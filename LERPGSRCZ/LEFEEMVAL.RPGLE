@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027706           Date 01Jul14               *
-      *  Prev Amend No  MD022452A          Date 01Oct13               *
+      *  Last Amend No. MD030628           Date 28Oct14               *
+      *  Prev Amend No. MD027706           Date 01Jul14               *
+      *                 MD022452A          Date 01Oct13               *
       *                 AR950498           Date 16Apr12               *
       *                 MD053942           Date 23Jul19               *
       *                 CER050             Date 16Jun19               *
@@ -114,6 +115,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030628 - AR950498 is not applicable for New York branch.   *
       *  MD027706 - AR950498 is not applicable for Shanghai branch.   *
       *  MD022452A - LER0014: Fee sequence - invalid number or type   *
       *              of characters entered.                           *
@@ -1777,11 +1779,12 @@
      C     WPEND         IFLT      FA_DTAP
      C     WPEND         ORGT      FA_DTEX
      C     WPEND         ORGT      FA_AVLD                                                 MD022452A
-      ** AR950498 not applicable to Nordea Singapore                                       MD022452A
+      ** AR950498 not applicable to Nordea Singapore, Shanghai, New York                   MD022452A
      C     SETZER        ANDEQ     'Y'                                                     MD022452A
      C     DDCALT        ANDLE     '06'                                                    MD022452A
      C     BJCNCD        ANDNE     'SG'                                                    MD022452A
      C     BJCNCD        ANDNE     'CN'                                                     MD027706
+     C     BJCNCD        ANDNE     'US'                                                     MD030628
       *
       ** If calculation type output error message rather than
       ** warning message

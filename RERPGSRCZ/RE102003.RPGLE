@@ -44,9 +44,9 @@
       *                                                               *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
-      *             (Child: AR928997A)                                *
+      *             (Child: AR928997A) (Recompile)                    *
       *  AR928996 - Data lost due to rate field :36: being truncated. *
-      *             (Child: AR928997)                                 *
+      *             (Child: AR928997) (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CER059 - German Feature Upgrade to Delhi                     *

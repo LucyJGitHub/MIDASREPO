@@ -433,9 +433,11 @@
       *
       *  Retrieve Posting Amount
      C                   If        PMTPY = '101'
-     C                   Eval      WPSTA = %subst(P32B : 28 : 15)
+     C**********         Eval      WPSTA = %subst(P32B : 28 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(P32B : 34 : 15)                          AR928996A
      C                   Else
-     C                   Eval      WPSTA = %subst(PDCA : 34 : 15)
+     C**********         Eval      WPSTA = %subst(PDCA : 34 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(PDCA : 40 : 15)                          AR928996A
      C                   Endif
      C                   Eval      X=%scan(',' : WPSTA)
       *
@@ -467,7 +469,8 @@
       *
       *  Retrieve Posting Value date
      C     PMTPY         IfEQ      '101'
-     C                   Eval      WVDAT = %subst(PH30 : 25 : 6)
+     C**********         Eval      WVDAT = %subst(PH30 : 25 : 6)                           AR928996A
+     C                   Eval      WVDAT = %subst(PH30 : 31 : 6)                           AR928996A
      C                   Else
      C                   Movel     PDCA          DSTRAN
      C                   Movel     TVVDAT        WVDAT

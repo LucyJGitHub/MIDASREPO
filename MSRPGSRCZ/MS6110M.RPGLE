@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR989496           Date 13Jun12               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD051624           Date 23Sep20               *
+      *  Prev Amend No. AR989496           Date 13Jun12               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR214111           Date 26Jun15               *
@@ -81,6 +82,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051624 - MT940's msgs found in the Outstanding Message     *
+      *             Details Enquiry Screen are dated incorrectly.     *
+      *           - Introduced system value 'MachineDateforTRAN' to   *
+      *             retrieved the machine time.                       *
       *  AR989496 - Remove redundant code related to dtaara/MEDTA     *
       *           - Causes DBase Error in MS_MED2MID job              *
       *           - (Child:AR989497)                                  *
@@ -199,6 +204,7 @@
       *                                                                                       245310
       * Constant to hold input parameter for AOSVALR0.                                        245310
      D MQManager       C                   Const('MQQueueManagerMMM')                         245310
+     D MachineDate     C                   Const('MachineDateforTRAN')                      MD051624
      D cpy@            S             80    dim(1) ctdata perrcd(1)
       ** Array containing Copyright statement
       *
@@ -407,6 +413,14 @@
      D BJDNWD5S                       5S 0                                      CSW025
      D BJDNWD5A                       5A   OVERLAY(BJDNWD5S)                    CSW025
                                                                                 CSW025
+     D DSTimeStamp     DS                                                                   MD051624
+     D  DSYYYY                 1      4                                                     MD051624
+     D  DSMM                   6      7                                                     MD051624
+     D  DSDD                   9     10                                                     MD051624
+     D  DSHH                  12     13                                                     MD051624
+     D  DSMN                  15     16                                                     MD051624
+     D  DSSC                  18     19                                                     MD051624
+     D  DSMS                  21     26                                                     MD051624
       ** Declared variables for enhancement CTI004                                            CTI004
                                                                                               CTI004
      D PMSGBUF         S           9999                                                       CTI004
@@ -439,6 +453,14 @@
                                                                                               CTI004
       ** Declared variable for system value setting                                         MD048231
      D MMMPaper        S              1A                                                    MD048231
+      *                                                                                     MD051624
+     D WMACFLAG        S              1                                                     MD051624
+     D WLATM           S              6                                                     MD051624
+     D PTimeStamp      S               Z                                                    MD051624
+     D PDateIn         S              8                                                     MD051624
+     D PMDNO           S              5P 0                                                  MD051624
+     D PDATE6          S              6  0                                                  MD051624
+     D PDATE7          S              7                                                     MD051624
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -749,8 +771,38 @@
      C                   movel     '3'           MGSG
      C                   movel     'TRAN'        MGST
      C                   endif
+      *                                                                                     MD051624
+      ** If 'MachineDateforTRAN' system value is ON, get machine time                       MD051624
+      *                                                                                     MD051624
+     C                   IF        WMACFLAG = 'Y'                                           MD051624
+     C                   CALLB     'ZAGENTMSTM'                                             MD051624
+     C                   PARM                    PTimeStamp                                 MD051624
+     C                   MOVE      PTimeStamp    DSTimeStamp                                MD051624
+      *                                                                                     MD051624
+      ** Convert from YYYYY to 99999                                                        MD051624
+      *                                                                                     MD051624
+     C                   EVAL      PDATEIN = DSYYYY + DSMM + DSDD                           MD051624
+     C                   CALLB     'ZDATE10'                                                MD051624
+     C                   PARM                    PDateIN                                    MD051624
+     C                   PARM                    PMDNO                                      MD051624
+      *                                                                                     MD051624
+      ** Convert from 99999 to DDMMMYY                                                      MD051624
+      *                                                                                     MD051624
+     C                   CALL      'ZDATE2'                                                 MD051624
+     C                   PARM                    PMDNO                                      MD051624
+     C                   PARM                    BJDFIN                                     MD051624
+     C                   PARM      *ZERO         PDATE6                                     MD051624
+     C                   PARM      *BLANKS       PDATE7                                     MD051624
+     C                   MOVEL     PDATE7        LADT                                       MD051624
+      *                                                                                     MD051624
+      ** Move DS time to numeric                                                            MD051624
+      *                                                                                     MD051624
+     C                   EVAL      WLATM = DSHH + DSMN + DSSC                               MD051624
+     C                   MOVE      WLATM         LATM                                       MD051624
+     C                   ELSE                                                               MD051624
      C                   movel     BJMRDT        LADT
      C                   TIME                    LATM
+     C                   ENDIF                                                              MD051624
      C                   update    mgorefd0
      C                   commit
       *
@@ -2384,6 +2436,35 @@
       ** Use default connection handle, and implicit connection
      C                   Z-ADD     HCDEFH        HCONN
 
+      *                                                                                     MD051624
+      ** Get Machine Date for TRAN value                                                    MD051624
+      *                                                                                     MD051624
+     C                   CALLB     'AOSVALR0'                                               MD051624
+     C                   PARM      *BLANKS       PRTCD                                      MD051624
+     C                   PARM      MachineDate   PSysVal01                                  MD051624
+     C                   PARM                    PCurSet01                                  MD051624
+     C                   PARM                    PSysVal02                                  MD051624
+     C                   PARM                    PCurSet02                                  MD051624
+     C                   PARM                    PSysVal03                                  MD051624
+     C                   PARM                    PCurSet03                                  MD051624
+     C                   PARM                    PSysVal04                                  MD051624
+     C                   PARM                    PCurSet04                                  MD051624
+     C                   PARM                    PSysVal05                                  MD051624
+     C                   PARM                    PCurSet05                                  MD051624
+     C                   PARM                    PSysVal06                                  MD051624
+     C                   PARM                    PCurSet06                                  MD051624
+     C                   PARM                    PSysVal07                                  MD051624
+     C                   PARM                    PCurSet07                                  MD051624
+     C                   PARM                    PSysVal08                                  MD051624
+     C                   PARM                    PCurSet08                                  MD051624
+     C                   PARM                    PSysVal09                                  MD051624
+     C                   PARM                    PCurSet09                                  MD051624
+     C                   PARM                    PSysVal10                                  MD051624
+     C                   PARM                    PCurSet10                                  MD051624
+      *                                                                                     MD051624
+     C     PRTCD         IFEQ      *BLANKS                                                  MD051624
+     C                   MOVEL     PCurSet01     WMACFLAG                                   MD051624
+     C                   ENDIF                                                              MD051624
       ** Open MQ series queue
       **  only if the Data Queue export feature is not present.                 CSW025
      C                   if        CSW025 = 'N'                                 CSW025

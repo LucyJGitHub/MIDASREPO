@@ -124,7 +124,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR927047 - Suppress Dbase 6. (Child: AR927049)               *
+      *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
       *             of system value Fld50FAddCustDtl                  *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER076             Date 12Aug20               *
-      *  Prev Amend No. MD055330           Date 14Feb20               *
+      *  Last Amend No. MD056875           Date 22Sep20               *
+      *  Prev Amend No. CER076             Date 12Aug20               *
+      *                 MD055330           Date 14Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056785 - Amend record length in accordance with ERCRCBPD   *
       *  CER076 - Update to KWG § 24c interface specification         *
       *           (BaFin version 3.3)                                 *
       *  MD055330 - ERC0100 continuously running during COB           *
@@ -82,7 +84,8 @@
       ** ERCRCDPD - Record type 'C' workfile
       *
      F***ERCRCDPD  UF A F 2000        DISK    INFSR(*PSSR)                                  MD055330
-     FERCRCDPD  UF A F 1086        DISK    INFSR(*PSSR)                                     MD055330
+     F***ERCRCDPD  UF A F 1086        DISK    INFSR(*PSSR)                         MD055330 MD056875
+     FERCRCDPD  UF A F 1145        DISK    INFSR(*PSSR)                                     MD056875
      F                                     USROPN
       *                                                                                     BUG26298
       ** ERCRBTPD - Midas @24 KWG transmission file                                         BUG26298
@@ -149,7 +152,8 @@
       ** Variables For Output Specification
       *
      D***CRcdData       S           2000A                                                   MD055330
-     D  CRcdData       S           1086A                                                    MD055330
+     D***CRcdData       S           1086A                                          MD055330 MD056875
+     D  CRcdData       S           1145A                                                    MD056875
       *
       *****************************************************************
       /EJECT
@@ -159,7 +163,8 @@
       *
      IERCRCDPD  NS
      I**********                        1 2000  CRcdData                                    MD055330
-     I                                  1 1086  CRcdData                                    MD055330
+     I**********                        1 1086  CRcdData                           MD055330 MD056875
+     I                                  1 1145  CRcdData                                    MD056875
       *
       *****************************************************************
       /EJECT

@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD056350           Date 31Jul20               *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CUT007  *CREATE    Date 22Nov10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056350 - Error with buffer when emulation is 24*80.        *
       *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Make utility file-driven.                           *
       *                                                               *
@@ -41,40 +43,40 @@
       *  *INZSR    - Initialise                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D ClrBuf          PR                  extproc( 'QsnClrBuf' )               clear buffer
      D   Buffer                      10I 0
      D   ErrorCode                   10I 0 const
- 
+
      D ClrScr          PR                  extproc( 'QsnClrScr' )               clear screen
      D   Mode                         1A   const
      D   CmdBuf                      10I 0
      D   LowLevel                    10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D CrtCmdBuf       PR                  extproc( 'QsnCrtCmdBuf' )            create command buff
      D   InitSize                    10I 0 const
      D   Increment                   10I 0 const
      D   Maximum                     10I 0 const
      D   CmdBuf                      10I 0
      D   ErrorCode                   10I 0 const
- 
+
      D CrtInpBuf       PR                  extproc( 'QsnCrtInpBuf' )            create input buffer
      D   InitSize                    10I 0 const
      D   Increment                   10I 0 const
      D   Maximum                     10I 0 const
      D   CmdBuf                      10I 0
      D   ErrorCode                   10I 0 const
- 
+
      D DltBuf          PR                  extproc( 'QsnDltBuf' )               delete buffer
      D   Buffer                      10I 0
      D   ErrorCode                   10I 0 const
- 
+
      D ReadInp         PR                  extproc( 'QsnReadInp' )              read input fields
      D   ControlChar1                 1A   const
      D   ControlChar2                 1A   const
@@ -83,17 +85,17 @@
      D   CmdBuf                      10I 0
      D   LowLevel                    10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D RtvDta          PR              *   extproc( 'QsnRtvDta' )               retrieve data
      D   InpBuf                      10I 0
      D   Data                          *
      D   ErrorCode                   10I 0 const
- 
+
      D RtvDtaLen       PR            10I 0 extproc( 'QsnRtvDtaLen' )            retrieve data length
      D   InpBuf                      10I 0
      D   DataLen                     10I 0
      D   ErrorCode                   10I 0 const
- 
+
      D SetCsrAdr       PR                  extproc( 'QsnSetCsrAdr' )            set cursor address
      D   FieldId                     10I 0 const
      D   Row                         10I 0 const
@@ -101,7 +103,7 @@
      D   CmdBuf                      10I 0
      D   LowLevel                    10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D SetFld          PR                  extproc( 'QsnSetFld' )               set field
      D   FieldId                     10I 0 const
      D   FieldLength                 10I 0 const
@@ -115,7 +117,7 @@
      D   CmdBuf                      10I 0
      D   LowLevel                    10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D WrtDta          PR                  extproc( 'QsnWrtDta' )               write data
      D   Data                     32767A   const
      D   DataLength                  10I 0 const
@@ -129,40 +131,40 @@
      D   CmdBuf                      10I 0
      D   LowLevel                    10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D WTD             PR                  extproc( 'QsnWTD' )                  write to display
      D   ControlChar1                 1A   const
      D   ControlChar2                 1A   const
      D   CmdBuf                      10I 0
      D   LowerLevel                  10I 0 const
      D   ErrorCode                   10I 0 const
- 
+
      D RtvReadAID      PR             1A   EXTPROC('QsnRtvReadAID')
      D  InpBfrHnd                    10I 0 const
      D  AIDCod                        1A   options(*omit)
      D  ErrorCode                    10I 0 const
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       * AID keys (function keys).
      D Qsn_F12         C                   X'3C'
- 
+
       * Control characters ( CC1 & CC2 ).
      D QSN_CC1_NULL    C                   X'00'
      D QSN_CC2_NULL    C                   X'00'
      D QSN_CC2_SET_CSR_BL...
      D                 C                   X'18'
- 
+
       * Screen Attributes.
      D QSN_SA_NORM     C                   X'20'
      D QSN_SA_RI       C                   X'21'
      D QSN_SA_HI       C                   X'22'
      D QSN_SA_UL       C                   X'24'
      D QSN_SA_ND       C                   X'27'
- 
+
      D QSN_SA_GRN      C                   X'20'
      D QSN_SA_WHT      C                   X'22'
      D QSN_SA_GRN_UL   C                   X'24'
@@ -170,16 +172,16 @@
      D                 C                   X'25'
      D QSN_SA_ND_37    C                   X'37'
      D QSN_SA_BLU      C                   X'3A'
- 
+
       * Field format words.
      D QSN_FFW_ALPHA_SHIFT...
      D                 C                   X'4000'
- 
+
       ** +--------------------------------------+
       ** ¦ Data Structures                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D Force_Align                     *
      D Var                           32A   dim( Max )
@@ -189,36 +191,36 @@
      D   VarRow                       3U 0 overlay( Var : 25 )
      D   VarCol                       3U 0 overlay( Var : 26 )
      D   VarRowCol                    2A   overlay( Var : 25 )
- 
+
      D                 DS                  based( Data@ )
      D DataByte                       1A
      D DataRowCol                     2A
      D Data                       32767A
- 
+
      D                SDS
      D PgmName               001    010
      D Job_Name              244    253
      D UserPrf               254    263
- 
+
      D InputData       ds                  qualified
      D                                     based(p_InputData)
      D   Row                          3U 0
      D   Col                          3U 0
      D   AID                          1A
      D   Field                      807A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CmdBuf          S             10I 0
      D FldCnt          S             10I 0
      D InpBuf          S             10I 0
      D DataLen         S             10I 0
      D Work            S          32767A   based( Work@ )
      D Max             C                   const( 4 )
- 
+
       * Entry parameters.
      D Action          S              1A
      D ValidList       S             10A
@@ -230,7 +232,7 @@
      D ID              S            100A
      D Pwd1            S            600A
      D Desc            S           1000A
- 
+
       * Parameters.
      D PReturnCode     S              7A
      D PAction         S              1A
@@ -240,7 +242,7 @@
      D PPass1          S            600A
      D PPass2          S            600A
      D PDescr          S           1000A
- 
+
       * Variables.
      D Aid             S              1A
      D InpFlds         S           1074A
@@ -342,7 +344,7 @@
      C                                   - %size(InputData.ROW)
      C                                   - %size(InputData.COL)
      C                                   - %size(InputData.AID)
- 
+
      C                   IF        len > 0
      C                   EVAL      InpFlds = %subst(InputData.field
      C                                       :1:len)
@@ -422,10 +424,16 @@
      C                   ENDDO
       *
       * Create command buffer.
-     C                   CALLP     CrtCmdBuf( 6300 : 6300 : 0 : CmdBuf : 0 )
+     C**********         CALLP     CrtCmdBuf( 6300 : 6300 : 0 : CmdBuf : 0 )                MD056350
+     C                   CALLP(E)  CrtCmdBuf( 6300 : 6300 : 0 : CmdBuf : 0 )                MD056350
       *
+     C                   if        %error                                                   MD056350
+     C                   CALLP     CrtCmdBuf( 4500 : 4500 : 0 : CmdBuf : 0 )                MD056350
+     C                   CALLP     CrtInpBuf( 4500 : 4500 : 0 : InpBuf : 0 )                MD056350
+     C                   else                                                               MD056350
       * Create input buffer.
      C                   CALLP     CrtInpBuf( 6300 : 6300 : 0 : InpBuf : 0 )
+     C                   endif                                                              MD056350
       *
       * Clear screen.
      C                   CALLP     ClrScr( '3' : CmdBuf : 0 : 0 )
@@ -645,7 +653,7 @@
      C                                  : 30 : 0 : 17 : 3 : QSN_SA_NORM :
      C                                  QSN_SA_NORM: QSN_SA_GRN : QSN_SA_GRN :
      C                                  CmdBuf : 0 : 0 )
- 
+
       * Write "Confirm New Password" input field.
      C                   CALLP     SetFld( Var_Id( 3 ) :
      C                                     VarLen( 3 ) :
@@ -702,7 +710,7 @@
      C                   EVAL      ExtFlg = *On
      C                   EVAL      Pwd1 = Pwd2
      C                   ENDIF
- 
+
      C     AmdDspE       ENDSR
       *
       /EJECT
@@ -781,7 +789,7 @@
       *
       * Check if ID input is blank.
      C                   ELSEIF    ID = *Blanks
- 
+
      C                   EVAL      ErrFlg = *On
      C                   CALLP     WrtDta( %Trim(IdTx) + ' must be entered.'
      C                                  : 70 : 0 : 24 : 02 : QSN_SA_HI :
@@ -886,9 +894,9 @@
      C                   CALLP     SetCsrAdr( Var_Id( 2 ) :
      C                                  0 : 0 : CmdBuf : 0: 0 )
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ValInpE       ENDSR
       *
       /EJECT

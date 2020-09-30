@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR945574             Date 29Mar12            */
-/*       Prev Amend No. MD046248             Date 27Oct17            */
+/*       Last Amend No. MD056886             Date 29Sep20            */
+/*       Prev Amend No. AR945574             Date 29Mar12            */
+/*                      MD046248             Date 27Oct17            */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056886 - Component REC24 00001 failed during COB          */
 /*       AR945574 - Send SBMJOB confirmation to screen               */
 /*                - Call to RE100410 is being bypassed               */
 /*                - (Child:AR945575)                                 */
@@ -66,6 +68,7 @@
              DCL        VAR(&RESERVID) TYPE(*CHAR) LEN(15)                               /*BUG7298*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)                                   /*AR945574*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                               /*AR945574*/
+             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                               /*MD056886*/
 
              DCLF       FILE(REACCHPD)
 
@@ -136,11 +139,16 @@ LOOP:        RCVF
 /**********     CALL       PGM(APCTRANVU) PARM(&SYS &USER &LANG +
                              &TRANSTYPE &UPDATEYN +
                              &APIRETC)                         *****************************SAMPO1*/
+/**********  CALL       PGM(APCTRANVU) PARM(&SYS &USER &LANG +
+                          &TRANSTYPE &UPDATEYN &BUFFER &BUFFER2 +
+                          &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
+                          &BUFFER7 &BUFFER8 &BUFFER9 &MSGARR +
+                          &APIRETC &RESERVID)                        */     /*BUG7298*/ /*MD056886*/
              CALL       PGM(APCTRANVU) PARM(&SYS &USER &LANG +
                           &TRANSTYPE &UPDATEYN &BUFFER &BUFFER2 +
                           &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
                           &BUFFER7 &BUFFER8 &BUFFER9 &MSGARR +
-                          &APIRETC &RESERVID)                                            /*BUG7298*/
+                          &APIRETC &RESERVID &APHEAD)                                   /*MD056886*/
 
 /**********  GOTO       CMDLBL(DOUG)                                                    /*AR945574*/
                 IF         COND(&MSGARR *NE '   ') THEN(CALL +

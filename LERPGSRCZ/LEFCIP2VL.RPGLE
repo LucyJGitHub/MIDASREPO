@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR896408           Date 31Jan19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD027517           Date 08Jul14               *
+      *  Prev Amend No. AR896408           Date 31Jan19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031311           Date 13Jun16               *
       *                 MD041034           Date 05Sep16               *
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027517 - Also validate Last Availability of CA against TR. *
+      *             Extend validation of 244684.                      *
       *  AR896408 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
       *             syndicated facilities thus DTEX                   *
@@ -2666,6 +2669,30 @@
      C                   Movel     'DDCAXR'      FldNamXAr(Idx)
      C                   Movel     'LEF0275'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     MD027517
+      ** Validate Last Availability Date of CA against attached TR.                         MD027517
+      *                                                                                     MD027517
+     C                   IF        DDTRCA = 'CA'                                            MD027517
+     C                   MOVEL     DDCSSN        K0CANM                                     MD027517
+     C                   MOVE      DDFACT        K0CAFT                                     MD027517
+     C                   MOVE      DDFCNO        K0CAFN                                     MD027517
+     C     K#KY10        SETLL     FCLTYFL9                                                 MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+      *                                                                                     MD027517
+     C     *IN05         DOWEQ     '0'                                                      MD027517
+      *                                                                                     MD027517
+     C     LERECI        IFEQ      'D'                                                      MD027517
+     C     LEAVLD        ANDGT     W#AVLD                                                   MD027517
+     C                   Move      'N'           DDAVLDOK                                   MD027517
+     C                   Add       1             Idx                                        MD027517
+     C                   Movel     'DDAVLD'      FldNamXAr(Idx)                             MD027517
+     C                   Movel     '5049411'     MsgIDXAr(Idx)                              MD027517
+     C                   LEAVE                                                              MD027517
+     C                   ENDIF                                                              MD027517
+      *                                                                                     MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+     C                   ENDDO                                                              MD027517
+     C                   ENDIF                                                              MD027517
       *
      C                   ENDIF
       *

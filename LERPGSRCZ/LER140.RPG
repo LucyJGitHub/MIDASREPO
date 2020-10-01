@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055481           Date 04Sep20               *
-      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. MD055481           Date 04Sep20               *
+      *                 MD052216           Date 04Apr19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR990753           Date 25Jan13               *
@@ -91,6 +92,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Report shows receipt settlement instructions. It *
+      *              should be the payment side for parts sold loans. *
+      *              (Child: AR375892)                                *
       *  MD055481 - Show the original borrower on the report for loan *
       *             fees attached to a participation purchased if the *
       *             system value 'LoanCustOriginPurch' is equal to 'O'*
@@ -210,6 +214,10 @@
      F            CLOANCKF                          KIGNORE                                 MD055481
      F            CLOANZ1F                          KIGNORE                                 MD055481
      F            CLOANCLF                          KRENAMEMCLONCLF                         MD055481
+     FPSOLDL1 IF  E           K        DISK                                                AR375891B
+     F            CLOANCLF                          KRENAMEJCLONCLF                        AR375891B
+      ** Parts Sold loans                                                                  AR375891B
+      *                                                                                    AR375891B
      F/COPY WNCPYSRC,LEH00554
      FLER140P1O   E             80     PRINTER      KINFDS SPOOL      UC
       * Lending Fees Input Today - audit
@@ -620,6 +628,7 @@
      C                     SETOF                     02
      C                     Z-ADD60        LINE
      C                     Z-ADD0         @DSAMT
+     C                     MOVE *BLANKS   WKLOAN  6                                        AR375891B
      C                     MOVEL'LER140'  DBPGM
      C/COPY WNCPYSRC,LER140CCP2                                           S01408
       *
@@ -1032,6 +1041,21 @@
      C                     MOVE FELOAN    @LORF            Loan
      C                     END
       *
+     C           FELOAN    IFNE *BLANKS                                                    AR375891B
+     C           FELOAN    IFNE WKLOAN                                                     AR375891B
+      *                                                                                    AR375891B
+     C           FELOAN    CHAINPSOLDL1              85                                    AR375891B
+     C           *IN85     IFEQ *OFF                                                       AR375891B
+     C                     MOVE 'Y'       WPRTS                                            AR375891B
+     C                     ELSE                                                            AR375891B
+     C                     MOVE 'N'       WPRTS                                            AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     MOVE FELOAN    WKLOAN                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ELSE                                                            AR375891B
+     C                     MOVE 'N'       WPRTS   1                                        AR375891B
+     C                     ENDIF                                                           AR375891B
+      *                                                                                    AR375891B
      C                     MOVE FEFCOD    AUFECD           Name of
      C                     CALL 'AOFEER0'              99
      C                     PARM '*MSG   ' @RTCD
@@ -1684,6 +1708,11 @@
      C                     MOVEL'INTERNAL'RPTFN     P                     CLE005
      C                     ENDIF                                                              193475
      C                     ENDIF                                          CLE005
+     C           PTFI      IFEQ *BLANK                                                     AR375891B
+     C           WPRTS     IFEQ 'Y'                                                        AR375891B
+     C                     MOVEA'01'      *IN,41                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ENDIF                                                           AR375891B
       *                                                                                       CLE031
       ** Format settlement ccy/xrate/indicator                                                CLE031
       *                                                                                       CLE031

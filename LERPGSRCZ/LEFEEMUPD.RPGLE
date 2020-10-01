@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034020           Date 19Jul17               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure settlement details is set        *
+      *              correctly. (Child: AR375892)                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -243,6 +247,11 @@
      F                                     IGNORE(CLOANZ1F)                                   CSW208
       ** Midas LE Loans File                                                                  CSW208
                                                                                               CSW208
+     FPSOLDL1   IF   E           K DISK    INFSR(*PSSR)                                    AR375891B
+     F                                     PREFIX(PS_)                                     AR375891B
+     F                                     RENAME(CLOANCLF:PSOLDCLF)                       AR375891B
+      ** Parts sold loan                                                                   AR375891B
+      *                                                                                    AR375891B
      FLEEIRDL5  UF   E           K DISK                                                       CAS011
      F                                     COMMIT                                            BUG9496
      FLESTALLA  UF   E           K DISK    COMMIT                                            BUG9225
@@ -2743,6 +2752,16 @@
       *
      C                   Z-ADD     VFPEND        FEPEND
      C                   Z-ADD     VFFAMT        FEFAMT
+      *                                                                                    AR375891B
+      ** If attached to loan, check if parts sold                                          AR375891B
+      *                                                                                    AR375891B
+     C                   MOVE      'N'           WPRTS                                     AR375891B
+     C                   IF        VFLOAN <> *BLANKS                                       AR375891B
+     C     VFLOAN        CHAIN     PSOLDL1                            95                   AR375891B
+     C                   IF        *IN95 = *OFF                                            AR375891B
+     C                   MOVE      'Y'           WPRTS                                     AR375891B
+     C                   ENDIF                                                             AR375891B
+     C                   ENDIF                                                             AR375891B
  
      C     VFPTFI        IFEQ      'P'
      C     VFPTFI        OREQ      'S'                                                        CLE106
@@ -2755,11 +2774,19 @@
      C                   ENDIF
       *
      C     VFPTFI        IFEQ      *BLANK
+     C                   IF        WPRTS = 'Y'                                             AR375891B
+     C                   MOVE      VFPSTM        FESTTL                                    AR375891B
+     C                   MOVEL     VFPONS        FEOURS                                    AR375891B
+     C                   MOVEL     VFPIBN        FETHER                                    AR375891B
+     C                   MOVE      VFOMDB        FEOSBR                                    AR375891B
+     C                   MOVE      VFOMDB        OMDB                                      AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      VFRSTM        FESTTL
      C                   MOVEL     VFRONS        FEOURS
      C                   MOVEL     VFRIBN        FETHER
      C                   MOVE      VFOSDB        FEOSBR
      C                   MOVE      VFOSDB        OSDB
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
       *
      C                   MOVE      VFFCOD        FEFCOD
@@ -3027,6 +3054,16 @@
      C     FESTTL        OREQ      7
      C     FESTTL        OREQ      8
      C     FESTTL        OREQ      12
+      *                                                                                    AR375891B
+      ** If attached to loan, check if parts sold                                          AR375891B
+      *                                                                                    AR375891B
+     C                   MOVE      'N'           WPRTS             1                       AR375891B
+     C                   IF        VFLOAN <> *BLANKS                                       AR375891B
+     C     VFLOAN        CHAIN     PSOLDL1                            95                   AR375891B
+     C                   IF        *IN95 = *OFF                                            AR375891B
+     C                   MOVE      'Y'           WPRTS                                     AR375891B
+     C                   ENDIF                                                             AR375891B
+     C                   ENDIF                                                             AR375891B
       *
      C     VFPTFI        IFEQ      'P'
      C     VFPTFI        OREQ      'S'                                                        CLE106
@@ -3035,7 +3072,11 @@
      C                   ENDIF
       *
      C     VFPTFI        IFEQ      *BLANKS
+     C                   IF        WPRTS = 'Y'                                             AR375891B
+     C                   MOVEL     VFPONS        WOURST                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVEL     VFRONS        WOURST
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
       *
      C     VFPTFI        IFNE      'I'

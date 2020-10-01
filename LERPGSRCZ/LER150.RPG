@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055481           Date 04Sep20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. MD055481           Date 04Sep20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD023646           Date 03Sep14               *
@@ -76,6 +77,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Report shows receipt settlement instructions. It *
+      *              should be the payment side for parts sold loans. *
+      *              (Child: AR375892)                                *
       *  MD055481 - Show the original borrower on the report for loan *
       *             fees attached to a participation purchased if the *
       *             system value 'LoanCustOriginPurch' is equal to 'O'*
@@ -181,6 +185,10 @@
      F            CLOANCKF                          KIGNORE                                 MD055481
      F            CLOANZ1F                          KIGNORE                                 MD055481
      F            CLOANCLF                          KRENAMEMCLONCLF                         MD055481
+     FPSOLDL1 IF  E           K        DISK                                                AR375891B
+     F            CLOANCLF                          KRENAMEJCLONCLF                        AR375891B
+      ** Parts Sold loans                                                                  AR375891B
+      *                                                                                    AR375891B
      FLER150P1O   E             80     PRINTER      KINFDS SPOOL      UC
       *
      FLER150AUO   E                    PRINTER      KINFDS SPOOLU
@@ -652,6 +660,7 @@
      C                     Z-ADD0         @DUAMT
      C                     Z-ADD0         @DVAMT
      C                     MOVE *BLANKS   SEQ     5
+     C                     MOVE *BLANKS   WKLOAN  6                                        AR375891B
       *
       ** Access bank details
      C                     CALL 'AOBANKR0'
@@ -1053,6 +1062,21 @@
      C                     MOVE FELOAN    @LORF            Loan
      C                     END
       *
+     C           FELOAN    IFNE *BLANKS                                                    AR375891B
+     C           FELOAN    IFNE WKLOAN                                                     AR375891B
+      *                                                                                    AR375891B
+     C           FELOAN    CHAINPSOLDL1              85                                    AR375891B
+     C           *IN85     IFEQ *OFF                                                       AR375891B
+     C                     MOVE 'Y'       WPRTS                                            AR375891B
+     C                     ELSE                                                            AR375891B
+     C                     MOVE 'N'       WPRTS                                            AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     MOVE FELOAN    WKLOAN                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ELSE                                                            AR375891B
+     C                     MOVE 'N'       WPRTS   1                                        AR375891B
+     C                     ENDIF                                                           AR375891B
+      *                                                                                    AR375891B
      C                     MOVE FEFCOD    AUFECD           Name of
      C                     CALL 'AOFEER0'              99
      C                     PARM '*MSG   ' @RTCD
@@ -1182,6 +1206,12 @@
      C           FESCCY    IFNE *BLANKS                                   CLE031
      C                     MOVE FESCCY    @CYCD                           CLE031
      C                     ENDIF                                          CLE031
+     C           PTFI      IFEQ *BLANK                                                     AR375891B
+     C           WPRTS     ANDEQ'Y'                                                        AR375891B
+     C           FEPSCY    IFNE *BLANKS                                                    AR375891B
+     C                     MOVE FEPSCY    @CYCD                                            AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ENDIF                                                           AR375891B
       *                                                                   CLE031
      C                     ENDIF                                          CLE031
      C                     ENDIF                                          CLE031
@@ -1487,6 +1517,12 @@
      C           FESCCY    IFNE *BLANKS                                   CLE031
      C                     MOVE FESCCY    @CYCD                           CLE031
      C                     ENDIF                                          CLE031
+     C           PTFI      IFEQ *BLANK                                                     AR375891B
+     C           WPRTS     ANDEQ'Y'                                                        AR375891B
+     C           FEPSCY    IFNE *BLANKS                                                    AR375891B
+     C                     MOVE FEPSCY    @CYCD                                            AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ENDIF                                                           AR375891B
       *                                                                   CLE031
      C                     ENDIF                                          CLE031
      C                     ENDIF                                          CLE031
@@ -1855,7 +1891,11 @@
      C                     EXSR SRSETL                                    CLE005
      C                     SELEC                                          CLE005
      C           PTFI      WHEQ ' '                                       CLE005
+     C           WPRTS     IFEQ 'Y'                                                        AR375891B
+     C                     WRITELER150D4                                                   AR375891B
+     C                     ELSE                                                            AR375891B
      C                     WRITELER150D3                                  CLE005
+     C                     ENDIF                                                           AR375891B
      C                     MOVE '0'       *IN30                                             MD023646
      C           PTFI      WHEQ 'P'                                       CLE005
      C           PTFI      OREQ 'S'                                                           CLE106
@@ -2138,9 +2178,15 @@
      C                     Z-ADD0         RPEXR                                               CLE031
      C                     MOVE *BLANK    RPEXI                                               CLE031
      C           PTFI      IFEQ *BLANK                                                        CLE031
+     C           WPRTS     IFEQ 'Y'                                                        AR375891B
+     C                     MOVE FEPSCY    RPSCY                                            AR375891B
+     C                     Z-ADDFEPEXR    RPEXR                                            AR375891B
+     C                     MOVE FEPEXI    RPEXI                                            AR375891B
+     C                     ELSE                                                            AR375891B
      C                     MOVE FESCCY    RRSCY                                               CLE031
      C                     Z-ADDFEREXR    RREXR                                               CLE031
      C                     MOVE FEREXI    RREXI                                               CLE031
+     C                     ENDIF                                                           AR375891B
      C                     ENDIF                                                              CLE031
      C           PTFI      IFEQ 'P'                                                           CLE031
      C           PTFI      OREQ 'S'                                                           CLE106
@@ -2278,7 +2324,11 @@
      C           PTFI      OREQ 'R'                                                           CLE106
      C                     MOVE *OFF      *IN30                                               CLE034
      C                     ELSE                                                               CLE034
+     C           WPRTS     IFEQ *BLANK                                                     AR375891B
+     C                     MOVE *OFF      *IN30                                            AR375891B
+     C                     ELSE                                                            AR375891B
      C                     MOVE *ON       *IN30                                               CLE034
+     C                     ENDIF                                                           AR375891B
      C                     ENDIF                                                              CLE034
       *                                                                                       CLE034
      C                     Z-ADD2         RQDLN                                               CLE034
@@ -2356,6 +2406,21 @@
       *                                                                                       CLE034
      C           PTFI      WHEQ *BLANK                                                        CLE034
       *                                                                                       CLE034
+     C           WPRTS     IFEQ *BLANK                                                     AR375891B
+      *                                                                                    AR375891B
+     C                     MOVE PSTMS     RSETM                                            AR375891B
+     C                     MOVE PSCY      RSETC                                            AR375891B
+     C                     MOVE PONSS     RSETA                                            AR375891B
+      *                                                                                    AR375891B
+     C                     Z-ADD9         PZADEC                                           AR375891B
+     C                     MOVE *BLANKS   PZFLD                                            AR375891B
+     C                     MOVE PYPC      PZFLD                                            AR375891B
+     C                     EXSR SRZEDT                                                     AR375891B
+     C                     MOVE *BLANKS   RSTLP                                            AR375891B
+     C                     MOVE PZFLD     RSTLP                                            AR375891B
+      *                                                                                    AR375891B
+     C                     ELSE                                                            AR375891B
+      *                                                                                    AR375891B
      C                     MOVE RSTMS     RSETM                                               CLE034
      C                     MOVE RSCY      RSETC                                               CLE034
      C                     MOVE RONSS     RSETA                                               CLE034
@@ -2366,6 +2431,8 @@
      C                     EXSR SRZEDT                                                        CLE034
      C                     MOVE *BLANKS   RSTLP                                               CLE034
      C                     MOVE PZFLD     RSTLP                                               CLE034
+      *                                                                                    AR375891B
+     C                     ENDIF                                                           AR375891B
       *                                                                                       CLE034
       ** Payment Settlement Instruction.                                                      CLE034
       *                                                                                       CLE034

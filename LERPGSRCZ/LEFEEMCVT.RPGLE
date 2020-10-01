@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR318270           Date 01Aug12               *
       *                 263801             Date 01Aug12               *
       *                 262672             Date 01Aug12               *
@@ -45,6 +47,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure fee type narrative is set        *
+      *              correctly. (Child: AR375892)                     *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR318270 - Specific Fee amendment ends in error              *
@@ -778,8 +786,20 @@
      C                   ELSE
       *
      C     PTFI          IFEQ      *BLANK
+     C     FELOAN        IFNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     66                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     67                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     69                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     72                                                      AR375891B
+     C                   MOVE      *BLANKS       ZAMSID                                    AR375891B
+     C                   MOVEL     'LER0203'     ZAMSID                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVEL     'LER0202'     ZAMSID
+     C                   ENDIF                                                             AR375891B
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDFETP
      C                   MOVE      '1'           *IN52
@@ -788,6 +808,18 @@
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'                                                        CLE106
      C     PTFI          OREQ      'R'                                                        CLE106
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     66                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     67                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     69                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     72                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVEL     'LER0203'     ZAMSID
      C                   EXSR      SRTEXT

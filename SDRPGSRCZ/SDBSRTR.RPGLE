@@ -34,14 +34,6 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
-      ** +--------------------------------------+                                             CSD103
-      ** ¦ F-specs                              ¦                                             CSD103
-      ** ¦ =======                              ¦                                             CSD103
-      ** +--------------------------------------+                                             CSD103
-      *****************************************************************                       CSD103
-     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
-     F                                     RENAME(@BAREDG:SDBSRTXX)                           CSD103
-                                                                                              CSD103
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -118,10 +110,6 @@
                                                                                               CSD103
       **  Data Structure for Backward-Looking Rate Fields                                     CSD103
      D BasRBckfld      DS            27                                                       CSD103
-     D  DDLBAC                26     27                                                       CSD103
-                                                                                              CSD103
-     D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
-     D                                     PREFIX(W)                                          CSD103
                                                                                               CSD103
      D AAuth           S              1A                                                      CSD103
 
@@ -177,10 +165,6 @@
      C                   ENDIF
 
       * Build buffer with required output
-     C     SDBRAC        CHAIN     SDBSRTXX      SDBSRTDS             99                      CSD103
-     C     *IN99         IFNE      '1'                                                        CSD103
-     C                   MOVE      WBALBDY       DDLBAC                                       CSD103
-     C                   ENDIF                                                                CSD103
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
      C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
@@ -289,10 +273,6 @@
       *
  E1  C                   ENDIF
       *
-     C     SDBRAC        KLIST                                                                CSD103
-     C                   KFLD                    BACYCD                                       CSD103
-     C                   KFLD                    BABRAC                                       CSD103
-      *                                                                                       CSD103
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -410,6 +390,8 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the

@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 240065             Date 09Jun06               *
+      *                 240065             Date 09Jun06               *
       *                 BUG4660            Date 05Nov04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  240065 - Allow negative base rates to be displayed.          *
       *           Use ZA0841 instead of ZEDIT.                        *
@@ -42,7 +44,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
+     F                                     RENAME(@BAREDG:SDBSRTXX)                           CSD103
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -61,55 +65,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Base Rate in File Format
      D BasRFilFmt    E DS                  EXTNAME(SDBSRTPD)
- 
+
       * Base Rate in Screen Format
      D BasRScnFmt    E DS                  EXTNAME(SDBSRSPD)
      D   DDTSDT                       6    OVERLAY(DDDFTS:3)
      D   DDTSTM                       6    OVERLAY(DDDFTS:9)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     240065
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                    240065
                                                                                               240065
@@ -119,12 +123,29 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
+     D ArrayBadj       S              1A   DIM(14)                                            CSD103
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+     D  DDBLRT                 1      1                                                       CSD103
+     D  DDLBDY                 2      3                                                       CSD103
+     D  DDLODY                 4      5                                                       CSD103
+     D  DDPDLY                 6      7                                                       CSD103
+     D  DDBADJ                 8     21                                                       CSD103
+     D  DDAVOP                22     22                                                       CSD103
+     D  DDBRAC                23     24                                                       CSD103
+     D  DDWGHT                25     25                                                       CSD103
+     D  DDLBAC                26     27                                                       CSD103
+                                                                                              CSD103
+     D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
+     D                                     PREFIX(W)                                          CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D DateIn          S              8S 0
- 
+
       ** Parameter list for ZA0841                                                            240065
       ** Alpha field for numeric validation                                                   240065
      D @@ALPH          S             16A                                                      240065
@@ -142,6 +163,9 @@
      D WrkRate         S             11  7                                                    240065
      D IntNbrt         S              4A                                                      240065
                                                                                               240065
+     D IntBadj         S              5A                                                      CSD103
+     D DecBadj         S              8A                                                      CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -186,11 +210,11 @@
       *
      C**********         MOVEL     *BLANK        ZFIELD                                       240065
      C**********         MOVE(P)   BANBRT        ZFIELD                                       240065
- 
+
      C**********         CALLB     'ZEDIT'                                                    240065
      C**********         PARM                    ZFIELD           16                          240065
      C**********         PARM      7             ZADEC             1 0                        240065
- 
+
      C**********         MOVE      ZFIELD        DDNBRT                                       240065
                                                                                              BUG4660
      C                   Z-ADD     7             @@IDP                                        240065
@@ -238,7 +262,7 @@
      C**********         PARM      7             ZADEC             1 0               BUG4660  240065
                                                                                              BUG4660
      C**********         MOVE      ZFIELD        DDCBSR                                       240065
- 
+
      C                   Z-ADD     7             @@IDP                                        240065
      C                   Z-ADD     4             @@IINT                                       240065
      C                   MOVE      *BLANKS       @@ALPH                                       240065
@@ -337,7 +361,65 @@
      C                   EXSR      ZA0770                                                     CSD006
      C                   MOVE      DateOut       DDTSDT                                       CSD006
      C                   ENDIF                                                                CSD006
-                                                                                              CSD006
+      *                                                                                       CSD103
+      * Backward-Looking Rate                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BABLRT        DDBLRT                                       CSD103
+      *                                                                                       CSD103
+      * Default Lookback Days for Settlement Base Rate                                        CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BALBDY        DDLBDY                                       CSD103
+      *                                                                                       CSD103
+      * Default Lockout Days                                                                  CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BALODY        DDLODY                                       CSD103
+      *                                                                                       CSD103
+      * Default Payment Delay Days                                                            CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAPDLY        DDPDLY                                       CSD103
+      *                                                                                       CSD103
+      * Benchmark Adjustment                                                                  CSD103
+      *                                                                                       CSD103
+     C                   MOVEL     BABADJ        IntBadj                                      CSD103
+     C                   MOVE      BABADJ        DecBadj                                      CSD103
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
+     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
+     C                                                                                        CSD103
+     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CSD103
+     C                   CALLB     'ZA0840'                                                   CSD103
+     C                   PARM      *BLANK        RetCodeOut                                   CSD103
+     C                   PARM                    @@ALPH                         Display field CSD103
+     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
+     C                   PARM      5             @@IINT                         no.of integersCSD103
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
+     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
+     C                   PARM      *ZERO         @@AMT                          File field    CSD103
+     C                   PARM                    BNDCSP                                       CSD103
+      *                                                                                       CSD103
+     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
+      *                                                                                       CSD103
+      * Averaging Option                                                                      CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAAVOP        DDAVOP                                       CSD103
+      *                                                                                       CSD103
+      * Base Rate for Accrual                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BABRAC        DDBRAC                                       CSD103
+      *                                                                                       CSD103
+      * Weight Convention                                                                     CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAWGHT        DDWGHT                                       CSD103
+      *                                                                                       CSD103
+      * Default Lookback Days for Accrual                                                     CSD103
+      *                                                                                       CSD103
+     C     SDBRAC        CHAIN     SDBSRTXX      SDBSRTDS             99                      CSD103
+     C     *IN99         IFNE      '1'                                                        CSD103
+     C                   MOVE      WBALBDY       DDLBAC                                       CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      *ZEROS        DDLBAC                                       CSD103
+     C                   ENDIF                                                                CSD103
       *                                                                                       CSD006
      C                   ENDSR
       *****************************************************************
@@ -393,6 +475,8 @@
       *
       * Base Rate in screen format
      C                   PARM                    BasRScnFmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
       *
       *
       ** Initialize program name
@@ -427,6 +511,10 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
+      *                                                                                       CSD103
+     C     SDBRAC        KLIST                                                                CSD103
+     C                   KFLD                    BACYCD                                       CSD103
+     C                   KFLD                    BABRAC                                       CSD103
       *
      C                   ENDSR
       *****************************************************************

@@ -407,6 +407,9 @@
       /COPY WNCPYSRC,SDBSRTV023                                                               CSD006
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
+      *                                                                                       CSD103
+     C                   EXSR      FMTBADJ                                                    CSD103
+      *                                                                                       CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -958,6 +961,31 @@
      C                   EXSR      UPDATERRS                                                  CSD006
       *                                                                                       CSD006
      C                   ENDSR                                                                CSD006
+      *****************************************************************                       CSD103
+     C/EJECT                                                                                  CSD103
+      *****************************************************************                       CSD103
+      ** FMTBADJ - Validate benchmark adjustment                                              CSD103
+      *****************************************************************                       CSD103
+     C     FMTBADJ       BEGSR                                                                CSD103
+      *                                                                                       CSD103
+      ** Validate Benchmark Adjustment                                                        CSD103
+      ** Ensure rate is correctly formatted                                                   CSD103
+      *                                                                                       CSD103
+     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
+     C                   MOVE      DDBADJ        @@ALPH                                       CSD103
+     C                   CALLB     'ZA0840'                                                   CSD103
+     C                   PARM      *BLANK        RetCodeOut                                   CSD103
+     C                   PARM                    @@ALPH                         Display field CSD103
+     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
+     C                   PARM      5             @@IINT                         no.of integersCSD103
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
+     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
+     C                   PARM      *ZERO         @@AMT                          File field    CSD103
+     C                   PARM                    BNDCSP                                       CSD103
+	  *                                                                                      CSD103
+     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
+      *                                                                                       CSD103
+     C                   ENDSR                                                                CSD103
       *****************************************************************
       /EJECT                                                                                 BUG3124
       *****************************************************************                      BUG3124
@@ -1019,14 +1047,21 @@
      C                   MOVE      DDOMD1        BVOMD1
      C                   MOVE      DDOMD2        BVOMD2
       *                                                                                       CSD103
-     C                   MOVEL     DDBLRT        BVBLRT                                       CSD103
-     C                   MOVEL     DDLBDY        BVLBDY                                       CSD103
-     C                   MOVEL     DDLODY        BVLODY                                       CSD103
-     C                   MOVEL     DDPDLY        BVPDLY                                       CSD103
-     C                   MOVEL     DDBADJ        BVBADJ                                       CSD103
-     C                   MOVEL     DDAVOP        BVAVOP                                       CSD103
-     C                   MOVEL     DDBRAC        BVBRAC                                       CSD103
-     C                   MOVEL     DDWGHT        BVWGHT                                       CSD103
+     C                   MOVE      DDBLRT        BVBLRT                                       CSD103
+     C                   MOVE      DDLBDY        BVLBDY                                       CSD103
+     C                   MOVE      DDLODY        BVLODY                                       CSD103
+     C                   MOVE      DDPDLY        BVPDLY                                       CSD103
+     C                                                                                        CSD103
+     C                   CALLB     'ZALIGN'                                                   CSD103
+     C                   PARM      *BLANKS       WZRetCode         7                          CSD103
+     C                   PARM      DDBADJ        WZFld16          16                          CSD103
+     C                   PARM      8             WZDec             1 0                        CSD103
+     C                   PARM      5             WZDig             2 0                        CSD103
+     C                   MOVE      WZFld16       BVBADJ                                       CSD103
+     C                                                                                        CSD103
+     C                   MOVE      DDAVOP        BVAVOP                                       CSD103
+     C                   MOVE      DDBRAC        BVBRAC                                       CSD103
+     C                   MOVE      DDWGHT        BVWGHT                                       CSD103
       *
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS

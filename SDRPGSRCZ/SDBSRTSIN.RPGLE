@@ -785,6 +785,8 @@
       *
       * Deal in screen format
      C                   PARM                    NwBsScnFmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
       *
       * Update 'Current' Deal with Deal in Screen Format
       *

@@ -928,6 +928,8 @@
       * OUTPUTS
       * Customer - screen formats
      C                   PARM                    NwBsScnFmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       *
       * Update 'Current' Base Rate with Base Rate in Screen Format

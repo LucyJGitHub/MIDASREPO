@@ -831,6 +831,7 @@
      C                   Z-ADD     *ZERO         BVVDRC
      C                   Z-ADD     *ZERO         BVNBRT
      C                   Z-ADD     *ZERO         BVVDNR
+     C                   Z-ADD     *ZERO         BVBADJ                                       CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -982,6 +983,8 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    BasRFilFmt
      C                   PARM                    CurTrTran
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.

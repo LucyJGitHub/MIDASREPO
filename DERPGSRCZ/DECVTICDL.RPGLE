@@ -19,26 +19,29 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. 188050             Date 27Dec00               *
+      *                 188050             Date 27Dec00               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CDE001  *CREATE    Date 16Dec99               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  188050 - Lookup failed due to int. calc. basis 7 not found   *
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -56,14 +59,14 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D*W#DI****        S              1  0 DIM(10) CTDATA PERRCD(1)
      D*W#IC****        S              7    DIM(10) CTDATA PERRCD(1)
      D W#DI            S              1  0 DIM(12) CTDATA PERRCD(1)
      D W#IC            S              7    DIM(12) CTDATA PERRCD(1)
- 
+
       *
       * INPUT PARAMETERS
       *

@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -92,7 +95,7 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -110,14 +113,14 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D/COPY DECPYSRC,DEXTFILA
      D/COPY DECPYSRC,DEXTFILS
      D/COPY DECPYSRC,DEEVDARRS
- 
- 
+
+
       ** EVENT TYPES/SEQUENCES
      D*TABTYP**********S**************2****DIM(16) CTDATA PERRCD(1)                           CDE002
      D*TABSEQ**********S**************2**0*DIM(16) ALT(TABTYP)                                CDE002
@@ -133,8 +136,8 @@
                                                                                               208221
      D POS             S              2  0                                                    208221
      D LongArr         S              1                                                       208221
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                                  CDE002
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
@@ -145,9 +148,9 @@
       ** External data structures for Settlement Allocation File                              CLE034
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CLE034
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * NOTES ON DATES:
- 
+
       **If*in*'HISTORIC'*mode******                                                           CDE002
       **---------------------******                                                           CDE002
       **I*******I*******I*******I**     I       I       I       I       I                     CDE002
@@ -175,8 +178,8 @@
       *   Date                                     Date           Date                        CDE002
       *                                                                                       CDE002
                                                                                               CDE002
- 
- 
+
+
       **
       **   ENTRY PARAMETER LIST
       **
@@ -273,21 +276,21 @@
       *
       * RETURN
      C                   RETURN
- 
+
       *********************************************************************
       /SPACE 5
       *********************************************************************
       ** IMPORT TRANSACTION DETAILS
       *********************************************************************
      C     IMP_TRAN      BEGSR
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    T#TMST
- 
+
       ** Get risk customer details
- 
+
      C                   MOVEL     T#RCST        @KEY1
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
@@ -316,7 +319,7 @@
      C                   EVAL      Err_Mess = 'DEAL DATE INVALID'                             CDE002
      C                   EXSR      *PSSR                                                      CDE002
      C                   ENDIF                                                                CDE002
- 
+
      C                   MOVEL     T#TRAN        #_tran(1)
      C                   ENDSR
       *********************************************************************
@@ -567,7 +570,7 @@
      C     E#PRDT        ANDGT     P#IACD
      C                   Z-ADD     P#IACD        #_ipdat(1)
      C                   ENDIF
- 
+
      C                   MOVEL     'IP'          W#TYPE
      C                   MOVEL     #arevdt_ip    #arevdt_WK
      C                   EXSR      LOG_EVDT
@@ -590,7 +593,7 @@
      C     E#PRDT        ANDGT     P#IACD
      C                   Z-ADD     P#IACD        #_irdat(1)
      C                   ENDIF
- 
+
      C                   MOVEL     'IR'          W#TYPE
      C                   MOVEL     #arevdt_ir    #arevdt_WK
      C                   EXSR      LOG_EVDT
@@ -829,7 +832,7 @@
       * ADD A POSITION INTO THE POSITIONS ARRAY
       *
      C                   EXSR      UPD_POSN
- 
+
      C                   ENDIF
      C*******************ENDIF**********************************************                  CDE002
       *
@@ -850,21 +853,21 @@
       ** VALUE DATE
       *********************************************************************
      C     VALUEDAT      BEGSR
- 
+
       * If cash is accrued
       *    If the cash amount is not supplied on the event
       *    (as well as the next cash date)
       *       Calculate the cash due
       *       on the next interest payment date
       *    Set the next cash date
- 
+
      C     P#ACCS        IFEQ      'Y'
      C     E#CASH        IFEQ      *ZERO
      C                   EXSR      CAL_CASH
      C                   ENDIF
      C                   Z-ADD     E#NXCD        NxtCashDt
      C                   ENDIF
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZVD'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -873,7 +876,7 @@
      C                   PARM                    P#ASLI            1
      C                   PARM                    P#NOML           15 0
      C                   PARM                    P#ACCS            1
- 
+
      C                   PARM                    E#PRDT            5 0
      C                   PARM                    E#INTA           15 0
      C                   PARM                    E#CHRG           15 0
@@ -890,27 +893,27 @@
      C                   PARM                    P#RLPL           15 0
      C                   PARM                    P#CHRG           15 0
      C                   PARM                    P#COMM           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZVD'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
- 
+
       ** Set the 'VALUE DATE PROCESSED' Indicator
- 
+
      C                   MOVEL     'Y'           ValDat_P
      C     P#ICMT        IFNE      *BLANK                                       198416
      C                   Z-ADD     *ZERO         P_P#NOML                                     CDE002
      C                   ENDIF                                                  198416
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -924,7 +927,7 @@
      C                   Z-ADD     E#FEE         E#TAMT
      C                   ADD       E#CHRG        E#TAMT
      C                   ADD       E#COMM        E#TAMT
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZFE'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -943,20 +946,20 @@
      C                   PARM                    P#FEE            15 0
      C                   PARM                    P#CHRG           15 0
      C                   PARM                    P#COMM           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZFE'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5                                                                                CDE002
@@ -996,7 +999,7 @@
       * to accrued cost of funds adjustments total
       *
      C                   ADD       E#COFA        P#ACAD
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1008,7 +1011,7 @@
       * Stop or start accruals
       *
      C                   MOVE      E#STAC        P#STAC
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1016,32 +1019,32 @@
       ** PRINCIPAL INCREASE
       *********************************************************************
      C     PRININC       BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZPI'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    P#ASLI            1
- 
+
      C                   PARM                    E#PRAM           15 0
      C                   PARM                    E#TAMT           15 0
      C                   PARM                    E#SSET            1
      C**********         PARM                    E#SETD           20                          CGL029
      C                   PARM                    E#SETD                                       CGL029
       * OUTPUTS
- 
+
      C                   PARM                    P#NOML           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZPI'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
@@ -1051,7 +1054,7 @@
       ** Increment number of repayments                                                       208221
       *                                                                                       208221
      C                   ADD       1             W#RENO                                       208221
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1059,7 +1062,7 @@
       ** PRINCIPAL DECREASE
       *********************************************************************
      C     PRINDEC       BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZPD'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1067,28 +1070,28 @@
       * INPUTS
      C                   PARM                    P#ASLI            1
      C                   PARM                    P#SECU            1
- 
+
      C                   PARM                    E#PRAM           15 0
      C                   PARM                    E#TAMT           15 0
      C                   PARM                    E#SSET            1
      C**********         PARM                    E#SETD           20                          CGL029
      C                   PARM                    E#SETD                                       CGL029
       * OUTPUTS
- 
+
      C                   PARM                    P#DIPR           15 0
      C                   PARM                    P#RLPL           15 0
      C                   PARM                    P#NOML           15 0
      C                   PARM                    P#PINT           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZPD'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
@@ -1096,7 +1099,7 @@
       ** Increment number of repayments                                                       208221
       *                                                                                       208221
      C                   ADD       1             W#RENO                                       208221
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1161,21 +1164,21 @@
      C                   Z-ADD     E#NXCD        NxtCashDt
      C                   Z-ADD     E#INTA        Int_Due
      C                   ENDIF
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZIP'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    T#VDAT            5 0
- 
+
      C                   PARM                    P#ASLI            1
      C                   PARM                    P#INPM            1
      C                   PARM                    P#INTC            1
      C                   PARM                    P#ACIN            1
      C                   PARM                    P#ACCF            1
      C                   PARM                    P#ACCS            1
- 
+
      C                   PARM                    E#PRDT            5 0
      C                   PARM                    E#INTC            1
      C                   PARM                    E#INTA           15 0
@@ -1185,7 +1188,7 @@
      C                   PARM                    E#SSET            1
      C**********         PARM                    E#SETD           20                          CGL029
      C                   PARM                    E#SETD                                       CGL029
- 
+
      C                   PARM                    Int_Due          15 0
       * OUTPUTS
      C                   PARM                    P#IPRD           15 0
@@ -1194,20 +1197,20 @@
      C                   PARM                    P#TOTC           15 0
      C                   PARM                    P#CASH           15 0
      C                   PARM                    P#NOML           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZIP'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1222,7 +1225,7 @@
       **  GENERATE REPAYMENT EVENT(S)
       *********************************************************************
      C     REPAY         BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZRE'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1230,7 +1233,7 @@
       * INPUTS
      C                   PARM                    P#ASLI            1
      C                   PARM                    P#REPT            1 0
- 
+
      C                   PARM                    E#PRAM           15 0
      C                   PARM                    E#TAMT           15 0
      C                   PARM                    E#SSET            1
@@ -1238,20 +1241,20 @@
      C                   PARM                    E#SETD                                       CGL029
       * OUTPUTS
      C                   PARM                    Int_Due          15 0
- 
+
      C                   PARM                    P#IPRD           15 0
      C                   PARM                    P#NOML           15 0
- 
+
      C                   PARM                    P_C#CASH
      C                   PARM                    I_C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZRE'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C                   MOVEL     P_C#CASH      C#CASH
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
@@ -1260,7 +1263,7 @@
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1268,14 +1271,14 @@
       **  MANUAL REPAYMENT EVENT(S)
       ********************************************************************
      C     MANREP        BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZMR'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    P#ASLI            1
- 
+
      C                   PARM                    E#PRAM           15 0
      C                   PARM                    E#INTA           15 0
      C                   PARM                    E#TAMT           15 0
@@ -1285,17 +1288,17 @@
       * OUTPUTS
      C                   PARM                    P#IPRD           15 0
      C                   PARM                    P#NOML           15 0
- 
+
      C                   PARM                    P_C#CASH
      C                   PARM                    I_C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZMR'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C                   MOVEL     P_C#CASH      C#CASH
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
@@ -1308,7 +1311,7 @@
       ** Increment number of repayments                                                       208221
       *                                                                                       208221
      C                   ADD       1             W#RENO                                       208221
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1316,7 +1319,7 @@
       ** SPREAD CHANGE
       *********************************************************************
      C     SPRDCHG       BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZSC'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1325,7 +1328,7 @@
      C                   PARM                    P#BRTE           11 7
      C                   PARM                    P#SPIN            1
      C                   PARM                    P#FSGN            1
- 
+
      C                   PARM                    E#RTSP           11 7
      C                   PARM                    E#FSRP           11 7
      C                   PARM                    E#IRCH            1
@@ -1335,14 +1338,14 @@
      C                   PARM                    P#FSRP           11 7
      C                   PARM                    P#IRAT           11 7
      C                   PARM                    P#CRAT           11 7
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZSC'
      C                   EXSR      *PSSR
      C                   END
                                                                                               CDE002
      C                   MOVEL     'Y'           P#RCTY                                       CDE002
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1350,35 +1353,35 @@
       ** BASE RATE CHANGE OR BASE RATE CODE CHANGE
       *********************************************************************
      C     BASECHG       BEGSR
- 
+
       ** If interest rate type signifies forward rate
- 
+
      C     E#IRTP        IFEQ      'F'
- 
+
       * NEAR DATE: THIS RATE CHANGE DATE
- 
+
      C                   Z-ADD     E#PRDT        W#NRDT
- 
+
       * FAR DATE: REFERENCE THE INT RATE CHANGE DATES ARRAY
- 
+
      C                   Z-ADD     1             #I                5 0
      C     E#PRDT        LOOKUP    #_irdat(#I)                            99     *
      C                   ADD       1             #I
      C                   Z-ADD     #_irdat(#I)   W#FRDT
- 
+
       * GET LAST AND NEXT PAY DATES STRADDLING THIS DATE (W#LIDT & W#NIDT)
- 
+
      C                   EXSR      GET_LNIPDT
- 
+
       ** CALCULATE FORWARD RATE
- 
+
      C                   EXSR      CAL_FWRT
- 
+
       ** SET EVENT BASE RATE
- 
+
      C                   Z-ADD     W#FWRT        E#BRTE
      C                   ENDIF
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZBC'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1386,7 +1389,7 @@
       * INPUTS
      C                   PARM                    P#RTSP           11 7
      C                   PARM                    P#SPIN            1
- 
+
      C                   PARM                    E#BRTT            2 0
      C                   PARM                    E#BRTE           11 7
      C                   PARM                    E#IRAT           11 7
@@ -1395,14 +1398,14 @@
      C                   PARM                    P#BRTT            2 0
      C                   PARM                    P#BRTE           11 7
      C                   PARM                    P#IRAT           11 7
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZBC'
      C                   EXSR      *PSSR
      C                   END
                                                                                               CDE002
      C                   MOVEL     'Y'           P#RCTY                                       CDE002
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1410,7 +1413,7 @@
       ** ROLLOVER EVENT
       *********************************************************************
      C     ROLLOVER      BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZRO'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1441,14 +1444,14 @@
      C                   PARM                    P#FSGN            1
      C                   PARM                    P#CRAT           11 7
      C                   PARM                    P#ICMT            7
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZRO'
      C                   EXSR      *PSSR
      C                   END
                                                                                               CDE002
      C                   MOVEL     'Y'           P#ROTY                                       CDE002
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1463,7 +1466,7 @@
       ** MATURITY
       *********************************************************************
      C     MATURITY      BEGSR
- 
+
       * Process the event
      C                   CALLB     'DEWRKEZMT'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
@@ -1471,7 +1474,7 @@
       * INPUTS
      C                   PARM                    P#ASLI            1
      C                   PARM                    P#NOML           15 0
- 
+
      C                   PARM                    E#NOML           15 0
      C                   PARM                    E#CHRG           15 0
      C                   PARM                    E#COMM           15 0
@@ -1483,24 +1486,24 @@
       * OUTPUTS
      C                   PARM                    P#CHRG           15 0
      C                   PARM                    P#COMM           15 0
- 
+
      C                   PARM                    C#CASH
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEWRKEZMT'
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Update the cashflow array
- 
+
      C     C#AMNT        IFNE      *ZERO
      C                   EXSR      UPD_CASH
      C                   ENDIF
- 
+
       ** SET 'MATURITY DATE PROCESSED' INDICATOR
- 
+
      C                   MOVEL     'Y'           MatDat_P
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1508,9 +1511,9 @@
       ** UPDATE POSITIONS ARRAY
       *********************************************************************
      C     UPD_POSN      BEGSR
- 
+
       ** Set Position Type
- 
+
      C                   EXSR      SET_PSTP
                                                                                               CDE002
       ** Set Position Statistics                                                              CDE002
@@ -1527,42 +1530,42 @@
      C                   MOVEL     P#POSN        #_posS(IMposn)                 208221
      C                   ENDSL                                                  208221
      C                   MOVEL     P#POSN        P_P#POSN                                     CDE002
- 
+
       *
       ** UPDATE POSITION WITH ACCRUALS
       *
- 
+
       **  Update ACCRUED INTEREST TO CONTROL DATE and PURCHASED INTEREST
- 
+
      C     P#ACIN        IFEQ      'Y'
      C     P#INPM        ANDNE     'Y'
      C     P#INPM        ANDNE     'D'
- 
+
      C                   ADD       P#INAC        P#AITC
      C     P#SECU        IFEQ      'Y'
      C                   ADD       P#INAC        P#PINT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Update DISCOUNT/PREMIUM (outstanding)
- 
+
      C     P#ACDP        IFEQ      'Y'
      C                   SUB       P#DPAC        P#DIPR
      C                   ELSE
      C                   Z-ADD     *ZERO         P#DIPR
      C                   ENDIF
- 
+
       ** Update CASH (outstanding)
- 
+
      C     P#ACCS        IFEQ      'Y'
      C                   SUB       P#CSAC        P#CASH
      C                   ELSE
      C                   Z-ADD     *ZERO         P#CASH
      C                   ENDIF
- 
+
       **  Update FEE (outstanding)
- 
+
      C     P#ACFE        IFEQ      'Y'
      C     CLE031        IFEQ      'Y'                                                        CLE031
      C                   ADD       Fee_Acc       P#FEAC                                       CLE031
@@ -1573,9 +1576,9 @@
      C                   ELSE
      C                   Z-ADD     *ZERO         P#FEE
      C                   ENDIF
- 
+
       **  Update REALIZED P/L (outstanding)
- 
+
      C     P#ACRL        IFEQ      'Y'
      C                   SUB       P#RLAC        P#RLPL
      C                   ELSE
@@ -1589,9 +1592,9 @@
      C                   ELSE                                                                 CDE002
      C                   Z-ADD     *ZERO         P#SWPL                                       CDE002
      C                   ENDIF                                                                CDE002
- 
+
       * Reset CHARGES & COMMISSIONS
- 
+
      C                   Z-ADD     *ZERO         P#CHRG
      C                   Z-ADD     *ZERO         P#COMM
                                                                                               CDE002
@@ -1606,14 +1609,14 @@
      C                   MOVEL     *BLANK        P#RCTY                                       CDE002
      C                   Z-ADD     *ZERO         P#MVNO                                       CDE002
      C                   Z-ADD     *ZERO         P#RENO                                       CDE002
- 
+
       ** Determine INTEREST DUE
- 
+
      C     P#AITC        ADD       P#AIAD        Int_Due
      C                   SUB       P#IPRD        Int_Due
      C                   SUB       P#ICTD        Int_Due
      C                   SUB       P#IWOD        Int_Due
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1621,18 +1624,18 @@
       ** SET POSITION TYPE
       *********************************************************************
      C     SET_PSTP      BEGSR
- 
+
       * I = IGNORE for export
       * C = Projected export - CURRENT POSITION
       *     (Current position is first position exported)
       * L = Historic  export - LATEST POSITION
       *     (Latest position is last position exported)
- 
+
      C                   SELECT
- 
+
      C     Proj_Hist     WHENEQ    'P'
      C     EndofBook     ANDEQ     'Y'                                                        CDE002
- 
+
      C*****P#IACD********IFLT******Extrct_Dat*******************************                  CDE002
      C     P#IACD        IFLT      Run_Date                                                   CDE002
      C                   MOVEL     'I'           P#PSTP
@@ -1650,9 +1653,9 @@
      C     EndofBook     ANDEQ     'N'                                                        CDE002
                                                                                               CDE002
      C                   MOVEL     'I'           P#PSTP                                       CDE002
- 
+
      C     Proj_Hist     WHENEQ    'H'
- 
+
      C*****P#IACD********IFGE******Extrct_Dat*******************************                  CDE002
      C     P#IACD        IFGT      EvtCtl_Dat                                                 CDE002
      C     P#IACD        ORLT      HistCO_Dat
@@ -1664,7 +1667,7 @@
      C                   MOVEL     *BLANK        P#PSTP
      C*******************ENDIF**********************************************                  CDE002
      C                   ENDIF
- 
+
      C                   ENDSL
       *
      C                   ENDSR
@@ -2340,7 +2343,7 @@
      C                   END                                                                  CLE031
      C                   Z-ADD     *ZERO         P#RLAC
      C                   Z-ADD     *ZERO         P#SWAC                                       CDE002
- 
+
       *
       * ACCRUE INTEREST
       * IF 'ACCRUE NEGATIVE BALANCE' = YES
@@ -2408,7 +2411,7 @@
      C     T#MDAT        ANDNE     99999                                                      CDE002
      C                   EXSR      ACC_SWPL                                                   CDE002
      C                   ENDIF                                                                CDE002
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2751,7 +2754,7 @@
      C                   Z-ADD     #_ipdat(#I)   E#NXCD
      C                   MOVE      #_ipdta(#I)   E#CASH
      C                   ENDIF
- 
+
      C     ECALCASH      ENDSR
       *********************************************************************
       /SPACE 5
@@ -2759,7 +2762,7 @@
       ** CALCULATE NUMBER OF DAYS (BETWEEN P#SDAT AND P#EDAT)
       *********************************************************************
      C     CAL_NDYS      BEGSR
- 
+
      C                   CALLB     'DECALNDYS'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2767,12 +2770,12 @@
      C                   PARM                    W#SDAT            5 0          * START DATE
      C                   PARM                    W#EDAT            5 0          * END DATE
      C                   PARM      *ZERO         W#NDYS            5 0          * NO. OF DAYS
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALNDYS'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2780,7 +2783,7 @@
       ** CALCULATE YEAR BASIS (GIVEN W#LIDT AND W#NIDT)
       *********************************************************************
      C     CAL_YBAS      BEGSR
- 
+
      C                   CALLB     'DECALYBAS'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2789,12 +2792,12 @@
      C                   PARM                    W#LIDT            5 0          * LAST INT DATE
      C                   PARM                    W#NIDT            5 0          * NEXT INT DATE
      C                   PARM      *ZERO         W#YBAS            5 0          * YEAR BASIS
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALYBAS'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2802,7 +2805,7 @@
       * CALCULATE INTEREST (FOR NUMBER OF DAYS W#NDYS & YEAR BASIS W#YBAS)
       *********************************************************************
      C     CAL_INTA      BEGSR
- 
+
      C                   CALLB     'DECALINTA'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2819,12 +2822,12 @@
      C                   PARM      *ZERO         W#INT            15 2          * INTEREST
      C                   PARM      *ZERO         W#INTP           15 9          * INTEREST %
      C                   PARM      *ZERO         W#INTF           15 9          * INTEREST FACTOR
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALINTA'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2832,7 +2835,7 @@
       * CALCULATE YIELD AMT (FOR NUMBER OF DAYS W#NDYS & YEAR BASIS W#YBAS)
       *********************************************************************
      C     CAL_YLDA      BEGSR
- 
+
      C                   CALLB     'DECALYLDA'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2846,12 +2849,12 @@
      C                   PARM      *ZERO         W#INT            15 2          * INTEREST
      C                   PARM      *ZERO         W#INTP           15 9          * INTEREST %
      C                   PARM      *ZERO         W#INTF           15 9          * INTEREST FACTOR
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALYLDA'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2859,7 +2862,7 @@
       * CALCULATE FORWARD RATE
       ********************************************************************
      C     CAL_FWRT      BEGSR
- 
+
      C                   CALLB     'DECALFWRT'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2872,12 +2875,12 @@
      C                   PARM                    W#LIDT            5 0          * LAST INT DATE
      C                   PARM                    W#NIDT            5 0          * NEXT INT DATE
      C                   PARM      *ZERO         W#FWRT           11 7          * FORWARD RATE
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALFWRT'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5
@@ -2885,7 +2888,7 @@
       * CALCULATE NET PRESENT VALUE
       ********************************************************************
      C     CAL_NPVL      BEGSR
- 
+
      C                   CALLB     'DECALNPVL'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30            * ERROR MESSAGE
@@ -2895,12 +2898,12 @@
      C                   PARM      C#AMNT        W#FWAM           13 0          * FORWARD AMOUNT
      C                   PARM      *ZERO         W#DF             11 9          * DISCNT FACTOR
      C                   PARM      *ZERO         W#SPAM           13 0          * SPOT AMOUNT
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DECALNPVL'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       **************************************************************************
       /SPACE 5
@@ -2908,34 +2911,34 @@
       ** GET LAST AND NEXT INT PAYMENT DATES STRADDLING THIS DATE
       *********************************************************************
      C     GET_LNIPDT    BEGSR
- 
+
       ** GET LAST AND NEXT EVENT DATE
- 
+
      C                   CALLB     'DEMNTEVDT'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
      C                   PARM      '*GETLNEVDT'  W#MODE           10
      C                   PARM      *BLANK        W#TYPE            2
- 
+
       * EVENT
      C                   PARM                    E#EVNT
- 
+
       * EVENT DATA ARRAY
      C                   PARM                    #arevdt_ip
- 
+
       * LAST/NEXT PERIOD?
      C                   PARM                    #LN_PERIOD        1
- 
+
       * LAST DATE
       * NEXT DATE
      C                   PARM      *ZERO         W#LIDT            5 0
      C                   PARM      *ZERO         W#NIDT            5 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEMNTEVDT'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -2943,34 +2946,34 @@
       ** LOG EVENT DATES
       *********************************************************************
      C     LOG_EVDT      BEGSR
- 
+
       ** LOG EVENT DATE
- 
+
      C                   CALLB     'DEMNTEVDT'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
      C                   PARM      '*LOGEVDT  '  W#MODE           10
      C                   PARM                    W#TYPE            2
- 
+
       * EVENT
      C                   PARM                    E#EVNT
- 
+
       * EVENT DATA ARRAY
      C                   PARM                    #arevdt_WK
- 
+
       * LAST/NEXT PERIOD?
      C                   PARM                    #LN_PERIOD        1
- 
+
       * LAST DATE
       * NEXT DATE
      C                   PARM      *ZERO         #LASTDT           5 0
      C                   PARM      *ZERO         #NEXTDT           5 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      Err_Mess = 'ERROR IN CALL TO DEMNTEVDT'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5

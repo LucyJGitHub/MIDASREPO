@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11193           Date 02May06               *
+      *                 BUG11193           Date 02May06               *
       *                 BUG11164           Date 06Apr06               *
       *                 CSE071             Date 19Jul05               *
       *                 218087             Date 16Jun03               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11193 - Purchased Interest not calculated on BackValued   *
       *             Trade. (Recompile)                                *
@@ -46,7 +49,7 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -64,26 +67,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Coupon dates array
      D CDArr           DS            48
      D  I#CD                   1     48
      D                                     DIM(12) ASCEND
- 
+
       ** Coupon rate indicator array
      D CRArr           DS            12
      D  I#CR                   1     12
      D                                     DIM(12) ASCEND
- 
+
       *
       * INPUT PARAMETERS
       *
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           30            * ERROR MESSAGE
- 
+
       * INPUTS
      C                   PARM                    I#MODE           10
      C                   PARM                    I#ZECD            5 0          * SPOT DATE
@@ -102,9 +105,9 @@
      C                   PARM                    O#IPY             2 0          * INT PAY PER YR
      C                   PARM                    O#PIDT            5 0          * PREC INT DATE
      C                   PARM                    O#NIDT            5 0          * PAYMENT DATES
- 
+
       * INITIALIZATION
- 
+
      C     I#MODE        IFEQ      '*INIT   '
       *
       ** ZEROIZE OUTPUTS
@@ -139,11 +142,11 @@
       ** START FROM PRECEDING COUPON DATE
       *
      C     O#PIDT        ADD       1             ECD
- 
+
      C                   ENDIF
- 
+
       ** IF PAST MATURITY DATE THEN SIGNIFY 'END OF DATA'
- 
+
      C     ECD           IFGT      MATY
      C                   MOVEL     '*EOD   '     I#RTCD
      C                   ELSE
@@ -177,7 +180,7 @@
      C     MATY          OREQ      99999
      C                   RETURN
      C                   END
- 
+
      C                   ENDSR
       **********************************************************************
      C/SPACE 5
@@ -201,7 +204,7 @@
      C/SPACE 5
       **********************************************************************
      C     ZLCD          BEGSR
- 
+
      C                   CALLB     'ZLCD'
      C                   PARM                    ISSD
      C                   PARM                    ITLD
@@ -225,13 +228,13 @@
      C                   PARM                    HCY8              3                          CSE071
      C                   PARM                    HCY9              3                          CSE071
      C                   PARM                    ZZLCD             5 0
- 
+
      C                   ENDSR
       **********************************************************************
      C/SPACE 5
       **********************************************************************
      C     ZNCD          BEGSR
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    ITLD
      C                   PARM                    FCPN
@@ -255,7 +258,7 @@
      C                   PARM                    HCY8              3                          CSE071
      C                   PARM                    HCY9              3                          CSE071
      C                   PARM                    NCD               5 0
- 
+
      C                   ENDSR
       **********************************************************************
       /SPACE 5

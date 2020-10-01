@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -41,10 +44,10 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
      FDEGTRANL1 IF   E           K DISK
      F                                     RENAME(DETRANP0: DEGTRANP0)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -62,16 +65,16 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXCPERDD
- 
- 
+
+
      D GTRAN         E DS                  EXTNAME(DEGTRANPD)
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -163,9 +166,9 @@
      C                   PARM                    PeriodEDT
      C                   PARM                    GTRAN
      C                   PARM                    Dataarea                                     208221
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = I#PH + 'GETR' + I#EXTT + I#TREF
@@ -181,16 +184,16 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * This is an historic extract
- 
+
      C                   MOVE      'H'           I#PH
- 
+
       * Get Extract control information
- 
+
       /COPY DECPYSRC,DEXTGTCT
- 
- 
+
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

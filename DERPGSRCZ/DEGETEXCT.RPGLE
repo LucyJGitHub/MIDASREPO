@@ -19,7 +19,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -42,7 +45,7 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -60,13 +63,13 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D PeriodEDT     E DS                  EXTNAME(DEPPERDPD)
- 
- 
+
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
                                                                                               CDE002
@@ -76,13 +79,13 @@
       ** External DS for Switchable Features details                                          CDE002
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDE002
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CDE002
- 
- 
+
+
      C     *ENTRY        PLIST
- 
+
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           30            * ERROR MESSAGE
- 
+
       * INPUTS
      C                   PARM                    Proj_Hist         1
      C                   PARM                    EndofBook         1
@@ -97,9 +100,9 @@
                                                                                               CDE002
      C                   PARM                    PeriodEDT
      C                   PARM                    DataArea        128                          208221
- 
+
       ** Read Extract Control Data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C                   IN        DEEXTCTL
      C                   MOVEL     DEEXTCTL      DataArea                                     208221
@@ -185,7 +188,7 @@
      C                   RETURN                                                               CDE002
                                                                                               CDE002
                                                                                               CDE002
- 
+
       **If*this*is*a*'PROJECTED'*extract*******************************                       CDE002
       **********                                                                              CDE002
      C*****Proj_Hist     IFEQ      'P'                                                        CDE002

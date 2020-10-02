@@ -28,7 +28,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 01Oct20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
@@ -152,7 +152,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *

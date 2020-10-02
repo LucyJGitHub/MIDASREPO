@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. ERZ248             Date 18Nov19               *
-      *  Prev Amend No. 260045A            Date 29Jan13               *
+      *  Last Amend No. MD056850           Date 29Sep20               *
+      *  Prev Amend No. ERZ248             Date 18Nov19               *
+      *                 260045A            Date 29Jan13               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033641           Date 08Apr15               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056850 - Move hook ERZ248_025 below READ operation of      *
+      *             FTOPAY1D1                                         *
       *  ERZ248 - SWIFT UETR via OPAY API                             *
       *           Add hooks ERZ248_021->028, ERZ248_045               *
       *           Amended hooks FTOPA1XC01                            *
@@ -515,8 +518,9 @@
       *
      C     WriteOnly     IFNE      'Y'
      C/COPY WNCPYSRC,ERZ248_024                                                               ERZ248
-     C/COPY WNCPYSRC,ERZ248_025                                                               ERZ248
+     C*/COPY*WNCPYSRC,ERZ248_025                                                     ERZ248 MD056850
      C                   READ      FTOPAY1D1                              99    *
+     C/COPY WNCPYSRC,ERZ248_025                                                             MD056850
      C                   ENDIF
      C/COPY WNCPYSRC,FTOPA1XC02
       *

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR950498           Date 13Apr12               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR804792           Date 05Sep11               *
@@ -114,6 +115,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR950498 - Facility availability should be zero if           *
+      *             availability date passed.                         *
+      *             If system value SetFcltyAvailToZero is 'Y' and    *
+      *             Facility Last Availability Date (AVLD) is earlier *
+      *             than run date, then display the available amount  *
+      *             as zero. (Child: AR950499)                        *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -973,6 +980,7 @@
      I                                        4   9 KEFCUS                                    CLE106
      I                                       10  12 KEFTYP                                    CLE106
      I                                       13  14 KEFCNO                                    CLE106
+     I              'SetFcltyAvailToZero' C         #SVALK                                  AR950498
      I*                                                                   S01311
      I/COPY WNCPYSRC,LE0170I003
      C/EJECT
@@ -1695,6 +1703,44 @@
      C                     KFLD           KEFCUS                                              CLE106
      C                     KFLD           KEFTYP                                              CLE106
      C                     KFLD           KEFCNO                                              CLE106
+      *                                                                                     AR950498
+     C                     MOVEL#SVALK    SVALK1                                            AR950498
+      *                                                                                     AR950498
+     C                     CALL 'AOSVALR0'                                                  AR950498
+     C                     PARM           RTNCDE  7                                         AR950498
+     C                     PARM           SVALK1 20                                         AR950498
+     C                     PARM           SVAL1 200                                         AR950498
+     C                     PARM           SVALK2 20                                         AR950498
+     C                     PARM           SVAL2 200                                         AR950498
+     C                     PARM           SVALK3 20                                         AR950498
+     C                     PARM           SVAL3 200                                         AR950498
+     C                     PARM           SVALK4 20                                         AR950498
+     C                     PARM           SVAL4 200                                         AR950498
+     C                     PARM           SVALK5 20                                         AR950498
+     C                     PARM           SVAL5 200                                         AR950498
+     C                     PARM           SVALK6 20                                         AR950498
+     C                     PARM           SVAL6 200                                         AR950498
+     C                     PARM           SVALK7 20                                         AR950498
+     C                     PARM           SVAL7 200                                         AR950498
+     C                     PARM           SVALK8 20                                         AR950498
+     C                     PARM           SVAL8 200                                         AR950498
+     C                     PARM           SVALK9 20                                         AR950498
+     C                     PARM           SVAL9 200                                         AR950498
+     C                     PARM           SVALK0 20                                         AR950498
+     C                     PARM           SVAL10200                                         AR950498
+      *                                                                                     AR950498
+     C           RTNCDE    IFNE *BLANKS                                                     AR950498
+     C           RTNCDE    ANDNE'*NRF   '                                                   AR950498
+     C                     MOVE 'SDSVALPD'DBFILE                                            AR950498
+     C                     MOVELSVALK1    DBKEY                                             AR950498
+     C                     Z-ADD10        DBASE                                             AR950498
+     C                     MOVE *ON       *INU7                                             AR950498
+     C                     MOVE *ON       *INU8                                             AR950498
+     C                     MOVE *ON       *INLR                                             AR950498
+     C                     EXSR *PSSR                                                       AR950498
+     C                     ENDIF                                                            AR950498
+     C                     MOVELSVAL1     SETZER  1                                         AR950498
+      *                                                                                     AR950498
      C**
      C*    CALL ACCESS ROUTINE TO GET THE VALUE OF PROFIT CENTRE          S01117
      C*    USED AND ORIGINATING BRANCH USED                               S01117
@@ -2323,6 +2369,16 @@
 0642 C***********          Z-ADDAMAV      @AMAV  110               CLE004 163949
 0642 C                     Z-ADDFAMT      @FAMT  130                      163949
 0642 C                     Z-ADDAMAV      @AMAV  130                      163949
+      *                                                                                     AR950498
+      ** if system value SetFcltyAvailToZero current setting is Y,                          AR950498
+      ** check if Last Availability Date has passed run date, if yes                        AR950498
+      ** display available amount as zero                                                   AR950498
+      *                                                                                     AR950498
+     C           SETZER    IFEQ 'Y'                                                         AR950498
+     C           DAY,11    ANDLTRUND                                                        AR950498
+     C                     Z-ADD*ZERO     @AMAV                                             AR950498
+     C                     ENDIF                                                            AR950498
+      *                                                                                     AR950498
      C           LPTP      IFEQ 'A'                                       145908
 0642 C                     Z-ADDLPAM      @LPAM  110                      CLE004
      C                     MOVE *OFF      *IN26                           145908

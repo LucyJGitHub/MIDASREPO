@@ -505,6 +505,15 @@
       *                                                                                     MD056543
       ** Move CGCORRPD Graphic fields                                                       MD056543
       *                                                                                     MD056543
+     C                   EVAL      CDCORNP = *BLANKS                                        MD056543
+     C                   EVAL      CDADD1P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD2P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD3P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD4P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD5P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD6P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD7P = *BLANKS                                        MD056543
+     C                   EVAL      CDADD8P = *BLANKS                                        MD056543
      C                   EVAL      CDCORNP = CDCORN                                         MD056543
      C                   EVAL      CDADD1P = CDADD1                                         MD056543
      C                   EVAL      CDADD2P = CDADD2                                         MD056543

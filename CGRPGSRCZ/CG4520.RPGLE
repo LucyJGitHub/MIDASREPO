@@ -3491,7 +3491,7 @@
      C     *LIKE         DEFINE    PSTA          ##CFB
      C     *LIKE         DEFINE    PSTA          ##CFCB
      C     *LIKE         DEFINE    PSTA          ##NOEC
-     C     *LIKE         DEFINE    PSTA          ##NOEC
+     C     *LIKE         DEFINE    PSTA          ##VAEC
      C     *LIKE         DEFINE    PSTA          ##NOED
      C     *LIKE         DEFINE    PSTA          ##VAED
      C     *LIKE         DEFINE    PSTA          ##ACBL

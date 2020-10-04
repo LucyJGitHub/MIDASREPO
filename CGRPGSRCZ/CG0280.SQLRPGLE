@@ -1,5 +1,6 @@
      H DEBUG
-     H CVTOPT (*GRAPHIC)                                                                    MD054955
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*DF***RPGBASE*******************************************************                       CSD053
 /**** *  RPGBNOCVT                                                    *              CSD053 MD054955
@@ -20,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055928           Date 02Jun20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. MD055928           Date 02Jun20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -60,6 +62,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  MD055928 - Schedule cannot be inserted for Primary recipient.*
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *

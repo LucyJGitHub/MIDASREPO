@@ -1,0 +1,260 @@
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Source (RPGLE)                                 *
+      *                                                               *
+      *  CGINPS - Midas CG Interest Paid Separately Information       *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD056543           Date 15Sep20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG22974           Date 19Feb09               *
+      *                 CER038  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *     
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG22974 - Comment out extra calling of PSHGRP, in CGINPS by *
+      *             which 1 extra Opening tag is written              *
+      *  CER038 - Additional fields added to Correspondence           *
+      *                                                               *
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  CGINPS                                         *
+      * Function    :  Interest Paid Separately Information           *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *                                                               *                     BUG22974
+      *  Note       : The extraction of RDE's must be maintained for  *                     BUG22974
+      *               both the hardcoded subrourine and \Copy CGINPS  *                     BUG22974
+      *****************************************************************
+     C     CGINPS        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CGINPS'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data
+      *
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\CGINPS'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+      *
+      ** Reset arrays
+      *
+     C                   MOVEL     *BLANK        ##R
+     C                   MOVEL     *BLANK        ##D
+     C                   MOVEL     *BLANK        ##S
+      *
+      ** Get Nostro Details
+      *
+     C                   MOVE      INSA          UFREST           13
+      *
+      ** If Nostronumber and interest paid seperately
+      *
+     C     UFREST        IFEQ      *BLANK
+     C     IPDS          ANDEQ     'Y'
+     C     *IN02         ANDEQ     *ON
+      *
+     C     ISCY          IFNE      *BLANK
+     C                   MOVE      ISCY          ##ICCY            3
+     C                   ELSE
+     C                   MOVE      CCY           ##ICCY
+     C                   ENDIF
+      *
+     C                   MOVEL     INSA          ##NOST            2
+     C                   CALL      'AONOSTR0'
+     C                   PARM      *BLANKS       @RTCD             7
+     C                   PARM      '*KEY   '     @OPTN             7
+     C                   PARM      *BLANKS       @KEYA             6
+     C                   PARM      ##ICCY        @KEYB             3
+     C                   PARM      *BLANKS       @KEYC             4
+     C                   PARM      *BLANKS       @KEYD             2
+     C                   PARM      ##NOST        @KEYE             2
+     C                   PARM      *BLANKS       @KEYF             3
+     C                   PARM      *BLANKS       @KEYG            10
+     C                   PARM      *BLANKS       @KEYH             1
+     C     SDNOST        PARM      SDNOST        DSFDY
+      *
+      ** Database Error
+      *
+     C     @RTCD         IFNE      *BLANK
+     C                   MOVEL     'SDNOSTPD'    W0FILE
+     C                   MOVEL     ##NOST        W0KEY
+     C                   Z-ADD     11            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+      *
+      ** If Nostro exists
+      *
+     C     @RTCD         IFEQ      *BLANK
+      *
+      ** Get Customer details of Nostro
+      *
+     C                   CALL      'AOCUSTR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      A7CUST        @KEY1            10
+     C                   PARM      *BLANKS       @KYST             7
+     C     SDCUST        PARM      SDCUST        DSSDY
+      *
+      ** Database error
+      *
+     C     @RTCD         IFNE      *BLANK
+     C                   MOVEL     'SDCUSTPD'    W0FILE
+     C                   MOVEL     A7CUST        W0KEY
+     C                   Z-ADD     12            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Int Settlement Method
+      *
+     C                   MOVEL     IMET          ##D(1)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZIMET '    ##RDE
+     C                   MOVEL     ##RDEF        ##R(1)
+      *
+      ** Int Nostro Name
+      *
+     C     UFREST        IFEQ      *BLANK
+     C     IPDS          ANDEQ     'Y'
+     C                   MOVEL     BBCRNM        ##D(2)
+     C                   ELSE
+     C                   MOVEL     *BLANK        ##D(2)
+     C                   ENDIF
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZINOS '    ##RDE
+     C                   MOVEL     ##RDEF        ##R(2)
+      *
+      ** Int Settlement Acc
+      *
+     C     UFREST        IFEQ      *BLANK
+     C     IPDS          OREQ      'N'
+     C                   MOVEL     *BLANK        ##D(3)
+     C                   ELSE
+     C                   MOVEL     INSA          ##D(3)
+     C                   ENDIF
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZINSA '    ##RDE
+     C                   MOVEL     ##RDEF        ##R(3)
+      *
+      ** Int Nostro Town
+      *
+     C     UFREST        IFEQ      *BLANK
+     C     IPDS          ANDEQ     'Y'
+     C                   MOVEL     BBCRTN        ##D(4)
+     C                   ELSE
+     C                   MOVEL     *BLANK        ##D(4)
+     C                   ENDIF
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZINTW '    ##RDE
+     C                   MOVEL     ##RDEF        ##R(4)
+      *
+      ** Interest Paid Seperately Indicator
+      *
+     C                   MOVEL     IPDS          ##D(5)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZINPS '    ##RDE
+     C                   MOVEL     ##RDEF        ##R(5)
+      *
+     C                   MOVEL     *BLANKS       UFTNN            30
+     C                   MOVEL     *BLANKS       UFTNT            20
+     C     INOS          IFNE      *BLANKS
+     C     IPDS          ANDEQ     'Y'
+      *
+      ** See if it is a customer number
+      *
+     C                   CALL      'AOCUSTR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      INOS          @KEY1
+     C                   PARM      *BLANKS       @KYST
+     C     SDCUST        PARM      SDCUST        DSSDY
+      *
+     C     @RTCD         IFNE      *BLANKS
+      *
+      ** See if it is a counterparty nostro
+      *
+     C                   CALL      'AOCNSTR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      INOS          @ARCD             8
+     C     SDCNST        PARM      SDCNST        DSFDY
+      *
+      ** Database error
+      *
+     C     @RTCD         IFNE      *BLANK
+     C                   MOVEL     'SDCNSTPD'    W0FILE
+     C                   MOVEL     INOS          W0KEY
+     C                   Z-ADD     13            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ELSE
+      *
+      ** Save Counterparty nostro information
+      *
+     C                   MOVEL     AWCPNM        UFTNN            30
+     C                   MOVEL     AWCNTN        UFTNT            20
+     C                   ENDIF
+     C                   ELSE
+      *
+      ** Save Customer information
+      *
+     C                   MOVEL     BBCRNM        UFTNN            30
+     C                   MOVEL     BBCRTN        UFTNT            20
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Int Counterparty Nostro Name
+      *
+     C                   MOVEL     UFTNN         ##D(6)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZCINOS'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(6)
+      *
+      ** Int Counterparty Nostro Town
+      *
+     C                   MOVEL     UFTNT         ##D(7)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZCINTW'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(7)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXINPS        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+     C/SPACE 5

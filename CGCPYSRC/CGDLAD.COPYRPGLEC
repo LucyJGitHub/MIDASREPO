@@ -1,0 +1,136 @@
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  CGDLAD - Midas CG Dealing Additional Information             *
+      *                                                               *
+      *  Last Amend No. MD056543           Date 15Sep20               *      
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER038  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *      
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER038 - Additional fields added to Correspondence           *
+      *           (upg German Feat)                                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  CGDLAD                                        *
+      *  Function    -  CG Dealing Additional Information             *
+      *                                                               *
+      *  Called by   -  d01FXO, d02FOP, d03FOT                        *
+      *  Calls       -                                                *
+      *****************************************************************
+     C     CGDLAD        BEGSR
+      *
+      ** Set up subroutine name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CGDLAD'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\CGDLAD'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+      *
+      ** Reset arrays
+      *
+     C                   MOVEL     *BLANKS       ##R
+     C                   MOVEL     *BLANKS       ##D
+     C                   MOVEL     *BLANKS       ##S
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Deal Number
+      *
+     C                   MOVEL     DLNO          ##D(1)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXDN38'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(1)
+      *
+     C                   MOVEL     CNUM          ##KEY1           10
+     C                   CALL      'AOCUSTR0'
+     C                   PARM      *BLANKS       ##RTCD
+     C                   PARM      '*KEY   '     ##OPTN
+     C                   PARM                    ##KEY1           10
+     C                   PARM      *BLANKS       ##KYST            7
+     C     SDCUST        PARM      SDCUST        DSSDY
+      *
+     C     ##RTCD        IFNE      *BLANKS
+     C                   MOVE      'SDCUSTPD'    W0FILE
+     C                   MOVE      CNUM          W0KEY
+     C                   MOVE      100           W0ERNB
+     C                   MOVE      'MEM5004'     W0MSGD
+     C                   MOVE      'MIDAS   '    W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Customer Shortname
+      *
+     C                   MOVEL     BBCSSN        ##D(2)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXDCSN'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(2)
+      *
+      ** Reciprocal Rate Flag
+      *
+     C     CER043        IFEQ      'Y'
+     C                   MOVEL     FGREIN        ##D(3)
+     C                   ENDIF
+      *
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXRECP'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(3)
+      *
+      ** Dealt Rate
+      *
+     C                   MOVEL     EXRT          ##D(4)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXDLTR'    ##RDE
+     C                   MOVEL     'Rate  '      ##RDEC
+     C                   MOVEL     'L'           ##RDET
+     C                   MOVEL     '8'           ##RDED
+     C                   MOVEL     ##RDEF        ##R(4)
+      *
+      ** Bank/Nonbank indicator
+      *
+     C                   MOVEL     BBBNBI        ##D(5)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXBNBI'    ##RDE
+     C                   MOVEL     ##RDEF        ##R(5)
+      *
+      ** Brokerage Amount
+      *
+     C                   MOVEL     BAGE          ##D(6)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZXBAGE'    ##RDE
+     C                   MOVEL     'Amount'      ##RDEC
+     C                   MOVE      'L'           ##RDET
+     C                   MOVEL     A6NBDP        ##RDED
+     C                   MOVEL     ##RDEF        ##R(6)
+      *
+      ** Accumulate RDE's and associated data and output to PF/CGUDTAPD
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+     C     EXDLAD        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+     C/SPACE 5

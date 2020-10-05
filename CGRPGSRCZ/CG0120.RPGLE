@@ -1,33 +1,28 @@
      H DEBUG
      H CCSID(*GRAPH:*SRC)                                                                   MD056543
-     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*DF***RPGBASE*******************************************************                       CSD053
-/**** *  RPGBNOCVT                                                    *              CSD053 MD054955
-/**** *  RPGCVTOPT1                                                   *              CSD053 MD054955
-/*STD *  RPGSQLBND                                                    *                     MD054955
-/*EXI *  TEXT('Midas CG Ref Integrity Check: Print Schedules')
+/*S*D ***RPGBNOCVT*****************************************************              CSD053 MD056543
+/*E*S ***RPGCVTOPT1****************************************************              CSD053 MD056543
+/*STD *  RPGBASEBND                                                   *                     MD056543
+/*EXI *  TEXT('Midas CG Ref Integrity Check: Customer')
 /*OVRF*: OVRDBF (File in program) (file on system)                  : *
      F*****************************************************************
      F*                                                               *
      F*  Midas - User Defined Correspondence                      *
      F*                                                               *
-     F*  CG0210 - Referential Integrity Chck                          *
-     F*  CGCORRLA  - Default print schedule                           *
-     F*  CGCSCHL7  - Print schedule                                   *
-     F*                                                               *
+     F*  CG0120 - Referential Integrity Check                         *
+     F*    CGCORRL4 Correspondent details by customer                 *
      F*                                                               *
      F*  Function:  This program tests the first 10 records and if    *
-     F*             they exist they cannot then be deleted and        *
-     F*             the return code will be set to CGD1202.           *
+     F*             any exist the return code will be set to 'CGD1183'*
      F*                                                               *
      F*  Called By:                                                   *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,7 +39,6 @@
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
-      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
       *         - (Recompile)                                         *
@@ -59,33 +53,28 @@
      F*  90   -    General work indicator                             *
      F*                                                               *
      F*****************************************************************
-     F/COPY WNCPYSRC,CG0210DFPG
+     F/COPY WNCPYSRC,CG0120DFPG
       *
       *  /Copy point for File Definition
       *
-     FCGCORRLA  IF   E           K DISK
+     FCGCORRL4  IF   E           K DISK
      F                                     INFSR(SRFILE)
       *
-      * Correspondent Details By Correspondent Structure.
-      *
-     F*CGCSCHL7* IF   E           K DISK                                                    MD054955
-     F**********                           INFSR(SRFILE)                                    MD054955
-      *
-      * Correspondent Schedule by print schedule.
+      * Correspondent Details By customer.
       *
      F/EJECT
-     D*COPY*CGCPYSRC,SRERRE                                                                 MD054955
-     D/COPY CGCPYSRC,SRERRDLE                                                               MD054955
-     D/COPY WNCPYSRC,CG0210DEPG
+     D/COPY CGCPYSRC,SRERRDLE
+     D/COPY WNCPYSRC,CG0120DEPG
       *
       *  /Copy point for Arrays
       *
       **                                                                                      CSC022
       ** Array to hold commitment jobs name                                                   CSC022
       **                                                                                      CSC022
-     D WCMT            S             10    DIM(10)
+     D WCMT            S             10    DIM(10)                                            CSC022
       **                                                                                      CSC022
-     D/COPY WNCPYSRC,CG0210DIPG
+     D*COPY*CGCPYSRC,SRERRE                                                                 MD056543
+     D/COPY WNCPYSRC,CG0120DIPG                                                             MD056543
       *
       *  /Copy point for Input Specs
       *
@@ -95,22 +84,21 @@
       *
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
-     D CGCSCH        E DS                  EXTNAME(CGCSHJW0)                                MD054955
-     D*COPY*CGCPYSRC,SRERRI                                                                 MD054955
+     D*COPY*CGCPYSRC,SRERRI                                                                 MD056543
      D RUNDTA        E DS                  EXTNAME(RUNDAT)
       *
       *  Define rundat data area
       *
       **                                                                                      CSC022
-     D SCCMT           DS           256
-     D  WCMTNO                 1      3  0
-     D  WCJOBS                 4    103
+     D SCCMT           DS           256                                                       CSC022
+     D  WCMTNO                 1      3  0                                                    CSC022
+     D  WCJOBS                 4    103                                                       CSC022
       ** Commitment Control dataarea                                                          CSC022
       **                                                                                      CSC022
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC022
       ** DS for Switchable Features details                                                   CSC022
       **                                                                                      CSC022
-     D DSFDY         E DS                  EXTNAME(DSFDY)
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSC022
       **                                                                                      CSC022
       ** Data Structures used by Access Programs                                              CSC022
       **                                                                                      CSC022
@@ -127,7 +115,7 @@
       *
      C     *ENTRY        PLIST
      C                   PARM                    W0RTN             7            Return Code
-     C                   PARM                    I#DPRT            6            Print schedu
+     C                   PARM                    I#CUST            6            Cust number
      C                   PARM                    I#CPGM           10            Calling Pgm tr.
       *
       * Initialise program
@@ -136,15 +124,11 @@
      C                   EXSR      SRINIT
      C                   END
       *
-     I/COPY WNCPYSRC,CG0210C
+     I/COPY WNCPYSRC,CG0120C
       *
-      * Check if Print schedule exists on CGCORRLA.
+      * Check if Customer details exist on CGCORRL4.
       *
-     C                   EXSR      SRRRLA
-      *
-      * Check if Print schedule exists on CGCSCHL7.
-      *
-     C                   EXSR      SRCHL7
+     C                   EXSR      SRRRL4
       *
       *  Unwind subroutine stack name
       *
@@ -157,112 +141,44 @@
      C/EJECT
       *****************************************************************
       *                                                               *
-      *  SRRRLA   : Process CGCORRLA                                  *
+      *  SRRRL4   : Process CGCORRL4                                  *
       *                                                               *
       *  CALLED BY: Main processing                                   *
       *                                                               *
       *  CALLS    : None                                              *
       *                                                               *
       *****************************************************************
-     CSR   SRRRLA        BEGSR
+     CSR   SRRRL4        BEGSR
       *
       *  Set up subroutine stack name
       *
      C                   ADD       1             Q                 5 0
-     C                   MOVEL     'SRRRLA'      @STK(Q)
+     C                   MOVEL     'SRRRL4'      @STK(Q)
       *
      C                   Z-ADD     1             I#NUMR
       *
-     C     I#DPRT        SETLL     CGCORRLA
-     C     I#DPRT        READE     CGCORRLA                               90
+     C     I#CUST        SETLL     CGCORRL4
+     C     I#CUST        READE     CGCORRL4                               90
       *
      C     *IN90         DOWEQ     *OFF                                         B1
      C     I#NUMR        ANDLT     11
       *
-      * If record found set return code to CGD1202, and send message.
+      * If record found set return code to CGD1183, and send message.
       *
-     C                   MOVEL     'CGD1202'     W0RTN
+     C                   MOVEL     'CGD1183'     W0RTN
       *
       *  Set up message details.
       *
-     C                   MOVEL     'CGD1216'     CGMSID
+     C                   MOVEL     'CGD1239'     CGMSID
      C                   MOVEL     CDCORR        CGMSDT
      C                   MOVEL     I#CPGM        CGPGMQ
      C                   EXSR      CGSNMS
       *
-     C     I#DPRT        READE     CGCORRLA                               90
+     C     I#CUST        READE     CGCORRL4                               90
      C                   ADD       1             I#NUMR
      C                   ENDDO                                                  E
       *
-     C     EXRRLA        TAG
-     C                   MOVEA     *BLANKS       @STK(Q)
-     C                   SUB       1             Q
-      *
-     CSR                 ENDSR
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRCHL7   : Process CGCSCHL7                                  *
-      *                                                               *
-      *  CALLED BY: Main processing                                   *
-      *                                                               *
-      *  CALLS    : None                                              *
-      *                                                               *
-      *****************************************************************
-     CSR   SRCHL7        BEGSR
-      *
-      *  Set up subroutine stack name
-      *
-     C                   ADD       1             Q                 5 0
-     C                   MOVEL     'SRCHL7'      @STK(Q)
-      *
-     C                   Z-ADD     1             I#NUMR
-      *
-     C*****I#DPRT        SETLL     CGCSCHL7                                                 MD054955
-     C*****I#DPRT        READE     CGCSCHL7                               90                MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ declare ACursor insensitive scroll cursor for                                       MD054955
-     C+ select * from CGCSHJW0                                                              MD054955
-     C+ where CPPSCH = :I#DPRT and CPRECI = 'D'                                             MD054955
-     C+ order by CPPSCH, CPCORR, CPPTYP, CPPSTP, CPSEQN                                     MD054955
-     C/END-EXEC                                                                             MD054955
-                                                                                            MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ open ACursor                                                                        MD054955
-     C/END-EXEC                                                                             MD054955
-                                                                                            MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ fetch next from ACursor into :CGCSCH                                                MD054955
-     C/END-EXEC                                                                             MD054955
-      *
-     C******IN90         DOWEQ     *OFF                                         B1          MD054955
-     C*****I#NUMR        ANDLT     11                                                       MD054955
-     C                   DOW       SQLCODE = 0                                  B1          MD054955
-     C                             and I#NUMR < 11                                          MD054955
-      *
-      * If record found set return code to CGD1202, and send message.
-      *
-     C                   MOVEL     'CGD1202'     W0RTN
-      *
-      *  Set up message details.
-      *
-     C                   MOVEL     'CGD1217'     CGMSID
-     C                   MOVEL     CPCORR        CGMSDT
-     C                   MOVEL     I#CPGM        CGPGMQ
-     C                   EXSR      CGSNMS
-      *
-     C*****I#DPRT        READE     CGCSCHL7                               90                MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ fetch next from ACursor into :CGCSCH                                                MD054955
-     C/END-EXEC                                                                             MD054955
-     C                   ADD       1             I#NUMR
-     C                   ENDDO                                                  E
-      *
-     C/EXEC SQL                                                                             MD054955
-     C+ close ACursor                                                                       MD054955
-     C/END-EXEC                                                                             MD054955
-                                                                                            MD054955
-     C     EXCHL7        TAG
+     C     EXRRL4        TAG
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
       *
@@ -309,46 +225,46 @@
       **                                                                                      CSC022
       ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
       **                                                                                      CSC022
-     C                   MOVE      'N'           CSC022            1
-     C                   MOVE      'N'           WCMTSK            1
+     C                   MOVE      'N'           CSC022            1                          CSC022
+     C                   MOVE      'N'           WCMTSK            1                          CSC022
       **                                                                                      CSC022
       ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
       ** is switched on                                                                       CSC022
       **                                                                                      CSC022
-     C                   CALL      'AOSARDR0'
-     C                   PARM      *BLANKS       P@RTCD            7
-     C                   PARM      '*VERIFY '    P@OPTN            7
-     C                   PARM      'CSC022'      P@SARD            6
-     C     SCSARD        PARM      SCSARD        DSFDY
+     C                   CALL      'AOSARDR0'                                                 CSC022
+     C                   PARM      *BLANKS       P@RTCD            7                          CSC022
+     C                   PARM      '*VERIFY '    P@OPTN            7                          CSC022
+     C                   PARM      'CSC022'      P@SARD            6                          CSC022
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSC022
       **                                                                                      CSC022
-     C     P@RTCD        IFEQ      *BLANKS
-     C                   MOVE      'Y'           CSC022
+     C     P@RTCD        IFEQ      *BLANKS                                                    CSC022
+     C                   MOVE      'Y'           CSC022                                       CSC022
       **                                                                                      CSC022
       ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
       **                                                                                      CSC022
-     C     *DTAARA       DEFINE    SCCMTJOB      SCCMT
-     C                   IN        SCCMT
+     C     *DTAARA       DEFINE    SCCMTJOB      SCCMT                                        CSC022
+     C                   IN        SCCMT                                                      CSC022
       **                                                                                      CSC022
-     C     WCMTNO        IFGT      0
+     C     WCMTNO        IFGT      0                                                          CSC022
       ** Move committed jobs to arrary for checking                                           CSC022
-     C                   MOVEA     WCJOBS        WCMT
+     C                   MOVEA     WCJOBS        WCMT                                         CSC022
       ** Verify if job running exists in array                                                CSC022
-     C     ##JOB         LOOKUP    WCMT                                   50
-     C     *IN50         IFEQ      *ON
-     C                   MOVE      'Y'           WCMTSK
-     C                   ENDIF
-     C                   ENDIF
+     C     ##JOB         LOOKUP    WCMT                                   50                  CSC022
+     C     *IN50         IFEQ      *ON                                                        CSC022
+     C                   MOVE      'Y'           WCMTSK                                       CSC022
+     C                   ENDIF                                                                CSC022
+     C                   ENDIF                                                                CSC022
       **                                                                                      CSC022
-     C                   ELSE
+     C                   ELSE                                                                 CSC022
       ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
-     C     P@RTCD        IFNE      '*NRF'
-     C                   MOVEL     'CSC022'      W0KEY
-     C                   MOVEL     'SCSARDPD'    W0FILE
-     C                   Z-ADD     1             W0ERNB
-     C                   EXSR      SRERR
-     C                   ENDIF
+     C     P@RTCD        IFNE      '*NRF'                                                     CSC022
+     C                   MOVEL     'CSC022'      W0KEY                                        CSC022
+     C                   MOVEL     'SCSARDPD'    W0FILE                                       CSC022
+     C                   Z-ADD     5             W0ERNB                                       CSC022
+     C                   EXSR      SRERR                                                      CSC022
+     C                   ENDIF                                                                CSC022
       **                                                                                      CSC022
-     C                   ENDIF
+     C                   ENDIF                                                                CSC022
       **                                                                                      CSC022
       *
       *  Unwind subroutine stack name
@@ -359,11 +275,11 @@
       *
      CSR                 ENDSR
      C/EJECT
-     C*COPY*CGCPYSRC,SRERRPSSR                                                              MD054955
-     C/COPY CGCPYSRC,SRERRPSSRL                                                             MD054955
-     C*COPY*CGCPYSRC,SCGSNMSC                                                               MD054955
-     C/COPY CGCPYSRC,SCGSNMSCLE                                                             MD054955
-     C*COPY*CGCPYSRC,SRERRC                                                                 MD054955
-     C/COPY CGCPYSRC,SRERRCLE                                                               MD054955
+     C*COPY*CGCPYSRC,SRERRPSSR                                                              MD056543
+     C*COPY*CGCPYSRC,SCGSNMSC                                                               MD056543
+     C*COPY*CGCPYSRC,SRERRC                                                                 MD056543
+     C/COPY CGCPYSRC,SRERRPSSRL                                                             MD056543
+     C/COPY CGCPYSRC,SCGSNMSCLE                                                             MD056543
+     C/COPY CGCPYSRC,SRERRCLE                                                               MD056543
 **CTDATA CPY@
 (c) Finastra International Limited 2001

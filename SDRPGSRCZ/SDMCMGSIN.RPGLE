@@ -1,8 +1,9 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
      H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXS *  RPGCVTOPT2                                                   *                       CSD053
+/*E*S ***RPGCVTOPT2****************************************************              CSD053 MD056543
 /*EXI *  TEXT('Midas SD Case management maintenance input')           *
       *****************************************************************
       *                                                               *
@@ -18,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 CAP212             Date 15Sep14               *
@@ -71,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD to readable  *
+      *             unicode equivalent.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -4478,27 +4483,61 @@
 
       ** 2nd Parameter
 
+     C                   MOVEL     *BLANKS       CDCORNP          30                        MD056543
+     C                   EVAL      CDCORNP = CDCORN                                         MD056543
+      *                                                                                     MD056543
      C                   If        CDCORN <> *BLANKS
      C     P_XML         CAT       OpenTag(22):0 P_XML
-     C     P_XML         CAT       CDCORN:0      P_XML
+     C*****P_XML         CAT       CDCORN:0      P_XML                                      MD056543
+     C     P_XML         CAT       CDCORNP:0     P_XML                                      MD056543
      C     P_XML         CAT       ClosTag(22):0 P_XML
      C                   EndIf
 
-     C                   If        CDADD1 <> *BLANKS
-     C                             OR CDADD2 <> *BLANKS
-     C                             OR CDADD3 <> *BLANKS
-     C                             OR CDADD4 <> *BLANKS
-     C                             OR CDADD5 <> *BLANKS
-     C                             OR CDADD6 <> *BLANKS
-     C                             OR CDADD7 <> *BLANKS
+     C                   MOVEL     *BLANKS       CDADD1P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD2P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD3P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD4P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD5P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD6P          50                        MD056543
+     C                   MOVEL     *BLANKS       CDADD7P          50                        MD056543
+      *                                                                                     MD056543
+     C                   EVAL      CDADD1P = CDADD1                                         MD056543
+     C                   EVAL      CDADD2P = CDADD2                                         MD056543
+     C                   EVAL      CDADD3P = CDADD3                                         MD056543
+     C                   EVAL      CDADD4P = CDADD4                                         MD056543
+     C                   EVAL      CDADD5P = CDADD5                                         MD056543
+     C                   EVAL      CDADD6P = CDADD6                                         MD056543
+     C                   EVAL      CDADD7P = CDADD7                                         MD056543
+      *                                                                                     MD056543
+     C**********         If        CDADD1 <> *BLANKS                                        MD056543
+     C**********                   OR CDADD2 <> *BLANKS                                     MD056543
+     C**********                   OR CDADD3 <> *BLANKS                                     MD056543
+     C**********                   OR CDADD4 <> *BLANKS                                     MD056543
+     C**********                   OR CDADD5 <> *BLANKS                                     MD056543
+     C**********                   OR CDADD6 <> *BLANKS                                     MD056543
+     C**********                   OR CDADD7 <> *BLANKS                                     MD056543
+     C                   If        CDADD1P <> *BLANKS                                       MD056543
+     C                             OR CDADD2P <> *BLANKS                                    MD056543
+     C                             OR CDADD3P <> *BLANKS                                    MD056543
+     C                             OR CDADD4P <> *BLANKS                                    MD056543
+     C                             OR CDADD5P <> *BLANKS                                    MD056543
+     C                             OR CDADD6P <> *BLANKS                                    MD056543
+     C                             OR CDADD7P <> *BLANKS                                    MD056543
      C     P_XML         CAT       OpenTag(15):0 P_XML
-     C     P_XML         CAT       CDADD1:0      P_XML
-     C     P_XML         CAT       CDADD2:1      P_XML
-     C     P_XML         CAT       CDADD3:1      P_XML
-     C     P_XML         CAT       CDADD4:1      P_XML
-     C     P_XML         CAT       CDADD5:1      P_XML
-     C     P_XML         CAT       CDADD6:1      P_XML
-     C     P_XML         CAT       CDADD7:1      P_XML
+     C*****P_XML         CAT       CDADD1:0      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD2:1      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD3:1      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD4:1      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD5:1      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD6:1      P_XML                                      MD056543
+     C*****P_XML         CAT       CDADD7:1      P_XML                                      MD056543
+     C     P_XML         CAT       CDADD1P:0     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD2P:1     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD3P:1     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD4P:1     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD5P:1     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD6P:1     P_XML                                      MD056543
+     C     P_XML         CAT       CDADD7P:1     P_XML                                      MD056543
      C     P_XML         CAT       ClosTag(15):0 P_XML
      C                   EndIf
 

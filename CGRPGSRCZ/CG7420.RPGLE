@@ -1,0 +1,3286 @@
+     H DEBUG                                                                                BUG23738
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+      *****************************************************************
+/*S*D ***RPGBASE*******************************************************                     MD056543
+/*STD *  RPGBASEBND                                                   *                     MD056543
+/*EXI *  TEXT('Midas CG Tax Advice - Extract')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7420 - CG Tax Advice - Extract                             *
+      *                                                               *
+      *  Function: This program extracts all the data required to     *
+      *            construct the relevant statement.                  *
+      *                                                               *
+      *  Called By: CG7410 Via CGC7410                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CER070             Date 25Nov14               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CER069             Date 03Jul14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26919           Date 19Jan10               *
+      *                 BUG26354           Date 15Oct79               *
+      *                 BUG26321           Date 09Oct09               *
+      *                 BUG25719           Date 26Aug09               *
+      *                 BUG25723           Date 26Aug09               *
+      *                 BUG25003           Date 16Jul09               *
+      *                 BUG25020           Date 21Jul09               *
+      *                 BUG24778           Date 09Jul09               *
+      *                 BUG24777           Date 07Jul09               *
+      *                 BUG24442A          Date 01Jul09               *
+      *                 BUG23948B          Date 16Jun09               *
+      *                 BUG24188           Date 09Jun09               *
+      *                 BUG24190           Date 04Jun09               *
+      *                 BUG23732           Date 23Apr09               *
+      *                 BUG23948A          Date 29May09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23739A          Date 12May09               *
+      *                 BUG23948           Date 08May09               *
+      *                 BUG23739           Date 28Apr09               *
+      *                 BUG23738A          Date 17Apr09               *
+      *                 BUG23738           Date 15Apr09               *
+      *                 BUG23135B          Date 30Mar09               *
+      *                 BUG23572           Date 27Mar09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 BUG22741           Date 18Feb09               *
+      *                 CER048  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CER069 - German Tax Enhancement                              *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26919 - Issues on Single Tax Advice - extra pages with    *
+      *             incorrect information                             *
+      *  BUG26354 - Incorrect interest dates display                  *
+      *  BUG26321 - Incorrect Church Tax Amount/Rate in the Tax       *
+      *             Certificate                                       *
+      *  BUG25719 - Incorrect church tax rate and amount. Original    *
+      *             error was not reproduced. Amended to correct code *
+      *             errors (precollection error-bug25003)             *
+      *             - Amended the correct ZZFCHRT array entry to use  *
+      *             edit code L4 instead of L5                        *
+      *             - Reinstated THRDTAX in ##GRP/##RDEA array as it  *
+      *             was over-written by changes in bug25003           *
+      *             - Amended THRDTAX to use edit code AmountL instead*
+      *             of Rate L5, patterned after MAINTAX and SCNDTAX   *
+      *  BUG25723 - Withholding Tax Rate is showing 30% when actual is*
+      *             25%. The 30% is hardcoded on the form. Tax Rate   *
+      *             TSTXRT should be extracted to show the correct    *
+      *             rate used (from SDCSINPD)                         *
+      *  BUG25003 - Incorrect Church Tax Rate (extracted as           *
+      *             0.90000 instead of 9.0000 as per SDCSINPD)        *
+      *             Replace ZZFCHRT with edit code L4 instead         *
+      *             of L5.                                            *
+      *  BUG25020 - Taxable interest figure is incorrect              *
+      *  BUG24778 - Incorrect Interest Rate Postings in the Tax       *
+      *             Advice.                                           *
+      *             Interest Rate added to DLSingleTaxAdvice by       *
+      *             Bug 23739 should be removed, since there is not   *
+      *             necessarily a single applicable rate available.   *
+      *             This makes it  unfixable. If possible, code       *
+      *             change and program comments should allow for      *
+      *             simple reinstatement if clients are concerned     *
+      *             by this removal. If reinstatement is needed       *
+      *             refer to comments added with the actual coding.   *
+      *  BUG24777 - Third tax info have been extracted with values    *
+      *             when there should be none (zeroes). This is       *
+      *             due to Third tax RDEs sharing the same seq 16,    *
+      *             17 and 18 with another set of fields. One set     *
+      *             of RDEs here must be resequenced accordingly.     *
+      *  BUG24442A - Solidarity surcharge (or Secondary Tax) is       *
+      *              showing as "5.5%" when actual is "1.5%". The     *
+      *              "5.5%" is hardcoded on the form. Secondary Tax   *
+      *              Rate TSSTRA should be extracted to show the      *
+      *              correct rate used (from SDCSINPD).               *
+      *  BUG23948B - Decimal places not populates in tax Curr field   *
+      *              when deal is in Japanese Yen                     *
+      *  BUG24188 - No Single Tax advices produced (Recompile)        *
+      *  BUG24190 - Incorrect computation of Portion of Threshold used*
+      *  BUG23732 - Joint Account threshold (Recompile)               *
+      *  BUG23948A - Supress population of PrevUtilUpToThreshTaxCcy   *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23948 - Problems with Single Tax advice on retest         *
+      *  BUG23739  - Extract "Single Tas Advice" incomplete           *
+      *  BUG23738A - CGC2050 00023                                    *
+      *  BUG23738 - CGC2050 00023                                     *
+      *  BUG23135B - Don't change the Statement required  flag        *
+      *  BUG23572 - CHIPSABA Not Accept '0' on screen, so that populat*
+      *             with blanks when '0' values in database           *
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *                     (Recompile)                               *
+      *  BUG22741 - Populate Telex Number, when STTX Address is blank *
+      *             in SDCUSTPD                                       *
+      *  CER048 - German Features - Taxes                             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ===============                                              *
+      *                                                               *
+      *  55   -    No Record found on LF/SDCSINL2                     *
+      *  65   -    No Record found on LF/SDLTOFL1                     *
+      *  66   -    READ PER DEAL/ACC.#                                *
+      *  67   -    No record found ACCNTBJ0                           *
+      *  69   -    No record found SDACTXL1                           *
+      *  90   -    No record found CGCORRL4                           *
+      *  99   -    LOOKUP indicator                                   *
+      *                                                               *
+      *  Structure of the extract                                     *
+      *  ========================                                     *
+      *  1 - ZFSM58 (top-level)                                       *
+      *  .                                                            *
+      *  .static data on customer level                               *
+      *  .   2 - Z58HDR (simple)                                      *
+      *  .   3 - CUST   (simple)                                      *
+      *  .   4 - CGBRCH (simple)                                      *
+      *  .                                                            *
+      *  .   dynamic data on deal/account level                       *
+      *  .   5 - POSDTA (complex, repeater)                           *
+      *  .   .   6 - Z58POS (complex)                                 *
+      *  .   .     7 - Z58DTA                                         *
+      *  .   .     8 - Z58DT2                                         *
+      *  .   .     9 - BRANCH                                         *
+      *  .   .     10- CCYGS                                          *
+      *  .   .     11- Z58DT3                                         *
+      *  .   .     12- Z58DT4                                         *
+      *  .   .     13- ACOF                                           *
+      *****************************************************************
+      *
+      ** Midas SD Customer Income
+      *
+     F*SDCSINL2IF  E           K        DISK                                                BUG23739
+     FSDCSINLH  IF   E           K DISK                                                     BUG23739
+     F                                     INFSR(SRFILE)
+      *
+      ** Midas SD Customer Income by customer income generation date,
+      ** Cust no. and DL/TRD No.
+      *
+     FSDCSINLF  IF   E           K DISK
+     F                                     RENAME(SDCSIND0:CSINDLF)
+      *
+      ** Midas DL Deals file
+      *
+     FDEALS     IF   E           K DISK
+     F                                     IGNORE(DEALSDAF)
+     F                                     IGNORE(DEALSDBF)
+     F                                     IGNORE(DEALSDDF)
+     F                                     IGNORE(DEALSDEF)
+     F                                     IGNORE(DEALSDFF)
+     F                                     IGNORE(DEALSDGF)
+      *
+      ** Midas SD Local Tax Office File
+      *
+     FSDLTOFL1  IF   E           K DISK
+      *
+      ** Correspondent File by Customer Number
+      *
+     FCGCORRL4  IF   E           K DISK
+      *
+      ** Midas SD Tax Basket Details
+      *
+     FSDTXBSL1  IF   E           K DISK
+      *
+      ** Midas SD Cust Details by Country of Tax
+      *
+     FSDACTXL1  IF   E           K DISK
+      *
+      ** Midas GL Account Details Join logic
+      *
+     FACCNTBJ0  IF   E           K DISK
+      *
+      ** Midas GL Accounts Master
+      *
+     FACCNT     IF   E           K DISK
+      *                                                                                     BUG24778
+      ** Retail History file                                                                BUG24778
+      *                                                                                     BUG24778
+     FREHISDL   IF   E           K DISK                                                     BUG24778
+      *
+     F/EJECT
+      *
+     D*COPY*CGCPYSRC,CGPACKE                                                                MD056543
+     D*COPY*CGCPYSRC,SRERRE                                                                 MD056543
+     D/COPY CGCPYSRC,CGPACKEILE                                                             MD056543
+     D/COPY CGCPYSRC,SRERRDLE                                                               MD056543
+     D*##NUMA***       S              1    DIM(29)                                          MD056543
+      *
+      ** Number Arrays
+      *
+     D*##NUMA***       S              1    DIM(29)                                          MD056543
+      *
+      ** ##GRP = Group/RDE Number ##RDEA = RDE + Attributes
+      *
+     D**********          ##GRP   1  80 10   ##RDEA 22                                      BUG23739
+     D**********          ##GRP   1  85 10   ##RDEA 22                            BUG23739 BUG24442A
+     D**********          ##GRP   1  86 10   ##RDEA 22                            BUG24442A BUG25723
+     D ##GRP           S             10    DIM(87) CTDATA PERRCD(1)                         BUG25723
+     D ##RDEA          S             22    DIM(87) ALT(##GRP)                               BUG25723
+      *                                                                                     BUG26354
+      ** Note: the above array defines the total number of RDE elements                     BUG26354
+      **       at compile-time declared below. Adjust the table length                      BUG26354
+      **       ONLY when newly added element would exceed the defined                       BUG26354
+      **       length!                                                                      BUG26354
+      *                                                                                     BUG26354
+      *
+      ** Copyright array.
+      *
+      *                                                                                     BUG23739
+     D*COPY*ZSRSRC,ZPOWERZ1                                                        BUG23739 MD056543
+      *
+      ** Array of Currencies accessed by program
+      *
+     D ##CY            S              3    DIM(100)
+      *
+     D                 DS
+     D  ##GRPX                 1     10
+     D  ##GRPS                 1      6
+     D  ##RDEN                 7     10  0
+      *
+      ** Look-up string for RDE definition Array
+      *
+     D ##SDS           DS
+     D  ##S                    1   5632
+     D                                     DIM(22)                                          MD056543
+      *
+      ** Packed data string.
+      *
+     D                 DS
+     D  ##W                    1     20
+     D                                     DIM(20)
+     D  ##WNUM                 1     20  0
+      *
+      ** Number Field
+      *
+     D                 DS
+     D  ##ITMA                 1      8
+     D  ##ITEM                 1      8  0
+      *
+     D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
+      *
+      ** External DS for incomplete reference
+      *
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)
+      *
+      ** External DS for General Ledger details
+      *
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      *
+      ** External DS for bank details
+      *
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
+      *
+      ** External DS for branch details
+      *
+     D SDCURR        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
+      *
+      ** External DS for currency details
+      *
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+     D  QDFAC        E                     EXTFLD(QQDFAC)
+      *
+      ** External DS for Customer details
+      *
+     D SDACCT        E DS                  EXTNAME(ACCNTAB)
+      *
+      ** Account Details
+      *
+     D SDACOF        E DS                  EXTNAME(SDACOFPD)
+      *
+      ** External DS for Account officer details
+      *
+     D SDACTX        E DS                  EXTNAME(SDACTXPD)                                  CER069
+      *                                                                                       CER069
+      ** External DS for Customer Details by Country of Tax                                   CER069
+      *                                                                                       CER069
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      *
+      ** First DS for access programs, short data structure
+      *
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      *
+      ** Second DS for access programs, long data structure
+      *
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   BUG23738
+      *                                                                                     BUG23738
+      ** Third DS for access programs, long data structure                                  BUG23738
+      *                                                                                     BUG23738
+     D W0FMT         E DS                  EXTNAME(CGUDTAPD)
+      *
+      ** Record format of PF/CGUDTAPD for use as a parameter
+      *
+     D SDACUS        E DS                  EXTNAME(SDACUSPD)                                BUG22741
+      *                                                                                     BUG22741
+      **  External DS for Additinal Customer details                                        BUG22741
+      *                                                                                     BUG22741
+     D ##SRDT          DS                  OCCURS(20)
+      *
+      ** DS to store subroutine specific data.
+      ** - Previous Bind
+      ** - This Bind
+      ** - Saved Path
+      *
+     D  ##PBIN                 1      5P 0
+     D  ##TBIN                 6     10P 0
+     D  ##SPAT                11     80
+     D*COPY*CGCPYSRC,CGPACKI                                                                MD056543
+     D/COPY CGCPYSRC,CGPACKIILE                                                             MD056543
+      *
+     D DSPARM        E DS                  EXTNAME(SDINPHPD)
+      *
+      ** External DS for parameter passed from CG7410
+      *
+     D CPYR            DS
+      *
+      ** Data Structure for Compilation - Copyright Insertion
+      *
+     D  ##CPY                  1     80
+     D                                     DIM(1) CTDATA PERRCD(1)
+     D/COPY ZSRSRC,ZPOWERZ1IL                                                               MD056543
+      *
+     I/EJECT
+      *
+      ** Rename fields of SDCSINLF to avoid confusion with SDCSINL2
+      *
+     ICSINDLF
+     I              TSRDNB                      XSRDNB
+     I              TSEDAT                      XSEDAT
+     I              TSTAXY                      XSTAXY
+     I              TSTAXM                      XSTAXM
+     I              TSCTRT                      XSCTRT
+     I              TSBRCA                      XSBRCA
+     I              TSJOIN                      XSJOIN
+     I              TSCUST                      XSCUST
+     I              TSNAHO                      XSNAHO
+     I              TSINVP                      XSINVP
+     I              TSSTAT                      XSSTAT
+     I              TSFAMN                      XSFAMN
+     I              TSFIRN                      XSFIRN
+     I              TSSTRT                      XSSTRT
+     I              TSZIPC                      XSZIPC
+     I              TSCITY                      XSCITY
+     I              TSRCTR                      XSRCTR
+     I              TSRTIN                      XSRTIN
+     I              TSDBTH                      XSDBTH
+     I              TSTBTH                      XSTBTH
+     I              TSCBTH                      XSCBTH
+     I              TSIPDT                      XSIPDT
+     I              TSTXBS                      XSTXBS
+     I              TSWTAC                      XSWTAC
+     I              TSOCCY                      XSOCCY
+     I              TSOCSR                      XSOCSR
+     I              TSOCMD                      XSOCMD
+     I              TSOCDP                      XSOCDP
+     I              TSSCCY                      XSSCCY
+     I              TSSCSR                      XSSCSR
+     I              TSSCMD                      XSSCMD
+     I              TSSCDP                      XSSCDP
+     I              TSTXCY                      XSTXCY
+     I              TSTCSR                      XSTCSR
+     I              TSTCMD                      XSTCMD
+     I              TSTCDP                      XSTCDP
+     I              TSXROS                      XSXROS
+     I              TSXRST                      XSXRST
+     I              TSOSMD                      XSOSMD
+     I              TSSTMD                      XSSTMD
+     I              TSMODI                      XSMODI
+     I              TSINST                      XSINST
+     I              TSTRTP                      XSTRTP
+     I              TSTRST                      XSTRST
+     I              TSDLLN                      XSDLLN
+     I              TSACOD                      XSACOD
+     I              TSACSQ                      XSACSQ
+     I              TSIBAN                      XSIBAN
+     I              TSETYP                      XSETYP
+     I              TSSESN                      XSSESN
+     I              TSSRPN                      XSSRPN
+     I              TSISIN                      XSISIN
+     I              TSPAMT                      XSPAMT
+     I              TSGINT                      XSGINT
+     I              TSTXRT                      XSTXRT
+     I              TSTXSR                      XSTXSR
+     I              TSNINT                      XSNINT
+     I              TSPAMS                      XSPAMS
+     I              TSGINS                      XSGINS
+     I              TSTXSS                      XSTXSS
+     I              TSNINS                      XSNINS
+     I              TSPAMC                      XSPAMC
+     I              TSGINC                      XSGINC
+     I              TSTXSC                      XSTXSC
+     I              TSNINC                      XSNINC
+     I              TSPAMB                      XSPAMB
+     I              TSGINB                      XSGINB
+     I              TSTXSB                      XSTXSB
+     I              TSNINB                      XSNINB
+     I              TSINPR                      XSINPR
+     I              TSTNLU                      XSTNLU
+     I              TSSTXB                      XSSTXB
+     I              TSSTAC                      XSSTAC
+     I              TSSTRA                      XSSTRA
+     I              TSSTDO                      XSSTDO
+     I              TSSTDS                      XSSTDS
+     I              TSSTDT                      XSSTDT
+     I              TSSTDB                      XSSTDB
+     I              TSPTHU                      XSPTHU
+     I/EJECT                                                                                BUG24778
+      *                                                                                     BUG24778
+      ** Rename fields of REHISDL to avoid confusion with ACCNTAB                           BUG24778
+      *                                                                                     BUG24778
+     IREHISPPF                                                                              BUG24778
+     I              RECI                        RRECI                                       BUG24778
+     I              ZZ001                       RZZ001                                      BUG24778
+     I              BRCA                        RBRCA                                       BUG24778
+     I              CNUM                        RCNUM                                       BUG24778
+     I              CCY                         RCCY                                        BUG24778
+     I              ACODQQ                      RACODQ                                      BUG24778
+     I              ACSQ                        RACSQ                                       BUG24778
+     I              HISD                        RHISD                                       BUG24778
+     I              HISB                        RHISB                                       BUG24778
+     I              MNBL                        RMNBL                                       BUG24778
+     I              CHGAR                       RCHGAR                                      BUG24778
+     I              TCHGAR                      RTCHGA                                      BUG24778
+     I              CHGAN                       RCHGAN                                      BUG24778
+     I              TCHGAN                      RTCHGN                                      BUG24778
+     I              DMVT                        RDMVT                                       BUG24778
+     I              DICT                        RDICT                                       BUG24778
+     I              DRCB                        RDRCB                                       BUG24778
+     I              DRIR                        RDRIR                                       BUG24778
+     I              DRCD                        RDRCD                                       BUG24778
+     I              DAID                        RDAID                                       BUG24778
+     I              MADI                        RMADI                                       BUG24778
+     I              TMADI                       RTMADI                                      BUG24778
+     I              PDID                        RPDID                                       BUG24778
+     I              DMINT                       RDMINT                                      BUG24778
+     I              CMVT                        RCMVT                                       BUG24778
+     I              CICT                        RCICT                                       BUG24778
+     I              CRCB                        RCRCB                                       BUG24778
+     I              CRIR                        RCRIR                                       BUG24778
+     I              CRCD                        RCRCD                                       BUG24778
+     I              CAID                        RCAID                                       BUG24778
+     I              MACI                        RMACI                                       BUG24778
+     I              TMACI                       RTMACI                                      BUG24778
+     I              PCID                        RPCID                                       BUG24778
+     I              CMINT                       RCMINT                                      BUG24778
+     I              DICI                        RDICI                                       BUG24778
+     I              CICI                        RCICI                                       BUG24778
+     I              DRCI                        RDRCI                                       BUG24778
+     I              CRCI                        RCRCI                                       BUG24778
+     I              VDTC                        RVDTC                                       BUG24778
+     I              ADTY                        RADTY                                       BUG24778
+     I              ALTI                        RALTI                                       BUG24778
+     I              MNBCP                       RMNBCP                                      BUG24778
+     I              LGID                        RLGID                                       BUG24778
+     I              VALL                        RVALL                                       BUG24778
+     I              LINK                        RLINK                                       BUG24778
+     I              ZZ008                       RZZ008                                      BUG24778
+     I              AODR                        RAODR                                       BUG24778
+     I              ODRL                        RODRL                                       BUG24778
+     I              ODLI                        RODLI                                       BUG24778
+     I              ODIA                        RODIA                                       BUG24778
+     I              ACOD                        RACOD                                       BUG24778
+     I*COPY*CGCPYSRC,SRERRI                                                                 MD056543
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Index to subroutines                                         *
+      *  --------------------                                         *
+      *                                                               *
+      *  ZFSM58 - Main processing - top level group set               *
+      *  Z58HDR - Header (simple)                                     *
+      *  BRANCH - Branch Details (Simple)                             *
+      *  CUST   - Customer Details (Simple)                           *
+      *  CGBRCH - Additional Branch information                       *
+      *  CCYGS  - Currency Details (Simple)                           *
+      *  Z58POS - Posting group set (complex)                         *
+      *  Z58DTA - Posting group set (simple)                          *
+      *  Z58DT2 - Posting group set (simple) more RDE's               *
+      *  Z58DT3 - Posting group set (simple) more RDE's               *
+      *  Z58DT4 - RDES FOR EURO                                       *
+      *  SRGENR - Generate reference record                           *
+      *  SRRRDE - Retrieve RDE information for RDE in group set       *
+      *  SRADTA - Accumulate RDEs & associated data for Output        *
+      *  SRRFMN - Reformat RDE data                                   *
+      *  SRODTA - Output Accumulated Data to PF/CGUDTAPD              *
+      *  SRDCDT - Determine Currency Details                          *
+      *  SRINIT - Initial processing - On First Call                  *
+      *  SRINZ  - Initialise Fields on Each Invocation                *
+      *  *PSSR  - Exception/Error Handling                            *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Process     -  MAINLINE                                      *
+      *  Function    -  Mainline processing                           *
+      *                                                               *
+      *  Called by   -  None                                          *
+      *  Calls       -  SRINIT - Initial Processing - On First Call   *
+      *                 SRINZ  - Initialise Fields on Each Invocation *
+      *                 G#STMT - Main Processing - Top Level Group Set*
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    W0RTN
+     C                   PARM                    W0CMT             3
+     C                   PARM                    UFCOPD            1
+     C                   PARM                    DSPARM
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'MAIN'        @STK(Q)
+      *
+      ** Initial processing - Once Only
+      *
+     C     ##INIT        IFEQ      *BLANKS
+     C                   EXSR      SRINIT
+     C                   MOVE      'Y'           ##INIT            1
+     C                   ENDIF
+      *
+      ** Initialisation processing
+      *
+     C                   EXSR      SRINZ
+      *
+      ** Main processing - top level group set
+      *
+     C                   EXSR      ZFSM58
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+      ** Terminate program
+      *
+     C                   RETURN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  ZFSM58                                        *
+      *  Function    -  Main processing - top level group set         *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  SRGENR - Generate reference record            *
+      *                 Z58HDR - Header (simple)                      *
+      *                 CUST   - Customer Details (simple)            *
+      *                 CGBRCH - Additional branch information        *
+      *                 Z58POS - Posting group set (complex)          *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     ZFSM58        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q                 5 0
+     C                   MOVEL     'ZFSM58'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     1             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\ZFSM58'     ##PNAM            7
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+      ** Position the Postings file before the first posting for this
+      ** Customer
+      *
+     C********** UFGLKY    SETLLSDCSINL2                                                    BUG23739
+     C********** UFGLKY    READESDCSINL2                 55                                 BUG23739
+     C     UFGLKY        SETLL     SDCSINLH                                                 BUG23739
+     C     UFGLKY        READE     SDCSINLH                               55                BUG23739
+      *
+     C                   MOVEL     'N'           ##IN50            1
+     C     *IN55         IFEQ      *ON
+     C                   MOVEL     'Y'           ##IN50
+     C                   ENDIF
+      *
+      ** If there is a posting, extract data
+      *
+     C     *IN55         IFEQ      *OFF
+      *
+      ** Generate reference number by writing to PF/CGUDCRPD
+      ** If the statement is to be produced, then produce it
+      *
+     C                   EXSR      SRGENR
+     C     UFCOPD        CABEQ     'N'           EXF058
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Header (simple)
+      *
+     C                   EXSR      Z58HDR
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Customer Details (simple)
+      *
+     C                   EXSR      CUST
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Internal customer address information (simple)
+      *
+     C                   EXSR      CGBRCH
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+     C     *IN55         DOWEQ     *OFF
+      *
+      ** Posting Group Set (complex)
+      *
+     C                   EXSR      POSDTA
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Process next record for that customer/date
+      *
+     C********** UFGLKY    READESDCSINL2                 55                                 BUG23739
+     C     UFGLKY        READE     SDCSINLH                               55                BUG23739
+     C                   ENDDO
+      *
+     C                   ENDIF
+      *
+      ** Only call if records read
+      *
+     C     ##IN50        IFEQ      'N'
+     C                   EXSR      POPGRS
+     C                   ENDIF
+      *
+     C     EXF058        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58HDR                                        *
+      *  Function    -  Header (simple)                               *
+      *                  - Extract RDEs for statement header          *
+      *                                                               *
+      *  Called by   -  ZFSM58 - Top level group set                  *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *****************************************************************
+     C     Z58HDR        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58HDR'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     2             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58HDR'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDEs in group set
+      *
+     C                   MOVEL     'Z58HDR'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Last Generation Date
+      *
+     C     TILSSD        IFNE      *ZEROS
+     C                   MOVEL     TILSSD        ##D(1)
+     C                   ELSE
+     C                   MOVEL     BJRDNB        ##D(1)
+     C                   ENDIF
+      *
+      ** Generation Date
+      *
+     C                   MOVEL     BJRDNB        ##D(2)
+      *
+      ** Statement Number
+      *
+     C                   MOVEL     TIPGNO        ##D(3)
+      *
+      ** Utilisation Up to Threshold
+      *
+     C                   MOVEL     TIUTTH        ##D(4)                                     BUG23739
+     C                   MOVEL     BJLCCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(4)
+      *
+      ** Total Utilisation
+      *
+     C                   MOVEL     TITOUT        ##D(5)
+     C                   MOVE      A6NBDP        ##D(5)                                     BUG23739
+      *
+      ** Current threshold
+      *
+     C                   MOVEL     TICUTH        ##D(6)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EX1HDR        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      *  Subroutine  _  POSDTA                                        *
+      *  Function    _  Repeating structure for Details               *
+      *                                                               *
+      *  Called by   _  ZFSM58 - Top level group set                  *
+      *  Calls       _  Z58POS - extract details                      *
+      *****************************************************************
+     C     POSDTA        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'POSDTA'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     10            OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\POSDTA'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+     C                   SETOFF                                       66
+      *                                                                                     BUG24778
+      ** Key for reading Retail History file                                                BUG24778
+      *                                                                                     BUG24778
+     C     KYREHI        KLIST                                                              BUG24778
+     C                   KFLD                    TSBRCA                                     BUG24778
+     C                   KFLD                    KCNUM                                      BUG24778
+     C                   KFLD                    TSOCCY                                     BUG24778
+     C                   KFLD                    TSACOD                                     BUG24778
+     C                   KFLD                    TSACSQ                                     BUG24778
+     C                   KFLD                    TSEDAT                                     BUG24778
+      *
+      ** Key for reading per deal/account
+      *
+     C**********           MOVELTSCUST    W0CUST  60                                          CER059
+     C                   MOVEL     TSCUST        W0CUST            6                          CER059
+     C     ACNTKY        KLIST
+     C                   KFLD                    W0CUST
+     C                   KFLD                    TSOCCY
+     C                   KFLD                    TSACOD
+     C                   KFLD                    TSACSQ
+     C                   KFLD                    TSBRCA
+      *
+      ** For each Deal/Account
+      *
+     C     KEY2          KLIST
+     C**********           KFLD           BJRDNB                                           BUG23135B
+     C**********           KFLD           TILSSD                                  BUG23135B BUG23739
+     C                   KFLD                    BJRDNB                                     BUG23739
+     C                   KFLD                    TSCUST
+     C                   KFLD                    TSDLLN
+     C                   KFLD                    TSBRCA
+     C                   KFLD                    TSOCCY
+     C                   KFLD                    TSACOD
+     C                   KFLD                    TSACSQ
+      *
+      ** Read per deal/account no
+      *
+     C     KEY2          SETLL     CSINDLF
+     C     KEY2          READE     CSINDLF                                66
+      *
+     C     *IN66         DOWEQ     *OFF
+      *
+     C     TSJOIN        IFEQ      XSJOIN                                                   BUG26919
+      *                                                                                     BUG26919
+     C                   EXSR      Z58POS
+      *
+     C     10            OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *                                                                                     BUG26919
+     C                   ENDIF                                                              BUG26919
+      *
+     C     KEY2          READE     CSINDLF                                66
+      *
+     C                   ENDDO
+      *
+     C     EXPOS         TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   EXSR      POPGRS
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  CUST                                          *
+      *  Function    -  Customer Details (Simple)                     *
+      *                 - Obtain Customer Details                     *
+      *                                                               *
+      *  Called by   -  ZFSM58 - Top level group set                  *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *                 AOCUSTR0 - Obtain Customer Details            *
+      *****************************************************************
+     C     CUST          BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CUST  '      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     4             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\CUST  '     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'CUST  '      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Access Customer Details if the Customer has changed.
+      ** (LF/SDCUSTL1)
+      *
+     C                   MOVE      TSCUST        UTCUST            6
+     C     UTCUST        IFNE      BBCUST
+     C                   MOVE      *BLANKS       ##KEY1
+     C                   MOVE      TSCUST        ##KEY1
+     C**********           CALL 'AOCUSTR0'                                                  BUG23738
+     C                   CALL      'AOCUSTR1'                                               BUG23738
+     C                   PARM      *BLANKS       ##RTCD
+     C                   PARM      '*KEY   '     ##OPTN
+     C                   PARM                    ##KEY1           10
+     C                   PARM      *BLANKS       ##KYST            7
+     C********** SDCUST    PARM SDCUST    DSSDY                                             BUG23738
+     C     SDCUST        PARM      SDCUST        DSLDY                                      BUG23738
+      *
+      ** If not found, Database Error.
+      *
+     C     BBCLST        IFNE      'Y'                                                      BUG23738
+     C     BBDTDL        ANDEQ     0                                                       BUG23738A
+     C     ##RTCD        IFNE      *BLANKS
+     C                   MOVEL     'SDCUSTPD'    W0FILE
+     C                   MOVEL     TSCUST        W0KEY
+     C                   Z-ADD     4             W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF                                                              BUG23738
+      *
+      ** Set up Customer Number
+      *
+     C                   MOVEL     BBCUST        ##D(1)
+      *
+      ** Set up Customer Name
+      *
+     C                   MOVEL     BBCRNM        ##D(2)
+      *
+      ** Set up Customer Address Line 1
+      *
+     C                   MOVEL     BBCNA1        ##D(3)
+      *
+      ** Set up Customer Address Line 2
+      *
+     C                   MOVEL     BBCNA2        ##D(4)
+      *
+      ** Set up Customer Address Line 3
+      *
+     C                   MOVEL     BBCNA3        ##D(5)
+      *
+      ** Set up Customer Address Line 4
+      *
+     C                   MOVEL     BBCNA4        ##D(6)
+      *
+      ** Set up Customer Town
+      *
+     C                   MOVEL     BBCRTN        ##D(7)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXCUST        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  CGBRCH                                        *
+      *  Function    -  Extract additinal branch information          *
+      *                                                               *
+      *  Called by   -  ZFSM58                                        *
+      *  Calls       -                                                *
+      *****************************************************************
+     C     CGBRCH        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CGBRCH'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     1             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\CGBRCH'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+      *
+      ** Access branch file to retrieve Branch internal customer
+      ** of originating branch of deal
+      *
+     C                   CALL      'AOBRCHR0'
+     C                   PARM      '*MSG    '    PRTCD
+     C                   PARM      '*KEY    '    POPTN
+     C                   PARM      TSBRCA        ##BRCD            3
+     C     SDBRCH        PARM      SDBRCH        DSFDY
+      *
+      ** Database error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   MOVEL     'SDBRCHPD'    W0FILE
+     C                   MOVEL     TSBRCA        W0KEY
+     C                   Z-ADD     28            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+      *                                                                                     BUG22741
+      ** Get Additional Customer Details for Branch Internal Customer                       BUG22741
+      *                                                                                     BUG22741
+     C                   CALL      'AOACUSR0'                                               BUG22741
+     C                   PARM      *BLANKS       ##RTCD                                     BUG22741
+     C                   PARM      '*KEY   '     ##OPTN                                     BUG22741
+     C                   PARM      A8BICN        ##KEY             6                        BUG22741
+     C     SDACUS        PARM      SDACUS        DSSDY                                      BUG22741
+      *                                                                                     BUG22741
+      ** Database error                                                                     BUG22741
+      *                                                                                     BUG22741
+     C     ##RTCD        IFNE      *BLANKS                                                  BUG22741
+     C                   MOVEL     'SDACUSPD'    W0FILE                                     BUG22741
+     C                   MOVEL     A8BICN        W0KEY                                      BUG22741
+     C                   Z-ADD     31            W0ERNB                                     BUG22741
+     C                   MOVEL     'MEM5004'     W0MSGD                                     BUG22741
+     C                   MOVEL     'MIDAS  '     W0MSGF                                     BUG22741
+     C                   EXSR      SRERR                                                    BUG22741
+     C                   END                                                                BUG22741
+      *
+      ** Get Correspondent Details for Branch Internal Custome
+      *
+     C     A8BICN        CHAIN     CGCORRL4                           90
+      *
+      ** If Correspondent not found
+      *
+     C     *IN90         IFEQ      '1'
+      *
+      ** Database error
+      *
+     C                   MOVEL     'CGCORRPD'    W0FILE
+     C                   MOVEL     A8BICN        W0KEY
+     C                   Z-ADD     30            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+      *
+      ** Reset arrays
+      *
+     C                   MOVEL     *BLANKS       ##R
+     C                   MOVEL     *BLANKS       ##D
+     C                   MOVEL     *BLANKS       ##S
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Telex Number
+      *
+     C     BBSTAD        IFNE      *BLANKS                                                  BUG22741
+     C                   MOVEL     BBSTAD        ##D(1)
+     C                   ELSE                                                               BUG22741
+     C                   MOVEL     E5TXNB        ##D(1)                                     BUG22741
+     C                   ENDIF
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZSTAD'     ##RDE
+     C                   MOVEL     ##RDEF        ##R(1)
+      *
+      ** Telephone Number
+      *
+     C                   MOVEL     BBCTNB        ##D(2)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZCTNB'     ##RDE
+     C                   MOVEL     ##RDEF        ##R(2)
+      *
+      ** SWIFT Code
+      *
+     C                   MOVEL     BBCSID        ##D(3)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZCSID'     ##RDE
+     C                   MOVEL     ##RDEF        ##R(3)
+      *
+      ** German Bankleitzahl
+      *
+     C                   MOVEL     BBBLCD        ##D(4)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZBLCD'     ##RDE
+     C                   MOVEL     ##RDEF        ##R(4)
+      *
+      ** Fax Number
+      *
+     C                   MOVEL     CDFAX         ##D(5)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' ZZFAX'      ##RDE
+     C                   MOVEL     ##RDEF        ##R(5)
+      *
+      ** Branch Internal Customer Number
+      *
+     C                   MOVEL     A8BICN        ##D(6)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BICNBR'     ##RDE
+     C                   MOVEL     ##RDEF        ##R(6)
+      *
+      ** Chips Id (Branch-Internal Customer):
+      *
+     C                   MOVEL     BBCHID        ##D(7)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BCHIPS_'    ##RDE
+     C                   MOVE      'ID  '        ##RDE
+     C                   MOVEL     ##RDEF        ##R(7)
+      *
+      ** Chips ABA (Branch-Internal Customer)
+      *
+     C     BBCABA        IFNE      0                                                        BUG23572
+     C                   MOVEL     BBCABA        ##D(8)
+     C                   ELSE                                                               BUG23572
+     C                   MOVEL     BBCABA        ##D(8)                                     BUG23572
+     C                   ENDIF
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BCHIPS_'    ##RDE
+     C                   MOVE      'ABA '        ##RDE
+     C                   MOVEL     ##RDEF        ##R(8)
+      *
+      ** Chaps sort code (Branch-Internal Customer)
+      *
+     C                   MOVEL     BBCHSC        ##D(9)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BCHAPS_'    ##RDE
+     C                   MOVE      'SRT '        ##RDE
+     C                   MOVEL     ##RDEF        ##R(9)
+      *
+      ** BOJ (Branch-Internal Customer)
+      *
+     C                   MOVEL     BBBFIC        ##D(10)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BBOJ'       ##RDE
+     C                   MOVEL     ##RDEF        ##R(10)
+      *
+      ** Fedwire (Branch-Internal Customer)
+      *
+     C                   MOVEL     BBFWCD        ##D(11)
+     C                   RESET                   ##RDEF
+     C                   MOVEL     ' BFEDWIR'    ##RDE
+     C                   MOVE      'E   '        ##RDE
+     C                   MOVEL     ##RDEF        ##R(11)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXBRC         TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  BRANCH                                        *
+      *  Function    -  Branch Details (Simple)                       *
+      *                 - Obtain Branch Details                       *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set                    *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 AOBRCHR0 - Obtain Branch Details              *
+      *****************************************************************
+     C     BRANCH        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'BRANCH'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     3             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\BRANCH'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'BRANCH'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Get Branch Details if the Branch has changed
+      *
+     C     TSBRCA        IFNE      UFBRCD
+     C                   CALL      'AOBRCHR0'
+     C                   PARM      '*MSG    '    ##RTCD
+     C                   PARM      '*KEY    '    ##OPTN
+     C                   PARM      TSBRCA        UFBRCD            3
+     C     SDBRCH        PARM      SDBRCH        DSFDY
+      *
+      ** Database Error
+      *
+     C     ##RTCD        IFNE      *BLANKS
+     C                   MOVEL     'SDBRCHPD'    W0FILE
+     C                   MOVEL     TSBRCA        W0KEY
+     C                   Z-ADD     15            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Get Branch Extension file details
+      *
+     C     A8BRCD        CHAIN     SDLTOFL1                           65
+      *
+      ** If Branch not found
+      *
+     C     *IN65         IFEQ      '1'
+      *
+      ** Database error
+      *
+     C                   MOVEL     'SDLTOFL1'    W0FILE
+     C                   MOVEL     A8BRCD        W0KEY
+     C                   Z-ADD     16            W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Set up Branch Code
+      *
+     C                   MOVEL     A8BRCD        ##D(1)
+      *
+      ** Set up Branch Name
+      *
+     C                   MOVEL     A8BRNM        ##D(2)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXBRCH        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58POS                                        *
+      *  Function    -  Posting group set (complex)                   *
+      *                                                               *
+      *  Called by   -  ZFSM58 - Top level group set                  *
+      *  Calls       -  Z58DTA - Posting group set (simple)           *
+      *                 Z58DT2 - Posting group set (simple) more RDE's*
+      *                 Z58DT3 - Posting group set (simple) more RDE's*
+      *                 BRANCH - Branch Details (simple)              *
+      *                 CCYGS  - Currency Details (simple)            *
+      *****************************************************************
+     C     Z58POS        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58POS'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     5             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58POS'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#TBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** For each posting...
+      *
+     C     XSDLLN        IFNE      0
+     C     XSBRCA        ORNE      *BLANKS
+     C     XSCUST        ANDNE     *BLANKS
+     C     XSOCCY        ANDNE     *BLANKS
+     C     XSACOD        ANDNE     *ZERO
+     C     XSACSQ        ANDNE     *ZERO
+      *
+      ** Increment Bind Levels for Complex Set only
+      *
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   ADD       1             ##BNDC
+     C                   Z-ADD     ##BNDC        S#TBIN
+     C                   Z-ADD     ##BNDC        ##TBIN
+      *
+      ** Call subroutine for Posting Group Set  (simple)
+      *
+     C                   EXSR      Z58DTA
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Call subroutine for Posting Group Set (simple) more RDE's
+      *
+     C                   EXSR      Z58DT2
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Branch Details (simple)
+      *
+     C                   EXSR      BRANCH
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Call subroutine for Currency details (simple)
+      *
+     C                   EXSR      CCYGS
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Call subroutine for Posting Group Set (simple) more RDE's
+      *
+     C                   EXSR      Z58DT3
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Call subroutine for Euro amounts Groupset (simple) more RDE's
+      *
+     C                   EXSR      Z58DT4
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+      ** Call subroutine for Account Officer (simple)
+      *
+     C                   EXSR      ACOF
+     C     5             OCCUR     ##SRDT
+     C                   MOVEL     ##SPAT        S#PATH
+     C                   Z-ADD     ##PBIN        S#PBIN
+     C                   Z-ADD     ##TBIN        S#TBIN
+      *
+     C                   ENDIF
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXSPS1        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  CCYGS                                         *
+      *  Function    -  Currency Details (Simple)                     *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set (complex)          *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRDCDT - Determine Currency Details           *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     CCYGS         BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'CCYGS '      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     7             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\CCY   '     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'CCY   '      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Determine Currency Details
+      *
+     C                   MOVE      *BLANKS       INCCY             1
+      *
+      ** Set up Currency Code
+      ** Retrieve currency details for TSOCCY
+      *
+     C                   MOVEL     TSOCCY        ##CCY
+     C                   EXSR      SRDCDT
+     C**********           CALL 'AOCURRR0'                                                 BUG23948B
+     C**********           PARM *BLANKS   ##RTCD                                           BUG23948B
+     C**********           PARM '*KEY'    ##OPTN                                           BUG23948B
+     C**********           PARM           TSOCCY                                           BUG23948B
+     C********** SDCURR    PARM *BLANKS   DSSDY                                            BUG23948B
+      *
+      ** No error exit, since currency has been validated before
+      ** Euro conversion necessary
+      *
+     C     A6INCY        IFEQ      'Y'
+     C                   MOVE      'Y'           INCCY
+     C                   ENDIF
+      *
+      ** Currency Code
+      *
+     C                   MOVEL     A6CYCD        ##D(1)
+      *
+      ** Set up Currency Description
+      *
+     C                   MOVEL     A6CYNM        ##D(2)
+      *
+      ** Precious Metal Indicator
+      *
+     C                   MOVEL     A6PMRT        ##D(3)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXCCY         TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58DT3                                        *
+      *  Function    -  Posting Group Set (simple) more RDE's         *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set (complex)          *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     Z58DT3        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58DT3'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     7             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58DT3'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'Z58DT3'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Prev. Utilisat. Up to Thresh.
+      *
+     C**********           MOVELTSPTHU    ##D,1                                   BUG23739 BUG23948A
+     C**********           MOVELTSTXCY    ##CCY                                   BUG23739 BUG23948A
+     C**********           EXSR SRDCDT                                            BUG23739 BUG23948A
+     C**********           MOVE A6NBDP    ##D,1                                   BUG23739 BUG23948A
+      *
+     C     TSBRCA        CHAIN     SDLTOFL1                           65
+     C     *IN65         IFEQ      *OFF
+      *
+      ** Tax Office Registration
+      *
+     C**********           MOVELLTOFRN    ##D,2                                            BUG23948A
+     C                   MOVEL     LTOFRN        ##D(1)                                    BUG23948A
+      *
+      ** Tax Office Name
+      *
+     C**********           MOVELLTOFNM    ##D,3                                            BUG23948A
+     C                   MOVEL     LTOFNM        ##D(2)                                    BUG23948A
+      *
+     C                   ENDIF
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXSDA3        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58DT4                                        *
+      *  Function    -  Amounts in Euro                               *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set (complex)          *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     Z58DT4        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58DT4'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     7             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58DT4'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'Z58DT4'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Gross interest in Tax ccy
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSGINC        ##D(1)
+     C                   MOVE      A6NBDP        ##D(1)                                     BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSGINC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,1                                    BUG23739 BUG23948
+     C                   MOVEL     TSGINC        ##D(1)                                     BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(1)                                     BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Main tax in tax ccy
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSTXSC        ##D(2)
+     C                   MOVE      A6NBDP        ##D(2)                                     BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSTXSC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,2                                    BUG23739 BUG23948
+     C                   MOVEL     TSTXSC        ##D(2)                                     BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(2)                                     BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Secondary tax in tax ccy
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSSTDT        ##D(3)
+      *                                                                                       CER054
+     C     CER054        IFEQ      'Y'                                                        CER054
+      *                                                                                       CER054
+      *  Third tax in tax ccy                                                                 CER054
+      *                                                                                       CER054
+     C                   MOVEL     TSTTDT        ##D(5)                                       CER054
+      *                                                                                       CER054
+     C                   ENDIF                                                                CER054
+     C                   MOVE      A6NBDP        ##D(3)                                     BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSSTDT    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,3                                    BUG23739 BUG23948
+     C                   MOVEL     TSSTDT        ##D(3)                                     BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(3)                                     BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Net Interest in tax ccy
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSNINC        ##D(4)
+     C                   MOVE      A6NBDP        ##D(4)                                     BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSNINC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,4                                    BUG23739 BUG23948
+     C                   MOVEL     TSNINC        ##D(4)                                     BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(4)                                     BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXSDA4        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  ACOF                                          *
+      *  Function    -  Account Officer Details                       *
+      *                                                               *
+      *  Called by   -  Z58POS - Common Group Set Routine             *
+      *  Calls       -  SRRRDE                                        *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     ACOF          BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'ACOF  '      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     9             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\ACOF  '     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'ACOF  '      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Do not process if Account Officer blank.
+      *
+     C     BBACOC        IFEQ      *BLANKS
+     C                   GOTO      EXACOF
+     C                   ENDIF
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Access Account Officer Details
+      *
+     C                   CALL      'AOACOFR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN             7
+     C                   PARM      BBACOC        PACOF             2
+     C     SDACOF        PARM      SDACOF        DSSDY
+      *
+      ** Account Officer details not found
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   GOTO      EXACOF
+     C                   END
+      *
+      ** Account Officer Code
+      *
+     C                   MOVEL     AZACOC        ##D(1)
+      *
+      ** Account Officer Dept
+      *
+     C                   MOVEL     AZDPCD        ##D(2)
+      *
+      ** Account Officer Name
+      *
+     C                   MOVEL     AZACON        ##D(3)
+      *
+      ** Account Officer Telephone Number
+      *
+     C                   MOVEL     AZAPHN        ##D(4)
+      *
+      ** Account Officer Telephone Extension
+      *
+     C                   MOVEL     AZAEXT        ##D(5)
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+      ** Unwind subroutine stack name
+      *
+     C     EXACOF        TAG
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58DTA                                        *
+      *  Function    -  Posting Group Set (simple)                    *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set (complex)          *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     Z58DTA        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58DTA'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     6             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58DTA'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'Z58DTA'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Klists For SDTXBSL1
+      *
+     C                   MOVEL     TSTXBS        W0TXBS            2
+     C     KEY1          KLIST
+     C                   KFLD                    TSCTRT
+     C                   KFLD                    W0TXBS
+     C                   KFLD                    TSRDNB
+      *
+     C     KEY4          KLIST
+     C                   KFLD                    TSCTRT
+     C                   KFLD                    W0TXBS
+      *
+      ** Deal Number
+      *
+     C                   MOVEL     TSDLLN        ##D(1)
+      *
+      ** Account Number
+      *
+     C     TSMODI        IFEQ      'G'
+     C     ACNTKY        CHAIN     ACCNT                              66
+     C     *IN66         IFEQ      *OFF
+     C     ATYP          ANDEQ     'R'
+     C                   MOVEL     ACNO          ##D(2)
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Taxable Indicator
+      *
+     C                   SELECT
+     C     TSMODI        WHENEQ    'D'
+     C     TSDLLN        CHAIN     DEALS                              66
+     C     *IN66         IFEQ      *OFF
+     C                   MOVEL     TAXI          ##D(3)
+     C                   MOVEL     TAXI          WTAXI             1                        BUG23948
+     C                   ENDIF
+      *
+     C     TSMODI        WHENEQ    'G'
+     C     ACNTKY        CHAIN     ACCNTBJ0                           67
+     C     *IN67         IFEQ      *OFF
+     C                   MOVEL     ATITAX        ##D(3)
+     C                   MOVEL     ATITAX        WTAXI                                      BUG23948
+     C                   ENDIF
+      *
+     C                   ENDSL
+      *
+      ** If Tax value at Account level is 'A', this means the EU Tax                          CER069
+      ** indicator at Customer level should be used to determine whether                      CER069
+      ** the account is taxable.                                                              CER069
+      *                                                                                       CER069
+     C     WTAXI         IFEQ      'A'                                                        CER069
+      *                                                                                       CER069
+     C                   CALL      'AOACTXR0'                                                 CER069
+     C                   PARM      *BLANKS       ##RTCD                                       CER069
+     C                   PARM      '*KEY   '     ##OPTN                                       CER069
+     C                   PARM      TSCUST        ##CUST            6                          CER069
+     C                   PARM      TSBRCA        ##BRCD                                       CER069
+     C     SDACTX        PARM      SDACTX        DSSDY                                        CER069
+      *                                                                                       CER069
+     C     ##RTCD        IFNE      *BLANKS                                                    CER069
+     C     ##RTCD        OREQ      *BLANKS                                                    CER069
+     C     AXETXS        ANDEQ     'S'                                                        CER069
+     C     ##RTCD        OREQ      *BLANKS                                                    CER069
+     C     AXETXS        ANDEQ     'D'                                                        CER069
+     C     ##RTCD        OREQ      *BLANKS                                                    CER069
+     C     AXETXS        ANDEQ     'E'                                                        CER069
+     C     ##RTCD        OREQ      *BLANKS                                                    CER069
+     C     AXETXS        ANDEQ     ' '                                                        CER069
+     C                   MOVE      'N'           ##D(3)                                       CER069
+     C                   MOVE      'N'           WTAXI                                        CER069
+     C                   ELSE                                                                 CER069
+     C                   MOVE      AXETXS        ##D(3)                                       CER069
+     C                   MOVE      AXETXS        WTAXI                                        CER069
+     C                   ENDIF                                                                CER069
+      *                                                                                       CER069
+     C                   ENDIF                                                                CER069
+      *
+      ** Transaction Type
+      *
+     C     KEY1          SETGT     SDTXBSL1
+     C     KEY4          READPE    SDTXBSL1                               68
+     C     *IN68         IFEQ      *OFF
+     C                   MOVEL     TBTRTY        ##D(4)
+     C                   ENDIF
+      *
+      ** Start date or last int. date
+      *
+     C**********           MOVELTSRDNB    ##D,5                                             BUG23739
+     C                   MOVEL     TSSLID        ##D(5)                                     BUG23739
+      *
+      ** Set up Value Date
+      *
+     C**********           MOVELTSIPDT    ##D,6                                             BUG23739
+     C                   MOVEL     TSRDNB        ##D(6)                                     BUG23739
+      *
+      ** Gross Interest in Deal Currency
+      *
+     C********** TSOCCY    IFNE TSTXCY                                             BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           MOVE TSOCCY    ZCCY                                     BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           CALL 'AOCURRR0'                                         BUG23739 BUG23948
+     C**********           PARM *BLANKS   PRTCD                                    BUG23739 BUG23948
+     C**********           PARM '*KEY   ' POPTN                                    BUG23739 BUG23948
+     C**********           PARM           ZCCY    3                                BUG23739 BUG23948
+     C********** SDCURR    PARM SDCURR    DSSDY                                    BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           Z-ADDA6SPRT    ZCRSRT                                   BUG23739 BUG23948
+     C**********           MOVE A6MDIN    ZCRSMD                                   BUG23739 BUG23948
+     C**********           Z-ADDA6NBDP    ZCDPF                                    BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           MOVE TSTXCY    ZCCY                                     BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           CALL 'AOCURRR0'                                         BUG23739 BUG23948
+     C**********           PARM *BLANKS   PRTCD                                    BUG23739 BUG23948
+     C**********           PARM '*KEY   ' POPTN                                    BUG23739 BUG23948
+     C**********           PARM           ZCCY                                     BUG23739 BUG23948
+     C********** SDCURR    PARM SDCURR    DSSDY                                    BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           Z-ADDA6NBDP    ZCDPT                                    BUG23739 BUG23948
+     C**********           ENDIF                                                   BUG23739 BUG23948
+      *                                                                                     BUG23948
+     C                   MOVEL     TSGINT        ##D(7)
+     C                   MOVE      TSOCCY        ##CCY
+     C                   EXSR      SRDCDT
+     C                   MOVE      A6NBDP        ##D(7)
+      *
+      ** Gross Interest in Tax Currency
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSGINC        ##D(8)
+     C**********           MOVE LOCDP     ##D,8                                             BUG23739
+     C                   MOVE      A6NBDP        ##D(8)                                     BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSGINC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,8                                    BUG23739 BUG23948
+     C                   MOVEL     TSGINC        ##D(8)                                     BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(8)                                     BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Margin Points in Deal Currency
+      *
+     C**********           MOVE TSOCCY    ZCCY                                    BUG23948 BUG23948B
+      *                                                                                     BUG23948
+     C**********           CALL 'AOCURRR0'                                        BUG23948 BUG23948B
+     C**********           PARM *BLANKS   PRTCD                                   BUG23948 BUG23948B
+     C**********           PARM '*KEY   ' POPTN                                   BUG23948 BUG23948B
+     C**********           PARM           ZCCY    3                               BUG23948 BUG23948B
+     C********** SDCURR    PARM SDCURR    DSSDY                                   BUG23948 BUG23948B
+      *                                                                                     BUG23948
+     C**********           MOVELTSTXRT    ##D,9                                             BUG23948
+     C**********           MOVELA6TCMP    ##D,9                                   BUG23948 BUG23948B
+      *
+      ** Withholding Tax
+      *
+     C                   MOVEL     TSTXSR        ##D(10)                                    BUG23739
+     C                   MOVEL     TSOCCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                  BUG23948B
+     C                   MOVEL     A6TCMP        ##D(9)
+     C                   MOVE      A6NBDP        ##D(10)
+      *
+      ** Withholding Tax in Tax Currency
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSTXSC        ##D(11)
+     C**********           MOVE LOCDP     ##D,11                                            BUG23739
+     C                   MOVE      A6NBDP        ##D(11)                                    BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSTXSC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,11                                   BUG23739 BUG23948
+     C                   MOVEL     TSTXSC        ##D(11)                                    BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(11)                                    BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Solidarity Contribution in Deal Currency
+      *
+     C                   MOVEL     TSSTDO        ##D(12)
+     C                   MOVE      TSOCCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(12)
+      *
+      ** Solidarity Contribution in Tax Currency
+      *
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG23739
+     C                   MOVEL     TSSTDT        ##D(13)
+     C**********           MOVE LOCDP     ##D,13                                            BUG23739
+     C                   MOVE      A6NBDP        ##D(13)                                    BUG23739
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSSTDT    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,13                                   BUG23739 BUG23948
+     C                   MOVEL     TSSTDT        ##D(13)                                    BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(13)                                    BUG23739
+     C                   ENDIF                                                              BUG23739
+      *
+      ** Net Interest in Deal Currency
+      *
+     C                   MOVEL     TSNINT        ##D(14)
+     C                   MOVE      TSOCCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(14)
+      *
+      ** Net Interest in Tax Currency
+      *
+     C********** TSOCCY    IFEQ TSTXCY                                             BUG23739 BUG26321
+     C**********           MOVELTSNINC    ##D,15                                            BUG26321
+     C**********           MOVE LOCDP     ##D,15                                            BUG23739
+      *                                                                                       CER054
+     C     CER054        IFEQ      'Y'                                                        CER054
+      *                                                                                       CER054
+      ** Third tax in Deal Currency                                                           CER054
+      *                                                                                       CER054
+     C                   MOVEL     TSTTDO        ##D(16)                                      CER054
+     C                   MOVE      TSOCCY        ##CCY                                      BUG26321
+     C                   EXSR      SRDCDT                                                   BUG26321
+     C                   MOVE      A6NBDP        ##D(16)                                      CER054
+      *                                                                                       CER054
+      ** Third tax in Tax Currency                                                            CER054
+      *                                                                                       CER054
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG26321
+     C                   MOVEL     TSTTDT        ##D(17)                                      CER054
+     C**********           MOVE LOCDP     ##D,17                                     CER054 BUG26321
+     C                   MOVE      A6NBDP        ##D(17)                                    BUG26321
+     C                   ELSE                                                               BUG26321
+     C                   MOVEL     TSTTDT        ##D(17)                                    BUG26321
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG26321
+     C                   EXSR      SRDCDT                                                   BUG26321
+     C                   MOVE      A6NBDP        ##D(17)                                    BUG26321
+     C                   ENDIF                                                              BUG26321
+      *                                                                                       CER054
+      ** Third tax rate                                                                       CER054
+      *                                                                                       CER054
+     C                   MOVEL     TSTTRA        ##D(18)                                      CER054
+      *                                                                                       CER054
+     C                   ENDIF                                                              BUG26321
+      *                                                                                     BUG26321
+     ** Net Interest in Tax Currency                                                        BUG26321
+      *                                                                                     BUG26321
+     C     TSOCCY        IFEQ      TSTXCY                                                   BUG26321
+     C                   MOVEL     TSNINC        ##D(15)                                    BUG26321
+     C                   MOVE      A6NBDP        ##D(15)                                    BUG26321
+      *                                                                                     BUG23739
+     C                   ELSE                                                               BUG23739
+      *                                                                                     BUG23739
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSNINC    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,15                                   BUG23739 BUG23948
+     C                   MOVEL     TSNINC        ##D(15)                                    BUG23948
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C                   MOVE      A6NBDP        ##D(15)                                    BUG23739
+     C                   ENDIF                                                              BUG23739
+      *                                                                                     BUG23948
+     C                   MOVE      *BLANKS       WCONV                                      BUG23948
+     C                   Z-ADD     0             FSPTHU           15 0                      BUG24190
+     C                   Z-ADD     0             FSPTUT           15 0                      BUG24190
+      *                                                                                     BUG23948
+      ** Taxable interest in Deal & Tax CCY                                                 BUG23948
+      *                                                                                     BUG23948
+     C                   SELECT                                                             BUG23948
+      *                                                                                     BUG23948
+     C     WTAXI         WHENEQ    'N'                                                      BUG23948
+     C**********           Z-ADD0         WSPTHU                                   BUG23948 BUG24190
+     C**********           Z-ADD0         WSPTUT                                   BUG23948 BUG24190
+     C                   Z-ADD     0             FSPTHU                                     BUG24190
+     C                   Z-ADD     0             FSPTUT                                     BUG24190
+      *                                                                                     BUG23948
+     C     WTAXI         WHENEQ    'Y'                                                      BUG23948
+     C**********           Z-ADDTSGINT    WSPTHU                                   BUG23948 BUG24190
+     C**********           Z-ADDTSGINC    WSPTUT                                   BUG23948 BUG24190
+     C                   Z-ADD     TSGINT        FSPTHU                                     BUG24190
+     C                   Z-ADD     TSGINC        FSPTUT                                     BUG24190
+      *                                                                                     BUG23948
+     C     WTAXI         WHENEQ    'T'                                                      BUG23948
+     C********** TSPTHU    IFGE *ZERO                                              BUG23948 BUG24190
+     C**********           Z-ADD0         WSPTHU                                   BUG23948 BUG24190
+     C**********           Z-ADD0         WSPTUT                                   BUG23948 BUG24190
+      **********                                                                   BUG23948 BUG24190
+     C**********           ELSE                                                    BUG23948 BUG24190
+      **********                                                                   BUG23948 BUG24190
+     C**********           Z-SUBTSPTHU    WSPTHU                                   BUG23948 BUG24190
+     C**********           Z-SUBTSPTUT    WSPTUT                                   BUG23948 BUG24190
+      *                                                                                     BUG25020
+     C                   Z-ADD     TSPTHU        WSPTHU                                     BUG25020
+     C                   Z-ADD     TSPTUT        WSPTUT                                     BUG25020
+     C                   MOVE      'Y'           WCONV             1                        BUG23948
+      *                                                                                     BUG23948
+     C     TSOCCY        IFEQ      BJCYCD                                                   BUG24190
+     C     TSGINT        SUB       WSPTHU        FSPTHU                                     BUG24190
+     C     TSGINC        SUB       WSPTUT        FSPTUT                                     BUG24190
+     C                   ENDIF                                                              BUG23948
+      *                                                                                     BUG23948
+     C                   ENDSL                                                              BUG23948
+      *                                                                                     BUG23739
+      ** Set up Taxable Interest in Deal Currency                                           BUG23739
+      *                                                                                     BUG23739
+     C**********           MOVELTSPTHU    ##D,16                                   BUG23739 BUG23948
+      *                                                                                     BUG23948
+     C     WCONV         IFEQ      'Y'                                                      BUG23948
+     C     TSOCCY        ANDNE     BJCYCD                                                   BUG23948
+      *                                                                                     BUG23948
+     C**********           MOVE BJCYCD    ZCCY                                    BUG23948 BUG23948B
+     C                   MOVE      BJCYCD        ##CCY                                     BUG23948B
+     C                   EXSR      SRDCDT                                                  BUG23948B
+      *                                                                                     BUG23948
+     C**********           CALL 'AOCURRR0'                                        BUG23948 BUG23948B
+     C**********           PARM *BLANKS   PRTCD                                   BUG23948 BUG23948B
+     C**********           PARM '*KEY   ' POPTN                                   BUG23948 BUG23948B
+     C**********           PARM           ZCCY    3                               BUG23948 BUG23948B
+     C********** SDCURR    PARM SDCURR    DSSDY                                   BUG23948 BUG23948B
+      *                                                                                     BUG23948
+     C     A6MDIN        IFEQ      'D'                                                      BUG23948
+     C                   Z-ADD     A6SPRT        ZRATE1           13 8                      BUG23948
+     C                   ELSE                                                               BUG23948
+     C     A6SPRT        SUB       A6TCMP        WSPRT            13 8                      BUG23948
+     C     1             DIV(H)    WSPRT         ZRATE1                                     BUG23948
+     C                   ENDIF                                                              BUG23948
+      *                                                                                     BUG23948
+     C                   MOVE      'D'           ZMDI1             1                        BUG23948
+     C                   Z-ADD     A6NBDP        ZCDPI             1 0                      BUG23948
+      *                                                                                     BUG23948
+     C**********           MOVE TSOCCY    ZCCY                                    BUG23948 BUG23948B
+     C                   MOVE      TSOCCY        ##CCY                                      BUG23948
+      *                                                                                     BUG23948
+     C**********           CALL 'AOCURRR0'                                        BUG23948 BUG23948B
+     C**********           PARM *BLANKS   PRTCD                                   BUG23948 BUG23948B
+     C**********           PARM '*KEY   ' POPTN                                   BUG23948 BUG23948B
+     C**********           PARM           ZCCY    3                               BUG23948 BUG23948B
+     C********** SDCURR    PARM SDCURR    DSSDY                                   BUG23948 BUG23948B
+      *                                                                                     BUG23948
+      ** Get Rate for conversion from Base - Deal Ccy                                       BUG23948
+      *                                                                                     BUG23948
+     C     A6MDIN        IFEQ      'D'                                                      BUG23948
+     C                   Z-ADD     A6SPRT        ZRATE2           13 8                      BUG23948
+     C                   ELSE                                                               BUG23948
+     C     A6SPRT        SUB       A6TCMP        WSPRT            13 8                      BUG23948
+     C     1             DIV(H)    WSPRT         ZRATE1                                     BUG23948
+     C                   ENDIF                                                              BUG23948
+      *                                                                                     BUG23948
+     C                   MOVE      'D'           ZMDI2             1                        BUG23948
+     C                   Z-ADD     A6NBDP        ZCDPO             1 0                      BUG23948
+      *                                                                                     BUG23948
+     C                   EXSR      ZXRATE                                                   BUG23948
+      *                                                                                     BUG23948
+     C                   Z-ADD     ZRATEX        ZCRSRT                                     BUG23948
+     C                   MOVE      ZMDI1         ZCRSMD                                     BUG23948
+     C                   Z-ADD     ZCDPI         ZCDPF                                      BUG23948
+     C                   Z-ADD     ZCDPO         ZCDPT                                      BUG23948
+      *                                                                                     BUG23948
+      ** Convert to Taxable Interest into Deal Ccy                                          BUG23948
+      *                                                                                     BUG23948
+     C                   Z-ADD     0             ZAMTT                                      BUG23948
+     C                   Z-ADD     WSPTHU        ZAMTF                                      BUG23948
+     C                   EXSR      ZCCYXR                                                   BUG23948
+     C                   MOVEL     ZAMTT         WSPTHU                                     BUG23948
+      *                                                                                     BUG24190
+     C     TSGINT        SUB       WSPTHU        FSPTHU                                     BUG24190
+     C     TSGINC        SUB       WSPTUT        FSPTUT                                     BUG24190
+     C                   ENDIF                                                              BUG24190
+      *                                                                                     BUG23948
+     C**********           MOVELWSPTHU    ##D,16                                   BUG23948 BUG24190
+     C**********           MOVELFSPTHU    ##D,16                                   BUG24190 BUG24777
+     C                   MOVEL     FSPTHU        ##D(19)                                    BUG24777
+     C                   MOVEL     TSOCCY        ##CCY                                      BUG23739
+     C                   EXSR      SRDCDT                                                   BUG23739
+     C**********           MOVE A6NBDP    ##D,16                                   BUG23739 BUG24777
+     C                   MOVE      A6NBDP        ##D(19)                                    BUG24777
+      *                                                                                     BUG23739
+      ** Set up Taxable Interest in Tax Currency                                            BUG23739
+      *                                                                                     BUG23739
+     C********** TSOCCY    IFEQ TSTXCY                                             BUG23739 BUG23948
+     C**********           MOVELTSPTUT    ##D,17                                   BUG23739 BUG23948
+     C**********           MOVELWSPTUT    ##D,17                                   BUG23948 BUG24190
+     C**********           MOVELFSPTUT    ##D,17                                   BUG24190 BUG24777
+     C                   MOVEL     FSPTUT        ##D(20)                                    BUG24777
+     C                   MOVEL     TSTXCY        ##CCY                                      BUG23948
+     C                   EXSR      SRDCDT                                                   BUG23948
+     C**********           MOVE A6NBDP    ##D,17                                   BUG23739 BUG24777
+     C                   MOVE      A6NBDP        ##D(20)                                    BUG24777
+      *                                                                                     BUG23739
+     C**********           ELSE                                                    BUG23739 BUG23948
+      **********                                                                   BUG23739 BUG23948
+     C**********           Z-ADD0         ZAMTT                                    BUG23739 BUG23948
+     C**********           Z-ADDTSPTUT    ZAMTF                                    BUG23739 BUG23948
+     C**********           EXSR ZCCYXR                                             BUG23739 BUG23948
+     C**********           MOVELZAMTT     ##D,17                                   BUG23739 BUG23948
+     C**********           MOVELTSTXCY    ##CCY                                    BUG23739 BUG23948
+     C**********           EXSR SRDCDT                                             BUG23739 BUG23948
+     C**********           MOVE A6NBDP    ##D,17                                   BUG23739 BUG23948
+     C**********           ENDIF                                                   BUG23739 BUG23948
+      * --------------------------------------------------------                            BUG24777
+      ** NOTE : System can only handle up to max of 20 RDEs at                              BUG24777
+      **        a time so accumulate the current set so far and                             BUG24777
+      **        reset ##D index back to 1.                                                  BUG24777
+      * --------------------------------------------------------                            BUG24777
+      ** Accumulate RDEs and associated data                                                BUG24777
+      *                                                                                     BUG24777
+     C                   EXSR      SRADTA                                                   BUG24777
+      *                                                                                     BUG24777
+      ** Retrieve RDE information for RDEs in group set                                     BUG24777
+      *                                                                                     BUG24777
+     C                   MOVEL     @STK(Q)       ##GRPS                                     BUG24777
+     C                   Z-ADD     21            ##RDEN                                     BUG24777
+     C                   EXSR      SRRRDE                                                   BUG24777
+      *                                                                                     BUG23739
+      ** Tax currency                                                                       BUG23739
+      *                                                                                     BUG23739
+     C***********          MOVELTSTXCY    ##D,18                                   BUG23739 BUG24777
+     C                   MOVEL     TSTXCY        ##D(1)                                     BUG24777
+      *
+      ** Secondary Tax Rate (Solidarity Surcharge rate)                                    BUG24442A
+      *                                                                                    BUG24442A
+     C***********          MOVELTSSTRA    ##D,19                                  BUG24442A BUG24777
+     C                   MOVEL     TSSTRA        ##D(2)                                     BUG24777
+      *                                                                                    BUG24442A
+      ** Withholding Tax Rate                                                               BUG25723
+      *                                                                                     BUG25723
+     C                   MOVEL     TSTXRT        ##D(3)                                     BUG25723
+      *                                                                                     BUG26354
+      ** Interest To                                                                        BUG26354
+      *                                                                                     BUG26354
+     C                   MOVEL     TSEDAT        ##D(4)                                     BUG26354
+      *                                                                                     BUG26354
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXSRC2        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  Z58DT2                                        *
+      *  Function    -  Posting Group Set (simple) more RDE's         *
+      *                                                               *
+      *  Called by   -  Z58POS - Posting group set (complex)          *
+      *  Calls       -  SRRRDE - Retrieve RDE Information             *
+      *                 SRADTA - Format Extract Data                  *
+      *                 SRODTA - Output Extract Data                  *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C     Z58DT2        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'Z58DT2'      @STK(Q)
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C     7             OCCUR     ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                   MOVEL     '\Z58DT2'     ##PNAM
+     C     S#PATH        CAT       ##PNAM:0      S#PATH
+     C                   MOVEL     S#PATH        ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                   Z-ADD     S#PBIN        ##PBIN
+     C                   Z-ADD     S#TBIN        ##TBIN
+      *
+     C                   EXSR      PSHGRS
+      *
+      ** KLIST for SDACTXL1
+      *
+     C     KEY3          KLIST
+     C                   KFLD                    TICUST
+     C                   KFLD                    BBCNCZ
+      *
+      ** Retrieve RDE information for RDE's in Group Set
+      *
+     C                   MOVEL     'Z58DT2'      ##GRPS
+     C                   Z-ADD     1             ##RDEN
+     C                   EXSR      SRRRDE
+      *
+      ** Customer Report Name
+      *
+     C                   MOVEL     BBCRNM        ##D(1)
+      *
+      ** Spot Rate
+      *
+     C**********           MOVELTSTCSR    ##D,2                                             BUG23948
+     C                   MOVEL     TSOCSR        ##D(2)                                     BUG23948
+      *
+      ** Tax Type
+      *
+     C     KEY3          CHAIN     SDACTXL1                           69
+     C     *IN69         IFEQ      *OFF
+     C                   MOVEL     AXETXS        ##D(3)
+     C                   ENDIF
+      *
+      ** Join Account Number
+      *
+     C                   MOVEL     TSJOIN        ##D(4)
+      *
+      ** Join Reference
+      *
+     C                   MOVEL     TSNAHO        ##D(5)
+      *
+      ** Account officer
+      *
+     C                   MOVEL     BBACOC        ##D(6)
+      *
+      ** Deal Type
+      *
+     C                   MOVEL     TSTRTP        ##D(7)
+      *
+      ** Deal Sub-type
+      *
+     C                   MOVEL     TSTRST        ##D(8)
+      *                                                                                     BUG23739
+      ** Exchange Rate                                                                      BUG23739
+      *                                                                                     BUG23739
+     C                   MOVEL     TSXRST        ##D(9)                                     BUG23739
+      *                                                                                     BUG23739
+      ** Interest Rate                                                                      BUG23739
+      *                                                                                     BUG23739
+     C***********TSDLLN    CHAINDEALS                66                            BUG23739 BUG24778
+     C***********          MOVELRTSP      ##D,10                                   BUG23739 BUG24778
+      *                                                                                     BUG24778
+      ** Hide retrieval of Interest Rate in subroutine SRINTR.                              BUG24778
+      ** It is currently not extracted but if needed later, just                            BUG24778
+      ** reinstate the commented line "EXSR SRINTR" below.                                  BUG24778
+      *                                                                                     BUG24778
+     C                   MOVEL     *BLANKS       ##D(10)                                    BUG24778
+     C***********          EXSR SRINTR                                                      BUG24778
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+      *
+     C                   EXSR      POPGRS
+      *
+     C     EXSDA2        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  SRGENR                                        *
+      *  Function    -  Generate reference number                     *
+      *                 by writing to PF/CGUDCRPD                     *
+      *                                                               *
+      *  Called by   -  ZFSM58 - Main Processing                      *
+      *  Calls       -  CG9010 - Create reference record              *
+      *****************************************************************
+     C     SRGENR        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRGENR'      @STK(Q)
+      *
+      ** Generate reference number and check if further processing
+      ** required. Set up all available information in the record
+      ** format before calling.
+      *
+     C                   MOVEL     TSBRCA        DRBRCA
+     C                   MOVEL     TSBRCA        DRORBR
+     C     TSMODI        IFEQ      'D'
+     C                   MOVEL     TSDLLN        DRMTRN
+     C                   MOVEL     'DL'          DRMODI
+     C                   MOVEL     *BLANK        DRMACT
+     C                   ELSE
+     C                   CLEAR                   DRMTRN
+     C                   MOVEL     'RE'          DRMODI
+      *
+     C**********           MOVELTSCUST    W0CUST  60                                          CER059
+     C                   MOVEL     TSCUST        W0CUST                                       CER059
+      *
+     C     ACNTKY        CHAIN     ACCNT                              80
+      *
+     C     *IN80         IFEQ      *OFF
+      *
+     C                   MOVEL     ACNO          DRMACT
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   MOVEL     'WTAX'        DRPTYP
+     C                   MOVEL     'ADVICE'      DRPSTP
+     C                   MOVEL     'N'           DRATRM
+     C                   MOVE      TSCUST        UTCUST
+      *
+     C                   CALL      'CG9010'
+     C                   PARM                    ##RTCD            7
+     C                   PARM      '*GEN'        UFMODE           10
+     C                   PARM      W0CMT         ##CMT             3
+     C                   PARM                    UTCUST            6
+     C                   PARM                    ##UDCR
+     C                   PARM                    ##ITMA            8
+      *
+      ** BLANKSreturn code implies generate correspondence.
+      ** CGD1270 => no error, but suppress output for this transaction.
+      *
+     C     ##RTCD        IFEQ      *BLANKS
+     C     DRPTYP        CAT(P)    ':':0         COLON            11
+     C     COLON         CAT(P)    DRPSTP:0      ##REFR
+     C                   EXSR      WRAPRF
+     C                   END
+      *
+     C     ##RTCD        IFNE      *BLANKS
+      *
+     C     ##RTCD        IFEQ      'CGD1270'
+     C                   MOVE      'N'           UFCOPD            1
+     C                   ELSE
+      *
+     C                   MOVEL     'CG9010  '    W0FILE
+     C                   MOVEL     ##RTCD        W0KEY
+     C                   Z-ADD     6             W0ERNB
+     C                   MOVEL     'CGD1286'     W0MSGD
+     C                   MOVEL     'CGUSRMSG'    W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     EXGENR        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRRRDE                                        *
+      *  Function    -  Retrieve RDE information for RDEs in group set*
+      *                                                               *
+      *  Called by   -  simple group set subroutines                  *
+      *  Calls       -  -                                             *
+      *                                                               *
+      *****************************************************************
+     C     SRRRDE        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRRRDE'      @STK(Q)
+      *
+      ** Reset
+      *
+     C                   MOVEL     *BLANKS       ##R
+     C                   MOVEL     *BLANKS       ##D
+     C                   MOVEL     *BLANKS       ##S
+      *
+      ** Get information about next 20 RDEs in group set from compile
+      ** time arrays
+      *
+     C                   Z-ADD     0             #1
+     C     *IN99         DOUEQ     '0'
+     C     #1            OREQ      20
+     C                   Z-ADD     1             #2
+     C     ##GRPX        LOOKUP    ##GRP(#2)                              99    *
+     C     *IN99         IFEQ      '1'
+     C                   ADD       1             #1
+     C                   MOVEL     ##RDEA(#2)    ##R(#1)
+     C                   ADD       1             ##RDEN
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C     EXRRDE        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRADTA                                        *
+      *  Function    -  Accumulate RDEs and associated data for output*
+      *                                                               *
+      *  Called by   -  simple group set subroutines                  *
+      *  Calls       -  CG3999 - Format and Pack Data                 *
+      *                 SRERR  - Database Error                       *
+      *                                                               *
+      *****************************************************************
+     C     SRADTA        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRADTA'      @STK(Q)
+      *
+      ** Reformat RDE data
+      *
+     C                   EXSR      SRRFMN
+      *
+      ** Pack RDEs and associated data into data string
+      *
+     C                   CLEAR                   ##SDS
+      *
+      ** If CCG015 is installed, value of W0ACT is '*NEWARR'
+      *
+     C     CCG015        IFEQ      'Y'
+     C                   MOVEL     '*NEWARR '    W0ACT
+     C                   MOVEL     S#PATH        W0SPAT
+     C                   ELSE
+     C                   MOVEL     '*PACK   '    W0ACT
+     C                   MOVEL     *BLANKS       W0SPAT
+     C                   ENDIF
+      *
+     C                   CALL      'CG3999'
+     C                   PARM      *BLANKS       ##RTCD
+     C                   PARM                    W0ACT
+     C                   PARM                    ##R
+     C                   PARM                    ##D
+     C                   PARM                    ##S
+     C                   PARM                    W0SPAT           70
+     C                   PARM                    ##RN
+     C                   PARM                    ##DN
+     C                   PARM                    ##FM
+      *
+      ** Database error
+      *
+     C     ##RTCD        IFNE      *BLANKS
+      *
+     C                   MOVEL     'CG3999  '    W0FILE
+     C                   MOVEL     ##RTCD        W0KEY
+     C                   Z-ADD     7             W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   EXSR      WRTRDE
+      *
+      ** Initialise Write Format Parameter.
+      *
+     C                   CLEAR                   W0FMT
+      *
+      ** Set up Control Information.
+      *
+     C                   Z-ADD     ##ITEM        DEITEM
+     C                   ADD       1             ##OSEQ
+     C                   Z-ADD     ##OSEQ        DEOSEQ
+     C                   Z-ADD     ##PBIN        DEPBIN
+     C                   Z-ADD     ##TBIN        DETBIN
+     C                   MOVE      'FR'          DEFSLI
+     C                   MOVE      *BLANKS       W0PATH
+     C                   MOVEL     S#PATH        W0PATH
+      *
+      ** Append Data from pack routine.
+      *
+     C     W0FMT         CAT       ##SDS:0       W0FMT
+      *
+      ** Set Flag to show record formatted
+      *
+     C                   MOVE      'Y'           ##RFMT            1
+      *
+     C     EXADTA        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  -  SRRFMN                                        *
+      *  Function    -  Reformat RDE data                             *
+      *                                                               *
+      *  Called by   -  SRADTA                                        *
+      *  Calls       -                                                *
+      *****************************************************************
+     C     SRRFMN        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRRFMN'      @STK(Q)
+      *
+      ** Loop through RDE's and data
+      *
+     C                   Z-ADD     0             #1
+     C     #1            DOUEQ     20
+     C                   ADD       1             #1
+     C                   MOVEL     ##R(#1)       R#DEFN
+     C                   MOVEL     ##D(#1)       R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+     C     R#DATA        IFNE      *BLANKS
+     C     ##RDEC        ANDNE     *BLANKS
+      *
+      ** Reformat Amount
+      *
+     C                   Z-ADD     1             #2
+     C     *BLANKS       LOOKUP    ##NUMA(#2)                             99    *
+     C                   Z-ADD     20            #3
+     C                   Z-ADD     0             ##WNUM
+     C     #2            DOWGT     1
+     C     #2            ANDLE     20
+     C     #3            ANDGT     1
+     C                   SUB       1             #2
+     C                   MOVEL     ##NUMA(#2)    ##W(#3)
+     C                   SUB       1             #3
+     C                   ENDDO
+      *
+      ** Sign the amount
+      *
+     C     ##SIGN        IFEQ      '-'
+     C                   Z-SUB     ##WNUM        ##NUMB
+     C                   ELSE
+     C                   Z-ADD     ##WNUM        ##NUMB
+     C                   END
+      *
+      ** Default Edit Type
+      *
+     C     ##EDTT        IFEQ      *BLANKS
+     C                   MOVEL     ##RDET        ##EDTT
+     C                   END
+      *
+      ** Default Decimal Places
+      *
+     C     ##DCPA        IFEQ      *BLANKS
+     C                   MOVEL     ##RDED        ##DCPA
+     C                   END
+      *
+      ** New RDE data
+      *
+     C                   MOVEL     R#DATA        ##D(#1)
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C     EXRFMN        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRODTA                                        *
+      *  Function    -  Output Accumulated data to PF/CGUDTAPD        *
+      *                                                               *
+      *  Called by   -  simple group set subroutines                  *
+      *  Calls       -  CG9020 - Output Data to CGUDTAPD              *
+      *                 SRERR  - Database Error                       *
+      *                                                               *
+      *****************************************************************
+     C     SRODTA        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRODTA'      @STK(Q)
+      *
+      ** Output PF/CGUDTAPD Record.
+      *
+     C     CCG015        IFEQ      'N'
+     C                   CALL      'CG9020'
+     C                   PARM      *BLANKS       ##RTCD
+     C                   PARM      '*WRITE  '    W0ACT
+     C                   PARM                    W0PATH          256
+     C                   PARM                    W0FMT
+     C                   PARM      *BLANKS       W0TITL            7
+     C                   PARM      *BLANKS       W0ULIN            7
+     C                   PARM                    W0CMT
+      *
+      ** Database error
+      *
+     C     ##RTCD        IFNE      *BLANKS
+      *
+     C                   MOVEL     'CG9020  '    W0FILE
+     C                   MOVEL     ##RTCD        W0KEY
+     C                   Z-ADD     8             W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Reset Flag to show formatted data output.
+      *
+     C                   MOVE      *BLANKS       ##RFMT
+      *
+     C     EXODTA        TAG
+      *
+      **
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT                                                                                BUG24778
+      *****************************************************************                     BUG24778
+      *                                                               *                     BUG24778
+      *  Subroutine  -  SRINTR                                        *                     BUG24778
+      *  Function    -  Extract Interest Rate                         *                     BUG24778
+      *                                                               *                     BUG24778
+      *  Called by   -                                                *                     BUG24778
+      *  Calls       -                                                *                     BUG24778
+      *                                                               *                     BUG24778
+      *****************************************************************                     BUG24778
+     C     SRINTR        BEGSR                                                              BUG24778
+      *                                                                                     BUG24778
+      ** Dealing transaction (module ID is 'D')                                             BUG24778
+      *                                                                                     BUG24778
+     C     TSMODI        IFEQ      'D'                                                      BUG24778
+     C     TSDLLN        CHAIN     DEALS                              66                    BUG24778
+      *                                                                                     BUG24778
+     C     *IN66         IFEQ      '0'                                                      BUG24778
+     C                   MOVEL     INTR          ##D(10)                                    BUG24778
+     C                   ENDIF                                                              BUG24778
+      *                                                                                     BUG24778
+     C                   ENDIF                                                              BUG24778
+      *                                                                                     BUG24778
+      ** Retail caplitalisation (module ID is 'G')                                          BUG24778
+      *                                                                                     BUG24778
+     C     TSMODI        IFEQ      'G'                                                      BUG24778
+      *                                                                                     BUG24778
+      ** Convert customer number to be used as one of the key fields.                       BUG24778
+      ** (the rest of the keys fields can be used directly from SDCSINPD)                   BUG24778
+     C**********           MOVELTSCUST    KCNUM   60                                 BUG24778 CER059
+     C                   MOVEL     TSCUST        KCNUM             6                          CER059
+      *                                                                                     BUG24778
+     C     KYREHI        SETGT     REHISDL                                                  BUG24778
+     C                   READP     REHISDL                              9090                BUG24778
+      *                                                                                     BUG24778
+     C     *IN90         IFEQ      '0'                                                      BUG24778
+     C                   MOVEL     RCRIR         ##D(10)                                    BUG24778
+     C                   ENDIF                                                              BUG24778
+      *                                                                                     BUG24778
+     C                   ENDIF                                                              BUG24778
+      *                                                                                     BUG24778
+     C                   ENDSR                                                              BUG24778
+      *****************************************************************                     BUG24778
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRDCDT                                        *
+      *  Function    -  Determine Currency Details                    *
+      *                                                               *
+      *  Called by   -                                                *
+      *  Calls       -                                                *
+      *                                                               *
+      *****************************************************************
+     C     SRDCDT        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRDCDT'      @STK(Q)
+      *
+      ** Access array of Currency Details already loaded
+      *
+     C                   Z-ADD     1             C                 3 0
+     C     ##CCY         LOOKUP    ##CY(C)                                99
+      *
+      ** If no match is found determine the next free space in the
+      ** loaded currency array.
+      *
+     C     *IN99         IFEQ      *OFF
+     C                   Z-ADD     1             C
+     C     *BLANKS       LOOKUP    ##CY(C)                                99
+      *
+      ** If no space is left, set the Currency Data data structure to
+      ** the 101st occurrence so that when the new details are
+      ** retrieved no existing details are overwritten.
+      *
+     C     *IN99         IFEQ      *OFF
+     C     101           OCCUR     SDCURR
+      *
+      ** If a space is found, set up the new currency into the array
+      ** and position the Currency Data data structure on the
+      ** occurrence matching the array index.
+      *
+     C                   ELSE
+     C                   MOVE      ##CCY         ##CY(C)
+     C     C             OCCUR     SDCURR
+     C                   ENDIF
+      *
+      ** Retrieve the currency details.
+      *
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       ##RTCD
+     C                   PARM      '*KEY'        ##OPTN
+     C                   PARM                    ##CCY             3
+     C     SDCURR        PARM      *BLANKS       DSSDY
+      *
+      ** Database Error
+      *
+     C     ##RTCD        IFNE      *BLANKS
+     C                   MOVEL     'SDCURRPD'    W0FILE
+     C                   MOVEL     ##CCY         W0KEY
+     C                   Z-ADD     9             W0ERNB
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** If the currency has been retrieved earlier, position the
+      ** Currency Data data structure on the relevant occurrence.
+      *
+     C                   ELSE
+     C     C             OCCUR     SDCURR
+     C                   ENDIF
+      *
+     C     EXDCDP        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRINIT                                        *
+      *  Function    -  Initial processing - First Call Only          *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  AOBANKR0 - Obtain Bank details                *
+      *                 AOGELRR0 - Obtain General Ledger Details      *
+      *                                                               *
+      *****************************************************************
+     C     SRINIT        BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRINIT'      @STK(Q)
+      *
+      ** Define Fields
+      *
+     C                   MOVE      *BLANKS       S#PATH          256
+     C     *LIKE         DEFINE    DEPBIN        ##BNDC
+     C     *LIKE         DEFINE    DEPBIN        S#PBIN
+     C     *LIKE         DEFINE    DETBIN        S#TBIN
+     C     *LIKE         DEFINE    TSPTHU        WSPTHU                                     BUG23948
+     C     *LIKE         DEFINE    TSPTUT        WSPTUT                                     BUG23948
+      *
+     C     *LIKE         DEFINE    ##CCY         EQCY
+     C     *LIKE         DEFINE    CCY           ##CCYP
+      *
+      ** Call access program for Bank details
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       ##RTCD            7
+     C                   PARM      '*FIRST  '    ##OPTN            7
+     C     SDBANK        PARM      SDBANK        DSFDY
+      *
+      ** Database error
+      *
+     C     ##RTCD        IFNE      *BLANKS
+      *
+     C                   MOVEL     'AOBANKR0'    W0FILE
+     C                   MOVEL     '*CALL'       W0KEY
+     C                   Z-ADD     10            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Determine number of decimal places - base currency
+      *
+     C                   MOVEL     BJCYCD        ##CCY
+     C                   EXSR      SRDCDT
+     C                   Z-ADD     A6NBDP        BASCDP            1 0
+      *
+      ** Determine number of decimal places - local currency
+      *
+     C**********           MOVELBJLCCY    ##CCY                                             BUG26321
+     C**********           EXSR SRDCDT                                                      BUG26321
+     C**********           Z-ADDA6NBDP    LOCDP   10                                        BUG26321
+      *
+      ** Call access program for General Ledger details
+      *
+     C                   CALL      'AOGELRR0'
+     C                   PARM      '*MSG   '     PRTCD             7
+     C                   PARM      '*FIRST '     POPTN
+     C     SDGELR        PARM      SDGELR        DSFDY
+      *
+      ** Database error
+      *
+     C     PRTCD         IFNE      *BLANKS
+      *
+     C                   MOVEL     'AOGELRR0'    W0FILE
+     C                   MOVEL     '*CALL'       W0KEY
+     C                   Z-ADD     11            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+      ** Access SAR details file to determine if CEU013 is installed
+      *
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD
+     C                   PARM      '*VERIFY'     POPTN
+     C                   PARM      'CEU013'      ##SARD            6
+     C                   PARM                    DSFDY
+      *
+      ** Database error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVEL     'SCSARDPD'    W0FILE
+     C                   MOVEL     '*CALL'       W0KEY
+     C                   Z-ADD     12            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+      *
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVEL     'Y'           CEU013            1
+     C                   ELSE
+     C                   MOVEL     'N'           CEU013
+     C                   END
+      *
+      ** Retrieve the Euro currency details for later use.
+      *
+     C     CEU013        IFEQ      'Y'
+     C     BKEURO        ANDNE     *BLANKS
+     C                   MOVE      BKEURO        ##CCY
+     C                   EXSR      SRDCDT
+     C                   ENDIF
+      *
+      ** Access SAR details file to determine if CEU014 is installed
+      *
+     C                   CALL      'AOSARDR0'
+     C                   PARM      '       '     PRTCD
+     C                   PARM      '*VERIFY'     POPTN
+     C                   PARM      'CEU014'      ##SARD
+     C                   PARM                    DSFDY
+      *
+      ** Database error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C     PRTCD         ANDNE     '*NRF   '
+     C                   MOVEL     'SCSARDPD'    W0FILE
+     C                   MOVEL     '*CALL'       W0KEY
+     C                   Z-ADD     13            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+      *
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVEL     'Y'           CEU014            1
+     C                   ELSE
+     C                   MOVEL     'N'           CEU014
+     C                   END
+      *
+      ** Access Switchable Features file and check if CCG015 is
+      ** installed (Correspondence Manager)
+      *
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*VERIFY'     POPTN
+     C                   PARM      'CCG015'      ##SARD
+     C                   PARM                    DSFDY
+      *
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CCG015            1
+     C                   ELSE
+     C                   MOVE      'N'           CCG015
+      *
+     C     PRTCD         IFNE      '*NRF    '
+     C                   MOVEL     'SCSARDPD'    W0FILE
+     C                   MOVEL     '*CALL   '    W0KEY
+     C                   Z-ADD     19            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *                                                                                       CER054
+      ** Access SAR details file to determine if CER054 is installed                          CER054
+      *                                                                                       CER054
+     C                   CALL      'AOSARDR0'                                                 CER054
+     C                   PARM      '       '     PRTCD                                        CER054
+     C                   PARM      '*VERIFY'     POPTN                                        CER054
+     C                   PARM      'CER054'      ##SARD                                       CER054
+     C                   PARM                    DSFDY                                        CER054
+      *                                                                                       CER054
+      ** Database error                                                                       CER054
+      *                                                                                       CER054
+     C     PRTCD         IFNE      *BLANKS                                                    CER054
+     C     PRTCD         ANDNE     '*NRF   '                                                  CER054
+     C                   MOVEL     'SCSARDPD'    W0FILE                                       CER054
+     C                   MOVEL     '*CALL'       W0KEY                                        CER054
+     C                   Z-ADD     14            W0ERNB                                       CER054
+     C                   MOVEL     'MEM5003'     W0MSGD                                       CER054
+     C                   MOVEL     'MIDAS  '     W0MSGF                                       CER054
+     C                   EXSR      SRERR                                                      CER054
+     C                   END                                                                  CER054
+      *                                                                                       CER054
+     C                   MOVEL     'N'           CER054                                       CER054
+     C     PRTCD         IFEQ      *BLANKS                                                    CER054
+     C                   MOVEL     'Y'           CER054            1                          CER054
+     C                   END                                                                  CER054
+      *
+      ** Ket for access of SDCSINL2 (only records added today)
+      *
+     C     UFGLKY        KLIST
+     C                   KFLD                    BJRDNB                                     BUG23739
+     C                   KFLD                    TICUST
+      *
+      *
+      ** Copyright
+      *
+     C                   MOVEA     ##CPY         ##BIS            80
+      *
+     C     EXINIT        TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine  -  SRINZ                                         *
+      *  Function    -  Initialise Fields on Program Invocation       *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  None                                          *
+      *                                                               *
+      *****************************************************************
+     C     SRINZ         BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                   ADD       1             Q
+     C                   MOVEL     'SRINZ '      @STK(Q)
+      *
+      ** Initialise work fields
+      *
+     C                   Z-ADD     *ZEROS        #1                6 0
+     C                   Z-ADD     *ZEROS        #2                6 0
+     C                   Z-ADD     *ZEROS        #3                6 0
+     C                   MOVE      *BLANKS       S#PATH
+     C     *LIKE         DEFINE    DEOSEQ        ##OSEQ
+      *
+     C                   Z-ADD     *ZEROS        ##OSEQ
+      *
+      ** Initialise Binds.
+      *
+     C                   Z-ADD     1             S#PBIN
+     C                   Z-ADD     1             S#TBIN
+     C                   Z-ADD     1             ##BNDC
+      *
+      ** Initialise XML increment
+      *
+     C                   EXSR      INIXML
+      *
+     C     EXINZ         TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+      *
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+     C*COPY*ZSRSRC,ZXRATEZ1                                                        BUG23948 MD056543
+     C*COPY*ZSRSRC,ZCCYXR                                                          BUG23739 MD056543
+     C*COPY*CGCPYSRC,SRERRPSSR                                                              MD056543
+     C/COPY ZSRSRC,ZXRATEZ1LE                                                               MD056543
+     C/COPY ZSRSRC,ZCCYXR_ILE                                                               MD056543
+     C/COPY CGCPYSRC,SRERRPSSRL                                                             MD056543
+     C/SPACE 5
+     C*COPY*CGCPYSRC,SRERRC                                                                 MD056543
+     C/COPY CGCPYSRC,SRERRCLE                                                               MD056543
+     O/SPACE 5
+     C*COPY*CGCPYSRC,CGNWEX                                                                 MD056543
+     C/COPY CGCPYSRC,CGNWEXCILE                                                             MD056543
+      *                                                                                     BUG26354
+      ** Added ZZFINTO rde to the Z58DTA group set                                          BUG26354
+      *                                                                                     BUG26354
+** ##GRP/##RDEA
+Z58HDR0001 ZZFLTSD    Date
+Z58HDR0002 ZZFSD      Date
+Z58HDR0003 ZZPAGNO    AmountL0
+Z58HDR0004 ZZUUTHR    AmountL
+Z58HDR0005 ZZUTIL     AmountL
+Z58HDR0006 ZZCTHR     AmountL
+BRANCH0001 BRANCH
+BRANCH0002 BRANCH NAM
+CUST  0001 CUSTOMER
+CUST  0002 CUST_NAME
+CUST  0003 CUST_ADR1
+CUST  0004 CUST_ADR2
+CUST  0005 CUST_ADR3
+CUST  0006 CUST_ADR4
+CUST  0007 CUST_TOWN
+CCY   0001 CURRENCY                                                                        BUG23739A
+CCY   0002 CCY_DESC                                                                        BUG23739A
+CCY   0003 PREC_METIN
+Z58DTA0001 ZZDLNO
+Z58DTA0002 ZZACNO
+Z58DTA0003 ZZFTAXI
+Z58DTA0004 ZZFTRTP
+Z58DTA0005 ZZFSLID    Date
+Z58DTA0006 ZZFVALD    Date
+Z58DTA0007 ZZFGINTC   AmountL
+Z58DTA0008 ZZFGINTD   AmountL
+Z58DTA0009 ZZFGLKR    Rate  L7
+Z58DTA0010 ZZFWHTC    AmountL
+Z58DTA0011 ZZFWHTB    AmountL
+Z58DTA0012 ZZFSCNC    AmountL
+Z58DTA0013 ZZFSCNB    AmountL
+Z58DTA0014 ZZFNINTC   AmountL
+Z58DTA0015 ZZFNINTD   AmountL
+Z58DTA0016 ZZFCHTC    AmountL                                                                 CER054
+Z58DTA0017 ZZFCHTB    AmountL                                                                 CER054
+Z58DTA0018 ZZFCHRT    Rate  L4                                                       CER054 BUG25719
+Z58DTA0019 ZZFTINTC   AmountL                                                      BUG23739 BUG24777
+Z58DTA0020 ZZFTINTD   AmountL                                                      BUG23739 BUG24777
+Z58DTA0021 CCY_LOCAL                                                               BUG23739 BUG24777
+Z58DTA0022 SEC_TAXRT  Rate  L4                                                    BUG24442A BUG24777
+Z58DTA0023 ZZFWHTR    Rate  L4                                                              BUG25723
+Z58DTA0024 ZZFINTO    Date                                                                  BUG26354
+Z58DT20001 ZZCRNM
+Z58DT20002 ZZSPRT     Rate  L8
+Z58DT20003 ZZTAXT
+Z58DT20004 ZZJACC
+Z58DT20005 ZZJREF
+Z58DT20006 ZZACOF
+Z58DT20007 DEAL TYPE
+Z58DT20008 DEALSUBTYP
+Z58DT20009 EXCH RATE  Xrate L8                                                              BUG23739
+Z58DT20010 INT RATE   Rate  L7                                                              BUG23739
+Z58DT30001 ZZTONO                                                                          BUG23948A
+Z58DT30002 ZZTONA                                                                          BUG23948A
+Z58DT30001 ZZPUTHR    AmountL                                                               BUG23739
+Z58DT30002 ZZTONO
+Z58DT30003 ZZTONA
+Z58DT40001 GINTCCY    AmountL                                                               BUG23739
+Z58DT40002 MAINTAX    AmountL                                                               BUG23739
+Z58DT40003 SCNDTAX    AmountL                                                               BUG23739
+Z58DT40004 NINTCCY    AmountL                                                               BUG23739
+Z58DT40005 THRDTAX    AmountL                                               CER054 BUG25003 BUG25719
+ACOF  0001 ACOF_CODE                     Account Officer Code
+ACOF  0002 ACOF_DEPT                     Account Officer Dept
+ACOF  0003 ACOF_NAME                     Account Officer Name
+ACOF  0004 ACOF_TELP                     Account Officer Telephone Num.
+ACOF  0005 ACOF_TELX                     Account Officer Telephone Ext.
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2008
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION                                         BUG23739
+0000001                                                                                     BUG23739
+0000010                                                                                     BUG23739
+0000100                                                                                     BUG23739
+0001000                                                                                     BUG23739
+0010000                                                                                     BUG23739
+0100000                                                                                     BUG23739
+1000000                                                                                     BUG23739

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052922           Date 03Mar19               *
-      *  Prev Amend No. MD022945           Date 18Oct13               *
+      *  Last Amend No. MD051567           Date 26Sep20               *
+      *  Prev Amend No. MD052922           Date 03Mar19               *
+      *                 MD022945           Date 18Oct13               *
       *                 MD051877A          Date 02Oct18               *
       *                 MD051877           Date 22Sep18               *
       *                 MD051932           Date 22Sep18               *
@@ -142,6 +143,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051567 - ISDA Rules version must be a valid year starting  *
+      *             with 199 or 20.                                   *
+      *           - Applied for MD056763                              *
       *  MD052922 - Settlement Payment Customer details blank on WIP  *
       *             during dummy amend and reverse (SETL API).        *
       *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
@@ -7351,6 +7355,24 @@
      C                   MOVEL     'N'           DDIsdaOK
      C                   ENDIF
      C                   ENDIF                                                  CSW097
+      *                                                                                     MD051567
+      **  ISDA Rules version must be a valid year starting with 199 or 20.                  MD051567
+      *                                                                                     MD051567
+     C     CSW212        IFEQ      'Y'                                                      MD051567
+     C     DDISDA        IFNE      *BLANKS                                                  MD051567
+     C     DDISDA        ANDNE     '0000'                                                   MD051567
+     C                   MOVEL     DDISDA        ISDA3                                      MD051567
+     C                   MOVEL     DDISDA        ISDA2                                      MD051567
+     C     ISDA3         IFNE      '199'                                                    MD051567
+     C     ISDA2         ANDNE     '20'                                                     MD051567
+     C     DDAGTY        ANDEQ     'ISDA  '                                                 MD051567
+     C                   ADD       1             Idx                                        MD051567
+     C                   EVAL      FldNameArr(Idx) = 'DDISDA'                               MD051567
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0418'                                MD051567
+     C                   MOVEL     'N'           DDIsdaOK                                   MD051567
+     C                   ENDIF                                                              MD051567
+     C                   ENDIF                                                              MD051567
+     C                   ELSE                                                               MD051567
       *                                                                                       CSW201
       ** If SWIFT 2001 is installed, DDISDA may be '2000'                                     CSW201
       *                                                                                       CSW201
@@ -7374,6 +7396,7 @@
      C                   MOVEL     'N'           DDIsdaOK                       CSW200
      C                   ENDIF                                                  CSW200
      C                   ENDIF                                                  CSW200
+     C                   ENDIF                                                              MD051567
       *
       **  Agreement Type
       **  RS/RX                                                                 CSW097
@@ -7530,6 +7553,24 @@
      C                   MOVEL     'N'           DDIsdaOK                       CSW097
      C                   ENDIF                                                  CSW097
      C                   ENDIF                                                  CSW097
+      *                                                                                     MD051567
+      **  ISDA Rules version must be a valid year starting with 199 or 20.                  MD051567
+      *                                                                                     MD051567
+     C     CSW212        IFEQ      'Y'                                                      MD051567
+     C     DDISDA        IFNE      *BLANKS                                                  MD051567
+     C     DDISDA        ANDNE     '0000'                                                   MD051567
+     C                   MOVEL     DDISDA        ISDA3                                      MD051567
+     C                   MOVEL     DDISDA        ISDA2                                      MD051567
+     C     ISDA3         IFNE      '199'                                                    MD051567
+     C     ISDA2         ANDNE     '20'                                                     MD051567
+     C     DDAGTY        ANDEQ     'ISDA  '                                                 MD051567
+     C                   ADD       1             Idx                                        MD051567
+     C                   EVAL      FldNameArr(Idx) = 'DDISDA'                               MD051567
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0418'                                MD051567
+     C                   MOVEL     'N'           DDIsdaOK                                   MD051567
+     C                   ENDIF                                                              MD051567
+     C                   ENDIF                                                              MD051567
+     C                   ELSE                                                               MD051567
       *                                                                                       CSW201
       ** If SWIFT 2001 is installed, DDISDA may be '2000'                                     CSW201
       *                                                                                       CSW201
@@ -7553,6 +7594,7 @@
      C                   MOVEL     'N'           DDIsdaOK                       CSW200
      C                   ENDIF                                                  CSW200
      C                   ENDIF                                                  CSW200
+     C                   ENDIF                                                              MD051567
       *                                                                         CSW097
       ** FR Agreement Type                                                      CSW097
       *                                                                         CSW097

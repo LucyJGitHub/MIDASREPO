@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CG for Core Utility Program for CGCORRPD')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       UTCCG0010 - Midas CG Core Utility Program of CGCORRPDD      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056543  *CREATE  Date 15Sep20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD056543 - EDWH SSRS Reports cannot be run.                 */
+/*                - Translate graphic fields of CGCORRPD to readable */
+/*                  unicode equivalent.                              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2020')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** To generate audit report without update **/
+
+                CALL       PGM(UTCCG0011) PARM('A')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+/** To update CGCORRPD file and generate audit report **/
+
+                CALL       PGM(UTCCG0011) PARM('U')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program UTCCG0010 ended abnormally - see joblog') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra +
+                          International Limited')
+
+             ENDPGM

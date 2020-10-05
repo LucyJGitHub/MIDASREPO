@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CG Utility Program for CGCORRPD')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       UTCCG0011 - Midas CG Utility Program for CGCORRPD           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056543  *CREATE  Date 15Sep20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD056543 - EDWH SSRS Reports cannot be run.                 */
+/*                - Translate graphic fields of CGCORRPD to readable */
+/*                  unicode equivalent.                              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+             PGM        PARM(&PMODE)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2020')
+
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Check if mode passed is 'A', 'a', 'U', 'u' or invalid */
+
+             IF         COND((&PMODE *NE 'A') *AND (&PMODE *NE +
+                          'a') *AND (&PMODE *NE 'U') +
+                          *AND (&PMODE *NE 'u')) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Mode should +
+                             be either ''A'' or ''a'' for Audit and ''U'' or ''u'' for +
+                             Update') MSGTYPE(*ESCAPE)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             CHGJOB     SWS(XXXXXX00)
+
+             CLRPFM     FILE(CGCORXPD)
+             CALL       PGM(UTCG0012)
+
+/** Audit mode */
+
+             IF         COND((&PMODE *EQ 'A') *OR (&PMODE *EQ 'a')) +
+                          THEN(DO)
+                CALL       PGM(UTCG0011) PARM('A')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ENDDO
+
+/** Update mode */
+
+             IF         COND((&PMODE *EQ 'U') *OR (&PMODE *EQ 'u')) +
+                          THEN(DO)
+                CALL       PGM(UTCG0011) PARM('U')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program UTCCG0011 ended abnormally - see joblog') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra +
+                          International Limited')
+
+             ENDPGM

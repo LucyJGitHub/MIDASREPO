@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248891             Date 04Mar09               *
-      *  Prev Amend No. 254657             Date 01Jun20               *
+      *  Last Amend No. MD056772           Date 01Oct20               *
+      *  Prev Amend No. 248891             Date 04Mar09               *
+      *                 254657             Date 01Jun20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
@@ -86,12 +87,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056772 - Records from GLJENPL1 would be OPENED first before*
+      *             accessing the file and CLOSING it after access.   *
       *  248891 - Journal Batch Entry has a Valid Status of 'No'.     *
       *           Applied core fix#255331.                            *
       *  255331 - Batch with Batch Header showing VALID = NO, when    *
       *          all entries are valid.                               *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
-      *           user tries to amend/accept JE inserted via APIs     *      
+      *           user tries to amend/accept JE inserted via APIs     *
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -851,6 +854,7 @@
       ** Determine if all batch items are valid.                                              255331
       *                                                                                       255331
      C                   MOVE      'Y'           JEVALI            1                          255331
+     C                   OPEN      GLJENPL1                                                 MD056772
      C     B1BTNB        SETLL     GLJENPL1                                                   255331
      C     B1BTNB        READE     GLJENPL1                               01                  255331
      C                   DOW       *IN01 = *OFF AND JEVALI = 'Y'                              255331
@@ -859,13 +863,14 @@
      C                   ENDIF                                                                255331
      C     B1BTNB        READE     GLJENPL1                               01                  255331
      C                   ENDDO                                                                255331
+     C                   CLOSE     GLJENPL1                                                 MD056772
       *                                                                                       255331
       ** If Valid Indicator and all batch item are valid, Set valid field to 'Y'              255331
       *                                                                                       255331
      C     B1VALI        IFEQ      'Y'                                                        255331
      C     JEVALI        ANDEQ     'Y'                                                        255331
      C                   MOVE      B1VALI        BRVALI                                       255331
-     C                   ENDIF                                                                255331     
+     C                   ENDIF                                                                255331
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085

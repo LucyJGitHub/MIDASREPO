@@ -10,9 +10,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      CER049             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,7 +21,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER049 - Stamp Tax                                          */
 /*       BUG10617 - An error occured while calling the RPG program   */

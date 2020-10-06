@@ -34,6 +34,7 @@
      F*                                                               *
      F*****************************************************************   S01230
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD006 - Use long DS with SDBSRTPD.                          *
       *  CAP038 - Conversion of SD inputs into modular structure      *

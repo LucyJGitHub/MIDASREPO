@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -56,16 +57,16 @@
      FCGISMPL0  UF A E           K DISK
      FCGCORRL4  IF   E           K DISK
      FACCNTL1   IF   E           K DISK
- 
+
      D/COPY CGCPYSRC,CGPACKDLE
      D/COPY CGCPYSRC,SRERRDLE
- 
+
       *-----------------------------------------------------------------
- 
+
       **  ##GRP = Group/RDE Number             ##RDEA = RDE + Attributes
      D ##GRP           S             10    DIM(51) CTDATA PERRCD(1)
      D ##RDEA          S             22    DIM(51) ALT(##GRP)
- 
+
       *-----------------------------------------------------------------
       **  Array of Currencies accessed by program
      D ##CY            S              3    DIM(100)
@@ -73,13 +74,13 @@
       *-----------------------------------------------------------------
       **  Copyright array.
       *================================================================
- 
+
       ** String that contains the concatenated path
      D WPathStr        S            256A
- 
+
       ** Index for WMDsPath only
      D WPx             S              3P 0
- 
+
       ** General purpose variables
      D Wx1             S              3P 0
      D Wx2             S              3P 0
@@ -102,14 +103,14 @@
      D #1              S              6P 0
      D #2              S              6P 0
      D #3              S              6P 0
- 
+
       ** Key fields
      D KYCNUM          S              6A
      D ##KEY1          S             10A
      D ##KYST          S              7A
      D ##RETL          S             10A
      D KYBRCA          S              3A
- 
+
       ** Parameter fields
      D PAction8        S              8A
      D PCustNumChr6    S              6A
@@ -138,7 +139,7 @@
      D ##CUST          S              6A
      D ##CCYP          S              3A
      D @SARD           S              6A
- 
+
      D                 DS
       ** General data structure to define fields that need to share data
      D WGrp10                  1     10
@@ -147,63 +148,63 @@
      D  WAr20                 21     40    DIM(20)
      D  WNum20                21     40  0
      D  WAr29                 51     79    DIM(29)
- 
+
      D                 DS
      D  ##GRPX                 1     10
      D  ##GRPS                 1      6
      D  ##RDEN                 7     10  0
       **  Look-up string for RDE definition Array
- 
+
       **  Packed data string.
      D                 DS
      D  ##W                    1     20
      D                                     DIM(20)
      D  ##WNUM                 1     20  0
       **  Number Field
- 
+
      D                 DS
      D  ##ITMA                 1      8
      D  ##ITEM                 1      8  0
       ** Used to convert item reference from character to numeric
- 
+
      D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
       ** External DS for incomplete reference
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  External DS for bank details
- 
+
      D SDCURR        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
       **  External DS for currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  External DS for Customer details
- 
+
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
       **  External DS for Additional Customer details
- 
+
      D SDACCT        E DS                  EXTNAME(ACCNTAB) PREFIX(AC)
       **  External DS for Master Accounts File
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  BRDFAC       E                     EXTFLD(QQDFAC)
       **  External DS for Branch
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       *   External DS for switchable features
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Second DS for access programs, long data structure
- 
+
      D DSPARM        E DS                  EXTNAME(CGISDRPD)
      D  @DACCT                 4     24
       **  External DS for parameters based on PF/STMTAH
- 
+
      D W0FMT         E DS                  EXTNAME(CGUDTAPD)
       **  Record format of PF/CGUDTAPD for use as a parameter
- 
+
      D ##SRDT          DS                  OCCURS(20)
       **  DS to store subroutine specific data.
       **  - Previous Bind
@@ -212,12 +213,12 @@
      D  ##PBIN                 1      5P 0
      D  ##TBIN                 6     10P 0
      D  ##SPAT                11     80
- 
+
      D CPYR            DS
       **  Data Structure for Compilation - Copyright Insertion
      D  ##CPY                  1     80
      D                                     DIM(1) CTDATA PERRCD(1)
- 
+
      D RUNDT           DS
       *  Data area Midas Rundate
      D  RUNA                   1      7
@@ -267,30 +268,30 @@
      C                   MOVEL     'MAIN'        @STK(Q)
       *
       *................................................................
- 
+
       **  Initial processing - Once Only
      C     ##INIT        IFEQ      *BLANK
      C                   EXSR      SRINIT
      C                   MOVE      'Y'           ##INIT
      C                   ENDIF
- 
+
       **  Initialisation processing
      C                   EXSR      SRINZ
- 
+
       **  Main processing - top level group set
      C                   EXSR      INT_SC
- 
+
       *................................................................
- 
+
       **  Unwind subroutine stack name
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
       **  Terminate program
      C                   RETURN
- 
+
       *****************************************************************
- 
+
       *****************************************************************
       * Subroutine  :  INT_SC                                         *
       * Function    :  Main processing - top level group set          *
@@ -373,7 +374,7 @@
      C                   MOVEL     ##SPAT        WPathStr
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
- 
+
       *---------------------------
       **  Branch Details (simple)
       *---------------------------
@@ -382,7 +383,7 @@
      C                   MOVEL     ##SPAT        WPathStr
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
- 
+
       *------------------------------------
       **  Additional Address Info (simple)
       *------------------------------------
@@ -391,7 +392,7 @@
      C                   MOVEL     ##SPAT        WPathStr
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
- 
+
       *---------------------
       **  Header (simple)
       *---------------------
@@ -476,7 +477,7 @@
      C                   MOVEL     ##SPAT        WPathStr
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
- 
+
       *---------------------------
       **  Branch Details (simple)
       *---------------------------
@@ -485,7 +486,7 @@
      C                   MOVEL     ##SPAT        WPathStr
      C                   Z-ADD     ##PBIN        S#PBIN
      C                   Z-ADD     ##TBIN        S#TBIN
- 
+
       *------------------------------------
       **  Additional Address Info (simple)
       *------------------------------------
@@ -599,77 +600,77 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       *................................................................
       **  Retrieve RDE information for RDEs in group set
      C                   MOVEL     'CUSTE '      ##GRPS
      C                   Z-ADD     1             ##RDEN
      C                   EXSR      SRRRDE
- 
+
       **  Customer Address Line 1
      C                   MOVEL     BBCNA1        ##D(1)
- 
+
       **  Customer Address Line 2
      C                   MOVEL     BBCNA2        ##D(2)
- 
+
       **  Customer Address Line 3
      C                   MOVEL     BBCNA3        ##D(3)
- 
+
       **  Customer Address Line 4
      C                   MOVEL     BBCNA4        ##D(4)
- 
+
       **  Customer Name
      C                   MOVEL     BBCRNM        ##D(5)
- 
+
       **  Customer Number
      C                   MOVEL     BBCUST        ##D(6)
- 
+
       **  Customer Town
      C                   MOVEL     BBCRTN        ##D(7)
- 
+
       **  Customer Telephone Number
      C                   MOVEL     BBCTNB        ##D(8)
- 
+
       **  Customer Fax Number
      C                   MOVEL     CDFAX         ##D(9)
- 
+
       **  Customer SWIFT Code
      C                   MOVEL     BBCSID        ##D(10)
- 
+
       **  German Bankleitzahl
      C                   MOVEL     BBBLCD        ##D(11)
- 
+
       **  Customer Chips ID
      C     BBCHID        IFNE      0
      C                   MOVEL     BBCHID        ##D(12)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(12)
      C                   ENDIF
- 
+
       **  Customer Chips ABA
      C     BBCABA        IFNE      0
      C                   MOVEL     BBCHID        ##D(13)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(13)
      C                   ENDIF
- 
+
       **  Chaps sort code (Branch-Internal Customer)
      C     BBCHSC        IFNE      0
      C                   MOVEL     BBCHSC        ##D(14)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(14)
      C                   ENDIF
- 
+
       **  Customer BOJ
      C                   MOVEL     BBBFIC        ##D(15)
- 
+
       **  Customer Fedwire
      C     BBFWCD        IFNE      0
      C                   MOVEL     BBFWCD        ##D(16)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(16)
      C                   ENDIF
- 
+
       *
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -714,7 +715,7 @@
      C                   Z-ADD     S#TBIN        ##TBIN
       *
      C                   EXSR      PSHGRS
- 
+
       **  Set up Branch Key
      C                   MOVEL     Z5BRCA        KYBRCA
       *
@@ -725,7 +726,7 @@
      C                   PARM      '*KEY    '    ##OPTN
      C                   PARM                    KYBRCA
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
       ** Database error
      C     ##RTCD        IFNE      *BLANK
      C                   MOVEL     'SDBRCHPD'    W0FILE
@@ -736,7 +737,7 @@
      C                   EXSR      SRERR
      C                   END
      C                   ENDIF
- 
+
       *................................................................
       **  Retrieve RDE information for RDEs in group set
      C                   MOVEL     'BRANCH'      ##GRPS
@@ -745,10 +746,10 @@
       *
       **  Branch Code
      C                   MOVEL     A8BRCD        ##D(1)
- 
+
       **  Branch Name
      C                   MOVEL     A8BRNM        ##D(2)
- 
+
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
      C                   EXSR      SrPackDta
@@ -792,14 +793,14 @@
      C                   Z-ADD     S#TBIN        ##TBIN
       *
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve Branch Internal Customer
      C                   CALL      'AOBRCHR0'
      C                   PARM      '*MSG    '    ##RTCD
      C                   PARM      '*KEY    '    ##OPTN
      C                   PARM                    Z5BRCA
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
       ** Database error
      C     ##RTCD        IFNE      *BLANK
      C                   MOVEL     'SDBRCHPD'    W0FILE
@@ -809,7 +810,7 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
- 
+
       ** Get Customer Details for Branch Internal Customer
      C                   MOVEL     *BLANKS       ##KEY1
      C                   MOVEL     A8BICN        ##KEY1
@@ -829,7 +830,7 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
- 
+
       ** Get Additional Customer Details for Branch Internal Customer
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       ##RTCD
@@ -846,7 +847,7 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
- 
+
       ** Retrieve Correspondent Detail of Branch Int Cust No
      C     A8BICN        CHAIN     CGCORRL4                           87
       *
@@ -859,66 +860,66 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       *................................................................
       **  Retrieve RDE information for RDEs in group set
      C                   MOVEL     'CGBRCH'      ##GRPS
      C                   Z-ADD     1             ##RDEN
      C                   EXSR      SRRRDE
- 
+
       ** Telex Number
      C     BBSTAD        IFNE      *BLANKS
      C                   MOVEL     BBSTAD        ##D(1)
      C                   ELSE
      C                   MOVEL     E5TXNB        ##D(1)
      C                   ENDIF
- 
+
       ** Telephone Number
      C                   MOVEL     BBCTNB        ##D(2)
- 
+
       ** SWIFT Code
      C                   MOVEL     BBCSID        ##D(3)
- 
+
       ** German Bankleitzahl
      C                   MOVEL     BBBLCD        ##D(4)
- 
+
       ** Fax Number
      C                   MOVEL     CDFAX         ##D(5)
- 
+
       ** Branch Internal Customer Number
      C                   MOVEL     A8BICN        ##D(6)
- 
+
       ** Chips Id (Branch-Internal Customer)
      C     BBCHID        IFNE      0
      C                   MOVEL     BBCHID        ##D(7)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(7)
      C                   ENDIF
- 
+
       ** Chips ABA (Branch-Internal Customer)
      C     BBCABA        IFNE      0
      C                   MOVEL     BBCABA        ##D(8)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(8)
      C                   ENDIF
- 
+
       **  Chaps sort code (Branch-Internal Customer)
      C     BBCHSC        IFNE      0
      C                   MOVEL     BBCHSC        ##D(9)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(9)
      C                   ENDIF
- 
+
       **  BOJ (Branch-Internal Customer)
      C                   MOVEL     BBBFIC        ##D(10)
- 
+
       **  Fedwire (Branch-Internal Customer)
      C     BBFWCD        IFNE      0
      C                   MOVEL     BBFWCD        ##D(11)
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(11)
      C                   ENDIF
- 
+
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
      C                   EXSR      SrPackDta
@@ -1050,10 +1051,10 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   END
- 
+
       ** Set up Account Name for Retail
      C                   MOVEL     ACANAM        ##D(3)
- 
+
       ** Do not extract account name for Dealing and Lending
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(3)
@@ -1105,7 +1106,7 @@
       **  Set up IBAN
      C     CFT004        IFEQ      'Y'
      C                   MOVEL     *BLANKS       WWWITH
- 
+
      C     ACIBAN        IFNE      *BLANKS
      C                   CALL      'AOIBANR3'
      C                   PARM      *BLANKS       ##RTCD
@@ -1113,9 +1114,9 @@
      C                   PARM                    WWWITH
      C                   PARM      *BLANKS       WWNOBL
      C                   ENDIF
- 
+
      C                   MOVEL     WWWITH        ##D(10)
- 
+
      C                   ELSE
      C                   MOVEL     *BLANKS       ##D(10)
      C                   ENDIF
@@ -1369,7 +1370,7 @@
       *
      C                   MOVEL     Z5BRCA        DRBRCA
      C                   MOVEL     Z5BRCA        DRORBR
- 
+
      C     Z5REFT        IFEQ      'R'
      C                   MOVEL     'RE'          DRMODI
      C                   ELSE
@@ -1379,7 +1380,7 @@
      C                   MOVEL     'DL'          DRMODI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   CLEAR                   DRMTRN
      C                   MOVEL     @DACCT        DRMACT
      C                   MOVE      Z5BRCA        DRMACT
@@ -1484,21 +1485,21 @@
       *                                                               *
       *****************************************************************
      C     SrPackDta     BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SrPackDta '  @STK(Q)
- 
+
       ** Reformat RDE data
- 
+
      C                   EXSR      SrFmtDta
- 
+
      C                   MOVEL     '*NEWARR '    PAction8
      C                   MOVEL     WPathStr      W0SPAT
- 
+
       ** Pack RDEs and associated data into data strings
- 
+
      C                   CALL      'CG3999'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PAction8
@@ -1509,7 +1510,7 @@
      C                   PARM                    ##RN
      C                   PARM                    ##DN
      C                   PARM                    ##FM
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   MOVEL     'CG3999'      W0File
      C                   MOVEL     PRtnCode      W0Key
@@ -1518,14 +1519,14 @@
      C                   MOVEL     'MIDAS  '     W0MsgF
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   EXSR      WRTRDE
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1533,31 +1534,31 @@
       * SrFmtDta - Reformat data before packing it.                  *
       *****************************************************************
      C     SrFmtDta      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SrFmtDta  '  @STK(Q)
- 
+
       ** Loop through RDE's and data
- 
+
      C                   Z-ADD     0             Wx1
- 
+
      C     Wx1           DOUEQ     20
- 
+
       ** Move RDE's and its data to their templates
- 
+
      C                   ADD       1             Wx1
      C                   MOVEL     ##R(Wx1)      R#DEFN
      C                   MOVEL     ##D(Wx1)      R#DATA
- 
+
       ** Reformat only if data is present and RDE is edited
- 
+
      C     R#DATA        IFNE      *BLANK
      C     ##RDEC        ANDNE     *BLANK
- 
+
       ** Right-align amount
- 
+
      C                   MOVEA     ##NUMA        WAr29
      C                   Z-ADD     1             Wx2
      C     *BLANK        LOOKUP    WAr29(Wx2)                             61
@@ -1570,40 +1571,40 @@
      C                   MOVEL     WAr29(Wx2)    WAr20(Wx3)
      C                   SUB       1             Wx3
      C                   ENDDO
- 
+
       ** Sign
- 
+
      C     ##SIGN        IFEQ      '-'
      C                   Z-SUB     WNum20        ##NUMB
      C                   ELSE
      C                   Z-ADD     WNum20        ##NUMB
      C                   ENDIF
- 
+
       ** Edit type
- 
+
      C     ##EDTT        IFEQ      *BLANK
      C                   MOVEL     ##RDET        ##EDTT
      C                   ENDIF
- 
+
       ** Default decimal places
- 
+
      C     ##DCPA        IFEQ      *BLANK
      C                   MOVEL     ##RDED        ##DCPA
      C                   ENDIF
- 
+
       ** New RDE data
- 
+
      C                   MOVEL     R#DATA        ##D(Wx1)
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5

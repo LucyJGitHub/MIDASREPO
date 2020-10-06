@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040354 - 1. DB erro 953 due to INIXML executed too soon.   *
       *             2. array index error caused by Q.                 *
@@ -50,78 +51,78 @@
       *  99   -    General error indicator                            *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas SD Stamp Tax Hist Detail - Average by date
- 
+
      FSDSTMDL2  UF   E           K DISK    COMMIT
      F                                     USROPN
      F                                     INFSR(SRFILE)
      FSDSTMDX2  UF   E           K DISK    USROPN
      F                                     INFSR(SRFILE)
      F                                     RENAME(@STMDV2:@STMDX2)
- 
+
       ** Midas RE Retail int. and charges detail
- 
+
      FREIAC     IF   E           K DISK    INFSR(SRFILE)
      F                                     IGNORE(REIACAF)
      F                                     IGNORE(REIACZF)
- 
+
       ** Midas LE Customer loans
- 
+
      FCLOAN     IF   E           K DISK    INFSR(SRFILE)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Data pack arrays and data structures
- 
+
      D/COPY CGCPYSRC,CGPACKDLE
- 
+
       ** Fields, data structures, arrays definition for
       ** CG error processing
- 
+
      D/COPY CGCPYSRC,SRERRDLE
- 
+
       ** Array of Currencies accessed by program
- 
+
      D ##CY            S              3    DIM(100)
- 
+
       ** Look-up string for RDE definition Array
- 
+
      D #@SDS           DS
      D  #@S                 5120   5120
- 
+
       **  Number Field
- 
+
      D                 DS
      D  ##ITMA                 1      8
      D  ##ITEM                 1      8  0
- 
+
       ** Multi-occurence data structure to store path
- 
+
      D WMDsPath        DS                  OCCURS(20)
      D  WMDsPathGrp            1      6
- 
+
       ** String that contains the concatenated path
- 
+
      D WPathStr        S            256A
- 
+
       ** Index for WMDsPath only
- 
+
      D WPx             S              3P 0
- 
+
       ** General purpose variables
- 
+
      D WProduce        S              1A
      D Wx1             S              3P 0
      D Wx2             S              3P 0
- 
+
       ** Parameter fields
- 
+
      D PAction8        S              8A
      D PCustNumChr6    S              6A
      D PItmRef         S              8A
@@ -147,11 +148,11 @@
      D PCAcno          S             10A
      D PCAcod          S             10A
      D PCAcsq          S              2A
- 
+
      D                 DS
- 
+
       ** General data structure to define fields that need to share data
- 
+
      D WGrp10                  1     10
      D  WGrpName               1      6
      D  WGrpSeq                7     10S 0
@@ -160,9 +161,9 @@
      D  WChr29                51     79
      D  WACOD          S             10A
      D  WACSQ          S              2A
- 
+
       ** Used to convert item reference from character to numeric
- 
+
      D                 DS
      D  ##NCIT                 1      6
      D  NMCY                   1      3
@@ -172,34 +173,34 @@
       *
       *----------------------------------------------------------------
       ** Named constants
- 
+
       ** Stamp Tax Print Type
- 
+
      D W#PTYP          C                   CONST('STAMP_TAX')
- 
+
       ** Stamp Tax Print Subtypes
- 
+
      D W#PSTY          C                   CONST('RETAVRBAL')
      D W#PSTL          C                   CONST('LN_AVRBAL')
      D W#PSTI          C                   CONST('LOAN INT')
      D W#PSTP          C                   CONST('LOAN PRN')
- 
+
       *----------------------------------------------------------------
- 
+
       ** External DS for UDC Data reference
- 
+
      D PEDsCGUDCRPD  E DS                  EXTNAME(CGUDCRPD)
- 
+
       **  External DS for Bank details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  External DS for General Ledger details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       **  External DS for Module details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       *
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
@@ -234,96 +235,96 @@
       **  External DS for Account Officer Details
       *
      D SDCURR        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
- 
+
       **  External DS for currency details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** MIDAS Switchable Features Accessed Via Access Program
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       **  Second DS for access programs, long data structure
- 
+
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
- 
+
       **  External DS for Bank details
- 
+
      D  ACRECI       E                     EXTFLD(RECI)
      D  ACLCD        E                     EXTFLD(LCD)
- 
+
       **  Record format of PF/CGUDTAPD for use as a parameter
- 
+
       ** Compile-time array to contain RDE definitions
- 
+
      D WTbGrp          S             10    DIM(47) CTDATA PERRCD(1)
      D WTbRDE          S             22    DIM(47) ALT(WTbGrp)
- 
+
       **  Data Structure for Compilation - Copyright Insertion
- 
+
      D CPYR            DS
      D  ##CPY                  1     80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** DS to store subroutine specific data.
       ** - Saved Path
- 
+
      D #PDS            DS
      D  P1                     1      3  0 INZ(0)
      D  P2                     4      6  0
      D  P3                     7      9  0
      D  P4                    10     12  0
      D  P5                    13     15  0
- 
+
       ** Correspondence Manager details
- 
+
      D P1PARM          DS           256
- 
+
       ** Output Sequence
- 
+
      D  P1OSEQ                 1      9  0
- 
+
       ** Item Reference Number
- 
+
      D  P1ITEM                10     17  0
- 
+
       ** This bind level
- 
+
      D  P1TBIN                18     25  0
- 
+
       ** Previous bind level
- 
+
      D  P1PBIN                26     33  0
- 
+
       ** Loan details Parameters for call to CG6001.
- 
+
      D P@PARM          DS           256
- 
+
       ** Loan Reference
- 
+
      D  P@LNRF                 1      6
- 
+
       ** Cancel/Amend Field
- 
+
      D  P@CNAM                 7      7
- 
+
       ** Facility details Parameter for call to CG6001
- 
+
      D P4PARM          DS           256
- 
+
       ** Facility customer
- 
+
      D  P4FCUS                 1      6
- 
+
       ** Facility type
- 
+
      D  P4FTYP                 7      9  0
- 
+
       ** Facility Seq
- 
+
      D  P4FSEQ                10     11  0
       *****************************************************************
       /EJECT
@@ -344,37 +345,37 @@
       *                 SRMAIN - Main Processing                      *
       *                                                               *
       *****************************************************************
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'MAIN'
- 
+
       ** Read stamp tax until end of file
- 
+
      C                   IF        W0CMT = 'YES'
      C                   READ      SDSTMDL2
      C                   ELSE
      C                   READ      SDSTMDX2
      C                   ENDIF
- 
+
      C                   DOW       NOT %EOF()
- 
+
       ** If UDC not extracted, process record
- 
+
      C                   IF        T2UDCF = *BLANKS
- 
+
       ** Initialisation processing
- 
+
      C                   EXSR      SRINZ
- 
+
       ** Main processing
- 
+
      C                   EXSR      SRMAIN
      C                   ENDIF
- 
+
       ** Read next record
- 
+
      C                   EVAL      T2UDCF = 'Y'
      C                   IF        W0CMT  = 'YES'
      C                   UPDATE    @STMDV2
@@ -384,20 +385,20 @@
      C                   UPDATE    @STMDX2
      C                   READ      SDSTMDX2
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR  = *ON
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q -=  1
- 
+
       ** Terminate program
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
@@ -409,78 +410,78 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMAIN        BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   MOVEL     'SRMAIN'      @STK(Q)
- 
+
       ** Account or Loan average
- 
+
      C                   SELECT
      C                   WHEN      T2KEY = 'ACCOUNT'
- 
+
       ** Check that account needs to be advised
- 
+
      C                   EVAL      CNUM = T2CNUM
      C                   EVAL      CCY  = T2CCY
      C                   EVAL      ACOD = T2ACOD
      C                   EVAL      ACSQ = T2ACSQ
      C                   EVAL      BRCA = T2BRCA
- 
+
      C     KACKEY        CHAIN     REIACDF
      C                   IF        %FOUND() AND
      C                             PTRA = 'Y'
- 
+
       ** Generate reference number by writing to PF/CGUDCRPD
       ** If no confirmation to be produced, then bypass
- 
+
      C                   EXSR      SRGenRef
      C                   IF        WProduce = 'Y'
- 
+
       ** Extract
- 
+
      C                   EXSR      SRzSTAVR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If loan
- 
+
      C                   WHEN      T2KEY = 'LOAN'
- 
+
       ** Get Loan Information
- 
+
      C                   EVAL      LNRF  = T2LNRF
      C                   EVAL      RCDT  = 'A'
      C     KCLOAN        CHAIN     CLOANCLF
- 
+
      C                   IF        %FOUND()
- 
+
       ** Generate reference number by writing to PF/CGUDCRPD.
       ** If no confirmation to be produced, then bypass.
- 
+
      C                   EXSR      SRGenRef
      C                   IF        WProduce = 'Y'
- 
+
       ** Extract Principal and Interest Related Events.
- 
+
      C                   IF        T2STFB = *BLANKS
      C                   EXSR      SRZSTLN
      C                   ELSE
      C                   EXSR      SRzSTAVL
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
       *
@@ -497,63 +498,63 @@
       *                                                               *
       *****************************************************************
      C     SRzSTAVR      BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRzSTAVR'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx              = 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'zSTAVR'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       *****************************************************************
- 
+
      C                   EXSR      SRCust
- 
+
       ** Set up key
- 
+
      C                   EVAL      PCnum  = T2CNUM
      C                   EVAL      PCcy   = T2CCY
      C                   EVAL      PAcod  = T2ACOD
      C                   EVAL      PAcsq  = T2ACSQ
      C                   EVAL      PBrca  = T2BRCA
- 
+
      C                   EXSR      SRAccnt
- 
+
       ** If account officer present...
- 
+
      C                   IF        BBACOC <> *BLANKS
      C                   EVAL      PAcoc   = BBACOC
      C                   EXSR      SRACOF
      C                   ENDIF
- 
+
      C                   EXSR      SRZAVR1
      C                   EXSR      SRZAVR2
- 
+
       ** If details entered...
- 
+
      C                   IF        T2DBRC <> *BLANKS AND
      C                             T2DCCY <> *BLANKS
      C                   EXSR      SRZDRACC
      C                   ENDIF
- 
+
       ** Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
       *
@@ -570,53 +571,53 @@
       *                                                               *
       *****************************************************************
      C     SRzSTAVL      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRzSTAVL'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx              = 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'zSTAVL'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       *****************************************************************
- 
+
       ** Loan details
- 
+
      C                   EXSR      SRLOANA
- 
+
       ** Average details
- 
+
      C                   EXSR      SRZAVR1
      C                   EXSR      SRZAVR2
- 
+
       ** If details entered
- 
+
      C                   IF        T2DBRC <> *BLANKS AND
      C                             T2DCCY <> *BLANKS
      C                   EXSR      SRZDRACC
      C                   ENDIF
- 
+
       ** Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -630,53 +631,53 @@
       *                                                               *
       *****************************************************************
      C     SRZSTLN       BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRZSTLN'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx              = 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'zSTLN'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       *****************************************************************
- 
+
       ** Loan details
- 
+
      C                   EXSR      SRLOANA
- 
+
       ** Loan Stamp Details
- 
+
      C                   EXSR      SRZLOAN
      C                   EXSR      SRZAVR2
- 
+
       ** If details entered
- 
+
      C                   IF        T2DBRC <> *BLANKS AND
      C                             T2DCCY <> *BLANKS
      C                   EXSR      SRZDRACC
      C                   ENDIF
- 
+
       ** Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -690,42 +691,42 @@
       *                                                               *
       *****************************************************************
      C     SRZDRACC      BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q       += 1
      C                   EVAL      @STK(Q)  = 'SRZDRACC'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx             += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'ZDRACC'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Set up key
- 
+
      C                   EVAL      PCnum  = T2DCST
      C                   EVAL      PCcy   = T2DCCY
      C                   EVAL      PAcod  = T2DACD
      C                   EVAL      PAcsq  = T2DASQ
      C                   EVAL      PBrca  = T2DBRC
- 
+
      C                   EXSR      SRAccnt
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
       *
@@ -742,33 +743,33 @@
       *                                                               *
       *****************************************************************
      C     SRAccnt       BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  =  'SRAccnt'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp = 'ACCNT'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'ACCNT'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
       ** Get Account Information
- 
+
      C                   MOVE      PAcod         PCAcod
      C                   MOVE      PAcsq         PCAcsq
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY    '    POptn
@@ -779,48 +780,48 @@
      C                   PARM                    PCAcsq
      C                   PARM                    PBrca
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
       ** Midas Account Identifier
- 
+
      C                   EVAL      ##D(1) = DRMACT
- 
+
       ** Retail Account number
- 
+
      C                   MOVEL     ACNO          ##D(2)
- 
+
       ** Account Name
- 
+
      C                   EVAL      ##D(3) = ANAM
- 
+
       ** Account type
- 
+
      C                   EVAL      ##D(4) = ATYP
- 
+
       ** Show Balance in Euros
- 
+
      C                   EVAL      ##D(5) = EUSB
- 
+
       ** International Bank A/c Number
- 
+
      C                   EVAL      ##D(6) = IBAN
- 
+
       ** Accumulate RDEs and associated data and output to CGUXMRPD
- 
+
      C                   EXSR      SrPackDta
- 
+
       ** Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -834,41 +835,41 @@
       *                                                               *
       *****************************************************************
      C     SRZAVR2       BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  = 'SRZAVR2'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp = 'ZAVR2'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'ZAVR2'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
       ** Tax Amount in Stamp Ccy
- 
+
      C                   EVAL      ##D(1) = %CHAR(T2TASC)
      C                   EVAL      ##CCY  = T2SCCY
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(1):256) = %CHAR(A6NBDP)
- 
+
       ** Stamp Tax Currency
- 
+
      C                   EVAL      ##D(2) = T2SCCY
- 
+
       ** Tax Paid Amount
- 
+
      C                   EVAL      ##D(3) = %CHAR(T2TADC)
      C                   IF        T2DCCY = *BLANKS
      C                   EVAL      ##CCY  = T2ECCY
@@ -877,39 +878,39 @@
      C                   ENDIF
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(3):256) = %CHAR(A6NBDP)
- 
+
       ** Tax Paid Curreny
- 
+
      C                   EVAL      ##D(4) = ##CCY
- 
+
       ** Transaction Stamp Tax Amount
- 
+
      C                   EVAL      ##D(5) = %CHAR(T2TATC)
      C                   EVAL      ##CCY  = T2ECCY
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(5):256) = %CHAR(A6NBDP)
- 
+
       ** Transaction Currency
- 
+
      C                   EVAL      ##D(6) = T2ECCY
- 
+
      C                   EXSR      SrPackDta
- 
+
       *****************************************************************
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -923,108 +924,108 @@
       *                                                               *
       *****************************************************************
      C     SRZLOAN       BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRZLOAN'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx             += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'ZLOAN'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'ZLOAN'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
       ** Current Principal (Amount)
- 
+
      C                   EVAL      ##D(1) = %CHAR(CPAM)
      C                   EVAL      ##CCY  = CCY
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(1):256) = %CHAR(A6NBDP)
- 
+
       ** Currency
- 
+
      C                   EVAL      ##D(2) = CCY
- 
+
       ** Loan Reference
- 
+
      C                   MOVEL     LNRF          ##D(3)
- 
+
       ** Control Date
- 
+
      C                   MOVEL     T2CDTE        ##D(4)
- 
+
       ** Tax Value Date
- 
+
      C                   MOVEL     T2VALD        ##D(5)
- 
+
       ** Tax Posted Date
- 
+
      C                   MOVEL     T2PSDT        ##D(6)
- 
+
       ** Tax Rate (as percentage %)
- 
+
      C                   EVAL      ##D(7) = %CHAR(T2TXRT*100)
- 
+
       ** Account Key
- 
+
      C                   EVAL      ##D(8) = T2AKEY
- 
+
       ** Event Type
- 
+
      C                   EVAL      ##D(9) = T2ETYP
- 
+
       ** Event Amount
- 
+
      C                   EVAL      ##D(10) = %CHAR(T2KAMT)
      C                   EVAL      ##CCY   = T2KCCY
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(10):256) = %CHAR(A6NBDP)
- 
+
       ** Event Currency
- 
+
      C                   EVAL      ##D(11) = T2KCCY
- 
+
       ** Number of Months
- 
+
      C                   EVAL      ##D(12) = %CHAR(T2MNTH)
- 
+
       ** Period of Stamp Tax
- 
+
      C                   EVAL      ##D(13) = T2PERD
- 
+
       ** Reversal Indicator
- 
+
      C                   EVAL      ##D(14) = T2REVI
- 
+
       ** Stamp Tax Rate
- 
+
      C                   EVAL      ##D(15) = %CHAR(T2TXBR * 100)
- 
+
      C                   EXSR      SrPackDta
- 
+
       *****************************************************************
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
       *
@@ -1041,58 +1042,58 @@
       *                                                               *
       *****************************************************************
      C     SRZAVR1       BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRZAVR1'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx             += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'ZAVR1'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'ZAVR1'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
       ** Adjustment Number
- 
+
      C                   EVAL      ##D(1) = %CHAR(T2ASEQ)
- 
+
       ** Control Date
- 
+
      C                   EVAL      ##D(2) = %CHAR(T2CDTE)
- 
+
       ** End of Period Date
- 
+
      C                   EVAL      ##D(3) = %CHAR(T2ENDT)
- 
+
       ** Start of Period Date
- 
+
      C                   EVAL      ##D(4) = %CHAR(T2STDT)
- 
+
       ** Tax Value Date
- 
+
      C                   EVAL      ##D(5) = %CHAR(T2VALD)
- 
+
       ** Tax Posted Date
- 
+
      C                   EVAL      ##D(6) = %CHAR(T2PSDT)
- 
+
       ** Tax rate (as percentage %)
- 
+
      C                   EVAL      ##D(7) = %CHAR(T2TXRB * 100)
- 
+
       ** Sum of Balances for Period
- 
+
      C                   EVAL      ##D(8) = %CHAR(T2AVBL)
      C                   SELECT
      C                   WHEN      T2KEY  = 'ACCOUNT'
@@ -1102,24 +1103,24 @@
      C                   ENDSL
      C                   EXSR      SRDCDT
      C                   EVAL      %SUBST(##D(8):256) = %CHAR(A6NBDP)
- 
+
      C                   EXSR      SrPackDta
- 
+
       *****************************************************************
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1133,28 +1134,28 @@
       *                                                               *
       *****************************************************************
      C     SRCust        BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  =  'SRCust'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp = 'CUST'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'CUST'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
      C                   EVAL      PCKey = T2CNUM
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
@@ -1162,46 +1163,46 @@
      C                   PARM                    PCKey
      C                   PARM      *BLANKS       PSKey
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       *****************************************************************
- 
+
       ** Customer Number
- 
+
      C                   EVAL      ##D(1) = BBCUST
- 
+
       ** Customer Name
- 
+
      C                   EVAL      ##D(2) = BBCRNM
- 
+
       ** Customer Town
- 
+
      C                   EVAL      ##D(3) = BBCRTN
- 
+
       ** Customer Address Line 1 - 4
- 
+
      C                   EVAL      ##D(4) = BBCNA1
      C                   EVAL      ##D(5) = BBCNA2
      C                   EVAL      ##D(6) = BBCNA3
      C                   EVAL      ##D(7) = BBCNA4
- 
+
       ** Accumulate RDEs and associated data and output to CGUXMRPD
- 
+
      C                   EXSR      SrPackDta
       *****************************************************************
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1215,73 +1216,73 @@
       *                                                               *
       *****************************************************************
      C     SRACOF        BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRACOF'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx             += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'ACOF'
- 
+
      C                   EXSR      SRPath
- 
+
      C                   EXSR      PSHGRS
- 
+
       ** Retrieve RDE info
- 
+
      C                   EVAL      WGrpName = 'ACOF'
      C                   EVAL      WGrpSeq  = 1
      C                   EXSR      SRRtvRDE
- 
+
       ** Retrieve Account Officer Details
- 
+
      C                   CALL      'AOACOFR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PAcoc
      C     SDACOF        PARM      SDACOF        DSFDY
- 
+
       ** Account Officer Code
- 
+
      C                   EVAL      ##D(1) = AZACOC
- 
+
       ** Acc. Officer Dept. Code
- 
+
      C                   EVAL      ##D(2) = AZDPCD
- 
+
       ** Account Officer Name
- 
+
      C                   EVAL      ##D(3) = AZACON
- 
+
       ** Account Officer Telephone Number
- 
+
      C                   EVAL      ##D(4) = AZAPHN
- 
+
       ** Acc. Off. Telephone Extension
- 
+
      C                   EVAL      ##D(5) = AZAEXT
- 
+
      C                   EXSR      SrPackDta
- 
+
       *****************************************************************
- 
+
       **  Decrement Path DS index
- 
+
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   CLEAR                   WMDsPathGrp
      C                   EVAL      WPx -= 1
- 
+
      C                   EXSR      POPGRS
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1296,40 +1297,40 @@
       *                                                               *
       *****************************************************************
      C     SRLOANA       BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  =  'SRLOANA'
- 
+
       ** Set up path multi-occurence data structure & path string
- 
+
      C                   EVAL      WPx             += 1
      C                   EVAL      %OCCUR(WMDsPath) = WPx
      C                   EVAL      WMDsPathGrp      = 'LOANA'
- 
+
      C                   EXSR      SRPath
- 
+
       *****************************************************************
       *                                                               *
       *  Get general loan information                                 *
       *                                                               *
       *****************************************************************
- 
+
      C                   EVAL      P2PARM  = WPathStr
      C                   EVAL      P1ITEM  = ##ITEM
- 
+
       ** Set up data.
- 
+
      C                   CLEAR                   P4PARM
      C                   EVAL      P@CNAM = *BLANKS
- 
+
      C                   IF        T2REVI = '1'
      C                   EVAL      P@CNAM = 'R'
      C                   ENDIF
- 
+
      C                   MOVE      LNRF          P@LNRF
- 
+
      C                   CALL      'CG6001'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM                    W0CMT
@@ -1341,12 +1342,12 @@
      C                   PARM                    ##REFR
      C                   PARM      0             P@ICR
      C                   PARM      'N'           ##MAST
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1358,27 +1359,27 @@
       *  Calls       :                                                *
       *****************************************************************
      C     SRINZ         BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRINZ'
- 
+
       **...............................................................
- 
+
       ** Initialise work fields
- 
+
      C                   EVAL      WPathStr = *BLANKS
- 
+
       ** Initialise XML increment
- 
+
      C                   EXSR      INIXML
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1392,27 +1393,27 @@
       *                                                               *
       *****************************************************************
      C     SRPath        BEGSR
- 
+
       **  Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRPath'
- 
+
       *................................................................
- 
+
      C                   EVAL      WPathStr = *BLANKS
- 
+
      C                   DO        WPx           Wx1
      C                   EVAL      %OCCUR(WMDsPath) = Wx1
      C                   EVAL      WPathStr = %TRIMR(WPathStr) + '\' +
      C                                        %TRIM(WMDsPathGrp)
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1420,65 +1421,65 @@
       *  SrFmtDta - Reformat data before packing it.                  *
       *****************************************************************
      C     SrFmtDta      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q) = 'SrFmtDta'
- 
+
       ** Loop through RDE's and data
- 
+
      C                   FOR       Wx1 = 1 TO 20
- 
+
       ** Move RDE's and its data to their templates
- 
+
      C                   EVAL      R#DEFN = ##R(Wx1)
      C                   EVAL      R#DATA = ##D(Wx1)
- 
+
       ** Reformat only if data is present and RDE is edited
- 
+
      C                   IF        R#DATA <> *BLANKS AND
      C                             ##RDEC <> *BLANKS
- 
+
       ** Right-align amount
- 
+
      C                   EVAL      WNum20  = 0
      C                   EVAL      WChr20  = *ALL'0'
      C                   EVALR     WChr20  = WChr20 + %TRIM(##NUMA)
- 
+
       ** Sign
- 
+
      C                   IF        ##SIGN = '-'
      C                   EVAL      ##NUMB = -WNum20
      C                   ELSE
      C                   EVAL      ##NUMB = WNum20
      C                   ENDIF
- 
+
       ** Edit type
- 
+
      C                   IF        ##EDTT = *BLANKS
      C                   EVAL      ##EDTT = ##RDET
      C                   ENDIF
- 
+
       ** Default decimal places
- 
+
      C                   IF        ##DCPA = *BLANKS
      C                   EVAL      ##DCPA = ##RDED
      C                   ENDIF
- 
+
       ** New RDE data
- 
+
      C                   EVAL      ##D(Wx1) = R#DATA
- 
+
      C                   ENDIF
- 
+
      C                   ENDFOR
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1488,21 +1489,21 @@
       *                                                               *
       *****************************************************************
      C     SrPackDta     BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SrPackDta'
- 
+
       ** Reformat RDE data
- 
+
      C                   EXSR      SrFmtDta
- 
+
      C                   EVAL      PAction8 = '*NEWARR'
      C                   EVAL      W0SPAT   = WPathStr
- 
+
       ** Pack RDEs and associated data into data strings
- 
+
      C                   CALL      'CG3999'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PAction8
@@ -1513,7 +1514,7 @@
      C                   PARM                    ##RN
      C                   PARM                    ##DN
      C                   PARM                    ##FM
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      W0File   = 'CG3999'
      C                   EVAL      W0Key    = PRtnCode
@@ -1522,14 +1523,14 @@
      C                   EVAL      W0MsgF   = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   EXSR      WRTRDE
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q -=  1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1542,50 +1543,50 @@
       *                                                               *
       *****************************************************************
      C     SRDCDT        BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  =  'SRDCDT'
- 
+
       *................................................................
- 
+
       ** Access array of Currency Details already loaded
- 
+
      C                   EVAL      Wx1 = %LOOKUP(##CCY:##CY)
- 
+
       **  If no match is found determine the next free space in the
       **  loaded currency array.
- 
+
      C                   IF        Wx1 = 0
      C                   EVAL      Wx2 = %LOOKUP(*BLANKS:##CY)
- 
+
       **  If no space is left, set the Currency Data data structure to
       **  the 101st occurrence so that when the new details are
       **  retrieved no existing details are overwritten.
- 
+
      C                   IF        Wx2 = 0
      C                   EVAL      %OCCUR(SDCURR) = 101
- 
+
       ** If a space is found, set up the new currency into the array
       ** and position the Currency Data data structure on the
       ** occurrence matching the array index.
- 
+
      C                   ELSE
      C                   EVAL      ##CY(Wx2) = ##CCY
      C                   EVAL      %OCCUR(SDCURR) = Wx2
      C                   ENDIF
- 
+
       ** Retrieve the currency details.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd                          B:Return Cd
      C                   PARM      '*KEY'        POptn                          I:Option
      C                   PARM      ##CCY         PCcy                           I:Currency Code
      C     SDCURR        PARM      *BLANK        DSSDY                          O:Format
- 
+
       ** Database Error
- 
+
      C                   IF        PRtCd <> *BLANK
      C                   EVAL      W0FILE = 'SDCURRPD'
      C                   EVAL      W0KEY  = ##CCY
@@ -1594,19 +1595,19 @@
      C                   EVAL      W0MSGF = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** If the currency has been retrieved earlier, position the
       ** Currency Data data structure on the relevant occurrence.
- 
+
      C                   ELSE
      C                   EVAL      %OCCUR(SDCURR) = Wx1
      C                   ENDIF
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1620,70 +1621,70 @@
       *                                                               *
       *****************************************************************
      C     SRGenRef      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q      += 1
      C                   EVAL      @STK(Q) = 'SRGenRef'
- 
+
       ** Generate reference number and check if further processing
       ** required. Set up all available information in the record
       ** format before calling.
- 
+
      C                   CLEAR                   PEDsCGUDCRPD
- 
+
       ** Booking/Main Branch (Mandatory)
- 
+
      C                   EVAL      DRBRCA = T2BRCA
- 
+
       ** Auto Transmission indicator
- 
+
      C                   EVAL      DRATRM = 'N'
- 
+
       ** If Account
- 
+
      C                   SELECT
      C                   WHEN      T2KEY = 'ACCOUNT'
- 
+
       ** Module identifier (Mandatory)
- 
+
      C                   EVAL      DRMODI = 'RE'
- 
+
       ** Midas GL Account Reference CNUMCCYACODACSQBRCA  (Optional)
- 
+
      C                   MOVEL     T2ACOD        WACOD
      C                   MOVEL     T2ACSQ        WACSQ
      C                   EVAL      DRMACT = %TRIM(T2CNUM) + T2CCY + WACOD +
      C                                      WACSQ + T2BRCA
- 
+
      C                   EVAL      DRPTYP = W#PTYP
      C                   EVAL      DRPSTP = W#PSTY
- 
+
       ** Customer Number (Mandatory)
- 
+
      C                   EVAL      PCustNumChr6 = T2CNUM
- 
+
       ** If loan
- 
+
      C                   WHEN      T2KEY = 'LOAN'
- 
+
       ** Module identifier (Mandatory)
- 
+
      C                   EVAL      DRMODI = 'LE'
- 
+
       ** Midas Transaction Number (Mandatory)
- 
+
      C                   MOVEL     LNRF          DRMTRN
- 
+
       ** Midas GL Account Reference CNUMCCYACODACSQBRCA  (Optional)
- 
+
      C                   MOVEL     T2DACD        WACOD
      C                   MOVEL     T2DASQ        WACSQ
      C                   EVAL      DRMACT = %TRIM(T2DCST) + T2DCCY + WACOD +
      C                                      WACSQ + T2DBRC
- 
+
      C                   EVAL      DRPTYP = W#PTYP
- 
+
      C                   SELECT
      C                   WHEN      T2STFB = 'Y'
      C                   EVAL      DRPSTP = W#PSTL
@@ -1692,13 +1693,13 @@
      C                   WHEN      T2STFF = 'Y'
      C                   EVAL      DRPSTP = W#PSTP
      C                   ENDSL
- 
+
       ** Customer Number (Mandatory)
- 
+
      C                   EVAL      PCustNumChr6 = T2DCST
- 
+
      C                   ENDSL
- 
+
      C                   CALL      'CG9010'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*GEN'        PMode
@@ -1706,24 +1707,24 @@
      C                   PARM                    PCustNumChr6
      C                   PARM                    PEDsCGUDCRPD
      C                   PARM      *BLANKS       PItmRef
- 
+
       ** Blank return code implies generate correspondence.
       ** CGD1270 => no error, but suppress output for this transaction.
- 
+
      C                   IF        PRtnCode = *BLANKS
- 
+
      C                   EVAL      WProduce = 'Y'
      C                   EVAL      ##ITMA   = PItmRef
- 
+
       ** Pass reference as PRINTTYPE:SUBTYPE.
- 
+
      C                   EVAL      ##REFR   = %TRIM(DRPTYP) + ':' +
      C                                        %TRIM(DRPSTP)
- 
+
      C                   EXSR      WRAPRF
- 
+
      C                   ELSE
- 
+
      C                   IF        PRtnCode <> 'CGD1270'
      C                   EVAL      W0FILE = 'CG9010'
      C                   EVAL      W0KEY  = PRtnCode
@@ -1733,12 +1734,12 @@
      C                   EXSR      SRERR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q -=  1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1750,46 +1751,46 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    W0RTN
      C                   PARM                    W0CMT
      C                   PARM                    WProduce
      C                   PARM                    WAUTO
- 
+
      C     KACKEY        KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
      C     KCLOAN        KLIST
      C                   KFLD                    LNRF
      C                   KFLD                    RCDT
- 
+
      C                   EVAL      Q   = 0
- 
+
       ** Initialise XML increment
- 
+
      C**********         EXSR      INIXML                                                   MD040354
- 
+
       ** Index of WMDsPath
- 
+
      C                   EVAL      WPx = 0
      C                   CLEAR                   WMDsPath
- 
+
       ** Call access program for Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
       ** Database error
- 
+
      C                   EVAL      W0FILE  = 'AOBANKR0'
      C                   EVAL      W0KEY   = '*CALL'
      C                   EVAL      W0ERNB  = 01
@@ -1797,38 +1798,38 @@
      C                   EVAL      W0MSGF  = 'MIDAS  '
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C     BJDFIN        COMP      'M'                                    98    MMDDYY, 98 ON
- 
+
       ** Determine Number of decimal places - Base currency
- 
+
      C                   MOVEL     BJCYCD        ##CCY
      C                   EXSR      SRDCDT
      C                   Z-ADD     A6NBDP        BASCDP            1 0
- 
+
      C                   IF        W0CMT = 'YES'
      C                   OPEN      SDSTMDL2
      C                   ELSE
      C                   OPEN      SDSTMDX2
      C                   ENDIF
- 
+
       ** CCG015
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CCG015'      PSard
- 
+
      C                   IF        PRtCd  = *BLANKS
      C                   EVAL      CCG015 = 'Y'
      C                   ENDIF
- 
+
      C                   EXSR      INIXML                                                   MD040354
       ** Unwind subroutine stack name
- 
+
      C**********         EVAL      %SUBARR(@STK:Q) = *BLANKS                                MD040354
      C**********         EVAL      Q -=  1                                                  MD040354
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1843,20 +1844,20 @@
       *                                                               *
       *****************************************************************
      C     SRRtvRDE      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   EVAL      Q  += 1
      C                   EVAL      @STK(Q)  =  'SRRtvRDE'
- 
+
       ** Reset primary arrays
- 
+
      C                   CLEAR                   ##R
      C                   CLEAR                   ##D
      C                   CLEAR                   ##S
- 
+
       ** Get info from compile time array of the 20 RDEs in group set
- 
+
      C                   EVAL      Wx1      = 1
      C                   DOU       Wx2      = 0  OR
      C                             Wx1      > 20
@@ -1867,12 +1868,12 @@
      C                   EVAL      WGrpSeq += 1
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   EVAL      %SUBARR(@STK:Q) = *BLANKS
      C                   EVAL      Q  -= 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

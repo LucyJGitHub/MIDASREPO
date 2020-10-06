@@ -22,6 +22,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG24542 - MT202 is generated instead of MT202COV            *
@@ -89,7 +90,7 @@
      D                                     PREFIX(N_)
       ** Account details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -111,7 +112,7 @@
      D P@S2RInfo       S            256A
      D P@SndCor        S            256A
      D P@RcvCor        S            256A
- 
+
       *
       ** Parameter for AONOSTR0
       *
@@ -125,7 +126,7 @@
      D PBRCD           S              3A
      D PCSSN           S             10A
      D PPNOI           S              1A
- 
+
      D WCUST           S              6
      D PIBAN           S             34A
      D PPSTR           S             35A
@@ -134,12 +135,12 @@
      D MATCH           S              1A
      D PSWftID         S             11A
      D PSWftID2        S             11A
- 
+
      D BRANCH          S              3A
      D OTHPTY          S             11A
      D CSID            S             12A
      D PNOSD           S              5A
- 
+
      D WSLSH           S              1A
      D WP@SndCor       S            256A
       *
@@ -173,25 +174,25 @@
      C                   ELSE
      C                   EVAL      WP@SndCor = P@SndCor
      C                   ENDIF
- 
+
      C                   EVAL      P@SndCor = WP@SndCor
       *
       ** Retrieve Customer Number
       ** If 2 digits long access nostro table. Use payment currency.
       *
      C                   IF        %LEN(%TRIM(P@SndCor)) = 2
- 
+
      C                   EVAL      PNONB = P@SndCor
      C                   EVAL      PCYCD = P@PCur
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PNOSD = P@SndCor
      C                   EVAL      PCYCD = %SUBST(PNOSD:1:3)
      C                   EVAL      PNONB = %SUBST(PNOSD:4:2)
- 
+
      C                   ENDIF
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -204,7 +205,7 @@
      C                   PARM      *BLANKS       PCSSN
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      *BLANKS       DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVE      A7CUST        WCUST
      C                   ENDIF
@@ -217,12 +218,12 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM                    PIBAN
      C     SDACCT        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVE      CNUM          WCUST
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** If not found, use AOACCTV1 to retrieve account details
       *
@@ -233,7 +234,7 @@
      C                   PARM      *BLANKS       POPTN
      C                   PARM                    PPSTR
      C     SDACCT        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   IF        POPTN = '*RETAIL' OR
      C                             POPTN = '*NOSTRO' OR
@@ -256,9 +257,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If customer number is retrieved, access customer details
@@ -283,24 +284,24 @@
      C                   PARM                    P@SndCor
      C                   PARM                    P@RcvCor
      C                   PARM                    PRTCD
- 
+
      C                   MOVE      PRTCD         P@Rtcd
      C                   ENDIF
- 
+
      C                   IF        P@BAgr = 'SCT_C202' OR P@BAgr = 'CCT_C202'
- 
+
      C                   SELECT
      C                   WHEN      P@Mtyp = '102' AND P@BAgr = 'SCT_C202'
      C                   EVAL      P@BAgr = 'CCT_C202'
      C                   WHEN      P@Mtyp = '103' AND P@BAgr = 'CCT_C202'
      C                   EVAL      P@BAgr = 'SCT_C202'
      C                   ENDSL
- 
+
      C                   IF        WSWIFT = *BLANKS
      C                   MOVE      *BLANKS       P@Rtcd
      C                   RETURN
      C                   ENDIF
- 
+
      C                   IF        P@Mtyp = '102' OR P@Mtyp = '103'
      C                   EVAL      P@Rtcd = '*CRTCOV'
      C**********         MOVE      P@SSwID       W@BIC                                      BUG24707
@@ -309,7 +310,7 @@
      C                   EVAL      P@Rtcd = '*CRT202'
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         IF        W@BIC = *BLANKS                                          BUG24707
      C**********         MOVE      P@RSwID       W@BIC                                      BUG24707
      C**********         ENDIF                                                              BUG24707
@@ -323,7 +324,7 @@
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       BRANCH
      C                   MOVE      W@BIC         OTHPTY
      C     KEY1          CHAIN     MEBAGRL1
@@ -348,7 +349,7 @@
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       BRANCH
      C                   MOVEL     W@BIC         OTHPTY
      C                   MOVE      '***'         OTHPTY
@@ -356,7 +357,7 @@
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   IF        PSwftID <> *BLANKS
      C                   MOVEL     PSwftID       PSWftID2
      C                   MOVE      '***'         PSWftID2
@@ -367,21 +368,21 @@
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   EVAL      BRANCH = P@Brch
      C                   EVAL      OTHPTY = W@BIC
      C     KEY1          CHAIN     MEBAGRL1
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   EVAL      BRANCH = P@Brch
      C                   EVAL      OTHPTY = PSwftID
      C     KEY1          CHAIN     MEBAGRL1
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   EVAL      BRANCH = P@Brch
      C                   MOVEL     W@BIC         OTHPTY
      C                   MOVE      '***'         OTHPTY
@@ -389,14 +390,14 @@
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   EVAL      BRANCH = P@Brch
      C                   EVAL      OTHPTY = PSwftID2
      C     KEY1          CHAIN     MEBAGRL1
      C                   IF        %FOUND(MEBAGRL1)
      C                   MOVE      'Y'           MATCH
      C                   ENDIF
- 
+
      C                   IF        P@Rtcd = '*CRTCOV'
      C                   IF        MATCH = 'Y'
      C                   EVAL      P@Rtcd = '*CRT202'
@@ -408,7 +409,7 @@
      C                   EVAL      P@Rtcd = *BLANKS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
       *
       /EJECT
@@ -445,14 +446,14 @@
      C                   PARM                    P@S2RInfo
      C                   PARM                    P@SndCor
      C                   PARM                    P@RcvCor
- 
+
      C     KEY1          KLIST
      C                   KFLD                    P@BAgr
      C                   KFLD                    BRANCH
      C                   KFLD                    OTHPTY
- 
+
      C                   MOVEL     *BLANKS       WCUST
- 
+
      C                   ENDSR
       *
       /EJECT

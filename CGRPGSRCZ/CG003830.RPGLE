@@ -40,6 +40,7 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -75,41 +76,41 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FREADVCL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas RE Settled Transaction Index File
- 
+
      FRERSACL3  IF   E           K DISK    INFSR(*PSSR)
       ** Midas RE Account Movements for Online Printing Adv
- 
+
      FDEALALL   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(Dl)
       ** Midas DL All deals
- 
+
      FREIAC     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(Re)
       ** Midas RETAIL INTEREST & CHARGES FILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WKeySysVal1     C                   CONST('DealAmendments      ')
      D WKeySysVal2     C                   CONST('ForeignExchangeDeals')
      D WKeySysVal3     C                   CONST('LoansDeposNAsIssued ')
@@ -119,25 +120,25 @@
      D WKeySysVal7     C                   CONST('SngleCcyIntRateSwaps')
      D WKeySysVal8     C                   CONST('CrossCcyIntRateSwaps')
      D WKeySysVal9     C                   CONST('CapsCollarsFloorsMnt')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Data structure for access objects, first DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data structure for access objects, second DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for GL Accounts master detail
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D  BRCA_ACCNT   E                     EXTFLD(BRCA)
- 
+
       ** External DS for  GL Account Movements
      D WDsRSAC       E DS                  EXTNAME(RSACMTPD)
      D  WNarratv              29     57A
@@ -145,7 +146,7 @@
      D  WModule               57     57A
      D  WDelete               58     58A
      D  WSeqnNum             125    127A
- 
+
       ** DS for data to be passed to the Extract Program
      D*PDsRetRsac      DS           155                                                       CAP204
      D*PDsRetRsac      DS           175                                                CAP204 CAP205
@@ -154,22 +155,22 @@
      D**WRsacDetls            11    155                                                       CAP204
      D**WRsacDetls            11    175                                                CAP204 CAP205
      D  WRsacDetls            11    182                                                       CAP205
- 
+
       ** Data structure for AOSVALR0 string
      D WSVal1          DS           200
      D  PSVal1                 1    200
      D  WSVal1_1               1      1
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry parameter fields
      D PInp_Commit     S              3A
      D PInp_CtlPgm     S             10A
      D CCG015          S              1A
- 
+
       ** Parameter fields
      D POption         S              7A
      D PRtnCode        S              7A
@@ -200,12 +201,12 @@
      D PSVal9          S            200
      D PSValK0         S             20
      D PSVal0          S            200
- 
+
       ** Key List Fields for RERSACPD
      D KTnmr           S              6A
      D KTryp           S              2A
      D KVudt           S              5S 0
- 
+
       ** Key List Fields for REIAC
      D*KCnum****       S              6S 0                                                    CSD027
      D KCnum           S              6A                                                      CSD027
@@ -213,135 +214,135 @@
      D KAcod           S             10S 0
      D KAcsq           S              2S 0
      D KBrca           S              3A
- 
+
       ** Work Variables
      D WCounter        S              5P 0
      D KDlno           S              6P 0
      D WReversal       S              1A
- 
+
       ** Fields, data structures, arrays definition for CG error processing
      D/COPY CGCPYSRC,SRERRDLE
- 
+
       ** Fields, data structures, arrays definition for CG audit processing
      D/COPY CGCPYSRC,CGAUDTDLE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'Main      '  @STK(Q)
- 
+
       ** Execute main subroutine
- 
+
      C                   IF        PInp_CtlPgm = 'REC000079'
      C                   EXSR      SRMainCOB
      C                   ELSE
      C                   EXSR      SRMainIC
      C                   END
- 
+
       ** Audit processing
- 
+
      C                   EXSR      SRAudit
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
       ** Termination
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       *  SRMainIC - Controls main flow of program for Input Cycle     *
       *                                                               *
       *****************************************************************
      C     SRMainIC      BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SRMainIC  '  @STK(Q)
- 
+
       ** Process all the records from RE Settled Transaction Index File
       ** with Transaction Maintenance Program equal to Control Program
- 
+
      C     PInp_CtlPgm   SETLL     READVCL0
      C     PInp_CtlPgm   READE     READVCL0                               10
- 
+
      C                   DOW       *IN10 = *OFF
- 
+
       ** Initialize the flag.
- 
+
      C                   EVAL      WReversal = *BLANKS
- 
+
       ** Set the key to be used to access Account Movements File.
- 
+
      C                   EVAL      KTnmr = RREFNO
      C                   EVAL      KTryp = RTRTYP
      C                   EVAL      KVudt = RVUDT
- 
+
       ** Process only those records on Movements File which refer to
       ** the Index File Record read.
- 
+
      C     KReRsac       SETGT     RERSACL3
      C     KReRsac       READPE    RERSACL3                               11
- 
+
       ** Set the Reversal Flag to 'Y' if the record read from the
       ** Account Movements File has '*' on position 30 of the narrative.
       ** (Reversal Record)
- 
+
       ** If the Change Type is insert and the record read from the
       ** Account Movements File has '*' on position 30 of the narrative,
       ** No record will be processed for this Index File record.
- 
+
      C                   IF        *IN11 = *OFF AND RENARR = WNarratv
      C                             AND RSEQNO = WSeqnNum AND WDelete = '*'
- 
+
      C                   EVAL      WReversal = 'Y'
- 
+
      C                   IF        RCHTYP = 'I'
      C                   EVAL      *IN11 = *ON
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   DOW       *IN11 = *OFF
- 
- 
+
+
      C                   IF        RENARR = WNarratv
      C                             AND RSEQNO = WSeqnNum
- 
+
       ** Set Narrative Description
- 
+
      C                   IF        WNarratv28 = *BLANKS
      C                   EVAL      WNarratv28 = 'DEALING TRANSACTION'
      C                   ENDIF
- 
+
       ** Store GL Account Movement Details to a work variable.
- 
+
      C                   MOVEL     WDsRsac       WRsacDetls
- 
+
       ** The account must refer to a Retail Account.
- 
+
      C                   MOVEL     CUSN          PCnum
      C                   EVAL      PCucd = CCYD
      C                   MOVEL     ACDE          PAccd
      C                   MOVEL     ASNC          PAcsq
      C                   EVAL      PBrca = BRCA
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      '*MSG'        PRtnCode
      C                   PARM      '*KEY  '      POption
@@ -352,7 +353,7 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      W0File = 'AOACCTR0'
      C                   EVAL      W0Key = PCnum + PCucd + PAccd + PAcsq + PBrca
@@ -361,75 +362,75 @@
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        ATYP = 'R'
- 
+
       ** Move Retail Account number to an alphanumeric variable.
- 
+
      C                   MOVEL     ACNO          WRetailNum
- 
+
       ** The account must allow printing of Transaction Advices.
- 
+
      C                   EVAL      KCnum = CUSN
      C                   EVAL      KCcy  = CCYD
      C                   EVAL      KAcod = ACDE
      C                   EVAL      KAcsq = ASNC
      C                   EVAL      KBrca = BRCA
- 
+
      C     KReiac        CHAIN     REIAC                              11
- 
+
      C                   IF        *IN11 = *OFF AND RePTRA = 'Y'
- 
+
       ** If the record read from the Account Movement File has '*' on
       ** position 30 if the narrative field, set Change Type to 'R'.
       ** (REVERSAL).  Else set if to Change Type Value from Settled
       ** Transaction Index File.
- 
+
      C                   IF        WDelete = '*'
      C                   EVAL      PChgType = 'R'
      C                   ELSE
      C                   EVAL      PChgType = RCHTYP
      C                   ENDIF
- 
+
       ** Increment the count of RERSACPD records processed.
- 
+
      C                   ADD       1             WCounter
- 
+
       ** Call the Extract Program.
- 
+
      C                   CALL      'CG003831'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PInp_Commit
      C                   PARM                    PDsRetRsac
      C                   PARM                    CCG015
      C                   PARM                    PChgType
- 
+
      C                   IF        PRtnCode <> *BLANKS
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   EVAL      W0File = 'CG003831'
      C                   EVAL      W0Key = PRtnCode
      C                   EVAL      W0ErNb = 02
      C                   EVAL      W0MsgD = 'MEM5003'
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record until EOF or end of processing for the
       ** Settled Transaction Index File record read.
- 
+
      C     KReRsac       READPE    RERSACL3                               11
- 
+
      C                   IF        *IN11 = *OFF AND RENARR = WNarratv
      C                             AND RSEQNO = WSeqnNum
- 
+
      C                   IF        (WReversal = 'Y' AND WDelete = ' ')
      C                             OR (RCHTYP = 'I' AND WDelete = '*')
      C                   EVAL      *IN11 = *ON
@@ -438,27 +439,27 @@
      C                   EVAL      WReversal = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** If no error occurred, set the Retail Settlement Advice Print Indicator
       ** to 'Y'.
- 
+
      C                   EVAL      RSAPIN = 'Y'
      C                   UPDATE    READVCD0
- 
+
      C                   COMMIT
- 
+
      C     PInp_CtlPgm   READE     READVCL0                               10
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -468,75 +469,75 @@
       *                                                               *
       *****************************************************************
      C     SRMainCOB     BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SRMainCOB '  @STK(Q)
- 
+
       ** Read all records in Midas RE Account Movements for Online Printing Adv
- 
- 
+
+
      C     *LOVAL        SETLL     RERSACL3
      C                   READ      RERSACL3                               11
- 
+
      C                   DOW       *IN11 = *OFF
- 
+
       ** Set Narrative Description
- 
+
      C                   EVAL      WNarratv28 = 'DEALING TRANSACTION'
- 
+
       ** Store GL Account Movement Details to a work variable.
- 
+
      C                   MOVEL     WDsRsac       WRsacDetls
- 
+
      C                   IF        WModule = 'D'
- 
+
      C                   MOVE      TNMR          KDlno
      C     KDlno         CHAIN     DEALALL                            13
- 
+
      C                   IF        *IN13 = *OFF
- 
+
       * Clear all the AOSVALR0 input parameters
- 
+
      C                   CLEAR                   PSValK1
- 
+
       * Initialise the first system value key
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WSeqnNum <> *BLANKS
      C                   EVAL      PSValK1 = WKeySysVal1
- 
+
      C                   WHEN      DlRCDT = 'B'
      C                   EVAL      PSValK1 = WKeySysVal2
- 
+
      C                   WHEN      DlRCDT = 'C'
      C                   EVAL      PSValK1 = WKeySysVal3
- 
+
      C                   WHEN      DlRCDT = 'D'
      C                   EVAL      PSValK1 = WKeySysVal4
- 
+
      C                   WHEN      DlRCDT = 'E'
      C                   EVAL      PSValK1 = WKeySysVal5
- 
+
      C                   WHEN      DlRCDT = 'G' AND DlDTYP = 'FR'
      C                   EVAL      PSValK1 = WKeySysVal6
- 
+
      C                   WHEN      DlRCDT = 'G' AND DlDTYP = 'RS'
      C                   EVAL      PSValK1 = WKeySysVal7
- 
+
      C                   WHEN      DlRCDT = 'G' AND DlDTYP = 'RX'
      C                   EVAL      PSValK1 = WKeySysVal8
- 
+
      C                   WHEN      DlRCDT = 'G' AND (DlDTYP <> 'FR' OR
      C                             DlDTYP <> 'RS' OR DlDTYP <> 'RX')
      C                   EVAL      PSValK1 = WKeySysVal9
- 
+
      C                   ENDSL
- 
+
       * Retrieve the system value
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PSValK1
@@ -559,9 +560,9 @@
      C                   PARM                    PSVal9
      C                   PARM                    PSValK0
      C                   PARM                    PSVal0
- 
+
       * If the system value is not found then issue a database error
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   IF        PSVal0 = '*NRF'
      C                   EVAL      W0Key = PSValK0
@@ -599,15 +600,15 @@
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        WSVal1_1 =  'Y'
- 
+
      C                   MOVEL     CUSN          PCnum
      C                   EVAL      PCucd = CCYD
      C                   MOVEL     ACDE          PAccd
      C                   MOVEL     ASNC          PAcsq
      C                   EVAL      PBrca = BRCA
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      '*MSG'        PRtnCode
      C                   PARM      '*KEY  '      POption
@@ -618,7 +619,7 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      W0File = 'AOACCTR0'
      C                   EVAL      W0Key = PCnum + PCucd + PAccd + PAcsq + PBrca
@@ -627,76 +628,76 @@
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        ATYP = 'R'
- 
+
       ** Move Retail Account number to an alphanumeric variable.
- 
+
      C                   MOVEL     ACNO          WRetailNum
- 
+
       ** The account must allow printing of Transaction Advices.
- 
+
      C                   EVAL      KCnum = CUSN
      C                   EVAL      KCcy  = CCYD
      C                   EVAL      KAcod = ACDE
      C                   EVAL      KAcsq = ASNC
      C                   EVAL      KBrca = BRCA
- 
+
      C     KReiac        CHAIN     REIAC                              11
- 
+
      C                   IF        *IN11 = *OFF AND RePTRA = 'Y'
- 
+
       ** Set Change Type to 'I'.
- 
+
      C                   EVAL      PChgType = 'I'
- 
+
       ** Increment the count of RERSACPD records processed.
- 
+
      C                   ADD       1             WCounter
- 
+
       ** Call the Extract Program.
- 
+
      C                   CALL      'CG003831'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM                    PInp_Commit
      C                   PARM                    PDsRetRsac
      C                   PARM                    CCG015
      C                   PARM                    PChgType
- 
+
      C                   IF        PRtnCode <> *BLANKS
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   EVAL      W0File = 'CG003831'
      C                   EVAL      W0Key = PRtnCode
      C                   EVAL      W0ErNb = 06
      C                   EVAL      W0MsgD = 'MEM5003'
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record until EOF.
- 
+
      C                   READ      RERSACL3                               11
- 
+
      C                   ENDDO
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -706,14 +707,14 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Set up subroutine stack name
- 
+
      C                   ADD       1             Q
      C                   MOVEL     'SRAudit   '  @STK(Q)
- 
+
       ** Output the count of records read
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG003830'    I#REF
      C                   MOVEL     'CGD2625'     I#TITL
@@ -725,43 +726,43 @@
      C                   Z-ADD     WCounter      I#QTY
      C                   Z-ADD     *ZERO         I#DECS
      C                   MOVEL     '1'           I#EDIT
- 
+
       ** Write line of text
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*LINE   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PSequence
- 
+
       ** Skip a line
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*SKIP   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PSequence
- 
+
       ** Close Audit Printer file
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG003830'    I#REF
      C                   MOVEL     'CGD2625'     I#TITL
      C                   MOVEL     'CGD2626'     I#TUL
      C                   MOVEL     'CGUSRMSG'    I#FILE
      C                   MOVEL     'CAD1008'     I#TEXT
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*CLOSE  '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PSequence
- 
+
       ** Unwind subroutine stack name
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   SUB       1             Q
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -773,38 +774,38 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    W0RTN
      C                   PARM                    PInp_Commit
      C                   PARM                    PInp_CtlPgm
      C                   PARM                    CCG015
- 
+
       ** Key list for RERSACL3
- 
+
      C     KReRsac       KLIST
      C                   KFLD                    KTnmr
      C                   KFLD                    KTryp
      C                   KFLD                    KVudt
- 
+
       ** Key list for REIAC
- 
+
      C     KReiac        KLIST
      C                   KFLD                    KCnum
      C                   KFLD                    KCcy
      C                   KFLD                    KAcod
      C                   KFLD                    KAcsq
      C                   KFLD                    KBrca
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      W0File = 'AOBANKR0'
      C                   EVAL      W0Key = POption
@@ -813,30 +814,30 @@
      C                   EVAL      W0MsgF = 'MIDAS'
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Reset @STK index
- 
+
      C                   Z-ADD     0             Q
- 
+
       ** Initialize the counter.
- 
+
      C                   Z-ADD     *ZERO         WCounter
- 
+
       ** Open the Audit Print file
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG003830AU'  I#SPLN
      C                   MOVEL     'CG003830'    I#REF
      C                   MOVEL     'CGD2625'     I#TITL
      C                   MOVEL     'CGD2626'     I#TUL
      C                   MOVEL     'CGUSRMSG'    I#FILE
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*OPEN   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PSequence
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

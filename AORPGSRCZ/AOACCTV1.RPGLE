@@ -45,6 +45,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030906 - Counterparty Nostro not defaulted.                *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -101,22 +102,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -126,11 +127,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -148,29 +149,29 @@
      D MEBICD        E DS                  EXTNAME(MEBICDPD)                                  221538
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAX       E                     EXTFLD(QQDFAC)                                     CGL029
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       /COPY FTCPYSRC,SFTVALCSLE                                                               221538
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D  AccStr         S             35
      D  AccStr1        S             34
      D  ParmStr        S                   Like(AccStr)
- 
+
      D @Type           S                   Like(@RTCD)
      D GLAcc           S                   Like(AccStr)
      DCharCNUM         S              6
@@ -185,7 +186,7 @@
      D j               S              5u 0
      D ##CSID          S              1                                                       221538
      D CMD@            S             60    DIM(1) CTDATA PERRCD(1)                           260426A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -193,44 +194,44 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      P@FMT = *Blanks
      C                   Eval      @RTCD = *Blanks
      C                   Eval      AccStr = ParmStr
      C                   Eval      @TYPE = *BLANKS
- 
+
       * If account starts with a '/', remove it.
      C                   If        %Subst(AccStr:1:1) = '/'
      C                   Eval      AccStr1 = %Subst(AccStr:2:34)
      C                   Eval      AccStr = AccStr1
      C                   Endif
- 
+
      C                   CallB     'ZAVALTXT'
      C                   Parm                    RetCode          10
      C                   Parm                    AccStr
- 
+
      C                   If        RetCode <> *Blanks
      C                   Eval      @TYPE = '*NRF   '
      C                   Eval      @RTCD = '*NRF   '
      C                   Return
      C                   Endif
- 
- 
+
+
       *  Account entry for GL Account should be in format :
       *   BbbCcccccAaaaCcySq (18)
- 
+
       *  If in a single branch mode, get default branch from SDBANKPD
       *  If branch code not 1st 3 characters, move default in
- 
+
      C                   Eval      GLAcc  = AccStr
- 
+
       * If 1st 3 characters numeric and single branch mode, move in branch
       *  code.
      C                   Eval      Char3 = %Subst(GLAcc:1:3)
@@ -239,7 +240,7 @@
      C                             AGMBIN <> 'Y'
      C                   Eval      GLAcc = BJSBRC + GLAcc
      C                   Endif
- 
+
       * Check to see if a GL Account
       *   Len                            Start
      C     3             Subst     GLAcc:1       BRCA
@@ -249,11 +250,11 @@
      C*****2****         Subst     GLAcc:17      CharACSQ                                     CGL029
      C     10            Subst     GLAcc:13      CharACOD                                     CGL029
      C     2             Subst     GLAcc:23      CharACSQ                                     CGL029
- 
+
      C                   Movel     CharCNUM      CNUM
      C                   Movel     CharACOD      ACOD
      C                   Movel     CharACSQ      ACSQ
- 
+
      C     KAccnt        Chain     ACCNTABF                           97
      C                   If        NOT *IN97
      C**********                   And %subst(GLAcc:19:17) =  *blank                   226083 TDA020
@@ -270,7 +271,7 @@
      C                   Eval      P@FMT = C@FMT                                            BUG15154
      C                   Eval      @TYPE = '*CUSTNO'                                        BUG15154
      C                   Else                                                               BUG15154
- 
+
       ** Retail Account ?  Accntl1
      C                   Eval      ACNO = *Zeros
      C                   Movel     AccStr        Char10
@@ -295,7 +296,7 @@
      C                   Movel     ACNO          ACNOC            10
      C                   Eval      ParmStr = ACNOC
      C                   Else
- 
+
       ** Nostro Account ?  SDNOSTL1
      C     3             Subst     AccStr:1      A7CYCD
      C     2             Subst     AccStr:4      A7NONB
@@ -306,7 +307,7 @@
      C                   Eval      P@FMT = N@FMT
      C                   Eval      @TYPE = '*NOSTRO'
      C                   Else
- 
+
      C*****6****         Subst     AccStr:1      CharCNUM                                   BUG15154
      C**********         Movel     CharCNUM      BBCUST                                     BUG15154
      C*****BBCUST        Chain     SDCUSTL0                           97                    BUG15154
@@ -329,7 +330,7 @@
      C                   Endif                                                              MD030906
      C                   Else                                                                221538
       *                                                                                      221538
- 
+
      C     10            Subst     AccStr:1      BBCSSN
      C     BBCSSN        Chain     SDCUSTL2                           97
      C                   If        %Subst(AccStr:11:25) = *Blanks AND
@@ -339,14 +340,14 @@
      C                   Else
      C                   Eval      @TYPE = '*NRF   '
      C                   Eval      @RTCD = '*NRF   '
- 
+
      C                   Endif                                                                221538
      C                   Endif
      C                   Endif
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
      C                   IF        @TYPE = '*RETAIL' OR
      C                             @TYPE = '*LEDGER'
      C                   IF        RECI <> 'D'
@@ -354,7 +355,7 @@
      C                   Eval      @RTCD = '*NRF   '
      C                   Endif
      C                   Endif
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -368,11 +369,11 @@
       *                                                               *
       *****************************************************************
      C     FmtRet        Begsr
- 
+
      C                   MoveA     Char10        A1
      C                   Z-add     1             j
      C                   Z-add     10            i
- 
+
       * Find first blank character
      C     ' '           Lookup    A1(j)                                  90
      C**********         If        *In90                                                      212229
@@ -385,11 +386,11 @@
      C                   Sub       1             i
      C                   Enddo
      C                   Endif
- 
- 
+
+
      C                   MoveA     A1            Char10
      C                   Move      Char10        ACNO
- 
+
      C                   Endsr
       /EJECT                                                                                  221538
       *****************************************************************                       221538
@@ -484,15 +485,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
      C                   Parm                    @RTCD                          B:Return code
      C                   Parm                    @TYPE                          B:Return code
      C                   Parm                    ParmStr                        B:Return code
      C                   Parm                    P@FMT
- 
+
       * GL Account Key List
      C     KAccnt        Klist
      C                   Kfld                    CNUM
@@ -500,12 +501,12 @@
      C                   Kfld                    ACOD
      C                   Kfld                    ACSQ
      C                   Kfld                    BRCA
- 
+
       * Nostro Klist
      C     KNostro       Klist
      C                   Kfld                    A7CYCD
      C                   Kfld                    A7NONB
- 
+
       * Retail ACNO Klist                                                                     260150
      C     KAcno         Klist                                                                260150
      C                   Kfld                    ACNO                                         260150
@@ -514,22 +515,22 @@
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*FIRST   '   @Optn
      C     Sdbank        Parm      Sdbank        Dsfdy
- 
+
      C                   If        @Rtcd <> *Blanks
      C                   Eval      dbfile = 'SDBANKPD'
      C                   Eval      dbase = 1
      C                   Eval      dbkey = '*FIRST'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C     *DTAARA       Define    RUNDAT        RunDta
      C                   In        RunDta
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
      C     @OPEN@        IFNE      'Y'                                                       260426A
      C                   MOVEL     'Y'           @OPEN@            1                         260426A
@@ -540,9 +541,9 @@
      C                   PARM                    @P2@                                        260426A
      C                   OPEN      ACCRETL                                                   260426A
      C                   END                                                                 260426A
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

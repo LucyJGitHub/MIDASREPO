@@ -48,6 +48,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046874 - Incorrectly update the Retail's account type      *
       *             causing database error in REC62N component        *
@@ -91,16 +92,16 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FACCNTAB   UF   E           K DISK
       **  Accounts Master File
       *
      FSDNOSTL2  IF   E           K DISK
       **  Nostro details
       *
- 
- 
- 
+
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -122,10 +123,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -134,46 +135,46 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
      D AADTA         E DS                  EXTNAME(AADTA)
       **  AA Data Area
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas modules details
- 
+
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       **  Profit Centre Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Profit Centre Details
- 
+
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       ** PCA ICD
- 
+
      D DSFDY         E DS
       **  Short Data Structure for Access Programs
- 
+
      D DSSDY         E DS
       **  Short Data Structure for Access Programs
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D PCDMBookC       S              2
      D PCDMTranType    S              5
@@ -189,7 +190,7 @@
      D WProfitC        S              4
      D Option          S              7
      D WAccType        S              1    INZ(' ')                                         MD046874
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -200,7 +201,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -218,7 +219,7 @@
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   END
- 
+
      C                   READ      ACCNTAB                                40
       *
       * Do While not EOF
@@ -285,15 +286,15 @@
       * Read next record
      C                   READ      ACCNTAB                                40
      C                   ENDDO
- 
+
       * This program has run suucessfully and therefor it should be
       * flagged as having run.  This allows AA0002 to run.
      C                   EVAL      AARNPI = 'Y'
      C                   OUT       AADTA
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -305,9 +306,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     PCDM          BEGSR
- 
+
       * Move Customer No. into the Field for the call to the Access Object
      C                   EVAL      @KEY1 = PCDMCust
       *
@@ -363,9 +364,9 @@
      C                   MOVEL     DSPCCD        WProfitC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -377,9 +378,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** GET MODULE DETAILS
       *
      C                   CALL      'AOMMODR0'
@@ -404,7 +405,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       *
       ** GET PCA ICD
       *
@@ -430,7 +431,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       *
       **  Nostro key
       *
@@ -440,9 +441,9 @@
      C                   KFLD                    A7ACCD
      C                   KFLD                    A7ACSN
      C                   KFLD                    A7BRCD
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *

@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055373           Date 14Jul20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. AR970389B          Date 16Sep20               *
+      *  Prev Amend No. AR970389A          Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
@@ -154,6 +156,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR970389B - Reopen AR970389A due to the field also being     *
+      *              defaulted to 'N' when some features are switched *
+      *              ON. (Child: AR970392B)                           *
+      *            - Applied for MD-56719.                            *
+      *  AR970389A - Reopen AR970389 due to error still occurs in     *
+      *              validation if transaction is coming from external*
+      *              systems. (Child: AR970392A)                      *
+      *            - Applied for MD-56719.                            *
       *  MD055373 - Audit trail not available                         *
       *           - Receive and process the DDIUSR and DDAUSR fields  *
       *             from APTRANVU.                                    *
@@ -2229,29 +2239,40 @@
      C     PMDDCSBY      ORNE      *BLANKS                                                    CSD079
      C*****PMDDSAFI      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDSAFI      ORNE      'N'                                                      AR970389
+     C     PMDDSAFI      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDCMS      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLFQ      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLDM      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLND      ORNE      *BLANKS                                                    CSD079
      C*****PMDDS1VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS1VR      ORNE      'N'                                                      AR970389
+     C     PMDDS1VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS2VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS2VR      ORNE      'N'                                                      AR970389
+     C     PMDDS2VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS3VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS3VR      ORNE      'N'                                                      AR970389
+     C     PMDDS3VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS4VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS4VR      ORNE      'N'                                                      AR970389
+     C     PMDDS4VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS5VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS5VR      ORNE      'N'                                                      AR970389
+     C     PMDDS5VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS6VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS6VR      ORNE      'N'                                                      AR970389
+     C     PMDDS6VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS7VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS7VR      ORNE      'N'                                                      AR970389
+     C     PMDDS7VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS8VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS8VR      ORNE      'N'                                                      AR970389
+     C     PMDDS8VR      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDAPBC      ORNE      *BLANKS                                                    CSD079
+     C     PMDDAPBC      ANDNE     'N'                                                     AR970389B
      C*****PMDDPPCS      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDPPCS      ORNE      'N'                                                      AR970389
+     C     PMDDPPCS      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDFPO      ORNE      *BLANKS                                                    CSD079
      C     PMDDINSU      ORNE      *BLANKS                                                    CSD079
      C     PMDDCYSU      ORNE      *BLANKS                                                    CSD079

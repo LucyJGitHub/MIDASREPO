@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055373           Date 14Jul20               *
-      *  Prev Amend No. MD026746           Date 05Feb20               *
+      *  Last Amend No. MD056719           Date 16Sep20               *
+      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
       *                 MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
@@ -153,6 +154,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
+      *             Messages.                                         *
+      *           - Include A_PMAPBC field under AR1049708 fix.       *
       *  MD055373 - Audit trail not available                         *
       *           - Receive and process the DDIUSR and DDAUSR fields  *
       *             from SDCUSDVU.                                    *
@@ -2165,6 +2169,7 @@
      C     A_PMS8VR      ORNE      *BLANKS                                                   BG12238
      C     A_PMS8VR      ANDNE     'N'                                                     AR1049708
      C     A_PMAPBC      ORNE      *BLANKS                                                   BG12238
+     C     A_PMAPBC      ANDNE     'N'                                                      MD056719
      C     A_PMPPCS      ORNE      *BLANKS                                                   BG12238
      C     A_PMPPCS      ANDNE     'N'                                                     AR1049708
      C     A_PMDFPO      ORNE      *BLANKS                                                   BG12238

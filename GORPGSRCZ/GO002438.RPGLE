@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD056838           Date 01Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CAS014 - IAS21 The Effects of Changes in Foreign Exchange    *
@@ -59,13 +61,13 @@
       ** +--------------------------------------+
       ** Midas GP Global Daily Historic Spot Rates
      FGPCUHSL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas Global Daily Historic Spot Rates File - Audit
      FGPCUHSPA  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas GP Global Currencies
      FGPCURRL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Print File for Midas Global Daily Historic Spot Rate - Audit
      FGO002438AUO    E             PRINTER INFDS(SPOOLA)
       *****************************************************************
@@ -91,26 +93,26 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** Program Status Data Structure
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** First DS for Access programs - short data structure
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for Bank Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** INFDS for GO002438AU
      D SPOOLA          DS
      D  SFILEA                83     92
      D  SFNUMA               123    124B 0
      D  OFLLNA               188    189B 0
      D  PRTLNA               367    368B 0
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -118,25 +120,26 @@
       ** +--------------------------------------+
       *
       ** parameters for AOBANKRO
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
- 
+
       ** Variables for key list GHCUHS
- 
+
      D K1CYCD          S              3
      D K1PRDT          S              5  0
- 
+
       ** Work variables
- 
+
      D WRecCtr         S             10  0
- 
+
       *
       ** Calling parameters for ZSFILE
       *
      D ZSEQ            S              5A
      D ZSENTY          S              3A
-     D ZSNUM           S              6S 0
+     D**ZSNUM***        S              6S 0                                                 MD056838
+     D ZSNUM           S              6  0                                                  MD056838
      D ZSERR           S              1A
       *****************************************************************
       /EJECT
@@ -148,24 +151,24 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Write or update records to global historic spot rate file
- 
+
      C                   EXSR      SRProcess
- 
+
       ** Detail Report
- 
+
      C                   EXSR      SRAudit
- 
+
       ** End of program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *********************************************************************
@@ -183,12 +186,12 @@
       *                                                                   *
       *********************************************************************
      C     SRProcess     BEGSR
- 
+
      C                   EVAL      WRecCtr = 0
- 
+
      C                   READ      GPCURRL0
      C                   DOW       NOT %EOF(GPCURRL0)
- 
+
      C                   EVAL      K1CYCD = GCCYCD
      C                   EVAL      K1PRDT = BJRDNB
      C     GHCUHS        CHAIN     GPCUHSL0
@@ -201,21 +204,21 @@
      C                   EVAL      GHCHTP = GCCHTP
      C                   EVAL      GHCUSR = GCCUSR
      C                   EVAL      GHPRDT = BJRDNB
- 
+
      C                   IF        %FOUND(GPCUHSL0)
      C                   UPDATE    GPCUHSD0
      C                   ELSE
- 
+
       ** Count records
- 
+
      C                   WRITE     GPCUHSD0
- 
+
      C                   EVAL      WRecCtr = WRecCtr + 1
      C                   ENDIF
- 
+
      C                   READ      GPCURRL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -229,50 +232,50 @@
       *                                                                   *
       *********************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Write report GO002438AU
       ** Write audit report heading
- 
+
      C                   WRITE     HEADAU
- 
+
       ** Check Counter
- 
+
      C                   IF        WRecCtr = 0
- 
+
       ** Write 'NO DETAILS' updated
- 
+
      C                   WRITE     DTAILA2
- 
+
      C                   ELSE
- 
+
       ** Read audit file
- 
+
      C                   READ      GPCUHSPA
      C                   EVAL      RRNO   = GHNORE
      C                   EVAL      GHNORE = GHNORE + WRecCtr
- 
+
      C                   IF        %EOF(GPCUHSPA)
      C                   WRITE     GPCUHSA0
      C                   ELSE
      C                   UPDATE    GPCUHSA0
      C                   ENDIF
      C
- 
+
       ** Set report fields
- 
+
      C                   EVAL      RADD = WRecCtr
      C                   EVAL      RTOT = RRNO + RADD
- 
+
       ** Write no. of records updated
- 
+
      C                   WRITE     DTAILA1
- 
+
      C                   ENDIF
- 
+
       ** Write end of report
- 
+
      C                   WRITE     ENDREAU
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -286,23 +289,23 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** LDA Data area
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       *
       ** Ensure Report Spool File recorded by RCF.
       *
      C                   Z-ADD     SFNUMA        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILEA
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       *
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
@@ -312,14 +315,14 @@
      C                   RETURN
      C                   ENDIF
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
@@ -329,13 +332,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Key list for GPCUHSL0
- 
+
      C     GHCUHS        KLIST
      C                   KFLD                    K1CYCD
      C                   KFLD                    K1PRDT
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -352,27 +355,27 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
       ** Write audit report heading
- 
+
      C                   WRITE     HEADAU
- 
+
       ** Write audit report details
- 
+
      C                   WRITE     DTAILA3
- 
+
       ** Write end of report
- 
+
      C                   WRITE     ENDREAU
- 
+
       ** End of Program
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *********************************************************************

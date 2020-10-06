@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056838           Date 01Oct20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR784436           Date 22Jun11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056838 - Amend SFNUM type to packed decimal                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -136,12 +138,12 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ External data areas                  ¦
       ** ¦ ===================                  ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -152,72 +154,72 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Program Status Data Structure
       /COPY ZACPYSRC,PSDS
- 
+
       ** File Information Data Structure for LE004621P1.
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File Information Data Structure for LE004621P2.
      D SPOOL2          DS
      D  SFILE2                83     92
      D  SFNUM2               123    124B 0
      D  OFLLN2               188    189B 0
      D  PRTLN2               367    368B 0
- 
+
       ** File Information Data Structure for LE004621AU.
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
      D  OFLLNU               188    189B 0
      D  PRTLNU               367    368B 0
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Fee Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Whether or not *PSSR has been run previously
      D RunBefore       S              1A
- 
+
       ** --- Start of fields used by access programs -----------------------------------------------
       ** Return code
      D PRtCd           S              7A
@@ -230,23 +232,24 @@
       ** Currency key
      D PCCY            S              3A
       ** --- End of fields used by access programs -------------------------------------------------
- 
+
       ** ZSEdit parms
      D ZFLD15          S             15P 0
      D ZDECS           S              1P 0
      D ZECODE          S              1A
      D ZOUT21          S             21A
- 
+
       ** ZEdit2 parms
      D ZFIELD          S             16A
      D ZADEC           S              2P 0
- 
+
       ** ZSFile parms
      D ZSEQ            S              5A
      D ZSENTY          S              3A
-     D ZSNUM           S              6S 0
+     D**ZSNUM***        S              6S 0                                                 MD056838
+     D ZSNUM           S              6  0                                                  MD056838
      D ZSERR           S              1A
- 
+
      D PRSEQ           S              5A
      D PRENT           S              3A
      D P1OPEN          S              1A
@@ -273,38 +276,38 @@
      D WERAPF          S              1A                                                    BUG15532
      D WWSTDT          S              5P 0                                                  AR784436
      D WREPORT         S              1A                                                    AR784436
- 
+
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       ** MAIN PROCEDURE                                                   *
       *********************************************************************
- 
+
       ** Perform Initialisation.
- 
+
      C                   EXSR      Init
- 
+
       ** Perform Detail Processing.
- 
+
      C                   EXSR      Proces
- 
+
       ** Output Audit Report and End Program.
- 
+
      C                   EXSR      Audit
- 
+
       *********************************************************************
       /EJECT
       /TITLE SR/Init
@@ -316,25 +319,25 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     Init          BEGSR
- 
+
      C                   MOVE      'N'           P1OPEN
      C                   MOVE      'N'           P2OPEN
- 
+
       ** Report Work fields.
- 
+
      C                   Z-ADD     0             RQDLN1
      C                   Z-ADD     0             DIFLN1
- 
+
      C                   Z-ADD     0             RQDLN2
      C                   Z-ADD     0             DIFLN2
- 
+
      C                   Z-ADD     0             RCOUNT
- 
+
      C                   MOVE      *BLANKS       SlBRCA
      C                   MOVE      *BLANKS       SvBRCA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -353,18 +356,18 @@
       *    Report - Output Detail lines                               *
       *                                                               *
       *****************************************************************
- 
+
      C     Proces        BEGSR
- 
+
       ** Read first record from File.
- 
+
      C                   IF        (PRENT = 'ALL') OR (PRENT = *BLANKS)
      C     KLOVAL        SETLL     CLOANLB
      C                   ELSE
      C     KLOANS        SETLL     CLOANLB
      C                   EVAL      SlBRCA = PRENT
      C                   ENDIF
- 
+
      C                   READ      CLOANLB
                                                                                               262607
       ** If loan fully prepaid skip it                                                        262607
@@ -372,22 +375,22 @@
      C                             AND VDAT < BJRDNB                                          262607
      C                   READ      CLOANLB                                                    262607
      C                   ENDDO                                                                262607
- 
+
       ** If End of File or branch of record is not same as selected
       ** branch, write No Details to report.
- 
+
      C                   IF        %EOF(CLOANLB)
      C                             OR (SlBRCA <> *BLANKS)
      C                             AND (SlBRCA <> BRCA)
      C                   EXSR      Audit
      C                   ENDIF
- 
+
       ** Do Until End of File.
- 
+
      C                   DOU       %EOF(CLOANLB)
      C                             OR (SlBRCA <> *BLANKS)
      C                             AND (SlBRCA <> BRCA)
- 
+
       ** Initialise Work Fields                                                             BUG15532
      C                   EVAL      WEIRDF = 'N'                                             BUG15532
      C                   EVAL      WERAPF = 'N'                                             BUG15532
@@ -399,52 +402,52 @@
      C                             AND VDAT < BJRDNB                                          262607
      C                   MOVE      *ON           *IN01                                        262607
      C                   ENDIF                                                                262607
- 
+
       ** EIR record found
- 
+
      C**********         IF        *IN01 = *ON                                              BUG15532
      C*****LNRF*         CHAIN     LEERAPL0                           01                    BUG15532
      C**********         ENDIF                                                              BUG15532
- 
+
       ** Count records read.
- 
+
      C                   IF        *IN01 = *OFF
      C                   ADD       1             RCOUNT
                                                                                             BUG15532
       ** Record found in EIRD File                                                          BUG15532
      C                   EVAL      WEIRDF = 'Y'                                             BUG15532
- 
+
       ** Check for change in Branch.
- 
+
      C                   IF        BRCA <> SvBRCA
- 
+
       ** Close the previous branch's spool files
- 
+
      C                   IF        SvBRCA <> *BLANKS
      C                   EXSR      ClsP1
      C                   EXSR      ClsP2
      C                   ENDIF
- 
+
       ** Access the next Branch's Details
- 
+
      C                   EVAL      PBRCA = BRCA
      C                   EXSR      AOBRCH
      C                   EVAL      RBRCA = A8BRCD
      C                   EVAL      RBRNM = A8BRNM
- 
+
       ** Open the next branch's spool files
- 
+
      C                   EXSR      OpnP1
      C                   EXSR      OpnP2
- 
+
      C                   EVAL      SvBRCA = BRCA
- 
+
      C                   ENDIF
- 
+
       ** Process Report Lines.
- 
+
      C                   EXSR      Report
- 
+
      C                   ENDIF
       ** If loan fully prepaid skip SR/Proces1                                              AR695779
      C                   IF        CPAM = *ZERO                                             AR695779
@@ -454,11 +457,11 @@
       ** Process Fees from LEERAPPD - Amortised Over Period File                            BUG15532
      C                   EXSR      Proces1                                                  BUG15532
      C                   ENDIF                                                              AR695779
- 
+
       ** Read next record.
- 
+
      C                   READ      CLOANLB
- 
+
      C                   IF        %EOF(CLOANLB)
      C                             OR (SlBRCA <> *BLANKS)
      C                             AND (SlBRCA <> BRCA)
@@ -469,9 +472,9 @@
      C                   EXSR      ClsP2
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************                     BUG15532
       /EJECT                                                                                BUG15532
@@ -780,56 +783,56 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     Audit         BEGSR
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUMU        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILEU
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Output Report Header.
- 
+
      C                   WRITE     LE004621HA
- 
+
      C                   SELECT
- 
+
       ** If there is a DB Error, output the DB Error Information.
- 
+
      C                   WHEN      (*INU7 = *ON)
      C                   WRITE     DBERROR
- 
+
       ** If no records read, Output "No Details" message.
- 
+
      C                   WHEN      (RCOUNT = 0)
      C                   WRITE     NODTLS
- 
+
       ** If no records read, Output "No Details" message.
- 
+
      C                   WHEN      (RCOUNT > 0)
      C                   WRITE     DTLS
- 
+
      C                   ENDSL
- 
+
       ** End Program and Return.
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       /TITLE SR/REPORT
@@ -842,47 +845,47 @@
       *                                                               *
       *****************************************************************
      C     Report        BEGSR
- 
+
       ** CLOANCL details
- 
+
      C                   MOVE      LNRF          RLNRF
      C                   EVAL      RCCY = CCY
      C                   EVAL      PCCY = CCY
      C                   MOVE      CNUM          RCNUM
      C                   EVAL      RLTYP  = LTYP + '-' + SUTP
- 
+
      C                   EVAL      ZFLD15 = CPAM
      C                   EXSR      ZSEdit
      C                   EVAL      RCBAL  = ZOUT21
- 
+
      C                   EVAL      ZFLD15 = TFDP
      C                   EXSR      ZSEdit
      C                   EVAL      RTFDP  = ZOUT21
- 
+
      C**********         EVAL      ZFLD15 = TFDPA                                           BUG17292
      C                   EVAL      ZFLD15 = TFAM                                            BUG17292
      C                   EXSR      ZSEdit
      C                   EVAL      RTFDPA = ZOUT21
- 
+
      C                   EVAL      ZFLD15 = AFDP
      C                   EXSR      ZSEdit
      C                   EVAL      RAFDP  = ZOUT21
- 
+
       ** LEEIRDPD details
- 
+
      C                   EVAL      WEIEIR = EIEIR * 100
      C                   MOVE      WEIEIR        ZFIELD
      C                   EVAL      ZADEC = 10
      C                   EXSR      ZEdit2
      C                   EVAL      REIR   = ZFIELD
- 
+
      C**********         EVAL      ZFLD15 = EIAMTD                                            258459
      C                   EVAL      ZFLD15 = EIDPTD                                            258459
      C                   EXSR      ZSEdit
      C                   EVAL      RACST  = ZOUT21
- 
+
       ** LENPVAPD details
- 
+
      C     LNRF          CHAIN     LENPVAL0
      C                   IF        %FOUND(LENPVAL0)
      C                   EVAL      ZFLD15 = LNNPVA
@@ -894,53 +897,53 @@
      C                   ELSE                                                               BUG17223
      C                   EVAL      RNPV = *BLANKS                                           BUG17223
      C                   ENDIF
- 
+
       ** Write P1 Header if required
- 
+
      C                   Z-ADD     9             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     LE004621H1
      C                   ENDIF
- 
+
       ** Write P1 EIR Format
- 
+
      C                   WRITE     LE004621D1
      C                   WRITE     LE004621D2
- 
+
      C                   EVAL      WFAMT = 0
      C                   EVAL      WAAMT = 0
      C                   EVAL      WFLAG = 'N'
- 
+
       ** Discounted Loans
      C                   IF        PTYP = 63
      C                             OR PTYP = 65
      C                             OR PTYP = 67
      C                   EVAL      WFLAG = 'Y'
      C                   EVAL      RFSEQ = *BLANKS
- 
+
      C                   EVAL      ZDAYNO = VDAT
      C                   EXSR      ZDate2
      C                   EVAL      RSTPD = ZADATE
- 
+
      C                   EVAL      ZDAYNO = MDAT
      C                   EXSR      ZDate2
      C                   EVAL      RENPD = ZADATE
- 
+
      C                   EVAL      WFAMT = WFAMT + TOTI
      C                   EVAL      ZFLD15 = TOTI
      C                   EXSR      ZSEdit
      C                   EVAL      RFAMT  = ZOUT21
- 
+
      C                   EVAL      RAFMT  = *BLANKS                                         BUG17318
                                                                                             BUG17318
      C                   EVAL      WAAMT = WAAMT + AMDS
      C                   EVAL      ZFLD15 = AMDS
      C                   EXSR      ZSEdit
      C                   EVAL      RAAMT  = ZOUT21
- 
+
       ** Write P1 Header if required
- 
+
      C**********         Z-ADD     4             RQDLN1                                       240763
      C                   Z-ADD     6             RQDLN1                                       240763
      C     OFLLN1        SUB       PRTLN1        DIFLN1
@@ -948,18 +951,18 @@
      C                   WRITE     LE004621H1
      C                   WRITE     LE004621D1
      C                   ENDIF
- 
+
      C                   WRITE     LE004621H2
      C                   WRITE     LE004621D3
- 
+
      C                   ENDIF
- 
+
       ** Read all adjustment to yield fees attached to the loan
      C*****LNRF*         SETLL     LEFEEDLC                                                   262550
      C*****LNRF*         READE     LEFEEDLC                                                   262550
      C     LNRF          SETLL     LEFEEDLN                                                   262550
      C     LNRF          READE     LEFEEDLN                                                   262550
- 
+
      C**********         IF        NOT %EOF(LEFEEDLC)                                         262550
      C                   IF        NOT %EOF(LEFEEDLN)                                         262550
      C                             AND PTYP <> 63
@@ -972,16 +975,16 @@
      C                   WRITE     LE004621H1
      C                   WRITE     LE004621D1
      C                   ENDIF
- 
+
      C                   WRITE     LE004621H2
      C                   ENDIF
- 
+
      C**********         DOW       NOT %EOF(LEFEEDLC)                                         262550
      C                   DOW       NOT %EOF(LEFEEDLN)                                         262550
- 
+
      C                   MOVE      FEFCOD        PFEE
      C                   EXSR      AOFEE
- 
+
      C                   IF        AUADJY = 'Y'
      C                             AND FERECI <> 'R'
      C                             AND FERECI <> '*'
@@ -990,24 +993,24 @@
      C                             AND FEAMRI <> 'Y'                                        BUG15532
                                                                                             BUG15532
      C                   MOVE      FEFSEQ        RFSEQ
- 
+
      C                   EVAL      ZDAYNO = FESTPD
      C                   EXSR      ZDate2
      C                   EVAL      RSTPD = ZADATE
- 
+
      C                   EVAL      ZDAYNO = FEENPD
      C                   EXSR      ZDate2
      C                   EVAL      RENPD = ZADATE
- 
+
      C                   IF        CCY <> FEFCCY
      C     KFEE          CHAIN     LEEIRAL5
- 
+
      C                   IF        %FOUND(LEEIRAL5)
      C                   EVAL      WFAMT = WFAMT + EAAMNT
      C                   EVAL      ZFLD15 = EAAMNT
      C                   EXSR      ZSEdit
      C                   EVAL      RFAMT  = ZOUT21
- 
+
      C                   EVAL      ZFLD15 = FEAFES                                          BUG17318
      C                   EXSR      ZSEdit                                                   BUG17318
      C                   EVAL      RAFMT  = ZOUT21                                          BUG17318
@@ -1018,12 +1021,12 @@
      C                   EVAL      RAAMT  = ZOUT21
      C                   ENDIF
      C                   ELSE
- 
+
      C                   EVAL      WFAMT = WFAMT + FEFAMT
      C                   EVAL      ZFLD15 = FEFAMT
      C                   EXSR      ZSEdit
      C                   EVAL      RFAMT  = ZOUT21
- 
+
      C                   EVAL      RAFMT  = *BLANKS                                         BUG17318
                                                                                             BUG17318
      C                   EVAL      WAAMT = WAAMT + FEAMTD
@@ -1031,9 +1034,9 @@
      C                   EXSR      ZSEdit
      C                   EVAL      RAAMT  = ZOUT21
      C                   ENDIF
- 
+
       ** Write P1 Header if required
- 
+
      C                   Z-ADD     1             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
@@ -1042,48 +1045,48 @@
      C                   WRITE     LE004621H2
      C                   ENDIF
      C                   WRITE     LE004621D3
- 
+
      C                   ENDIF
- 
+
      C*****LNRF*         READE     LEFEEDLC                                                   262550
      C     LNRF          READE     LEFEEDLN                                                   262550
      C                   ENDDO
- 
+
      C                   EVAL      ZFLD15 = WFAMT
      C                   EXSR      ZSEdit
      C                   EVAL      RTFEE  = ZOUT21
- 
+
      C                   EVAL      ZFLD15 = WAAMT
      C                   EXSR      ZSEdit
      C                   EVAL      RTMRT  = ZOUT21
- 
+
      C                   IF        WFLAG = 'Y'
       ** Write P1 Header if required
- 
+
      C                   Z-ADD     3             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     LE004621H1
      C                   WRITE     LE004621D1
      C                   ENDIF
- 
+
      C                   WRITE     LE004621T1
      C                   ENDIF
- 
+
       ** Format P2 report
      C                   Z-ADD     9             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     LE004621H3
      C                   ENDIF
- 
+
      C                   WRITE     LE004621D4
- 
+
       ** Report all Cash Flow records within an EIR period
- 
+
      C     LNRF          SETLL     LECFSFL0
      C     LNRF          READE     LECFSFL0
- 
+
      C                   DOW       NOT %EOF(LECFSFL0)
       *****************************************************************              BUG17295 262550
       ***Adjusted*checking*of*fees*on*Loan*end*date********************              BUG17295 262550
@@ -1140,7 +1143,7 @@
      C                   READP     LEEIRDLD                                                 AR784436
      C                                                                                      AR784436
      C                   ENDIF                                                              AR784436
- 
+
      C                   IF        WREPORT = 'Y'                                            AR784436
      C**********         IF        LFADLN = 0                                                 CLE148
      C                   IF        LFADLN = *BLANKS                                           CLE148
@@ -1149,57 +1152,57 @@
      C                   MOVE      LFADLN        RSOLD
      C                   ENDIF
      C                   MOVE      LFNDYP        WNDYP
- 
+
      C                   EVAL      RCDATE = LFDATE
      C                   EVAL      ZFLD15 = LFCAMT
      C                   EVAL      PCCY = LFCYCD
      C                   EXSR      ZSEdit
      C                   EVAL      RCSFL  = ZOUT21
- 
+
      C                   EVAL      RTYPE  = LFFTYP
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   Z-ADD     LFIRAT        VarRat1
      C                   MOVE      VarRat1       ZFIELD
      C                   EVAL      ZADEC = 8
      C                   EXSR      ZEdit2
      C                   MOVE      ZFIELD        RINTR
- 
+
      C                   MOVE      LFICBS        RCALC
      C                   EVAL      RYIELD = LFYLDC
- 
+
      C                   EVAL      ZFIELD = *BLANKS
      C                   Z-ADD     LFDSCF        VarRat2
      C                   MOVE      VarRat2       ZFIELD
      C                   EVAL      ZADEC = 9
      C                   EXSR      ZEdit2
      C                   MOVE      ZFIELD        RDISC
- 
+
       ** Write P2 Header and EIR format if required
- 
+
      C                   Z-ADD     1             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     LE004621H3
      C                   WRITE     LE004621D4
      C                   ENDIF
- 
+
       ** Write P2 Cash Flow format
- 
+
      C                   WRITE     LE004621D5
      C                   ENDIF
      C                   ENDIF                                                              AR784436
       *****************************************************************                       262550
      C**********         ENDIF                                                                262550
- 
+
       ** Read next Cash Flow record
- 
+
      C     LNRF          READE     LECFSFL0
- 
+
       ** ENDDO of Cash flows within an EIR period
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1209,37 +1212,37 @@
       *  OpnP1  - Open P1 processing.                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     OpnP1         BEGSR
- 
+
      C                   IF        P1OPEN = 'N'
      C                   OPEN      LE004621P1
      C                   EVAL      P1OPEN = 'Y'
      C                   ENDIF
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM1        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write Header
- 
+
      C                   WRITE     LE004621H1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1249,16 +1252,16 @@
       *  OpnP2  - Open P2 processing.                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     OpnP2         BEGSR
- 
+
      C                   IF        P2OPEN = 'N'
      C                   OPEN      LE004621P2
      C                   EVAL      P2OPEN = 'Y'
      C                   ENDIF
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM2        ZSNUM
       *
      C                   CALL      'ZSFILE'
@@ -1267,19 +1270,19 @@
      C                   PARM                    SFILE2
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write Header
- 
+
      C                   WRITE     LE004621H3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1294,19 +1297,19 @@
       *****************************************************************
       *
      C     ClsP1         BEGSR
- 
+
       ** Check that sufficient lines remain for the Footer. If not,
       ** write out the Header on a new page.
- 
+
      C**********         Z-ADD     2             RQDLN1                                       CAS019
      C                   Z-ADD     3             RQDLN1                                       CAS019
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     LE004621H1
      C                   ENDIF
- 
+
       ** Write Footer
- 
+
      C                   WRITE     LE004621F1
       *
       ** Close the spool file
@@ -1315,7 +1318,7 @@
      C                   CLOSE     LE004621P1
      C                   MOVE      'N'           P1OPEN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1330,27 +1333,27 @@
       *****************************************************************
       *
      C     ClsP2         BEGSR
- 
+
       ** Check that sufficient lines remain for the Footer. If not,
       ** write out the Header on a new page.
- 
+
      C                   Z-ADD     4             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     LE004621H3
      C                   ENDIF
- 
+
       ** Write Footer
- 
+
      C                   WRITE     LE004621F2
- 
+
       ** Close the spool file
- 
+
      C     P2OPEN        IFEQ      'Y'
      C                   CLOSE     LE004621P2
      C                   MOVE      'N'           P2OPEN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1363,27 +1366,27 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
      C                   PARM                    PRSEQ
      C                   PARM                    PRENT
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        (PRtCd <> *BLANKS)
- 
+
       ** Data base error in file SDBANKPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
      C                   EVAL      DBKEY  =  '*FIRST'
@@ -1391,16 +1394,16 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
       ** Access the Midas Modules
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSSDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDMMODPD'
@@ -1409,32 +1412,32 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System if Multi-Branch environment
- 
+
      C                   IF        BGMBIN = 'Y'
      C                   SETON                                        37
      C                   ENDIF
- 
+
       ** Check System Date Format, DDMMYY (*IN98 off)
       **                           MMDDYY (*IN98 on).
- 
+
      C     BJDFIN        IFEQ      'M'
      C                   SETON                                        98
      C                   ENDIF
- 
+
      C     KLOVAL        KLIST
      C                   KFLD                    KBRCA
      C                   KFLD                    KLNRF
- 
+
      C     KLOANS        KLIST
      C                   KFLD                    PRENT
      C                   KFLD                    KLNRF
- 
+
      C     KFEE          KLIST
      C                   KFLD                    FELOAN
      C                   KFLD                    FEFSEQ
- 
+
      C     KFEE1         KLIST                                                              BUG15532
      C                   KFLD                    EITRAN                                     BUG15532
      C                   KFLD                    EIFSEQ                                     BUG15532
@@ -1446,7 +1449,7 @@
      C                   EVAL      KBRCA = *BLANKS
      C**********         EVAL      KLNRF = 0                                                  CLE148
      C                   EVAL      KLNRF = *BLANKS                                            CLE148
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1456,18 +1459,18 @@
       *  ZSEdit - Call to 'ZSEDIT'                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ZSEdit        BEGSR
- 
+
      C                   EXSR      AOCURR
      C                   EVAL      ZDECS = A6NBDP
- 
+
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM      'J'           ZECODE
      C                   PARM                    ZOUT21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1477,13 +1480,13 @@
       *  ZEdit2 - Call to 'ZEDIT2'                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ZEdit2        BEGSR
- 
+
      C                   CALLB     'ZEDIT2'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1493,15 +1496,15 @@
       *  ZDate2 - Call to 'ZDate2'                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ZDate2        BEGSR
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         ZDATE
      C                   PARM      *BLANKS       ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1511,19 +1514,19 @@
       *  AOBRCH - Call to AOBRCHR1                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     AOBRCH        BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM                    PBRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        (PRtCd <> *BLANKS)
- 
+
       ** Data base error in file SDBRCHPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBRCHPD'
      C                   EVAL      DBKEY  =  PBRCA
@@ -1531,9 +1534,9 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1543,19 +1546,19 @@
       *  AOCURR - Call to AOCURRR0                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     AOCURR        BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        (PRtCd <> *BLANKS)
- 
+
       ** Data base error in file SDCURRPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDCURRPD'
      C                   EVAL      DBKEY  =  PCCY
@@ -1563,9 +1566,9 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/AOFEE
@@ -1574,19 +1577,19 @@
       *  AOFEE - Call to AOFEER0                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     AOFEE         BEGSR
- 
+
      C                   CALL      'AOFEER0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PFEE
      C     SDFEE         PARM      SDFEE         DSSDY
- 
+
      C                   IF        (PRTCD <> *BLANKS)
- 
+
       ** Data base error in file SDFEEPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDFEEPD'
      C                   EVAL      DBKEY  =  PFEE
@@ -1594,7 +1597,7 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -1611,19 +1614,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        RunBefore = *BLANK
      C                   DUMP
      C                   EVAL      RunBefore = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   EXSR      AUDIT
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053611           Date 19Aug19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047680           Date 08Sep17               *
       *                 MD046635           Date 10Aug17               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *

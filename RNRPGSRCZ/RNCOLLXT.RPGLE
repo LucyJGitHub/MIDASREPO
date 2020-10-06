@@ -651,7 +651,8 @@
      c     cdcsec        chain     secty
      c                   if        %found
 
-     c                   if        basc       <> 00
+     c**********         if        basc       <> 00                                           CSD103
+     c                   if        basc       <> *blanks                                      CSD103
      c                   eval      typintra    = 2
      c                   else
      c                   eval      typintra    = 1

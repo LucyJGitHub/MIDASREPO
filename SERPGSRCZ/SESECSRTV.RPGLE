@@ -65,7 +65,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -319,7 +318,7 @@
      C                   IF        OKACTN = 'N' OR OKSESN = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate action code and security shortname.
@@ -331,7 +330,7 @@
      C                   IF        OKACTN = 'N' OR OKSESN = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   SELECT
       *
       ** Additional validation for Insert.
@@ -353,7 +352,7 @@
       *
      C                   WHEN      DDACTN = 'E'
      C                   EXSR      SRValEnq
- 
+
      C                   ENDSL
       *
       ** No further validation if errors occurred.
@@ -394,7 +393,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -412,7 +411,7 @@
      C                   EVAL      NMCY = CRNMCY                                             BUG9500
      C                   ENDIF                                                               BUG9500
      C                   CLEAR                   CrSEFilFmt
- 
+
      C                   Z-ADD     0             CrNMDP
      C                   Z-ADD     0             CrSIDY
      C**********         Z-ADD     0             CrISSR                                       CSD027
@@ -434,7 +433,8 @@
      C                   Z-ADD     0             CrNEXD
      C                   Z-ADD     0             CrLCPN
      C                   Z-ADD     0             CrCPNR
-     C                   Z-ADD     0             CrBASC
+     C**********         Z-ADD     0             CrBASC                                       CSD103
+     C                   EVAL      CrBASC = *BLANKS                                           CSD103
      C                   Z-ADD     0             CrBASS
      C                   Z-ADD     0             CrMCPN
      C                   Z-ADD     0             CrMATY
@@ -484,7 +484,7 @@
      C                   Z-ADD     0             CrRPRT                                       CSE075
      C                   Z-ADD     0             CrWACP                                       CSE075
      C                   Z-ADD     0             CrWAMY                                       CSE075
- 
+
      C                   CLEAR                   PINVTPD
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKSESN
@@ -501,7 +501,7 @@
      C                   Z-ADD     0             FITNLU
      C                   Z-ADD     0             FIDCMF
      C                   Z-ADD     0             FIPRTO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -511,7 +511,7 @@
       *              Interface                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValFrnt     BEGSR
       *
       ** Error if action code is not I(Insert), A(Amend), D(Delete) or
@@ -577,11 +577,11 @@
       ** If not insert, update security shortname.
       *
      C                   MOVEL     SESN          DDSESN
- 
+
      C                   ENDIF
- 
+
      C     EValFrnt      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -590,7 +590,7 @@
       *             Shortname                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAct      BEGSR
       *
       ** Error if action code is not I(Insert), A(Amend), D(Delete)
@@ -613,9 +613,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSESN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0229'
      C                   ENDIF
- 
+
      C     EValAct       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -623,7 +623,7 @@
       *  SRValIns - Routine to validate Action Code 'I'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValIns      BEGSR
       *
       ** Check that the security does not exist on master file as
@@ -648,9 +648,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSESN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0231'
      C                   ENDIF
- 
+
      C     EValIns       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -658,7 +658,7 @@
       *  SRValAmd - Routine to validate Action Code 'A'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAmd      BEGSR
       *
       ** If there is no valid, undeleted or matured record on SECTYD,
@@ -684,9 +684,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSESN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0232'
      C                   ENDIF
- 
+
      C     EValAmd       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -694,7 +694,7 @@
       *  SRValDel - Routine to validate Action Code 'D'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValDel      BEGSR
       *
       ** If there is no valid, undeleted or matured record on SECTYD,
@@ -854,9 +854,9 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDDO
- 
+
      C     EValDel       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -864,7 +864,7 @@
       *  SRValEnq - Routine to validate Action Code 'E'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValEnq      BEGSR
       *
       ** If there is no valid record on SECTY, it is an error.
@@ -879,9 +879,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSESN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0233'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -889,7 +889,7 @@
       *  SRAcsSec - Access Security Checking                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAcsSec      BEGSR
       *
       ** If not multi-branching, check authority to only action code.
@@ -904,7 +904,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0304'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If multi-branching, check authority to user's default branch.
@@ -913,25 +913,25 @@
      C                   PARM      DDACTN        PActn
      C                   PARM      PDBRN         PBrc
      C                   PARM                    PError
- 
+
      C                   IF        PError = 1
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0305'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   IF        PError = 2
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0306'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -939,11 +939,11 @@
       *  SRRtvOldSec - Retrieve old security details                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRtvOldSec   BEGSR
- 
+
      C     POSESN        CHAIN     SECTYDF                            01
- 
+
      C                   IF        *IN01
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POSESN
@@ -952,7 +952,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SESN = DDSESN
      C                   EVAL      FRNT = *BLANK
      C                   EVAL      REPA = *BLANK
@@ -962,9 +962,9 @@
      C                   EVAL      ORED = 0
      C                   EVAL      DCOM = 0
      C                   CLEAR                   TMST
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -972,16 +972,16 @@
       *  SRAcsInv - Access investment type details                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAcsInv      BEGSR
- 
+
      C                   CALL      'AOINVTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    SITP
      C                   PARM                    NMCY
      C     PINVTPD       PARM      PINVTPD       DSFDY
- 
+
       ** Do not issues DB error for Action I, it should be cover by                          BUG2408
       ** investment validation.                                                              BUG2408
                                                                                              BUG2408
@@ -997,9 +997,9 @@
      C                   ENDIF
                                                                                              BUG2408
      C                   ENDIF                                                               BUG2408
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1007,16 +1007,16 @@
       *  SRAOCust - Access customer details                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAOCust      BEGSR
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PKeyC
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = PKeyC
@@ -1025,9 +1025,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1037,9 +1037,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1124,7 +1124,7 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1134,7 +1134,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       *
 **  CPY@

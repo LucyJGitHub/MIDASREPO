@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -160,7 +163,7 @@
       ** Account Master Extension File.                                                       243973
      FGLACNTL3  UF A E           K DISK    INFSR(*PSSR)                                       243973
      F                                     USROPN                                          AR1037730
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,GLAMADU008
       *                                                                                      LLN022A
@@ -187,7 +190,7 @@
      F                                     COMMIT                                             CER001
      FGLVEAMX1PDO    E             DISK    USROPN                                             CER001
      F                                     RENAME(GLVAMLXD6:GLVAMLXD6R)                       CER001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -206,33 +209,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in ACCN API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID SECURITY
      D GLVAMAD       E DS                  EXTNAME(GLVAMADPD)
      D GLVAMBX       E DS                  EXTNAME(GLVAMBXPD)
@@ -245,9 +248,9 @@
      D GLPWACOD      E                     EXTFLD(QQACOD)                                     CGL029
      D GLVAMPP       E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D/COPY OFCPYSRCZ,CRE101_006                                                              CRE101
- 
+
      D GLAMADUPC       DS             1    DTAARA(GLAMADUPC)
- 
+
       **  Data Structure for AOSVALR0 string                                                  CSD012
      DSVAL1            DS           200                                                       CSD012
      DSVAL11                   1      1                                                       CSD012
@@ -258,7 +261,7 @@
                                                                                               CSD012
       ** Override SDAULGL0                                                                    CSD012
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
- 
+
      D Object          S             10A   INZ('GLAMADUPC')
      D LockObj         S             10A   INZ('GLAMADLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -272,19 +275,19 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Key fields for access to L1 files
      D @BRCA           S                   LIKE(AMBRCA)
      D @CNUM           S                   LIKE(AMCNUM)
      D @CCY            S                   LIKE(AMCCY)
      D @ACOD           S                   LIKE(AMACOD)
      D @ACSQ           S                   LIKE(AMACSQ)
- 
+
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX2           S              1    DIM(50) CTDATA PERRCD(50)
@@ -292,10 +295,10 @@
      D ##OX4           S              1    DIM(50) CTDATA PERRCD(50)
      D***##OX5           S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
      D ##OX6           S              1    DIM(50) CTDATA PERRCD(50)                          CRE015
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
@@ -305,7 +308,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -333,7 +336,7 @@
      D @@FIND          S              1A                                                      CER001
      D @Return         S              6A                                                      CER001
      D @FrontID        S                   LIKE(AMFRNT)                                       CER001
- 
+
       *******************************************************************
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -342,19 +345,19 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *******************************************************************
- 
+
       /COPY WNCPYSRC,GLAMADU001
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APAMADDTQ'
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       *  Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -382,19 +385,19 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,GLAMADU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     GLVAMADPD
- 
+
       ** READ VALID ACCOUNT
      C                   READ      GLVAMADD0                              80
      C     *IN80         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,GLAMADU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lower level modules
       **  will include the key information
@@ -403,33 +406,33 @@
      C                   EVAL      ARFOTranID = AMFRNT
      C                   EVAL      ARFOAsocID = AMAFRT
      C                   EVAL      ARRprLocn  = AMREPA
- 
+
       /COPY WNCPYSRC,GLAMADU004
- 
+
       ** GET EXTENSION FILE DETAILS
- 
+
      C                   CLEAR                   GLVAMBX
      C                   CLEAR                   GLVAMRI
      C                   CLEAR                   GLVAMCO
      C                   CLEAR                   GLVAMPW
      C                   CLEAR                   GLVAMPP                                      CRE015
      C/COPY OFCPYSRCZ,CRE101_007                                                              CRE101
- 
- 
+
+
       /COPY WNCPYSRC,GLAMADU005
       *                                                                                       CER001
      C     ULX606        IFNE      'Y'                                                        CER001
       *                                                                                       CER001
- 
+
      C*****@KeyAccnL0    CHAIN     GLVAMBXL0                          81                      CGL029
      C     @KeyAccnL0    CHAIN     GLVAMBXL2                          81                      CGL029
- 
+
      C*****@KeyAccnL0    CHAIN     GLVAMRIL0                          81                      CGL029
      C     @KeyAccnL0    CHAIN     GLVAMRIL2                          81                      CGL029
- 
+
      C*****@KeyAccnL0    CHAIN     GLVAMCOL0                          81                      CGL029
      C     @KeyAccnL0    CHAIN     GLVAMCOL2                          81                      CGL029
- 
+
      C     *IN81         IFEQ      *ON                                          198865
      C*****AMCNUM        ANDNE     *ZERO                                               198865 CSD027
      C     AMCNUM        ANDNE     *BLANKS                                                    CSD027
@@ -449,7 +452,7 @@
      C     @KeyAccnL0    CHAIN     GLVAMPWL2                          81                      CGL029
                                                                                               CRE015
      C     @KeyAccnL0    CHAIN     GLVAMPPL2                          81                      CRE015
- 
+
       ** ACCOUNT DATABASE UPDATE
      C                   CALLB     'GLAMADUPD'
      C                   PARM      *BLANK        @@RTCD            7
@@ -475,7 +478,7 @@
      C                   PARM                    AUTHRQ            1                          CSD012
       * Authorisation Mode                                                                    CSD012
      C                   PARM                    AUTHMD            1                          CSD012
- 
+
      C/COPY WNCPYSRC,GLAMADUC01
       *                                                                                      LLN022A
       ** If Bank of England switched on then CHAIN to BoE details on valid                   LLN022A
@@ -582,7 +585,7 @@
       *                                                                                      LLN022A
      C                   COMMIT
      C                   END
- 
+
       /COPY WNCPYSRC,GLAMADU006
       *                                                                                       CER001
       ** ULX606 - API Luxembourg - Function GLAMAD                                            CER001
@@ -720,7 +723,7 @@
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -788,9 +791,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID ACCOUNTS
      C                   READ      GLVAMADD0                              80
      C                   END
@@ -805,15 +808,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,GLAMADU007
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,GLAMADU010
- 
+
       *****************************************************************                       243973
       /EJECT                                                                                  243973
       *****************************************************************                       243973
@@ -1137,7 +1140,7 @@
      C     @KeyAccnL0    KLIST
      C**********         KFLD                    FrontOff         20                          CGL029
      C                   KFLD                    FrontOff         40                          CGL029
- 
+
       *  Define key list for L1
      C     @KeyAccnL1    KLIST
      C                   KFLD                    @BRCA
@@ -1146,27 +1149,27 @@
      C                   KFLD                    @ACOD
      C                   KFLD                    @ACSQ
      C                   KFLD                    @Timestamp
- 
- 
+
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -1176,11 +1179,11 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
      C* Overrride ACCBR
      C                   Z-ADD     50            MESLEN           15 5
      C                   CALL      'QCMDEXC'
@@ -1206,7 +1209,7 @@
      C                   CALL      'QCMDEXC'                                                  CRE015
      C                   PARM                    ##OX6                                        CRE015
      C                   PARM                    MESLEN                                       CRE015
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,GLAMADU011
       *                                                                                      LLN022A
@@ -1253,7 +1256,7 @@
      C                   OPEN      GLVAMLX1L1                                                 CER001
      C                   OPEN      GLVEAMX1PD                                                 CER001
      C                   ENDIF                                                                CER001
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

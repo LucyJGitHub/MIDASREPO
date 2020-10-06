@@ -60,16 +60,16 @@
       *  CRN001 - FRS Regulatory Reporting                            *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      fmrtrapl0  if   e           k disk    infsr(*pssr)
- 
+
      fgpregbj0  if   e           k disk    infsr(*pssr)
- 
+
      fcloan     if   e           k disk    infsr(*pssr)
      f                                     include(cloanclf)
      f                                     include(cloanckf)
@@ -77,38 +77,38 @@
      floams     if   e           k disk
      f                                     include(loamsdkf)
      f                                     prefix(la#)
- 
+
      ffclty     if   e           k disk    infsr(*pssr)
      f                                     include(fcltyfmf)
      f                                     prefix(f#)
- 
+
      ft_rnclip  if   e           k disk    infsr(*pssr)
      f                                     rename(t_rnclip: t_rnclipf)
      f                                     prefix(lx#)
- 
+
      ft_rnbsrt  if   e           k disk    infsr(*pssr)
      f                                     rename(t_rnbsrt:t_rnbsrtf)
      f                                     prefix(bx#)
- 
+
      ft__dfboo  if a e             disk    infsr(*pssr)
      f                                     rename(t__dfboo:t__dfboof)
- 
+
      frn_loandepo    e             disk    infsr(*pssr)
- 
+
      frn_loadepao    e             disk    infsr(*pssr) usropn
- 
+
      frn_loadepuo    e             disk    infsr(*pssr) usropn
- 
+
      frn_lodamo o    e             disk    infsr(*pssr)
- 
+
      frn_guaranto    e             disk    infsr(*pssr)
- 
+
      frn_guaamo o    e             disk    infsr(*pssr)
- 
+
      frnaupnpd  o    e             disk    infsr(*pssr)
- 
+
      frnxcpnpd  o    e             disk    infsr(*pssr)
- 
+
       *=====================================================================
       *****************************************************************
       /EJECT
@@ -119,33 +119,33 @@
       ** +--------------------------------------+
       /copy zacpysrc,psds
       /copy rncpysrc,rnpssrdfn
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      d pRaid           s                   like(rbraid)
      d runDatIso       s               d
      d evtDatIso       s               d
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      d cpy@            s             80    dim(1) ctdata perrcd(1)
- 
+
      d dsfdy         e ds
      d dssdy         e ds
      d sdbank        e ds                  extname(sdbankpd)
      d sdgelr        e ds                  extname(sdgelrpd)
      d sdcurr        e ds                  extname(sdcurrpd)
      d sdcust        e ds                  extname(sdcustpd)
- 
+
       ** External DS for SAR details
      d scsard        e ds                  extname(scsardpd)
- 
+
      d pRtnCod         s              7
      d pOption         s              7
      d pKey1           s             10
@@ -172,11 +172,11 @@
      d wBasis          s              3  0                                                   BUG9393
      d wLoanPrd        s              8f                                                     BUG9393
      d wDiscRate       s              8f                                                     BUG9393
- 
+
      d extrid          ds
      d**dealNo**                      6s 0                                                    CLE148
      d  dealNo                        6A                                                      CLE148
- 
+
      d                 ds
      d exfcus
      d exftyp
@@ -185,35 +185,35 @@
      d exfcusN                        6    overlay(exfcus)                                   CSD027A
      d exftypN                        3s 0 overlay(exftyp)
      d exfcnoN                        2s 0 overlay(exfcno)
- 
+
      d fcltyFound      s               n
- 
+
      d kExsub          s                   like(exsub)
      d                                     inz('LOAN')
- 
+
      d CRN002          s               n
      d CRN006          s               n
- 
+
      d negFracPwr      c                   00101                                            BUG10335
      d divByZero       c                   00102                                             BUG9393
      d dupKey          c                   01021
- 
+
      d rtnProduct      s                   like(product)
      d rtnPrdclaUS     s                   like(prdclaus)
- 
+
       * Deal types handled by this extract.
      d aTrty           s                   like(extrty)
      d                                     dim(13) ctdata perrcd(1)
      d ixTrty          s              3u 0
- 
+
      d mmFixed         s               n
- 
+
      d bsrtExtnFound   s               n
- 
+
      d loanExtnFound   s               n
- 
+
      d pstduFound      s               n
- 
+
       * Parameters for RNPRODMAP
      d I#ERMS          s             30
      d I#AccountCode   s             10
@@ -234,39 +234,39 @@
      d I#CollateralTy  s              5
      d O#Product       s             10  0
      d O#CntOfClauses  s              5  0
- 
+
      d pstDuVdat       s                   like(la#vdat)
- 
+
      d*eligible********s                   like(lx#eligible)                                BUG9828R
- 
+
      d brtt            s                   like(bx#babsrc)
- 
+
      d w_maturity      s                   like(exmdat)                         work field
- 
+
       /copy rncpysrc,rnrgaudfn
- 
+
       /copy rncpysrc,rndaycnv
       /copy rncpysrc,rnamtcnv
       /copy rncpysrc,rnastlia
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Declaratives                         ¦
       ** ¦ ============                         ¦
       ** +--------------------------------------+
- 
+
      c     kFclty        klist
      c                   kfld                    exfcusN
      c                   kfld                    exftypN
      c                   kfld                    exfcnoN
- 
+
      c     Kbase         klist
      c                   kfld                    excycd
      c                   kfld                    brtt
- 
+
      c     *entry        plist
      c                   parm                    pRaid
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -277,17 +277,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      c                   exsr      main
- 
+
      c                   exsr      bootstrap
- 
+
      c                   exsr      closedown
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -296,35 +296,35 @@
       *                                                               *
       *****************************************************************
      c     main          begsr
- 
+
      c     kExsub        setll     mrtrapl0
      c     kExsub        reade     mrtrapl0
      c                   dow       not %eof
- 
+
       * Check if record is to be extracted.
      c                   eval      rgIx = %lookup(exbrch:aBrcd:1:rgEl)
      c                   if        (   rgIx        >  0
      c                             and aNxDt(rgIx) <= evtDatIso )
- 
- 
+
+
       * Get Product Code.
      c                   exsr      getProdCode
- 
+
      c                   select
      c                   when      rtnProduct  > 0
      c                   exsr      mapData
- 
+
      c                   when      rtnProduct  < 0
      c                   exsr      wrtExcptn
      c                   endsl
- 
+
      c                   endif
- 
+
      c     kExsub        reade     mrtrapl0
      c                   enddo
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -332,68 +332,68 @@
       *  mapData   - Subroutine that maps data to be written to files *
       *                                                               *
       *****************************************************************
- 
+
      c     mapData       begsr
- 
+
      c                   exsr      getLoan
- 
+
      c                   exsr      getFclty
- 
+
       * Get customer details.
      c                   eval      pKey1       = excusn
      c                   exsr      getCust
- 
+
       * Get Past Due detail
      c                   exsr      getPastDueRec
- 
+
       * Get Loan Extension record
      c                   exsr      getLoanExtn
- 
+
       * Get Base Rate Extension record
      c                   exsr      getBasRatExtn
- 
+
       ** Risk Loans:
       ** output to guarantee and guarantee amount tables.
- 
+
      c                   if        (   l#ptyp  = 70
      c                             or  l#ptyp  = 71
      c                             or  l#ptyp  = 72 )
      c                   clear                   t__guarant
      c                   clear                   t__guaamo
- 
+
      c                   exsr      commonFlds
- 
+
      c                   exsr      guarantRec
      c                   exsr      guaamoRec
- 
+
       ** Non-risk.
      c                   else
      c                   clear                   t__loandep
      c                   clear                   t__lodamo
- 
+
      c                   if        CRN002
      c                   clear                   t__loadepa
      c                   endif
      c                   if        CRN006
      c                   clear                   t__loadepu
      c                   endif
- 
+
      c                   exsr      commonFlds
- 
+
      c                   exsr      loandepRec
- 
+
      c                   if        CRN002
      c                   exsr      loadepaRec
      c                   endif
      c                   if        CRN006
      c                   exsr      loadepuRec
      c                   endif
- 
+
      c                   exsr      lodamoRec
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -402,24 +402,24 @@
       *                                                               *
       *****************************************************************
      c     commonFlds    begsr
- 
+
      c                   eval      product     = rtnProduct
      c                   eval      statusl2    = 5
      c                   move      runDatIso     validon
      c                   eval      lottypfk    = aPosLot(rgIx)
      c                   eval      aPosLotUsed(rgIx) = *on
- 
+
      c                   eval      deal        = rnDayCnv(exddat)
- 
+
       * Maturity date.
      c                   select
      c                   when      exmdat     <> 0
      c                   eval      w_maturity  = exmdat
- 
+
      c                   when         l#nidt   > 0                              next interest date
      c                             or l#nrod   > 0                              next rollover date
      c                             or l#nrpd   > 0                              next repayment date
- 
+
       ** get the greater of l#nidt, l#nrod or l#nrpd.
      c                   if        l#nidt      > l#nrod
      c                   eval      w_maturity  = l#nidt
@@ -431,7 +431,7 @@
      c                   else
      c                   eval      w_maturity  = w_maturity + 1
      c                   endif
- 
+
      c                   other
       ** get the greater of extraction date (extdat) or value date (exvdat).
      c                   if        extdat      > exvdat
@@ -439,14 +439,14 @@
      c                   else
      c                   eval      w_maturity  = exvdat + 1
      c                   endif
- 
+
      c                   endsl
      c                   eval      maturity    = rnDayCnv(w_maturity)
- 
+
      c                   eval      counref     = bbbrcd
      c                                         + '-'
      c                                         + excusn
- 
+
      c                   eval      pKey1       = exfcus
      c                   exsr      getCust
      c                   eval      limiref     = bbbrcd
@@ -454,23 +454,23 @@
      c                                         + exfcus
      c                                         + exftyp
      c                                         + exfcno
- 
+
      c                   eval      sourref     = pZone
- 
+
       * Position ref.
      c                   eval      posiref     = exbrch
      c                                         + 'LE'
      c                                         + extrid
- 
+
       * Contract ref.
      c                   eval      contref     = posiref
- 
+
      c                   eval      pKey1       = exbicn
      c                   exsr      getCust
      c                   eval      intparre    = bbbrcd
      c                                         + '-'
      c                                         + exbicn
- 
+
      c                   if        loanExtnFound
      c                   move      lx#loclfund   locafund
      c                   eval      portfoli    = lx#portfolo
@@ -484,9 +484,9 @@
      c**********         eval      eligiblt    = *zeros                             BUG9828 BUG9828R
      c                   eval      eligible    = *zeros                                     BUG9828R
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -495,35 +495,35 @@
       *                                                               *
       *****************************************************************
      c     loandepRec    begsr
- 
+
      c                   eval      numberof    = 1
- 
+
      c                   eval      lastroll    = rnDayCnv(l#rldt)
- 
+
      c                   if        l#ormd <> 0
      c                   eval      earlrede    = rnDayCnv(exmdat)
      c                   endif
- 
+
      c                   eval      lasintda    = rnDayCnv(l#dlrc)
- 
+
      c                   if           exnidt  <> 0
      c                             or exnpdt  <> 0
- 
+
      c                   if           exnidt   < exnpdt
      c                             and exnidt <> 0
      c                   eval      nextsett    = rnDayCnv(exnidt)
      c                   else
- 
+
      c                   if        exnpdt     <> 0
      c                   eval      nextsett    = rnDayCnv(exnpdt)
      c                   else
      c                   eval      nextsett    = rnDayCnv(exnidt)
      c                   endif
- 
+
      c                   endif
- 
+
      c                   endif
- 
+
      c                   eval      nextroll    = rnDayCnv(l#nrod)
      c                   if        exrate      = 'F'                                        bug10168
      c                   eval      nexintfi    = *blanks                                    bug10168
@@ -533,23 +533,23 @@
      c                   eval      intstar     = rnDayCnv(exvdat)
      c                   eval      intend      = rnDayCnv(exmdat)
      c                   eval      settleme    = rnDayCnv(exnidt)
- 
+
      c                   if        pstDuFound
      c                   eval      dtepastd    = rnDayCnv(pstDuVdat)
      c                   endif
- 
+
      c                   eval      boocntre    = pZone
      c                                         + exbook
- 
+
      c                   eval      original    = w_maturity
      c                                         - exvdat
- 
+
      c                   eval      remainin    = w_maturity
      c                                         - extdat
      c                   if        remainin    < 0
      c                   eval      remainin    = 0
      c                   endif
- 
+
      c                   eval      oriintra    = l#oinr
      c                   if        exintr     <> 0                                          BUG10909
      c                   eval      perintra    = exintr
@@ -558,7 +558,7 @@
      c                   eval      perintra    = exrtsp                                     BUG10909
      c                   eval      intintra    = exrtsp                                     BUG10909
      c                   endif                                                              BUG10909
- 
+
       * Reimbursement frequency
      c                   select
      c                   when      (   l#ipfr  = 'M'
@@ -571,7 +571,7 @@
      c                   when      l#ipfr      = 'Y'
      c                   eval      reimfreq    = 1
      c                   endsl
- 
+
      c                   if        (    l#ptyp = 63
      c                               or l#ptyp = 65
      c                               or l#ptyp = 67 )
@@ -580,27 +580,27 @@
      c*****              eval(h)   yield       = l#cpam                                      BUG9393
      c*****                                    / (l#cpam - l#toti)                           BUG9393
      c                   endif
- 
+
      c                   eval      spread      = exrtsp
- 
+
      c                   if        expali      = 'A'
      c                   eval      alindi      = 1
      c                   else
      c                   eval      alindi      = 2
      c                   endif
- 
+
      c                   if        exddat      = extdat
      c                   eval      contract    = 1
      c                   else
      c                   eval      contract    = 2
      c                   endif
- 
+
       * Reference Rate Type
      c                   if        exrate  =  'V'
      c                             and bsrtExtnFound
      c                   eval      referate    = bx#refrattp
      c                   endif
- 
+
       * Interest Day Count Basis
      c                   select
      c                   when      l#icbs      = 1
@@ -609,7 +609,7 @@
      c                   eval      indacoba    = 2
      c                   when      l#icbs      = 3
      c                   eval      indacoba    = 5
- 
+
       ******O/S*** no values provided for 4,5,6 yet.
      c******O/S***       when      l#icbs      = 4
      c******O/S***       eval      indacoba    = ???
@@ -630,30 +630,30 @@
      c                   other                                                              BUG11435
      c                   eval      indacoba    = 0                                          BUG11435
      c                   endsl
- 
+
      c                   eval      amortisa    = 4
      c                   eval      listed      = 0                                          BUG10804
      c                   eval      reschedu    = 2
      c                   eval      risquain    = 1
- 
+
       * Interest Rate Type
      c                   if        exrate   = 'F'
      c                   eval      typintra    = 1
      c                   else
      c                   eval      typintra    = 2
      c                   endif
- 
+
      c                   eval      intpayfr    = reimfreq
      c                   eval      thirindi    = 1
- 
+
      c                   if        f#rvcr  = 'Y'
      c                   eval      revofac     = 1
      c                   endif
- 
+
      c                   write     t__loandep
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -662,26 +662,26 @@
       *                                                               *
       *****************************************************************
      c     loadepaRec    begsr
- 
+
       ** Test bit '4'
      c                   testb     '4'           l#loni               20
- 
+
       ** Bit '4' is on
      c                   if        Not *in20
      c                   eval      intsusp     = 1
      c                   endif
- 
+
      c                   if        loanExtnFound
      c                   eval      liquifya    = lx#liquifab
      c**********         eval      eligible    = lx#eligible                                 BUG9828
      c                   else                                                                BUG9828
      c                   eval      liquifya    = *zeros                                      BUG9828
      c                   endif
- 
+
      c                   write     t__loadepa
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -690,7 +690,7 @@
       *                                                               *
       *****************************************************************
      c     loadepuRec    begsr
- 
+
      c                   if        loanExtnFound
      c                   eval      fdicins     = lx#fdicinsr
      c                   eval      smbus       = lx#smallbus
@@ -706,15 +706,15 @@
      c                   eval      fiduciar    = *zeros                                      BUG9828
      c                   eval      accrual     = *zeros                                      BUG9828
      c                   endif
- 
+
       ** Get US product Code.
      c                   exsr      getProdCodeUS
      c                   eval      prdclaus    = rtnPrdclaUS
- 
+
      c                   write     t__loadepu
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -723,11 +723,11 @@
       *                                                               *
       *****************************************************************
      c     lodamoRec     begsr
- 
+
       * Output 3 records:
       *---------------
       * 1) Book value.
- 
+
      c                   if        expacc     <> *blanks
      c                   if        expref      = '1'
      c                   eval      glref       = exbrch
@@ -745,20 +745,20 @@
      c                   else
      c                   eval      glref       = *blanks
      c                   endif
- 
+
      c                   eval      gldetre     = glref
      c                   eval      glentre     = glref
- 
+
      c                   if        expdci      = 0
      c                   eval      dcindi      = 1
      c                   else
      c                   eval      dcindi      = 2
      c                   endif
- 
+
       * Get currency details.
      c                   eval      pCcy        = excycd
      c                   exsr      getCcy
- 
+
      c                   eval      isocurr     = excycd
      c                   eval      ocaamunt    = expamt
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
@@ -769,14 +769,14 @@
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 1
      c                   eval      value       = rnDayCnv(bjrdnb)
- 
+
      c                   write     t__lodamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** ---------------------
       ** 2) Original cost.
- 
+
       ***get*original*principal*amount*from*file*CLOANCK*********************               BUG10335
      c*****dealNo        chain     cloanckf                                                 BUG10335
      c**********         if        not %found                                               BUG10335
@@ -785,7 +785,7 @@
      c**********         eval      wDbKey      = %char( dealNo )                            BUG10335
      c**********         exsr      *pssr                                                    BUG10335
      c**********         endif                                                              BUG10335
- 
+
      c                   eval(h)   ocaamunt    = l#opam/(10**a6nbdp)
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
@@ -794,14 +794,14 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 26
- 
+
      c                   write     t__lodamo
- 
+
      c                   exsr      wrtAudit
- 
+
       *---------------------
       * 3) Accrued Interest.
- 
+
      c                   if        exaacc     <> *blanks
      c                   if        exaref      = '1'
      c                   eval      glref       = exbrch
@@ -819,16 +819,16 @@
      c                   else
      c                   eval      glref       = *blanks
      c                   endif
- 
+
      c                   eval      gldetre     = glref
      c                   eval      glentre     = glref
- 
+
      c                   if        exadci      = 0
      c                   eval      dcindi      = 1
      c                   else
      c                   eval      dcindi      = 2
      c                   endif
- 
+
      c                   eval      ocaamunt    = exaamt
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
@@ -837,13 +837,13 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 20
- 
+
      c                   write     t__lodamo
- 
+
      c                   exsr      wrtAudit
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -852,25 +852,25 @@
       *                                                               *
       *****************************************************************
      c     guarantRec    begsr
- 
+
      c                   eval      value       = rnDayCnv(exvdat)
- 
+
      c                   eval      pKey1       = exbicn
      c                   exsr      getCust
      c                   eval      issuref     = bbbrcd
      c                                         + '-'
      c                                         + exbicn
- 
+
      c                   if        l#ptyp      = 70
      c                   eval      originv     = 1
      c                   else
      c                   eval      originv     = 2
      c                   endif
- 
+
      c                   write     t__guarant
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -879,11 +879,11 @@
       *                                                               *
       *****************************************************************
      c     guaamoRec     begsr
- 
+
       * Output 2 records:
       *---------------
       * 1) Book value.
- 
+
      c                   if        expacc     <> *blanks
      c                   if        expref      = '1'
      c                   eval      glref       = exbrch
@@ -901,20 +901,20 @@
      c                   else
      c                   eval      glref       = *blanks
      c                   endif
- 
+
      c                   eval      gldetre     = glref
      c                   eval      glentre     = glref
- 
+
      c                   if        expdci      = 0
      c                   eval      dcindi      = 1
      c                   else
      c                   eval      dcindi      = 2
      c                   endif
- 
+
       * Get currency details.
      c                   eval      pCcy        = excycd
      c                   exsr      getCcy
- 
+
      c                   eval      isocurr     = excycd
      c                   eval      ocaamunt    = expamt
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
@@ -925,22 +925,22 @@
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 1
      c                   eval      value       = rnDayCnv(bjrdnb)
- 
+
      c                   write     t__guaamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** --------------
       ** 2) Face value.
- 
+
      c                   eval      typamunt    = 3
- 
+
      c                   write     t__guaamo
- 
+
      c                   exsr      wrtAudit
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -949,7 +949,7 @@
       *                                                               *
       *****************************************************************
      c     getLoan       begsr
- 
+
      c     dealNo        chain     cloanclf
      c                   if        not %found
      c                   eval      wDbFile     = 'CLOANCL'
@@ -967,9 +967,9 @@
      c                   eval      wDbKey      = dealNo                                       CLE148
      c                   exsr      *pssr                                                    BUG10335
      c                   endif                                                              BUG10335
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -978,9 +978,9 @@
       *                                                               *
       *****************************************************************
      c     getFclty      begsr
- 
+
      c     kFclty        chain     fclty
- 
+
      c                   if        not %found
      c                   eval      wDbFile      = 'FCLTY'
      c                   eval      wDbase       =  7
@@ -992,11 +992,11 @@
      c                                          + %char(exfcnoN)
      c                   exsr      *pssr
      c                   endif
- 
+
      c                   eval      fcltyFound  = %found
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1005,7 +1005,7 @@
       *                                                               *
       *****************************************************************
      c     getCust       begsr
- 
+
      c                   callb     'AOCUSTR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1020,9 +1020,9 @@
      c                   eval      wDbkey      = pKey1                                      BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1031,9 +1031,9 @@
       *                                                               *
       *****************************************************************
      c     getPastDueRec begsr
- 
+
      c                   eval      pstDuFound = *off
- 
+
      c     l#lnrf        setgt     loamsdkf
      c     l#lnrf        readpe    loamsdkf
      c                   dow       not %eof
@@ -1044,12 +1044,12 @@
      c                   eval      pstDuVdat = la#vdat
      c                   leave
      c                   endif
- 
+
      c     l#lnrf        readpe    loamsdkf
      c                   enddo
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1058,12 +1058,12 @@
       *                                                               *
       *****************************************************************
      c     getLoanExtn   begsr
- 
+
      c     la#lnrf       chain     t_rnclip
      c                   eval      loanExtnFound = %found
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1072,13 +1072,14 @@
       *                                                               *
       *****************************************************************
      c     getBasRatExtn begsr
- 
-     c                   eval      brtt = %char(l#brtt)
+
+     c**********         eval      brtt = %char(l#brtt)                                       CSD103
+     c                   eval      brtt = l#brtt                                              CSD103
      c     Kbase         chain     t_rnbsrt
      c                   eval      bsrtExtnFound = %found
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1087,7 +1088,7 @@
       *                                                               *
       *****************************************************************
      c     getCcy        begsr
- 
+
      c                   callb     'AOCURRR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1101,9 +1102,9 @@
      c                   eval      wDbkey      = pCcy                                       BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -1112,7 +1113,7 @@
       *                                                                   *
       *********************************************************************
      c     getProdCode   begsr
- 
+
      c                   callb     'RNPRODMAP'
      c                   parm      *blanks       pRtnCod
      c                   parm                    I#ERMS
@@ -1134,7 +1135,7 @@
      c                   parm                    I#CollateralTy
      c     rtnProduct    parm                    O#Product
      c                   parm                    O#CntOfClauses
- 
+
       ** If not found, issue a database error
      c                   if        pRtnCod    <> *blanks
      c                   eval      wDbfile     = 'T_FRSMAPR'
@@ -1142,9 +1143,9 @@
      c                   eval      wDbkey      = I#LoanType
      c                   exsr      *pssr
      c                   endif
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1153,9 +1154,9 @@
       *                                                                   *
       *********************************************************************
      c     GetProdCodeUS begsr
- 
+
      c                   callb     'RNPRODMAPU'
- 
+
      c                   parm      *blanks       pRtnCod
      c                   parm                    I#ERMS
      c                   parm                    I#AccountCode
@@ -1176,8 +1177,8 @@
      c                   parm                    I#CollateralTy
      c     rtnPrdclaUS   parm                    O#Product
      c                   parm                    O#CntOfClauses
- 
- 
+
+
       ** If not found, issue a database error
      c                   if        pRtnCod <> *blanks
      c                   eval      wDbfile     = 'T_FRSMAPR'
@@ -1185,11 +1186,11 @@
      c                   eval      wDbkey      = I#LoanType
      c                   exsr      *pssr
      c                   endif
- 
+
      c                   if        rtnPrdclaUS < 0
      c                   eval      rtnPrdclaUS = 0
      c                   endif
- 
+
      c                   endsr
                                                                                              BUG9393
       *****************************************************************                      BUG9393
@@ -1241,7 +1242,7 @@
      c                   eval      wLoanPrd    = zzindy / wBasis                             BUG9393
                                                                                              BUG9393
      c                   monitor                                                             BUG9393
- 
+
       * Store discount rate.                                                                 BUG9393
      c                   eval      wDiscRate   = ((                                          BUG9393
      c                                             (l#opam/(l#opam-l#toti))                  BUG9393
@@ -1269,7 +1270,7 @@
       *                                                               *
       *****************************************************************
      c     wrtAudit      begsr
- 
+
      c                   eval      auregaut    = aRaid(rgIx)
      c                   eval      autrncls    = exsub
      c                   eval      aucntref    = contref
@@ -1289,9 +1290,9 @@
      C                   eval      audci       = 'C'
      C                   endif
      c                   write     rnaupnpdf
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1300,7 +1301,7 @@
       *                                                               *
       *****************************************************************
      c     wrtExcptn     begsr
- 
+
      c                   eval      xcregaut    = aRaid(rgIx)
      c                   eval      xctrncls    = exsub
      c                   eval      xccntref    = exbrch
@@ -1311,9 +1312,9 @@
      c                   eval      xctrty      = extrty
      c                   eval      xctrst      = extrst
      c                   write     rnxcpnpdf
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1322,31 +1323,31 @@
       *                                                                   *
       *********************************************************************
      c     bootstrap     begsr
- 
+
       ** Loop thru used lots
      c                   for       rgIx        = 1 to rgEl
- 
+
       ** Write to t__dfboo if not existing
      c                   if        APosLotUsed(rgIx)
      c     APosLot(rgIx) setll     t__dfboof
- 
+
      c                   if        not %equal
      c                   eval      lottypfk    = APosLot(rgIx)
- 
+
      c                   monitor
      c                   write     t__dfboof
      c                   on-error  dupKey
      c                   endmon
- 
+
      c                   endif
- 
+
      c                   endif
- 
+
      c                   endfor
- 
- 
+
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1355,12 +1356,12 @@
       *                                                               *
       *****************************************************************
      c     closedown     begsr
- 
+
      c                   eval      *inlr       = *on
      c                   return
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *****************************************************************
@@ -1371,7 +1372,7 @@
       *                                                               *
       *****************************************************************
      c     *inzsr        begsr
- 
+
       * Get zone.
      c                   callb     'GOGETZONE'
      c                   parm      *blanks       pRtnCod
@@ -1383,16 +1384,16 @@
      c                   parm                    pDnwd
      c                   parm                    pBccy
      c                   parm                    pNjob
- 
+
      c                   if        pRtnCod    <> *blanks
      c                   eval      wDbfile     = 'GPZONEPD'
      c                   eval      wDbase      = 5
      c                   eval      wDbkey      = pZone
      c                   exsr      *pssr
      c                   endif
- 
+
       *---------------------------------------------------------------------
- 
+
       * Get bank details.
      c                   callb     'AOBANKR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
@@ -1406,9 +1407,9 @@
      c                   eval      wDbkey      = pOption                                    BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   eval      runDatIso   = %date(rnDayCnv(bjrdnb))
- 
+
       * Get general ledger details.
      c                   callb     'AOGELRR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
@@ -1422,76 +1423,76 @@
      c                   eval      wDbkey      = pOption                                    BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
       * Derive event control date.
      c                   if        bkapdt      < bjdnwd
      c                   eval      evtDatIso   = %date(rnDayCnv(bkapdt))
      c                   else
      c                   eval      evtDatIso   = %date(rnDayCnv(bjdnwd - 1))
      c                   endif
- 
+
       *---------------------------------------------------------------------
- 
+
       /copy rncpysrc,rnrgaulod
- 
+
       *---------------------------------------------------------------------
- 
+
       * Check if enhancement CRN002 is on
- 
+
      c                   callb     'AOSARDR0'
      c                   parm      *blanks       pRtnCod
      c                   parm      '*VERIFY'     pOption
      c                   parm      'CRN002'      pSar
- 
+
      c                   if        pRtnCod     = *blank
      c                   eval      CRN002      = *on
- 
+
      c                   elseif    pRtnCod     = '*NRF'
      c                   eval      CRN002      = *off
- 
+
      c                   else
      c                   eval      wDbase      = 4
      c                   eval      wDbmod      = 'AOSARDR0'
      c                   exsr      *pssr
      c                   endif
- 
+
       * Check if enhancement CRN006 is on
- 
+
      c                   callb     'AOSARDR0'
      c                   parm      *blanks       pRtnCod
      c                   parm      '*VERIFY'     pOption
      c                   parm      'CRN006'      pSar
- 
+
      c                   if        pRtnCod     = *blank
      c                   eval      CRN006      = *on
- 
+
      c                   elseif    pRtnCod     = '*NRF'
      c                   eval      CRN006      = *off
- 
+
      c                   else
      c                   eval      wDbase      = 3
      c                   eval      wDbmod      = 'AOSARDR0'
      c                   exsr      *pssr
      c                   endif
- 
+
       ** Feature CRN002 is present
      c                   if        CRN002
      c                   open      rn_loadepa
      c                   endif
- 
+
       ** Feature CRN006 is present
      c                   if        CRN006
      c                   open      rn_loadepu
      c                   endif
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
       /copy rncpysrc,rnpssrsr
       *****************************************************************
- 
+
 **ctdata CPY@
 (c) Finastra International Limited 2004
 **ctdata aTrty

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034725           Date 27Jul16               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -133,23 +136,23 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FRELINKL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FRESTCHPD  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Customer Group Code
      FTABLEV4   IF   E             DISK    INFSR(*PSSR)
                                                                                               CRE015
      FSDACD1L0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
- 
+
      FREAPRHI0  IF   E           K DISK    INFSR(*PSSR)                                       CER050
      FREAPRHI1  IF   E           K DISK    INFSR(*PSSR)                                       CER050
      F                                     RENAME(REAPRHD0:REAPRHD1)                          CER050
      F****RECCY     IF   E           K DISK    INFSR(*PSSR)                     176842
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -168,45 +171,45 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the GL standard declares
      D/COPY GLCPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D Idx1            S              2P 0 INZ(0)
- 
+
       ** Client Group Code
      D GRP             S              1    DIM(8)
       ** Account Commission Indicators
@@ -223,17 +226,17 @@
      D AIN6            S              1    DIM(8)
       ** Fixed Commission Indicators
      D AIN7            S              1    DIM(8)
- 
+
      D   ZFIELD        S             16A
- 
+
      D   ZADEC         S              1P 0
- 
+
       ** DATA STRUCTURE TO GET THE RIGHT CUSTOMER GROUP
      D                 DS
      D  ZZ010                  1     10
      D  CGRP                  10     10
- 
- 
+
+
      D***WWLINK*         DS            18                                                     CGL029
      D WWLINK          DS            24                                                       CGL029
      D  WWLTAB                 1      3
@@ -244,7 +247,7 @@
      D***WWLTAS*               17     18  0                                                   CGL029
      D  WWLTAC                13     22  0                                                    CGL029
      D  WWLTAS                23     24  0                                                    CGL029
- 
+
       * Account in File Format
      D AccnFilFmt    E DS                  EXTNAME(GLVAMADPD)
      D ExBXFilFmt    E DS                  EXTNAME(GLVAMBXPD)
@@ -256,7 +259,7 @@
      D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)
      D GLPWACOD      E                     EXTFLD(QQACOD)                                     CGL029
      D ExPPFilFmt    E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
- 
+
       * Account in Screen Format
      D AccScnMast    E DS                  EXTNAME(GLAMADPD)
      D AccScnDebi    E DS                  EXTNAME(GLAMDIPD)
@@ -265,36 +268,36 @@
      D AccScnOthe    E DS                  EXTNAME(GLAMODPD)
      D AccScnPena    E DS                  EXTNAME(GLAMPPPD)                                  CRE015
      D  ScnPenaRows           33   4166                                                       CRE015
- 
- 
+
+
      D/COPY OFCPYSRCZ,CRE101_010                                                              CRE101
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
       ** EXTERNAL DS FOR RETAIL DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR Customer DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** Array DS for screen definition                                                       CRE015
                                                                                               CRE015
      D ArrScn        E DS                  DIM(26) QUALIFIED                                  CRE015
@@ -308,7 +311,7 @@
      D                                     EXTNAME(REPRPNPD)                                  CRE015
                                                                                               CRE015
      D ArrFilBuf       S                   DIM(26) LIKE(ArrFil)                               CRE015
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
       ** SD data area                                                                         CSD101
                                                                                               CSD101
@@ -331,7 +334,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CLE025          S              1                                                       CLE025
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
@@ -343,7 +346,7 @@
      D W#MM            S              2                                                       CRE015
      D W#DATE          S              6                                                       CRE015
      D C#TRMDAT        C                   CONST(26664)                                       CRE015
- 
+
      D CER047          S              1A                                                      CER047
      D CRE075          S              1A                                                      CRE075
      D CER055          S              1A                                                      CER055

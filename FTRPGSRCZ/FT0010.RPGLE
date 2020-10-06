@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053553           Date 21Jan20               *
-      *  Prev Amend No. MD050134           Date 21Mar18               *
+      *  Last Amend No. MD056477           Date 22Sep20               *
+      *  Prev Amend No. MD053553           Date 21Jan20               *
+      *                 MD050134           Date 21Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056477 - In SrVAmtNR9DSR, if P#RATE is zero, use ZRATEX.   *
       *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
       *  MD050134 - A serious midas error encountered when exchange   *
       *             rate exceeds tolerance level                      *
@@ -1987,7 +1989,18 @@
       *                                                                                     MD053553
      C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
      C                   MOVE      NRATE         D9                                         MD053553
+      *                                                                                     MD056477
+      ** Check if rate is zero                                                              MD056477
+      *                                                                                     MD056477
+     C                   IF        P#RATE = 0                                               MD056477
+     C                   MOVEL     ZRATEX        NRATE                                      MD056477
+     C                   ELSE                                                               MD056477
+     C                   IF        WINVER = 'Y'                                             MD056477
+     C                   MOVEL     WGRATE        NRATE                                      MD056477
+     C                   ELSE                                                               MD056477
      C                   MOVEL     P#RATE        NRATE                                      MD053553
+     C                   ENDIF                                                              MD056477
+     C                   ENDIF                                                              MD056477
       *                                                                                     MD053553
       ** Adjustment if original exchange rate was rounded up.                               MD053553
       *                                                                                     MD053553
@@ -2026,7 +2039,18 @@
       *                                                                                     MD053553
      C                   EVAL      NRATE = AMNT(T) / AMNT(F)                                MD053553
      C                   MOVE      NRATE         D9                                         MD053553
+      *                                                                                     MD056477
+      ** Check if rate is zero                                                              MD056477
+      *                                                                                     MD056477
+     C                   IF        P#RATE = 0                                               MD056477
+     C                   MOVEL     ZRATEX        NRATE                                      MD056477
+     C                   ELSE                                                               MD056477
+     C                   IF        WINVER = 'Y'                                             MD056477
+     C                   MOVEL     WGRATE        NRATE                                      MD056477
+     C                   ELSE                                                               MD056477
      C                   MOVEL     P#RATE        NRATE                                      MD053553
+     C                   ENDIF                                                              MD056477
+     C                   ENDIF                                                              MD056477
       *                                                                                     MD053553
       ** Adjustment if original exchange rate was rounded up.                               MD053553
       *                                                                                     MD053553

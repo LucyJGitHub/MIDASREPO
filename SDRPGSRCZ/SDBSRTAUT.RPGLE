@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  CSD012 - Standing Data Authorisation                         *
@@ -36,26 +37,26 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Base rate Codes
- 
+
      FSDBRSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDBSRTD0:SDBRSHD0)
       ** Midas SD Base Rate Shadow File
- 
+
      FSDBRSHL1  UF A E           K DISK    INFSR(*PSSR)
       ** Midas SD Base Rate Shadow File
- 
+
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Log - by Key (Rtv)
- 
+
      FSDAULGL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDAULGD0:SDAULGD1)
       ** Midas SD Authorisation Log - by Key (Upd)
- 
+
      F/COPY WNCPYSRC,SDBSRTF001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -74,83 +75,83 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Fisrt DS for Access Programs, Short Data Structure
- 
+
      D @1DBRC        E DS                  EXTNAME(SDBSRTPD)
       * Stored file format fields
- 
+
      D #1DBRC        E DS                  EXTNAME(SDBSRTPD) PREFIX(#)
       * Stored shadow file format fields
- 
+
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+
      D UBA             DS          5000
       **  1st Record Format
      D  MAIN1                              LIKE(@1DBRC)
      D/COPY WNCPYSRC,SDBSRTD001
- 
+
      D UPA             DS          5000
       **  2nd Record Format
      D  MAIN2                              LIKE(@1DBRC)
      D/COPY WNCPYSRC,SDBSRTD002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Override SDBRSHL0
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)
- 
+
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
      D @RUN            S              1
      D CPY2@           S             80
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -160,11 +161,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Access record from authorisation log
      C     PKEY          CHAIN     SDAULGL0                           90
       *
@@ -176,12 +177,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access record from master file
      C                   MOVEL     PKEY          @PKEY             5
      C                   MOVEL     @PKEY         @CYCD             3
      C                   MOVE      @PKEY         @BSRC             2
- 
+
      C     @KBSRT        CHAIN     SDBSRTL0                           91
       *
      C                   IF        *IN91 = '1' AND ALACTN = 'A'
@@ -196,7 +197,7 @@
      C                   MOVE      *BLANKS       UBA
      C                   MOVE      @1DBRC        MAIN1
      C                   ENDIF
- 
+
       ** Access record from shadow file
      C     @KBSRT        CHAIN     SDBRSHL0                           91
       *
@@ -207,17 +208,17 @@
      C                   MOVEL     *BLANKS       UBA
      C                   MOVEL     @1DBRC        MAIN1
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDBSRTC002
- 
+
       ** Call program SDAUTHCMP to display differences
- 
+
      C                   CALLB     'SDAUTHCMP'
      C                   PARM      *BLANKS       RETCODE
      C                   PARM      'SDBSRTPD'    FILE             10
      C                   PARM                    UBA
      C                   PARM                    UPA
- 
+
      C                   PARM                    PKEY
      C                   PARM                    PACTN
       * Command Keys
@@ -225,19 +226,19 @@
      C                   PARM                    @INKI             1
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
- 
+
       * Exit program if Enquire or F3 or F12
      C                   IF        PACTN = 'E' OR @INKC = '1' OR @INKL = '1'
      C                   MOVEL     RETCODE       ERRMSG
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       * Authorise Requested
      C                   IF        @INKI = '1'
      C                   EXSR      SRUpdate
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       * Delete Requested
      C                   IF        @INKJ = '1'
      C                   EXSR      SRDelete
@@ -254,7 +255,7 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
       ** Delete record from Audit Log
      C     PKEY          CHAIN     SDAULGL1                           90
       *
@@ -265,20 +266,20 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   DELETE    SDAULGL1
      C                   ENDIF
- 
+
       ** Delete record from Shadow file
      C     @KBSRT        CHAIN     SDBRSHL1                           91
       *
      C                   IF        *IN91 = '0'
      C                   DELETE    SDBRSHL1
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDBSRTC003
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -288,15 +289,15 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
      C     @KBSRT        CHAIN     SDBRSHL0                           91
- 
+
  B1  C                   IF        *IN91 = '0'
- 
+
       ** Hold shadow record image
      C                   MOVEL     @1DBRC        #1DBRC
      C     @KBSRT        CHAIN     SDBSRTL0                           91
- 
+
  B2  C     *IN91         IFEQ      *ON
      C     ALACTN        ANDNE     'I'
      C     *LOCK         IN        LDA
@@ -305,12 +306,12 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
  X2  C                   ELSE
      C                   MOVEL     PACTN         AUTHMD
- 
+
       ** Update Master file
- 
+
      C                   CALLB     'SDBSRTUPD'
      C                   PARM      *BLANKS       RETURNCODE       10
      C                   PARM                    #1DBRC
@@ -338,9 +339,9 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDBSRTC004
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -350,15 +351,15 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -368,19 +369,19 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C* Override SDBRSHL0
      C                   Z-ADD     50            CMDLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD
      C                   PARM                    CMDLEN
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RETCODE           7
      C**********         PARM                    PKEY             20                          CGL029
@@ -388,20 +389,20 @@
      C                   PARM                    PACTN             1
      C                   PARM                    ERRMSG            7
      C                   PARM                    @INKC
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'SDBSRTAUT'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   OUT       LDA
- 
+
       ** Key list to chain base rate file SDBSRTL0
      C     @KBSRT        KLIST
      C                   KFLD                    @CYCD
      C                   KFLD                    @BSRC
- 
+
       ** Check if CSD012 is installed
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD             7
@@ -413,7 +414,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSD012
      C                   ENDIF
- 
+
       ** If CSD012 is ON, Check if Base Rate Authorisation is ON
  B1  C     CSD012        IFEQ      'Y'
       *
@@ -441,7 +442,7 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK0        DBKEY
      C                   ENDIF
@@ -472,7 +473,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   Z-ADD     1             DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -489,9 +490,9 @@
      C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
      C/COPY WNCPYSRC,SDBSRTC001
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

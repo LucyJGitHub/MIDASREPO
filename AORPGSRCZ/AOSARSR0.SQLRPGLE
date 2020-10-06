@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055681         Date 31Jul20                 *
-      *  Prev Amend No. MD046248         Date 27Oct17                 *
+      *  Last Amend No. MD056939         Date 06Oct20                 *
+      *  Prev Amend No. MD055681         Date 31Jul20                 *
+      *                 MD046248         Date 27Oct17                 *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056939 - Column or global variable P@SAR not found.        *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK014 - New module created to allow the mandatory LE        *
@@ -157,11 +159,13 @@
      C     P@OPTN        IFEQ      '*KEY   '                                    IF 7 KEYED ACC
      C     P@OPTN        OREQ      '*VERIFY'                                      OR
      C*****P@SAR         CHAIN     SCSARSD0                           9590        Get recordMD055681
+     C                   MOVEL     P@SAR         X@SAR             6                        MD056939
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :D@FMT                                                                         MD055681
      C+ from SCSRSJW0                                                                       MD055681
-     C+ where AXSARN = P@SAR and AXMODE = 'C'                                               MD055681
+     C**where*AXSARN = P@SAR and AXMODE = 'C'                                      MD055681 MD056939
+     C+ where AXSARN = :X@SAR and AXMODE = 'C'                                              MD056939
      C/END-EXEC                                                                             MD055681
      C                   SETOFF                                       9095                  MD055681
      C                   IF        SQLCODE = 100                                            MD055681

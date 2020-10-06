@@ -2,12 +2,12 @@
      H CCSID(*GRAPH:*SRC)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas CG Utility Update Program for CGCORRPD')         *
+/*EXI *  TEXT('Midas SM Utility Update Program for CGCORRPD')         *
       *****************************************************************
       *                                                               *
-/*    *  Midas - User Defined Correspondence                          *
+      *  Midas - Implementation Module                                *
       *                                                               *
-      *  UTCG0011 - Midas CG Utility Update Program for CGCORRPD      *
+      *  SMU02000 - Midas SM Utility Update Program for CGCORRPD      *
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
@@ -15,23 +15,22 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-/*    *  MD056543 - EDWH SSRS Reports cannot be run.                  *
-/*    *           - Translate graphic fields of CGCORRPD to readable  *
-/*    *             unicode equivalent.                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD to readable  *
+      *             unicode equivalent.                               *
       *                                                               *
       *****************************************************************
       *
-     FCGCORXPD  IF   E             DISK
+     FSMCORXPD  IF   E             DISK
      FCGCORRL0  UF A E           K DISK
       *
-     FUTCG0011P1O    E             PRINTER OFLIND(*IN95)
+     FSMU02000P1O    E             PRINTER OFLIND(*IN95)
       *
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
       *                                                               *
-      *   90    - Audit/Update mode                                   *
-      *   95    - Page overflow on UTCG0011P1                         *
+      *   95    - Page overflow on SMU02000P1                         *
       *   LR    - End of Program                                      *
       *   U7,U8 - Database error occured.                             *
       *                                                               *
@@ -79,9 +78,6 @@
       *****************************************************************
       *  P R O G R A M   S T A R T                                    *
       *****************************************************************
-      *
-     C     *ENTRY        PLIST
-     c                   PARM                    PMODE             1
       *
       ** Perform initial processing
       *
@@ -141,19 +137,7 @@
       *
       ** Define program for error handling
       *
-     C                   EVAL      DBPGM = 'UTCG0011'
-     C                   EVAL      *IN90 = '0'
-
-      *
-     C     PMODE         IFEQ      'A'
-     C     PMODE         OREQ      'a'
-     C                   EVAL      *IN90 = '0'
-     C                   ELSE
-     C     PMODE         IFEQ      'U'
-     C     PMODE         OREQ      'u'
-     C                   EVAL      *IN90 = '1'
-     C                   ENDIF
-     C                   ENDIF
+     C                   EVAL      DBPGM = 'SMU02000'
       *
      C                   EVAL      TOTAL1 = 0
      C                   EVAL      WRUN = ' '
@@ -177,16 +161,13 @@
       *
       ** Read the entire Correspondent file
       *
-     C     1             SETLL     CGCORXPD
-     C                   READ      CGCORXPD
-     C                   DOW       NOT %EOF(CGCORXPD)
+     C     1             SETLL     SMCORXPD
+     C                   READ      SMCORXPD
+     C                   DOW       NOT %EOF(SMCORXPD)
       *
      C     XXCORR        CHAIN     CGCORRL0                           8081
      C     *IN80         IFEQ      '0'
       *
-      ** Update CGCORRPD if option 'U'
-      *
-     C     *IN90         IFEQ      '1'
      C                   EVAL      CDCORR =  XXCORR
      C                   EVAL      CDCORN =  XXCORN
      C                   EVAL      CDADD1 =  XXADD1
@@ -198,7 +179,6 @@
      C                   EVAL      CDADD7 =  XXADD7
      C                   EVAL      CDADD8 =  XXADD8
      C                   UPDATE    @CORRL0                              81
-     C                   ENDIF
       *
       ** Print report
       *
@@ -210,7 +190,7 @@
       *
      C                   ENDIF
       *
-     C                   READ      CGCORXPD
+     C                   READ      SMCORXPD
      C                   ENDDO
       *
      C                   ENDSR

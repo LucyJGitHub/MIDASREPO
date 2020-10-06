@@ -997,7 +997,8 @@
 
      I/COPY WNCPYSRC,GL0600I002
 
-     I                                242  243 0DRIB
+     I**********                      242  243 0DRIB                                       CSD103
+     I                                242  243  DRIB                                       CSD103
      I                             P  244  249 7DRIS
      I                             P  250  252 0DRCD
      I                                253  253 0DRIC
@@ -1015,9 +1016,11 @@
      I                                303  303  DDIS
      I                             P  304  306 0DDIA
      I                             P  307  309 0OLDR
-     I                                310  311 0OLDB
+     I**********                      310  311 0OLDB                                       CSD103
+     I                                310  311  OLDB                                       CSD103
      I                             P  312  317 7OLDS
-     I                                318  319 0CRIB
+     I**********                      318  319 0CRIB                                       CSD103
+     I                                318  319  CRIB                                       CSD103
      I                             P  320  325 7CRIS
      I                             P  326  328 0CRCD
      I                                329  329 0CRIC
@@ -1035,7 +1038,8 @@
      I                                379  379  CDIS
      I                             P  380  382 0DCIA
      I                             P  383  385 0OLCR
-     I                                386  387 0OLCB
+     I**********                      386  387 0OLCB                                       CSD103
+     I                                386  387  OLCB                                       CSD103
      I                             P  388  393 7OLCS
      I                             P  394  396 0LCD
      I                                397  397  CHTP
@@ -1169,7 +1173,8 @@
      I                                303  303  DDIS
      I                             P  304  306 0DDIA
      I                             P  307  309 0OLDR
-     I                                310  311 0OLDB
+     I**********                      310  311 0OLDB                                       CSD103
+     I                                310  311  OLDB                                       CSD103
      I                             P  312  317 7OLDS
      I                                318  319 0CRIB
      I                             P  320  325 7CRIS
@@ -1189,7 +1194,8 @@
      I                                379  379  CDIS
      I                             P  380  382 0DCIA
      I                             P  383  385 0OLCR
-     I                                386  387 0OLCB
+     I**********                      386  387 0OLCB                                       CSD103
+     I                                386  387  OLCB                                       CSD103
      I                             P  388  393 7OLCS
      I                             P  394  396 0LCD
      I                                397  397  CHTP

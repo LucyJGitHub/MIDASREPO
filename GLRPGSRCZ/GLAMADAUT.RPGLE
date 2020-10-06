@@ -56,6 +56,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -108,7 +109,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FACCBR     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(AC_)
      FACCNTBXC  IF   E           K DISK    INFSR(*PSSR)
@@ -120,32 +121,32 @@
      F**********REAPWDL0  IF   E           K DISK    INFSR(*PSSR)                             CSD101
      F**********                                     PREFIX(RW_)                              CSD101
      FREPRPNPD  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
- 
+
      FGLACSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:GLACSHD0)
      F                                     PREFIX(AC_)
      FGLACSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:GLACSHD1)
       ** Midas GL Account Details Shadow File
- 
+
      FGLBXSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(AX_)
      FGLBXSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLBXSHD0:GLBXSHD1)
       ** Midas GL Account extension Details Shadow File
- 
+
      FREIASHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RE_)
      FREIASHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(REIASHD0:REIASHD1)
       ** Midas RE Retail Int and Charges Details Shadow File
- 
+
      FRECMSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RC_)
      FRECMSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(RECMSHD0:RECMSHD1)
       ** Midas RE commission Details Shadow File
- 
+
      F***REPWSHL0  IF   E           K DISK    INFSR(*PSSR)                                    CSD101
      F***                                     PREFIX(RW_)                                     CSD101
      F***REPWSHL1  UF A E           K DISK    INFSR(*PSSR)                                    CSD101
@@ -155,12 +156,12 @@
      FREPRSHL0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
      FREPRSHL1  UF A E           K DISK    INFSR(*PSSR)                                       CRE015
      F                                     RENAME(REPRSHD0:REPRSHD1)                          CRE015
- 
+
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)
      FSDAULGL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDAULGD0:SDAULGD1)
       ** Midas SD Authorisation Log - by Key
- 
+
      F/COPY WNCPYSRC,GLH00523
      FGLACNTL3  UF   E           K DISK    INFSR(*PSSR)                                      BUG3825
       ** Midas GL Account Extension File Key                                                 BUG3825
@@ -178,9 +179,9 @@
       ** Account code extension file                                                          CRE015
                                                                                               CRE015
      FSDACD1L0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
- 
+
      F/COPY WNCPYSRC,GLAMADF001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -199,92 +200,92 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Fisrt DS for Access Programs, Short Data Structure
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR Midas Modules Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       * DATA STRUCTURE FOR Midas SAR Details
- 
+
      D @1DACCNT      E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC_)
       * Stored Account details file format fields
- 
+
      D @1DACCNTBX    E DS                  EXTNAME(ACCNTBXC)
      D                                     PREFIX(AX_)
       * Stored Extension Account Details file format fields
- 
+
      D @1DREIAC      E DS                  EXTNAME(REIACD)
      D                                     PREFIX(RE_)
       * Stored Ret Int & Charges details file format fields
- 
+
      D @1DRECOM      E DS                  EXTNAME(RECOMD)
      D                                     PREFIX(RC_)
       * Stored Ret Commission details file format fields
- 
+
      D***@1DREAPW      E DS                  EXTNAME(REAPWDPD)                                CSD101
      D***                                    PREFIX(RW_)                                      CSD101
       * Stored Ret Password details file format fields
- 
+
      D #1DACCNT      E DS                  EXTNAME(ACCNTAB) PREFIX(#AC)
      D #1PART1                 1    396
      D #1CHTP                397    397
      D***#1PART3               398    553                                                     CGL029
      D #1PART3               398    573                                                       CGL029
       * Stored Account details Shadow file format fields
- 
+
      D #1DACCNTBX    E DS                  EXTNAME(ACCNTBXC) PREFIX(#AX)
       * Stored Extension Account Details Shadow file format fields
- 
+
      D #1DREIAC      E DS                  EXTNAME(REIACD) PREFIX(#RE)
      D DREIACsh                1    144                                                       TDA084
      D DREIACex              146    218                                                       TDA084
                                                                                               TDA084
       * Stored Ret Int & Charges details Shadow file format fields
- 
+
      D #1DRECOM      E DS                  EXTNAME(RECOMD) PREFIX(#RC)
      D DRECOMsh                1    286                                                      BUG2733
      D DRECOMex              287    296                                                      BUG2733
       * Stored Ret Commission details Shadow file format fields
- 
+
      D***#1DREAPW      E DS                  EXTNAME(REAPWDPD) PREFIX(#RW)                    CSD101
      D***DREAPWsh                1     33                                             BUG2733 CSD101
      D***DREAPWex               34     43                                             BUG2733 CSD101
@@ -305,7 +306,7 @@
      D GLVAMPWex             214    223                                                       CSD101
      D GLVAMPP       E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D/COPY OFCPYSRCZ,CRE101_006                                                              CRE101
- 
+
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
       ** Commitment Control dataarea                                                          CSC022
@@ -313,7 +314,7 @@
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+
       ** Fields defined used for SDAULGL0
      D***PKEY***         DS            20                                                     CGL029
      D PKEY            DS            26                                                       CGL029
@@ -324,7 +325,7 @@
      D***PkeyACSQ               17     18                                                     CGL029
      D PKeyACOD               13     22                                                       CGL029
      D PkeyACSQ               23     24                                                       CGL029
- 
+
      D UBA             DS          5000
       **  1st Record Format
      D  MAINUBA                            LIKE(@1DACCNT)
@@ -336,7 +337,7 @@
      D  EXT4UBA                            LIKE(@1DREIAC)                                     225539
      D  EXT5UBA                    3000                                                       CRE015
      D/COPY WNCPYSRC,GLAMADD001
- 
+
      D UPA             DS          5000
       **  2nd Record Format
      D  MAINUPA                            LIKE(@1DACCNT)
@@ -348,12 +349,12 @@
      D  EXT4UPA                            LIKE(@1DREIAC)                                     225539
      D  EXT5UPA                    3000                                                       CRE015
      D/COPY WNCPYSRC,GLAMADD002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Override GLACSHL0,GLBXSHL0,REIASHL0,RECMSHL0 &REPPSHL0 .
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)
      D CMD1            S              1    DIM(50) CTDATA PERRCD(50)
@@ -361,7 +362,7 @@
      D CMD3            S              1    DIM(50) CTDATA PERRCD(50)
      D***CMD4            S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
      D CMD5            S              1    DIM(50) CTDATA PERRCD(50)                          CRE015
- 
+
       ** Array to hold commitment jobs name                                                   CSC022
      D WCMT            S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
@@ -369,7 +370,7 @@
      D SVALKK          C                   CONST('AuthReqAccntMaint')
      D @RUN            S              1
      D CPY2@           S             80
- 
+
       ** Fields for enhancement CSC022                                                        CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D WCmtSk          S              1A                                                      CSC022
@@ -381,13 +382,13 @@
      D CRE015          S              1A                                                      CRE015
      D REPRPN        E DS                  EXTNAME(REPRPNPD)                                  CRE015
      D ArrFilBuf       S                   DIM(26) LIKE(REPRPN)                               CRE015
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -397,7 +398,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -420,7 +421,7 @@
      C                   MOVEL     PKeyCCY       KeyCCY
      C                   MOVEL     PKeyACOD      KeyACOD
      C                   MOVEL     PKeyACSQ      KeyACSQ
- 
+
      C     Rehiskey      CHAIN     ACCBR                              81
       *
      C                   IF        *IN81 = '1' AND ALACTN = 'A'
@@ -435,7 +436,7 @@
      C                   MOVEL     *BLANKS       MAINUBA
      C                   MOVEL     @1DACCNT      MAINUBA
      C                   ENDIF
- 
+
      C     BGWDPR        IFEQ      'Y'
      C     BGSWRT        ANDEQ     'Y'
      C     AC_ATYP       ANDEQ     'R'
@@ -465,7 +466,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C     BGNXST        IFEQ      'Y'
      C     BGNYST        OREQ      'Y'
      C                   IF        AC_ATYP = 'R'
@@ -484,7 +485,7 @@
      C                   MOVEL     *BLANKS       EXT4UBA                                      225539
      C                   MOVEL     @1DREIAC      EXT4UBA                                      225539
      C                   ENDIF
- 
+
      C     RehisKey      CHAIN     RECOM                              84
      C                   IF        *IN84 = '1' AND ALACTN = 'A'
      C     *LOCK         IN        LDA
@@ -501,7 +502,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** If CRT101 (Password on Retail Accounts) is installed and
       ** CRT001 (Retail Teller System) is on
       *
@@ -555,7 +556,7 @@
      C                   ENDIF                                                                CRE015
       *----------------------------------------------------------------
       ** Access record from shadow Account files
- 
+
      C     Rehiskey      CHAIN     GLACSHL0                           86
       *
      C                   IF        ALACTN = 'A'
@@ -565,7 +566,7 @@
      C                   MOVEL     *BLANKS       MAINUBA
      C                   MOVEL     @1DACCNT      MAINUBA
      C                   ENDIF
- 
+
      C     Accntkey      CHAIN     GLBXSHL0                           87
       *
      C                   IF        *IN87 = '1'
@@ -583,7 +584,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C     Rehiskey      CHAIN     REIASHL0                           88
       *
      C                   IF        *IN88 = '1'
@@ -607,7 +608,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C     Rehiskey      CHAIN     RECMSHL0                           89
       *
      C                   IF        *IN89 = '1'
@@ -625,7 +626,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C*****Accntkey      CHAIN     REPWSHL0                           90                      CSD101
       *
      C**********         IF        *IN90 = '1'                                                CSD101
@@ -674,18 +675,18 @@
      C                   MOVEA     ArrFilBuf     EXT5UBA                                      CRE015
      C                   ENDIF                                                                CRE015
      C                   ENDIF                                                                CRE015
- 
+
      C/COPY WNCPYSRC,GLAMADC002
       *----------------------------------------------------------------
       *
       ** Call program SDAUTHCMP to display differences
- 
+
      C                   CALLB     'SDAUTHCMP'
      C                   PARM      *BLANKS       RETCODE
      C                   PARM      'ACCNTAB'     FILE             10
      C                   PARM                    UBA
      C                   PARM                    UPA
- 
+
      C                   PARM                    PKEY
      C                   PARM                    PACTN
       * Command Keys
@@ -693,19 +694,19 @@
      C                   PARM                    @INKI             1
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
- 
+
       * Exit program if Enquire or F3 or F12
      C                   IF        PACTN = 'E' OR @INKC = '1' OR @INKL = '1'
      C                   MOVEL     RETCODE       ERRMSG
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       * Authorise Requested
      C                   IF        @INKI = '1'
      C                   EXSR      SRUpdate
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       * Delete Requested
      C                   IF        @INKJ = '1'
      C                   EXSR      SRDelete
@@ -722,7 +723,7 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
       ** Delete record from Audit Log
      C     PKEY          CHAIN     SDAULGL1                           91
       *
@@ -746,7 +747,7 @@
       *
       *----------------------------------------------------------------
       ** Delete record from Account extension shadow file
- 
+
      C     BGWDPR        IFEQ      'Y'
      C     BGSWRT        ANDEQ     'Y'
      C     AC_ATYP       ANDEQ     'R'
@@ -759,7 +760,7 @@
      C     BGWDPR        OREQ      'Y'
      C     R_TSTMC       ANDEQ     'Y'
      C     AC_ATYP       ANDEQ     'R'
- 
+
      C     Accntkey      CHAIN     GLBXSHL1                           93
       *
      C                   IF        *IN93 = '0'
@@ -769,7 +770,7 @@
      C                   ENDIF
       *----------------------------------------------------------------
       ** Delete record from RE Int & Charges Account Shadow file
- 
+
      C     BGNXST        IFEQ      'Y'
      C     BGNYST        OREQ      'Y'
       *
@@ -829,9 +830,9 @@
      C     RehisKey      READE     REPRSHL1                                                   CRE015
      C                   ENDDO                                                                CRE015
      C                   ENDIF                                                                CRE015
- 
+
      C/COPY WNCPYSRC,GLAMADC003
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -841,9 +842,9 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
       ** Hold shadow record image for the 5 Account master files
- 
+
      C     Rehiskey      CHAIN     GLACSHL0                           86
  B1  C                   IF        *IN86 = '0'
      C                   MOVEL     @1DACCNT      #1DACCNT
@@ -971,7 +972,7 @@
      C                   MOVEL     PKEY          DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
  X1  C                   ELSE
       *                                                                                      BUG5340
       ** Validate TI acocunt if insert mode                                                  BUG5340
@@ -999,9 +1000,9 @@
      C                   IF        *IN82 = *OFF                                              BUG5340
      C                   MOVEL     PACTN         AUTHMD
      C                   MOVEL     ALACTN        #1CHTP
- 
+
       ** Update Master files
- 
+
      C                   CLEAR                   GLVAMRI                                      TDA084
      C                   MOVEL     DREIACsh      GLVAMRIsh                                    TDA084
      C                   MOVEL     DREIACex      GLVAMRIex                                    TDA084
@@ -1067,9 +1068,9 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GLAMADC004
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1079,15 +1080,15 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1097,28 +1098,28 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Override GLACSHL0
      C                   Z-ADD     50            CMDLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD
      C                   PARM                    CMDLEN
- 
+
       * Override GLBXSHL0
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD1
      C                   PARM                    CMDLEN
- 
+
       * Override REIASHL0
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD2
      C                   PARM                    CMDLEN
- 
+
       * Override RECMSHL0
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD3
      C                   PARM                    CMDLEN
- 
+
       **Override*REPWSHL0**********************************************                       CSD101
      C**********         CALL      'QCMDEXC'                                                  CSD101
      C**********         PARM                    CMD4                                         CSD101
@@ -1128,13 +1129,13 @@
      C                   CALL      'QCMDEXC'                                                  CRE015
      C                   PARM                    CMD5                                         CRE015
      C                   PARM                    CMDLEN                                       CRE015
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RETCODE           7
      C**********         PARM                    PKEY             20                          CGL029
@@ -1142,17 +1143,17 @@
      C                   PARM                    PACTN             1
      C                   PARM                    ERRMSG            7
      C                   PARM                    @INKC
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'GLAMADAUT'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   OUT       LDA
- 
+
       ** Access SAR details file to determine if CSD012 is on.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*VERIFY'     @OPTN             7
@@ -1192,7 +1193,7 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK0        DBKEY
      C                   ENDIF
@@ -1223,7 +1224,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     '009'         DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -1338,7 +1339,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CDE002
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
       ** is switched on                                                                       CSC022
       *                                                                                       CSC022
@@ -1398,7 +1399,7 @@
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Access Retail III Table file
      C     BGNXST        IFEQ      'Y'
      C     BGNYST        OREQ      'Y'
@@ -1434,7 +1435,7 @@
      C                   KFLD                    KeyACOD
      C                   KFLD                    KeyACSQ
      C                   KFLD                    KeyBRCA
- 
+
       *                                                                                      BUG5340
       ** Define key list for ACCNTTI                                                         BUG5340
       *                                                                                      BUG5340
@@ -1443,7 +1444,7 @@
      C                   KFLD                    #ACA5TIAN                                   BUG5340
      C                   KFLD                    #ACA5TIAS                                   BUG5340
      C/COPY WNCPYSRC,GLAMADC001
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

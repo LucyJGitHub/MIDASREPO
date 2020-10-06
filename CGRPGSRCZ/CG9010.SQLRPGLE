@@ -1,5 +1,6 @@
      H DEBUG
-     H CVTOPT (*GRAPHIC)                                                                    MD054955
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*DF***RPGBASE*******************************************************                       CSD053
 /**** *  RPGBNOCVT                                                    *              CSD053 MD054955
@@ -27,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD054011           Date 19Aug19               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD054011           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043920           Date 02Feb17               *
       *                 MD043686           Date 20Jan17               *
@@ -58,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD054011 - SEC0304 in MSGW. Fix is replace LF/CLINT which    *
       *             only use recordformat CLINTSEF within the program.*

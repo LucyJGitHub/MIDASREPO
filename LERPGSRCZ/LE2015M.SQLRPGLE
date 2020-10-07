@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 02Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -152,7 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -4962,7 +4964,8 @@
      C     X1MSGT        WHENEQ    'BSHS'
       *
      C                   MOVE      G0CYCD        SJCYCD
-     C                   Z-ADD     G0BSRC        SJBSRC
+     C**********         Z-ADD     G0BSRC        SJBSRC                                       CSD103
+     C                   MOVE      G0BSRC        SJBSRC                                       CSD103
       *   History Date
      C                   Z-ADD     G0HIDT        W#ZDAYN
      C                   EXSR      ZZA0140
@@ -5358,11 +5361,11 @@
       *
      C                   MOVE      F#FLPTP       L0LPTP
       *
-     C     F#FLPBR       IFNE      *ZEROS
+     C*****F#FLPBR       IFNE      *ZEROS                                                     CSD103
      C                   MOVE      F#FLPBR       L0LPBR
-     C                   ELSE
-     C                   MOVE      *BLANKS       L0LPBR
-     C                   ENDIF
+     C************       ELSE                                                                 CSD103
+     C************       MOVE      *BLANKS       L0LPBR                                       CSD103
+     C************       ENDIF                                                                CSD103
       *
       *   Late Payment Penalty Amount
      C                   MOVE(P)   F#FLPAM       ZFIELD
@@ -5771,11 +5774,11 @@
      C                   MOVE      *BLANKS       L1ICBS
      C                   ENDIF
       *
-     C     F#LBRTT       IFNE      *ZEROS
+     C*****F#LBRTT       IFNE      *ZEROS                                                     CSD103
      C                   MOVE      F#LBRTT       L1BRTT
-     C                   ELSE
-     C                   MOVE      *BLANKS       L1BRTT
-     C                   ENDIF
+     C**********         ELSE                                                                 CSD103
+     C**********         MOVE      *BLANKS       L1BRTT                                       CSD103
+     C**********         ENDIF                                                                CSD103
       *
       *   Rate/Spread
      C                   MOVE(P)   F#LRTSP       ZFIELD
@@ -6540,11 +6543,11 @@
      C                   MOVE      *BLANKS       L1NCAS
      C                   ENDIF
       *
-     C     F#LNBRA       IFNE      *ZEROS
+     C*****F#LNBRA       IFNE      *ZEROS                                                     CSD103
      C                   MOVE      F#LNBRA       L1NBRA
-     C                   ELSE
-     C                   MOVE      *BLANKS       L1NBRA
-     C                   ENDIF
+     C**********         ELSE                                                                 CSD103
+     C**********         MOVE      *BLANKS       L1NBRA                                       CSD103
+     C**********         ENDIF                                                                CSD103
       *
       *   Next Rate/Spread
      C                   MOVE(P)   F#LNRTS       ZFIELD
@@ -6791,11 +6794,11 @@
      C                   MOVE      F#ACNUM       L2CNUM
      C                   MOVE      F#ACCY        L2CCY
       *
-     C     F#ABRTT       IFNE      *ZEROS
+     C*****F#ABRTT       IFNE      *ZEROS                                                     CSD103
      C                   MOVE      F#ABRTT       L2BRTT
-     C                   ELSE
-     C                   MOVE      *BLANKS       L2BRTT
-     C                   ENDIF
+     C**********         ELSE                                                                 CSD103
+     C**********         MOVE      *BLANKS       L2BRTT                                       CSD103
+     C**********         ENDIF                                                                CSD103
       *
       *   Rate/Spread
      C                   MOVE(P)   F#ARTSP       ZFIELD

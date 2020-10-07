@@ -26,7 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CER059 - German Feature Upgrade to Delhi                     *

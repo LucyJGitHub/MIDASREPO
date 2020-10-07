@@ -337,6 +337,11 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
+     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
+     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
+     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469

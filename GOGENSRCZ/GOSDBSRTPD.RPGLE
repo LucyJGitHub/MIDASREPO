@@ -25,7 +25,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+<<<<<<< HEAD
       *           (Recompile)                                         *
+=======
+>>>>>>> branch 'feature/MDSC-32950' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *

@@ -37,6 +37,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -48,15 +49,15 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
       ** RE Retail Accounts File
      FACCNT     IF   E           K DISK
      F                                     PREFIX(AC_)
- 
+
       ** RE Retail History Header Records
      FREHISBL   IF   E           K DISK
      F                                     PREFIX(BL_)
- 
+
       ** DE Accounts Codes to be extracted
      FDEACEXPD  IF   E             DISK
      F
@@ -88,17 +89,17 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D PeriodEDT     E DS                  EXTNAME(DEPPERDPD)
- 
+
      D ACCNTX        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC_)
- 
+
      D REHISBLX      E DS                  EXTNAME(REHISPD)
      D                                     PREFIX(BL_)
- 
+
      D***I#TREF***       DS            20                                                     CGL029
      D***W#ACCT***               1     18                                                     CGL029
      D I#TREF          DS            26                                                       CGL029
@@ -111,7 +112,7 @@
      D***W#ACSQ***              17     18  0                                                  CGL029
      D W#ACOD                 13     22  0                                                    CGL029
      D W#ACSQ                 23     24  0                                                    CGL029
- 
+
       *
      D K#BRCA          S              3
      D*K#CNUM***       S              6S 0                                                    CSD027
@@ -127,18 +128,18 @@
       ********************************************************************
       * MAIN PROCESSING
       ********************************************************************
- 
+
      C                   EXSR      XCINIT
- 
+
      C                   EXSR      XCMAIN
- 
+
      C/SPACE 5
       ********************************************************************
       * INITIAL PROCESSING
       ********************************************************************
      C     XCINIT        BEGSR
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -325,7 +326,7 @@
       *
       ** Check for Opening Balance Record
      C     K#ACCR        CHAIN     REHISBL                            89
- 
+
      C                   IF        *IN89 = *Off
      C                   CALLB     'DEHXTACCR'
      C                   PARM                    I#RTCD            7
@@ -352,13 +353,13 @@
      C                   PARM                    ACCNTX
      C                   PARM                    REHISBLX
      C                   PARM                    Dataarea                                     208221
- 
+
       *
       ** Write record to error log if error returned.
      C                   IF        I#RTCD = '*ERROR'
      C                   EXSR      XCWRITE
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ELSE
      C                   CALLB     'DEHXTACCT'
@@ -393,7 +394,7 @@
      C                   EXSR      XCWRITE
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -402,7 +403,7 @@
       ********************************************************************
      C     XCWRITE       BEGSR
       * If data error encountered, log error
- 
+
      C     I#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C*******************EVAL      BUFFER = Proj_hist + 'ACCT' + I#EXTT                       208221

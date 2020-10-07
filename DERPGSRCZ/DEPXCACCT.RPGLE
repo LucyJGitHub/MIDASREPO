@@ -36,6 +36,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -50,13 +51,13 @@
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(ACCNTABF)
      FMEMOSL1   IF   E           K DISK    INFSR(*PSSR)
      FDEACEXPD  IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(AC_)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -75,13 +76,13 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXCPERDD
- 
- 
+
+
       * A/C CODES TO BE EXTRACTESD
      D***EX_ACCD         S              4S 0 DIM(500)                                         CGL029
      D EX_ACCD         S             10S 0 DIM(500)                                           CGL029
@@ -89,17 +90,17 @@
      D EX_ACCN         S             16    DIM(500)
       * TRADE FINANCE EXPOSURE A/C
      D EX_TFCT         S              1    DIM(500)
- 
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SF_)                      CDE005
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
                                                                                               CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
- 
+
      D                 DS
      D***W#ACID*                 1     18                                                     CGL029
      D W#ACID                  1     24                                                       CGL029
@@ -112,8 +113,8 @@
      D  W#ACOD                10     19S 0                                                    CGL029
      D  W#ACSQ                20     21S 0                                                    CGL029
      D  W#BRCA                22     24A                                                      CGL029
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -195,7 +196,7 @@
       *
      C                   Z-ADD     1             I                 5 0
      C     ACOD          LOOKUP    EX_ACCD(I)                             99    *
- 
+
      C     *IN99         CABEQ     '0'           N_EXTRCT
       *
       * Account description
@@ -248,9 +249,9 @@
      C                   PARM                    W#TFCT            1
      C                   PARM                    Dataarea                                     208221
      C                   PARM                    I#RSRV           10                          CDE005
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C     CDE005        IFEQ      'Y'                                                        CDE005
@@ -271,24 +272,24 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * This is a projections extract
- 
+
      C                   MOVE      'P'           I#PH
- 
+
       * Get Extract control information
- 
+
       /COPY DECPYSRC,DEXTGTCT
- 
- 
+
+
       * LOAD UP A/C CODES TO BE EXTRACTED
- 
+
      C                   Z-ADD     1             I                 5 0
      C                   READ      DEACEXPD                               99
      C     *IN99         DOWEQ     '0'
- 
+
       * Get account code current details
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       @RTCD             7        B:Return Cd
      C                   PARM      '*KEY    '    @OPTN             7
@@ -296,9 +297,9 @@
      C*****SDACOD        PARM      SDACOD        DSFDY                      O:Format          CGL029
      C                   PARM      AC_A5ACCD     @ACCD            10                          CGL029
      C     SDACOD        PARM      SDACOD        DSSDY                                        CGL029
- 
+
       * Only do extraction if a/c code found
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     A5ACCD        EX_ACCD(I)                     *
      C                   MOVEL     AC_A5ACCN     EX_ACCN(I)

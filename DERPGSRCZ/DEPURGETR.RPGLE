@@ -30,6 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -83,24 +84,24 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Generic Transaction Details File
      FDEGTRANL1 UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Generic Positions file
      FDEGPOSNL1 UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Generic Events File
      FDEGEVNTL1 UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Generic Valudations Detail File
      FDEGVALUL1 UF   E           K DISK    INFSR(*PSSR)
- 
+
      FDEPURGTP1 O    E             PRINTER USROPN INFDS(SPOOL1)
      F                                     OFLIND(*IN85)
- 
+
      FDEPURGTAU O    E             PRINTER INFDS(SPOOLA)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -108,90 +109,90 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
- 
+
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
      D                                     DTAARA(DEEXTCTL)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** File Information Data Structure for DEPURGTP1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
- 
+
       ** File Information Data Structure for DEPURGTAU
      D SPOOLA          DS
      D  SFILEA                83     92
      D  SFNUMA               123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WkRetDeal       S              4  0
      D WkRetFRA        S              4  0
      D WkRetFndT       S              4  0
      D WkRetFuOp       S              4  0
      D WkRetLenF       S              4  0
      D WkRetRCE        S              4  0
- 
+
      D @RUN            S              1
      D WNew            S              1
      D WDtls           S              1    INZ(*Blanks)
      D WOpen           S              1    INZ(*Blanks)
      D PTranType       S              4
      D RetDate         S              5  0
- 
+
      D ZDayNo          S              5P 0
      D ZDate           S              6P 0
      D ZADate          S              7A
- 
+
      D ZFLD15          S             15  0
      D ZDECS           S              1  0
      D ZECODE          S              1
      D ZECHAR          S              1
      D ZOUT21          S             21
- 
+
      D PSeq            S              5A
      D PEnty           S              3A
      D ZSErr           S              1A
      D ZSNUM           S              6  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -202,13 +203,13 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Set the Retention Date
- 
+
      C                   SELECT
      C                   WHEN      PTranType = 'FXDL' or
      C                             PTranType = 'LDNI' or
@@ -223,7 +224,7 @@
      C                   IF        PTranType = 'NASP'
      C                   EVAL      *IN72 = *On
      C                   ENDIF
- 
+
      C                   WHEN      PTranType = 'SWAP' or
      C                             PTranType = 'CFCO' or
      C                             PTranType = 'FRAS'
@@ -237,11 +238,11 @@
      C                   IF        PTranType = 'FRAS'
      C                   EVAL      *IN75 = *On
      C                   ENDIF
- 
+
      C                   WHEN      PTranType = 'FUND'
      C     BJRDNB        SUB       WkRetFNDT     RetDate
      C                   EVAL      *IN76 = *On
- 
+
      C                   WHEN      PTranType = 'EXTR' or
      C                             PTranType = 'OTCC'
      C     BJRDNB        SUB       WkRetFuOp     RetDate
@@ -251,26 +252,26 @@
      C                   IF        PTranType = 'OTCC'
      C                   EVAL      *IN78 = *On
      C                   ENDIF
- 
+
      C                   WHEN      PTranType = 'FEES'
      C     BJRDNB        SUB       WkRetLenF     RetDate
      C                   EVAL      *IN79 = *On
- 
+
      C                   WHEN      PTranType = 'CUSX'
      C     BJRDNB        SUB       WkRetRCE      RetDate
      C                   EVAL      *IN80 = *On
- 
+
      C                   ENDSL
- 
+
       ** Read through the Generic Files
- 
+
      C     *LOVAL        SETLL     DEGTRANL1
      C                   READ      DEGTRANL1                              89
- 
+
      C                   DOW       *IN89 = *Off
- 
+
      C                   MOVEA     '111'         *IN(86)
- 
+
      C                   IF        T#MDAT <= RetDate
      C                   EVAL      WDtls = 'Y'
      C                   IF        WOpen = *Blanks
@@ -283,22 +284,22 @@
      C                   EXSR      SRValue
      C                   DELETE    DEGTRANL1
      C                   ENDIF
- 
+
      C                   READ      DEGTRANL1                              89
- 
+
      C                   IF        *IN89 = *On and WDtls = 'Y'
      C                   WRITE     TRAILER
      C                   CLOSE     DEPURGTP1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WDtls = *Blanks
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -310,38 +311,38 @@
       *                                                               *
       *****************************************************************
      C     SRPosition    BEGSR
- 
+
      C                   EVAL      WNew = 'Y'
      C     Key1          SETLL     DEGPOSNL1
      C     Key1          READE     DEGPOSNL1                              88
- 
+
      C                   DOW       *IN88 = *Off
      C                   IF        P#ASLI = 'A'
      C                   EVAL      RPASLI = 'Asset'
      C                   ELSE
      C                   EVAL      RPASLI = 'Liability'
      C                   ENDIF
- 
+
      C                   EVAL      RPPSTP = P#PSTP
- 
+
      C                   IF        *IN85 = *ON or RTDRF <> T#TREF
      C                   EVAL      RTDRF = T#TREF
      C                   WRITE     HEADP1
      C                   EVAL      *IN85 = *Off
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *On or WNew = 'Y'
      C                   WRITE     SUBHD
      C                   EVAL      WNew = *Blanks
      C                   ENDIF
- 
+
      C                   WRITE     DetPosD
- 
+
      C                   DELETE    DEGPOSNL1
- 
+
      C     Key1          READE     DEGPOSNL1                              88
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -354,53 +355,53 @@
       *                                                               *
       *****************************************************************
      C     SREvents      BEGSR
- 
+
      C                   EVAL      WNew = 'Y'
      C     Key1          SETLL     DEGEVNTL1
      C     Key1          READE     DEGEVNTL1                              87
- 
+
      C                   DOW       *IN87 = *OFF
      C                   IF        E#ASLI = 'A'
      C                   EVAL      REASLI = 'Asset'
      C                   ELSE
      C                   EVAL      REASLI = 'Liability'
      C                   ENDIF
- 
+
      C                   MOVE      E#PRSQ        REPRSQ
      C                   EVAL      REEVTP = E#EVTP
      C                   EVAL      REEVRF = E#EVRF
- 
+
      C                   EVAL      ZDayNo = E#PRDT
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *Zero         ZDate
      C                   PARM      *BLanks       ZADate
- 
+
      C                   IF        ZDate <> *Zero
      C                   MOVEL     ZADate        REPRDT
      C                   ELSE
      C                   EVAL      REPRDT = *Blanks
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *ON or RTDRF <> E#TREF
      C                   EVAL      RTDRF = E#TREF
      C                   WRITE     HEADP1
      C                   EVAL      *IN85 = *Off
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *ON or WNew = 'Y'
      C                   WRITE     SUBHD
      C                   EVAL      WNew = *Blanks
      C                   ENDIF
- 
+
      C                   WRITE     DetEvntD
- 
+
      C                   DELETE    DEGEVNTL1
- 
+
      C     Key1          READE     DEGEVNTL1                              87
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -413,26 +414,26 @@
       *                                                               *
       *****************************************************************
      C     SRValue       BEGSR
- 
+
      C                   EVAL      WNew = 'Y'
      C     Key1          SETLL     DEGVALUL1
      C     Key1          READE     DEGVALUL1                              86
- 
+
      C                   DOW       *IN86 = *Off
- 
+
      C                   EVAL      ZDayNo = V#VLDT
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *Zero         ZDate
      C                   PARM      *BLanks       ZADate
- 
+
      C                   IF        ZDate <> *Zero
      C                   MOVEL     ZADate        RVVLDT
      C                   ELSE
      C                   EVAL      RVVLDT = *Blanks
      C                   ENDIF
- 
+
      C                   MOVE      V#MKVL        ZFLD15
      C                   Z-ADD     T#VCDP        ZDECS
      C                   EVAL      ZOUT21 = *Blanks
@@ -442,27 +443,27 @@
      C                   PARM                    ZECODE
      C                   PARM                    ZECHAR
      C                   PARM                    ZOUT21
- 
+
      C                   EVAL      RVMKVL = ZOUT21
- 
+
      C                   IF        *IN85 = *ON or RTDRF <> V#TREF
      C                   EVAL      RTDRF = V#TREF
      C                   WRITE     HEADP1
      C                   EVAL      *IN85 = *OFF
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *ON or WNew = 'Y'
      C                   WRITE     SUBHD
      C                   EVAL      WNew = *Blanks
      C                   ENDIF
- 
+
      C                   WRITE     DetVald
- 
+
      C                   DELETE    DEGVALUL1
- 
+
      C     Key1          READE     DEGVALUL1                              86
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -475,30 +476,30 @@
       *  Calls:     ZSFILE                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRCFP1       BEGSR
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM1        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       PEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM      *Blanks       ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -511,30 +512,30 @@
       *  Calls:     ZSFILE                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRCFAU       BEGSR
- 
+
       ** Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUMA        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       PEnty
      C                   PARM                    SFILEA
      C                   PARM                    ZSNUM
      C                   PARM      *Blanks       ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -547,27 +548,27 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
- 
+
       ** Output Report Header and File Controls.
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *On
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   IF        WDtls = *Blanks
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -580,31 +581,31 @@
       * Calls:     None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
      C                   PARM                    PTranType
- 
+
       ** Access Bank details file
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       ReturnCode
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        ReturnCode <> *Blanks
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 001
      C                   EVAL      DBKEY = @Optn
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Access data area
- 
+
      C     *LOCK         IN        DEEXTCTL
      C                   EVAL      WkRetDeal = DEPDDL
      C                   EVAL      WkRetFRA  = DEPDFR
@@ -613,13 +614,13 @@
      C                   EVAL      WkRetLenF = DEPDLF
      C                   EVAL      WKRetRCE  = DEPDCE
      C                   OUT       DEEXTCTL
- 
+
      C                   EXSR      SRRCFAU
- 
+
      C     Key1          KLIST
      C                   KFLD                    T#MOD
      C                   KFLD                    T#TREF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -635,20 +636,20 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   EXSR      SRAudit
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************

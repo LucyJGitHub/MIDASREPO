@@ -34,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -47,11 +48,11 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FDEINPEXDF CF   E             WORKSTN        INFSR(*PSSR)
      FDEOLEJPD  IF A E             DISK    COMMIT INFSR(*PSSR)
      FSDCURRL0  IF   E           K DISK           INFSR(*PSSR)                                CDE002
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -70,40 +71,40 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
@@ -112,17 +113,17 @@
       ** EXTERNAL DS FOR BASE RATE CODE DETAILS                                               CDE002
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DEEXTCTL      E DS                  EXTNAME(DEEXTCTL)
       ** EXTRACT CONTROL DATA
      D**ExtData*               1     32                                                       CDE002
      D  ExtData                1     34                                                       CDE002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      DWKRDFRERR        S              1    INZ(' ')                                           CDE002
       ** Warning flag for Default Funding Rate                                                CDE002
                                                                                               CDE002
@@ -149,15 +150,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Return parameter set if DEEXTCTL data changed
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    EXCT_CHG          1
- 
+
       **  Main processing
       **  Loop until CK/3 taken
- 
+
      C     *INKC         DOWEQ     '0'
      C                   EXSR      MAIN
      C                   END
@@ -165,24 +166,24 @@
       * TERMINATE PROGRAM
       *
      C                   MOVE      '1'           *INLR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN - MAIN PROCESSING
       *****************************************************************
      C     MAIN          BEGSR
- 
+
       ** Selection screen
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     DEEXCTS0
      C                   WRITE     DEEXCTD1
      C                   WRITE     DEEXCTF1
      C                   READ      DEEXCTD1                               99
- 
+
       ** Validate screen input as long as F3 is not taken
- 
+
      C     *INKC         IFEQ      '0'
      C                   EXSR      VALSIN
      C                   ENDIF
@@ -659,7 +660,7 @@
       * ZASNMS - SEND A MESSAGE
       *****************************************************************
      C     ZASNMS        BEGSR
- 
+
      C                   CALL      'Y2SNMGC'                            9999    *
      C                   PARM      DDPGM         ZAPGMQ           10
      C                   PARM                    ZAPGRL            5
@@ -667,11 +668,11 @@
      C                   PARM      'MIDAS'       ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM                    ZAMSTP            7
- 
+
       * Error encountered
- 
+
      C                   MOVE      '1'           *IN50
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -799,14 +800,14 @@
      C                   MOVEL     '903'         DBASE                                        CDE004
      C                   EXSR      *PSSR                                                      CDE004
      C                   END                                                                  CDE004
- 
+
       * Get extract control data
- 
+
      C     *DTAARA       DEFINE                  DEEXTCTL
      C     *LOCK         IN        DEEXTCTL
- 
+
       * Default if no details
- 
+
      C     ExtData       IFEQ      *BLANK
      C                   MOVEL     'Y'           EXCT_CHG
      C                   Z-ADD     7             DEPCOD
@@ -825,9 +826,9 @@
      C                   Z-ADD     0             DETKON                                       CDE002
      C                   ENDIF
      C                   OUT       DEEXTCTL
- 
+
       * Set screen fields
- 
+
      C                   MOVEL     DEPCOD        DDPCOD
      C                   MOVEL     DEPCOM        DDPCOM
      C                   MOVEL     DEPCOY        DDPCOY
@@ -842,20 +843,20 @@
      C                   MOVEL     DEPDLF        #1PDLF                                       CDE004
      C                   MOVEL     DEPDCE        #1PDCE                                       CDE004
      C                   ENDIF                                                                CDE004
- 
+
       * Write a record to the on-line extract journal seq. no. file
       * if one does not currently exist.
- 
+
      C     1             CHAIN     DEOLEJPD                           99
      C     *IN99         IFEQ      '1'
      C                   EVAL      I#LASTSEQ = '0000000001'
      C                   WRITE     DEOLEJP0
      C                   ENDIF
- 
+
       * Commit the update
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -46,6 +46,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055440 - CLS accounting entries are generated with a blank *
       *             blank posting narrative.	                      *
       *             Reinstate codes that was removed by CER030 changes*

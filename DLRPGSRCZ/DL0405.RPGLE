@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054655 - GLC0802C seq.00001 fails. DBCE length too small   *
       *           - Introduced WDBCE 15,0 to hold result before move  *
       *             to DBCE                                           *

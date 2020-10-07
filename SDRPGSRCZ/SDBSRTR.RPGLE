@@ -167,12 +167,7 @@
 
       * Build buffer with required output
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
-     C                   ENDIF                                                                CSD103
-     C                   EVAL      Buffer = BasRScnfmt                                        CSD103
+     C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103
      C                                      + AAuth                                           CSD103

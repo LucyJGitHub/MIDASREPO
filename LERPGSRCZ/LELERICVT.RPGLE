@@ -350,7 +350,7 @@
      C**********         MOVE      ZFIELD        DDNRTS                              BUG9507 BUG9737
      C**********         IF        CLE036 = 'Y'                                      BUG9507 BUG9737
      C**********         IF        NBRA = *Zeros And NBSR = *Zeros                     CLE106 CSD103
-     C                   IF        NBRA = *BLANKSAnd NBSR = *Zeros                            CSD103
+     C                   IF        NBRA = *BLANKS And NBSR = *Zeros                           CSD103
      C                             AND CLE036 = 'Y'                                          BUG9737
      C**********         MOVE      ZFIELD        DDNRTF                                CLE106 CRE073
      C**********         MOVEL     ZFIELD        DDNRTF                              CRE073 MD044083

@@ -44,7 +44,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -179,9 +178,11 @@
       *
      C                   DOW       EndOfFile = False
       *
-     C                   IF        NBRA <> 0 AND
+     C**********         IF        NBRA <> 0 AND                                              CSD103
+     C                   IF        NBRA <> *BLANKS AND                                        CSD103
      C                             CHIN = 'R' OR
-     C                             BRTT <> 0 AND
+     C**********                   BRTT <> 0 AND                                              CSD103
+     C                             BRTT <> *BLANKS AND                                        CSD103
      C                             CHIN = 'R'
 
      C                   IF        RFDY = *Blanks

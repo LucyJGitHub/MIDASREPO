@@ -4096,7 +4096,8 @@ E001 C                   ENDIF
      C     DDACTN        OREQ      'A'                                                      AR826996
      C     AYPPLT        IFNE      *BLANKS                                                  AR826996
      C     AYPPLS        ANDNE     *BLANKS                                                  AR826996
-     C     AYPBSR        ANDNE     0                                                        AR826996
+     C*****AYPBSR        ANDNE     0                                                 AR826996 CSD103
+     C     AYPBSR        ANDNE     *BLANKS                                                    CSD103
       *                                                                                     AR826996
      C     KCYBR         KLIST                                                              AR826996
      C                   KFLD                    DDCURR                                     AR826996
@@ -4123,7 +4124,8 @@ E001 C                   ENDIF
      C     AYIPLT        IFNE      *BLANKS                                                  AR826996
      C     AYIPLS        ANDNE     *BLANKS                                                  AR826996
      C     AYCAPI        ANDNE     'Y'                                                      AR826996
-     C     AYIBSR        ANDNE     0                                                        AR826996
+     C*****AYIBSR        ANDNE     0                                                 AR826996 CSD103
+     C     AYIBSR        ANDNE     *BLANKS                                                    CSD103
       *                                                                                     AR826996
       ** Validate Base rate code + Currency for PDCL Interest                               AR826996
       *                                                                                     AR826996
@@ -8550,7 +8552,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714
@@ -9165,8 +9167,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD <> *BLANKS                                           CLE134
-     C                             AND AYPBSR <> *ZEROS                                       CLE134
-     C                             OR  AYPBSR = *ZEROS                                        CLE134
+     C**********                   AND AYPBSR <> *ZEROS                                CLE134 CSD103
+     C                             AND AYPBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYPBSR = *ZEROS                                 CLE134 CSD103
+     C                             OR  AYPBSR = *BLANKS                                       CSD103
      C                             AND AYPRSP = *ZEROS                                        CLE134
      C                             AND AYPCS1 = *ZEROS                                      MD019830
      C                   MOVE      'N'           PBRFLG            1                        MD019830
@@ -9201,8 +9205,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD <> *BLANKS                                           CLE134
-     C                             AND AYIBSR <> *ZEROS                                       CLE134
-     C                             OR  AYIBSR = *ZEROS                                        CLE134
+     C**********                   AND AYIBSR <> *ZEROS                                CLE134 CSD103
+     C                             AND AYIBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYIBSR = *ZEROS                                 CLE134 CSD103
+     C                             OR  AYIBSR = *BLANKS                                       CSD103
      C                             AND AYIRSP = *ZEROS                                        CLE134
      C                             AND AIPCS1 = *ZEROS                                      MD019830
      C                   MOVE      'N'           IBRFLG            1                        MD019830

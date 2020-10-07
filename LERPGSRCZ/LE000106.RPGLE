@@ -497,7 +497,8 @@
      C                   ENDIF
 
      C                   IF        FLPTP = 'P' AND FLPAM <> 0
-     C                   IF        FLPBR = 0
+     C**********         IF        FLPBR = 0                                                  CSD103
+     C                   IF        FLPBR = *BLANKS                                            CSD103
      C                   MOVE      FLPAM         FCXPFR
      C                   ELSE
      C                   MOVE      FLPAM         FCXPSR
@@ -568,7 +569,8 @@
      C                   ENDIF
 
      C                   IF        ALPTP = 'P' AND ALPAM <> 0
-     C                   IF        ALPBR = 0
+     C**********         IF        ALPBR = 0                                                  CSD103
+     C                   IF        ALPBR = *BLANKS                                            CSD103
      C                   MOVE      ALPAM         FCXPFR
      C                   ELSE
      C                   MOVE      ALPAM         FCXPSR

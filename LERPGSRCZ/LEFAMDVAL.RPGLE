@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027429           Date 26Jun14               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024398           Date 11May14               *
       *                 AR693564           Date 08Oct12               *
       *                 CLE134             Date 01Aug12               *
@@ -39,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027429 - Tranches exceeded facility amount of Credit       *
+      *             Agreement. Display message when facility amount   *
+      *             of TR's exceeded facility amount of Credit        *
+      *             Agreement.                                        *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
@@ -79,12 +84,12 @@
       *           use as API's.                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Facility amendments
      FLEFCAML3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFCAMPF:LEFCAMQ1)
@@ -93,13 +98,31 @@
      FLEAGAML3  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(LEFCAMPF:LEAGAMD3)                          CLE041
      F                                     PREFIX(SQ)                                         CLE041
- 
+
      FLEFCAML6  IF   E           K DISK    INFSR(*PSSR)
                                                                                               CLE041
      FLEAGAML2  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(LEFCAMPF:LEAGAMD4)                          CLE041
+                                                                                            MD027429
+      ** Midas Facility File                                                                MD027429
+     FLEFCLTLK  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     IGNORE(FCLTYHHF)                                 MD027429
+     F                                     IGNORE(FCLTYFNF)                                 MD027429
+     F                                     RENAME(FCLTYFMF:FCLTYFLK)                        MD027429
+     F                                     PREFIX(FC_)                                      MD027429
+                                                                                            MD027429
+      ** Midas Facility File by Credit Agreement                                            MD027429
+     FLEFCLTL9  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     RENAME(FCLTYFMF:FCLTYFL9)                        MD027429
+     F                                     PREFIX(TR_)                                      MD027429
+                                                                                            MD027429
+      ** Midas Live Facility Amendment - FI/FD                                              MD027429
+     FLEFCAML7  IF   E           K DISK    INFSR(*PSSR)                                     MD027429
+     F                                     RENAME(LEFCAMPF:LEFCAMP7)                        MD027429
+     F                                     PREFIX(FA_)                                      MD027429
+                                                                                            MD027429
      F/COPY WNCPYSRC,LEH00239
- 
+
      FLEVFAMDL2 IF   E           K DISK    INFSR(*PSSR)                                     AR693564
      F                                     PREFIX(SQ)                                       AR693564
       ** Logical file for  LEVFAMDPD                                                        AR693564
@@ -115,106 +138,111 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D*PSysVal1        C                   CONST('OMEIndicator')                       CSC024 CSC054
      D PSysVal1        C                   CONST('PEAIndicator')                              CSC054
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Facility Amendment Details in screen format
      D FAMD          E DS                  EXTNAME(LEFAMDPD)
- 
+
       ** Facility Amendment Details in file format
      D VFAMD         E DS                  EXTNAME(LEVFAMDPD)
- 
+
       ** Facility Amendment Details OK indicator
      D FAMD_OK       E DS                  EXTNAME(LEEFAMDPD)
- 
+
       * Facility run dates
      D  @RUNA          DS
      D  @RUN                   1     50  0
      D                                     DIM(10)
- 
+
       * Facility drawn amounts
      D  @OAMA          DS
      D  @OAM                   1    130  0
      D                                     DIM(10)
- 
- 
+
+      ** Currency                                                                           MD027429
+     DCYA              S              3    DIM(150)                                         MD027429
+                                                                                            MD027429
+      ** Curreny No. of Decimal Place                                                       MD027429
+     DNDP              S              1  0 DIM(150)                                         MD027429
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer lending details
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
                                                                                              CAP084
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                    CAP084
       ** Java user information                                                               CAP084
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CLE106          S              1A   INZ('N')                                           CLE106
      D CSC011          S              1A   INZ('N')
      D CLE025          S              1A   INZ('N')                                           CLE041
@@ -222,7 +250,7 @@
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
- 
+
      D PRetCode        S              7A                                                      CSC024
      D P@OP01          S             20A                                                      CSC024
      D P@VL01          S            200A                                                      CSC024
@@ -255,28 +283,28 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Clear output fields
- 
+
      C                   Z-ADD     *ZERO         W#AAMT
- 
+
      C                   MOVEL     *ALL'Y'       FAMD_OK
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIDArr
@@ -308,6 +336,18 @@
       * Validate Amendment Amount
       *
      C                   EXSR      VLAAMT
+      *                                                                                     MD027429
+      ** Amendment Amount still ok, further validate amount                                 MD027429
+      ** for Tranche or Credit Agreement                                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        S#AAMTok = 'Y'                                           MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'CA' OR FctrTRCA = 'TR')                     MD027429
+     C                             and (S#FATP = 'FI' OR S#FATP = 'FD')                     MD027429
+     C                   EXSR      VTCAMT                                                   MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
       *
       * Validate Revolving Credit indicator
       *
@@ -317,27 +357,27 @@
       *
      C                   EXSR      VLNDEX
      C/COPY WNCPYSRC,LEH00240
- 
+
       * Set fields on insert
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   EXSR      SETF_I
      C                   ENDIF
- 
+
       * Set fields on amend
- 
+
      C     S#ACTN        IFEQ      'A'
      C                   EXSR      SETF_A
      C                   ENDIF
- 
+
       * Set fields on delete
- 
+
      C     S#ACTN        IFEQ      'D'
      C                   EXSR      SETF_A
      C                   ENDIF
- 
+
      C     ENDVAL        TAG
- 
+
      C                   RETURN
       *
      C/COPY WNCPYSRC,LEH00241
@@ -346,9 +386,9 @@
       * Validate Amendment Currency
       *****************************************************************
      C     VLACCY        BEGSR
- 
+
       * The currency must exist
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
@@ -361,11 +401,11 @@
      C                   MOVEL     'S#ACCY    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0018'     MsgIdArr(Ix)
      C                   ELSE
- 
+
       * The currency must be the same as the facility currency
- 
+
      C                   MOVEL     A6CYCD        S#ACCY
- 
+
      C     S#ACCY        IFNE      FccyFCCY
      C                   MOVE      'N'           S#ACCYok
      C                   ADD       1             Ix
@@ -373,7 +413,7 @@
      C                   MOVEL     'LEF0201'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -381,13 +421,13 @@
       * Validate Amendment Amount
       *****************************************************************
      C     VLAAMT        BEGSR
- 
+
       ** For amendment type FR, default the amendment amount to the
       ** available absolute amount at expiry (setting the sign accordingly)
- 
+
      C     S#FATP        IFEQ      'FR'
      C     S#AAMT        ANDEQ     *BLANKS
- 
+
      C     W#FAMTSV      IFLT      0
      C                   Z-SUB     W#FAMTSV      W#AAMT
      C                   MOVE      '-'           S#SIGN
@@ -395,17 +435,17 @@
      C                   Z-ADD     W#FAMTSV      W#AAMT
      C                   MOVE      '+'           S#SIGN
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      W#AAMT        ZFIELD
      C                   Z-ADD     FccyNBDP      ZADEC
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        S#AAMT
- 
+
      C                   ENDIF
- 
+
       * For amendment types FI and FD, amount must be defined
- 
+
      C     S#FATP        IFEQ      'FI'
      C     S#FATP        OREQ      'FD'
      C     S#AAMT        IFEQ      *BLANKS
@@ -415,9 +455,9 @@
      C                   MOVEL     'LEF0202'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       * For amendment types RC, amount mustn't be defined
- 
+
      C     S#FATP        IFEQ      'RC'
      C     S#AAMT        IFNE      *BLANKS
      C                   MOVE      'N'           S#AAMTok
@@ -427,17 +467,17 @@
      C                   ENDIF
      C                   ENDIF
      C/COPY WNCPYSRC,LEH00242
- 
+
       * If amendment amount is OK so far, check it is a valid amount
- 
+
      C     S#AAMTok      IFEQ      'Y'
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#AAMT        ZFIELD
      C                   Z-ADD     FccyNBDP      ZADEC
      C     13            SUB       ZADEC         ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#AAMTok
      C                   ADD       1             Ix
@@ -445,7 +485,7 @@
      C                   MOVEL     'LEF0204'     MsgIdArr(Ix)
      C                   ELSE
      C                   MOVE      ZFIELD        W#AAMT
- 
+
       ** Reformat amount field if valid                                                       CLE025
      C     S#FATP        IFEQ      'FD'                                                       CLE025
      C                   MOVE      *BLANKS       ZFIELD                                       CLE025
@@ -456,9 +496,9 @@
      C                   ENDIF                                                                CLE025
                                                                                               CLE025
      C                   ENDIF
- 
+
       * For amendment types FI and FD, amount must not be zero
- 
+
      C     S#FATP        IFEQ      'FI'
      C     S#FATP        OREQ      'FD'
      C     S#AAMTok      IFEQ      'Y'
@@ -471,10 +511,10 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** For facility decreases check that
       ** the available amount is not exceeded by the decrease
- 
+
      C     S#AAMTok      IFEQ      'Y'
      C     S#FATP        ANDEQ     'FD'
      C     A5GASS        ANDNE     'A'
@@ -494,13 +534,13 @@
      C     W#VLDT        IFLT      @RUN(1)
      C     W#FAMTSV      SUB       @OAM(1)       W#AVAIL
      C                   ENDIF
- 
+
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACT
      C                   MOVEL     S#FCNO        K#FCNO
      C                   Z-ADD     *ZERO         K#VLDT
      C                   Z-ADD     *ZERO         K#SQNO
- 
+
      C                   IF        CLE025 = 'Y'  AND                                          CLE041
      C                             FctrTRCA = 'AG'                                            CLE041
                                                                                               CLE041
@@ -549,9 +589,9 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       * Validate amendment amount sign
- 
+
      C     S#FATP        IFEQ      'FR'
      C     S#SIGN        ANDNE     ' '
      C     S#SIGN        ANDNE     '-'
@@ -563,18 +603,441 @@
      C                   MOVEL     'S#SIGN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0326'     MsgIdArr(Ix)
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                     MD027429
+      * Validate Tranche/Credit Agreement Amount                                            MD027429
+      *****************************************************************                     MD027429
+     C     VTCAMT        BEGSR                                                              MD027429
+      *                                                                                     MD027429
+      ** Define Fields                                                                      MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    BRCA          K#BRCA1                                    MD027429
+     C     *LIKE         DEFINE    CNUM          K#CNUM1                                    MD027429
+     C     *LIKE         DEFINE    FACT          K#FACT1                                    MD027429
+     C     *LIKE         DEFINE    FCNO          K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    FC_CANM       K#CANM                                     MD027429
+     C     *LIKE         DEFINE    FC_CAFT       K#CAFT                                     MD027429
+     C     *LIKE         DEFINE    FC_CAFN       K#CAFN                                     MD027429
+      *                                                                                     MD027429
+     C     *LIKE         DEFINE    CNUM          S#CNUM1                                    MD027429
+     C     *LIKE         DEFINE    FACT          S#FACT1                                    MD027429
+     C     *LIKE         DEFINE    FCNO          S#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     S#CSSN        K#CNUM1                                    MD027429
+     C                   MOVEL     S#FACT        K#FACT1                                    MD027429
+     C                   MOVEL     S#FCNO        K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     S#CSSN        S#CNUM1                                    MD027429
+     C                   MOVEL     S#FACT        S#FACT1                                    MD027429
+     C                   MOVEL     S#FCNO        S#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Facility                                                               MD027429
+      *                                                                                     MD027429
+     C     KFcty         KLIST                                                              MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+     C                   KFLD                    K#VLDT1           5 0                      MD027429
+     C                   KFLD                    K#SQNO1           3 0                      MD027429
+      *                                                                                     MD027429
+     C     KFctyP        KLIST                                                              MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Facility Amendment                                                     MD027429
+      *                                                                                     MD027429
+     C     KFcAm         KLIST                                                              MD027429
+     C                   KFLD                    K#BRCA1                                    MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+     C                   KFLD                    K#VLDT1                                    MD027429
+     C                   KFLD                    K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        KLIST                                                              MD027429
+     C                   KFLD                    K#BRCA1                                    MD027429
+     C                   KFLD                    K#CNUM1                                    MD027429
+     C                   KFLD                    K#FACT1                                    MD027429
+     C                   KFLD                    K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Keylist for Credit Agreement - Tranche Facility                                    MD027429
+      *                                                                                     MD027429
+     C     KCaFc         KLIST                                                              MD027429
+     C                   KFLD                    K#CANM                                     MD027429
+     C                   KFLD                    K#CAFT                                     MD027429
+     C                   KFLD                    K#CAFN                                     MD027429
+      *                                                                                     MD027429
+      **  Initialised working variables                                                     MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WSqNoN            4 0                      MD027429
+     C                   Z-ADD     0             WTRAmt           13 0                      MD027429
+     C                   Z-ADD     0             WCAAmt           13 0                      MD027429
+     C                   Z-ADD     0             WTRAmtX          13 0                      MD027429
+     C                   Z-ADD     0             WCAAmtX          13 0                      MD027429
+     C                   Z-ADD     0             WTRAmtD          13 0                      MD027429
+     C                   Z-ADD     0             WCAAmtD          13 0                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C     KFctyP        CHAIN     FCLTYFLK                                                 MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Save value of Credit Agreement Facility details                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C                   MOVEL     S#CSSN        K#CANM                                     MD027429
+     C                   MOVEL     S#FACT        K#CAFT                                     MD027429
+     C                   MOVEL     S#FCNO        K#CAFN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVEL     FC_CANM       K#CANM                                     MD027429
+     C                   MOVEL     FC_CAFT       K#CAFT                                     MD027429
+     C                   MOVEL     FC_CAFN       K#CAFN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for total facility amount of TR's up to value                                MD027429
+      ** date of facility amendment                                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C                   Z-ADD     0             WSqNoN                                     MD027429
+     C                   MOVE      S#SQNO        WSqNoN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     1000          WSqNoN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KCaFc         SETLL     FCLTYFL9                                                 MD027429
+     C     KCaFc         READE     FCLTYFL9                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCLTL9)                                       MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     TR_BRCA       K#BRCA1                                    MD027429
+     C                   MOVEL     TR_CNUM       K#CNUM1                                    MD027429
+     C                   Z-ADD     TR_FACT       K#FACT1                                    MD027429
+     C                   Z-ADD     TR_FCNO       K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_RECI = 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   ADD       TR_FAMT       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     TR_FAMT       ZAMTCI                                     MD027429
+     C                   Z-ADD     TR_CAXR       ZEXCH                                      MD027429
+     C                   MOVE      TR_CMDI       ZMD                                        MD027429
+     C                   MOVEL     TR_FCCY       ZCCYI                                      MD027429
+     C                   MOVEL     TR_CACY       ZCCYO                                      MD027429
+      *                                                                                     MD027429
+     C                   EVAL      X = %LOOKUP(TR_FCCY:CYA)                                 MD027429
+     C                   EVAL      ZCDPI = NDP(X)                                           MD027429
+     C                   EVAL      X = %LOOKUP(TR_CACY:CYA)                                 MD027429
+     C                   EVAL      ZCDPO = NDP(X)                                           MD027429
+      *                                                                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+      *                                                                                     MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Check for facility re-activation                                                   MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WTRAmtX                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcty         SETLL     LEFCAML6                                                 MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML6)                                       MD027429
+      *                                                                                     MD027429
+     C                   IF        CNUM = K#CNUM1 AND FACT = K#FACT1                        MD027429
+     C                             AND FCNO = K#FCNO1 AND FATP = 'FR'                       MD027429
+     C                   Z-ADD     AAMT          WTRAmtX                                    MD027429
+     C                   LEAVE                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        WTRAmtX = 0                                              MD027429
+     C                   Z-ADD     TR_FAMT       WTRAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     WTRAmtX       ZAMTCI                                     MD027429
+     C                   Z-ADD     TR_CAXR       ZEXCH                                      MD027429
+     C                   MOVE      TR_CMDI       ZMD                                        MD027429
+     C                   MOVEL     TR_FCCY       ZCCYI                                      MD027429
+     C                   MOVEL     TR_CACY       ZCCYO                                      MD027429
+      *                                                                                     MD027429
+     C                   EVAL      X = %LOOKUP(TR_FCCY:CYA)                                 MD027429
+     C                   EVAL      ZCDPI = NDP(X)                                           MD027429
+     C                   EVAL      X = %LOOKUP(TR_CACY:CYA)                                 MD027429
+     C                   EVAL      ZCDPO = NDP(X)                                           MD027429
+      *                                                                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+      *                                                                                     MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for FI/FD against the Tranche Facility                                       MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Check if Tranche is the facility of amendment events                               MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR' AND TR_CNUM = S#CNUM1                    MD027429
+     C                             AND TR_FACT = S#FACT1  AND                               MD027429
+     C                             TR_FCNO = S#FCNO1                                        MD027429
+     C                   MOVE      'Y'           WSmFc             1                        MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVE      'N'           WSmFc                                      MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAm         SETLL     LEFCAMP7                                                 MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML7)                                       MD027429
+      *                                                                                     MD027429
+      ** Include FI/FD of tranche facility up to value date and not equal                   MD027429
+      ** to sequence no. of facility amendment                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_VLDT < W#VLDT OR (FA_VLDT = W#VLDT                    MD027429
+     C                             AND FA_SQNO <> WSqNoN)                                   MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   Z-ADD     FA_AAMT       WTRAmtX                                    MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     FA_AAMT       ZAMTCI                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_FATP = 'FI'                                           MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+      ** If facility amendment is for Tranche and action not reverse,                       MD027429
+      ** include FI/FD on total amount                                                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR' AND WSmFc = 'Y'                          MD027429
+      *                                                                                     MD027429
+     C                   IF        TR_FCCY = TR_CACY                                        MD027429
+     C                   Z-ADD     W#AAMT        WTRAmtX                                    MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     W#AAMT        ZAMTCI                                     MD027429
+     C                   EXSR      ZCONVZ1                                                  MD027429
+     C                   Z-ADD     ZAMTCO        WTRAmTX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        S#ACTN <> 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   ADD       WTRAmtX       WTRAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       WTRAmtX       WTRAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FD'                                            MD027429
+     C                   Z-ADD     WTRAmtX       WTRAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KCaFc         READE     FCLTYFL9                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'TR'                                          MD027429
+     C     WTRAmt        SUB       WTRAmtD       WTRAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** Check for total facility amount of Credit Agreement                                MD027429
+      ** up to value date of facility amendment                                             MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     K#CANM        K#CNUM1                                    MD027429
+     C                   MOVEL     K#CAFT        K#FACT1                                    MD027429
+     C                   MOVEL     K#CAFN        K#FCNO1                                    MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C                   Z-ADD     0             WSqNoN                                     MD027429
+     C                   MOVE      S#SQNO        WSqNoN                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   Z-ADD     1000          WSqNoN                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        CHAIN     FCLTYFLK                                                 MD027429
+      *                                                                                     MD027429
+     C                   IF        FC_RECI = 'D'                                            MD027429
+     C                   ADD       FC_FAMT       WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Check for facility re-activation                                                   MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     0             WCAAmtX                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+     C     KFcty         SETLL     LEFCAML6                                                 MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML6)                                       MD027429
+      *                                                                                     MD027429
+     C                   IF        CNUM = K#CNUM1 AND FACT = K#FACT1                        MD027429
+     C                             AND FCNO = K#FCNO1 AND FATP = 'FR'                       MD027429
+     C                   Z-ADD     AAMT          WCAAmtX                                    MD027429
+     C                   LEAVE                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFctyP        READE     LEFCAML6                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        WCAAmtX = 0                                              MD027429
+     C                   Z-ADD     FC_FAMT       WCAAmtX                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ADD       WCAAmtX       WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     FC_BRCA       K#BRCA1                                    MD027429
+     C                   Z-ADD     0             K#VLDT1                                    MD027429
+     C                   Z-ADD     0             K#SQNO1                                    MD027429
+      *                                                                                     MD027429
+      ** Check if Credit Agreement is the facility of amendment events                      MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA' AND FC_CNUM = S#CNUM1                    MD027429
+     C                             AND FC_FACT = S#FACT1 AND                                MD027429
+     C                             FC_FCNO = S#FCNO1                                        MD027429
+     C                   MOVE      'Y'           WSmFc                                      MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVE      'N'           WSmFc                                      MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAm         SETLL     LEFCAMP7                                                 MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+      *                                                                                     MD027429
+     C                   DOW       NOT %EOF(LEFCAML7)                                       MD027429
+      *                                                                                     MD027429
+      ** Include FI/FD of tranche facility up to value date and not equal                   MD027429
+      ** to sequence no. of facility amendment                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_VLDT < W#VLDT OR (FA_VLDT = W#VLDT                    MD027429
+     C                             AND FA_SQNO <> WSqNoN)                                   MD027429
+      *                                                                                     MD027429
+     C                   IF        FA_FATP = 'FI'                                           MD027429
+     C                   ADD       FA_AAMT       WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       FA_AAMT       WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C     KFcAmP        READE     LEFCAMP7                                                 MD027429
+     C                   ENDDO                                                              MD027429
+      *                                                                                     MD027429
+      ** If facility amendment is for Credit Agreement and action                           MD027429
+      ** not reverse, include FI/FD on total amount                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA' AND WSmFc = 'Y'                          MD027429
+      *                                                                                     MD027429
+     C                   IF        S#ACTN <> 'D'                                            MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   ADD       W#AAMT        WCAAmt                                     MD027429
+     C                   ELSE                                                               MD027429
+     C                   SUB       W#AAMT        WCAAmt                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+     C                   IF        S#FATP = 'FI'                                            MD027429
+     C                   Z-ADD     W#AAMT        WCAAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   IF        FctrTRCA = 'CA'                                          MD027429
+     C     WCAAmt        ADD       WCAAmtD       WCAAmtD                                    MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+      ** If total facility amount of TR's exceed facility amount of                         MD027429
+      ** Credit Agreement, send message as follows:                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        WTRAmt > WCAAmt                                          MD027429
+      *                                                                                     MD027429
+      ** Error message when below amendment type for type of facility                       MD027429
+      ** will cause facility amount of TR's exceed the facility                             MD027429
+      ** amount of Credit Agreement                                                         MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'TR' AND S#FATP = 'FI'                       MD027429
+     C                             AND S#ACTN <> 'D') OR                                    MD027429
+     C                             (FctrTRCA = 'CA' AND S#FATP = 'FD'                       MD027429
+     C                             AND S#ACTN <> 'D')                                       MD027429
+      *                                                                                     MD027429
+     C                   MOVE      'N'           S#AAMTok                                   MD027429
+     C                   Add       1             Ix                                         MD027429
+     C                   MOVEL     'S#AAMT'      FldNameArr(Ix)                             MD027429
+     C                   MOVEL     'LEF0144'     MsgIdArr(Ix)                               MD027429
+      *                                                                                     MD027429
+     C                   ELSE                                                               MD027429
+      *                                                                                     MD027429
+      ** Warning Message:                                                                   MD027429
+      ** a) Reversal of FD for TR or FI for CA will caused the facility                     MD027429
+      ** amount of TR's exceed facility amount of Credit Agreement                          MD027429
+      ** b) Facility amount of TR's still has exceeded the facility                         MD027429
+      ** amount of Credit Agreement with inserted/amended/reversed                          MD027429
+      ** facility amendment amount                                                          MD027429
+      *                                                                                     MD027429
+     C                   Add       1             Wx                                         MD027429
+     C                   MOVEL     'S#AAMT'      WFldNamArr(Wx)                             MD027429
+      *                                                                                     MD027429
+     C                   IF        (FctrTRCA = 'TR' AND S#FATP = 'FD'                       MD027429
+     C                             AND S#ACTN = 'D'                                         MD027429
+     C                             AND WTRAmtD <= WCAAmt) OR                                MD027429
+     C                             (FctrTRCA = 'CA' AND S#FATP = 'FI'                       MD027429
+     C                             AND S#ACTN = 'D'                                         MD027429
+     C                             AND WCAAmtD >= WTRAmt)                                   MD027429
+      *                                                                                     MD027429
+     C                   MOVEL     'LEF0145'     WMsgIdArr(Wx)                              MD027429
+     C                   ELSE                                                               MD027429
+     C                   MOVEL     'LEF0146'     WMsgIdArr(Wx)                              MD027429
+     C                   ENDIF                                                              MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDSR                                                              MD027429
+      *****************************************************************                     MD027429
+      /SPACE 5                                                                              MD027429
       *****************************************************************
       * Validate Revolving Credit indicator
       *****************************************************************
      C     VLRVCR        BEGSR
- 
+
       * If the amendment type is 'RC',
       * the revolving credit indicator must be defined
- 
+
      C     S#FATP        IFEQ      'RC'
       *
      C                   SELECT
@@ -603,11 +1066,11 @@
      C                   MOVEL     'LEF0206'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDSL
- 
+
       * If the revolving credit indicator is ok so far,
       * issue a warning if the revolving credit indicator
       * differs from that on the facility
- 
+
      C     S#RVCRok      IFEQ      'Y'
      C     S#RVCR        ANDEQ     FcrvRVCR
      C                   MOVE      'W'           S#RVCRok
@@ -617,9 +1080,9 @@
      C                   ENDIF
       *
      C                   ELSE
- 
+
       * Otherwise the revolving credit indicator must be blank
- 
+
      C     S#RVCR        IFNE      *BLANKS
      C                   MOVE      'N'           S#RVCRok
      C                   ADD       1             Ix
@@ -628,7 +1091,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -636,21 +1099,21 @@
       * Validate New Expiry Date
       *****************************************************************
      C     VLNDEX        BEGSR
- 
+
       * Expiry date is mandatory for amendment type FR
- 
+
      C     S#FATP        IFEQ      'FR'
- 
+
       * New expiry date can't be blank or an invalid date
- 
+
      C     S#NDEX        IFEQ      *BLANKS
      C                   MOVE      'N'           S#NDEXok
      C                   ADD       1             Ix
      C                   MOVEL     'S#NDEX    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0208'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#NDEX        ZFIELD
      C                   Z-ADD     0             ZADEC
@@ -671,10 +1134,10 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       * If the new expiry date is ok so far
       * if can't be prior to the current facility expiry/closure date
- 
+
      C     S#NDEXok      IFEQ      'Y'
      C     fcRECI        IFEQ      'E'
      C     W#NDEX        ANDLT     fcDTEX
@@ -686,10 +1149,10 @@
      C                   MOVEL     'LEF0211'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       * If the new expiry date is ok so far
       * issue a warning if it falls on a holiday
- 
+
      C     S#NDEXok      IFEQ      'Y'
      C                   Z-ADD     W#NDEX        ZDAYNO
      C                   MOVEL     S#ACCY        ZCCY
@@ -701,20 +1164,20 @@
      C                   MOVEL     'LEF0212'     WMsgIDArr(Wx)
      C                   ENDIF
      C                   ENDIF
- 
+
       * Otherwise, expiry date must not be defined
- 
+
      C                   ELSE
- 
+
      C     S#NDEX        IFNE      *BLANKS
      C                   MOVE      'N'           S#NDEXok
      C                   ADD       1             Ix
      C                   MOVEL     'S#NDEX    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0209'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -723,22 +1186,22 @@
       *****************************************************************
      C
      C     SETF_I        BEGSR
- 
+
       ** Record Id, Branch, Facility Customer Number
- 
+
      C                   MOVEL     'D'           AMRECI
      C                   MOVE      FcbrBranch    AMBRCA
      C                   MOVEL     S#CSSN        AMCNUM
- 
+
      ** Facility Type, Facility Number, Amendment sequence number
- 
+
      C                   MOVE      S#FACT        AMFACT
      C                   MOVE      S#FCNO        AMFCNO
- 
+
      ** Value Date, Amendment Type, Amendment ccy & Amendment Amount
- 
+
      ** Convert Screen Value date to Midas day number
- 
+
      C                   MOVE      S#VLDT        ZDATEI
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        AMVLDT
@@ -753,26 +1216,26 @@
      C     CSC054        IFNE      'Y'                                                        CSC054
      C     WPEAInd       ORNE      'Y'                                                        CSC054
      C     S#SQNO        OREQ      *BLANKS                                                    CSC024
- 
+
       ** Get the next available sequence no.
- 
+
      C                   EXSR      SRSQNO
      C                   MOVE      W#SQNO        AMSQNO
      C                   ELSE                                                                 CSC024
      C                   MOVE      S#SQNO        AMSQNO                                       CSC024
      C                   ENDIF                                                                CSC024
- 
+
      C                   MOVE      S#FATP        AMFATP
      C                   MOVE      S#ACCY        AMACCY
      C                   MOVE      W#AAMT        AMAAMT
- 
+
      ** Revolving Credit Indicator, Next expiry date & record status
- 
+
      C                   MOVE      S#RVCR        AMRVCR
      C                   MOVE      S#NDEX        ZDATEI
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        AMNDEX
- 
+
      ** User
                                                                                               CAP084
       * Use the job user name or remote (java) user name as appropriate                       CAP084
@@ -780,23 +1243,23 @@
      C                   EVAL      PSUser = USRID                                             CAP084
      C                   ENDIF                                                                CAP084
      C                   MOVE      PSUser        AMIUSR
- 
+
      ** Status
       * Set record status if CLE002 is present and
       * Facility Amendment Authorise = Y.
- 
+
      C     CLE002        IFEQ      'Y'
      C     BPFAAM        ANDEQ     'Y'
      C                   MOVEL     'C'           AMASTS
      C                   ELSE
      C                   MOVEL     'A'           AMASTS
      C                   ENDIF
- 
+
      ** Original Entry Date
      C                   MOVE      BJRDNB        AMORED
- 
+
      ** PC Transaction Reference
- 
+
      C     P#MODE        IFEQ      'B'
      C     A5TNRF        ANDNE     *BLANK
      C     CLE106        OREQ      'Y'                                                        CLE106
@@ -821,21 +1284,21 @@
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
      C                   ENDIF
- 
+
       * PC Originating Branch
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      A5PCOB        AMPCOB
      C                   ELSE
      C                   MOVE      *BLANKS       AMPCOB
      C                   ENDIF
- 
+
       * Last change Date
      C                   MOVE      WProcDate     ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         AMTLCD
      C                   MOVE      S#ACTN        AMCHTP
- 
+
      C/COPY WNCPYSRC,LEH00243
      C                   ENDSR
       *****************************************************************
@@ -849,67 +1312,67 @@
       * Record id
      C                   MOVE      FcbrBranch    AMBRCA
      C                   MOVEL     S#CSSN        AMCNUM
- 
+
      ** Facility Type, Facility Number, Amendment sequence number
- 
+
      C                   MOVE      S#FACT        AMFACT
      C                   MOVE      S#FCNO        AMFCNO
      C                   MOVE      S#SQNO        AMSQNO
- 
+
      ** Convert Screen Value date to Midas day number
- 
+
      C                   MOVE      S#VLDT        ZDATEI
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        AMVLDT
- 
+
      C                   MOVE      S#FATP        AMFATP
- 
+
       * Currency
      C                   MOVE      S#ACCY        AMACCY
- 
+
       * Amount
      C                   MOVE      W#AAMT        AMAAMT
- 
+
       * Revolving Credit ind, new expiry date
- 
+
      C                   MOVE      S#RVCR        AMRVCR
- 
+
      C                   MOVE      S#NDEX        ZDATEI
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        AMNDEX
- 
+
      ** User
      C                   MOVE      PSUser        AMAUSR
      ** Status
       * Set record status if CLE002 is present and
       * Facility Amendment Authorise = Y.
- 
+
      C     CLE002        IFEQ      'Y'
      C     BPFAAM        ANDEQ     'Y'
- 
+
       * Status = 'R' if previous status was 'A', otherwise status = 'C'
- 
+
      C     AMASTS        IFEQ      'A'
      C     AMASTS        OREQ      'R'
      C                   MOVEL     'R'           AMASTS
      C                   ELSE
      C                   MOVEL     'C'           AMASTS
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVEL     'A'           AMASTS
      C                   ENDIF
- 
+
      ** Original Entry Date
      C                   MOVE      *BLANKS       AMORED
- 
+
       * Last change Date
      C                   MOVE      WProcDate     ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         AMTLCD
      C                   MOVE      S#ACTN        AMCHTP
- 
- 
+
+
      C/COPY WNCPYSRC,LEH00244
      C                   ENDSR
      C
@@ -919,9 +1382,9 @@
       * SRSQNO  -  Get Sequence No.                                   *
       *****************************************************************
      C     SRSQNO        BEGSR
- 
+
       * Set up FCAMK key
- 
+
      C                   MOVE      AMCNUM        K#CNUM
      C                   MOVE      AMFACT        K#FACT
      C                   MOVE      AMFCNO        K#FCNO
@@ -929,7 +1392,7 @@
      C**********         Z-ADD     *ZERO         K#SQNO                                     MD024398
      C                   Z-ADD     999           K#SQNO                                     MD024398
      C                   Z-ADD     1             W#SQNO            3 0
- 
+
      C                   EVAL      wSeqFlag = 'N'                                           MD024398
                                                                                             MD024398
      C                   IF        CLE025 = 'Y'  AND                                          CLE041
@@ -978,7 +1441,7 @@
      C                                                                                      MD024398
      C     FCAMK         SETLL     LEFCAML3
      C     FCAMKV        READE     LEFCAML3                               80
- 
+
      C     *IN80         DOWEQ     *OFF
      C     SQSQNO        ANDEQ     W#SQNO
      C                   ADD       1             W#SQNO
@@ -1000,7 +1463,7 @@
      C                   ENDDO                                                              AR693564
                                                                                               CLE041
      C                   ENDIF                                                                CLE041
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1052,30 +1515,44 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                     MD027429
+     C     ZCONVZ1       BEGSR                                                              MD027429
+     C                   CALLB     'ZCONVZ1'                                                MD027429
+     C                   PARM                    ZAMTCI           15 0                      MD027429
+     C                   PARM                    ZEXCH            13 8                      MD027429
+     C                   PARM                    ZMD               1                        MD027429
+     C                   PARM                    ZCCYI             3                        MD027429
+     C                   PARM                    ZCCYO             3                        MD027429
+     C                   PARM                    ZCDPI             1 0                      MD027429
+     C                   PARM                    ZCDPO             1 0                      MD027429
+     C                   PARM                    ZAMTCO           15 0                      MD027429
+     C                   ENDSR                                                              MD027429
+      *****************************************************************                     MD027429
+      /SPACE 5                                                                              MD027429
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Facility Amendment Details in screen format
      C                   PARM                    FAMD
- 
+
       * Value date of amendment
      C                   PARM                    W#VLDT            5 0
- 
+
       * Generated by assignment
      C                   PARM                    A5GASS            1
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1100,21 +1577,21 @@
      C                   PARM                    FcDTEX            5 0
      C                   PARM                    FcCDTE            5 0
      C/COPY WNCPYSRC,LEH00245
- 
+
       * Front Office Inputs (if mode = 'B')
      C                   PARM                    A5PCOB            3
      C                   PARM                    A5TNRF           15
- 
+
       * Facility run dates
       * Facility drawn amount
      C                   PARM                    @RUNA
      C                   PARM                    @OAMA
       *
       * OUTPUTS
- 
+
       * Amendment amount
      C                   PARM                    W#AAMT           13 0
- 
+
       * Field OK flags
      C                   PARM                    FAMD_OK
       *
@@ -1132,7 +1609,7 @@
      C                   PARM                    Wx                3 0
       * Valid Amendment from/to caller
      C                   PARM                    VFAMD
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -1148,23 +1625,23 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CLE002 - Lending Authorisations - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE002'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE002
      C                   ELSE
      C                   MOVEL     'N'           CLE002            1
      C                   ENDIF
- 
+
       ** Retrieve customer lending data, if CLE002 is Installed
- 
+
      C     CLE002        IFEQ      'Y'
       *
      C                   CALL      'AOCLNDR0'
@@ -1180,10 +1657,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
       ** CSC011 is made redundant feature, no need to check                                 MD024398
- 
+
      C**********         CALLB     'AOSARDR0'                                               MD024398
      C**********         PARM      *BLANKS       PRTCD                                      MD024398
      C**********         PARM      '*VERIFY'     POPTN                                      MD024398
@@ -1210,26 +1687,26 @@
      C**********         ENDIF                                                              MD024398
       **********                                                                            MD024398
      C**********         ENDIF                                                              MD024398
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
      C                   ELSE
      C                   EVAL      WProcDate = BJRDNB
      C                   ENDIF
- 
+
       ** Determine if CLE014 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
      C     SCSARD        PARM      SCSARD        DSSDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE014            1
      C                   ELSE
@@ -1299,7 +1776,7 @@
      C                   EVAL      WPEAInd = 'Y'                                              CSC054
      C                   ENDIF                                                                CSC024
      C                   ENDIF                                                                CSC024
- 
+
       ** Access Switchable SAR details for the existence of CLE025                            CLE041
                                                                                               CLE041
      C                   CALLB     'AOSARDR0'                                                 CLE041
@@ -1339,27 +1816,55 @@
      C                   ENDIF                                                                CLE106
      C/COPY WNCPYSRC,LEH00246
       *                                                                                       CLE106
- 
+      ** Access Currency Files                                                              MD027429
+      *                                                                                     MD027429
+     C                   Z-ADD     1             X                 3 0                      MD027429
+      *                                                                                     MD027429
+     C                   CALLB     'AOCURRR0'                                               MD027429
+     C                   PARM      *BLANKS       @RTCD                                      MD027429
+     C                   PARM      '*FIRST '     @OPTN                                      MD027429
+     C                   PARM                    @CYCD             3                        MD027429
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD027429
+      *                                                                                     MD027429
+     C                   MOVE      A6CYCD        CYA(X)                                     MD027429
+     C                   MOVE      A6NBDP        NDP(X)                                     MD027429
+      *                                                                                     MD027429
+     C     @RTCD         DOWNE     '*EOF    '                                               MD027429
+     C                   ADD       1             X                                          MD027429
+      *                                                                                     MD027429
+     C                   CALLB     'AOCURRR0'                                               MD027429
+     C                   PARM      *BLANKS       @RTCD                                      MD027429
+     C                   PARM      '*NEXT  '     @OPTN                                      MD027429
+     C                   PARM                    @CYCD                                      MD027429
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD027429
+      *                                                                                     MD027429
+     C     @RTCD         IFNE      '*EOF    '                                               MD027429
+     C                   MOVE      A6CYCD        CYA(X)                                     MD027429
+     C                   MOVE      A6NBDP        NDP(X)                                     MD027429
+     C                   ENDIF                                                              MD027429
+      *                                                                                     MD027429
+     C                   ENDDO                                                              MD027429
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
      C     *LIKE         DEFINE    VLDT          K#VLDT
      C     *LIKE         DEFINE    SQNO          K#SQNO
- 
+
       ** Key lists
- 
+
      C     FCAMKP        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
- 
+
      C     FCAMK         KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
      C                   KFLD                    K#VLDT
      C                   KFLD                    K#SQNO
- 
+
      C     FCAMKV        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -1370,9 +1875,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

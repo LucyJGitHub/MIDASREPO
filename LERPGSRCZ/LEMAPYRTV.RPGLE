@@ -76,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -338,7 +340,7 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
       *                                                                         CAP084
@@ -397,7 +399,7 @@
                                                                                               CSC024
      D CAP086          S              1A                                                      CAP086
      D CLE056          S              1A                                                      CLE056
- 
+
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
@@ -425,7 +427,7 @@
      D SVAL9           S            200A                                                      CLE148
      D SVALK0          S             20A                                                      CLE148
      D SVAL10          S            200A                                                      CLE148
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -436,7 +438,7 @@
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** Ê                                                                Ê
       ** Ê Initial processing is performed automatically: the *inzsr is   Ê
@@ -454,7 +456,7 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
       *                                                                                      BUG8550
      C                   EXSR      INIT
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C**********         CALL      'SFC000026'                                       CAP084 MD024398
      C**********         PARM      *BLANKS       USER             10                 CAP084 MD024398
@@ -490,7 +492,7 @@
      C     OKESEQ        OREQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF                                                  *FRONT
       *
       ***  Validate Key fields and Input details
@@ -514,9 +516,9 @@
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
- 
+
       ***  Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -898,12 +900,12 @@
      C                   Eval      K@FCNO = CL_FSEQ
       *
      C     K@FCLTY       CHAIN     FCLTY                              99
- 
+
      C                   IF        *IN99 = *On or                               Not Found
      C                             *IN99 = *Off and FC_RECI = 'E' or            Expired
      C                             CLE005 = 'Y' and
      C                             *IN99 = *Off and FC_RECI = 'C'               Closed
- 
+
       ***  No Facility Found,
       *
      C                   If        *IN99 = *on                                  Not Found
@@ -1358,7 +1360,7 @@
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
- 
+
       ***  'Value date is Mandatory and in valid format
       *
      C                   MOVEL     'LEM0106'     MsgIdArr(Ix)
@@ -1382,7 +1384,7 @@
      c                   Endif
       *
      c                   if        DDACTN = 'I'                                 insert Validation
- 
+
       ***  1) Expected Sequence is mandatory when Insert and Expected Value Date was input
       *
      C                   If        DDESEQ = *BLANKS and DDEVAL <> *BLANKS
@@ -1395,7 +1397,7 @@
      C                   MOVEL     'LEM0202'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  2) Expected Value Date must be input if Action ='I' and Exp. seq. is input.
       *
      C                   If        DDESEQ <> *BLANKS and DDEVAL = *BLANKS
@@ -1403,13 +1405,13 @@
      C                   ADD       1             Ix
      C**********         MOVEL     'DDESEQ'      FldNameArr(Ix)                              BUG4326
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)                              BUG4326
- 
+
       ***  'Please, fill in Expected Date when Expected sequence is filled in (when Insert).'
       *
      C                   MOVEL     'LEM0210'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  3) Expected Value date may be LN or a valid numeric
       *
       * Allow lower case entry                                                               BUG4326
@@ -1430,7 +1432,7 @@
      C                   MOVE      'N'           OKESEQ
      C                   ADD       1             Ix
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
- 
+
       ***  'Invalid or wrong format for sequence number'
       *
      C                   MOVEL     'LEM0031'     MsgIdArr(Ix)
@@ -1439,7 +1441,7 @@
      c                   endif                                                  'LN '
       *
      C                   endif                                                  DDACTN = 'I'
- 
+
       *
       ***  Other Validation : Check Manual Repayment Loan Amendment
       ***  Access loan amendment record what ever Action Code is.

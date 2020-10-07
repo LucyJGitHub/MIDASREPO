@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054637           Date 04Nov19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. CLE172             Date 10Aug20               *
+      *  Prev Amend No. MD054637           Date 04Nov19               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD054101           Date 08Aug19               *
       *                 MD053950           Date 16Jul19               *
       *                 MD053873           Date 10Jul19               *
@@ -166,6 +167,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172   - LIBOR Deregulation - Lending                      *
       *  MD054637 - Wrong value was retrieved for system value        *
       *             'Retail Projected Days' caused by MD22382A changes*
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -669,6 +671,7 @@
 0065 F*       81      TEMP NOSTRO TRAILER READ
 0066 F*       82      NOSTRO EVENT TRAILER READ
       *       83      Read of Fee Detail Main and Extension File      *                     MD052216
+      *       88      CLE172 switched on                                                      CLE172
      F*       89      DEALING EVENT-SUPPRESS RATE                         S01108
      E/EJECT
      E******************* CPY@    1   1 80                        *****   S01194
@@ -1785,6 +1788,31 @@
      C           @RTCD     IFEQ *BLANKS                                                       CRE020
      C                     MOVE 'Y'       CRE020                                              CRE020
      C                     ENDIF                                                              CRE020
+      *                                                                                       CLE172
+      ** Determine if feature CLE172 is installed.                                            CLE172
+      *                                                                                       CLE172
+     C                     MOVE *OFF      *IN88                                               CLE172
+      *                                                                                       CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM '       ' @RTCD                                               CLE172
+     C                     PARM '*VERIFY' @OPTN                                               CLE172
+     C                     PARM 'CLE172'  @KEY                                                CLE172
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFNE *BLANKS                                                       CLE172
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE172
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE172
+     C                     MOVEL'CLE172'  DBKEY                                               CLE172
+     C                     MOVEL'015'     DBASE                                               CLE172
+     C                     MOVE *ON       *INU7                                               CLE172
+     C                     MOVE *ON       *INU8                                               CLE172
+     C                     MOVE *ON       *INLR                                               CLE172
+     C                     EXSR *PSSR                                                         CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFEQ *BLANKS                                                       CLE172
+     C                     MOVE *ON       *IN88                                               CLE172
+     C                     ENDIF                                                              CLE172
       *                                                                   CDL006
       ** If feature CDL006 is installed.                                  CDL006
       *                                                                   CDL006
@@ -2188,6 +2216,7 @@
      C                     MOVE *BLANKS   NRTD                            178438
      C                     MOVE *BLANKS   NRTC                                              MD036589
      C                     MOVE *BLANKS   OTR1                                              MD044815
+     C                     MOVE *BLANKS   PRFR                                                CLE172
      C*                                                                   178438
      C/COPY WNCPYSRC,GL0580CP18                                           S01408
      C*                                                                   S01408
@@ -4146,6 +4175,7 @@
      C                     KFLD           ETP                                                 237466
      C                     KFLD           EDAT                                                237466
      C           KLOAN     CHAINLVENTELF             80                                       237466
+     C                     MOVE PRFL      PRFR    1                                           CLE172
       *                                                                                       237466
       ** Key list for CLOANCL of CLOAN.                                                       237466
       *                                                                                       237466
@@ -4866,8 +4896,11 @@
      O                                   57 'TRANSACTION  EVENT'          209995
 0856 O**********                         57 'LOAN/DEAL  EVENT'            209995
 0856 O                                   70 ' RATE / '                    178438
-0857 O                                   92 'FED        INCOMING'
-0858 O                                  111 'OUTGOING'
+0857 O**********                         92 'FED        INCOMING'                             CLE172
+0858 O**********                        111 'OUTGOING'                                        CLE172
+     O                                   92 'FED       INCOMING'                              CLE172
+     O                                  109 'OUTGOING'                                        CLE172
+     O                 88               132 'PROV'                                            CLE172
 0859 O*****   D  1     L2                                         *****   S01117
 0860 O*****  OR       NL2 OF                                      *****   S01117
 0859 O        D  1     L2 55                                              S01117
@@ -4881,11 +4914,15 @@
 0861 O                                   21 'DATE        CUSTOMER'
 0862 O                                   57 'NUMBER     TYPE'             178438
 0856 O                                   70 'SECURITY'                    178438
-0863 O                                   90 'FDS         AMOUN'           178438
+0863 O**********                         90 'FDS         AMOUN'                        178438 CLE172
+     O                                   90 'FDS        AMOUN'                                CLE172
 0862 O***********************************66 'NUMBER     TYPE       RA'    178438
 0863 O***********************************90 'TE     FDS         AMOUN'    178438
-0864 O                                  110 'T             AMOUNT'
-0865 O                                  128 'BALANCE'
+0864 O**********                        110 'T             AMOUNT'                            CLE172
+0865 O**********                        128 'BALANCE'                                         CLE172
+     O                                  109 'T            AMOUNT'                             CLE172
+     O                                  125 'BALANCE'                                         CLE172
+     O                 88               132 'RATE'                                            CLE172
 0866 O********D*11*****MR 01 21                                           LN0819
 0866 O*******AND*******55                                           S01117LN0819
 0867 O****   OR        01N21                                      *****   S01117
@@ -4925,10 +4962,14 @@
 0879 O***********************31NOBL     131 '  ,   ,   ,   , 0 . -'       LN0819
 0880 O***********************32NOBL     131 ' ,   ,   ,   , 0 .  -'       LN0819
 0881 O***********************33NOBL     131 '   ,   ,   , 0 .   -'        LN0819
-0878 O                       30@NOBL    131 '   ,   ,   ,   , 0 -'        LN0819
-0879 O                       31@NOBL    131 '  ,   ,   ,   , 0 . -'       LN0819
-0880 O                       32@NOBL    131 ' ,   ,   ,   , 0 .  -'       LN0819
-0881 O                       33@NOBL    131 '   ,   ,   , 0 .   -'        LN0819
+0878 O**********             30@NOBL    131 '   ,   ,   ,   , 0 -'                     LN0819 CLE172
+0879 O**********             31@NOBL    131 '  ,   ,   ,   , 0 . -'                    LN0819 CLE172
+0880 O**********             32@NOBL    131 ' ,   ,   ,   , 0 .  -'                    LN0819 CLE172
+0881 O**********             33@NOBL    131 '   ,   ,   , 0 .   -'                     LN0819 CLE172
+     O                       30@NOBL    128 '   ,   ,   ,   , 0 -'                            CLE172
+     O                       31@NOBL    128 '  ,   ,   ,   , 0 . -'                           CLE172
+     O                       32@NOBL    128 ' ,   ,   ,   , 0 .  -'                           CLE172
+     O                       33@NOBL    128 '   ,   ,   , 0 .   -'                            CLE172
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP1                                           S01408
      O*                                                                   S01408
@@ -4938,10 +4979,14 @@
 0882 O        E 10     52 53 55@BALIN                                     LN0819
      O       AND       MR                                                 LN0730
      O/COPY WNCPYSRC,GL0580O002
-0878 O                       30NOBL     131 '   ,   ,   ,   , 0 -'
-0879 O                       31NOBL     131 '  ,   ,   ,   , 0 . -'
-0880 O                       32NOBL     131 ' ,   ,   ,   , 0 .  -'
-0881 O                       33NOBL     131 '   ,   ,   , 0 .   -'
+0878 O**********             30NOBL     131 '   ,   ,   ,   , 0 -'                            CLE172
+0879 O**********             31NOBL     131 '  ,   ,   ,   , 0 . -'                           CLE172
+0880 O**********             32NOBL     131 ' ,   ,   ,   , 0 .  -'                           CLE172
+0881 O**********             33NOBL     131 '   ,   ,   , 0 .   -'                            CLE172
+     O                       30NOBL     128 '   ,   ,   ,   , 0 -'                            CLE172
+     O                       31NOBL     128 '  ,   ,   ,   , 0 . -'                           CLE172
+     O                       32NOBL     128 ' ,   ,   ,   , 0 .  -'                           CLE172
+     O                       33NOBL     128 '   ,   ,   , 0 .   -'                            CLE172
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OOP9                                           S01408
      O*                                                                   S01408
@@ -5029,14 +5074,23 @@
 0905 O********            46 32EAMT     111 '  ,   ,   , 0 .  '           S01119
 0906 O********            46 33EAMT     111 ' ,   ,   , 0 .   '           S01119
 0902 O*                                                                   S01119
-0898 O                 44 45 30EAMT  J   93                               S01119
-0899 O                 44 45 31EAMT      93 '   ,   ,   , 0 . -'          S01119
-0900 O                 44 45 32EAMT      93 '  ,   ,   , 0 .  -'          S01119
-0901 O                 44 45 33EAMT      93 ' ,   ,   , 0 .   -'          S01119
-0903 O                 44 46 30EAMT  J  111                               S01119
-0904 O                 44 46 31EAMT     111 '   ,   ,   , 0 . -'          S01119
-0905 O                 44 46 32EAMT     111 '  ,   ,   , 0 .  -'          S01119
-0906 O                 44 46 33EAMT     111 ' ,   ,   , 0 .   -'          S01119
+0898 O**********       44 45 30EAMT  J   93                                            S01119 CLE172
+0899 O**********       44 45 31EAMT      93 '   ,   ,   , 0 . -'                       S01119 CLE172
+0900 O**********       44 45 32EAMT      93 '  ,   ,   , 0 .  -'                       S01119 CLE172
+0901 O**********       44 45 33EAMT      93 ' ,   ,   , 0 .   -'                       S01119 CLE172
+0903 O**********       44 46 30EAMT  J  111                                            S01119 CLE172
+0904 O**********       44 46 31EAMT     111 '   ,   ,   , 0 . -'                       S01119 CLE172
+0905 O**********       44 46 32EAMT     111 '  ,   ,   , 0 .  -'                       S01119 CLE172
+0906 O**********       44 46 33EAMT     111 ' ,   ,   , 0 .   -'                       S01119 CLE172
+     O                 44 45 30EAMT  J   92                                                   CLE172
+     O                 44 45 31EAMT      92 '   ,   ,   , 0 . -'                              CLE172
+     O                 44 45 32EAMT      92 '  ,   ,   , 0 .  -'                              CLE172
+     O                 44 45 33EAMT      92 ' ,   ,   , 0 .   -'                              CLE172
+     O                 44 46 30EAMT  J  109                                                   CLE172
+     O                 44 46 31EAMT     109 '   ,   ,   , 0 . -'                              CLE172
+     O                 44 46 32EAMT     109 '  ,   ,   , 0 .  -'                              CLE172
+     O                 44 46 33EAMT     109 ' ,   ,   , 0 .   -'                              CLE172
+     O                 88      PRFR     130                                                   CLE172
 0902 O*                                                                   S03220
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0580OP14                                           S01408
@@ -5053,14 +5107,22 @@
 0895 O                 27      TABNM2    59                                                   CLE028
 0894 O                         EXRT      73 '   0 .        '              S03220
 0896 O                                   75 'N'                           S03220
-0898 O                    45 30EAMT  1   93                               S03220
-0899 O                    45 31EAMT      93 '   ,   ,   , 0 . '           S03220
-0900 O                    45 32EAMT      93 '  ,   ,   , 0 .  '           S03220
-0901 O                    45 33EAMT      93 ' ,   ,   , 0 .   '           S03220
-0903 O                    46 30EAMT  1  111                               S03220
-0904 O                    46 31EAMT     111 '   ,   ,   , 0 . '           S03220
-0905 O                    46 32EAMT     111 '  ,   ,   , 0 .  '           S03220
-0906 O                    46 33EAMT     111 ' ,   ,   , 0 .   '           S03220
+0898 O**********          45 30EAMT  1   93                                            S03220 CLE172
+0899 O**********          45 31EAMT      93 '   ,   ,   , 0 . '                        S03220 CLE172
+0900 O**********          45 32EAMT      93 '  ,   ,   , 0 .  '                        S03220 CLE172
+0901 O**********          45 33EAMT      93 ' ,   ,   , 0 .   '                        S03220 CLE172
+0903 O**********          46 30EAMT  1  111                                            S03220 CLE172
+0904 O**********          46 31EAMT     111 '   ,   ,   , 0 . '                        S03220 CLE172
+0905 O**********          46 32EAMT     111 '  ,   ,   , 0 .  '                        S03220 CLE172
+0906 O**********          46 33EAMT     111 ' ,   ,   , 0 .   '                        S03220 CLE172
+     O                    45 30EAMT  1   92                                                   CLE172
+     O                    45 31EAMT      92 '   ,   ,   , 0 . '                               CLE172
+     O                    45 32EAMT      92 '  ,   ,   , 0 .  '                               CLE172
+     O                    45 33EAMT      92 ' ,   ,   , 0 .   '                               CLE172
+     O                    46 30EAMT  1  109                                                   CLE172
+     O                    46 31EAMT     109 '   ,   ,   , 0 . '                               CLE172
+     O                    46 32EAMT     109 '  ,   ,   , 0 .  '                               CLE172
+     O                    46 33EAMT     109 ' ,   ,   , 0 .   '                               CLE172
 0902 O*                                                                   S03220
 0902 O*                                                                   S01119
      O*                                                                   S01408
@@ -5075,14 +5137,22 @@
      O                 27      TABNM2    59                                                   CAP204
      O                         EXRT      73 '   0 .        '                                  CAP204
      O                                   75 'N'                                               CAP204
-     O                    45 30EAMT  1   93                                                   CAP204
-     O                    45 31EAMT      93 '   ,   ,   , 0 . '                               CAP204
-     O                    45 32EAMT      93 '  ,   ,   , 0 .  '                               CAP204
-     O                    45 33EAMT      93 ' ,   ,   , 0 .   '                               CAP204
-     O                    46 30EAMT  1  111                                                   CAP204
-     O                    46 31EAMT     111 '   ,   ,   , 0 . '                               CAP204
-     O                    46 32EAMT     111 '  ,   ,   , 0 .  '                               CAP204
-     O                    46 33EAMT     111 ' ,   ,   , 0 .   '                               CAP204
+     O**********          45 30EAMT  1   93                                            CAP204 CLE172
+     O**********          45 31EAMT      93 '   ,   ,   , 0 . '                        CAP204 CLE172
+     O**********          45 32EAMT      93 '  ,   ,   , 0 .  '                        CAP204 CLE172
+     O**********          45 33EAMT      93 ' ,   ,   , 0 .   '                        CAP204 CLE172
+     O**********          46 30EAMT  1  111                                            CAP204 CLE172
+     O**********          46 31EAMT     111 '   ,   ,   , 0 . '                        CAP204 CLE172
+     O**********          46 32EAMT     111 '  ,   ,   , 0 .  '                        CAP204 CLE172
+     O**********          46 33EAMT     111 ' ,   ,   , 0 .   '                        CAP204 CLE172
+     O                    45 30EAMT  1   92                                                   CLE172
+     O                    45 31EAMT      92 '   ,   ,   , 0 . '                               CLE172
+     O                    45 32EAMT      92 '  ,   ,   , 0 .  '                               CLE172
+     O                    45 33EAMT      92 ' ,   ,   , 0 .   '                               CLE172
+     O                    46 30EAMT  1  109                                                   CLE172
+     O                    46 31EAMT     109 '   ,   ,   , 0 . '                               CLE172
+     O                    46 32EAMT     109 '  ,   ,   , 0 .  '                               CLE172
+     O                    46 33EAMT     109 ' ,   ,   , 0 .   '                               CLE172
      O*                                                                   S01408
      O        D 10     MR 20 70                                           073714
 0887 O       AND       55                                                 073714
@@ -5097,14 +5167,22 @@
 0893 O**********               TABNAM    59                                            073714 CLE028
      O                N27      TABNAM    59                                                   CLE028
      O                 27      TABNM2    59                                                   CLE028
-0898 O                 44 45 30EAMT  J   93                               073714
-0899 O                 44 45 31EAMT      93 '   ,   ,   , 0 . -'          073714
-0900 O                 44 45 32EAMT      93 '  ,   ,   , 0 .  -'          073714
-0901 O                 44 45 33EAMT      93 ' ,   ,   , 0 .   -'          073714
-0903 O                 44 46 30EAMT  J  111                               073714
-0904 O                 44 46 31EAMT     111 '   ,   ,   , 0 . -'          073714
-0905 O                 44 46 32EAMT     111 '  ,   ,   , 0 .  -'          073714
-0906 O                 44 46 33EAMT     111 ' ,   ,   , 0 .   -'          073714
+0898 O**********       44 45 30EAMT  J   93                                            073714 CLE172
+0899 O**********       44 45 31EAMT      93 '   ,   ,   , 0 . -'                       073714 CLE172
+0900 O**********       44 45 32EAMT      93 '  ,   ,   , 0 .  -'                       073714 CLE172
+0901 O**********       44 45 33EAMT      93 ' ,   ,   , 0 .   -'                       073714 CLE172
+0903 O**********       44 46 30EAMT  J  111                                            073714 CLE172
+0904 O**********       44 46 31EAMT     111 '   ,   ,   , 0 . -'                       073714 CLE172
+0905 O**********       44 46 32EAMT     111 '  ,   ,   , 0 .  -'                       073714 CLE172
+0906 O**********       44 46 33EAMT     111 ' ,   ,   , 0 .   -'                       073714 CLE172
+     O                 44 45 30EAMT  J   92                                                   CLE172
+     O                 44 45 31EAMT      92 '   ,   ,   , 0 . -'                              CLE172
+     O                 44 45 32EAMT      92 '  ,   ,   , 0 .  -'                              CLE172
+     O                 44 45 33EAMT      92 ' ,   ,   , 0 .   -'                              CLE172
+     O                 44 46 30EAMT  J  109                                                   CLE172
+     O                 44 46 31EAMT     109 '   ,   ,   , 0 . -'                              CLE172
+     O                 44 46 32EAMT     109 '  ,   ,   , 0 .  -'                              CLE172
+     O                 44 46 33EAMT     109 ' ,   ,   , 0 .   -'                              CLE172
 0907 O********D*10*****MR 04 70                                           LN0819
 0907 O*******AND*******55                                           S01117LN0819
 0908 O*******OR*10*****MR 05 70                                           LN0819
@@ -5158,10 +5236,14 @@
 0913 O*****************44    31NOBL14   131 ' ,   ,   ,   , 0 . -'  S01119LN0819
 0914 O*****************44    32NOBL14   131 '   ,   ,   , 0 .  -'   S01119LN0819
 0915 O*****************44    33NOBL14   131 '  ,   ,   , 0 .   -'   S01119LN0819
-0912 O                       30NOBL14   131 '  ,   ,   ,   , 0 -'         LN0819
-0913 O                       31NOBL14   131 ' ,   ,   ,   , 0 . -'        LN0819
-0914 O                       32NOBL14   131 '   ,   ,   , 0 .  -'         LN0819
-0915 O                       33NOBL14   131 '  ,   ,   , 0 .   -'         LN0819
+0912 O**********             30NOBL14   131 '  ,   ,   ,   , 0 -'                      LN0819 CLE172
+0913 O**********             31NOBL14   131 ' ,   ,   ,   , 0 . -'                     LN0819 CLE172
+0914 O**********             32NOBL14   131 '   ,   ,   , 0 .  -'                      LN0819 CLE172
+0915 O**********             33NOBL14   131 '  ,   ,   , 0 .   -'                      LN0819 CLE172
+     O                       30NOBL14   128 '  ,   ,   ,   , 0 -'                             CLE172
+     O                       31NOBL14   128 ' ,   ,   ,   , 0 . -'                            CLE172
+     O                       32NOBL14   128 '   ,   ,   , 0 .  -'                             CLE172
+     O                       33NOBL14   128 '  ,   ,   , 0 .   -'                             CLE172
      O*                                                                   S01117
 0911 O        T 2      LR U7 U8                                           S01117
 0911 O       AND       55                                                 S01117

@@ -50,7 +50,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(ACCNTABF)
      FREACR     IF   E           K DISK    INFSR(*PSSR)
@@ -67,8 +67,8 @@
      F                                     PREFIX(D_)                                         217184
      FACCNTBXC  IF   E           K DISK                                                       217184
      FMXRISLPD  IF   E           K DISK    INFSR(*PSSR) USROPN
- 
- 
+
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
@@ -82,10 +82,10 @@
      D MsgFArray       S             10A   DIM(MsgFArrMax)                                   BUG6417
                                                                                              BUG6417
       *****************************************************************
- 
+
      D*P_ACOD**********S             10  0                                            CGL029 BUG6417
      D I_RACCID        S             24                                                       CGL029
- 
+
      D #_CRTD          S              1    DIM(66) CTDATA PERRCD(66)
      D #_OVR1          S              1    DIM(55) CTDATA PERRCD(55)
      D #_OVR2          S              1    DIM(55) CTDATA PERRCD(55)
@@ -96,12 +96,12 @@
      D ZIN1            S             18  5 DIM(11)                                            217184
      D ZIA             S             15  0 DIM(11)                                            217184
      D ZIA1            S             15  5 DIM(11)                                            217184
- 
- 
+
+
      D #_BALS          S             75    DIM(1000)
      D #_BALSR         S             75    DIM(30)
- 
- 
+
+
       * Account ID
      D                 DS
      D***ACCID**                 1     18                                                     CGL029
@@ -114,8 +114,8 @@
      D***ASN****                17     18S 0                                                  CGL029
      D ACD                    13     22S 0                                                    CGL029
      D ASN                    23     24S 0                                                    CGL029
- 
- 
+
+
       * Balance
      D                 DS
      D BALANCE                 1     75
@@ -126,13 +126,13 @@
      D EINTRT                 43     55
      D EINTAC                 56     72
      D ECCY                   73     75
- 
- 
+
+
      D                 DS
      D ZOUT21                  1     21
      D ZOUT21Sign             21     21
      D ZOUT21Edit              1     22
- 
+
      D WDRAT           DS            72                                                       217184
      D  ZIRD                   1     66P 7                                                    217184
      D                                     DIM(11)                                            217184
@@ -220,7 +220,7 @@
      D  ZDAYX                  3      4  0                                                    217184
      D  ZYEARX                 5      6  0                                                    217184
                                                                                               217184
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
@@ -229,37 +229,37 @@
       ** Currency Details
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs
- 
- 
+
+
      IACCNTABF
      I              DRIS                        XDRIS
      I              CRIS                        XCRIS
- 
- 
+
+
       /SPACE 5
- 
+
       * Clear outputs
- 
+
      C                   MOVEL     *BLANK        Buffer
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIDArr
      C                   MOVEL     *BLANK        MsgDtaArr
      C                   MOVEL     *BLANK        APIRetc
- 
+
      C                   Z-ADD     0             X                 3 0
      C                   Z-ADD     *ZERO         CoLR              5 0
      C                   Z-ADD     *ZERO         CoLT              5 0
- 
+
       * Requested Account ID
- 
+
      C                   MOVEL     I_RACCID      ACCID
- 
+
       * Access Account
- 
+
      C                   EXSR      ACS_ACCNT
- 
+
       * 'Account not found'
- 
+
      C     *IN60         IFEQ      '1'
      C                   ADD       1             X
      C                   MOVEL     'ACCID '      FldNameArr(X)
@@ -267,9 +267,9 @@
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
       * 'This Account type is not Retail.'
- 
+
      C     ATYP          IFNE      'R'
      C                   ADD       1             X
      C                   MOVEL     'ACCDID'      FldNameArr(X)
@@ -277,9 +277,9 @@
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
       * Start point
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     I_SPnt        ZFIELD
      C                   CALLB     'ZALIGN'
@@ -287,34 +287,34 @@
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   PARM      5             ZADIG             2 0
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        SPnt              5 0
      C                   ELSE
      C                   Z-ADD     1             SPnt
      C                   ENDIF
- 
+
       * Access Retail Accrued Interest
- 
+
      C                   EXSR      ACS_REACR
- 
+
       * Access Retail Interest and Charges
- 
+
      C                   EXSR      ACS_REIAC
- 
+
       * Access Currency
- 
+
      C                   EXSR      ACS_CURR
                                                                                               217184
       * If REACR date is less than History Date, calculate extra interest and add to R_DAIC1  217184
                                                                                               217184
      C                   EXSR      CAL_XINTR                                                  217184
- 
+
       * Extract Statement Lines
       * D E B I T
- 
+
      C     I_R_DR_CR     IFEQ      'D'
- 
+
      C                   Z-ADD     BJRDNB        HISD                                         217184
      C     BMLDAI        IFEQ      'Y'
      C*****BJRDNB********SUB       1             HISD                                         217184
@@ -332,12 +332,12 @@
      C                   MOVEL     'D'           DRCRIN
      C                   EXSR      EXT_LINES
      C                   ENDIF
- 
+
       * Extract Statement Lines
       * C R E D I T
- 
+
      C     I_R_DR_CR     IFEQ      'C'
- 
+
      C                   Z-ADD     BJRDNB        HISD                                         217184
      C     BMLDAI        IFEQ      'Y'
      C*****BJRDNB********SUB       1             HISD                                         217184
@@ -355,20 +355,20 @@
      C                   MOVEL     'C'           DRCRIN
      C                   EXSR      EXT_LINES
      C                   ENDIF
- 
+
       * Read the statement lines
- 
+
      C                   EXSR      READ_LINES
- 
+
       * Get balances
- 
+
      C     Spnt          IFGT      0
      C     Spnt          ANDLE     CoLT
      C                   MOVEA     #_BALS(SPnt)  #_BALSR
      C                   ENDIF
- 
+
       * Determine count of lines returned
- 
+
      C                   Z-ADD     1             X
      C     X             DOUGT     30
      C                   MOVEL     #_BALSR(X)    BALANCE
@@ -377,62 +377,62 @@
      C                   ENDIF
      C                   ADD       1             X
      C                   ENDDO
- 
+
       * Return count of lines returned, total count of lines and  balances
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      CoLR          ZFIELD
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   MOVE      ZFIELD        E_CoLR            5
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      CoLT          ZFIELD
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   MOVE      ZFIELD        E_CoLT            5
- 
+
      C                   MOVEA     #_BALSR       D#_BALSR       3000
      C                   EVAL      Buffer = E_CoLR + E_CoLT + D#_BALSR
- 
+
       * End of program
- 
+
      C                   SETON                                        LR
- 
+
       /SPACE 5
       *****************************************************************
       * Read the statement lines
       *****************************************************************
      C     READ_LINES    BEGSR
- 
+
       * Read all balances for a/c
- 
+
      C     RISLK         SETLL     MXRISLP0
      C     RISLK         READE     MXRISLP0                               99    *
      C     *IN99         DOWEQ     '0'
      C     RECTYP        ANDNE     ' '
      C     RISLK         READE     MXRISLP0                               99    *
      C                   ENDDO
- 
+
       * Do while balances found
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
       * Format a balance
- 
+
      C                   EXSR      FMT_BALANCE
      C                   ADD       1             CoLT                           *
      C                   MOVEL     BALANCE       #_BALS(CoLT)
- 
+
      C     RISLK         READE     MXRISLP0                               99    *
      C     *IN99         DOWEQ     '0'
      C     RECTYP        ANDNE     ' '
      C     RISLK         READE     MXRISLP0                               99    *
      C                   ENDDO
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -440,39 +440,39 @@
       * Format Balance
       *****************************************************************
      C     FMT_BALANCE   BEGSR
- 
+
      C                   CLEAR                   BALANCE
- 
+
       * Start date
- 
+
      C                   Z-ADD     SDATE         ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        ESDAT
- 
+
       * End date
- 
+
      C                   Z-ADD     EDATE         ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        EEDAT
- 
+
       * A/c balance
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      ACBAL         ZFLD15
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21Edit    EACBAL
- 
+
       * No of days
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      NODYS         ZFLD15
      C                   Z-ADD     0             ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        ENODYS
- 
+
       * Interest rate
- 
+
      C     INTRT         IFNE      *ZERO
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      INTRT         ZFLD15
@@ -493,9 +493,9 @@
      C                   EVAL      EINTRT = ' Ref:' + W_ICT + ' ' + W_CST
      C                   ENDIF
      C                   ENDIF
- 
+
       * interest accrued
- 
+
      C     INTACC        IFNE      0
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      INTACC        ZFLD15
@@ -503,9 +503,9 @@
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        EINTAC
      C                   ENDIF
- 
+
      C                   MOVE      CCY           ECCY
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -513,9 +513,9 @@
       * Access a/c details
       ********************************************************************
      C     ACS_ACCNT     BEGSR
- 
+
      C     ACCNTK        CHAIN     ACCNTABF                           60        *
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -523,9 +523,9 @@
       * Access Retail Accrued Interest
       ********************************************************************
      C     ACS_REACR     BEGSR
- 
+
      C     ACCNTK        CHAIN     REACRDF                            60        *
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -533,9 +533,9 @@
       * Access Retail Interest and Charges
       ********************************************************************
      C     ACS_REIAC     BEGSR
- 
+
      C     ACCNTK        CHAIN     REIACDF                            60        *
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -543,11 +543,11 @@
       * Access a currency
       ********************************************************************
      C     ACS_CURR      BEGSR
- 
+
      C                   CALLB     'ZAACSCURR'
      C                   PARM                    CCY
      C                   PARM                    SDCURR
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -582,11 +582,11 @@
       /SPACE 5
       ********************************************************************
      C     EXT_LINES     BEGSR
- 
+
      C                   CALLB     'MXEXTRISL'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
- 
+
      C                   PARM      BRCA          P_BRCA            3
      C**********         PARM      CNUM          P_CNUM            6 0                        CSD027
      C                   PARM      CNUM          P_CNUM            6                          CSD027
@@ -595,10 +595,10 @@
      C**********         PARM      ACOD          P_ACOD                               CGL029 BUG6417
      C                   PARM      ACOD          P_ACOD           10 0                       BUG6417
      C                   PARM      ACSQ          P_ACSQ            2 0
- 
+
      C                   PARM      DACO          P_DACO            5 0
      C                   PARM      HISD          P_HISD            5 0
- 
+
      C                   PARM                    DRCRIN            1
       * credit
      C                   PARM      PCID          P_LCID            5 0
@@ -618,15 +618,15 @@
      C                   PARM      PMADI         P_PMADI          15 0
      C                   PARM      *ZERO         P_DTNODYS         5 0
      C                   PARM      *ZERO         P_DTINT          15 0
- 
+
      C                   PARM      *ZERO         P_SEQN            5 0
- 
+
       * Error
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO MXEXTRISL'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       * Calculate extra interest                                                              217184
@@ -1496,9 +1496,9 @@
       * *INZSR - Initial subroutine called automatically at program start
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Requested Account ID
      C**********         PARM                    I_RACCID         18                          CGL029
      C                   PARM                    I_RACCID                                     CGL029
@@ -1519,16 +1519,16 @@
       * Set up the names of the message files from which the message handler                 BUG6417
       * will get the messages                                                                BUG6417
      C                   EVAL      MsgFArray(1) = 'REUSRMSG'                                 BUG6417
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Retail Details
- 
+
      C                   CALL      'AORETLR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -1545,16 +1545,16 @@
      C                   Move      'Y'           CRE001                                       217184
      C                   Move      '1'           *IN57                                        217184
      C                   Endif                                                                217184
- 
+
       * Execute CRTDUPOBJ
- 
+
      C                   Z-ADD     66            #MesLen          15 5
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_CRTD
      C                   PARM                    #MesLen
- 
+
       * Execute OVRDBFs
- 
+
      C                   Z-ADD     55            #MesLen          15 5
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_OVR1
@@ -1562,20 +1562,20 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_OVR2
      C                   PARM                    #MesLen
- 
+
       * Execute CLRPFM
- 
+
      C                   Z-ADD     27            #MesLen
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_CLR
      C                   PARM                    #MesLen
- 
+
      C                   OPEN      MXRISLPD
- 
+
      C                   MOVE      *BLANK        I#ERMS            7
- 
+
       * key lists
- 
+
      C     ACCNTK        KLIST
      C                   KFLD                    CUS
      C                   KFLD                    CCY
@@ -1617,7 +1617,8 @@
      C     *LIKE         DEFINE    BJRDNB        ZID2                                         217184
      C     *LIKE         DEFINE    BJRDNB        ZILPCP                                       217184
      C     *LIKE         DEFINE    BJRDNB        ZIDREM                                       217184
-     C     *LIKE         DEFINE    DRIB          ZICT                                         217184
+     C******LIKE         DEFINE    DRIB          ZICT                                  217184 CSD103
+     C                   Z-ADD     0             ZICT              2 0                        CSD103
      C     *LIKE         DEFINE    XDRIS         ZIRATE                                       217184
      C     *LIKE         DEFINE    DRIC          ZICALC                                       217184
      C     *LIKE         DEFINE    ACSQ          Y                                            217184
@@ -1630,7 +1631,7 @@
      C                   Z-ADD     0             ZIWRK1           15 5                        217184
      C                   Z-ADD     0             INST              5 0                        217184
                                                                                               217184
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

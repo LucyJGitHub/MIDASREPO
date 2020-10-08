@@ -15,7 +15,7 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046682           Date 24Jul17               *
       *                 CGL165             Date 17Feb15               *
@@ -41,7 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *      
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046682 - Display 'CASH MANAGEMENT' only if CRE008 is on.   *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -64,7 +64,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FRE100454DFCF   E             WORKSTN INFSR(*PSSR)
      F                                     SFILE(SUBFLREC:RRN)
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
@@ -83,15 +83,15 @@
      F                                     PREFIX(D_)                                         217184
      FACCNTBXC  IF   E           K DISK                                                       217184
      FMXRISLPD  IF   E           K DISK    INFSR(*PSSR) USROPN
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
- 
- 
+
+
      D #_CRTD          S              1    DIM(68) CTDATA PERRCD(68)
      D #_OVR1          S              1    DIM(55) CTDATA PERRCD(55)
      D #_OVR2          S              1    DIM(55) CTDATA PERRCD(55)
@@ -102,8 +102,8 @@
      D ZIN1            S             18  5 DIM(11)                                            217184
      D ZIA             S             15  0 DIM(11)                                            217184
      D ZIA1            S             15  5 DIM(11)                                            217184
- 
- 
+
+
       * Account ID
      D                 DS
      D***ACCID                   1     18                                                     CGL029
@@ -116,8 +116,8 @@
      D***ASN                    17     18S 0                                                  CGL029
      D ACD                    13     22S 0                                                    CGL029
      D ASN                    23     24S 0                                                    CGL029
- 
- 
+
+
       * Balance
      D                 DS
      D BALANCE                 1    100
@@ -128,8 +128,8 @@
      D ENODYS                 36     42
      D EINTRT                 43     55
      D EINTAC                 56     72
- 
- 
+
+
      D                 DS
      D ZOUT21                  1     21
      D ZOUT21Sign             21     21
@@ -224,8 +224,8 @@
                                                                                               217184
       *  Layout for data area SDSTAT
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
@@ -238,17 +238,17 @@
       ** First DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs
- 
- 
+
+
      IACCNTABF
      I              DRIS                        XDRIS
      I              CRIS                        XCRIS
- 
- 
+
+
       /SPACE 5
- 
+
       * Requested Account ID
- 
+
      C                   MOVEL     I_RACCID      ACCID
      C                   MOVE      CUS           WrkCUS            6
      C**********         MOVE      ACD           WrkACD            4                          CGL029
@@ -257,34 +257,34 @@
      C                   EVAL      DDACC  = BRC  +  '-'  +  WrkCUS   +  '-'
      C                                      +  CCY  +  '-'  +  WrkACD   +
      C                                      '-'  +  WrkASN
- 
+
       * Access Account
- 
+
      C                   EXSR      ACS_ACCNT
- 
+
       * Access Retail Accrued Interest
- 
+
      C                   EXSR      ACS_REACR
- 
+
       * Access Retail Interest and Charges
- 
+
      C                   EXSR      ACS_REIAC
- 
+
       * Access Customer
- 
+
      C                   EXSR      ACS_CUST
- 
+
       * Access Currency
- 
+
      C                   EXSR      ACS_CURR
                                                                                               217184
       * If REACR date is less than History Date, calculate extra interest and add to R_DAIC1  217184
                                                                                               217184
      C                   EXSR      CAL_XINTR                                                  217184
- 
+
       * Extract Statement Lines
       * D E B I T
- 
+
      C                   Z-ADD     BJRDNB        HISD                                         217184
      C     BMLDAI        IFEQ      'Y'
      C*****BJRDNB        SUB       1             HISD                                         217184
@@ -301,10 +301,10 @@
      C                   Z-ADD     *ZERO         PMADI
      C                   MOVEL     'D'           DRCRIN
      C                   EXSR      EXT_LINES
- 
+
       * Extract Statement Lines
       * C R E D I T
- 
+
      C                   Z-ADD     BJRDNB        HISD                                         217184
      C     BMLDAI        IFEQ      'Y'
      C*****BJRDNB        SUB       1             HISD                                         217184
@@ -321,55 +321,55 @@
      C                   Z-ADD     *ZERO         PMACI
      C                   MOVEL     'C'           DRCRIN
      C                   EXSR      EXT_LINES
- 
- 
+
+
       * Fill the subfile
- 
+
      C                   EXSR      FILL_SUB
- 
+
       * Display screen until F3, or F12 taken
- 
+
      C     *INKC         DOWEQ     '0'
      C     *INKL         ANDEQ     '0'
      C                   EXSR      DSPLAY_SCN
      C                   END
- 
+
       * Pass back function keys taken
- 
+
      C                   MOVE      *INKC         @INKC
      C                   MOVE      *INKL         @INKL
- 
+
       * End of program
- 
+
      C                   SETON                                        LR
- 
+
       /SPACE 5
       *****************************************************************
       * Display screen
       *****************************************************************
      C     DSPLAY_SCN    BEGSR
- 
+
      C                   MOVEL     DDDRCR        P_DDDRCR          1
- 
+
       * Write and read screen
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     MSGSUBCT
      C**********         WRITE     SUBFLCTL                                                   BG8539
      C                   WRITE     FOOTER
      C                   WRITE     SUBFLCTL                                                   BG8539
- 
+
       * Read subfile control
- 
+
      C                   READ      SUBFLCTL                               99    *
- 
+
       ** Clear the message queue & init error indicators
- 
+
      C                   EXSR      CLR_MSGQ
- 
+
       ** If dr/cr indicator has changed and it's valid
       ** Re-fill the subfile
- 
+
      C     *INKC         IFNE      '1'
      C     *INKL         ANDNE     '1'
      C                   EXSR      VALID_SELECT
@@ -378,7 +378,7 @@
      C                   EXSR      FILL_SUB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -386,68 +386,68 @@
       * Fill the subfile
       *****************************************************************
      C     FILL_SUB      BEGSR
- 
+
       * Clear subfile
      C                   MOVEA     '000'         *IN(11)
      C                   Z-ADD     *ZERO         RRN
      C                   WRITE     SUBFLCTL                                     *
- 
+
       * Read all balances for a/c
- 
+
      C     RISLK         SETLL     MXRISLP0
      C     RISLK         READE     MXRISLP0                               99    *
      C     *IN99         DOWEQ     '0'
      C     RECTYP        ANDNE     ' '
      C     RISLK         READE     MXRISLP0                               99    *
      C                   ENDDO
- 
+
       * Do while balances found
- 
+
      C                   MOVEL     *BLANK        P_DRCRIN          1
- 
+
      C     *IN99         DOWEQ     '0'
- 
+
       * Check if record to be selected
- 
+
      C                   EXSR      CHK_SELECT
- 
+
      C     RecdSelect    IFEQ      'Y'
- 
+
       * Write a total
- 
+
      C     DRCRIN        IFNE      P_DRCRIN
      C     P_DRCRIN      ANDNE     *BLANK
      C                   EXSR      FMT_TOTAL
      C                   ADD       1             RRN                            *
      C                   WRITE     SUBFLREC
      C                   ENDIF
- 
+
      C                   MOVEL     DRCRIN        P_DRCRIN
- 
+
       * Write a balance
- 
+
      C                   EXSR      FMT_BALANCE
      C                   ADD       1             RRN               4 0          *
      C                   WRITE     SUBFLREC
      C                   ENDIF
- 
+
      C     RISLK         READE     MXRISLP0                               99    *
      C     *IN99         DOWEQ     '0'
      C     RECTYP        ANDNE     ' '
      C     RISLK         READE     MXRISLP0                               99    *
      C                   ENDDO
      C                   ENDDO
- 
+
       * Write a total
- 
+
      C                   EXSR      FMT_TOTAL
      C                   ADD       1             RRN                            *
      C                   WRITE     SUBFLREC
- 
+
       * Reset subfile
- 
+
      C                   MOVEA     '111'         *IN(11)
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -455,43 +455,43 @@
       * Format Balance
       *****************************************************************
      C     FMT_BALANCE   BEGSR
- 
+
      C                   CLEAR                   BALANCE
- 
+
       * Dr/cr indicator
- 
+
      C                   MOVEL     DRCRIN        EDRCRIN
- 
+
       * Start date
- 
+
      C                   Z-ADD     SDATE         ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        ESDAT
- 
+
       * End date
- 
+
      C                   Z-ADD     EDATE         ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZADATE        EEDAT
- 
+
       * A/c balance
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      ACBAL         ZFLD15
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21Edit    EACBAL
- 
+
       * No of days
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      NODYS         ZFLD15
      C                   Z-ADD     0             ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        ENODYS
- 
+
       * Interest rate
- 
+
      C     INTRT         IFNE      *ZERO
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      INTRT         ZFLD15
@@ -512,9 +512,9 @@
      C                   EVAL      EINTRT = ' Ref:' + W_ICT + ' ' + W_CST
      C                   ENDIF
      C                   ENDIF
- 
+
       * interest accrued
- 
+
      C     INTACC        IFNE      0
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      INTACC        ZFLD15
@@ -522,7 +522,7 @@
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        EINTAC
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -530,15 +530,15 @@
       * Format Total
       *****************************************************************
      C     FMT_TOTAL     BEGSR
- 
+
      C                   CLEAR                   BALANCE
- 
+
       * Dr/cr indicator
- 
+
      C                   MOVEL     P_DRCRIN      EDRCRIN
- 
+
       * Total interest accrued
- 
+
      C     P_DRCRIN      IFEQ      'D'
      C*****R_DAIC        ADD       R_MADI        W_TOTINT         15 0                        217184
      C     DAIC          ADD       R_MADI        W_TOTINT         15 0                        217184
@@ -546,13 +546,13 @@
      C*****R_CAIC        ADD       R_MACI        W_TOTINT                                     217184
      C     CAIC          ADD       R_MACI        W_TOTINT                                     217184
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      W_TOTINT      ZFLD15
      C                   Z-ADD     A6NBDP        ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        EINTAC
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -560,11 +560,11 @@
       ** Validate selection
       *****************************************************************
      C     VALID_SELECT  BEGSR
- 
+
      C                   MOVE      'Y'           Valid             1
- 
+
       * If entered, debit/credit indicator must be valid
- 
+
      C     DDDRCR        IFNE      *BLANK
      C     DDDRCR        ANDNE     'D'
      C     DDDRCR        ANDNE     'C'
@@ -573,7 +573,7 @@
      C                   MOVEL     'RE75956 '    ZAMSID
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -581,19 +581,19 @@
       ** Check if record to be selected
       *****************************************************************
      C     CHK_SELECT    BEGSR
- 
+
      C                   MOVEL     'Y'           RecdSelect        1
- 
+
      C     DDDRCR        IFEQ      'D'
      C     DRCRIN        ANDNE     'D'
      C                   MOVEL     'N'           RecdSelect
      C                   ENDIF
- 
+
      C     DDDRCR        IFEQ      'C'
      C     DRCRIN        ANDNE     'C'
      C                   MOVEL     'N'           RecdSelect
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -601,13 +601,13 @@
       ** Clear the message queue & init error indicators
       *****************************************************************
      C     CLR_MSGQ      BEGSR
- 
+
      C                   CALL      'Y2CLMSC'
      C                   PARM      DDPGM         ZAPGMQ           10
      C                   PARM      '*SAME'       ZAPGRL            5
- 
+
      C                   MOVEA     '000000'      *IN(51)
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -615,13 +615,13 @@
       * Access a/c details
       ********************************************************************
      C     ACS_ACCNT     BEGSR
- 
+
      C     ACCNTK        CHAIN     ACCNTABF                           60        *
      C  N60              MOVEL     ACNO          DDRAN
      C  N60              MOVEL     ANAM          DDANAM
      C   60              MOVEL     *BLANK        DDRAN
      C   60              MOVEL     *BLANK        DDANAM
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -629,9 +629,9 @@
       * Access Retail Accrued Interest
       ********************************************************************
      C     ACS_REACR     BEGSR
- 
+
      C     ACCNTK        CHAIN     REACRDF                            60        *
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -639,9 +639,9 @@
       * Access Retail Interest and Charges
       ********************************************************************
      C     ACS_REIAC     BEGSR
- 
+
      C     ACCNTK        CHAIN     REIACDF                            60        *
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -649,14 +649,14 @@
       * Access a customer
       ********************************************************************
      C     ACS_CUST      BEGSR
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      WrkCUS        @KEY1            10
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -664,11 +664,11 @@
       * Access a currency
       ********************************************************************
      C     ACS_CURR      BEGSR
- 
+
      C                   CALLB     'ZAACSCURR'
      C                   PARM                    CCY
      C                   PARM                    SDCURR
- 
+
      C                   ENDSR
       ********************************************************************                    217184
       * Calculate extra interest                                                              217184
@@ -1563,11 +1563,11 @@
       /SPACE 5
       ********************************************************************
      C     EXT_LINES     BEGSR
- 
+
      C                   CALLB     'MXEXTRISL'
      C                   PARM      *BLANK        W#RTCD            7
      C                   PARM      *BLANK        W#ERMS           30
- 
+
      C                   PARM      BRCA          P_BRCA            3
      C**********         PARM      CNUM          P_CNUM            6 0                        CSD027
      C                   PARM      CNUM          P_CNUM            6                          CSD027
@@ -1575,10 +1575,10 @@
      C**********         PARM      ACOD          P_ACOD            4 0                        CGL029
      C                   PARM      ACOD          P_ACOD           10 0                        CGL029
      C                   PARM      ACSQ          P_ACSQ            2 0
- 
+
      C                   PARM      DACO          P_DACO            5 0
      C                   PARM      HISD          P_HISD            5 0
- 
+
      C                   PARM                    DRCRIN            1
       * credit
      C                   PARM      PCID          P_LCID            5 0
@@ -1598,15 +1598,15 @@
      C                   PARM      PMADI         P_PMADI          15 0
      C                   PARM      *ZERO         P_DTNODYS         5 0
      C                   PARM      *ZERO         P_DTINT          15 0
- 
+
      C                   PARM      *ZERO         P_SEQN            5 0
- 
+
       * Error
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO MXEXTRISL'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -1614,7 +1614,7 @@
       * ZASNMS - SEND A MESSAGE
       *****************************************************************
      C     ZASNMS        BEGSR
- 
+
      C                   CALL      'Y2SNMGC'                            0909    *
      C                   PARM      DDPGM         ZAPGMQ           10
      C                   PARM                    ZAPGRL            5
@@ -1622,7 +1622,7 @@
      C                   PARM      'REUSRMSG'    ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM                    ZAMSTP            7
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1630,44 +1630,44 @@
       * *INZSR - Initial subroutine called automatically at program start
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Return code
       * Error Message
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
- 
+
       * Requested Account ID
      C**********         PARM                    I_RACCID         18                          CGL029
      C                   PARM                    I_RACCID         24                          CGL029
       * Command keys
      C                   PARM                    @INKC             1
      C                   PARM                    @INKL             1
- 
+
       * Initialize program name
- 
+
      C                   MOVEL     'RE100454 '   DDPGM
- 
+
       * Set up subfile message queue information
- 
+
      C                   MOVEL     '*'           DDPGMQ
      C                   MOVE      '1'           *IN40
- 
+
       * Set up standard screen fields.
- 
+
      C                   MOVEL     PsJobName     DDJOB
      C                   MOVEL     PsUser        DDUSR
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Retail Details
- 
+
      C                   CALL      'AORETLR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -1695,21 +1695,21 @@
      C     PRTCD         IFEQ      *blanks                                                  MD046682
      C                   Seton                                        20                    MD046682
      C                   Endif                                                              MD046682
- 
+
      C     *DTAARA       DEFINE                  SDSTAT
      C     *LOCK         IN        SDSTAT
      C                   OUT       SDSTAT
- 
+
       * Execute CRTDUPOBJ
- 
+
      C                   MOVEA     LIBR          #_CRTD(33)
      C                   Z-ADD     68            #MesLen          15 5
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_CRTD
      C                   PARM                    #MesLen
- 
+
       * Execute OVRDBFs
- 
+
      C                   Z-ADD     55            #MesLen          15 5
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_OVR1
@@ -1717,22 +1717,22 @@
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_OVR2
      C                   PARM                    #MesLen
- 
+
       * Execute CLRPFM
- 
+
      C                   Z-ADD     27            #MesLen
      C                   CALL      'QCMDEXC'                            9999    *
      C                   PARM                    #_CLR
      C                   PARM                    #MesLen
- 
+
      C                   OPEN      MXRISLPD
- 
+
       ** Clear the message queue & init error indicators
- 
+
      C                   EXSR      CLR_MSGQ
- 
+
       * key lists
- 
+
      C     ACCNTK        KLIST
      C                   KFLD                    CUS
      C                   KFLD                    CCY
@@ -1774,7 +1774,8 @@
      C     *LIKE         DEFINE    BJRDNB        ZID2                                         217184
      C     *LIKE         DEFINE    BJRDNB        ZILPCP                                       217184
      C     *LIKE         DEFINE    BJRDNB        ZIDREM                                       217184
-     C     *LIKE         DEFINE    DRIB          ZICT                                         217184
+     C******LIKE         DEFINE    DRIB          ZICT                                  217184 CSD103
+     C                   Z-ADD     0             ZICT              2 0                        CSD103
      C     *LIKE         DEFINE    XDRIS         ZIRATE                                       217184
      C     *LIKE         DEFINE    DRIC          ZICALC                                       217184
      C     *LIKE         DEFINE    ACSQ          Y                                            217184

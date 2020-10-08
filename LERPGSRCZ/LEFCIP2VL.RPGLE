@@ -75,7 +75,7 @@
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *
-      *             during insert and at the start. (Child: AR918344) *
+      *             during insert and at the start (Child: AR918344)  *
       *  MD027517 - Also validate Last Availability of CA against TR. *
       *             Extend validation of 244684.                      *
       *  AR896408 - Validation in subroutine VCDTE                    *

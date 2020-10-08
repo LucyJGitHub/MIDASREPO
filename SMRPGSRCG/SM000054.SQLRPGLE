@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD050393           Date 13Apr18               *
-      *  Prev Amend No. MD032152           Date 22Jan15               *
+      *  Last Amend No. MD056920           Date 06Oct20               *
+      *  Prev Amend No. MD056614           Date 21Sep20               *
+      *                 MD050393           Date 13Apr18               *
+      *                 MD032152           Date 22Jan15               *
       *                 MD022609           Date 27Sep13               *
       *                 MD022372           Date 12Sep13               *
       *                 MD018386C          Date 23Apr13               *
@@ -25,6 +27,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056920 - UXP Incorrect user migration for non-default zone.*
+      *             If user is exist in T_USERMENU get zone.          *
+      *  MD056614 - FM2.1 SP21 UXP1_ BFUpload does not add user/branch*
+      *             entitlements.                                     *
+      *             Duplicate record key in member BFTB_00064 and     *
+      *             BFTB_00055. Check if record is existing before    *
+      *             inserting a new record.                           *
       *  MD050393 - UXP: Amend user ends in error                     *
       *           - apply trim function to BFUSERID field to avoid    *
       *             UXP data type mismatch                            *
@@ -64,6 +73,12 @@
      D UserId          S             50                                                     AR958654
      D DefBranch       S              3                                                     AR958654
      D USZONESTM       S            256                                                    AR1085933
+     D WBFLINKIDPK     S             30                                                     MD056614
+     D WBFIDPK         S             30                                                     MD056614
+     D PFLD15          S             15P 0                                                  MD056614
+     D PDECS           S              1P 0                                                  MD056614
+     D PCODE           S              1A                                                    MD056614
+     D POUT21          S             21A                                                    MD056614
       *
      D Count           S              2  0
       *
@@ -218,11 +233,13 @@
       *
      C     WriteRec      BEGSR
       *
+     C                   IF        ZoneName = ''                                            MD056920
      C/EXEC SQL
      C*+********SELECT*TZONE*INTO*:DefZone*from*T_USERMENU*                                 MD022609
      C+ SELECT TZONE INTO :ZoneName from T_USERMENU                                         MD022609
      C+ WHERE MUSERNAME = :UserName
      C/END-EXEC
+     C                   ENDIF                                                              MD056920
       *
      C**********         IF        DefZone = ''                                             MD022609
      C                   IF        ZoneName = ''                                            MD022609
@@ -281,6 +298,13 @@
      C+ SELECT ZOMSYS INTO :Zone from GPZONEPD
      C+ WHERE ZOZONE = :ZoneName
      C/END-EXEC
+      **** Check for duplicates                                                             MD056614
+     C                   EVAL      WBFLINKIDPK = %TRIMR(USERNAME) + ZONE                    MD056614
+     C/EXEC SQL                                                                             MD056614
+     C+ SELECT COUNT(*) INTO :Count                                                         MD056614
+     C+ FROM BFTB_ZONEUSER WHERE BFLINKIDPK = :WBFLINKIDPK                                  MD056614
+     C/END-EXEC                                                                             MD056614
+     C                   IF        Count = 0                                                MD056614
       *
       * Write record on BFTB_ZONEUSER
      C/EXEC SQL
@@ -293,6 +317,22 @@
      C+         trim(:UserName), CONCAT(trim(:Username),:Zone),trim(:Zone), 1)              MD022609
      C*+********trim(:UserName),*CONCAT('MIZU',:Key),*:Zone,*1)****************   MD018386C MD022372
      C/END-EXEC
+     C                   ENDIF                                                              MD056614
+      **** Convert KEY from 00001 to 1, 00012 to 12                                         MD056614
+     C                   MOVE      KEY           PFLD15                                     MD056614
+     C                   EVAL      PDECS = 0                                                MD056614
+     C                   CALL      'ZSEDIT'                                                 MD056614
+     C                   PARM                    PFLD15                                     MD056614
+     C                   PARM                    PDECS                                      MD056614
+     C                   PARM      ' '           PCODE                                      MD056614
+     C                   PARM      *BLANKS       POUT21                                     MD056614
+     C                   EVAL      WBFIDPK = %TRIMR(USERNAME) + %TRIML(POUT21)              MD056614
+      **** Check for duplicates                                                             MD056614
+     C/EXEC SQL                                                                             MD056614
+     C+ SELECT COUNT(*) INTO :Count                                                         MD056614
+     C+ FROM BFTB_USERLOGINNODE WHERE BFIDPK = :WBFIDPK                                     MD056614
+     C/END-EXEC                                                                             MD056614
+     C                   IF        Count = 0                                                MD056614
       *
       * Write record on BFTB_USERLOGINNODE
      C/EXEC SQL
@@ -303,6 +343,7 @@
      C+ CONCAT(trim(:UserName), :Key), ' ', 0, :Username, 1)                                MD022372
      C*+*CONCAT('usrloginmod',:Key),*'*',*0,*:UserName,*1)*********************             MD022372
      C/END-EXEC
+     C                   ENDIF                                                              MD056614
       *
      C     WriteRecE     ENDSR
       *

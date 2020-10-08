@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052870           Date 27Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056823           Date 29Sep20               *
+      *  Prev Amend No. MD052870           Date 27Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044395           Date 08Mar17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *
+      *             Amendment in WIP                                  *
       *  MD052870 - Recompiled due to changes made by MD-50928 in     *
       *             FTOPY6PD.                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -245,6 +248,8 @@
      D SCHQN           S              6                                                       CFT116
      D SCQIN           S              1                                                       CFT118
      D AAuth           S              1                                                     MD039986
+     D InputUser       S             10                                                     MD056823
+     D StopUser        S             10                                                     MD056823
      D/COPY WNCPYSRC,FTOPAYZD01
       **--------------------------------------------------------------------------------------------
 
@@ -409,13 +414,20 @@
       ** Populate Customer Name on Input fields                                               CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
+      *                                                                                     MD056823
+      ** Populate Input User                                                                MD056823
+      *                                                                                     MD056823
+     C                   EVAL      InputUser = INUSR1                                       MD056823
+     C                   EVAL      StopUser = SUSR                                          MD056823
 
      C                   MOVE      TMST          @TimeStamp       26                         BUG4196
      C                   MOVE      OPMSGR        PMSGR             8                          CSD083
      C                   MOVEL     RegData       RegData1          2                          CSF011
      C                   MOVE      RegData       RegData2         18                          CSF011
-     C                   MOVEL     NewPmtScn6    NewPmtScn6A       9                        MD039986
-     C                   MOVE      NewPmtScn6    NewPmtScn6B      11                        MD039986
+     C**********         MOVEL     NewPmtScn6    NewPmtScn6A       9               MD039986 MD056823
+     C**********         MOVE      NewPmtScn6    NewPmtScn6B      11               MD039986 MD056823
+     C                   MOVEL     NewPmtScn6    NewPmtScn6A      19                        MD056823
+     C                   MOVE      NewPmtScn6    NewPmtScn6B       1                        MD056823
      C                   EVAL                    Buffer = NewPmtScn1
      C                                           + NewPmtSc1b + NewPmtSc2a
      C                                           + NewPmtSc2b + NewPmtScn3
@@ -440,7 +452,11 @@
      C**********         EVAL      Buffer2 =  RegData2                               CSF011 MD039986
      C                   EVAL      Buffer2 = NewPmtScn6B + AAuth                            MD039986
      C                                       + BtnPressed                                   MD039986
-     C                                       + RegData + ExtData                            MD039986
+     C**********                             + RegData + ExtData                   MD039986 MD056823
+     C                                       + ExtData                                      MD056823
+     C                                       + InputUser                                    MD056823
+     C                                       + StopUser                                     MD056823
+     C                                       + RegData                                      MD056823
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011

@@ -47,6 +47,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CAP204 - Teller Related APIs - Account Transfer              *
@@ -76,7 +77,7 @@
      FMEINFTL0  IF   E           K DISK    INFSR(FileErr)                       185196
      F* RFT detail file                                                         185196
      FFT101DL4  IF   E           K DISK    INFSR(FileErr)RENAME(FT101DD0:RFTL4D)185196
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -95,22 +96,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -120,29 +121,29 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
       * Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT101HPD)
- 
+
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Funds Transfer Details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * AOSPOSU0 datastructure parameter
      DC#DTA            DS           256
      D C#ATYP                  1      1
@@ -185,11 +186,11 @@
      D C#ACO1                121    130  0                                                    CGL029
      D C#ACOD                131    140  0                                                    CGL029
      D C#OTR1                141    160                                                       CAP204
- 
+
       ** Exception Reference Id/Number                                                        CLE134
      D C#XRFI                162    164                                                       CLE134
      D C#XRFN                165    174  0                                                    CLE134
- 
+
       ** Full General Ledger - CNUM/CCY/ACOD/ACSQ                                             CGL029
      D                 DS                                                                     CGL029
      D C#ACCT                  1     24                                                       CGL029
@@ -206,7 +207,7 @@
      DD#CCYI                   2      3
      DD#GLUI                   4      4
      DD#TPCI                   5      5
- 
+
      D  W0ACT          S              8
                                                                                 178384
       ** Parameters for ZDATE1                                                  178384
@@ -218,28 +219,28 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D HdrDS           DS
      D  HdrStat          *STATUS
- 
+
      D DtlDS           DS
      D  DtlStat          *STATUS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      DTotalAmt         S                   LIKE(TRNAMT)
      DRcdCount         S                   Like(NUMTRN)
      DP@RftId          S                   Like(RftId)
@@ -251,7 +252,7 @@
      D Acc             S             35
      D TmpA            S                   Like(Acc)
      D SavUser         S                   Like(INUSER)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -262,12 +263,12 @@
       *
       *  Reset Work Variables
      C                   Eval      RetCodeIn  = *BlankS
- 
+
       *  If action code not authorise / confirm, abort.
      C                   If        ActionCode <> 'X'
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
       *  Get Header Details
      C     P@RftId       Chain     FT101HL3                           99
      C                   If        *In99 = *On
@@ -279,22 +280,22 @@
      C                   Eval      DBProc = 'Main'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       * If aleady authorised, exit program
      C                   If        AUIN = 'Y'
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
      C                   Eval      SavUser = INUSER
- 
+
       * if process = Batch, ensure that the STP autoconfirm flag is = 'Y'
      C                   If        RespMode = 'S'
- 
+
      C                   Call      'AOFTFRR0'
      C                   Parm                    @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C     SDFTFR        Parm                    DSFDY
- 
+
      C                   If        @RTCD  <> *Blanks
      C                   Eval      DBKey  =  @OPTN
      C                   Eval      DBFile = 'SDBANKPD'
@@ -308,20 +309,20 @@
      C                   If        BTAFTM <> 'Y'
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
       * Ensure that the update user, date and time are not set.
- 
+
      C                   If        UPDUSR <> *Blanks      OR
      C                             UPDDTE <> *Zeros       OR
      C                             UPDTIM <> *Zeros
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
       * if process = Batch,the count of records for the selected senders
       * reference must be equal to the count of the 'Number of Transaction
       * records' in file FT101DPD.
      C     Ky#Meir       Chain     MEIRFTL0                           99
- 
+
      C                   If        *In99 = *On
      C                   Eval      DBKey  =  SNDREF
      C                   Eval      DBFile = 'MEIRFTPD'
@@ -331,29 +332,29 @@
      C                   Eval      DBProc = 'Main'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       * Got fields NUMTRN (Number of transactions which must equal the
       *  number of records in FT101DPD and SUMAMT which must equal the
       *  sum of amounts in FT101DPD for the selected RFT Id
- 
+
      C                   Setoff                                           99
      C                   Eval      RcdCount = *Zeros
      C                   Eval      TotalAmt = *Zeros
      C     P@RftId       Setll     FT101DL0
      C     P@RftId       Reade     FT101DL0                               99
      C                   Dow       *In99 = *Off
- 
+
      C                   Add       1             RcdCount
      C                   Add       TRNAMT        TotalAmt
- 
+
      C     P@RftId       Reade     FT101DL0                               99
      C                   Enddo
- 
+
      C                   If        RcdCount <> NUMTRN OR
      C                             TotalAmt <> SUMAMT
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
       * Setll MEINFTL0 using message unique reference number                    185196
       * For all records with this MUR , is MUR + Part number assigned to this   185196
       * RFTID                                                                   185196
@@ -379,17 +380,17 @@
      C     RHMSGR        Reade     MEINFTL0                               46    185196
      C                   Enddo                                                  185196
                                                                                 185196
- 
+
       * End if process is in batch mode
- 
+
      C                   Endif
       *
- 
+
       * If reached this far in process then either the confirmation
       *  process is manual OR the STP criteria have been met.
       *  Other validation MUST be carried out in the FTVxx validation
       *  modules. Call them HERE.
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -397,36 +398,36 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   MOVEL     USER          PSUSER                         CAP084
      C                   ENDIF                                                  CAP084
- 
+
       * Ensure that the RFT is valid.
- 
+
      C                   CallB     'FTM1016VL'
      C                   Parm                    ValErrCde
      C                   Parm                    ActionCode
      C                   Parm                    HdrRcdIn
- 
+
      C                   If        ValErrCde = '*VALERROR'
      C                   Return
      C                   Endif
- 
+
       *  Update RFT Header Record
- 
+
       *  Dual Authorisation
- 
+
      C                   If        ValErrCde = '*DUALAUTH'
- 
+
      C                   Eval      RDUAL = 'Y'
- 
+
       *  If first authorising user, only update user
- 
+
      C                   If        AUP1 = *Blanks
- 
+
      C                   If        RespMode = 'S'
      C                   Eval      AUP1 = '*STP'
      C                   Else
      C                   Eval      AUP1 = PSUser
      C                   Endif
- 
+
      C*********          Eval      UPDDTE = PSRunDate                           178384
      C                   Move      PSRunDate     Datein                         178384
      C                   CALLB     'ZDATE1'                                     178384
@@ -438,18 +439,18 @@
      C                   Z-ADD     DaynoOut      Upddte                         178384
       *                                                                         178384
      C                   Eval      UPDTIM = PSRunTime
- 
+
      C                   Eval      INUSER = SavUser
- 
+
      C                   Update    FT101HD0
- 
+
      C                   Else
- 
+
       *  If 2nd authorising user, record is only authorised if the 2nd user
       *  is not equal to the first authorising user
- 
+
      C                   If        AUP1 <> PSUser
- 
+
      C                   Eval      AUP2 = PSUser
      C**********         Eval      UPDDTE = PSRunDate                           178384
      C                   Move      PSRunDate     Datein                         178384
@@ -464,21 +465,21 @@
      C                   Eval      UPDTIM = PSRunTime
      C                   Eval      AUIN = 'Y'
      C                   Update    FT101HD0
- 
+
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Else
- 
+
       *  Not dual authorisation
- 
+
      C                   If        RespMode = 'S'
      C                   Eval      AUP1 = '*STP'
      C                   Else
      C                   Eval      AUP1 = PSUser
      C                   Endif
- 
+
      C*******            Eval      UPDDTE = PSRunDate                           178384
      C                   Move      PSRunDate     Datein                         178384
      C                   CALLB     'ZDATE1'                                     178384
@@ -490,13 +491,13 @@
      C                   Z-ADD     DaynoOut      Upddte                         178384
       *                                                                         178384
      C                   Eval      UPDTIM = PSRunTime
- 
+
      C                   Eval      AUIN = 'Y'
- 
+
      C                   Update    FT101HD0
- 
+
      C                   Endif
- 
+
       ***Create*Shadow*Postings*if*authorised*this*time                         178186
      C*******************If        AUIN = 'Y'        AND                        178186
      C*****************************RespMode =  'S'   AND                        178186
@@ -522,13 +523,13 @@
      C                   If        AUIN = 'Y'                                   187211
      C                   Exsr      Crt_101_Otpay                                187211
      C                   Endif                                                  187211
- 
+
      C                   If        AUIN = 'Y'                                   184255
      C                   CallB     'FTC0631'                                    184255
      C                   Parm      '1'           @Type             1            184255
      C                   Endif                                                  184255
- 
- 
+
+
      C                   Exsr      Ex@Pgm
       *****************************************************************
       /EJECT
@@ -558,7 +559,7 @@
      C                   Eval      DBProc = 'Clr_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -572,7 +573,7 @@
       *                                                               *
       *****************************************************************
      C     Add_AOSPOS    Begsr
- 
+
       * Chain the RFT Header record to obtain settlement details.
      C     P@RftId       Chain     FT101HL3                           99
      C                   If        *In99 = *On
@@ -584,21 +585,21 @@
      C                   Eval      DBProc = 'Main'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       *  Read ALL detail records for the RFTID.  If outgoing payment NOT
       *   generated, create shadow posting.  Each detail record will have
       *   a posting.  The ordering customer / Account Servicing instution
       *   may be derived from the header record.
- 
+
      C                   Setoff                                           99
      C     P@RftId       Setll     FT101DL0
      C     P@RftId       Reade     FT101DL0                               99
      C                   Dow       *In99 = *Off
- 
+
      C                   Eval      C#NARR   =    RFTID
- 
+
      C                   If        GOPFLG <> 'Y'
- 
+
       *         S E T T L E M E N T     D E T A I L S
      C                   Select
       * Account Servicing Institution
@@ -608,7 +609,7 @@
      C                   Eval      C#ATYP = ASITTP
      C                   Eval      TmpA   = %Subst(HACSV1:2:34)
      C                   Exsr      FmtAcc
- 
+
       * Header Ordering Customer
      C                   When      CUSTTP = 'R'  OR
      C                             CUSTTP = 'G'  OR
@@ -622,7 +623,7 @@
      C                   Eval      TmpA   = %Subst(HOCUS1:2:34)
      C                   Exsr      FmtAcc
      C                   Endif
- 
+
       * Detail Ordering Customer
      C                   When      DCUSTP = 'R'  OR
      C                             DCUSTP = 'G'  OR
@@ -637,7 +638,7 @@
      C                   Exsr      FmtAcc
      C                   Endif
      C                   Endsl
- 
+
       * Settlement Value Date
      C                   Eval      C#VDAT   =    DBTVDT
      C                   Eval      C#IO     =    'I'
@@ -652,9 +653,9 @@
      C                   Eval      C#RPST = 'Y'
      C                   Eval      C#RPNB = 10
      C                   Eval      C#RTYP = 'D'
- 
+
       * Determine Date
- 
+
      C                   Select
      C                   When      D#Pdti   =  'E'                              Event Date
      C                   Eval      C#pstd   =   Exdate
@@ -667,19 +668,19 @@
      C                   Eval      C#Pstd   =  Dbtvdt
      C                   Endif
      C                   Endsl
- 
+
      C                   If        D#Glui   =  'P'
      C                   Eval      C#FTOV   =  *Blank
      C                   Else
      C                   Eval      C#FTOV   =  'Y'
      C                   Endif
- 
+
      C                   Exsr      Do_Add_Spos
- 
+
       *             P A Y     D E T A I L S
       * Order for pay instructions are 1.  Account with Institution,
       *  2. Intermediary,  3.  Befeficiary.
- 
+
      C                   Select
      C                   When      AWITTP  = 'F'  OR
      C                             AWITTP  = 'I'  OR
@@ -688,7 +689,7 @@
      C                   Eval      C#ATYP  = AWITTP
      C                   Eval      TmpA    = TACA35
      C                   Exsr      FmtAcc
- 
+
      C                   When      INTTTP  = 'F'  OR
      C                             INTTTP  = 'I'  OR
      C                             INTTTP  = 'G'  OR
@@ -696,7 +697,7 @@
      C                   Eval      C#ATYP  = INTTTP
      C                   Eval      TmpA    = TINST1
      C                   Exsr      FmtAcc
- 
+
      C                   When      BENTTP  = 'F'  OR
      C                             BENTTP  = 'I'  OR
      C                             BENTTP  = 'G'  OR
@@ -704,9 +705,9 @@
      C                   Eval      C#ATYP  = BENTTP
      C                   Eval      TmpA    = TBNA35
      C                   Exsr      FmtAcc
- 
+
      C                   Endsl
- 
+
       * Pay Value Date
      C                   Eval      C#VDAT   =    CRDVDT
      C                   Eval      C#IO     =    'I'
@@ -721,9 +722,9 @@
      C                   Eval      C#RPST = 'Y'
      C                   Eval      C#RPNB = 10
      C                   Eval      C#RTYP = 'C'
- 
+
       * Determine Date
- 
+
      C                   Select
      C                   When      D#Pdti   =  'E'                              Event Date
      C                   Eval      C#pstd   =   Exdate
@@ -736,29 +737,29 @@
      C                   Eval      C#Pstd   =  CRDVDT
      C                   Endif
      C                   Endsl
- 
+
      C                   If        D#Glui   =  'P'
      C                   Eval      C#FTOV   =  *Blank
      C                   Else
      C                   Eval      C#FTOV   =  'Y'
      C                   Endif
- 
+
      C                   Exsr      Do_Add_Spos
- 
+
       * Create outgoing payments if required.
- 
+
      C                   Else
- 
+
      C                   CallB     'FTM10XUPO'
      C                   Parm                    RetCodeOTP
      C                   Parm                    RftId
      C                   Parm                    TrnsId
- 
+
      C                   Endif
- 
+
      C     P@RftId       Reade     FT101DL0                               99
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************         187211
       /EJECT                                                                    187211
@@ -825,7 +826,7 @@
       *                                                               *
       *****************************************************************
      C     Upd_AOSPOS    Begsr
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*UPDATE'     W0ACT
@@ -841,7 +842,7 @@
      C                   Eval      DBProc = 'Upd_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -855,7 +856,7 @@
       *                                                               *
       *****************************************************************
      C     Cmt_AOSPOS    Begsr
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*COMMIT'     W0ACT
@@ -871,7 +872,7 @@
      C                   Eval      DBProc = 'Upd_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -885,12 +886,12 @@
       *                                                               *
       *****************************************************************
      C     Do_Add_Spos   Begsr
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*ADD   '     W0ACT
      C                   PARM      C#DTA         O#DTA           256
- 
+
      C                   If        *In90  = *On  OR
      C                             @RTCD  <> *Blanks
      C                   Eval      DBKey  =  W0ACT
@@ -901,7 +902,7 @@
      C                   Eval      DBProc = 'Do_add_Spos'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -915,10 +916,10 @@
       *                                                               *
       *****************************************************************
      C     FileErr       Begsr
- 
+
       * If record locked by another user, return from program.  Do not
       *  dump and do not pass GO.
- 
+
      C                   Rolbk
      C
      C                   If        HdrStat = 01218
@@ -956,13 +957,13 @@
       *                                                               *
       *****************************************************************
      C     FmtAcc        Begsr
- 
+
      C                   If        %Subst(TmpA:1:1) = '/'
      C                   Eval      Acc  = %Subst(TmpA:2:34)
      C                   Eval      TmpA = *Blanks
      C                   Eval      TmpA = Acc
      C                   Endif
- 
+
      C                   If        C#ATYP = 'G'
      C**********         Eval      %Subst(Acc:1:6) = %Subst(TmpA:4:9)                         CGL029
      C**********         Eval      %Subst(Acc:7:9) = %Subst(TmpA:10:12)                       CGL029
@@ -975,7 +976,7 @@
      C                   Eval      %Subst(Acc:10:10) = %Subst(TmpA:13:10)                     CGL029
      C                   Eval      %Subst(Acc:20:2) = %Subst(TmpA:23:2)                       CGL029
      C                   Eval      %Subst(Acc:22:3) = %Subst(TmpA:1:3)                        CGL029
- 
+
      C                   Eval      C#ACCT = Acc
      C                   Else
      C                   Eval      C#ACCT = TmpA
@@ -986,7 +987,7 @@
      C                   EVAL      C#ACO1 = W#ACO1                                            CGL029
      C                   EVAL      C#ACS1 = W#ACS1                                            CGL029
      C                   EVAL      C#BRC1 = W#BRC1                                            CGL029
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -998,9 +999,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       * INPUTS
      C                   Parm                    RetCodeIn
@@ -1011,7 +1012,7 @@
      C                   Parm                    P@RftId
      C                   Parm                    P@SNDREF
      C                   Parm                    P@SNDIST
- 
+
       * <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=> <=>
       * Key Lists
      C     Ky#Meir       Klist
@@ -1028,31 +1029,31 @@
      C                   KFLD                    Krftid                         185196
      C                   KFLD                    Krftmsg                        185196
      C                   KFLD                    Krftmsq                        185196
- 
+
       * Get FT Defaults
      C                   Call      'FT0005'
      C                   Parm                    @RTCD
      C                   Parm                    D#Dta
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
- 
- 
- 
+
+
+
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

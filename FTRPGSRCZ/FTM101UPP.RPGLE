@@ -49,6 +49,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034834 - Serious Midas error on Amend of Incoming RFTD     *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -79,7 +80,7 @@
       *****************************************************************
      FFT101HL3  IF   E           K DISK    PREFIX(FH)
      FFT101DL0  IF   E           K DISK    PREFIX(FD)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -98,22 +99,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -123,11 +124,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -138,7 +139,7 @@
                                                                                               CRE020
       ** First DS for access programs, short data structure                                   CRE020
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE020
- 
+
       * AOSPOSU0 datastructure parameter
      DC#DTA            DS           256
      D C#ATYP                  1      1
@@ -183,7 +184,7 @@
      D C#ACOD                131    140  0                                                    CGL029
      D C#OTR1                141    160                                                       CAP204
      D C#MTYP                161    161                                                       CAP205
- 
+
       ** Exception Reference Id/Number                                                        CLE134
      D C#XRFI                162    164                                                       CLE134
      D C#XRFN                165    174  0                                                    CLE134
@@ -197,35 +198,35 @@
      D W#ACO1                 10     19  0                                                    CGL029
      D W#ACS1                 20     21  0                                                    CGL029
      D W#BRC1                 22     24                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Acc             S             35
      D TmpA            S                   Like(Acc)
- 
+
      D  AddRemove      S              1
      D  Action         S              1
- 
+
      D  HdrInfo        S              1
      D  DtlInfo        S              1
- 
+
      D W0ACT           S              8
      D***C#AcctN         S             18  0                                           213054 CGL029
      D C#AcctN         S             24  0                                                    CGL029
- 
+
      D  WorkAmt        S                   Like(FDPAYAMT)
      D CFT004          S              1    INZ('N')                                           212229
      D CAP205          S              1                                                       CAP205
@@ -270,15 +271,15 @@
       *  Reset Work Variables
      C                   EXSR      *INZSR                                                     212229
      C                   Eval      RetCodeIn  = *BlankS
- 
+
      C                   If        AddRemove = 'R'
      C                   Exsr      Remove
      C                   Else
      C                   Exsr      AddPos
      C                   Endif
- 
+
      C                   Exsr      Ex@Pgm
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -290,17 +291,17 @@
       *                                                               *
       *****************************************************************
      C     Remove        Begsr
- 
+
       * Remove all header and detail positions.
      C                   Eval      *In55 = *Off
      C     FHRFTID       Chain     FT101HL3                           55
- 
+
      C                   If        *In55
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
      C*******************Exsr      Oth_Proc
- 
+
      C                   Eval      *In55 = *Off
      C     FHRFTID       Setll     FT101DL0
      C     FHRFTID       ReadE     FT101DL0                               55
@@ -318,7 +319,7 @@
       *                                                                         185699
      C     FHRFTID       ReadE     FT101DL0                               55
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -332,15 +333,15 @@
       *                                                               *
       *****************************************************************
      C     AddPos        Begsr
- 
+
       * Add all header and detail positions.
      C                   Eval      *In55 = *Off
      C     FHRFTID       Chain     FT101HL3                           55
- 
+
      C                   If        *In55
      C                   Exsr      Ex@Pgm
      C                   Endif
- 
+
      C                   Eval      *In55 = *Off
      C     FHRFTID       Setll     FT101DL0
      C     FHRFTID       ReadE     FT101DL0                               55
@@ -356,7 +357,7 @@
       *                                                                         185699
      C     FHRFTID       ReadE     FT101DL0                               55
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -371,16 +372,16 @@
       *****************************************************************
      C     Oth_Proc      Begsr
       *  Create Shadow Postings
- 
+
       *  1.  Clear AOSPOSR0 arrays
      C                   Exsr      Clr_AOSPOS
- 
+
       *  2.  Add AOSPOSR0 data
      C                   Exsr      Add_AOSPOS
- 
+
       *  3.  Update positions
      C                   Exsr      Upd_AOSPOS
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -409,7 +410,7 @@
      C                   Eval      DBProc = 'Clr_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -423,16 +424,16 @@
       *                                                               *
       *****************************************************************
      C     Add_AOSPOS    Begsr
- 
+
       *         S E T T L E M E N T     D E T A I L S
- 
+
       * Move data : Amount
- 
+
      C                   Select
       * If incoming, debit sending institution / senders corr / rcv corr
       * INCOMING MT101 : CREDIT
      C                   When      FHPYTP   = 'RI'
- 
+
      C                   Select
       * Ordering Customer Header
      C                   When      FHCUSTTP = 'G'  OR
@@ -444,7 +445,7 @@
      C                   Eval      C#ATYP = FHCUSTTP
      C                   Eval      TmpA   = FHHOCUS1
      C                   Exsr      FmtAcc
- 
+
       * Ordering Customer Detail
      C                   When      FDDCUSTP = 'G'  OR
      C                             FDDCUSTP = 'R'  OR
@@ -455,14 +456,14 @@
      C                   Eval      C#ATYP = FDDCUSTP
      C                   Eval      TmpA   = FDTOCUS1
      C                   Exsr      FmtAcc
- 
+
      C                   Endsl
       *                                                                                       219765
       ** Save debit account for charges processing in SRCVCharges                             219765
      C**********         Move      C#ACCT        DRAcct           18                 219765 AR750695
      C                   Move      C#ACCT        DRAcct           24                        AR750695
      C                   Move      C#ATYP        DRAtyp            1                          219765
- 
+
      C                   Eval      C#AMT = FDTRNAMT
       *                                                                                       219765
       ** Charges will be posted separately in SRCBCharges                                     219765
@@ -473,11 +474,11 @@
      C**********         Add       FDRCTCHG      C#AMT                                        219765
      C**********         Endif                                                                219765
      C**********         Endif                                                                219765
- 
+
      C                   If        AddRemove = 'R'
      C                   Mult      -1            C#Amt
      C                   Endif
- 
+
       * Debit Value Date
      C                   Eval      C#VDAT   =    FHDBTVDT
      C                   Eval      C#IO     =    'I'
@@ -496,7 +497,7 @@
      C                   Eval      C#MOD    =    'FT'
      C                   Eval      C#OLRC   =    '01'
      C                   Eval      C#FTOV   =  'Y'
- 
+
      C     HDRINFO       IFEQ      'Y'                                                        212229
      C     PHHOCUS1      IFNE      NHHOCUS1                                                   212229
      C     PHHANDAC      ORNE      NHHANDAC                                                   212229
@@ -529,7 +530,7 @@
      C                   ENDIF                                                                212229
      C                   ENDIF                                                                212229
      C                   ENDIF                                                                212229
- 
+
       * Charges Account
      C**********         If        FHHANDAC <> *Blank                                         212229
      C     FDCHGACC      IFNE      *BLANK                                                     212229
@@ -548,11 +549,11 @@
      C**********                   FDTDCHGS = 'SHA'                                           219765
      C**********         Z-Add     FDRCTCHG      C#AMT                                        219765
      C**********         Endif                                                                219765
- 
+
      C**********         If        AddRemove = 'R'                                            219765
      C**********         Eval      C#AMT =  C#AMT * - 1                                       219765
      C**********         Endif                                                                219765
- 
+
       **Debit*Value Date                                                                      219765
      C**********         Eval      C#VDAT   =    FHDBTVDT                                     219765
      C**********         Eval      C#IO     =    'I'                                          219765
@@ -572,7 +573,7 @@
      C**********         Eval      C#MOD    =    'FT'                                         219765
      C**********         Eval      C#OLRC   =    '01'                                         219765
      C**********         Eval      C#FTOV   =  'Y'                                            219765
- 
+
      C*****HDRINFO       IFEQ      'Y'                                                 212229 219765
      C*****PHDBTVDT      IFNE      NHDBTVDT                                            212229 219765
      C*****ACTION        OREQ      'D'                                                 212229 219765
@@ -593,8 +594,8 @@
      C**********         ENDIF                                                         212229 219765
      C**********         ENDIF                                                         212229 219765
      C                   Endif
- 
- 
+
+
      C                   MOVE      *BLANKS       ACCTUSED          3                          212229
       * Credit Amount
       * Beneficiary
@@ -607,7 +608,7 @@
      C                   Eval      TmpA   = FDTBNA35
      C                   MOVE      'BEN'         ACCTUSED                                     212229
      C                   Exsr      FmtAcc
- 
+
       * Account With Institution
      C                   When      FDAWITTP = 'G'  OR
      C                             FDAWITTP = 'R'  OR
@@ -626,9 +627,9 @@
      C                   Eval      TmpA   = FDTINST1
      C                   MOVE      'INT'         ACCTUSED                                     212229
      C                   Exsr      FmtAcc
- 
+
      C                   Endsl
- 
+
       ** Save credt account for charges processing in SRCVCharges                             219765
      C**********         Move      C#ACCT        CRAcct           18                 219765 AR750695
      C                   Move      C#ACCT        CRAcct           24                        AR750695
@@ -640,11 +641,11 @@
      C**********         If        FDTDCHGS = 'BEN'                                           219765
      C**********         Sub       FDRCPCHG      C#AMT                                        219765
      C**********         Endif                                                                219765
- 
+
      C                   If        AddRemove = 'A'
      C                   Eval      C#Amt = C#Amt * - 1
      C                   Endif
- 
+
       * Debit Value Date
      C                   Eval      C#VDAT   =    FDCRDVDT
      C                   Eval      C#IO     =    'I'
@@ -664,7 +665,7 @@
      C                   Eval      C#MOD    =    'FT'
      C                   Eval      C#OLRC   =    '01'
      C                   Eval      C#FTOV   =  'Y'
- 
+
      C     DTLINFO       IFEQ      'Y'                                                        212229
      C     ACCTUSED      IFEQ      'BEN'                                                      212229
      C     PDTBNA35      ANDNE     NDTBNA35                                                   212229
@@ -697,16 +698,16 @@
      C                   If        FDRCVCHG <> 0                                              219765
      C                   Exsr      SRCVCharges                                                219765
      C                   Endif                                                                219765
- 
- 
+
+
       * OUTGOING MT101 : CREDIT
      C                   When      FHPytp   = 'RO'
- 
+
       * Handling Charge Account
      C                   If        FHHANDAC <> *Blanks
- 
+
      C                   Eval      TmpA = FHHANDAC                                   184182
- 
+
      C                   CallB     'AOACCTV1'                                        177669
      C                   Parm      *Blanks       @Rtcd                               177669
      C                   Parm      *Blanks       @Type             7                 177669
@@ -722,7 +723,7 @@
                                                                                      177669
      C                   Eval      TmpA   = FHHANDAC
      C                   Exsr      FmtAcc
- 
+
       * Settlement Value Date
      C                   Eval      C#VDAT   =    FHINDATE
      C                   Eval      C#IO     =    'I'
@@ -745,7 +746,7 @@
      C     AddRemove     IFEQ      'R'                                                        212229
      C                   MULT      -1            C#AMT                                        212229
      C                   ENDIF                                                                212229
- 
+
      C     HDRINFO       IFEQ      'Y'                                                        212229
      C     PHHANDAC      IFNE      NHHANDAC                                                   212229
      C     PHINDATE      ORNE      NHINDATE                                                   212229
@@ -765,9 +766,9 @@
      C                   EXSR      Do_Add_Spos                                                212229
      C                   ENDIF                                                                212229
      C                   Endif
- 
+
      C                   Endsl
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -781,7 +782,7 @@
       *                                                               *
       *****************************************************************
      C     Upd_AOSPOS    Begsr
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*UPDATE'     W0ACT
@@ -797,7 +798,7 @@
      C                   Eval      DBProc = 'Upd_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -811,7 +812,7 @@
       *                                                               *
       *****************************************************************
      C     Cmt_AOSPOS    Begsr
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*COMMIT'     W0ACT
@@ -827,7 +828,7 @@
      C                   Eval      DBProc = 'Upd_AOSPOS'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -841,18 +842,18 @@
       *                                                               *
       *****************************************************************
      C     Do_Add_Spos   Begsr
- 
+
      C                   Move      C#Acct        C#AcctN                                      213054
                                                                                               213054
      C**********         If        C#Acct <> *Blanks                                          213054
      C                   If        C#AcctN <> *Zeros                                          213054
      C                             AND C#ATYP <> *BLANKS                                    MD034834
- 
+
      C                   CallB     'AOSPOSU0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*ADD   '     W0ACT
      C                   PARM      C#DTA         O#DTA           256
- 
+
      C                   If        *In90  = *On  OR
      C                             @RTCD  <> *Blanks
      C                   Eval      DBKey  =  W0ACT
@@ -863,9 +864,9 @@
      C                   Eval      DBProc = 'Do_add_Spos'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -1027,13 +1028,13 @@
       *                                                               *
       *****************************************************************
      C     FmtAcc        Begsr
- 
+
      C                   If        %Subst(TmpA:1:1) = '/'
      C                   Eval      Acc  = %Subst(TmpA:2:34)
      C                   Eval      TmpA = *Blanks
      C                   Eval      TmpA = Acc
      C                   Endif
- 
+
      C                   If        C#ATYP = 'G'
      C**********         Eval      %Subst(Acc:1:6) = %Subst(TmpA:4:9)                         CGL029
      C**********         Eval      %Subst(Acc:7:9) = %Subst(TmpA:10:12)                       CGL029
@@ -1046,20 +1047,20 @@
      C                   Eval      %Subst(Acc:10:10) = %Subst(TmpA:13:10)                     CGL029
      C                   Eval      %Subst(Acc:20:2) = %Subst(TmpA:23:2)                       CGL029
      C                   Eval      %Subst(Acc:22:3) = %Subst(TmpA:1:3)                        CGL029
- 
+
      C                   Eval      C#ACCT = Acc
      C                   Else
- 
+
      C                   If        C#ATYP = 'R'
      C                   CallB     'AOACCTV1'
      C                   Parm                    @RTCD                          B:Return code
      C                   Parm                    @TYPE                          B:Return code
      C     TmpA          Parm                    TmpA                           B:Return code
      C                   Parm                    P@FMT
- 
+
      C                   Eval      C#ACCT = TmpA
      C                   Movel     TmpA          C#ACNO                                     AR750695
- 
+
      C                   Else
      C                   Eval      C#ACCT = TmpA
      C                   Endif
@@ -1072,7 +1073,7 @@
      C                   EVAL      C#ACS1 = W#ACS1                                            CGL029
      C                   EVAL      C#BRC1 = W#BRC1                                            CGL029
      C                   Endif                                                              AR750695
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************                       212229
@@ -1140,9 +1141,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       * INPUTS
      C                   Parm                    RetCodeIn
@@ -1171,7 +1172,7 @@
      C                   ELSE                                                                 212229
      C                   MOVE      'N'           CFT004                                       212229
      C                   ENDIF                                                                212229
- 
+
       ** Check if Online Printing of Advices (GE7) is on.                                     CRE020
                                                                                               CRE020
      C                   EVAL      CRE020 = 'N'                                               CRE020
@@ -1215,16 +1216,16 @@
      C     @RTCD         IFEQ      *BLANK                                                     CAP205
      C                   MOVE      'Y'           CAP205                                       CAP205
      C                   ENDIF                                                                CAP205
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

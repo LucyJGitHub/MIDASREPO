@@ -44,6 +44,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
       *           - Recompile due to changes in INPAYDD               *
       *           - Applied fix for MD050928                          *

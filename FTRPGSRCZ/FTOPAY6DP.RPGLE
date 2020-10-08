@@ -38,6 +38,7 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027047 - Avoid HATS issue with redisplaying previous screen*

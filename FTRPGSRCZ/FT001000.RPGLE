@@ -125,6 +125,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
       *             of system value Fld50FAddCustDtl                  *

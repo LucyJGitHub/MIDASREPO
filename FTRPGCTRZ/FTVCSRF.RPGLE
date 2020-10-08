@@ -56,6 +56,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
@@ -111,23 +112,23 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
- 
+
      FACNUMA    IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMAF)
- 
+
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for Midas SD Retail Details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       ** External data structure for Nostro customer number
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
@@ -142,7 +143,7 @@
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT120
- 
+
       *                                                                                       CFT145
       ** External DS for Accounts file                                                        CFT145
       *                                                                                       CFT145
@@ -155,7 +156,7 @@
       ** External data structure for access programs (Long)                                   CFT145
       *                                                                                       CFT145
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CFT145
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -174,50 +175,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
      D LWRC            C                   'abcdefghijklmnopqrstuvwxyz'                       CFT120
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *                                                                                       240689
@@ -233,19 +234,19 @@
       *                                                                                       240689
       ** Array of Warning message data.                                                       240689
       *                                                                                       240689
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D*TranInSecA****E*DS***               EXTNAME(FTOPY2PD)                    CFT014
      D TranInFour    E DS                  EXTNAME(FTOPY6PD)                    CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D*OKFlagsDS*****E*DS***               EXTNAME(FTEOPY2PD)                   CFT014
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY4PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
      D**********       DS            18                                                       CGL029
      D                 DS                                                                     CGL029
      D*K#CNUM***               1      6  0                                                    CSD027
@@ -259,19 +260,19 @@
      D*K#ACSQ***              14     15  0                                                    CGL029
      D*K#BRCA***              16     18                                                       CGL029
      D*AKEYF****               1     18                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D/COPY FTCPYSRC,SFTVALCSLE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       240689
@@ -279,9 +280,9 @@
       *                                                                                       240689
       ** Index for arrays of warning message ids etc.                                         240689
       *                                                                                       240689
- 
+
      D K#RENO          S             10  0
- 
+
      D*C#ACCD***       S              4                                                       CGL029
      D C#ACCD          S             10                                                       CGL029
      D C#ACSN          S              2
@@ -293,7 +294,7 @@
      D C#OPTN          S              7
      D C#PNOI          S              1
      D C#RTCD          S              7
- 
+
      D*WACCS****       S              6                                                       CGL029
      D*WCDRO13**       S             13                                                       CGL029
      D WACCS           S             12                                                       CGL029
@@ -301,7 +302,7 @@
      D WDATE           S              5  0
      D Ccy             S              3A                                                      CFT120
      D CFT120          S              1A                                                      CFT120
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -316,7 +317,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -334,11 +335,11 @@
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   Eval      SCDRO  = %Xlate(LWRC: ALPHAB: SCDRO)                       CFT120
      C                   ENDIF                                                                CFT120
- 
+
       * Validate
       *
      C                   Exsr      VDBTCC
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKCdro = 'N' or
@@ -350,9 +351,9 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       ******************************************************************
       /EJECT
@@ -361,7 +362,7 @@
      C**********************************************************************
      C*
      C     VDBTCC        BEGSR
- 
+
       *  Charges To The Debit of A/C is optional.
       *  3 formats acceptable - Nostro, Retail A/C, A/C No.
                                                                                 CFT014
@@ -371,7 +372,7 @@
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   EVAL      @CDRC = *BLANKS                                            CFT120
      C                   ENDIF                                                                CFT120
- 
+
       *  If blank and branch entered error
      C                   If        SCDRO  = *Blanks and
      C                             SCDBR <> *Blanks
@@ -423,7 +424,7 @@
      C                   ENDIF                                                                CFT120
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT120
- 
+
       * Field is optional, ignore if blank
      C                   If        SCDRO <> *Blanks
       * If Add/deduct indicator is 'D' and Details of charges is 'BEN',                       255428
@@ -437,10 +438,10 @@
      C                   MOVEL     'SCDRO'       FldNamXAr(Idx)                               255428
      C                   MOVEL     'FTM5052'     MsgIDXAr(Idx)                                255428
      C                   ENDIF                                                                255428
- 
+
       * No error
      C                   If        OKCdro = 'Y'
- 
+
       *  ? not allowed
      C     '?'           Scan      SCDRO         Y#                       90
       *
@@ -452,13 +453,13 @@
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1027'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       * No error
      C                   BITOFF    '01234567'    WRETB             1                          240689
      C                   If        OKCdro = 'Y'
- 
+
       *  Determine the number of digits in the field
       *
       *  Check first two characters are numeric and rest is blank
@@ -476,7 +477,7 @@
       ** 2, 10 and 18 digits allowed                                                          CFT120
       *
      C                   If        *IN90 = *ON
- 
+
      C                   If        Y# = 3 or
      C                             Y# = 11 or
      C**********                   Y# = 13 and                                                CGL029
@@ -488,9 +489,9 @@
      C                             @MBIN <> 'Y'
      C                   Eval      *IN90 = *Off
      C                   End
- 
+
      C                   End
- 
+
       *  Field is invalid format
      C                   If        *IN90 = *On
       * Send error to screen
@@ -500,12 +501,12 @@
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1028'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       * No error
      C                   If        OKCdro = 'Y'
- 
+
       *  If 10 digits and Retail accounts not used error
      C                   If        BMRANR <> 'Y' and
      C                             Y# = 11 and
@@ -517,17 +518,17 @@
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1029'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       * No error
      C                   If        OKCdro = 'Y'
- 
+
       *  Check if a 2 digit Nostro code has been entered - based on
       *  no. of blanks found in field
      C                   If        Y# = 3 and
      C                             SCDBR = *Blanks
- 
+
       *  Validate Nostro Code
      C                   Movel     SCDRO         C#NONB
      C                   IF        SCDRC   =  *BLANKS AND CFT120 = 'Y'                        CFT120
@@ -536,7 +537,7 @@
      C                   ELSE                                                                 CFT120
      C                   Eval      C#CYCD  =  SCDRC                                           CFT120
      C                   ENDIF                                                                CFT120
- 
+
       * Read SDNOSTPD for customer number
      C                   CALLB     'AONOSTR0'
      C                   Parm      *Blanks       C#RTCD
@@ -567,7 +568,7 @@
      C                   ELSE                                                                 CFT120
      C                   Movel     'MMA1030'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   Else
       * Move new SYNON field names to old field names
      C                   Move      A7CUST        K#CNUM
@@ -575,7 +576,7 @@
      C                   Move      A7ACSN        K#ACSQ
      C                   Move      A7BRCD        K#BRCA
      C                   MOVE      A7CUST        WWCDCN            6                          CFT145
- 
+
      C                   IF        SCDRC   =  *BLANKS AND CFT120 = 'Y'                        CFT120
      C                             OR CFT120 <> 'Y'                                           CFT120
      C                   Eval      K#BCCY = BJCYCD
@@ -604,17 +605,17 @@
      C                   End
      C                   End
      C                   End
- 
+
       * No error
      C                   If        OKCdro = 'Y'
- 
+
       *  Check for Retail Account No. being entered
       *  only if Debit Customer reference is not entered OR
       *  multibranching is not active.
      C**********         If        Y# = 11 and                                               BUG4321
      C**********                   SCDBR = *Blanks                                           BUG4321
      C                   If        Y# = 11                                                   BUG4321
- 
+
      C                   Movel     SCDRO         K#RENO
      C     K#RENO        Chain     ACNUMAF                            90
       *
@@ -627,7 +628,7 @@
      C                   Add       1             Idx
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1031'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   MOVEL     CNUM          WWCDCN            6                          CFT145
       *                                                                                       CFT120
@@ -684,12 +685,12 @@
      C                   End
      C                   End
      C                   ENDIF                                                                CFT120
- 
+
       * No error
       * ... and no valid retail account found                                                BUG4321
      C                   If        OKCdro = 'Y'
      C                             and RetailAc <> 'Y'                                       BUG4321
- 
+
       *  Validate for G/L Account No.
       *  If 12 digits when combined with base currency must exist
       *  on PF/ACCNTAB
@@ -697,7 +698,7 @@
      C**********         If               Y# = 13 or                                          CGL029
      C                   If               Y# = 19 or                                          CGL029
      C                                    SCDBR <> *Blanks
- 
+
      C                   Movel     SCDRO         K#CNUM
      C                   MOVEL     SCDRO         WWCDCN            6                          CFT145
      C                   IF        SCDRC   =  *BLANKS AND CFT120 = 'Y'                        CFT120
@@ -716,7 +717,7 @@
      C                   Else
      C                   Movel     BJSBRC        K#BRCA
      C                   End
- 
+
      C     AKEY          Chain     ACCNTABF                           90
       * Error if not found or RECI <> D
      C                   If        *IN90 = *ON or
@@ -742,13 +743,13 @@
      C                   ENDIF                                                             AR1097264
       *                                                                                    AR1097264
      C                   End
- 
+
      C                   End
      C                   End
- 
+
       * No error
      C                   If        OKCdro = 'Y'
- 
+
       *  If 'Charges To The Debit Of is entered then
       *  check if date is in the future and if the account is
       *  closing today
@@ -757,7 +758,7 @@
      C                   Else
      C                   Eval      WDATE = @PVDT
      C                   End
- 
+
      C                   If        WDATE > BJRDNB and
      C                             ACST = 'C'
       * Send error to screen
@@ -770,7 +771,7 @@
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1033'     MsgIdXAr(Idx)
      C                   End
- 
+
       *  Check not past backvalue period
       *                                                                                       CFT120
       ** If OP Template validation, this date will be zero                                    CFT120
@@ -787,7 +788,7 @@
      C                   Movel     'MMA1034'     MsgIdXAr(Idx)
      C                   End
      C                   ENDIF                                                                CFT120
- 
+
       *  For Retail accounts only, check that the
       *  earlier of the two value dates is not before the Backvalue
       *  Limit Date nor before the account was opened
@@ -806,12 +807,12 @@
      C                   Movel     'SCDRO'       FldNamXAr(Idx)
      C                   Movel     'MMA1035'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   End
- 
+
       *  If no errors then set file fields
      C                   If        OKCdro = 'Y'
- 
+
      C                   Select
      C                   When      Y# = 3
      C                   Movel     'N'           @CDRT
@@ -820,7 +821,7 @@
      C**********         When      Y# = 13                                                    CGL029
      C                   When      Y# = 19                                                    CGL029
      C                   Movel     'P'           @CDRT
- 
+
      C                   End
       *
      C                   Movel     SCDRO         @CDRO
@@ -924,7 +925,7 @@
      C                   ENDIF                                                                240689
       *                                                                                       240689
      C                   ENDIF                                                                240689
- 
+
      C                   SELECT
       *
      C     SCDRO         WHENNE    *BLANKS
@@ -959,7 +960,7 @@
      C                   OTHER                                                                187056
      C                   EVAL      @CCCY = SPCCY                                              187056
      C                   ENDSL                                                                187056
- 
+
      C                   End
       *                                                                                       CFT145
       ** Additional validation CDRO                                                           CFT145
@@ -1004,7 +1005,7 @@
      C                   MOVEL     'FTX0023'     WMsgIdXAr(WIx)                               CFT145
      C                   ENDIF                                                                CFT145
      C                   ENDIF                                                                CFT145
- 
+
      C                   ENDSR
      C*
      C************************************************************
@@ -1015,18 +1016,18 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C***********        Parm                    TranInSecA                     CFT014
      C                   Parm                    TranInFour                     CFT014
- 
+
       *  Program Fields
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
@@ -1037,13 +1038,13 @@
      C                   Parm                    WFldNmXAr                                    240689
      C                   Parm                    WMsgIDXAr                                    240689
      C                   Parm                    WMsgDtaXAr                                   240689
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -1101,7 +1102,7 @@
      C                   MOVEL     @OPTN         DBKEY                                        187056
      C                   EXSR      *PSSR                                                      187056
      C                   ENDIF                                                                187056
- 
+
       * Key list for account validation
      C     AKEY          KLIST
      C                   Kfld                    K#CNUM
@@ -1136,9 +1137,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

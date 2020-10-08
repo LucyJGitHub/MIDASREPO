@@ -53,6 +53,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -69,7 +70,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       *                                                               *
       *                  FUNCTION OF INDICATORS                       *
@@ -77,7 +78,7 @@
       *       80  CHAIN indicator                                     *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -89,59 +90,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D P_TransDet      S           3000A
      D P_TransExt      S           3000A
- 
+
      D InPay         E DS                  EXTNAME(INPAYDD)  PREFIX(I_)
      D InPayEx       E DS                  EXTNAME(INPAYXPD) PREFIX(I_)
- 
+
      D OutPay        E DS                  EXTNAME(OTPAYDD)  PREFIX(O_)
      D OtPayEx       E DS                  EXTNAME(OTPAYXPD) PREFIX(O_)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D P@FMT         E DS                  EXTNAME(DSFDY)
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D TransType       S              2
- 
+
      D SettDateLoc     S              3
      D PayDateLoc      S                   Like(SettDateLoc)
- 
+
      D N_Return        S              7
      D N_Optn          S              7
      D N_Cust          S              6
@@ -153,20 +154,20 @@
      D N_Brcd          S              3
      D N_Cssn          S             10
      D N_PNoi          S              1
- 
+
      D Account         S                   Like(O_DST1)
      D Branch          S                   Like(O_BRCA)
      D N_Retl          S             10
      D Nostro          S              1
      D Type            S              1
- 
+
      D*Orbk_W***       S             10                                                       CGL029
      D Orbk_W          S             16                                                       CGL029
      D Snco_W          S             10
      D Rcco_W          S             10
      D IbanAcc         S             34
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -183,38 +184,38 @@
       ** +----------------------------------------------------------------+
       *
       *****************************************************************
- 
+
      C                   Exsr      ResetVar
- 
+
       * Move data to apprppriate datastructure
      C                   Select
      C                   When      TransType = 'OP'
      C                   Eval      OutPay    = P_TransDet
      C                   Eval      OtPayEx   = P_TransExt
- 
+
      C                   Exsr      GetOPLoc
- 
+
      C                   When      TransType = 'IN'
      C                   Eval      InPay     = P_TransDet
      C                   Eval      InPayEx   = P_TransExt
- 
+
      C                   Exsr      GetINLoc
- 
+
      C                   Endsl
- 
+
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * GetOPLoc - Get Outgoing Payments Location Codes
       *****************************************************************
      C     GetOPLOc      Begsr
- 
+
       * Get Settle Date Location Code
       * Ordering Bank     = ORBT ORBK
       * Ordering Customer = ORCT ORC1
- 
+
      C                   Select
      C                   When      O_Orbt  <> *Blanks
      C                   Eval      Type    =  O_Orbt
@@ -223,7 +224,7 @@
      C                   Eval      Ccy     =  O_SMCY
      C                   Eval      Branch  =  O_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   When      O_Orct  <> *Blanks
      C                   Eval      Type    =  O_Orct
                                                                                              CFT032
@@ -240,16 +241,16 @@
      C                   Eval      Branch  =  O_BRCA
      C                   Exsr      FormatAccount
      C                   EndSl
- 
+
       * If nostro, move to settle date location
      C                   If        Nostro = 'Y'
      C                   Eval      SettDateLoc = %Subst(A7NOSN:8:3)
      C                   Endif
- 
+
       * Get Payment Date Location Code
       * Senders Correspondent : SNCT SNCO
       * Destination           : DSTT DST1
- 
+
      C                   Select
      C                   When      O_Snct  <> *Blanks
      C                   Eval      Type    =  O_Snct
@@ -258,7 +259,7 @@
      C                   Eval      Ccy     =  O_PCCY
      C                   Eval      Branch  =  O_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   When      O_Dstt  <> *Blanks
      C                   Eval      Type    =  O_Dstt
      C                   Eval      Account =  O_Dst1
@@ -266,12 +267,12 @@
      C                   Eval      Branch  =  O_BRCA
      C                   Exsr      FormatAccount
      C                   EndSl
- 
+
       * If nostro, move to payment date location
      C                   If        Nostro = 'Y'
      C                   Eval      PayDateLoc = %Subst(A7NOSN:8:3)
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -279,7 +280,7 @@
       * GetINLoc - Get Incoming Payments Location Codes
       *****************************************************************
      C     GetINLOc      Begsr
- 
+
       * Settlement date location code
      C                   Select
      C                   When      I_INTRIT <> *Blank
@@ -288,29 +289,29 @@
      C                   Eval      Ccy     =  I_SMCY
      C                   Eval      Branch  =  I_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   When      I_INRCRT <> *Blank
      C                   Eval      Type    =  I_INRCRT
      C                   Eval      Account =  I_INRCO1
      C                   Eval      Ccy     =  I_SMCY
      C                   Eval      Branch  =  I_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   When      I_SNTP   <> *Blank
      C                   Eval      Type    =  I_SNTP
      C                   Eval      Account =  I_SND1
      C                   Eval      Ccy     =  I_SMCY
      C                   Eval      Branch  =  I_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   Endsl
- 
+
       * If nostro, move to settle date location
      C                   If        Nostro = 'Y'
      C                   Eval      SettDateLoc = %Subst(A7NOSN:8:3)
      C                   Endif
- 
- 
+
+
       * Payment date location code
      C                   Select
      C                   When      I_ACBT   <> *Blank
@@ -322,21 +323,21 @@
      C                   Eval      Branch = I_ACBB
      C                   Endif
      C                   Exsr      FormatAccount
- 
+
      C                   When      I_BNCT   <> *Blank
      C                   Eval      Type    =  I_BNCT
      C                   Eval      Account =  I_BNC1
      C                   Eval      Ccy     =  I_PCCY
      C                   Eval      Branch  =  I_BRCA
      C                   Exsr      FormatAccount
- 
+
      C                   Endsl
- 
+
       * If nostro, move to payment date location
      C                   If        Nostro = 'Y'
      C                   Eval      PayDateLoc = %Subst(A7NOSN:8:3)
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -345,11 +346,11 @@
       *  to get nostro code.
       *****************************************************************
      C     FormatAccount Begsr
- 
+
      C                   Exsr      ResetVar
- 
+
      C                   Select
- 
+
      C                   When      Type  = 'G'
      C                   Eval      N_Cust = %Subst(Account:1:6)
      C**********         Eval      N_Accd = %Subst(Account:10:4)                              CGL029
@@ -359,7 +360,7 @@
      C                   Eval      N_Ccy  = %Subst(Account:7:3)
      C**********         Eval      N_Brcd = %Subst(Account:16:3)                              CGL029
      C                   Eval      N_Brcd = %Subst(Account:22:3)                              CGL029
- 
+
      C                   When      Type  = 'P'
      C                   Eval      N_Cust = %Subst(Account:1:6)
      C**********         Eval      N_Accd = %Subst(Account:7:4)                               CGL029
@@ -369,19 +370,19 @@
      C                   Eval      N_Ccy  = Ccy
      C**********         Eval      N_Brcd = %Subst(Account:13:3)                              CGL029
      C                   Eval      N_Brcd = %Subst(Account:19:3)                              CGL029
- 
+
      C                   If        N_Brcd = *Blanks
      C                   Eval      N_Brcd = Branch
      C                   Endif
- 
+
      C                   When      Type  = 'N'
      C                   Eval      N_Ccy  = Ccy
      C                   Eval      N_Nonb = Account
- 
+
      C                   When      Type  = 'F'
      C                   Eval      N_Ccy  = %Subst(Account:1:3)
      C                   Eval      N_Nonb = %Subst(Account:4:2)
- 
+
      C                   When      Type  = 'R'
      C                   Eval      N_Retl = Account
      C                   Eval      N_Cust = *Blanks
@@ -389,20 +390,20 @@
      C                   Eval      N_Accd = *Blanks
      C                   Eval      N_Acsn = *Blanks
      C                   Eval      N_Brcd = *Blanks
- 
+
      C                   Exsr      Get_Retail
- 
+
      C                   When      Type  = 'I'
      C                   If        %Subst(Account:1:1) = '/'
      C                   Eval      IbanAcc = %Subst(Account:2:34)
      C                   Else
      C                   Eval      IbanAcc = Account
      C                   Endif
- 
+
      C                   Exsr      Get_Iban
- 
+
      C                   Endsl
- 
+
       * Call AONOSTR0 to see if nostro account
      C                   CallB     'AONOSTR0'
      C                   Parm      *Blanks       N_Return                       B:Return code
@@ -416,11 +417,11 @@
      C                   Parm                    N_Cssn                         I:Cust ShortN
      C                   Parm                    N_PNoi                         I:Prime Nost In
      C     N@FMT         Parm      *Blanks       P@FMT                          O:Format
- 
+
      C                   If        N_Return = *Blanks
      C                   Eval      Nostro = 'Y'
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -428,7 +429,7 @@
       * Get_Retail  - Retrieve account details
       *****************************************************************
      C     Get_Retail    Begsr
- 
+
      C                   CallB     'AOACCTR0'
      C                   Parm      *Blanks       N_Return
      C                   Parm      '*KEY   '     N_Optn
@@ -439,7 +440,7 @@
      C                   Parm                    N_Acsn
      C                   Parm                    N_Brcd
      C     ACCNT         Parm      *Blanks       P@FMT
- 
+
      C                   If        N_Return = *Blanks
      C                   Movel     CNUM          N_Cust
      C                   Move      ACOD          N_Accd
@@ -453,7 +454,7 @@
      C                   Eval      N_Ccy  = *Blanks
      C                   Eval      N_Brcd = *Blanks
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -461,13 +462,13 @@
       * Get_Iban - Get IBAN account Details
       *****************************************************************
      C     Get_Iban      Begsr
- 
+
      C                   CallB     'AOIBANR4'
      C                   Parm      *Blanks       N_Return
      C                   Parm      '*KEY'        N_Optn
      C                   Parm                    IbanAcc
      C     ACCNT         Parm      *Blanks       P@FMT                          O:Format
- 
+
      C                   If        N_Return = *Blanks
      C                   Movel     CNUM          N_Cust
      C                   Move      ACOD          N_Accd
@@ -481,7 +482,7 @@
      C                   Eval      N_Ccy  = *Blanks
      C                   Eval      N_Brcd = *Blanks
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -524,7 +525,7 @@
       ** Payment date location code
      C                   Parm                    SettDateLoc
      C                   Parm                    PayDateLoc
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************

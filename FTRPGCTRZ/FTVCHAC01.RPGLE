@@ -43,6 +43,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -59,10 +60,10 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       * RFT Header file (keyed on RFTID)
      FFT101HL3  IF   E           K Disk    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -81,22 +82,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -106,11 +107,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -119,32 +120,32 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
      D  PSNDREF_H    E                     EXTFLD(PSNDREF)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       * OK Flags for second screen
      D OKFlags       E DS                  EXTNAME(FTE101S2PD)
- 
+
       * Incoming account details from access objects
      D AccRecord     E DS                  EXTNAME(ACCNTAB)
- 
+
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * DS to split account identifier into components
      D AccntCode       DS
      D  CustNo                 1      6
@@ -155,7 +156,7 @@
      D**AccCode*              10     13  0                                                    CGL029
      D**AccSeq**              14     15  0                                                    CGL029
      D**Branch**              16     18                                                       CGL029
- 
+
       * DS to split account identifier into components
      D WorkAccId       DS
      D**W#CNUM**               1      6  0                                                    CSD027
@@ -167,7 +168,7 @@
      D**W#ACOD**              10     13  0                                                    CGL029
      D**W#ACSQ**              14     15  0                                                    CGL029
      D**W#BRCA**              16     18                                                       CGL029
- 
+
       * DS to save account identifier
      D SaveAccId       DS
      D**X#CNUM**               1      6  0                                                    CSD027
@@ -179,32 +180,32 @@
      D**X#ACOD**              10     13  0                                                    CGL029
      D**X#ACSQ**              14     15  0                                                    CGL029
      D**X#BRCA**              16     18                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D CFT004          S              1    INZ('N')
- 
+
       ** Index for arrays of of warning message ids etc
      D W#OrdCust       S                   LIKE(POCUS1)
- 
+
      D W#AccNum        S                   LIKE(PCHGACC)
      D IBANRetCde      S              7
      D P@IBAN          S             34
- 
+
      D ACCTRetCde      S              7
      D P@ACID          S             10
      D P@CYCD          S              3
@@ -213,11 +214,11 @@
      D P@BRCA          S             33
      D P@TYPE          S              7
      D P@NOSN          S              2
- 
+
      D RespMode        S              1
- 
+
      D DDSName         S             10
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -225,7 +226,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -233,18 +234,18 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise
      C                   EVAL      Idx     = 0
      C                   EVAL      WIx     = 0
      C                   EVAL      OKCGAC  = 'Y'
- 
+
       ** Main processing
- 
+
      C                   EXSR      VALIDATE
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
      C                   If        PCHGACC <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -257,11 +258,11 @@
      C                   EVAL      OKCGAC  = 'N'
      C                   Endif
      C                   Endif
- 
- 
+
+
       ** Return
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -296,7 +297,7 @@
      C                   MOVEL     'RFV0175'     MsgIdXAr(Idx)
      C                   Return
      C                   ENDIF
- 
+
      C                   IF        PPTYP = 'RI'
       *
       * If charges account begins with a '/', remove it
@@ -413,24 +414,24 @@
      C                   ENDIF
       *
      C                   ELSE
- 
+
      C                   EVAL      @TYPE = 'RO'
      C                   EVAL      IBAN = PCHGACC
- 
+
      C                   CALLB     'FTVIBNB01'
      C                   PARM      *Blanks       IRetCde          10
      C                   PARM                    @TYPE             2
      C                   PARM                    IBAN
- 
+
      C                   IF        IRetCde = '*INVALIDOT'
      C                   MOVE      'N'           OKCGAC
      C                   ADD       1             Idx
      C                   MOVEL     DDSName       FldNamXAr(Idx)
      C                   MOVEL     'RFV0306'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -462,7 +463,7 @@
      C                   MOVEL     'Dummy'       IBANRetCde                     B:Return code
      C                   MOVEL     *Blanks       P@IBAN                         I:Option
      C                   ENDIF                                                  I:Option
- 
+
      C                   CallB     'AOACCTV1'
      C                   Parm                    ACCTRetCde
      C                   Parm                    P@TYPE
@@ -474,7 +475,7 @@
      C                             P@TYPE = '*LEDGER' or                        I:Option
      C                             P@TYPE = '*NOSTRO' or                        I:Option
      C                             P@IBAN <> *Blanks                            I:Option
- 
+
      C                   Select
      C                   When      P@TYPE = '*NOSTRO'
      C                   Eval      N@FMT = DSSDY
@@ -515,7 +516,7 @@
      C                   EVAL      W#BRCA = BRCA                                O:ACCNT Format
      C                   EVAL      W#CNUM = CNUM
      C                   Endsl
- 
+
      C                   ENDIF                                                  I:Option
       *
      C                   ENDSR
@@ -582,20 +583,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       * INPUTS
      C                   PARM                    RetCodeIn
      C                   PARM                    RespMode
      C                   PARM                    ActionCode
- 
+
       *  Screen fields
      C                   PARM                    HdrRcdIn
      C                   PARM                    DtlRcdIn
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
@@ -606,7 +607,7 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    DDSName
      C                   PARM                    OKFlags
- 
+
       ** Access SAR file to see if CFT004 is present
      C                   CALLB     'AOSARDR0'
      C                   PARM      *Blanks       @RTCD
@@ -631,20 +632,20 @@
      C                   Eval      DBProc = '*Inzsr'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *  Program, module and procedure names for database error processing.*
       *  The following /COPY sets these values, and also defines LDA as    *
       *  an external data area                                             *
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@

@@ -1,18 +1,18 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
- 
+
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Validate RFT Header Ordering Customer')       *
       * ==============================================================
       *  Midas - Standard subprograms                                 *
- 
+
       *  FTVHDCS01  - Validate RFT Header Ordering Customer           *
- 
+
       *  (c) Finastra International Limited 2001                      *
- 
+
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
- 
+
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
@@ -79,10 +79,11 @@
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CFT006  *CREATE    Date 10Sep99               *
       *                                    Date ddmmmyy               *
- 
+
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034505 - Database error encountered when Ordering Customer *
       *             is a Customer Number or Accountline               *
@@ -154,7 +155,7 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -173,22 +174,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -198,18 +199,18 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
       * Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -220,27 +221,27 @@
      D WACOD           S             10A                                                     CSW207A
      D WACSQ           S              2A                                                     CSW207A
      D Valid50F        S              1A   INZ('N')                                         BUG15239
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * OK Flags for screen - Header
      D OKFlagHs      E DS                  EXTNAME(FTE101HPD)
- 
+
      D GenOkFlag       S              1    Import
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
@@ -261,13 +262,13 @@
      D                                     PREFIX(N_)                                      BUG15010A
      D C_SDCUST      E DS                  EXTNAME(SDCUSTPD)                               BUG15010A
      D                                     PREFIX(C_)                                      BUG15010A
- 
+
      D IbanStr         S             34
- 
+
      D RespMode        S              1
      D DDSName         S             10
      D WAccStr         S              1    INZ('N')                                           221538
- 
+
      D AccStr          S                   Like(PHOCUS1)
      D @TYPE           S                   Like(@RTCD)
       *                                                                                       226083
@@ -296,28 +297,28 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      RetCodeIn  = *BlankS
      C                   Eval      Idx        = 0
      C                   Eval      WIdx       = 0
- 
+
      C                   Eval      GenOkFlag = 'Y'
      C                   Eval      OkHoc1 = 'Y'
      C                   Eval      OkHoc2 = 'Y'
      C                   Eval      OkHoc3 = 'Y'
      C                   Eval      OkHoc4 = 'Y'
      C                   Eval      OkHoc5 = 'Y'
- 
+
      C                   Eval      PCUSTTP = ' '
- 
+
      C***********        Eval      ScanPos2  = *Zeros                                         226083
      C***********        Eval      ScanPos3  = *Zeros                                         226083
      C***********        Eval      ScanPos4  = *Zeros                                         226083
      C***********        Eval      ScanPos5  = *Zeros                                         226083
- 
+
       * Optional.  (If not entered in general details, mandatory in
       * transaction details).  Send Warning Message
- 
+
      C***********        If        PHOCUS1 = *Blanks                                          226083
      C                   If        PHOCUS1 = *Blanks  And                                     226083
      C                             PHOCUS2 = *blanks  And                                     226083
@@ -382,10 +383,10 @@
      C                   Eval      GenOkFlag = 'N'
      C                   Return
      C                   Endif
- 
+
      C                   Select
      C                   When      PPTYP = 'RO'
- 
+
       * Ensure that the second character is not blank
      C                   If        %Subst(PHOCUS1:2:1) = *Blank
      C                   Eval      Idx             =   Idx+1
@@ -780,10 +781,10 @@
      C                   Endif                                                                226083
      C*                                                                                       226083
       * <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <-> <->
- 
+
       * If the transfer type is 'RI' a valid account must be entered into
       *  this field.  Either GL, IBAN, Retail or Nostro
- 
+
       *                                                                                       226083
       **  For RIs,                                                                            226083
       **  (1) Entry is only allowed on line 1....2-5 should be blank                          226083
@@ -792,7 +793,7 @@
       **  (3) Should not accept a Customer, Shortname or SWIFT ID type of entry.              226083
       *                                                                                       226083
      C                   When      PPTYP = 'RI'
- 
+
      C                   CallB     'AOACCTV1'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      *Blanks       @TYPE
@@ -896,7 +897,7 @@
      C                   ENDIF                                                                226083
      C                   ENDIF                                                                226083
      C                   ENDIF                                                  End CFT004    226083
- 
+
      C                   IF        %Subst(PHOCUS1:1:1) = '/'                                BUG25015
      C                             AND PHOCUS2 <> *BLANKS                                   BUG25015
      C                   EVAL      @Type = '*ACCT'                                          BUG25015
@@ -912,7 +913,7 @@
      C                   Eval      PHOCUS1 = %Subst(PHOCUS1:2)
      C                   Endif
      C                   Endif
- 
+
      C     @Type         Ifeq      '*LEDGER'                                                  221776
      C     @Type         Oreq      '*RETAIL'                                                  221776
      C     @Type         Oreq      '*NOSTRO'                                                  221776
@@ -1178,7 +1179,7 @@
      C                   Endif                                                                221774
       *                                                                                       226083
      C                   ENDSL                                                                226083
- 
+
      C*                                                                                     BUG24434
      C** No errors so far, check there are no invalid characters used.                      BUG24434
      C                   If        GenOkFlag <>'N'                                          BUG24434
@@ -1260,7 +1261,7 @@
      C                   Endif                                                              BUG24434
      C                                                                                      BUG24434
      C                   Endif                                                              BUG24434
- 
+
      C                   IF        GenOKFlag <> 'N'                                         BUG24829
      C                                 And PCUSTTP = *Blanks                                BUG24829
      C                   EVAL      PCUSTTP = 'A'                                            BUG24829
@@ -1426,19 +1427,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       * INPUTS
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode
      C                   Parm                    ActionCode
- 
+
       *  Screen fields
      C                   Parm                    HdrRcdIn
      C                   PARM                    OKFlagHS
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -1448,13 +1449,13 @@
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtXAr
      C                   Parm                    DDSName
- 
+
      C                   CALLB     'AOSARDR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT004'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   Select
      C                   When      @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
@@ -1462,14 +1463,14 @@
      C                   Eval      DBase =  2
      C                   Eval      DBKey = 'CFT004'
      C                   Exsr      *PSSR
- 
+
      C                   When      @RTCD = *Blanks
      C                   Eval      CFT004 = 'Y'
- 
+
      C                   When      @RTCD = '*NRF   '
      C                   Eval      @RTCD = *Blanks
      C                   Eval      CFT004 = 'N'
- 
+
      C                   Endsl
       *                                                                                       CSW207
       ** Check if SWIFT Changes 2007 (CSW207) is installed                                    CSW207
@@ -1483,16 +1484,16 @@
      C                   Eval      CSW207 = 'N'                                               CSW207
      C                   Endif                                                                CSW207
       *                                                                                       CSW207
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -1660,7 +1661,7 @@
      C**********         Eval      MsgIdXAr(Idx)   =  'RFV0076'                    BUG21228 BUG25897
      C**********         Eval      RetCodeIn       =   'Error'                     BUG21228 BUG25897
      C                   EndIf                                                              BUG21228
- 
+
       ** Check if valid 50F format                                                          BUG15077
      C                   Eval      Valid50F = 'Y'                                           BUG15239
                                                                                             BUG15077

@@ -51,6 +51,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -85,9 +86,9 @@
                                                                                               CRE008
       ** Midas FT Customer Credit Transfer details                                            CRE008
      FFT102DL1  IF   E           K DISK    INFSR(*PSSR)                                       CRE008
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -105,22 +106,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -130,63 +131,63 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       ** External data structure for Currency standing data
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Currency standing data
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for ICd
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
                                                                                               CRE008
       ** Externally described DS for SAR details                                              CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE008
      D   SLCD        E                     EXTFLD(LCD)                                        CRE008
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * OK Flags for First screen - detail
      D OKFlagDs1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       * OK Flags for second screen - detail
      D OKFlagDs2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       * OK Flags for First screen - header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       * OK Flags for second screen - header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
       ** External Data structure to hold the outgoing record format
      D ACcnt         E DS                  EXTNAME(ACCNTAB)
      D   ACBRCA      E                     EXTFLD(BRCA)
      D   ACPRFC      E                     EXTFLD(PRFC)
- 
+
       ** Define full account details                                                          CRE008
      D*WkORCDS**       DS            18                                                CRE008 CGL029
      D WkORCDS         DS                                                                     CGL029
@@ -203,49 +204,49 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D PType           S                   LIKE(PRtcd)
- 
+
      D CalcXRate       S             13P 8 Import
- 
+
      D CFT004          S              1    INZ('N')
- 
+
      D PAcct           S             35
      D*Pacct1***       S             34                                                     BUG15148
      D Pacct1          S             35                                                     BUG15148
- 
+
      D RespMode        S              1
- 
+
       ** Indicator for ft0010 if 0 has been entered in payment amount field
      D ZerInd          S              1
- 
+
      D DDSName         S             10
- 
+
      D WValid          S              1    INZ('Y')
- 
+
       ** Work field for % rate discrepancy
      D WBtpcrd         S              5  2
- 
+
      D WAmt            S             15
      D TAmt            S             13
- 
+
      D ZField          S             16A
      D WField          S             16A
      D WField1         S             16  0
      D WField2         S             16  0
      D WField3         S             16  0
- 
+
      D DateIn          S              6A
      D DayNoOut        S              5P 0
      D ErrorFlag       S              1A
@@ -253,7 +254,7 @@
      D CGL014          S              1                                                       CGL014
      D POPTN           S              7                                                       CGL014
      D PSARD           S              6                                                       CGL014
- 
+
       *
       ** Data Structure for P#INDC of FT0010
       *
@@ -263,7 +264,7 @@
      DWindc3                   3      3
      DWindc4                   4      4
      DWindc5                   5      5
- 
+
       ** Parameters used for call to RE101901                                                 CRE008
      D PRetCode        S              7                                                       CRE008
      D PInBranch       S              3                                                       CRE008
@@ -308,19 +309,19 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialise fields
       *

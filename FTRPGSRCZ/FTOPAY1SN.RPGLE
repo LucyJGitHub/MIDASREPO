@@ -173,6 +173,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054131 - Ordering Institution work fields values will be   *
       *             passed to Ordering Bank line fields only when     *
       *             action is Insert.                                 *

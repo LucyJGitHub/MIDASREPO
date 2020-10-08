@@ -23,6 +23,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034542 - Additional 59F validation for Beneficiary Cover   *
       *  MD000091 - Event Codes Substitution                          *
@@ -33,7 +34,7 @@
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -51,89 +52,89 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Incoming Transaction
      D NwIPFilFmt    E DS                  EXTNAME(FTVIPAYPD)                               MD034542
      D NwIP7ScnFmt   E DS                  EXTNAME(FTIPY7PD)
- 
+
       ** Valid Incoming Payments Extension File (default)
      D NwIP2FilFmt   E DS                  EXTNAME(FTVIPY2PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEIPY7       E DS                  EXTNAME(FTEIPY7PD)
- 
+
       ** Externally described DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Externally described DS for BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** Externally described DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Externally described DS for Counterparty Nostros
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Beneficiary Customer data structure
      D BENCUS          DS           175
      D  WCBC1                  1     35
@@ -141,27 +142,27 @@
      D  WCBC3                 71    105
      D  WCBC4                106    140
      D  WCBC5                141    175
- 
+
       /COPY FTCPYSRC,SFTVALCSLE
       *
       /COPY FTCPYSRC,SFTADDRILE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
       ** Work fields
      D CFT004          S              1A
      D PRTCD           S              7A
@@ -176,7 +177,7 @@
      D P@IBAN          S             34A
      D POWith          S             47A
      D PONobl          S             34A
- 
+
       ** Used for SWIFT validation
      D ADLINE          S              1A
      D ADSLON          S              1A
@@ -186,7 +187,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** MG001001 59F parameters                                                            MD034542
      D CSW215          S              1A                                                    MD034542
      D PretCode        S              7A                                                    MD034542
@@ -219,7 +220,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -232,7 +233,7 @@
      C                   EVAL      WMsgDtaXAr = *BLANKS
      C                   EVAL      WIX = 0
      C                   EVAL      Idx = 0
- 
+
       ** Validate
      C                   Exsr      VICBC
       *                                                                                     MD034542
@@ -241,7 +242,7 @@
      C                   IF        CSW215 = 'Y' AND Idx = 0                                 MD034542
      C                   EXSR      V59F                                                     MD034542
      C                   ENDIF                                                              MD034542
- 
+
       *
       ** If an error was found, set the return code appropriately
       *
@@ -255,7 +256,7 @@
      C                   EVAL      I2CBC4 = DDCBC4
      C                   EVAL      I2CBC5 = DDCBC5
      C                   ENDIF
- 
+
       ** RETURN
       *
      C                   RETURN
@@ -480,7 +481,7 @@
      C                   EVAL      WMsgIdXAr(WIX) = 'FTM2401'
       *
       ** Invalid character
- 
+
      C                   WHEN      PRTCD = '      3'
      C                   EVAL      WMsgIdXAr(WIX) = 'FTM2402'
       *
@@ -660,7 +661,7 @@
      C     *INZSR        BEGSR
      C*
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
@@ -668,7 +669,7 @@
       ** Incoming Payments details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -680,7 +681,7 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtaXAr
@@ -726,9 +727,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

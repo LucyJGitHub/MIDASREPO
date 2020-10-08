@@ -71,6 +71,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -125,7 +126,7 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -144,22 +145,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -169,11 +170,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -182,28 +183,28 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
      D  PSNDREF_H    E                     EXTFLD(PSNDREF)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       * OK Flags for first screen
      D OKFlags       E DS                  EXTNAME(FTE101S1PD)
- 
+
       * Incoming account details from access objects
      D AccRecord     E DS                  EXTNAME(ACCNTAB)
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                            BUG15010A
@@ -215,7 +216,7 @@
      D                                     PREFIX(N_)                                      BUG15010A
      D C_SDCUST      E DS                  EXTNAME(SDCUSTPD)                               BUG15010A
      D                                     PREFIX(C_)                                      BUG15010A
- 
+
       * DS to split account identifier into components
      D AccntCode       DS
      D  CustNo                 1      6
@@ -226,7 +227,7 @@
      D**P@ACCD**              10     13                                                       CGL029
      D**P@ACSN**              14     15                                                       CGL029
      D**P@BRCA**              16     18                                                       CGL029
- 
+
       * DS to split account identifier into components
      D WorkAccId       DS
      D**W#CNUM**               1      6  0                                                    CSD027
@@ -238,23 +239,23 @@
      D**W#ACOD**              10     13  0                                                    CGL029
      D**W#ACSQ**              14     15  0                                                    CGL029
      D**W#BRCA**              16     18                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D CFT004          S              1    INZ('N')
      D WCNUM           S              6A                                                     CSW207A
      D WACOD           S             10A                                                     CSW207A
@@ -302,7 +303,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -310,7 +311,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -318,7 +319,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise
      C                   EVAL      Idx     = 0
      C                   EVAL      WIx     = 0
@@ -330,11 +331,11 @@
      C                   EVAL      PDCUSTP = *Blanks
      C                   EVAL      P@TYPE  = *Blanks                                          226083
      C                   CLEAR                   AccRecord
- 
+
       ** Main processing
- 
+
      C                   EXSR      VALIDATE
- 
+
       ** If no problems with the account entered, set up hidden field.
      C                   IF        Idx = 0
       *
@@ -364,7 +365,7 @@
      C                   ENDSL
       *
      C                   ENDIF
- 
+
       * Now validate that all data entered is OK for SWIFT
      C                   IF        PPTYP = 'RO'                                             BUG25130
      C                   If        POCUS1  <> *Blanks
@@ -379,7 +380,7 @@
      C                   EVAL      OKTOC1  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POCUS2  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -393,7 +394,7 @@
      C                   EVAL      OKTOC2  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POCUS3  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -407,7 +408,7 @@
      C                   EVAL      OKTOC3  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POCUS4  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -421,7 +422,7 @@
      C                   EVAL      OKTOC4  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POCUS5  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -518,10 +519,10 @@
      C                   Endif                                                                221774
       *                                                                                       221774
      C                   Endif                                                                221774
- 
+
       ** Return
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -602,7 +603,7 @@
      C                   MOVEL     DDSName       FldNamXAr(Idx)
      C                   MOVEL     'RFV0132'     MsgIdXAr(Idx)
      C                   ELSE
- 
+
      C*                                                                                       226083
      C* Remove the following lines of codes as Ordering customer for ROs should               226083
      C* not be validated as internal accounts, and there is no need to check '/'              226083
@@ -1088,7 +1089,7 @@
      C*  If not a valid IBAN, check if RETAIL, GL or NOSTRO                                   226083
       *                                                                                       226083
      C                   CLEAR                   AccRecord
- 
+
      C                   EVAL      WPOCUS1 = POCUS1                                         BUG24734
      C*                                                                                     BUG24734
      C                   CallB     'AOACCTV1'
@@ -1437,20 +1438,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       * INPUTS
      C                   PARM                    RetCodeIn
      C                   PARM                    RespMode          1
      C                   PARM                    ActionCode        1
- 
+
       *  Screen fields
      C                   PARM                    HdrRcdIn
      C                   PARM                    DtlRcdIn
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
@@ -1464,7 +1465,7 @@
       *  OK flags from screen 2
      C                   PARM                    OKTRAM            1
      C                   PARM                    OKTRCY            1
- 
+
      C     PLSWFT        PLIST                                                               CSW207A
      C                   PARM      *Blanks       PRtnCde                                     CSW207A
      C                   PARM      *Blanks       PMsgID                                      CSW207A
@@ -1522,7 +1523,7 @@
      C                   Eval      DBProc = '*Inzsr'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                              CSW207A
      C                   CALL      'SWIF2007'                                                CSW207A
@@ -1533,18 +1534,18 @@
      C                   ELSE                                                                CSW207A
      C                   MOVE      'Y'           CSW207                                      CSW207A
      C                   ENDif                                                               CSW207A
- 
+
       *  Program, module and procedure names for database error processing.*
       *  The following /COPY sets these values, and also defines LDA as    *
       *  an external data area                                             *
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@

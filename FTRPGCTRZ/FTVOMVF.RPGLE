@@ -22,6 +22,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -30,7 +31,7 @@
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -48,103 +49,103 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D FTOPAY1       E DS                  EXTNAME(FTOPY1PD)
      D NwOPFilFmt    E DS                  EXTNAME(FTVOPAYPD)
      D NwOPFilFmx    E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Cover Message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPYA       E DS                  EXTNAME(FTEOPYAPD)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for access programs
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
- 
+
       ** External data structure for access programs
      D NOSTRO        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** External data structure for access programs
      D CUST          E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
      D PMTPY           S              3A
@@ -155,13 +156,13 @@
      D PKEY            S              7A
      D WAllowsMT202C   S              1A
      D CTYP            S              1A                                                    BUG26775
- 
+
       ** System Value for MT202 SWIFT MT202 COV to cover SWIFT MT202 COV
- 
+
      D PAllowsMT202C   C                    'AllowMT202Cover'
- 
+
       ** Parameters for Access Objects
- 
+
      D P@RTCD          S              7A
      D P@OP01          S             20A
      D P@VL01          S            200A
@@ -183,7 +184,7 @@
      D P@VL09          S            200A
      D P@OP10          S             20A
      D P@VL10          S            200A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -198,7 +199,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -211,10 +212,10 @@
      C                   Eval      WMsgDtaXAr = *BLANKS
      C                   Eval      WIX = 0
      C                   Eval      Idx = 0
- 
+
       ** Validate
      C                   Exsr      VOMVF
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKOMVF = 'N'
@@ -223,7 +224,7 @@
      C                   Else
      C                   Eval      O2OMVF = SOMVLF
      C                   EndIf
- 
+
       ** RETURN
       *
      C                   Return
@@ -239,7 +240,7 @@
      C                             And (SMTPY = '202' Or SMTPY = '205')
      C                             And SVALF = 'COV'
      C                             And SOMVLF = 'COV'
- 
+
      C                   Else
      C                   If        SOMVLF <> 'COV'
      C                             And SOMVLF <> *Blanks
@@ -251,34 +252,34 @@
      C                   LeaveSr
      C                   EndIf
      C                   EndIf
- 
+
      C                   If        SOMVLF = *Blanks
- 
+
      C                   If        OTSTMT = 08
      C                             And SVALF = 'COV'
      C                   Eval      SOMVLF = 'COV'
- 
+
      C                   ExSr      VOrdBen
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VMT202
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VRelRef
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VRegPay
- 
+
      C                   EndIf
- 
+
      C                   Else
- 
+
      C                   If        OTSTMT <> 08
      C                   Eval      OKOMVF = 'N'
      C                   Eval      Idx = Idx + 1
@@ -287,9 +288,9 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00229'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   If        SOMVLF = 'COV'
- 
+
      C                   If        SVALF <> 'COV'
      C                   Eval      OKOMVF = 'N'
      C                   Eval      Idx = Idx + 1
@@ -298,30 +299,30 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00231'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VOrdBen
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VMT202
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VRelRef
      C                   If        OKOMVF = 'N'
      C                   LeaveSr
      C                   EndIf
- 
+
      C                   ExSr      VRegPay
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -331,7 +332,7 @@
      C     VOrdBen       BegSr
       *
      C                   If        OTORC1 <> 'MT202'
- 
+
      C                   If        OTORC1 <> *Blanks
      C                             AND OTBNC1 <> *BLANKS                                    BUG26775
      C**********         Eval      PACCT = OTORC1                                           BUG26775
@@ -353,7 +354,7 @@
      C                   Parm      OTBNC5        BNTR5            35                        BUG26775
      C                   Parm      'C'           CTYP                                       BUG26775
      C                   EndIf
- 
+
      C**********         If        BBBNBI <> 'Y'                                            BUG26775
      C                   IF        CTYP <> 'B'                                              BUG26775
      C                   Eval      OKOMVF = 'N'
@@ -363,12 +364,12 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00230'
      C                   LeaveSr
      C                   EndIf
- 
+
      C**********         If        OTBNC1 <> *Blanks                                        BUG26775
      C**********         Eval      PACCT = OTBNC1                                           BUG26775
      C**********         Exsr      VBANK                                                    BUG26775
      C**********         EndIf                                                              BUG26775
- 
+
      C**********         If        BBBNBI <> 'Y'                                            BUG26775
      C**********         Eval      OKOMVF = 'N'                                             BUG26775
      C**********         Eval      Idx = Idx + 1                                            BUG26775
@@ -377,11 +378,11 @@
      C**********         Eval      MsgIDXAr(Idx)  = 'ME00230'                               BUG26775
      C**********         LeaveSr                                                            BUG26775
      C**********         EndIf                                                              BUG26775
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -400,9 +401,9 @@
      C                   Eval      MsgIDXAr(Idx)  = 'ME00250'
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -418,9 +419,9 @@
      C                   Eval      MsgDtaXAr(IDX) = SOMVLF
      C                   Eval      MsgIDXAr(Idx)  = 'ME00174'
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -437,9 +438,9 @@
      C                   Eval      MsgDtaXAr(IDX) = SOMVLF
      C                   Eval      MsgIDXAr(Idx)  = 'ME00251'
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -455,7 +456,7 @@
      C**********         Parm      *Blanks       PTYPE                                      BUG26775
      C**********         Parm                    PACCT                                      BUG26775
      C**********         Parm                    DSSDY                                      BUG26775
- 
+
      C**********         If        PRTCD = *Blanks                                          BUG26775
      C**********         Select                                                             BUG26775
      C*****PTYPE         WhenEQ    '*RETAIL'                                                BUG26775
@@ -472,9 +473,9 @@
      C**********         Eval      CUST = DSSDY                                             BUG26775
      C**********         EndSl                                                              BUG26775
      C**********         EndIf                                                              BUG26775
- 
+
      C**********         EndSr                                                              BUG26775
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -489,7 +490,7 @@
      C                   Parm                    PCUST10A
      C                   Parm      *Blanks       PKEY
      C     CUST          Parm      CUST          DSSDY
- 
+
      C                   EndSr
      C*****************************************************************
       /EJECT
@@ -499,7 +500,7 @@
      C     *InzSr        BegSr
       *
      C     *Entry        PList
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    FTOPAY1
      C                   Parm                    NwOPFilFmt
@@ -512,7 +513,7 @@
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtaXAr
- 
+
      C                   Call      'AOSVALR0'
      C                   Parm      *Blanks       P@RTCD
      C                   Parm      PAllowsMT202C P@OP01
@@ -535,7 +536,7 @@
      C                   Parm      *Blanks       P@VL09
      C                   Parm      *Blanks       P@OP10
      C                   Parm      *Blanks       P@VL10
- 
+
      C                   Eval      WAllowsMT202C = 'N'
      C                   If        P@RTCD = *Blanks
      C                   Movel     P@VL01        WAllowsMT202C
@@ -546,9 +547,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT

@@ -76,6 +76,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035561 - Additional lines were generated in field tag 50F  *
       *             of MT101                                          *
@@ -180,19 +181,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -200,7 +201,7 @@
      D*
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -215,7 +216,7 @@
       ** Commitment Control Job Array                                                         CSC022
      D WJobs           S             10A   Dim(10)                                            CSC022
       **                                                                                      CSC022
- 
+
      D RUNDAT          DS            13
      D* DATA STRUCTURE TO RETRIEVE MULTIBRANCH INDICATOR
      D  MBIN                  13     13
@@ -512,9 +513,9 @@
      C                   MOVEL     CHTP          @CHG              1                          CSW025
                                                                                               CSW025
      C                   Dow       Not *IN90
- 
+
      C                   Movel     *Blanks       HOCDone           1
- 
+
      C                   Exsr      SRCLRF
      C                   Exsr      SRBRCH
       *
@@ -782,14 +783,14 @@
      C                   If        HOCUS1  <> *Blanks
      C                             AND MTAG <> ':50F:'                                        CSW207
      C                             AND PRTCD <> *BLANKS                                      CSW207A
- 
+
      C                   Eval      HOCDone = 'Y'
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':50H:'
      C                   Eval      MFLD = HOCUS1
- 
+
      C                   If        CUSTTP = 'S'  OR                             177680
      C                             CUSTTP = 'C'                                 177680
      C                   Eval      KeyVal = %Subst(Hocus1:2)                    177680
@@ -880,14 +881,14 @@
      C                   ENDIF                                                                CSW201
                                                                                               CSW201
      C                   Endif                                                  177680
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    KeyVal           10
      C                   Parm      *Blanks       @Type
      C                   Parm                    SDCUST
- 
+
      C*******************If        @Type = '*CSHT  ' or                         177680
      C*******************          @Type = '*CNUM  '                            177680
      C                   If        @Rtcd = *Blanks                              177680
@@ -943,19 +944,19 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA1
      C                   Endif
- 
+
      C                   If        BBCNA2 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA2
      C                   Endif
- 
+
      C                   If        BBCNA3 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA3
      C                   Endif
- 
+
      C                   If        BBCNA4 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -963,9 +964,9 @@
      C                   Endif
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Else
- 
+
      C                   If        HOCUS2 <> *Blanks
       *                                                                                       CSW201
       ** If CSW201 is on, check if second field is BEI. If it is, format with G               CSW201
@@ -1006,7 +1007,7 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = HOCUS2
      C                   Endif
- 
+
      C                   IF        CSW201 = 'N' OR                                            CSW201
      C                             WChgInd = 'N'                                              CSW201
                                                                                               CSW201
@@ -1015,27 +1016,27 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = HOCUS3
      C                   Endif
- 
+
      C                   If        HOCUS4 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = HOCUS4
      C                   Endif
- 
+
      C                   If        HOCUS5 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = HOCUS5
      C                   Endif
      C                   ENDIF                                                                CSW201
- 
+
      C                   Endif
      C                   Endif
       *
       * Account Servicing Institution
      C                   If        HACSV1 <> *Blanks   OR
      C                             HACSV2 <> *Blanks
- 
+
      C                   If        HACSV2 <> *Blanks
       * Is the second field a BIC ?
      C                   Eval      Char18 = HACSV2
@@ -1044,7 +1045,7 @@
      C                   Parm                    Char18           18
      C                   Parm                    @Type
      C                   Parm                    DSSDY
- 
+
      C                   If        @Type = '*BIC'
       *                                                                                       CSW201
       ** If SWIFT 2001 enhancement is installed check if subtype is                           CSW201
@@ -1093,18 +1094,18 @@
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':52A:'
      C                   Eval      MFLD = HACSV1
- 
+
      C                   Eval      Q = Q + 1
      C     Q             OCCUR     MULT                                                     MD034368
      C                   Eval      MFLD = HACSV2
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
       * Not a Bic.  Must be a customer number or shortname
      C                   Else
- 
+
      C                   Movel     HACSV2        KeyVal
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
@@ -1163,7 +1164,7 @@
      C                   IF        CSW201 = 'Y' AND                                           CSW201
      C                             WChgInd <> 'Y' OR                                          CSW201
      C                             CSW201 <> 'Y'                                              CSW201
- 
+
       * Customer must have a BIC
                                                                                             MD035561
      C                   IF        HACSV1 <> *BLANKS                                        MD035561
@@ -1172,7 +1173,7 @@
      C                   Eval      MTAG = ':52A:'
      C                   Eval      MFLD = HACSV1
      C                   ENDIF                                                              MD035561
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   IF        HACSV1 = *BLANKS                                         MD035561
@@ -1181,7 +1182,7 @@
      C                   Eval      MFLD = BBCSID
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Endif
      C                   Else
       *
@@ -1194,7 +1195,7 @@
       *
      C                   Endif
      C                   Endif
- 
+
       * Request Execution Date
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1205,7 +1206,7 @@
      C                   Parm                    ZMDATE            6
      C                   Eval      MFLD = ZMDATE
      C                   Eval      REXDTE = ZMDATE
- 
+
       * Authorisation
      C                   If        AUTHTX <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1226,7 +1227,7 @@
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':21:'
      C                   Eval      MFLD = TRNSID
- 
+
       * FX Deal Reference
      C******             If        FXDREF = *Blanks                             177680
      C                   If        FXDREF <> *Blanks                            177680
@@ -1235,7 +1236,7 @@
      C                   Eval      MTAG = ':21F:'
      C                   Eval      MFLD = FXDREF
      C                   Endif
- 
+
       * Instruction Code
      C                   If        INSCA4 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1253,7 +1254,7 @@
      C                   Eval      MFLD = INSCA4
      C                   Endif
      C                   Endif
- 
+
       * Instruction Code 2
      C                   If        INSCB4 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1270,7 +1271,7 @@
      C                   Eval      MFLD = INSCB4
      C                   Endif
      C                   Endif
- 
+
       * Instruction Code 3
      C                   If        INSCC4 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1278,7 +1279,7 @@
      C                   Eval      MTAG = ':23E:'
      C                   Eval      MFLD = INSCC4
      C                   Endif
- 
+
       * Instruction Code 4
      C                   If        INSCD4 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1286,7 +1287,7 @@
      C                   Eval      MTAG = ':23E:'
      C                   Eval      MFLD = INSCD4
      C                   Endif
- 
+
       * Instruction Code 5
      C                   If        INSCE4 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1294,7 +1295,7 @@
      C                   Eval      MTAG = ':23E:'
      C                   Eval      MFLD = INSCE4
      C                   Endif
- 
+
       *
       * Transfer ccy and amount
       *
@@ -1314,7 +1315,7 @@
      C                   Eval      MFLD = FLD32
      C                   Eval      R32B = FLD32
      C                   Eval      TOTTRN = TOTTRN + TRNAMT
- 
+
       * Instructing Party
      C                   If        TINPTY <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1416,10 +1417,10 @@
      C                   ENDIF                                                                CSW201
                                                                                               CSW201
      C                   Endif
- 
+
       * Ordering Customer (DETAILS
       * Must have an account number on line 1 and name and address on line 2
- 
+
       * Check if Swift 2007 is ON and Customer is not blanks                                  CSW207
      C                   EVAL      PRTCD = 'A'                                               CSW207A
      C                   IF        CSW207 = 'Y'                                               CSW207
@@ -1444,12 +1445,12 @@
      C                   If        HOCDone <> 'Y'
      C                             AND MTAG <> ':50F:'                                        CSW207
      C                             AND PRTCD <> *BLANKS                                      CSW207A
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':50H:'
      C                   Eval      MFLD = TOCUS1
- 
+
       * Is the Ordering Customer a shortname or Customer number
      C                   Eval      KeyVal = %Subst(TOCUS1:2)
       *                                                                                       CSW201
@@ -1535,14 +1536,14 @@
                                                                                               CSW201
      C                   ENDSL                                                                CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    KeyVal           10
      C                   Parm      *Blanks       @Type
      C                   Parm                    SDCUST
- 
+
      C                   If        @Type = '*CSHT  ' or
      C                             @Type = '*CNUM  '
       *                                                                                       CSW201
@@ -1598,19 +1599,19 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA1
      C                   Endif
- 
+
      C                   If        BBCNA2 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA2
      C                   Endif
- 
+
      C                   If        BBCNA3 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCNA3
      C                   Endif
- 
+
      C                   If        BBCNA4 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1618,9 +1619,9 @@
      C                   Endif
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Else
- 
+
      C                   If        TOCUS2 <> *Blanks
       *                                                                                       CSW201
       ** If CSW201 is on, check if second field is customer, if not check                     CSW201
@@ -1687,7 +1688,7 @@
      C                   ENDIF                                                                CSW201
                                                                                               CSW201
      C                   Endif
- 
+
      C                   IF        CSW201 = 'N' OR                                            CSW201
      C**********                   WChgInd = 'Y'                                       CSW201 221627
      C                             WChgInd = 'N'                                              221627
@@ -1697,28 +1698,28 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = TOCUS3
      C                   Endif
- 
+
      C                   If        TOCUS4 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TOCUS4
      C                   Endif
- 
+
      C                   If        TOCUS5 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TOCUS5
      C                   Endif
      C                   ENDIF                                                                CSW201
- 
+
      C                   Endif
      C                   Endif
- 
+
       * Account Servicing Institution
- 
+
      C                   If        TASI35 <> *Blanks   OR
      C                             TACC11 <> *Blanks
- 
+
      C                   If        TACC11 <> *Blanks
       * Is the second field a BIC ?
      C                   Eval      Char18 = TACC11
@@ -1727,7 +1728,7 @@
      C                   Parm                    Char18           18
      C                   Parm                    @Type
      C                   Parm                    DSSDY
- 
+
      C                   If        @Type = '*BIC'
       *                                                                                       CSW201
       ** If SWIFT 2001 enhancement is installed, check if subtype is                          CSW201
@@ -1777,17 +1778,17 @@
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':52A:'
      C                   Eval      MFLD = TASI35
- 
+
      C                   Eval      Q = Q + 1
      C                   Eval      MFLD = TACC11
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
       * Not a Bic.  Must be a customer number or shortname
      C                   Else
- 
+
      C                   Movel     TACC11        KeyVal
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
@@ -1845,19 +1846,19 @@
      C                   IF        CSW201 = 'Y' AND                                           CSW201
      C                             WChgInd <> 'Y' OR                                          CSW201
      C                             CSW201 <> 'Y'                                              CSW201
- 
+
       * Customer must have a BIC
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':52A:'
      C                   Eval      MFLD = TASI35
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = BBCSID
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Endif
      C                   Else
       *
@@ -1870,7 +1871,7 @@
       *
      C                   Endif
      C                   Endif
- 
+
       * Intermediary
       * BIC
       * 1.  PARTY ID + BIC
@@ -1878,7 +1879,7 @@
       * 3.  NAME AND ADDRESS
      C                   If        TINSTA <> *Blanks   OR
      C                             TINST1 <> *Blanks
- 
+
      C                   If        TINSTA <> *Blanks
       * Is the second field a BIC ?
      C**********         Eval      Char18 = TINSTA                                            CSW201
@@ -1887,7 +1888,7 @@
      C**********         Parm                    Char18           18                          CSW201
      C**********         Parm                    @Type                                        CSW201
      C**********         Parm                    DSSDY                                        CSW201
- 
+
      C**********         If        @Type = '*BIC'                                             CSW201
       *                                                                                       CSW201
       ** Use ME1400 to check if TINSTA is a BIC                                               CSW201
@@ -2029,10 +2030,10 @@
      C                   Eval      MFLD = TINSTA
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
       * Not a Bic.  Must be a customer number or shortname
      C                   Else
- 
+
      C                   Movel     TINSTA        KeyVal
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
@@ -2155,7 +2156,7 @@
      C                   IF        CSW201 = 'Y' AND                                           CSW201
      C                             WChgInd <> 'Y' OR                                          CSW201
      C                             CSW201 <> 'Y'                                              CSW201
- 
+
       * Customer must have a BIC
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -2167,9 +2168,9 @@
      C                   Eval      MFLD = BBCSID
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Endif
- 
+
      C                   Else
       *
       ** Field 2 not entered.  Just report on field 1
@@ -2181,38 +2182,38 @@
      C                   Eval      MTAG = ':56C:'
      C                   Eval      MFLD = TINST1
      C                   Else
- 
+
      C                   If        TINST1 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':56D:'
      C                   Eval      MFLD = TINST1
      C                   Endif
- 
+
      C                   If        TINST2 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TINST2
      C                   Endif
- 
+
      C                   If        TINST3 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TINST3
      C                   Endif
- 
+
      C                   If        TINST4 <> *Blanks
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TINST4
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       * Account with Institution (:57:)
- 
+
       *                                                                                     MD027286
       ** The following output is re-written down below to display                           MD027286
       ** the correct ouput, the correct tags and make the codes                             MD027286
@@ -2764,9 +2765,9 @@
      C                   Endif                                                              MD027286
       *                                                                                     MD027286
      C                   Endif                                                   End 'A'    MD027286
- 
+
      C                   ENDIF                                                              MD034339
- 
+
       * Beneficiary
       *                                                                                       CSW215
       ** SWIFT 2015 changes :59F:                                                             CSW215
@@ -2979,23 +2980,23 @@
                                                                                               CSW201
      C                   IF        CSW201 = 'N' OR                                            CSW201
      C                             WChgInd <> 'Y'                                             CSW201
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MFLD = TBNB35
- 
+
      C                   If        TBNC35 <> *Blanks
      C                   Eval      Q = Q + 1                                     184183
      C     Q             Occur     MULT
      C                   Eval      MFLD = TBNC35
      C                   Endif
- 
+
      C                   If        TBND35 <> *Blanks
      C                   Eval      Q = Q + 1                                     184183
      C     Q             Occur     MULT
      C                   Eval      MFLD = TBND35
      C                   Endif
- 
+
      C                   If        TBNE35 <> *Blanks
      C                   Eval      Q = Q + 1                                     184183
      C     Q             Occur     MULT
@@ -3003,7 +3004,7 @@
      C                   Endif
                                                                                               CSW201
      C                   ENDIF                                                                CSW201
- 
+
       * Remittance Information
      C                   If        TRMA35 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -3029,7 +3030,7 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = TRMD35
      C                   Endif
- 
+
       * Regulatory Reporting
      C                   If        TRGA35 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -3049,7 +3050,7 @@
      C     Q             Occur     MULT
      C                   Eval      MFLD = TRGC35
      C                   Endif
- 
+
       * Currency/Original Ordered Amount
      C                   If        TOCCY <> *Blanks  AND
      C                             TOCCY <> TRNCCY
@@ -3064,13 +3065,13 @@
      C                   Eval      MFLD = FLD33
      C                   Eval      R33B = FLD33
      C                   Endif
- 
+
       * Details of Charges
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':71A:'
      C                   Eval      MFLD = TDCHGS
- 
+
       * Charges Account
      C                   If        CHGACC <> *Blanks
      C                   Eval      Q = Q + 1
@@ -3078,7 +3079,7 @@
      C                   Eval      MTAG = ':25A:'
      C                   Eval      MFLD = CHGACC
      C                   Endif
- 
+
       * Exchange Rate
      C                   If        XRATE <> 0     AND
      C                             TOOAMT <> 0    AND
@@ -3092,7 +3093,7 @@
      C                   Eval      MFLD = ZSEXRT
      C                   Eval      RXRATE = ZSEXRT
      C                   Endif
- 
+
       *
      C                   Endsr
       /EJECT
@@ -3217,17 +3218,17 @@
      C                   Move      *Blanks       OFSPT3
      C                   Move      *Blanks       OFSPT4
      C                   Move      *Blanks       OFSPT5
- 
+
      C                   Move      *Blanks       OSTAG             1
      C                   Move      'N'           OSUFLG            1
- 
- 
+
+
      C                   If        %Subst(ISPTY1:1:1) = '/'
      C                   If        %Subst(ISPTY1:2:1) <> '/'
      C                   Eval      ISPTY1 = %Subst(ISPTY1:2:34)
      C                   Endif
      C                   Endif
- 
+
      C                   Select
      C                   When      ISPTP = 'F'
      C                   Movel     ISPTY1        TLCCNN            5
@@ -3249,17 +3250,17 @@
       * Retail Account Processing
       *
      C                   When      ISPTP = 'R'
- 
+
      C                   Move      *Blanks       ParmStr          35
      C                   Movel     ISPTY1        ParmStr
- 
+
      C                   CallB     'AOACCTV1'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      *Blanks       @Type             7
      C                   Parm                    ParmStr
      C                   Parm                    DSSDY
      C                   Eval      P@ACC = DSSDY
- 
+
      C                   Eval      CUSTNO = CNUM
       *
       * General Ledger Account
@@ -3350,11 +3351,11 @@
      C                   Movel     ISPTY1        ##002             2
       *
      C                   Select
- 
+
      C                   When      IVTAG1 = 'A' AND ISPTY1A <> *Blanks
- 
+
      C                   Eval      SCSID = ISPTY1A
- 
+
      C                   Movel     ISPTY1        ##001             1
       *
      C                   If        ##001 = '/'
@@ -3366,7 +3367,7 @@
      C                   Move      'A'           OSTAG
       *
      C                   When      IVTAG3 = 'C' AND ISPTY1A = *Blanks
- 
+
      C                   Movel     ISPTY1        OFSPT1
      C                   Move      'C'           OSTAG
      C
@@ -3489,25 +3490,25 @@
      C                   Parm                    Char18           18
      C                   Parm                    @Type
      C                   Parm                    DSSDY
- 
+
      C                   If        @Type = '*BIC'
      C                   Eval      NWDS = RFTDST
- 
+
       * Not a Bic.  Must be a customer number or shortname
      C                   Else
- 
+
      C                   Movel     RFTDST        KeyVal
- 
+
      C                   CallB     'AOCUSTR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm                    KeyVal           10
      C                   Parm      *Blanks       @Type
      C                   Parm                    SDCUST
- 
+
       * Customer must have a BIC
      C                   Eval      NWDS = BBCSID
- 
+
      C                   Endif
       *
       *
@@ -4338,14 +4339,14 @@
       *
      C                   Z-add     SFNUM1        SPLNO
      C                   Eval      SFILP = SFILE1
- 
+
      C                   Call      'ZSFILE'
      C                   Parm                    RSEQ              5
      C                   Parm      *Blanks       RENT              3
      C                   Parm                    SFILP            10
      C                   Parm                    SPLNO             6 0
      C                   Parm      *Blanks       ZERR              1
- 
+
      C                   If        ZERR = 'Y'
      C     *LOCK         IN        LDA
      C                   Eval      *INU7= *ON
@@ -4367,7 +4368,7 @@
      C                   Parm                    SFILP            10
      C                   Parm                    SPLNO             6 0
      C                   Parm      *Blanks       ZERR              1
- 
+
      C                   If        ZERR = 'Y'
      C     *LOCK         IN        LDA
      C                   Eval      *INU7= *ON

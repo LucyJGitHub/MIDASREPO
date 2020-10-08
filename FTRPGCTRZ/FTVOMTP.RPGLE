@@ -21,13 +21,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG24962 - Incoming message type field should be blanks      *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -45,102 +46,102 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D NwOPFilFmt    E DS                  EXTNAME(FTVOPAYPD)
      D NwOPFilFmx    E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Cover message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPYA       E DS                  EXTNAME(FTEOPYAPD)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for access programs
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
- 
+
       ** External data structure for access programs
      D NOSTRO        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** External data structure for access programs
      D CUST          E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
      D PMTPY           S              3A
@@ -149,7 +150,7 @@
      D PCUST           S              7A
      D PCUST10A        S             10A
      D PKEY            S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -164,7 +165,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *
@@ -178,10 +179,10 @@
      C                   Eval      WIX = 0
      C                   Eval      Idx = 0
      C                   EVAL      PMTPY = *BLANKS                                          BUG24962
- 
+
       ** Validate
      C                   Exsr      VOMTP
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKMTPY = 'N'
@@ -190,7 +191,7 @@
      C                   Else
      C                   Eval      O2MTPY = PMTPY
      C                   EndIf
- 
+
       ** RETURN
       *
      C                   Return
@@ -224,25 +225,25 @@
      C                             SMTPY = '205'   And
      C                             OTORBK = *Blanks And
      C                             OTORBB = *Blanks
- 
+
      C                   Exsr      VOrdBen
- 
+
      C                   If        BBBNBI <> 'Y'
- 
+
      C                   Eval      OKMTPY = 'N'
      C                   Eval      Idx = Idx + 1
      C                   Eval      FldNamXAr(Idx) = 'SMTPY'
      C                   Eval      MsgDtaXAr(IDX) = SMTPY
      C                   Eval      MsgIDXAr(Idx)  = 'ME00169'
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -252,25 +253,25 @@
      C     VOrdBen       BegSr
       *
      C                   If        OTORC1 <> 'MT202'
- 
+
      C                   If        OTORC1 <> *Blanks
      C                   Eval      PACCT = OTORC1
      C                   Exsr      VBANK
      C                   EndIf
- 
+
      C                   If        BBBNBI = 'Y'
- 
+
      C                   If        OTBNC1 <> *Blanks
      C                   Eval      PACCT = OTBNC1
      C                   Exsr      VBANK
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -286,7 +287,7 @@
      C                   Parm      *Blanks       PTYPE
      C                   Parm                    PACCT
      C                   Parm                    DSSDY
- 
+
      C                   If        PRTCD = *Blanks
      C                   Select
      C     PTYPE         WhenEQ    '*RETAIL'
@@ -302,12 +303,12 @@
      C     PTYPE         OrEQ      '*SHNAME'
      C                   Eval      CUST = DSSDY
      C                   EndSl
- 
+
      C                   Else
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -322,18 +323,18 @@
      C                   Parm                    PCUST10A
      C                   Parm      *Blanks       PKEY
      C     CUST          Parm      CUST          DSSDY
- 
+
      C                   EndSr
- 
+
      C*****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BegSr
- 
+
      C     *Entry        Plist
- 
+
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
@@ -353,9 +354,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT

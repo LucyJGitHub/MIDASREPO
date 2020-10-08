@@ -119,6 +119,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD051978 - ':' should not be present in first character of   *

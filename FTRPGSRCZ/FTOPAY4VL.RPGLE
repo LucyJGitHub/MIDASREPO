@@ -70,6 +70,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -135,7 +136,7 @@
      FMEISOCL1  IF   E           K DISK                                                       CFT017
       ** Midas ME SWIFT ISO Country Codes retrieval index                                     CFT017
       *                                                                                       CFT017
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -156,101 +157,101 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
      D TranInSecB    E DS                  EXTNAME(FTOPY3PD)
      D TranInThir    E DS                  EXTNAME(FTOPY4PD)
- 
+
       ** Payment Extension Details layout
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)
      D TranInThrB    E DS                  EXTNAME(FTOPY5PD)
      D TranInFour    E DS                  EXTNAME(FTOPY6PD)
- 
+
       ** FT (OPAY) Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
- 
+
       ** Valid Payments layout
      D ValidPmnt     E DS                  EXTNAME(FTVOPAYPD)
- 
+
       ** Valid Outgoing Payments Extension File
      D ValidPmtX     E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY4PD)
- 
+
       ** Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
      D @CDRO1        E                     EXTFLD(@CDRQQ)                                     CGL029
@@ -262,13 +263,13 @@
       * Valid Payments layout (default)                                         CFT009
      D DEFVALID      E DS                  EXTNAME(FTVOPAYPD)                   CFT009
      D                                     PREFIX(D#)                           CFT009
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
      D ZMUSER          DS            17                                                       CAP084
      D  WUSRID                 1     10                                                       CAP084
                                                                                               CAP084
@@ -312,18 +313,18 @@
       *                                                                                       CFT017
       ** BIC details                                                                          CFT017
      D MEBICD        E DS                  EXTNAME(MEBICDPD)                                  CFT017
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D TCNTRL          DS           256
      D  WPDTI                  1      1
      D  WGLUI                  4      4
      D  WVATF                  6      6
- 
+
       ** Data structure to retrieve VAT rate
      DVATDS            DS
      D WVATR                  10     12P 4
@@ -340,7 +341,7 @@
                                                                                 CFT009
      D File_Ext      E DS                  EXTNAME(OTPAYXPD)                    CFT009
       *  Transaction details extension file                                     CFT009
- 
+
      D/COPY WNCPYSRC,FTH00251
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -354,20 +355,20 @@
      D ZALIGNOK        S              1                                         CFT009
      D ZADIG           S              2  0                                      CFT009
                                                                                 CFT009
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
- 
+
+
       ** A code to indicate the calling function to the lower level modules
      D OPAY            S              4A   INZ('OPAY')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
      D I               S              3  0
       *                                                                         CFT009
       ** Access object parameters                                               CFT009
@@ -391,17 +392,17 @@
      D  ##IRATE               24     36P 8                                                    CRE067
      D  ##OMDIN               23     23                                                       CRE067
      D  ##ORATE               24     36P 8                                                    CRE067
- 
+
      D InputUser       S             10A                                                    MD042042
       **  Data Structure for input/output parameters
      D/COPY FTCPYSRC,FT0010D001
      D/COPY WNCPYSRC,FTH00253
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -412,19 +413,19 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initial Processing
- 
+
      C                   ExSr      SrInit
       *                                                                                       260510
       ** Validate Details of Charges                                                          260510
       *                                                                                       260510
      C                   ExSr      SrDetChg                                                   260510
- 
+
       ** Validate Charges to the debit of account
- 
+
      C                   ExSr      SrChgDbA
- 
+
       ***Validate*Details*of*Charges***********************************                       260510
       *****************************************************************                       260510
      C**********         If        OKCDRO  =  'Y' AND CFT120 = 'Y'                     CFT120 260510
@@ -492,35 +493,35 @@
       *                                                                                       CFT017
      C                   MOVE      ZFIELD        SRCRM                                        CFT017
      C                   ENDIF                                                                CFT017
- 
+
       ** Validate Transfer Commission Charges
- 
+
      C                   ExSr      SrTrfCom
- 
+
       ** Validate F/Xchange Commission Charges
- 
+
      C                   If        @01494 = 'Y'
      C                   ExSr      SrComChg
      C                   EndIf
- 
+
       ** Validate Telex Charges
- 
+
      C                   ExSr      SrTlxChg
- 
+
       ** Validate Cheque Charges
- 
+
      C                   ExSr      SrChqChg
- 
+
       ** Validate Costs Abroad
- 
+
      C                   ExSr      SrCstAbr
- 
+
       ** Validate Swift Priority Charges
- 
+
      C                   ExSr      SrSwpChg
- 
+
       ** Validate Miscellaneous Charges
- 
+
      C                   ExSr      SrMscChg
                                                                                 CFT009
       ** Validate Swift Standard Charges and Miscellaneous 1-5 Charges          CFT009
@@ -533,9 +534,9 @@
      C                   EXSR      SRMS4CHG                                     CFT009
      C                   EXSR      SRMS5CHG                                     CFT009
      C                   ENDIF                                                  CFT009
- 
+
       ** Validate VAT Flags and Calculate charges
- 
+
      C                   If        @VATP = 'Y'
      C                   ExSr      SrVatFlg
      C**********         EndIf                                                             AR1028639
@@ -545,32 +546,32 @@
      C                   EXSR      SRCNVAMT                                                   CRE067
      C                   ENDIF                                                                CRE067
      C                   ENDIF                                                             AR1028639
- 
+
       ** Validate Total Charges (Pay Amount)
- 
+
      C                   ExSr      SrTotChg
- 
+
      C                   If        @CFT014 = 'Y'
       ** Validate Receiver's Charges
- 
+
      C                   ExSr      SrRcvChg
- 
+
       ** Validate Sender's Charges
- 
+
      C                   ExSr      SrSdrChg
      C                   EndIf
      C**********         ENDIF                                                         CFT120 260510
- 
+
      C/COPY WNCPYSRC,FTOPA4VC01
       ** Setup outstanding fields for valid file when no error is encoun -
       ** tered
- 
+
      C                   If        Idx = *Zero
      C                   ExSr      SetupValid
      C                   EndIf
- 
+
      C                   Return
- 
+
       *****************************************************************
       /Title Sr/SrChgDbA
       *****************************************************************
@@ -585,15 +586,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrChgDbA      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Charges to Debit of entry
- 
+
      C                   CallB     'FTVCSRF'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -606,13 +607,13 @@
      C                   Parm                    WMsgDtXAr                                    240689
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrDetChg
       *****************************************************************
@@ -627,15 +628,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDetChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Details of Charges entry
- 
+
      C                   CallB     'FTVDECH'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInFour
@@ -645,13 +646,13 @@
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
      C                   Parm                    TranInPrim                                   255428
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrTrfCom
       *****************************************************************
@@ -666,15 +667,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTrfCom      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Transfer Commission Charges entry
- 
+
      C                   CallB     'FTVTFCH'
      C                   Parm                    ReTCodeOut
      C                   PARM                    TRANINPRIM                     CFT009
@@ -695,13 +696,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrComChg
       *****************************************************************
@@ -716,15 +717,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrComChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate FX/Change Commission Charges entry
- 
+
      C                   CallB     'FTVCMCH'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -745,13 +746,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrTlxChg
       *****************************************************************
@@ -766,15 +767,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTlxChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Telex Charge entry
- 
+
      C                   CallB     'FTVTLCH'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -795,13 +796,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrChqChg
       *****************************************************************
@@ -816,15 +817,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrChqChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Cheque Charge entry
- 
+
      C                   CallB     'FTVCQCH'
      C                   Parm                    ReTCodeOut
      C                   PARM                    TRANINPRIM                     CFT009
@@ -845,13 +846,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrCstAbr
       *****************************************************************
@@ -866,15 +867,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCstAbr      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Costs Abroad entry
- 
+
      C                   CallB     'FTVCTAB'
      C                   Parm                    ReTCodeOut
      C                   PARM                    TRANINPRIM                     CFT009
@@ -895,13 +896,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrSwsChg                                                        CFT009
       *****************************************************************         CFT009
@@ -1204,15 +1205,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSwpChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Swift Priority Charge entry
- 
+
      C                   CallB     'FTVSFCH'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -1233,13 +1234,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrMscChg
       *****************************************************************
@@ -1254,15 +1255,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrMscChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Miscellaneous Charge entry
- 
+
      C                   CallB     'FTVMCCH'
      C                   Parm                    ReTCodeOut
      C                   PARM                    TRANINPRIM                     CFT009
@@ -1283,13 +1284,13 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG                       CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrVatFlg
       *****************************************************************
@@ -1304,15 +1305,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrVatFlg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate VAT Flags entries
- 
+
      C                   CallB     'FTVVTIN'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInFour
@@ -1321,13 +1322,13 @@
      C                   Parm                    MsgDtaXAr
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************                       CRE067
       /Title Sr/SrVatFld                                                                      CRE067
       *****************************************************************                       CRE067
@@ -1474,15 +1475,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTotChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Total Charges
- 
+
      C                   CallB     'FTVCHPY'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -1493,13 +1494,13 @@
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
      C                   Parm                    O2XRTE                         CFT009
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrRcvChg
       *****************************************************************
@@ -1514,15 +1515,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRcvChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Receiver's Charges
- 
+
      C                   CallB     'FTVRCRM'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -1538,13 +1539,13 @@
      C                   Parm                    CFT017                                       CFT017
      C                   Parm                    WVMIFF                                       CFT017
      C                   Parm                    BTMIFE                                       CFT017
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrSdrChg
       *****************************************************************
@@ -1559,15 +1560,15 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSdrChg      BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Sender's Charges
- 
+
      C                   CallB     'FTVSCHG'
      C                   Parm                    ReTCodeOut
      C                   Parm                    TranInPrim
@@ -1580,13 +1581,13 @@
      C                   Parm                    WMsgDtXAr
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************         CFT009
       /EJECT                                                                    CFT009
       *****************************************************************         CFT009
@@ -1736,42 +1737,42 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupValid    BegSr
- 
+
       ** Charges to Debit of Branch / Type / Value
- 
+
      C                   Eval      OTCDBR = SCDBR
      C                   Eval      OTCDRT = @CDRT
      C                   Eval      OTCDRO = @CDRO
      C                   IF        CFT120 = 'Y'                                               CFT120
      C                   Eval      OTCDRC = @CDRC                                             CFT120
      C                   ENDIF                                                                CFT120
- 
+
       ** Details of Charges
- 
+
      C                   Eval      OTDTCH = SDTCH
- 
+
       ** Charges
- 
+
      C                   Eval      OTDUMA1 = @TRCD
      C                   Eval      OTTRCM = @TRCM
- 
+
      C                   Eval      OTDUMA2 = @TXCD
      C                   Eval      OTTXCH = @TXCH
- 
+
      C                   Eval      OTDUMA3 = @CQCD
      C                   Eval      OTCQCH = @CQCH
- 
+
      C                   Eval      OTDUMA4 = @CSTD
      C                   Eval      OTCSTA = @CSTA
- 
+
      C                   Eval      OTDUMA5 = @SPCD
      C                   Eval      OTSPCH = @SPCH
- 
+
      C                   Eval      OTDUMA6 = @MSCD
      C                   Eval      OTMSCH = @MSCH
- 
+
      C                   If        @01494 = 'Y'
      C                   Eval      OTOPDUM7 = @CHCD
      C                   Eval      OTOPCHCM = @CHCM
@@ -1791,9 +1792,9 @@
      C                   Eval      O2AMC5 = @MI5CD                              CFT009
      C                   Eval      O2AMM5 = @M5CH                               CFT009
      C                   EndIf                                                  CFT009
- 
+
       ** If switchable feature S01499 is switched ON, set up V.A.T. details
- 
+
      C                   If        @01499 = 'Y'
      C                             AND @CFT009 ='N' OR @CFT010 = 'Y'            CFT009
      C                   Eval      OTOPDUM8 = @VATD
@@ -1805,19 +1806,19 @@
      C                   Eval      OTOPVAT5 = SVAT5
      C                   Eval      OTOPVAT6 = SVAT6
      C                   Eval      OTOPVAT7 = SVAT7
- 
+
       ** Store V.A.T. rate if used
      C                   If        @VATD <> 0 or
      C                             @VATT <> 0
      C                   Eval      OTOPVATR = @VATR
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** Receiver's and Sender's Charges
- 
+
      C                   If        @CFT014 = 'Y'
- 
+
      C                   Eval      O2RCUS = @RCUS
      C                   Eval      O2RCRM = @RCRM
      C                   Eval      O2SCH1 = @SCH1
@@ -1831,12 +1832,12 @@
      C                   Eval      O2SCC4 = SSCC4
      C                   Eval      O2SCC5 = SSCC5
      C                   Eval      O2SCLE = @SENT
- 
+
       ** Set paramaters for call to FT0010 to calculate receiver's charges base
       ** equivalent
- 
+
      C                   Clear                   P#0010
- 
+
      C                   Eval      P#FRDT = @PVDT
      C                   Eval      P#TODT = @SLDT
      C                   Eval      P#FRCY = SPCCY
@@ -1846,7 +1847,7 @@
      C                   Eval      P#RATE = *ZERO
      C                   Call      'FT0010'
      C                   Parm                    P#0010
- 
+
      C     P#RTCD        IfNe      *BLANKS
      C                   MoveL     'FT0010  '    DBFILE
      C                   Z-Add     6             DBASE
@@ -1855,12 +1856,12 @@
      C                   Else
      C                   Z-Add     P#TOAM        O2RBCQ
      C                   EndIf
- 
+
       ** Set paramaters for call to FT0010 to calculate receiver's charges
       ** in settlement currency
- 
+
      C                   Clear                   P#0010
- 
+
      C                   Eval      P#FRDT = @PVDT
      C                   Eval      P#TODT = @SLDT
      C                   Eval      P#FRCY = SPCCY
@@ -1870,7 +1871,7 @@
      C                   Eval      P#RATE = *ZERO
      C                   Call      'FT0010'
      C                   Parm                    P#0010
- 
+
      C     P#RTCD        IfNe      *BLANKS
      C                   MoveL     'FT0010  '    DBFILE
      C                   Z-Add     7             DBASE
@@ -1879,12 +1880,12 @@
      C                   Else
      C                   Z-Add     P#TOAM        O2RCSC
      C                   EndIf
- 
+
       ** Set paramaters for call to FT0010 to calculate base currency equivalent
       ** of receiver's charges in settlement currency
- 
+
      C                   Clear                   P#0010
- 
+
      C                   Eval      P#FRDT = @PVDT
      C                   Eval      P#TODT = @SLDT
      C                   Eval      P#FRCY = SSMCY
@@ -1894,7 +1895,7 @@
      C                   Eval      P#RATE = *ZERO
      C                   Call      'FT0010'
      C                   Parm                    P#0010
- 
+
      C     P#RTCD        IfNe      *BLANKS
      C                   MoveL     'FT0010  '    DBFILE
      C                   Z-Add     8             DBASE
@@ -1957,9 +1958,9 @@
      C                   EVAL      O2VTM4 = VAT12                               CFT009
      C                   EVAL      O2VTM5 = VAT13                               CFT009
      C                   ENDIF                                                  CFT009
- 
+
       ** If insert set up audit information
- 
+
      C                   If        SACTION = 'I'
      C                   Time                    OTLCHT
      C                   Eval      OTLCD = BJRDNB
@@ -1972,9 +1973,9 @@
      C                   ENDIF                                                              MD042042
      C                   EndIf
      C
- 
+
       ** If amend set up audit information
- 
+
      C                   If        SACTION = 'A'
      C                   Time                    OTLCHT
      C                   If        OTLCD <> BJRDNB
@@ -1989,18 +1990,18 @@
      C                   EVAL      OTINUSR2 = InputUser                                     MD042042
      C                   ENDIF                                                              MD042042
      C                   EndIf
- 
+
       ** If delete set up audit information
- 
+
      C                   If        SACTION = 'D'
      C                   Eval      OTRECI = 'C'
      C                   Time                    OTLCHT
      C                   Eval      OTLCD = BJRDNB
      C                   Eval      OTCHTP = 'D'
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/*InzSr
       *****************************************************************
@@ -2012,9 +2013,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
      C     *Entry        Plist
      C                   PARM                    RespMode
      C                   PARM                    TranInPrim
@@ -2045,32 +2046,32 @@
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
      C                   PARM                    InputUser                                  MD042042
- 
+
      C     *LOCK         In        LDA
      C                   Movel     'FTOPAY4VL'   DBPGM
      C                   Out       LDA
- 
+
       ** Access Bank Details via Access Object AOBANKR0
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C                   MoveL     'SDBANKPD'    DBFILE
      C                   Z-Add     1             DBASE
      C                   MoveL     @Optn         DBKEY
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Access Module Details
- 
+
      C                   Call      'AOMMODR0'
      C                   Parm      *Blanks       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RTCD         IfNe      *Blanks
      C                   Movel     'SDMMODPD'    DBFILE
      C                   Z-Add     2             DBASE
@@ -2116,10 +2117,10 @@
      C                   ENDIF                                                                CRE067
                                                                                               CRE067
      C                   ENDIF                                                                CFT017
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
- 
+
      C                   EVAL      #MsgFile     = 'FTUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
       **********                                                                      CAP084 BUG7029
@@ -2127,10 +2128,10 @@
       **********                                                                      CAP084 BUG7029
      C******DTAARA       DEFINE                  ZMUSER                               CAP084 BUG7029
      C**********         IN        ZMUSER                                             CAP084 BUG7029
- 
+
      C/COPY WNCPYSRC,FTH00471
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrInit
       *****************************************************************
@@ -2142,16 +2143,16 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SrInit        BegSr
       *                                                                                      BUG7029
       ** Retrieve ZMUSER details.                                                            BUG7029
       *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
- 
+
       ** Access FT Control data
- 
+
      C                   Call      'FT0005'                             9090
      C                   Parm      *BLANKS       @RTCD
      C     TCNTRL        Parm      TCNTRL        DSFDY
@@ -2164,48 +2165,48 @@
      C                   Movel     '*CALL'       DBKEY
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   If        WGLUI = 'I'
      C                   Eval      @FTOV = 'Y'
      C                   Else
      C                   Eval      @FTOV = *Blanks
      C                   EndIf
- 
+
      C                   Eval      @PDTI =WPDTI
      C                   Eval      @VATF =WVATF
- 
+
       ** Access SAR details file to determine if CEU006 enhancement is ce -
       ** switched on.
- 
+
      C                   Call      'AOSARDR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        (@RTCD <> *Blanks) And (@RTCD <> '*NRF   ')
      C                   Movel     'SCSARDPD'    DBFILE
      C                   Z-Add     4             DBASE
      C                   Movel     'CEU006'      DBKEY
      C                   ExSr      *PSSR
      C                   EndIf
- 
+
      C                   If        @RTCD = *BLANKS
      C                   Movel     'Y'           CEU006            1
      C                   Else
      C                   Movel     'N'           CEU006
      C                   EndIf
- 
+
       ** Read V.A.T. details if S01499 switched ON
       ** OR CFT010 switched on                                                  CFT009
- 
+
      C                   If        @01499 = 'Y'
      C                             AND @CFT009 ='N' OR @CFT010 = 'Y'            CFT009
      C                   Call      'AOVATR0'                            9090
      C                   Parm      '*MSG   '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C                   Parm                    VATDS
- 
+
      C                   If        *IN90 = True or
      C                             @RTCD = '*ERROR*'
      C                   Movel     'FTOPAY4VL'   DBPGM
@@ -2259,7 +2260,7 @@
      C                   ENDIF                                                                CFT120
       *
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/Reseterrs
       *****************************************************************
@@ -2272,22 +2273,22 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     Reseterrs     BegSr
- 
+
      C                   Eval      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
- 
+
      C                   Eval      FldNamXAr = *BlankS
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      WFldNmXAr = *BlankS
      C                   Eval      WMsgIDXAr = *BlankS
      C                   Eval      WMsgDtXAr = *BlankS
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/Updaterrs
       *****************************************************************
@@ -2300,11 +2301,11 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     Updaterrs     BegSr
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    FldNameArr(I)                          99
      C                   If        *IN99 = True
@@ -2312,15 +2313,15 @@
      C                   Movea     MsgIDXAr      MsgIdArr(I)
      C                   Movea     MsgDtaXAr     MsgDtaArr(I)
      C                   EndIf
- 
+
       ** Set Error Index
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    FldNameArr(I)                          99
      C                   Eval      Idx = I - 1
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    WFldNamArr(I)                          99
      C                   If        *IN99 = True
@@ -2328,15 +2329,15 @@
      C                   Movea     WMsgIDXAr     WMsgIDArr(I)
      C                   Movea     WMsgDtXAr     WMsgDtaArr(I)
      C                   EndIf
- 
+
       ** Set Warning Index
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    WFldNamArr(I)                          99
      C                   Eval      WIdx = I - 1
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT                                                                    CFT009
       *****************************************************************         CFT009

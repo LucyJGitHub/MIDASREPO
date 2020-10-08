@@ -52,6 +52,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034726 - Incorrect field highlighted for Ordering          *
       *             Institution 1 error                               *
@@ -86,9 +87,9 @@
       *  CFT008 - Funds Transfer/Swift Messages MT102                 *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -106,22 +107,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -131,88 +132,88 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       ** Detail record datastructure
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       ** External Data structure to hold the outgoing record format
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * OK Flags for first screen - Detail
      D OKFlagDs1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       * OK Flags for Second screen - Detail
      D OKFlagDs2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       * OK Flags for first screen - Header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       * OK Flags for Second screen - Header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** External data structure for Customer standing data
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CFT004          S              1    INZ(' ')
      D wvalid          S              1
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
       ** Field in error
      D DDsName         S             10
- 
+
      D  WCust          S                   Like(CNUM)
      D  @Type          S                   Like(@Rtcd)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialise fields
       *
@@ -249,9 +250,9 @@
       *******************                                                         184049
      C*******************ENDIF                                                    184049
       *
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
      C                   If        POrdi35 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -264,9 +265,9 @@
      C                   EVAL      Okoi35     = 'N'
      C                   Endif
      C                   Endif
- 
- 
- 
+
+
+
      C                   RETURN
       *
       *****************************************************************
@@ -329,18 +330,18 @@
      C                   Parm                    @Key             10
      C                   Parm                    @Keyst            7
      C     SDCUST        Parm      *Blanks       DSSDY
- 
+
      C                   If        @Rtcd  <> *Blanks  OR
      C                             BBCSID = *Blanks
- 
+
      C                   Eval      Okoi35 = 'N'
      C                   Eval      Idx            =   Idx+1
      C                   Eval      RetCodeIn      =   'Error'
      C                   Eval      MsgIdXAr(Idx)  =   'RFV0377'
      C                   Eval      FldNamXAr(Idx) =   DDSName
- 
+
      C                   Endif
- 
+
      C                   SELECT                                                   184049
      C                   WHEN      PType = 'IBAN'                                 184049
      C                   EVAL      POrdItp = 'I'                                  184049
@@ -519,7 +520,7 @@
      C                   If        %Subst(POrdi35:1:1) = '/'
      C                   Eval       POrdi35 = %Subst(POrdi35:2)
      C                   Endif
- 
+
       *
       ** Second field must be blank
       *
@@ -671,19 +672,19 @@
      C                             PTYPE = '*LEDGER'                                        BUG15279
      C                   EVAL      Wvalid = 'N'                                             BUG15279
      C                   EndIf                                                              BUG15279
- 
+
      C                   WHEN      PTYPE = '*NOSTRO'
      C                   EVAL      N@FMT = DSSDY
      C                   Movel     A7Cust        WCust
- 
+
      C                   WHEN      PTYPE = '*RETAIL'
      C                   EVAL      ACCNT = DSSDY
      C                   Eval      Wcust = CNUM
- 
+
      C                   WHEN      PTYPE = '*LEDGER'
      C                   Eval      ACCNT = DSSDY
      C                   Eval      Wcust = CNUM
- 
+
      C                   ENDSL
      C                   ENDIF
       *

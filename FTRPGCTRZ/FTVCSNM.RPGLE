@@ -73,6 +73,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD051679 - Added clear before reading SDNOSTPD to ensure that*
       *             no values are carried out when reading again. Also*
       *             added a validation to not set ODMTT to 'F' if     *
@@ -154,7 +155,7 @@
      FSDJACCL4  IF   E           K DISK    INFSR(*PSSR)                                       250600
      F                                     RENAME(SDJACCD0:SDJACCF)                           250600
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -173,49 +174,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       ** Array of Warning in error.                                                         BUG14042
@@ -227,26 +228,26 @@
       ** Array of Warning message data.                                                     BUG14042
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)                    BUG14042
                                                                                             BUG14042
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)                                 CFT032
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** External data structure for Nostro customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D B_SDCUST      E DS                  EXTNAME(SDCUSTPD)                                 250804A
      D                                     Prefix(B_)                                        250804A
- 
+
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D DSLDY         E DS                  EXTNAME(DSLDY)                                    250804A
- 
+
       ** External data strcuture for Accounts Master Detail                                   CFT032
                                                                                               CFT032
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CFT032
@@ -320,7 +321,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Midas general constant fields                                                        CFT032
                                                                                               CFT032
       /COPY FTCPYSRC,SFTVALCSLE                                                               CFT032
@@ -338,12 +339,12 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of warning message ids etc                                        BUG14042
      D WIx             S              3P 0                                                  BUG14042
- 
+
      D C#KEY1          S             10
      D C#KYST          S              7
      D C#OPTN          S              7
@@ -430,7 +431,7 @@
       ** SWIFT 2007 feature                                                                   CSW207
                                                                                               CSW207
      D CSW207          S              1A                                                      CSW207
- 
+
      D PfAccnt         DS            24                                                       250600
      D  PfBRCA                 1      3                                                       250600
      D  PfCNUM                 4      9                                                       250600
@@ -456,7 +457,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -465,17 +466,17 @@
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                  BUG14042
- 
+
       * MT100 Customer
       *
      C                   Exsr      VODMTX
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKOdmt = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -486,7 +487,7 @@
      C****************************************************************
      C*
      C     VODMTX        BEGSR
- 
+
      C                   Eval      #SODMT = SODMT                                             CFT032
      C                   Eval      WSbrca = SBRCA                                           BUG15037
      C                   If        %Check('?':SODMT) = 0                                      CFT032
@@ -797,14 +798,14 @@ E2    *                                                                         
      C**********         Parm      SODMT         C#KEY1                                       CFT032
      C**********         Parm      *Blanks       C#KYST                                       CFT032
      C*****SDCUST        Parm      SDCUST        DSSDY                                        CFT032
- 
+
      C**********         If        C#RTCD <> *Blanks                                          CFT032
       **Send*error to screen                                                                  CFT032
      C**********         Move      'N'           OKOdmt                                       CFT032
      C**********         Add       1             Idx                                          CFT032
      C**********         Movel     'SODMT'       FldNamXAr(Idx)                               CFT032
      C**********         Movel     'MMA1013'     MsgIdXAr(Idx)                                CFT032
- 
+
      C**********         Else                                                                 CFT032
      C**********         Movel(P)  BBCUST        SODMT                                        CFT032
      C**********         End                                                                  CFT032
@@ -1640,41 +1641,41 @@ E2    *                                                                         
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C                   Parm                    TranInPrmB                                   CFT032
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   Parm                    WFldNamXAr                                 BUG14042
      C                   Parm                    WMsgIDXAr                                  BUG14042
      C                   Parm                    WMsgDtaXAr                                 BUG14042
                                                                                             BUG14042
       * OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access Bank details                                                                  CFT032
                                                                                               CFT032
      C                   Call      'AOBANKR0'                                                 CFT032

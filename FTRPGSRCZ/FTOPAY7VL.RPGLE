@@ -40,6 +40,7 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
@@ -343,7 +344,7 @@
       ** VDRAC - Validate Settlement Account
       *****************************************************************
      C     VDRAC         BEGSR
- 
+
       * Reset variables updated by each module
      C                   Z-add     0             Ix                3 0
       *

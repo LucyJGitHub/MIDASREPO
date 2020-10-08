@@ -72,6 +72,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034176 - Customer not found displayed in Ordering Customer *
       *             upon Enquire                                      *
@@ -130,7 +131,7 @@
       *  CFT008 - Funds Transfer/Swift Messages MT102                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -155,22 +156,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -180,39 +181,39 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD)
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD) PREFIX(D)
- 
+
       ** External Data structure to hold the outgoing record format
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D   ACBRCA      E                     EXTFLD(BRCA)
      D   ACPRFC      E                     EXTFLD(PRFC)
- 
+
       ***External*data*structure*for*Currency*standing*data                     188775
      D*SDCURR********E DS                  EXTNAME(SDCURRPD)                    188775
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for access programs (Long)                     188775
      D DSSDY1        E DS                  EXTNAME(DSSDY)                       188775
      D N_Sdy1        E                     ExtFld(SDY1)                         188775
@@ -237,15 +238,15 @@
      D                                     PREFIX(N_)                                      BUG15010A
      D C_SDCUST      E DS                  EXTNAME(SDCUSTPD)                               BUG15010A
      D                                     PREFIX(C_)                                      BUG15010A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * OK Flags for first screen - Header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
      D GenOkFlag2      S              1    Import
      D CFT004          S              1    INZ(' ')
      D CSW207          S              1    INZ(' ')                                           CSW207
@@ -304,7 +305,7 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -312,27 +313,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      RetCodeIn  = *Blanks
      C                   Eval      Idx        = 0
      C                   Eval      WIx        = 0
      C                   Eval      PCUSTTH  = *Blanks
      C                   Eval      PType  = *Blanks
      C                   Clear                   Accnt
- 
+
      C                   Eval      GenOkFlag2 = 'Y'
      C                   Eval      OkOcus1 = 'Y'
      C                   Eval      OkOcus2 = 'Y'
      C                   Eval      OkOcus3 = 'Y'
      C                   Eval      OkOcus4 = 'Y'
- 
+
      C                   If        PTOCUS1 <> *Blanks
      C                             Or (CSW207 = 'Y' And (PTOCUS2 <> *Blanks                  CSW207A
      C                                Or PTOCUS3 <> *Blanks                                  CSW207A
@@ -448,7 +449,7 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ** Type is BO
      C                   If        PCCttyp = 'BO'
      C                   EXSR      SrSwft                                                     CSW207
@@ -488,16 +489,16 @@
      C                   EVAL      PCUSTTH = 'S'                                              221538
      C                   Endif                                                                221538
       *                                                                                       221538
- 
+
       ** Payment ccy must be the same as the account ccy
- 
+
      C                   Move      'N'           NotPCCY           1
- 
+
      C     PCCTID        Setll     FT102DL1
      C     PCCTID        Reade     FT102DL1                               01
- 
+
      C                   Dow       *IN01 = *OFF
- 
+
      C                   If        CPayCCY <> %SUBST(DSSDY:1:3) and
      C                             PTYPE = '*NOSTRO' or
      C                             CPayCCY <> %SUBST(DSSDY:8:3) and
@@ -508,19 +509,19 @@
      C                             PTYPE = '*RETAIL'
      C                   Move      'Y'           NotPCCY
      C                   Endif
- 
+
      C     PCCTID        Reade     FT102DL1                               01
      C                   Enddo
- 
+
      C                   If        NotPCCY = 'Y'
      C                   Eval      GenOkFlag2 = 'W'
      C                   Eval      WIx = WIx + 1
      C                   Eval      WFldNmXAr(WIx) = DDSName
      C                   Eval      WMsgIdXAr(WIx) = 'RFV0289'
      C                   Endif
- 
+
      C**************     Exsr      SrSffd                                       188775
- 
+
       ** Valid Account
       *                                                                                       221538
      C**********         If        PTOCUS2 = *blank And                                221538 CSW207
@@ -558,7 +559,7 @@
      C                   When      PTYPE = '*RETAIL'
      C                   Eval      PCUSTTH = 'R'
      C                   Endsl
- 
+
      C                   Endif                                                                221538
      C                   Endif
      C                   Endif
@@ -615,11 +616,11 @@
      C**********         Eval      OkOCus5 = 'N'                                      CSW207 CSW207A
      C**********         Endif                                                        CSW207 CSW207A
      C**********         Endif                                                        CSW207 CSW207A
- 
+
      C                   Endif
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
       *                                                                                     BUG24669
       ** Not applicable for incoming IBAN transactions                                      BUG24669
       *                                                                                     BUG24669
@@ -644,7 +645,7 @@
      C                   Endif
      C                   Endif
      C                   EndIf                                                              BUG24669
- 
+
      C                   If        PToCus2 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -658,7 +659,7 @@
      C                   Eval      OkOcus2 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PToCus3 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -672,7 +673,7 @@
      C                   Eval      OkOcus3 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PToCus4 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -770,7 +771,7 @@
       *                                                               *
       *****************************************************************
      C     SrAcct        Begsr
- 
+
      C                   Eval      PAcType = *Blanks                                          CSW207
      C                   Eval      PTYPE = *Blanks
      C                   IF        %SUBST(PTOCUS1:1:1) = '/'                                BUG15248
@@ -778,14 +779,14 @@
      C                   ELSE                                                               BUG15248
      C                   Eval      PACCT = PTOCUS1
      C                   ENDIF                                                              BUG15248
- 
+
       ** Validate Account
      C                   CallB     'AOACCTV1'
      C                   Parm      *Blanks       PRTCD             7            B:Return code
      C                   Parm                    PTYPE             7            I:A/c ID
      C                   Parm                    PACCT                          I:A/c Currency
      C                   Parm                    DSSDY                          I:A/c code
- 
+
       *                                                                                     BUG11467
       *  If shortname or customer number were entered in lower case,                        BUG11467
       *  the return code will be '*NRF' and the input will be                               BUG11467
@@ -889,7 +890,7 @@
      C                   Endif                                                              BUG24404
       *                                                                                     BUG24404
      C                   Endsl
- 
+
       ** CFT004 is switched on
      C                   If        CFT004 = 'Y' and
      C                             PCCTTYP = 'BO'
@@ -900,13 +901,13 @@
      C                             PTYPE <> '*CUSTNO'
      C                             and PTYPE <> '*LEDGER'
      C                             and PTYPE <> '*SWIFT'                                    BUG15250
- 
+
      C                   If        %SUBST(PTOCUS1:1:1) = '/'
      C                   Eval      PACCT = %SUBST(PTOCUS1:2)
      C                   Else                                                              BUG15280A
      C                   Eval      PACCT = PTOCUS1                                         BUG15280A
      C                   Endif
- 
+
      C                   MOVEL     PACCT         PIBAN                                      BUG24639
      C                   CALL      'AOIBANR3'                                               BUG24639
      C                   PARM                    PRTCD                                      BUG24639
@@ -930,7 +931,7 @@
      C                   Parm      *Blanks       PRTCD
      C                   Parm                    PACCT            35
      C     ACCNT         Parm      ACCNT         Dssdy
- 
+
      C                   If        PRTCD = *Blanks
      C                   Eval      PActype = 'I'                                             CSW207A
      C                   Move      CNUM          WCNUM                                       CSW207A
@@ -1035,9 +1036,9 @@
      C                   Endif                                                              BUG24639
      C                   Endif
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************                       CSW207
       /EJECT                                                                                  CSW207
       *****************************************************************                       CSW207
@@ -1449,22 +1450,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        PLIST
- 
+
       ** INPUTS
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode          1
      C                   Parm                    ActionCode
- 
+
       ** Screen fields
      C                   Parm                    HdrRcdIn
      C                   Parm                    DtlRcdIn
      C                   PARM                    OKFlagHS1
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -1474,7 +1475,7 @@
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtXAr
      C                   Parm                    DDSName          10
- 
+
      C     PLSWFT        PLIST
      C                   PARM                    PRtnCde                                      CSW207
      C                   PARM                    PMsgID                                       CSW207
@@ -1509,7 +1510,7 @@
      C                   Parm      '*VERIFY'     POPTN             7
      C                   Parm      'CFT004'      PSARD             6
      C                   Parm                    DSFDY
- 
+
      C                   Eval      CFT004 = 'N'
      C                   If        PRTCD = *Blanks
      C                   Eval      CFT004 = 'Y'
@@ -1523,16 +1524,16 @@
      C                   ELSE                                                                 CSW207
      C                   EVAL      CSW207 = 'Y'                                               CSW207
      C                   ENDif                                                                CSW207
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   Endsr                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

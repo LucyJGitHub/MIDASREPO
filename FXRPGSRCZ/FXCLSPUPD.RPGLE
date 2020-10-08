@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CSD083 - Watch List Compliance Upgrade                       *
@@ -68,7 +69,7 @@
      F                                     COMMIT
      FFXCLSPSDL2UF A E           K DISK
      F                                     COMMIT
- 
+
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
                                                                                               CSD015
@@ -90,39 +91,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D Timestamp       S               Z
       *
       ** Externally Described Data Structure for Valid Pay-in Schedule
      D NPyInHFilFmt  E DS                  EXTNAME(FXVCLSPHPD)
- 
+
       *
       ** Externally Described Data Structure for Valid Pay-in Schedule
      D NPyInDFilFmt  E DS                  EXTNAME(FXVCLSPDPD)
      D                                     PREFIX(D)
- 
+
       * Data Structures for use with Access Programs
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** External DS for Nostro Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
                                                                                               CSD015
@@ -165,7 +166,7 @@
       ** Watch List Fields Array.                                                             CSD015
      D WLF             S             18A   DIM(Elements)                                      CSD015
                                                                                               CSD015
- 
+
      D C#DTA           DS           256
      D  C#ATYP                 1      1
      D***C#ACCT*                2     19                                                      CGL029
@@ -215,12 +216,12 @@
      D  C#XRFI               162    164                                                       CLE134
      D  C#XRFN               165    174  0                                                    CLE134
       *  Calling parameter data structure for AOSPOSU0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D***P#ACCD          S              4A                                                   CGL029
      D P#ACCD          S             10A                                                      CGL029
      D P#ACSN          S              2A
@@ -230,7 +231,7 @@
      D P#CYCD          S              3A
      D P#NONB          S              2A
      D P#PNOI          S              1A
- 
+
      D CSC011          S              1                                                       CSD015
      D CSD015          S              1                                                       CSD015
      D CCF001          S              1                                                       CSD015
@@ -283,7 +284,7 @@
       *
      C                   EXSR      SRCLR
      C                   MOVE      *BLANK        WRVRS             1
- 
+
      C     P@ACTN        CASEQ     'I'           SRCINS
      C     P@ACTN        CASEQ     'A'           SRCAMD
      C     P@ACTN        CASEQ     'X'           SRCAUT
@@ -1060,7 +1061,7 @@
      C                   PARM      *BLANKS       P#CSSN
      C                   PARM      *BLANKS       P#PNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      CSR                 ENDSR
      C****************************************************************
      C/EJECT
@@ -1084,7 +1085,7 @@
      C                   MOVEL     '*CALL   '    DBKEY
      C                   EXSR      SRERR
      C                   END
- 
+
      CSR                 ENDSR
      C****************************************************************
      C/EJECT
@@ -1135,7 +1136,7 @@
      C                   MOVEL     '*CALL   '    DBFILE
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      CSR                 ENDSR
      C****************************************************************
      C/EJECT

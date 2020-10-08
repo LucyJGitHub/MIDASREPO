@@ -51,6 +51,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27895 - Serious midas error when confirm authorize an     *
@@ -78,7 +79,7 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,82 +98,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions parameter list
       ** for call to FT0010.
      D/COPY FTCPYSRC,FT0010D001
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
      D  PSNDREF_H    E                     EXTFLD(PSNDREF)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       ** External data structure for Bank standing data
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Currency standing data
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Funds Transfer ICD
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Incoming account details from access objects
      D AccRecord     E DS                  EXTNAME(ACCNTAB)
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * OK Flags for second screen
      D OKFlags       E DS                  EXTNAME(FTE101S2PD)
- 
+
       * DS to split account identifier into components
      D AccntCode       DS
      D  CustNo                 1      6
@@ -183,52 +184,52 @@
      D**P@ACCD**              10     13                                                       CGL029
      D**P@ACSN**              14     15                                                       CGL029
      D**P@BRCA**              16     18                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
       ** Numeric version of Payment Amount (work field)
      D WNumPAYAMT      S             13P 0
       ** Numeric version of Payment Amount
      D NumPAYAMT       S             13P 0
- 
+
       ** Numeric version of Transfer Amount
      D NumTRNAMT       S             13P 0
- 
+
       ** Exchange Rate calculated by the system/numeric version of PXRATE
      D CalcXRATE       S             13P 8
      D NumXRATE        S             13P 8                                                   CSW207A
      D NumORAMT        S             13P 0                                                   CSW207A
      D NXRATE          S             16P 0                                                  BUG24955
- 
+
       ** Exchange Rate from screen but in numeric format
      D ScrnXRATE       S                   LIKE(CalcXRATE)
- 
+
       ** Limit of exchange rate discrepancy
      D RateLimit       S                   LIKE(CalcXRATE)
- 
+
       ** Work field to hold a valid account Id
      D W#Account       S             35A
- 
+
      D CFT004          S              1    INZ('N')
      D CSW207          S              1    INZ('N')                                           CSW207
- 
+
       ** Working version of % rate discrepancy
      D WBtpcrd         S              5  2
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -236,17 +237,17 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initial Processing
      C                   EXSR      InitProc
- 
+
       ** Validate Payment Currency if Outgoing RFT                                          BUG15067
       *                                                                                     BUG15067
      C                   IF        PPTYP = 'RO' And PPAYCCY <> *Blanks                      BUG15067
@@ -260,19 +261,19 @@
       *                                                                                     BUG15067
       ** Only validate the fields if Incoming RFT
      C                   IF        PPTYP = 'RI'
- 
+
       ** Validate Exchange Rate Override Indicator
      C                   EXSR      ValOvrrdIn
- 
+
       ** Validate Payment Currency
      C                   EXSR      ValPayCcy
- 
+
       ** Validate Payment Amount (only do this if the ccy was valid to avoid
       ** database error)
      C                   IF        OKPYCY = 'Y'
      C                   EXSR      ValPayAmt
      C                   ENDIF
- 
+
       ** Validate Exchange Rate (can only be done if both ccys and both
       ** amounts are valid).
      C                   IF        OKPYCY  = 'Y'  and  OKTRCY =  'Y'  and
@@ -282,7 +283,7 @@
      C                   EXSR      ConvAmts
      C                   EXSR      ValXRate
      C                   ENDIF
- 
+
       ** If Payment Amount is left blank, default to Transfer Amount conver-
       ** ted to the Payment Currency at the Exchange Rate.  If no rate has
       ** been entered, use the calculated Exchange Rate.
@@ -300,9 +301,9 @@
      C                   PARM                    ZADECP            2 0
       *
      C                   MOVE      ZFIELD        PPAYAMT
- 
+
      C                   ELSE
- 
+
      C     CalcXRate     MULT(H)   NumTRNAMT     WNumPAYAMT
      C                   IF        WNumPAYAMT <> NumPAYAMT
      C                   MOVE      'N'           OKPYAM
@@ -310,14 +311,14 @@
      C                   MOVEL     'PPAYAMT'     FldNamXAr(Idx)
      C                   MOVEL     'RFV0309'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -432,7 +433,7 @@
      C                   ELSE
      C                   EVAL      CalcXRATE = P#RATE
      C                   ENDIF
- 
+
      C                   IF        CalcXRATE <> *Zeros  AND  P#MDIN = 0
      C                   EVAL      CalcXRATE = (1 / CalcXRATE)
      C                   ENDIF
@@ -586,7 +587,7 @@
      C**********         ENDIF                                                        CSW207 CSW207A
       **********                                                                      CSW207 CSW207A
      C**********         ENDIF                                                        CSW207 CSW207A
- 
+
      C                   ENDIF
       *
       **  If the Exchange Rate is valid (all checks are done by now), put
@@ -605,7 +606,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      8             ZADEC
- 
+
      C                   MOVE      ZFIELD        PXRATE
      C                   ENDIF
       *
@@ -721,13 +722,13 @@
      C                   MOVEL     'Dummy'       IBANRetCde        7            B:Return code
      C                   MOVEL     *Blanks       P@IBAN           34            I:Option
      C                   ENDIF                                                  I:Option
- 
+
      C                   CallB     'AOACCTV1'
      C                   Parm      *Blanks       ACCTRetCde        7
      C                   Parm                    P@TYPE            7
      C                   Parm                    W#Account
      C                   Parm                    DSSDY
- 
+
      C                   Select
      C                   When      P@TYPE = '*NOSTRO'
      C                   Eval      N@FMT = DSSDY
@@ -737,9 +738,9 @@
      C                   When      P@TYPE = '*LEDGER'
      C                   Eval      ACCRECORD = DSSDY
      C                   Endsl
- 
- 
- 
+
+
+
       *
      C                   ENDSR
       *****************************************************************
@@ -778,11 +779,11 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      A6NBDP        ZADEC
- 
+
      C                   MOVE      ZFIELD        PPAYAMT
       *
      C                   ENDIF
- 
+
       * If pay currency = transfer currency AND pay amount <> transfer
       *  amount, error.
      C                   If        PPAYCCY = PTRNCCY AND
@@ -793,7 +794,7 @@
      C                   MOVEL     'PPAYAMT'     FldNamXAr(Idx)
      C                   MOVEL     'RFV0280'     MsgIdXAr(Idx)
      C                   Endif
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -825,8 +826,8 @@
      C                   PARM      13            ZADIG             2 0
       *
      C                   MOVE      ZFIELD        NumTRNAMT
- 
- 
+
+
       ** Obtain Payment Amount in numeric format
      C                   EVAL      @CCY = PPAYCCY
      C                   EVAL      ZFIELD = *Blanks
@@ -859,9 +860,9 @@
      C                   PARM      13            ZADIG             2 0                       CSW207A
       *                                                                                      CSW207A
      C                   MOVE      ZFIELD        NumORAMT                                    CSW207A
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -914,7 +915,7 @@
      C                   Eval      NumPAYAMT  = 0
      C                   Eval      W#Account  = *Blanks
      C                   Eval      AccntCode  = *Blanks
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -927,22 +928,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       * INPUTS
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode          1
      C                   Parm                    ActionCode        1
- 
+
       *  Screen fields
      C                   Parm                    HdrRcdIn
      C                   PARM                    DtlRcdIn
- 
+
       * OUTPUTS
- 
+
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
@@ -952,7 +953,7 @@
      C                   Parm                    WMsgDtXAr
      C                   Parm                    DDSName          10
      C                   PARM                    OKFlags
- 
+
       ** Access object for Bank details
      C                   CALLB     'AOBANKR0'
      C                   PARM      *Blanks       @RTCD             7
@@ -1002,16 +1003,16 @@
      C                   ELSE                                                                 CSW207
      C                   EVAL      CSW207 = 'N'                                               CSW207
      C                   ENDIF                                                                CSW207
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

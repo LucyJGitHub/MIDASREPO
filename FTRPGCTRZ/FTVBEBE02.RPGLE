@@ -51,6 +51,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -76,8 +77,8 @@
       *  CFT008 - Funds Transfer addition of MT102 messages           *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -96,22 +97,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -121,11 +122,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -134,71 +135,71 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Arrays used to check clearing code if SWIFT 2000 is on                 CSW200
      D ArrDig          S              1    DIM(10) CTDATA PERRCD(10)            CSW200
      D StrArr          S              1    DIM(35)                              CSW200
                                                                                 CSW200
       ** Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       ** Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       ** OK Flags for first screen
      D OKFlagDs1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       ** OK Flags for Second screen
      D OKFlagDs2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       ** OK Flags for first screen - Header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       ** OK Flags for Second screen - Header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)                                  221538
- 
+
       ** External Data structure to hold the outgoing record format
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D   ACBRCA      E                     EXTFLD(BRCA)
      D   ACPRFC      E                     EXTFLD(PRFC)
       ** Nostro DS                                                                            CSW215
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  CSW215
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D CFT004          S              1    INZ('N')
- 
+
      D PAcct           S             35
- 
+
      D RespMode        S              1
- 
+
      D DDSName         S             10
- 
+
      D WValid          S              1    INZ('Y')
- 
+
      D BnkCod          C                   'CHQB'
- 
+
      D CSW200          S              1                                         CSW200
                                                                                 CSW200
      D SPos            S              3  0                                      CSW200
@@ -234,11 +235,11 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -297,9 +298,9 @@
      C                   Endif                                                                221538
       *
      C                   ENDIF
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
      C                   IF        PBenf1  <> *Blanks
      C                   CALLB     'FTVSFTX01'
      C                   PARM                    RetCdeIn         10
@@ -312,7 +313,7 @@
      C                   EVAL      OkBn1     = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PBenf2  <> *Blanks
      C                   CALLB     'FTVSFTX01'
      C                   PARM                    RetCdeIn         10
@@ -326,7 +327,7 @@
      C                   EVAL      OkBn2     = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PBenf3  <> *Blanks
      C                   CALLB     'FTVSFTX01'
      C                   PARM                    RetCdeIn         10
@@ -340,7 +341,7 @@
      C                   EVAL      OkBn3     = 'N'
      C                   ENDIF
      C                   Endif
- 
+
      C                   IF        PBenf4  <> *Blanks
      C                   CALLB     'FTVSFTX01'
      C                   PARM                    RetCdeIn         10
@@ -354,7 +355,7 @@
      C                   EVAL      OkBn4     = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PBenf5  <> *Blanks
      C                   CALLB     'FTVSFTX01'
      C                   PARM                    RetCdeIn         10
@@ -442,7 +443,7 @@
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
      C                   ELSE
- 
+
       *
       ** Check to see if A/C with Institution contains
       ** a valid account
@@ -1084,7 +1085,7 @@
       *****************************************************************
       /EJECT
       **********************************************************************
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
                                                                                 CSW200

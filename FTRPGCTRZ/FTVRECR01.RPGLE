@@ -49,6 +49,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
@@ -69,7 +70,7 @@
       *  CFT008 - Funds Transfer/Swift Messages MT102                 *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,22 +89,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -113,16 +114,16 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -130,15 +131,15 @@
       * Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD)
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD) PREFIX(D)
- 
+
       *  External Data structure to hold the outgoing record format
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D   ACBRCA      E                     EXTFLD(BRCA)
      D   ACPRFC      E                     EXTFLD(PRFC)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for access programs (Short)                                  CSW202
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSW202
                                                                                               CSW202
@@ -158,7 +159,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D wvalid          S              1
      D wivld           S              1
      D wdvld           S              1
@@ -166,16 +167,16 @@
      D wssvld          S              1
      D CFT004          S              1
      D  XSINST         S                   Like(PSINST)
- 
+
       * OK Flags for first screen - Header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
      D GenOkFlag2      S              1    Import
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** SWIFT 2001 switchable feature                                                        CSW201
      D CSW201          S              1A                                                      CSW201
                                                                                               CSW201
@@ -200,23 +201,23 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      RetCodeIn  = *Blanks
      C                   Eval      Idx        = 0
      C                   Eval      WIdx       = 0
      C                   Eval      PTType = *Blanks
      C                   Eval      PType = *Blanks
      C                   Eval      GenOkFlag2 = 'Y'
- 
+
      C                   Eval      PRCVTYP = *Blanks
- 
+
      C                   Eval      wsvld = 'Y'
      C                   Eval      wssvld = 'Y'
      C                   Eval      wdvld = 'Y'
@@ -236,7 +237,7 @@
       *
      C                   Eval      PACCT = PCctDst
      C                   Exsr      SrAcct
- 
+
       ** Account invalid for destination
      C                   If        wvalid = 'N'
      C                   Eval      wdvld = 'N'
@@ -312,14 +313,14 @@
      C                   Eval      FldNamXAr(Idx) = DDSName
      C                   Eval      MsgIdXAr(Idx) = 'RFV0347'
      C                   Else
- 
+
       *
       ** If a valid account and starts with a '/', remove it.
       *
      C                   If        %Subst(PRCVCOR:1:1) = '/'
      C                   Eval      PRCVCOR = %Subst(PRCVCOR:2)
      C                   Endif
- 
+
      C                   Select
      C                   When      PTYPE = 'IBAN'
      C                   Eval      PRCVTYP = 'I'
@@ -339,7 +340,7 @@
       ** B.I.C, customer number or shortname.
       *
      C                   Other
- 
+
      C                   If        PRcvCor <> *Blanks
      C                   Eval      XSINST = PSINST
       *
@@ -349,22 +350,22 @@
      C                   Parm                    PRcvCor
      C                   Parm                    PTType            7
      C                   Parm                    Dssdy
- 
+
      C                   If        PTType = '*BIC   ' or
      C                             PTType =  '*NUMBER'  and
      C                             RetCodeIn = '*BICFND' or
      C                             PTType =  '*SHNAME' and
      C                             RetCodeIn = '*BICFND'
- 
+
       *
       ** If a valid account and starts with a '/', remove it.
       *
      C                   If        %Subst(PRCVCOR:1:1) = '/'
      C                   Eval      PRCVCOR = %Subst(PRCVCOR:2)
      C                   Endif
- 
+
      C                   Else
- 
+
       *
      C                   Eval      PACCT = PRCVCOR
      C                   Exsr      SrAcct
@@ -378,14 +379,14 @@
      C                   Eval      FldNamXAr(Idx) = DDSName
      C                   Eval      MsgIdXAr(Idx) = 'RFV0323'
      C                   Else
- 
+
       *
       ** If a valid account and starts with a '/', remove it.
       *
      C                   If        %Subst(PRCVCOR:1:1) = '/'
      C                   Eval      PRCVCOR = %Subst(PRCVCOR:2)
      C                   Endif
- 
+
      C                   Select
      C                   When      PTYPE = 'IBAN'
      C                   Eval      PRCVTYP = 'I'
@@ -396,15 +397,15 @@
      C                   When      PTYPE = '*RETAIL'
      C                   Eval      PRCVTYP = 'R'
      C                   Endsl
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
      C                   Endsl
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
      C                   If        PRCVCOR <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -490,7 +491,7 @@
       *                                                                                       CSW201
      C                   ENDSL                                                                CSW201
      C                   ENDIF                                                                CSW201
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -504,26 +505,26 @@
       *                                                               *
       *****************************************************************
      C     SrAcct        Begsr
- 
+
      C                   Eval      PTYPE = *Blanks
      C                   Eval      wvalid = 'Y'
- 
+
       ** CFT is switched on
      C                   If        CFT004 = 'Y'
- 
+
       ** Validate Account
      C                   CallB     'AOIBANR2'
      C                   Parm      *Blanks       PRTCD
      C                   Parm                    PACCT            35
      C     ACCNT         Parm      ACCNT         DSSDY
- 
+
      C                   If        PRTCD = *Blanks
      C                   Eval      PTYPE = 'IBAN'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PTYPE <> 'IBAN'
- 
+
       ** Validate Account
      C                   CallB     'AOACCTV1'
      C                   Parm      *Blanks       PRTCD             7            B:Return code
@@ -531,7 +532,7 @@
      C                   Parm                    PACCT                          I:A/c Currency
      C                   Parm                    DSSDY                          I:A/c code
      C                   Endif
- 
+
       ** Invalid Account
      C                   If        PTYPE <> 'IBAN' and
      C                             PTYPE <> '*NOSTRO'  and
@@ -540,7 +541,7 @@
      C                             PRTCD <> *Blanks
      C                   Eval      wvalid = 'N'
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************                       CSW201
       /EJECT                                                                                  CSW201
@@ -601,22 +602,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        PLIST
- 
+
       ** INPUTS
- 
+
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode          1
      C                   Parm                    ActionCode        1
- 
+
       ** Screen fields
      C                   Parm                    HdrRcdIn
      C                   Parm                    DTlRcdIn
      C                   PARM                    OKFlagHS1
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -626,14 +627,14 @@
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtXAr
      C                   Parm                    DDSName          10
- 
+
       ** Access SAR file to see if CFT004 is present
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       PRTCD
      C                   Parm      '*VERIFY'     POPTN             7
      C                   Parm      'CFT004'      PSARD             6
      C                   Parm                    DSSDY
- 
+
      C                   Eval      CFT004 = 'N'
      C                   If        PRTCD = *Blanks
      C                   Eval      CFT004 = 'Y'
@@ -661,16 +662,16 @@
      C                   ELSE                                                                 CSW202
      C                   EVAL      CSW202 = 'N'                                               CSW202
      C                   ENDIF                                                                CSW202
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   Endsr                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

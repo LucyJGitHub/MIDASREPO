@@ -69,6 +69,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25973 - When Ordering Customer L1 is equal to valid IBAN  *
@@ -123,7 +124,7 @@
       *  CFT008 - Funds Transfer addition of MT102 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -142,22 +143,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -167,11 +168,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -180,36 +181,36 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT102HSPD) PREFIX(H)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT102DSPD)
- 
+
       * OK Flags for first screen
      D OKFlagDs1     E DS                  EXTNAME(FTE102S1PD)
- 
+
       * OK Flags for Second screen
      D OKFlagDs2     E DS                  EXTNAME(FTE102S2PD)
- 
+
       * OK Flags for first screen - Header
      D OKFlagHs1     E DS                  EXTNAME(FTE102H1PD)
- 
+
       * OK Flags for Second screen - Header
      D OKFlagHs2     E DS                  EXTNAME(FTE102H2PD)
- 
+
       *  External Data structure to hold the outgoing record format
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D   ACBRCA      E                     EXTFLD(BRCA)
      D   ACPRFC      E                     EXTFLD(PRFC)
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (Long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)                                  221538
@@ -221,29 +222,29 @@
      D                                     PREFIX(N_)                                      BUG15010A
      D C_SDCUST      E DS                  EXTNAME(SDCUSTPD)                               BUG15010A
      D                                     PREFIX(C_)                                      BUG15010A
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
      D CFT004          S              1    INZ('N')
- 
+
      D RespMode        S              1
- 
+
      D DDSName         S             10
- 
+
      D W#OrdCU         S             35
      D W#OrdCuB        S             35                                                     BUG15010
                                                                                               CSW207
@@ -264,16 +265,16 @@
      D NUMC            S              1    DIM(10) CTDATA PERRCD(10)                        BUG24639
      D Char            S             26A   Inz('ABCDEFGHIJKLMNOPQRSTUVWXYZ')                BUG24669
      D Num             S             10A   Inz('0123456789')                                BUG24669
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -344,9 +345,9 @@
      C                   Endif                                                                221538
       *
      C                   ENDIF
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
       *                                                                                     BUG24669
       ** Not applicable for incoming IBAN transactions                                      BUG24669
       *                                                                                     BUG24669
@@ -370,7 +371,7 @@
      C                   Endif
      C                   Endif
      C                   EndIf                                                              BUG24669
- 
+
      C                   If        POrdCu2 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -384,7 +385,7 @@
      C                   EVAL      OKOCU2  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POrdCu3 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -398,7 +399,7 @@
      C                   EVAL      OKOCU3  = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        POrdCu4 <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -426,7 +427,7 @@
      C                   EVAL      OKOCU5  = 'N'                                              CSW207
      C                   Endif                                                                CSW207
      C                   Endif                                                                CSW207
- 
+
      C                   If        PCUSTTD = ' ' And POrdCu1 <> *blanks Or                    221538
      C                             PCUSTTD = ' ' And POrdCu2 <> *blanks Or                    221538
      C                             PCUSTTD = ' ' And POrdCu3 <> *blanks Or                    221538
@@ -865,7 +866,7 @@
      C                   Movel     POrdCu2       PCust                                      BUG15250
      C                   EndIf                                                              BUG15250
      C                   EndIf                                                              BUG15250
- 
+
      C                   EVAL      PAcType = PCUSTTD                                        BUG15010
      C                   CALL      'FT001000'                                                 CSW207
      C                   PARM      *BLANKS       PrtCd                                        CSW207
@@ -1123,7 +1124,7 @@
      C                   PARM      *Blanks       PRTCD
      C                   PARM                    W#OrdCu
      C     Accnt         PARM      Accnt         Dssdy
- 
+
      C                   IF        PRtcd = *Blanks
      C                   EVAL      PType = 'IBAN'
      C                   Eval      PAcType = 'I'                                             CSW207A

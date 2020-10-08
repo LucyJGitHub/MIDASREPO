@@ -36,6 +36,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  221761 - Recompiled due to change made in PF/FT101HPD.       *
       *  226083 - Correct various RFTD validation errors              *
@@ -45,7 +46,7 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -66,22 +67,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -91,11 +92,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -115,31 +116,31 @@
       ** Numeric array                                                                        226083
      D NUMC            S              1    DIM(10) CTDATA PERRCD(10)                          226083
       *                                                                                       226083
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      DBicRetCode       S                   Like(RetCodeIn)
- 
+
      D RespMode        S              1
      D DDSName         S             10
      D ClrOrAcc        S             35
      D BicCSname       S             11
      D P@IBAN          S             34                                                       226083
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -147,27 +148,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      RetCodeIn  = *BlankS
      C                   Eval      Idx        = 0
      C                   Eval      WIdx       = 0
      C                   Eval      PASITTP = *Blank
      C                   Eval      OKASI1= 'Y'
      C                   Eval      OKASI2= 'Y'
- 
+
       *  Not a mandatory item.  If blank, return
      C                   If        PHACSV1 = *Blanks and
      C                             PHACSV2 = *Blanks
      C                   Return
      C                   Endif
- 
+
      C                   If        %Subst(PHACSV1:1:1) <> '/'    AND
      C                             PHACSV1 <> *Blanks
      C                   Eval      Idx            =   Idx+1
@@ -176,20 +177,20 @@
      C                   Eval      FldNamXAr(Idx) =   DDSName
      C                   Eval      OKASI1= 'N'
      C                   Else
- 
+
       ** Call module FTVBCCC01 to validate the clearing and BIC codes.
- 
+
      C                   CallB     'FTVBCCC01'
      C                   Parm      'HEADER'      BicRetCode
      C                   Parm      PHACSV1       ClrOrAcc
      C                   Parm      PHACSV2       BicCSname
      C                   Parm                    DDSName                        CSW200
- 
+
      C                   Select
- 
+
      C                   When      BicRetCode     =   '*INVALIDCC'  or
      C                             BicRetCode     =   '*DIGITERR'
- 
+
      C                   If        %Subst(PHACSV1:2:1) = '/'
      C                   Eval      Idx            =   Idx+1
      C                   Eval      RetCodeIn      =   BicRetCode
@@ -197,7 +198,7 @@
      C                   Eval      FldNamXAr(Idx) =   DDSName
      C                   Eval      OKASI1 = 'N'
      C                   Endif
- 
+
      C                   When      BicRetCode     =   '*11ERROR'
      C                   Eval      Idx            =   Idx+1
      C                   Eval      RetCodeIn      =   BicRetCode
@@ -205,14 +206,14 @@
      C*******************Eval      FldNamXAr(Idx) =   DDSName                   CAP084
      C                   Eval      FldNamXAr(Idx) =   'PHACSV2'                 CAP084
      C                   Eval      OKASI2 = 'N'
- 
+
      C                   When      BicRetCode     =   '*BLANKERR'
      C                   Eval      Idx            =   Idx+1
      C                   Eval      RetCodeIn      =   BicRetCode
      C                   Eval      MsgIdXAr(Idx)  =   'RFV0366'
      C                   Eval      FldNamXAr(Idx) =   DDSName
      C                   Eval      OKASI1 = 'N'
- 
+
      C                   EndSl
      C                   Endif
       *                                                                                       226083
@@ -287,7 +288,7 @@
      C                   Endif                                                                226083
      C*                                                                                       226083
      C                   Endif                                                  End IBAN chk  226083
- 
+
       * Now validate that all data entered is OK for SWIFT
      C                   If        PHACSV1 <> *Blanks
      C                   CallB     'FTVSFTX01'
@@ -301,7 +302,7 @@
      C                   Eval      OKASI1 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -314,18 +315,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       * INPUTS
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode
      C                   Parm                    ActionCode
- 
+
       *  Screen fields
      C                   Parm                    HdrRcdIn
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -359,16 +360,16 @@
      C                   Eval      CFT004 = 'N'                                               226083
                                                                                               226083
      C                   Endsl                                                                226083
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

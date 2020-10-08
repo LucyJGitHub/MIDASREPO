@@ -54,6 +54,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034751 - Serious Midas Error on completion of details for  *
       *             RFTD-Incoming when OrdCust1 in Header is          *
@@ -86,13 +87,13 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
+
       * RFT Detail file (keyed on RFTID)
      FFT101DL2  IF   E           K Disk    INFSR(*PSSR)
                                                                                               CGL014
       ** RE Shadow balances file                                                              CGL014
      FMEMOSL2   IF   E           K DISK    INFSR(*PSSR)                                       CGL014
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -111,22 +112,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -136,48 +137,48 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
      D  PSNDREF_H    E                     EXTFLD(PSNDREF)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       ** External data structure for Currency standing data
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
                                                                                               CRE008
       ** Externally described DS for SAR details                                              CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE008
      D   SLCD        E                     EXTFLD(LCD)                                        CRE008
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Incoming account details from access objects
      D AccRecord     E DS                  EXTNAME(ACCNTAB)
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
      D C@FMT         E DS                  EXTNAME(SDCUSTPD)
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * OK Flags for second screen
      D OKFlags       E DS                  EXTNAME(FTE101S2PD)
- 
+
       * DS to split account identifier into components
      D AccntCode       DS
      D  CustNo                 1      6
@@ -188,7 +189,7 @@
      D  P@ACCD                10     19                                                       CGL029
      D  P@ACSN                20     21                                                       CGL029
      D  P@BRCA                22     24                                                       CGL029
- 
+
       * DS to split account identifier into components
      D WorkAccId       DS
      D**W#CNUM**               1      6  0                                                    CSD027
@@ -200,7 +201,7 @@
      D  W#ACOD                10     19  0                                                    CGL029
      D  W#ACSQ                20     21  0                                                    CGL029
      D  W#BRCA                22     24                                                       CGL029
- 
+
       ** DS to combine nostro account components                                              212229
      D WorkNost        DS                                                                     212229
      D  N#BRCA                 1      3                                                       212229
@@ -224,38 +225,38 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
       ** Numeric version of Transfer Amount
      D NumTRNAMT       S             15P 0
- 
+
       ** CFT004 switchable feature flag
      D CFT004          S              1A
- 
+
       ** Entry in Ordering Customer field
      D*W#OrdCust*******S             34A                                                      205011
      D W#OrdCust       S             35A                                                      205011
- 
+
       ** Field to save Ledger Balance of account entered in Ordering Cust.
      D SaveLDBL        S                   LIKE(LDBL)
- 
+
       ** Field to save Account Id of account entered in Ordering Cust.
      D***SaveAccnt       S             18                                                     CGL029
      D SaveAccnt       S             24                                                       CGL029
- 
+
       ** Total of Transfer Amounts for all transactions in on RFTID.
      D Total           S             15P 0
- 
+
       ** SWIFT 2001 switchable feature                                                        CSW201
      D CSW201          S              1A                                                      CSW201
       *                                                                                       CSW207
@@ -310,18 +311,18 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EVAL      RetCodeIn  = *Blanks
      C                   EVAL      Idx        = 0
      C                   EVAL      WIx        = 0
@@ -688,7 +689,7 @@
      C                   PARM                    DSSDY
       *
      C                   SELECT
- 
+
      C                   WHEN      P@TYPE = '*NOSTRO'
      C                   CLEAR                   ACCRECORD                      221929
      C                   EVAL      N@FMT = DSSDY
@@ -714,7 +715,7 @@
      C                   MOVEL     DSSDY         ACCRECORD                                    212229
      C                   MOVEL     '*NOSTRO'     P@TYPE                                       212229
      C                   ENDIF                                                                212229
- 
+
      C                   WHEN      P@TYPE = '*RETAIL'
      C                   EVAL      ACCRECORD = DSSDY
      C                   EVAL      W#CCY  = CCY                                 O:ACCNT Format
@@ -722,7 +723,7 @@
      C                   EVAL      W#ACSQ = ACSQ                                O:ACCNT Format
      C                   EVAL      W#BRCA = BRCA                                O:ACCNT Format
      C                   EVAL      W#CNUM = CNUM
- 
+
      C                   WHEN      P@TYPE = '*LEDGER'
      C                   Eval      ACCRECORD = DSSDY
      C                   EVAL      W#CCY  = CCY                                 O:ACCNT Format

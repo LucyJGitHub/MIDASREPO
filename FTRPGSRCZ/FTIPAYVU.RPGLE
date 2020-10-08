@@ -102,6 +102,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
       *              'Stamp Tax Amount' : Invalid Numeric Value       *

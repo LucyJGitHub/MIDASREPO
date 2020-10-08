@@ -34,6 +34,7 @@
      F*****************************************************************
      F*                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
      F*     BUG8891 - M+ ref DL1956 & DL1950 Single IRS & FRA         *
      F*               revaluation reports can not be found in         *

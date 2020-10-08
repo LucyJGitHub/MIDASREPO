@@ -19,7 +19,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR900506           Date 04Nov14               *
@@ -83,8 +83,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
-      *              beneficary customer account.                     *      
+      *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR900506 - Add/Deduct defaulting not occurring through API   *
@@ -848,7 +849,7 @@
       *                                                                                     AR798055
      C                   ENDIF                                                              AR798055
      C                   ENDIF                                                              AR798055
- 
+
       * Validate FX spread set and payment date offset code                     CFT009
      C                   IF        CFT009 = 'Y'                                 CFT009
      C                   EXSR      VFXSP                                        CFT009

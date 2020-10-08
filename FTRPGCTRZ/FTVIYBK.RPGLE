@@ -56,6 +56,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -97,7 +98,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -116,94 +117,94 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      **COPY*FTCPYSRC,SFTVALCSLE                                                               257144
       /COPY FTCPYSRC,SFTVALCSLL                                                               257144
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D*TranInThir*   E DS                  EXTNAME(FTOPY4PD)                    CFT014
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)                    CFT014
      D TranInSecB    E DS                  EXTNAME(FTOPY3PD)                    CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D*OKFlagsDS*    E DS                  EXTNAME(FTEOPY3PD)                   CFT014
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY2PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** Array of valid swift characters
      D SWCH            S              1    DIM(47) CTDATA PERRCD(47)
- 
+
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Midas Counterparty NOSTROS
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Midas BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
- 
+
      D SINBDS          DS           175
      D  DSINB1Pos1             1      1                                         CFT004
      D  DSINB1                 1     35
@@ -211,7 +212,7 @@
      D  DSINB3                71    105
      D  DSINB4               106    140
      D  DSINB5               141    175
- 
+
      D CLSWTK          DS
      D  SW                     1     12
                                                                                 CFT014
@@ -316,23 +317,23 @@
       ** Error codes array                                                      CFT014
      D  X#ERCD                51    200                                         CFT014
      D  O#E                   51    200                                         CFT014
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D C#CNUM          S             10
      D C#KYST          S              7
      D C#OPTN          S              7
@@ -340,15 +341,15 @@
                                                                                 CFT014
       ** Program where the message from ME9940 will be sent                     CFT014
      D WPrgQ           S             10A                                        CFT014
- 
+
      D R               S              2  0
      D Q               S              2  0
- 
+
       * This prog only
      D ADLINE          S              1
      D ADSLON          S              1
      D ##CSID          S              1
- 
+
       ** IBAN character test arrays                                             CFT004
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)            CFT004
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)            CFT004
@@ -374,7 +375,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -392,10 +393,10 @@
      C                   Eval      AD#4 = 'N'
      C                   Eval      AD#5 = 'N'
      C                   Eval      AD#6 = 'N'
- 
+
       * Validate
      C                   Exsr      VINTBNK
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKInb1 = 'N' or
@@ -413,7 +414,7 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -424,17 +425,17 @@
       ******************************************************************
      C*
      C     VINTBNK       BEGSR
- 
+
      C                   Eval      DSINB1 = SINB1
      C                   Eval      DSINB2 = SINB2
      C                   Eval      DSINB3 = SINB3
      C                   Eval      DSINB4 = SINB4
      C                   Eval      DSINB5 = SINB5
      C                   Eval      @INBT = *Blanks
- 
+
       *  Receiver's Correspondent is Optional
      C                   If        SINBDS  <> *Blanks
- 
+
      C                   If        @ACBT = *Blanks
       * Send error to screen
      C                   Move      'N'           OKInb1
@@ -442,10 +443,10 @@
      C                   Movel     'SINB1'       FldNamXAr(Idx)
      C                   Movel     'MMA1075'     MsgIdXAr(Idx)
      C                   End
- 
+
       * No error
      C                   If        OKInb1 <> 'N'
- 
+
       *  ? not allowed
      C     '?'           Scan      SINB1         Y#                3 0    90
       *
@@ -456,12 +457,12 @@
      C                   Movel     'SINB1'       FldNamXAr(Idx)
      C                   Movel     'MMA1076'     MsgIdXAr(Idx)
      C                   End
- 
+
       * No error
      C                   If        OKInb1 <> 'N'
- 
+
      C                   Movel(P)  SINBDS        ADDRSS
- 
+
       *  If first ten characters used then try to find via SDCUSTPD
      C                   If        ADCH26 = *Blanks and
      C                             ADEXCS = *Blanks and
@@ -471,7 +472,7 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 10 characters should be key for SDCUST
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        C#CNUM
@@ -486,18 +487,18 @@
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
      C     SDCUST        Parm      *Blanks       DSSDY
- 
+
      C                   If        C#RTCD = *Blanks
- 
+
       * Overwrite shortname
      C                   If        ADSLSH <> '/'
      C                   Movel(P)  BBCUST        SINB1
      C                   Else
      C                   Movel(P)  BBCUST        SINB2
      C                   End
- 
+
      C                   Eval      @INBT = 'C'
- 
+
      C                   End
      C                   End
      C                   End
@@ -505,10 +506,10 @@
       * No errors
      C                   If        OKInb1 <> 'N' and
      C                             @INBT = *Blanks
- 
+
       *  If 1st 11 Chars of 1st line then SWIFT address assumed
       *  Or first is '/' and second is SWIFT Address
- 
+
       *  If field does not begin with '/' and is not longer than 11
       *  characters, validate as a S.W.I.F.T. Address
      C                   If        ADCH26 = *Blanks and
@@ -518,18 +519,18 @@
      C                             ADEXS2 = *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 11 characters should be key for CLSWT.
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        CLSWTK
      C                   Else
      C                   Movel     ADCHK2        CLSWTK
      C                   End
- 
+
      C                   Exsr      SWIFT
- 
+
      C                   If        ##CSID = 'Y'
- 
+
      C                   If        *IN31 = *On
       * Send error to screen
      C**********         Add       1             Idx                                          CSD089
@@ -547,14 +548,14 @@
      C                   End
      C**********         Movel     'MMA1077'     MsgIdXAr(Idx)                                CSD089
      C                   Movel     'MMA1077'     WMsgIdXAr(WIx)                               CSD089
- 
+
      C                   Else
      C                   Eval      @INBT = 'S'
       *
       *  No SWIFT address record.
      C                   If        *IN32 = *On and
      C                             *IN31 = *Off
- 
+
       *  If text changed then warning needs to be changed
      C                   If        ADSLSH <> '/'
      C                   Movel     CLSWTK        @INB1
@@ -563,7 +564,7 @@
      C                   Add       1             WIx
      C                   Movel     'MMA1078'     WMsgIdXAr(WIx)
      C                   Movel     'SINB1'       WFldNmXAr(WIx)
- 
+
      C                   Else
      C                   Movel     CLSWTK        @INB2
       * Send warning to screen
@@ -572,18 +573,18 @@
      C                   Movel     'MMA1078'     WMsgIdXAr(WIx)
      C                   Movel     'SINB2'       WFldNmXAr(WIx)
      C                   End
- 
+
      C                   End
      C                   End
      C                   End
      C                   End
      C                   End
- 
+
       * No error
      C                   If        OKInb1 <> 'N' and
      C                             OKInb2 <> 'N' and
      C                             @INBT = *Blanks
- 
+
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
      C                             ADEXCS = *Blanks and
@@ -593,7 +594,7 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 10 characters should be key for SDCUST
       * Send error to screen
      C                   Add       1             Idx
@@ -605,7 +606,7 @@
      C                   Movel     'SINB2'       FldNamXAr(Idx)
      C                   End
      C                   Movel     'MMA1079'     MsgIdXAr(Idx)
- 
+
      C                   Else
       * Validate as an address
      C                   Eval      ADLINE = 'Y'
@@ -619,7 +620,7 @@
      C                   Else                                                   CFT014
      C                   Move      'N'           WCL103                         CFT014
      C                   EndIf                                                  CFT014
- 
+
       *  Depending on the indicators, highlight the field in error
      C                   If        *IN91 = *On
      C                             And (@CFT014 = 'N') Or *IN91 = *On           CFT014
@@ -639,7 +640,7 @@
      C                   Movel     'MMA1081'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKInb1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -650,7 +651,7 @@
      C                   Movel     'SINB1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKInb2                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -661,7 +662,7 @@
      C                   Movel     'SINB2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#3 = 'Y'
      C**********         Move      'N'           OKInb3                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -672,7 +673,7 @@
      C                   Movel     'SINB3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#4 = 'Y'
      C**********         Move      'N'           OKInb4                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -683,7 +684,7 @@
      C                   Movel     'SINB4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#5 = 'Y'
      C**********         Move      'N'           OKInb5                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -694,7 +695,7 @@
      C                   Movel     'SINB5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
       *  If no errors then customer is an address
      C                   If        OKInb1 = 'Y'and
      C                             OKInb2 = 'Y'and
@@ -704,7 +705,7 @@
      C                             @INBT = *Blanks
      C                   Eval      @INBT = 'A'
      C                   End
- 
+
      C                   End
                                                                                 CFT014
       ** Entry not allowed if Bank Operation Code is 'SPRI'                     CFT014
@@ -893,7 +894,7 @@
      C                   ENDIF                                                  CFT004
      C                                                                          CFT004
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF RECEIVER'S CORRESPONDENT VALIDATION                    *
@@ -901,55 +902,55 @@
      C/EJECT
       * Subroutine SWIFT
      E/COPY FTCPYSRC,SFTSWFTCLE
- 
+
       * Subroutine ADCHK
      E/COPY FTCPYSRC,SFTADDRCLE
- 
+
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
- 
+
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C***********        Parm                    TranInThir                     CFT014
      C                   Parm                    TranInSecA                     CFT014
      C                   Parm                    TranInSecB                     CFT014
      C                   Parm                    WPrgQ                          CFT014
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Call SWIF2003 to check if CSW203 is installed                                        CSW203
                                                                                               CSW203
      C                   CALL      'SWIF2003'                                                 CSW203

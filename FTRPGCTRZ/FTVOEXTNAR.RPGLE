@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -579,7 +580,7 @@
      C                   PARM      *BLANKS       P1Cssn
      C                   PARM      *BLANKS       P1Pnoi
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   MOVE      A7CUST        PCusno
      C                   MOVE      A7ACCD        PAccd
      C                   MOVE      A7ACSN        PAcsq

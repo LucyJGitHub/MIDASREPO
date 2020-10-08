@@ -53,6 +53,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25385 - Database error appears when opening OPAC          *
@@ -77,8 +78,8 @@
       *  CFT006 - Funds Transfer addition of MT101 messages           *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,22 +98,22 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -122,11 +123,11 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -135,17 +136,17 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Header record in screen format
      D HdrRcdIn      E DS                  EXTNAME(FT101HSPD)
      D  PSNDREF_H    E                     EXTFLD(PSNDREF)
- 
+
       * Detail record in screen format
      D DtlRcdIn      E DS                  EXTNAME(FT101DSPD)
- 
+
       * OK Flags for first screen
      D OKFlags       E DS                  EXTNAME(FTE101S1PD)
- 
+
       * ACCNTABF - Account details record format data structure
      D P@FMT         E DS                  EXTNAME(ACCNTAB)
      D N@FMT         E DS                  EXTNAME(SDNOSTPD)
@@ -162,7 +163,7 @@
      D**P@ACCD**              10     13                                                       CGL029
      D**P@ACSN**              14     15                                                       CGL029
      D**P@BRCA**              16     18                                                       CGL029
- 
+
       * All Intermediary screen fields
      D IntFields       DS
      D  W#PINSTA                     11
@@ -171,26 +172,26 @@
      D  W#PINST3                     35
      D  W#PINST4                     35
      D  W#PINST5                     35
- 
+
      D  Char18         S             18                                         184179
      D  CSW202         S              1                                                       CSW202
      D  PRTCD          S              7                                                       CSW202
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -198,7 +199,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -206,7 +207,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise
      C                   EVAL      Idx    = 0
      C                   EVAL      WIdx   = 0
@@ -218,7 +219,7 @@
      C                   EVAL      OKINT5 = 'Y'
      C                   EVAL      PINTTTP = *Blanks
      C                   CLEAR                   IntFields
- 
+
       ** Main processing - validate only if field is non-blank
      C                   IF        PINST1 <> *Blanks  or  PINSTA <> *Blanks or
      C                             PINST2 <> *Blanks  or  PINST3 <> *Blanks or
@@ -229,11 +230,11 @@
      C                   EVAL      W#PINST3 = PINST3
      C                   EVAL      W#PINST4 = PINST4
      C                   EVAL      W#PINST5 = PINST5
- 
+
      C                   EXSR      VALIDATE
- 
+
      C                   ENDIF
- 
+
       ** In the case of incoming RFTs:
       ** If none of Beneficiary, A/C with Institution and Intermediary
       ** long fields contain a valid account, send on error message.
@@ -253,9 +254,9 @@
      C                   Eval      MsgIdXAr(Idx)  =  'RFV0122'                              BUG25385
      C                   Eval      FldNamXAr(Idx) =  DDSName                                BUG25385
      C                   ENDIF
- 
+
       * Now validate that all data entered is OK for SWIFT
- 
+
      C                   If        PINST1  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -268,7 +269,7 @@
      C                   EVAL      OKINT1 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PINST2  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -282,7 +283,7 @@
      C                   EVAL      OKINT2 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PINST3  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -296,7 +297,7 @@
      C                   EVAL      OKINT3 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PINST4  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -310,7 +311,7 @@
      C                   EVAL      OKINT4 = 'N'
      C                   Endif
      C                   Endif
- 
+
      C                   If        PINST5  <> *Blanks
      C                   CallB     'FTVSFTX01'
      C                   Parm                    RetCdeIn         10
@@ -333,10 +334,10 @@
      C                             PINTTTP = ' ' And PINSTA <> *blanks                        221538
      C                   Eval      PINTTTP = 'A'                                              221538
      C                   Endif                                                                221538
- 
+
       ** Return
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -389,19 +390,19 @@
      C                   Parm                    P@TYPE            7
      C                   Parm                    PINST1
      C                   Parm                    DSSDY
- 
+
      C                   IF        ACCTRetCde <> *Blanks  or
      C                             P@TYPE <> '*NOSTRO' and
      C                             P@TYPE <> '*LEDGER' and
      C                             P@TYPE <> '*RETAIL'
      C                   ELSE
- 
+
       * If contains a valid account and the first character is a /, remove.
- 
+
      C                   If        %Subst(PINST1:1:1) = '/'
      C                   Eval      PINST1 = %Subst(PINST1:2)
      C                   Endif
- 
+
      C                   Select
      C                   When      P@TYPE = '*NOSTRO'
      C                   Eval      N@FMT  =  DSSDY
@@ -433,7 +434,7 @@
      C                   EVAL      PINTTTP = 'R'
      C                   ENDSL
      C                   Endif                                                                221538
- 
+
      C                   ENDIF
       *
       ** The 11-long field must be blank if the 35-long fields defines
@@ -720,20 +721,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       * INPUTS
      C                   PARM                    RetCodeIn
      C                   PARM                    RespMode          1
      C                   PARM                    ActionCode        1
- 
+
       *  Screen fields
      C                   PARM                    HdrRcdIn
      C                   PARM                    DtlRcdIn
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
@@ -755,18 +756,18 @@
      C                   ELSE                                                                 CSW202
      C                   EVAL      CSW202 = 'N'                                               CSW202
      C                   ENDIF                                                                CSW202
- 
+
       *  Program, module and procedure names for database error processing.*
       *  The following /COPY sets these values, and also defines LDA as    *
       *  an external data area                                             *
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@

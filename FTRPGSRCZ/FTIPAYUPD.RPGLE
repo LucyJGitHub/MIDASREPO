@@ -96,6 +96,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
@@ -3674,7 +3675,7 @@ e1   C                   ENDIF                                                  
      C                   KFLD                    KIDEN                                        CSD015
      C                   KFLD                    BRCA                                         CSD015
                                                                                               CSD015
- 
+
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

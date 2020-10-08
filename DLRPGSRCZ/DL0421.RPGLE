@@ -1490,6 +1490,7 @@
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQN
      C                   PARM      *BLANKS       PENTY
+     C                   PARM                    SFILEU
      C**********         PARM                    SFNUMU                                     MD056838
      C                   PARM                    SFNUM                                      MD056838
      C                   PARM      *BLANKS       PERR

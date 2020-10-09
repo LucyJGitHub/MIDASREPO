@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR761706           Date 27May11               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR761706           Date 27May11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 245028             Date 02Mar07               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR761706 - SDC0607 in MSGW. Unlock the file after update     *
       *             (EXCPT) operation (Child: AR761707)               *
@@ -108,6 +110,7 @@
 0020 F**04************TABLEU RECORD - HEADER OTHER THAN BASE RATE         S01194
 0021 F**05************TABLEU - CATCHALL -DELETED RECORDS                  S01194
 0022 F********10******INSTALLATION CONTROL DATA RECORD1 FOUND             S01194
+     F*       19      APPLY ON SUBSEQUENT DATE (APYONS) = V                                   CSD103
 0023 F********11******INSTALLATION CONTROL DATA RECORD2 FOUND             S01194
 0024 F*       20      NEW VALUE DATE NON-ZERO, NOT GR.THAN COMPARISON DATE
 0025 F*       21      DEALING MODULE PRESENT
@@ -255,6 +258,9 @@
      IDSSDY     E DSDSSDY                                                                     CGL029
       *                                                                                       CGL029
      I/COPY ZSRSRC,ZDATE9Z2                                                                   245028
+      *                                                                                       CSD103
+      ** Apply On Subsequent Dates                                                            CSD103
+     I              'APYONSUBDAT'         C         APYONC                                    CSD103
      C*
      C**   DEFINE KLIST                                                   S01267
      C*                                                                   S01267
@@ -382,6 +388,39 @@
      C                     MOVE FTFNBR    WFNBR   2                       186713
      C*                                                                   186713
      C                     ENDIF                                          186713
+      *                                                                                       CSD103
+      * Check if Apply On Subsequent Dates is on                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'AOSVALR0'                                                    CSD103
+     C                     PARM *BLANKS   RTNCDE  7                                           CSD103
+     C                     PARM APYONC    SVALK1 20                                           CSD103
+     C                     PARM *BLANKS   SVAL1 200                                           CSD103
+     C                     PARM *BLANKS   SVALK2 20                                           CSD103
+     C                     PARM *BLANKS   SVAL2 200                                           CSD103
+     C                     PARM *BLANKS   SVALK3 20                                           CSD103
+     C                     PARM *BLANKS   SVAL3 200                                           CSD103
+     C                     PARM *BLANKS   SVALK4 20                                           CSD103
+     C                     PARM *BLANKS   SVAL4 200                                           CSD103
+     C                     PARM *BLANKS   SVALK5 20                                           CSD103
+     C                     PARM *BLANKS   SVAL5 200                                           CSD103
+     C                     PARM *BLANKS   SVALK6 20                                           CSD103
+     C                     PARM *BLANKS   SVAL6 200                                           CSD103
+     C                     PARM *BLANKS   SVALK7 20                                           CSD103
+     C                     PARM *BLANKS   SVAL7 200                                           CSD103
+     C                     PARM *BLANKS   SVALK8 20                                           CSD103
+     C                     PARM *BLANKS   SVAL8 200                                           CSD103
+     C                     PARM *BLANKS   SVALK9 20                                           CSD103
+     C                     PARM *BLANKS   SVAL9 200                                           CSD103
+     C                     PARM *BLANKS   SVALK0 20                                           CSD103
+     C                     PARM *BLANKS   SVAL10200                                           CSD103
+      *                                                                                       CSD103
+      * If the system value is not found then default value to 'N'                            CSD103
+      *                                                                                       CSD103
+     C                     SETOF                     19                                       CSD103
+     C           RTNCDE    IFEQ *BLANKS                                                       CSD103
+     C           SVAL1     COMP 'V'                      19                                   CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
      C/COPY WNCPYSRC,SDH00504
      C*                                                                   186713
      C** LR SET ON FOR REMAINDER OF PROCESSING                            S01194
@@ -436,8 +475,10 @@
      CLR                   SETON                     20                   S01194
      CLR                   END                                            S01194
 0172 CLR 20      VDNR      COMP SAVE                   2020
-     CLR 20                Z-ADDNBRT      BRTE                            S01194
-     CLR 20                Z-ADDVDNR      VDRC                            S01194
+     C*R*20*****           Z-ADDNBRT      BRTE                                         S01194 CSD103
+     C*R*20*****           Z-ADDVDNR      VDRC                                         S01194 CSD103
+     CLR 20N19             Z-ADDNBRT      BRTE                                                CSD103
+     CLR 20N19             Z-ADDVDNR      VDRC                                                CSD103
 0173 CLR 20                EXCPTTABLE
 0174 CLR                   GOTO READ
 0131 C*                                                                   S01194
@@ -485,8 +526,10 @@
 0171 C*                                                                   S01194
      CLR         BAVDNR    COMP *ZEROS               2020                 S01194
 0172 CLR 20      BAVDNR    COMP SAVE                   2020               S01194
-     CLR 20                Z-ADDBANBRT    BACBSR                          S01194
-     CLR 20                Z-ADDBAVDNR    BAVDRC                          S01194
+     C*R*20*****           Z-ADDBANBRT    BACBSR                          S01194
+     C*R*20*****           Z-ADDBAVDNR    BAVDRC                          S01194
+     CLR 20N19             Z-ADDBANBRT    BACBSR                                       S01194 CSD103
+     CLR 20N19             Z-ADDBAVDNR    BAVDRC                                       S01194 CSD103
      CLR                   Z-ADD6991231   BAVDTO                                              245028
      CLR                   Z-ADDBACBSR    BACBRT                                              245028
       *
@@ -501,7 +544,8 @@
      C***LR******BANBRT    ANDNEBACBSR                             S01267 103492
      C*                                                                   S01267
      CLR                   MOVELBACYCD    WCYCD   3                       S01267
-     CLR                   MOVELBABSRC    WBSRC   20                      S01267
+     C*R********           MOVELBABSRC    WBSRC   20                                   S01267 CSD103
+     CLR                   MOVELBABSRC    WBSRC   2                                           CSD103
      CLR                   Z-ADDBAVDNR    WVDNR   50                      S01267
      CLR                   Z-ADDBANBRT    WNBRT  117                      S01267
       *                                                                   CMC001
@@ -554,7 +598,11 @@
      CLR         G0CYCD    DOWEQWCYCD                                     S01267
      CLR         G0BSRC    ANDEQWBSRC                                     S01267
      CLR         *IN80     ANDEQ'0'                                       E36180
-     CLR                   Z-ADDWNBRT     G0CBSR                          S01267
+     CLR 19      G0HIDT    IFEQ WVDNR                                                         CSD103
+     CLR 19                Z-ADDWNBRT     G0CBSR                                              CSD103
+     CLR                   ENDIF                                                              CSD103
+     C*R********           Z-ADDWNBRT     G0CBSR                                       S01267 CSD103
+     CLRN19                Z-ADDWNBRT     G0CBSR                                              CSD103
      CLR                   EXCPTHIST                                      S01267
      CLR                   READ SDBSHSL1                 80               S01267
      CLR                   END                                            S01267
@@ -571,6 +619,7 @@
      CLR                   MOVELBACYCD    G0CYCD                          S01267
      CLR                   MOVELBABSRC    G0BSRC                          S01267
      CLR         BANBRT    IFNE *ZERO                                     S01267
+     CLR         *IN19     ANDNE*ON                                                           CSD103
      CLR                   Z-ADDBANBRT    G0CBSR                          S01267
      CLR                   ELSE                                           S01267
      CLR                   Z-ADDBACBSR    G0CBSR                          S01267

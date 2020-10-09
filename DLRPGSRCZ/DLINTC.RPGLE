@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027681           Date 02Jul14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027681           Date 02Jul14               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027681 - Incorrect int. accrued calculation                *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -51,10 +54,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDlDIRHPd  UF A E           K Disk
       ** Deal Interest Rate History
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -77,28 +80,28 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D P@Dlno          S                   Like(A2DlNo)
      D P@Slid          S                   Like(A2Hisd)
@@ -106,7 +109,7 @@
      D P@IdMd          S              1
      D P@CalcInt       S                   Like(A2AInP)
      D P@AInP          S                   Like(A2AInP)
- 
+
      D P@Begin         S                   Like(A2Hisd)
      D P@End           S                   Like(A2Hisd)
      D P@Basis         S                   Like(A2Icbs)
@@ -114,7 +117,7 @@
      D P@Rate          S                   Like(A2IntR)
      D P@Interest      S             30  9
      D P@Pcpl          S             13  0                                                  MD027681
- 
+
      D Wk#13d0         S             13  0
      D WkLastDate      S              5  0 Inz(0)
      D WkThisDate      S              5  0 Inz(0)
@@ -123,7 +126,7 @@
      D WkAInP          S                   Like(A2AInP)
      D WkCalcInt       S                   Like(A2AInP)
      D WkNew           S              1                                                     MD027681
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -134,20 +137,20 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Start reading history from last interest date
- 
+
      C     DealHistKey   SetLL     DlDIRHPd
- 
+
       ** Read all history records for this deal
- 
+
      C                   DoU       %EoF
      C     P@DlNo        ReadE     DlDIRHPd
      C                   If        Not %EoF
- 
+
       * (Include accrued interest from take-on. First int. date only)
      C                   Add       A2AID1        WkCalcInt
- 
+
      C                   Eval      WkLastDate = WkThisDate
      C                   Eval      WkThisDate = A2HisD
      C                   IF        A2Hisd <= P@NiDt                                         MD027681
@@ -181,10 +184,10 @@
      C                   EndIf
      C                   ENDIF                                                              MD027681
      C                   EndDo
- 
+
       ** If no history record exists for next interest date perform extra
       ** calculation to cover the final period.
- 
+
      C                   If        P@NiDt > A2Hisd and
      C                             P@NiDt <> 99999
      C                   Eval      WkLastDate = WkThisDate
@@ -192,14 +195,14 @@
      C                   ExSr      Sr_GlintC
      C                   ExSr      Write_IRH
      C                   EndIf
- 
+
       ** Set up return parameters
- 
+
      C                   Eval      P@CalcInt = WkCalcInt
      C                   Eval      P@AInP = WkAInP
      C                   Eval      *InLR = *On
      C                   Return
- 
+
       *******************************************************************
       /EJECT
       *******************************************************************
@@ -209,9 +212,9 @@
       *  Called by: Main processing
       *
       *******************************************************************
- 
+
      C     Sr_GlIntC     BegSr
- 
+
      C                   Eval      P@Begin = WkLastDate
      C                   Eval      P@End = WkThisDate
      C                   Eval      P@Basis = A2ICBs
@@ -221,7 +224,7 @@
      C                   CallB     'GLINTC'      PL_GlIntC
      C                   Z-Add(H)  P@Interest    Wk#13d0
      C                   Add       Wk#13d0       WkCalcInt
- 
+
      C                   EndSr
       /EJECT
       *******************************************************************
@@ -231,15 +234,15 @@
       *  Called by: Main processing
       *
       *******************************************************************
- 
+
      C     Update_IRH    BegSr
- 
+
      C                   Eval      A2RecI = 'P'
      C                   If        P@IdMd = 'M' and P@NiDt = A2Hisd
      C                   Eval      A2Pcpl = 0
      C                   EndIf
      C                   Update    DlDIRHd0
- 
+
      C                   EndSr
       /EJECT
       *******************************************************************
@@ -250,9 +253,9 @@
       *  Called by: Main processing
       *
       *******************************************************************
- 
+
      C     Write_IRH     BegSr
- 
+
      C                   Eval      A2RecI = 'D'
      C                   Eval      A2HisD = P@NiDt
      C                   EVAL      A2Pcpl = P@Pcpl                                          MD027681
@@ -263,7 +266,7 @@
      C                   Eval      A2AInP = 0
      C                   Eval      A2AID1 = 0
      C                   Write     DlDIRHd0
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -275,9 +278,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
      C     *Entry        Plist
      C                   Parm                    P@DlNo
      C                   Parm                    P@Slid
@@ -286,9 +289,9 @@
      C                   Parm                    P@CalcInt
      C                   Parm                    P@AInP
      C                   Parm                    P@Pcpl                                     MD027681
- 
+
       ** Parameter list for interest calculation
- 
+
      C     PL_GlIntC     Plist
      C                   Parm                    P@Begin
      C                   Parm                    P@End
@@ -296,15 +299,15 @@
      C                   Parm                    P@Amount
      C                   Parm                    P@Rate
      C                   Parm                    P@Interest
- 
+
       ** Define key list
- 
+
      C     DealHistKey   Klist
      C                   KFld                    P@DlNo
      C                   KFld                    P@Slid
- 
+
      C                   EndSr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -319,23 +322,23 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BegSr
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   EndSr
- 
+
       ********************************************************************

@@ -46,43 +46,43 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes (among others)
       ** the LDA layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields
       ** in the  Program Status Data Structures.
       ** They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant
       ** giving the size of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -115,7 +115,7 @@
       *
       ** Short data structure for access objects                                              CLE134
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CLE134
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -146,7 +146,7 @@
      D@FECD            S              2
      D@KEY1            S              3
      D@KEY2            S              2
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -154,7 +154,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -329,7 +329,8 @@
       ** Check main PDCL (principal) for a loan
       *
      C                   IF        AYPBRT = 0                                                 CLE134
-     C                   IF        AYPBSR <> 0                                             AR1073112
+     C**********         IF        AYPBSR <> 0                                      AR1073112 CSD103
+     C                   IF        AYPBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AYPBSR        @KEY2
       *
@@ -341,7 +342,8 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AYPBSR <> *ZEROS                                       262691
+     C**********                   AND AYPBSR <> *ZEROS                                262691 CSD103
+     C                             AND AYPBSR <> *BLANKS                                      CSD103
      C                             OR  AYPBSR = *ZEROS                                        262691
      C                             AND AYPRSP = *ZEROS                                        262691
      C                   EVAL      DDORLNOK = 'N'

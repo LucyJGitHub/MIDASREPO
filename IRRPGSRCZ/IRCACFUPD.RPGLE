@@ -1283,7 +1283,8 @@
      C                   EVAL      UNRL = *ZEROS
      C                   EVAL      UNRLP = *ZEROS
      C                   EVAL      DDTM = *ZEROS
-     C                   EVAL      BRSQ = *ZEROS
+     C*********          EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
      C                   EVAL      LSWC = *ZEROS
      C                   EVAL      LSWS = *ZEROS
      C                   EVAL      ORED = *ZEROS
@@ -2295,7 +2296,8 @@
 
       ** Base Rate Code for Sequencing
 
-     C                   EVAL      BRSQ = *ZEROS
+     C*********          EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
 
       ** Start Date Current Average Period                                                   BUG7217
                                                                                              BUG7217
@@ -2621,7 +2623,8 @@
 
       ** Base Rate Code for Sequencing
 
-     C                   EVAL      BRSQ = *ZEROS
+     C*********          EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
 
      C                   EVAL      RSTM = RSETM                                               220020
      C                   EVAL      RONS = URACC                                               220020

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -55,7 +58,7 @@
       *  CAP076 - Lending API enhancements - Rollover details         *
       *                                                               *
       *****************************************************************
- 
+
      FLEVLERLPD UF   E             DISK
      F                                     COMMIT
      F                                     RENAME(LEVCLILD0:LEVLERLD0)
@@ -71,10 +74,10 @@
      F                                     RENAME(LEVCLILD0:LEVLERLERR)
      FLEVECLIKPDO    E             DISK
      F                                     RENAME(LEVCLIKD0:LEVLERKERR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LELERIU001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -95,33 +98,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in LERI API update')
- 
+
       *****************************************************************
- 
+
       **  Externally described data structure for valid Loans (CL & CK)
       *
      D ValidloanL    E DS                  EXTNAME(LEVLERLPD)
@@ -129,9 +132,9 @@
       *
      D ValidloanK    E DS                  EXTNAME(LEVLERKPD)
      D                                     PREFIX(K_)
- 
+
      D LELERIUPC       DS             1    DTAARA(LELERIUPC)
- 
+
      D Object          S             10A   INZ('LELERIUPC')
      D LockObj         S             10A   INZ('LELERILCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -145,54 +148,54 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External data structure for SAR details
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for Access ProgramsS, Short DS
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** Third DS for access programs, very long data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long data structure for access objects
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,LELERIU002
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       /COPY WNCPYSRC,LELERIU003
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APLERIDTQ'
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
       *  Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -220,32 +223,32 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,LELERIU004
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     LEVLERLPD
      C     1             SETLL     LEVLERKPD
- 
+
       ** READ VALID LOANS
      C                   READ      LEVLERLPD                              99    *
      C                   READ      LEVLERKPD                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   EVAL      @LoanNo = CLLNRF
      C                   EVAL      @Timestamp = CLTMES
       /COPY WNCPYSRC,LELERIU005
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = CLFRNT
      C                   EVAL      ARFOAsocID = CLAFRT
      C                   EVAL      ARRprLocn  = CLREPA
- 
+
       /COPY WNCPYSRC,LELERIU006
- 
+
      C                   CALLB     'LELERIUPD'
      C                   PARM                    @@RTCD            7
      C                   PARM                    CLCHTP
@@ -257,9 +260,9 @@
      C                   PARM                    CLE005            1
       ***  Called from CTU
      C                   PARM      *blank        @@CTU             1
- 
+
       /COPY WNCPYSRC,LELERIU007
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
@@ -269,19 +272,19 @@
      C                   DELETE    LEVLERKD0
      C                   COMMIT
      C                   END
- 
+
       /COPY WNCPYSRC,LELERIU008
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
      C                   EVAL      @LoanNo = CLLNRF
      C                   EVAL      @Timestamp = CLTMES
- 
+
      ** Write details of record to error file
      ** (same format as LEVLERLPD & LEVLERKPD)
- 
+
       * process LEVLERLPD
      C                   WRITE     LEVLERLERR
      C     @KLECL2       CHAIN     LEVLERLL1                          89
@@ -304,7 +307,7 @@ B004 C     *IN89         IFEQ      *ON
      C                   EXSR      *PSSR
 E004 C                   ENDIF
      C                   DELETE    LEVLERKD1
- 
+
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
      C                   CALLB     'ZAMSGTOOPR'
@@ -312,9 +315,9 @@ E004 C                   ENDIF
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID LOANS
      C                   READ      LEVLERLD0                              99    *
      C                   READ      LEVLERKD0                              99    *
@@ -330,15 +333,15 @@ E004 C                   ENDIF
      C                   END
       ** End loop for data queue prompt
      C                   ENDDO
- 
+
       /COPY WNCPYSRC,LELERIU009
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LELERIU010
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -429,7 +432,7 @@ E004 C                   ENDIF
      C                   EXSR      *PSSR
      C                   END
      C                   END
- 
+
       *  Check if an existing DBU_LERI job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -441,26 +444,26 @@ E004 C                   ENDIF
      C                   PARM                    Endjob                                       201589
      C                   PARM                    Return2                                      201589
                                                                                               201589
- 
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -470,14 +473,14 @@ E004 C                   ENDIF
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LELERIU011
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

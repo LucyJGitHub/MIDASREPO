@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -69,7 +72,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,57 +91,57 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Facility in Screen Format
      D FcipNwPrim    E DS                  EXTNAME(LEFCPPPD)
      D FcipNwSeco    E DS                  EXTNAME(LEFCSPPD)
- 
+
       * (Current) Facility in Screen Format - First screen
      D CurPriScn     E DS                  EXTNAME(LEFCPPPD)
      D                                     PREFIX(@)
       * (Current) Facility in Screen Format - Second screen
      D CurSecScn     E DS                  EXTNAME(LEFCSPPD)
      D                                     PREFIX(@)
- 
+
       * Valid Facility FM layout
      D ValidFacm     E DS                  EXTNAME(LEVFCIMPD)
      D                                     PREFIX(V_)
@@ -147,7 +150,7 @@
      D                                     PREFIX(V_)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
       *
@@ -158,25 +161,25 @@
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFcPrim      E DS                  EXTNAME(LEEFCIPPD)
      D OKFcSeco      E DS                  EXTNAME(LEEFCISPD)
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -262,21 +265,21 @@
      C     CLE106        ANDNE     'Y'                                                        CLE106
      C     V_FPPRTR      OREQ      'I'
      C     CLE106        ANDNE     'Y'                                                        CLE106
- 
+
      C                   CALLB     'ZCMPAMTS'
      C                   PARM      DDFAMT        ZCMPAMT1         25
      C                   PARM      @DDFAMT       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFAMT'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0402'
      C                   EVAL      DDFAMTOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------*
      C* Start date   OK                         *
      C*-----------------------------------------*
@@ -318,7 +321,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                                CLE106
- 
+
      C*---------------------------------------------*
      C* Expiry date must be protected               *
       * if Participant Facility ind equal to P or I *
@@ -328,14 +331,14 @@
      C     CLE106        IFNE      'Y'                                                        CLE106
      C     V_FPPRTR      IFEQ      'P'
      C     V_FPPRTR      OREQ      'I'
- 
+
      C     DDDTEX        IFNE      @DDDTEX
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDDTEX'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0406'
      C                   EVAL      DDDTEXOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                CLE106
      C*
@@ -343,14 +346,14 @@
      C     CLE007        ANDEQ     'Y'
      C     V_FPRECI      IFEQ      'C'
      C     V_FPDTEX      ORLT      BJRDNB
- 
+
      C     DDDTEX        IFNE      @DDDTEX
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDDTEX'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0406'
      C                   EVAL      DDDTEXOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -362,14 +365,14 @@
      C     CLE106        IFNE      'Y'                                                        CLE106
      C     V_FPPRTR      IFEQ      'P'
      C     V_FPPRTR      OREQ      'I'
- 
+
      C     DDMCSI        IFNE      @DDMCSI
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDMCSI'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0407'
      C                   EVAL      DDMCSIOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                CLE106
       *
@@ -378,122 +381,122 @@
       **  if Profit center not used                   *
       **  or if Profit center not amendable           *
      C*-----------------------------------------------*
- 
+
      C     BKPRCU        IFEQ      'N'
      C     BKPRCA        OREQ      'N'
- 
+
      C     DDPRFC        IFNE      @DDPRFC
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDPRFC'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0408'
      C                   EVAL      DDPRFCOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Origin branch must be protected               *
       **  if not Multi branching                      *
      C*-----------------------------------------------*
- 
+
      C     MBIN          IFEQ      'N'
- 
+
      C     DDORBR        IFNE      @DDORBR
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDORBR'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0409'
      C                   EVAL      DDORBROK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Tranche/Credit agreement must be protected    *
       **  if CLE005 not installed                     *
      C*-----------------------------------------------*
- 
+
      C     CLE005        IFEQ      'N'
- 
+
      C     DDTRCA        IFNE      @DDTRCA
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDTRCA'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0410'
      C                   EVAL      DDTRCAOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Credit agreement customer must be protected   *
       **  if CLE005 not installed                     *
      C*-----------------------------------------------*
- 
+
      C     CLE005        IFEQ      'N'
- 
+
      C     DDCANM        IFNE      @DDCANM
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCANM'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0411'
      C                   EVAL      DDCANMOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Credit agreement type/no  must be protected   *
       **  if CLE005 not installed                     *
      C*-----------------------------------------------*
- 
+
      C     CLE005        IFEQ      'N'
- 
+
      C     DDCAFT        IFNE      @DDCAFT
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCAFT'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0412'
      C                   EVAL      DDCAFTOK        = 'N'
      C                   ENDIF
- 
+
      C     DDCAFN        IFNE      @DDCAFN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCAFN'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0412'
      C                   EVAL      DDCAFNOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Account seq no must be protected              *
       **  if CLE005 not installed                     *
       ** or if CLE007 not installed                     *
      C*-----------------------------------------------*
- 
+
      C     CLE005        IFEQ      'N'
      C     CLE007        OREQ      'N'
- 
+
      C     DDACSQ        IFNE      @DDACSQ
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACSQ'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0413'
      C                   EVAL      DDACSQOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-----------------------------------------------*
      C* Multi  branch must be protected               *
       **  if not Multi branching                      *
      C*-----------------------------------------------*
- 
+
      C     MBIN          IFEQ      'N'
- 
+
      C     DDMBFC        IFNE      @DDMBFC
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDMBFC'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0414'
      C                   EVAL      DDMBFCOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -509,14 +512,14 @@
      C     CLE106        IFNE      'Y'                                                        CLE106
      C     V_FPPRTR      IFEQ      'P'
      C     V_FPPRTR      OREQ      'I'
- 
+
      C     DDSYIN        IFNE      @DDSYIN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSYIN'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0415'
      C                   EVAL      DDSYINOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                CLE106
       *
@@ -528,14 +531,14 @@
      C     CLE106        IFNE      'Y'                                                        CLE106
      C     V_FPPRTR      IFEQ      'P'
      C     V_FPPRTR      OREQ      'I'
- 
+
      C     DDSYCP        IFNE      @DDSYCP
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSYCP'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0416'
      C                   EVAL      DDSYCPOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                CLE106
       *
@@ -547,14 +550,14 @@
      C     CLE106        IFNE      'Y'                                                        CLE106
      C     V_FPPRTR      IFEQ      'P'
      C     V_FPPRTR      OREQ      'I'
- 
+
      C     DDANUM        IFNE      @DDANUM
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDANUM'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0417'
      C                   EVAL      DDANUMOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                CLE106
       *
@@ -573,20 +576,20 @@
       **  and CLE008 = 'N'                                  *
      C*---------------------------------------------*
      C*
- 
+
      C     V_FPPRTR      IFEQ      'P'
      C     CLE106        ANDNE     'Y'                                                        CLE106
      C     V_FPPRTR      OREQ      'I'
      C     CLE106        ANDNE     'Y'                                                        CLE106
      C     CLE008        OREQ      'N'
- 
+
      C     DDLAID        IFNE      @DDLAID
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDLAID'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0418'
      C                   EVAL      DDLAIDOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C*---------------------------------------------*
@@ -595,14 +598,14 @@
      C*---------------------------------------------*
      C*
      C     DDMCCY        IFNE      'Y'
- 
+
      C     DDCSEL        IFNE      @DDCSEL
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCSEL'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0419'
      C                   EVAL      DDCSELOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C*---------------------------------------------*
@@ -611,91 +614,91 @@
      C*---------------------------------------------*
      C*
      C     DDMCCY        IFNE      'Y'
- 
+
      C     DDCY01        IFNE      @DDCY01
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY01'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY01OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY02        IFNE      @DDCY02
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY02'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY02OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY03        IFNE      @DDCY03
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY03'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY03OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY04        IFNE      @DDCY04
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY04'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY04OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY05        IFNE      @DDCY05
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY05'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY05OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY06        IFNE      @DDCY06
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY06'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY06OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY07        IFNE      @DDCY07
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY07'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY07OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY08        IFNE      @DDCY08
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY08'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY08OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY09        IFNE      @DDCY09
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY09'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY09OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY10        IFNE      @DDCY10
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY10'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY10OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY11        IFNE      @DDCY11
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY11'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY11OK        = 'N'
      C                   ENDIF
- 
+
      C     DDCY12        IFNE      @DDCY12
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCY12'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0420'
      C                   EVAL      DDCY12OK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C*---------------------------------*
@@ -704,16 +707,16 @@
      C*---------------------------------*
      C*
      C     CLE006        IFEQ      'N'
- 
+
      C     DDCDTE        IFNE      @DDCDTE
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCDTE'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0421'
      C                   EVAL      DDCDTEOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*-------------------------------------------------------------*
      C* Default Participation Loan type/sub type must be protected  *
       **  if CLE006 is 'N'              *                           *
@@ -725,7 +728,7 @@
      C     V_FPPRTR      OREQ      'I'
      C     CLE106        ANDNE     'Y'                                                        CLE106
      C     CLE006        OREQ      'N'
- 
+
      C     DDDFTP        IFNE      @DDDFTP
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDDFTP'
@@ -736,7 +739,7 @@
      C                   ENDIF                                                                CLE042
      C                   EVAL      DDDFTPOK        = 'N'
      C                   ENDIF
- 
+
      C     DDDFST        IFNE      @DDDFST
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDDFST'
@@ -758,43 +761,43 @@
      C                   ENDIF                                                                CLE042
      C                   EVAL      DDDFCLOK        = 'N'                                      CLE042
      C                   ENDIF                                                                CLE042
- 
+
      C                   ENDIF
- 
+
      C*-------------------------------------------------------------*
      C* Credit agreement exchange rate must be protected  *
       **  if CLE005 is 'N'              *                           *
      C*-------------------------------------------------------------*
      C*
      C     CLE005        IFEQ      'N'
- 
+
      C     DDCAXR        IFNE      @DDCAXR
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCAXR'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0423'
      C                   EVAL      DDCAXROK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*--------------------------------------------*
      C* Exchange rate indicator must be protected  *
       **  if CLE005 is 'N'                         *
      C*--------------------------------------------*
      C*
      C     CLE005        IFEQ      'N'
- 
+
      C     DDCMDI        IFNE      @DDCMDI
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCMDI'
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0424'
      C                   EVAL      DDCMDIOK        = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -998,9 +1001,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -1117,7 +1120,7 @@
      C                   ELSE                                                                 CLE042
      C                   MOVE      'N'           CLE042                                       CLE042
      C                   ENDIF                                                                CLE042
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

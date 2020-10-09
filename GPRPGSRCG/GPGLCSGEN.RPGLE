@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CSF011 - Customer Name on Inputs                             *
@@ -73,7 +74,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGZSDCUSTL1IP  AE           K DISK    RENAME(SDCUSTD0   : FormatZON)
      F                                     INFSR(*PSSR)
      FGPGLCUSLL1US  AE           K DISK    RENAME(GPGLCUSL   : FormatGLB)
@@ -86,13 +87,13 @@
      FGPCUSTXL0 IF   E           K DISK    INFSR(*PSSR)
      FGPCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      FGPAMADL1  UF A E           K DISK    PREFIX(H_) INFSR(*PSSR)                          BUG16715
- 
+
 B    D*#_BR*****       S              3    DIM(99)                                            244485
 B    D #_BR            S              3    DIM(999)                                           244485
 B    D*#_ZN*****       S             10    DIM(99)                                          BUG16461
      D #_ZN            S             10    DIM(999)                                         BUG16461
 B
- 
+
      IFormatZON     01
      I                                          BBBRCD        L1M2
      I                                          BBCUST        L1M1
@@ -101,7 +102,7 @@ B
      I                                          CGCNUM        L1M1
      ISDBRCHD0
      I              QQDFAC                      QQDFAC_X
- 
+
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON
 B    C                   EXSR      SET_OUT_FLDS
@@ -115,13 +116,13 @@ B    C   02              EXSR      SET_OUT_FLDS
      C   02              UPDATE    FormatGLB
      C   02              EXSR      UPDAMAD                                                  BUG16715
      C                   ENDIF
- 
+
      C/SPACE 5
       ********************************************************************
       * Set output fields
       ********************************************************************
      C     SET_OUT_FLDS  BEGSR
- 
+
      C                   EVAL      Glob_Customer = 'N'
      C     GPCUSTXK      CHAIN     GPCUSTXL0                          99
      C     *IN99         IFEQ      *OFF
@@ -130,15 +131,15 @@ B    C   02              EXSR      SET_OUT_FLDS
      C                   EVAL      Glob_Customer = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       * Output either global or local (zone) customer details
- 
+
      C                   IF        Glob_Customer = 'Y'
 B    C                   EXSR      SET_OUT_GLOB
      C                   ELSE
 B    C                   EXSR      SET_OUT_LOCL
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -150,7 +151,7 @@ B    C                   EXSR      SET_OUT_LOCL
      C                   Z-ADD     1             #X
      C     BBBRCD        LOOKUP    #_BR(#X)                               99
      C                   EVAL      Zone_ID  = #_ZN(#X)
- 
+
 B     * Branch
      C                   EVAL      CGBRCD   = BBBRCD
 B     * Local Customer Number
@@ -225,7 +226,7 @@ B
      C                   Z-ADD     1             #X
      C     BBBRCD        LOOKUP    #_BR(#X)                               99
      C                   EVAL      Zone_ID  = #_ZN(#X)
- 
+
 B     * Branch
      C                   EVAL      CGBRCD   = BBBRCD
 B     * Customer Number
@@ -372,25 +373,25 @@ B
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   Z-ADD     0             #X                3 0
- 
+
       * Read all branches
      C     *LOVAL        SETLL     SDBRCHD0
      C                   READ      SDBRCHD0                               99
- 
+
       * For each branch
      C     *IN99         DOWEQ     *OFF
- 
+
       * Add branch & zone to arrays
      C                   ADD       1             #X
      C                   MOVEL     A8BRCD        #_BR(#X)
      C                   MOVEL     A8ZONE        #_ZN(#X)
- 
+
       * Read next branch
      C                   READ      SDBRCHD0                               99
      C                   ENDDO
- 
+
      C     GPCUSTXK      KLIST
      C                   KFLD                    BBBRCD
      C                   KFLD                    BBCUST
@@ -402,7 +403,7 @@ B
      C     GPINDSXK      KLIST
      C                   KFLD                    Zone_ID
      C                   KFLD                    BBLICD
- 
+
      C                   MOVE      *BLANK        Glob_Customer     1
      C                   MOVE      *BLANK        Zone_ID          10
 B
@@ -413,16 +414,16 @@ B
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     RunBefore     IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           RunBefore         1
- 
+
      C                   DUMP
      C                   ENDIF
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
- 
+
      C                   ENDSR
       *********************************************************************

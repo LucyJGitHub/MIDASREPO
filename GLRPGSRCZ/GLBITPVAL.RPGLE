@@ -71,6 +71,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *

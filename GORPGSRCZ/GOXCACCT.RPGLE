@@ -26,6 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -34,16 +35,16 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR) INCLUDE(ACCNTABF)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)
- 
- 
+
+
      C     *ENTRY        PLIST
       /COPY GOCPYSRC,GOXCEPARM
       *
@@ -120,15 +121,15 @@
       * INPUTS
      C                   PARM      I#LOC         W#LOC             4
      C                   PARM      I#CCID        W#CCID           10 0
- 
+
      C                   PARM      I#RDNB        W#RDNB            5 0
      C                   PARM      I#DNWD        W#DNWD            5 0
      C                   PARM      I#PCOD        W#PCOD            5 0
      C                   PARM      I#AMRD        W#AMRD            5 0
      C                   PARM                    ACCT
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = 'ACCT' + I#EXTT + I#TREF
@@ -144,14 +145,14 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Extract control information
- 
+
       /COPY GOCPYSRC,GOGETEXCT
- 
- 
+
+
       * key lists
- 
+
      C     ACCNTK        KLIST
      C                   KFLD                    W#CNUM
      C                   KFLD                    W#CCY

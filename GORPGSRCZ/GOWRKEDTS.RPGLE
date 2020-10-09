@@ -43,6 +43,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *   258638 - GOC0020 00011 failed with various dumps due to     *
       *            blank Interest Calculation Method.                 *
       *          - Applied for MD-53803.                              *

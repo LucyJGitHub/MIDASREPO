@@ -37,6 +37,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  264185 - Correct conversion of Nominal. If Price Basis is P, *
       *           ZPRC should be 100. While if Price Basis is U, ZPRC *
@@ -64,17 +65,17 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FTRDMTHT   IF   E           K DISK    RENAME(TRADSDF:TRADSDF_T)INFSR(*PSSR)
      F                                     RENAME(HSTTRDF:HSTTRDF_T)
      FTRDMTH    IF   E           K DISK    RENAME(TRADSDF:TRADSDF_V)INFSR(*PSSR)
      F                                     RENAME(HSTTRDF:HSTTRDF_V)
      FSECET     IF   E           K DISK    INFSR(*PSSR)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -83,8 +84,8 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
      D BKPHD         E DS                  EXTNAME(BKPHDD)
      D BKPHD_RECI    E                     EXTFLD(RECI)
      D BKPHD_TNLU    E                     EXTFLD(TNLU)
@@ -100,8 +101,8 @@
      D INVTP         E DS                  EXTNAME(INVTPD)
      D                                     PREFIX(IN_)
      D PRICE         E DS                  EXTNAME(PRICED) PREFIX(PR_)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -126,29 +127,29 @@
      D**W#POSA**************** 3     14                                                       TDA102
      D**W#POSB****************15     17                                                       TDA102
      D**W#POSY****************18     20                                                       TDA102
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      ISEDEVDF
      I              RECI                        SEDEV_RECI
      I              NMCY                        SEDEV_NMCY
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0
      C                   PARM                    I#DNWD            5 0
      C                   PARM                    I#PCOD            5 0
@@ -157,46 +158,46 @@
      C                   PARM                    BKPOS
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
       *                                                                                     BUG14267
       ** Skip updates when record read has no valid event.                                  BUG14267
       *                                                                                     BUG14267
      C     W#RTCD        IFNE      '*NOREC '                                                BUG14267
- 
+
       * WRITE TRANSACTION INDEX RECORD
- 
+
      C     I#TVDI        IFEQ      'T'
       * Commitment Cycle ID
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
      C                   ENDIF                                                              BUG14267
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -216,10 +217,10 @@
      C                   PARM                    SECTY
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    PRICE
      C                   PARM                    NomCcyDec         1 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETSBPS'
      C                   EXSR      *PSSR
@@ -232,11 +233,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -244,14 +245,14 @@
       * SETUP SETTLEMENT INSTRUCTIONS
       *****************************************************************
      C     SETUP_SETI    BEGSR
- 
+
       **  Position settlement instructions
- 
+
      C                   MOVE      *BLANK        W#POSM                         * settle method
      C                   MOVE      *BLANK        W#POSA                         * settle A/C
      C                   MOVE      *BLANK        W#POSB                         * settle branch
      C                   MOVE      *BLANK        W#POSY                         * settle currency
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -357,7 +358,7 @@
       * Int Calc Method
      C     DYBS          IFNE      ' '
      C     DYBS          ANDNE     '4'
- 
+
      C                   MOVEL     DYBS          W#DYBS
      C                   MOVEL     DVBS          W#DVBS
      C                   CALLB     'GOCVTICSE'
@@ -373,7 +374,7 @@
      C                   END
       *
      C                   MOVEL     W#ICMT        P_ICMT
- 
+
      C                   ENDIF
       *
       * Initialisation for determination of next interest payment date
@@ -495,9 +496,9 @@
       *
       * Event Type
      C                   MOVEL     'IR'          E_EVTP
- 
+
       * Pick up interest rates from the security diary
- 
+
      C                   MOVE      'IR'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -505,9 +506,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current rate on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date = initial date
@@ -524,11 +525,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all interest rate changes
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -549,13 +550,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -571,9 +572,9 @@
       *
       * Event Type
      C                   MOVEL     'PP'          E_EVTP
- 
+
       * Pick up part payments from the security diary
- 
+
      C                   MOVE      'PP'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -581,9 +582,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current partly paid price on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date
@@ -602,11 +603,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all part payments
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -629,13 +630,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -651,9 +652,9 @@
       *
       * Event Type
      C                   MOVEL     'MP'          E_EVTP
- 
+
       * Pick up mortage payments from the security diary
- 
+
      C                   MOVE      'MP'          SDET
      C     SEDEVK        SETLL     SEDEVDF
      C     *IN99         DOUEQ     '1'
@@ -661,9 +662,9 @@
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
       * If none present, use current factor on security
- 
+
      C     *IN99         IFEQ      '1'
       *
       * Processing Date = initial date
@@ -680,11 +681,11 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   ENDIF
- 
+
       * Extract all mortgage payments
- 
+
      C     *IN99         DOWEQ     '0'
       *
       * Processing Date
@@ -705,13 +706,13 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C     *IN99         DOUEQ     '1'
      C     SEDEV_RECI    OREQ      'D'
      C     SEDEV_RECI    OREQ      'M'
      C     SEDEVK        READE     SEDEVDF                                99
      C                   ENDDO
- 
+
      C                   ENDDO
       *
      C                   ENDSR
@@ -751,13 +752,13 @@
       * IMPORT TRADE EVENTS
       *****************************************************************
      C     IMP_TRAD      BEGSR
- 
+
      C     I#TVDI        IFEQ      'T'
      C     TRADKF        SETGT     TRDMTHT
      C                   ELSE
      C     TRADKF        SETGT     TRDMTH
      C                   ENDIF
- 
+
      C     *IN99         DOUEQ     '1'
      C     RECI          ORNE      '*'
      C     RECI          ANDNE     'C'
@@ -849,7 +850,7 @@
       * DETERMINE NEXT DAY
       ********************************************************************
      C     GETSIPD       BEGSR
- 
+
      C                   CALLB     'GOGETSIPD'
       * inputs
      C                   PARM      *BLANK        W#RTCD_SIP        7            * RETURN CODE
@@ -890,7 +891,7 @@
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM                    @CYCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO AOCURRR0'
      C                   EXSR      *PSSR
@@ -949,16 +950,16 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Securities Trading details
- 
+
      C                   CALLB     'AOSTRDR0'
      C                   PARM      '*DBERR  '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
@@ -977,7 +978,7 @@
      C                   KFLD                    BHBK
      C                   KFLD                    BHSC
      C                   KFLD                    BHMK
- 
+
      C     SEDEVKF       KLIST
      C                   KFLD                    BHSC
      C                   KFLD                    SDET

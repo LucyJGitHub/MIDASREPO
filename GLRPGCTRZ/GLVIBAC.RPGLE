@@ -49,6 +49,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037025 - Recompiled due to changes in INPAYIB              *
       *  MD029037 - Unable to close acount due to IBAN error          *
@@ -121,7 +122,7 @@
      F                                     PREFIX(A1)                                         224639
      F
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -140,58 +141,58 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *
@@ -202,7 +203,7 @@
      DS5ACNO           S                   LIKE(IBACNO)
      DS5BRCA           S                   LIKE(IBBRCA)
      DS5CCY            S                   LIKE(IBCCY)
- 
+
      D*
      D** Data structure for AOIBANR6
      D*
@@ -224,23 +225,23 @@
      D S4ACNO                196    205                                                       CGL029
      D S4IBAN                455    488                                                       CGL029
      D S4IBSQ                489    491                                                       CGL029
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       193178
@@ -248,7 +249,7 @@
      D WIx             S              3P 0                                                    193178
                                                                                               CGL029
      D DDACOD          S             10                                                       CGL029
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -259,7 +260,7 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       /EJECT
       *****************************************************************
      C
@@ -278,9 +279,9 @@
      C                   PARM                    @IWITH           47
      C                   PARM                    @INOBL           34
      C                   ENDIF
- 
+
       ** Initialization
- 
+
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
      C                   Eval      MsgIDXAr  = *Blanks
@@ -664,7 +665,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       * INPUTS
@@ -717,9 +718,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

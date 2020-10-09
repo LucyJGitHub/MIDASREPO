@@ -26,6 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -34,47 +35,47 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
- 
+
       * Universal Transaction Updates
- 
+
      C                   EXSR      TRAP_ACCT
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       ********************************************************************
       * Universal Transaction Updates - Account
       ********************************************************************
      C     TRAP_ACCT     BEGSR
- 
+
      C                   MOVEL     I#AIMG        ACCT
- 
+
       * SETUP TRANSACTION INDEX RECORD
       * WRITE TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAPACCT
      C     W#RTCD        IFNE      '*NOEXT*'
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -82,7 +83,7 @@
       * SETUP TRANSACTION INDEX RECORD
       ********************************************************************
      C     SETUP_TRAPACCTBEGSR
- 
+
      C                   CALLB     'GOSETACCT'
      C                   PARM      *BLANK        W#RTCD            7            * RETURN CODE
      C                   PARM      *BLANK        W#ERMS           50            * ERROR MESSAGE
@@ -91,12 +92,12 @@
       * OUTPUTS
      C                   PARM                    T_TRAP
      C                   PARM      *ZERO         T_PRRN            5 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETACCT'
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -104,15 +105,15 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
       * Commitment Cycle ID
      C                   Z-ADD     0             T_CCID
- 
+
      C                   MOVEL     'GLOB'        I#LOC
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -120,7 +121,7 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

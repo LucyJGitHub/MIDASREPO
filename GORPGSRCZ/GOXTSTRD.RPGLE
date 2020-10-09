@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -41,9 +42,9 @@
       *  BG3512 - Extract of SE Trades was missing                    *
       *                                                               *
       *****************************************************************
- 
+
      FPRICM     IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -61,9 +62,9 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -71,19 +72,19 @@
       ** E V E N T    D E T A I L S
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D  E_SETD               185    210
- 
+
      D TRADS         E DS                  EXTNAME(TRADSD) PREFIX(TR_)
      D SECTY         E DS                  EXTNAME(SECTYD) PREFIX(SE_)
      D INVTP         E DS                  EXTNAME(INVTPD) PREFIX(IN_)
- 
- 
+
+
      D W#SETI          DS
      D  W#SETM                 1      2
      D  W#SETA                 3     20                                                       CGL029
      D  W#SETB                21     23                                                       CGL029
      D  W#SETY                24     26                                                       CGL029
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -94,8 +95,8 @@
       ** External DS for Switchable Features details
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       *
       * INPUT PARAMETERS
       *
@@ -112,33 +113,33 @@
      C                   PARM                    TRADS
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
- 
+
      C     I#TVDI        IFEQ      'T'
       * Commitment Cycle ID
      C                   Z-ADD     I#CCID        T_CCID
@@ -162,9 +163,9 @@
      C                   PARM                    SECTY
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    NomCcyDec         1 0
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETSTRD'
      C                   EXSR      *PSSR
@@ -177,11 +178,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -203,7 +204,7 @@
      C                   MOVE      TR_PYTA       W#SETB                         * settle branch
      C                   MOVE      TR_SETC       W#SETY                         * settle currency
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -382,13 +383,13 @@
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        ZYLDOk            1
      C                   PARM      *ZERO         ZPRCOT           15 8
- 
+
      C                   Z-ADD     ZPRCOT        Mkt_Price
- 
+
      C                   ENDIF
- 
+
       * Calculate trade countervalue (in nominal currency)
- 
+
      C                   CALLB     'ZCOTR'
      C                   PARM                    TR_NOML
      C                   PARM                    Mkt_Price
@@ -412,13 +413,13 @@
      C                   PARM      NomCcyDec     ZCDP              1 0
      C                   PARM      *ZERO         ZCONS            15 0
      C                   PARM      *ZERO         ZCTRVL           15 0
- 
+
       * Exit if countervalue is zero
- 
+
      C     ZCTRVL        CABEQ     *ZEROS        E_MRKTVAL
- 
+
       *  Convert countervalue to settlement currency
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM      ZCTRVL        ZAMTCI           15 0
      C                   PARM      TR_TDER       ZEXCH            13 8

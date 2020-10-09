@@ -15,7 +15,7 @@
       *                                                               *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 220877             Date 22Mar19               * 
+      *  Prev Amend No. 220877             Date 22Mar19               *
       *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -161,6 +161,7 @@
 0013 F*---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  220877 - GL0420 Statements produced do not include the       *
       *           IBAN even if CFT004 is switched on.                 *
       *         - Applied for MD052224.                               *

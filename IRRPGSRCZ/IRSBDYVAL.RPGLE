@@ -38,6 +38,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR017 - SIRS Business Day Conventions for both Legs         *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -71,47 +72,47 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
      D MsgidAr         S                   LIKE(MsgIdArr) DIM(ArrayMax)
      D FldNameAr       S                   LIKE(FldNameArr) DIM(ArrayMax)
      D WMsgidAr        S                   LIKE(MsgIdArr) DIM(ArrayMax)
      D WFldNamAr       S                   LIKE(FldNameArr) DIM(ArrayMax)
- 
+
       ** External DS for SAR Details                                                          CIR017
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CIR017
                                                                                               CIR017
@@ -120,7 +121,7 @@
                                                                                               CIR017
      D ValidDeal     E DS                  EXTNAME(IRVSIRSPD)
       ** Valid Single Currency Interest Rate Swap
- 
+
      D PScrData      E DS                  EXTNAME(IRSBDYPD)
       ** Business Day Convention Format Definition File
      D  PPCcy                  1     30
@@ -132,7 +133,7 @@
      D  PPCcy2                65     94                                                       CIR017
      D  PRCcy2                99    128                                                       CIR017
      D  PConv2                95     98                                                       CIR017
- 
+
      D OKIRSBSDY     E DS                  EXTNAME(IRESIRSPD)
       ** Error File for IRS Single Currency
       ** Redefine layout to match file layout IRESIRSPD                                       CIR017
@@ -151,7 +152,7 @@
      D   Ok2FlagPD            97     97                                                       CIR017
      D   Ok2FlagAM            98     98                                                       CIR017
      D   Ok2Flag1             99    108                                                       CIR017
- 
+
      D POKFlag         DS
      D   OkFlags1              1     10
      D   OkFlags2             11     20
@@ -163,18 +164,18 @@
      D   Ok2Flags2            33     42                                                       CIR017
      D   OK2Flags3            43     43                                                       CIR017
      D   OK2Flags4            44     44                                                       CIR017
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D E               S              2  0
      D C               S              2  0
      D X               S              2  0
      D Idx             S              2  0
      D WIdx            S              2  0
- 
+
      D PRTCD           S              7A                                                      CIR017
      D POPTN           S              7A                                                      CIR017
      D PSARD           S              6A                                                      CIR017
@@ -186,14 +187,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** If CIR017 is on, save out RetCodeIn to indicate where                                CIR017
       ** call was done from. Then clear out RetCodeIn                                         CIR017
                                                                                               CIR017
@@ -204,14 +205,14 @@
                                                                                               CIR017
      C                   Eval      Idx = 0
      C                   Eval      WIdx = 0
- 
+
       /COPY WNCPYSRC,IRSIRSV095
       *  *-------------------------*
       *  * Validate Convention Ccy *
       *  *-------------------------*
      C                   Exsr      SrRFCcy
       /COPY WNCPYSRC,IRCIRSV096
- 
+
       /COPY WNCPYSRC,IRCIRSV097
       *  *---------------------------------------*
       *  * Validate Payment Date and Amount Code *
@@ -254,7 +255,7 @@
      C                   Eval      PRCcy2 =  *Blanks                                          CIR017
      C                   Eval      PConv2 =  *Blanks                                          CIR017
      C                   EndIf                                                                CIR017
- 
+
      C                   MoveL     OkFlag1       OkFlags1
      C                   MoveL     OkFlag2       OkFlags2
      C                   MoveL     OkFlagPD      OkFlags3
@@ -266,13 +267,13 @@
      C                   MoveL     Ok2FlagPD     Ok2Flags3                                    CIR017
      C                   MoveL     Ok2FlagAM     Ok2Flags4                                    CIR017
      C                   EndIf                                                                CIR017
- 
+
       ** Place validated fields to valid file.
- 
+
      C                   If        Idx = 0
      C                   Exsr      SrValid
      C                   Endif
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -285,12 +286,12 @@
       * Calls: IRVBSDYCCY                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRFCcy       Begsr
- 
+
       * Reset variables updated by each module before each call
      C                   Exsr      RESETERRS
- 
+
      C                   CallB     'IRVBDYCCY'
      C                   Parm                    ReturnCode
      C                   Parm      'B'           PCode             1
@@ -303,7 +304,7 @@
      C                   Parm                    FldNameAr
      C                   Parm                    WMsgIdAr
      C                   Parm                    WFldNamAr
- 
+
      C                   Eval      X = 1
      C                   DoW       MsgIdAr(X) <> *Blanks
      C                   Eval      Idx = Idx + 1
@@ -312,7 +313,7 @@
      C                                               '1'
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Eval      X = 1
      C                   DoW       WMsgIdAr(X) <> *Blanks
      C                   Eval      WIdx = WIdx + 1
@@ -321,7 +322,7 @@
      C                                               '1'
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -379,12 +380,12 @@
       * Calls: IRVPYAMCNV                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPayDt       Begsr
- 
+
       * Reset variables updated by each module before each call
      C                   Exsr      RESETERRS
- 
+
      C                   CallB     'IRVPAMCNV'
      C                   Parm                    ReturnCode
      C                   Parm                    SPDC1
@@ -393,7 +394,7 @@
      C                   Parm                    OkFlagAM          1
      C                   Parm                    MsgIdAr
      C                   Parm                    FldNameAr
- 
+
      C                   Eval      X = 1
      C                   DoW       MsgIdAr(X) <> *Blanks
      C                   Eval      Idx = Idx + 1
@@ -402,7 +403,7 @@
      C                                               '1'
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************                       CIR017
       /EJECT                                                                                  CIR017
@@ -449,9 +450,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValid       Begsr
- 
+
       ** Leg 1
      C                   MoveL     SC1R1         RSC1R1
      C                   MoveL     SC2R1         RSC2R1
@@ -501,7 +502,7 @@
      C                   MoveL     SPDC2         RSPDC2                                       CIR017
      C                   MoveL     SAMC2         RSAMC2                                       CIR017
      C                   EndIf                                                                CIR017
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -515,16 +516,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETERRS     Begsr
- 
+
      C                   Reset                   MsgIdAr
      C                   Reset                   FldNameAr
      C                   Reset                   WMsgIdAr
      C                   Reset                   WFldNamAr
- 
+
      C                   Eval      ReturnCode = *Blanks
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -537,9 +538,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        Plist
      C                   Parm                    RetCodeIn
      C                   Parm                    PActCode          1
@@ -550,7 +551,7 @@
      C                   Parm                    WMsgIdArr
      C                   Parm                    WFldNamArr
      C                   Parm                    PScrData
- 
+
       ** Check if CIR017 - Separate Business Day Convention for SIRS                          CIR017
                                                                                               CIR017
      C                   CALL      'AOSARDR0'                                                 CIR017
@@ -580,11 +581,11 @@
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

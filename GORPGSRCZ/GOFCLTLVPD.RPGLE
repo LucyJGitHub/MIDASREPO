@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - Set CGZONE to A8ZONE                              *
       *  MD022705 - Duplicate records in GZFCLTLVPD                   *
@@ -51,7 +52,7 @@
      FFCLVDVPD  IF   E           K DISK    INFSR(*PSSR)                                       CGP015
      F                                     RENAME(FCLTYFMF: DRIVERF)                          CGP015
      F                                     USROPN                                             CGP015
- 
+
      FFCLTYFM   IF   E             DISK    INFSR(*PSSR)
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)                                     CGO001AB
      F                                     INCLUDE(FCLTYFMF)                                CGO001AB
@@ -60,28 +61,28 @@
                                                                                             CGO001AB
      FFCLTYL5   IF   E           K DISK    INFSR(*PSSR)
      FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FLEAGFMPD  IF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:LEAGFM)
      FLEAGFYL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFNF:LEAGFN)
      FLEAGFCL7  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFCLTD0:LEAGFQ)
- 
+
      FGPGLCUSL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GPGLCUSL:GPGLCUSLD0)
      FGZFCLTLVL1UF A E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
- 
+
       ** Program Status Data Structure
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D GZSDBRCH      E DS                  EXTNAME(GZSDBRCHPD)
- 
+
      D DS_FCLTYFN    E DS                  EXTNAME(FCLTYFN)
      D  DS_CNUM      E                     EXTFLD(CNUM)
      D  DS_FACT      E                     EXTFLD(FACT)
@@ -91,12 +92,12 @@
      D  DS_LCD       E                     EXTFLD(LCD)
      D  DS_CHTP      E                     EXTFLD(CHTP)
      D  DS_FRNT      E                     EXTFLD(FRNT)
- 
+
      D DS_LEFCLTQD   E DS                  EXTNAME(LEFCLTQD)
                                                                                             AR812802
      D CentFlag                       2A    INZ(*BLANKS)                                    AR812802
      D CharDate                      30A    INZ(*BLANKS)                                    AR812802
- 
+
       ** Data Structure for the end record key                                              CGO001AB
                                                                                             CGO001AB
      D                 DS                                                                   CGO001AB
@@ -135,7 +136,7 @@
      I              CHTP                        CHTP_FN
      I              FRNT                        FRNT_FN
       *****************************************************************
- 
+
       ** Facilities
                                                                                             CGO001AB
      C                   MOVE      *BLANK        AZKEY             1                        CGO001AB
@@ -205,29 +206,29 @@
                                                                                               CGP015
       ** Original (non-task split) mode                                                       CGP015
      C                   If        I_MODE = *blanks                                           CGP015
- 
+
      C                   Eval      *In01 = *On
- 
+
      C                   Read      FCLTYFM
      C                   DoW       NOT %EOF(FCLTYFM)
      C                   ExSr      Sr_Process
      C                   Read      FCLTYFM
      C                   EndDo
      C                   EndIf                                                                CGP015
- 
+
       ** Aggregated Facilities
- 
+
      C                   If           I_MODE = *blanks                                        CGP015
      C                             or I_MODE = '*AGF'                                         CGP015
      C                   Eval      *In01 = *Off
- 
+
      C                   Read      LEAGFMPD
      C                   DoW       NOT %EOF(LEAGFMPD)
      C                   ExSr      Sr_Process
      C                   Read      LEAGFMPD
      C                   EndDo
      C                   EndIf                                                                CGP015
- 
+
      C                   IF        I_MODE <> '*TSK'                                         CGO001AB
      C                   Eval      *InLr = *On
      C                   ELSE                                                               CGO001AB
@@ -235,41 +236,41 @@
      C                   CLOSE     FCLTY                                                    CGO001AB
      C                   ENDIF                                                              CGO001AB
      C                   RETURN                                                             CGO001AB
- 
+
       *****************************************************************
       * *INZSR - Initial subroutine Called automatiCally at program
       *          start.
       *****************************************************************
      C     *INZSR        BegSr
- 
+
      C     *ENTRY        PList
      C                   Parm                    I_ZONE           10
      C                   Parm                    I_MODE            4                          CGP015
- 
+
      C     KEY_FCLTYL5   KList
      C                   KFld                    CNUM
      C                   KFld                    FACT
      C                   KFld                    FCNO
- 
+
      C     KEY_LEFCLTLH  KList
      C                   KFld                    FCXFCU
      C                   KFld                    FCXFTP
      C                   KFld                    FCXFNO
- 
+
      C     KEY_LEAGFYL2  KList
      C                   KFld                    CNUM
      C                   KFld                    FACT
      C                   KFld                    FCNO
- 
+
      C     KEY_LEAGFCL7  KList
      C                   KFld                    FCXFCU
      C                   KFld                    FCXFTP
      C                   KFld                    FCXFNO
- 
+
      C     KEY_GLCUSL    KList
      C                   KFld                    CNUM
      C                   KFld                    I_ZONE
- 
+
      C     KEY_FCLTY     KLIST                                                              CGO001AB
      C                   KFLD                    CNUM                                       CGO001AB
      C                   KFLD                    FACT                                       CGO001AB
@@ -283,35 +284,35 @@
      C                   KFLD                    PADFCNO                                    MD022705
                                                                                             MD022705
       ** Access Switchable Features File
- 
+
      C                   Call      'AOSARDR0'
      C                   Parm      *Blanks       PRtcd             7
      C                   Parm      '*VERIFY '    POptn             7
      C                   Parm      'CLE024'      PSard             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   Move      'N'           #CLE024           1
      C                   If        PRtcd = *Blanks
      C                   Eval      #CLE024 = 'Y'
      C                   EndIf
- 
+
      C                   Call      'AOSARDR0'
      C                   Parm      *Blanks       PRtcd
      C                   Parm      '*VERIFY '    POptn
      C                   Parm      'CLE025'      PSard
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   Move      'N'           #CLE025           1
      C                   If        PRtcd = *Blanks
      C                   Eval      #CLE025 = 'Y'
      C                   EndIf
- 
+
      C**********         If        I_MODE = '*TSK'                                   CGP015 CGO001AB
      C**********         Open      FCLVDVPD                                          CGP015 CGO001AB
      C**********         EndIf                                                       CGP015 CGO001AB
- 
+
       ** delete zone records from global facilities list view
- 
+
      C                   If        I_MODE = *blanks                                           CGP015
      C     I_ZONE        SetLl     GZFCLTLVL1
      C     I_ZONE        ReadE     GZFCLTLVL1
@@ -320,7 +321,7 @@
      C     I_ZONE        ReadE     GZFCLTLVL1
      C                   EndDo
      C                   EndIf                                                                CGP015
- 
+
      C                   EndSr
       ****************************************************************
      C/SPACE 5
@@ -328,31 +329,31 @@
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *****************************************************************
      C     *PSSR         BegSr
- 
+
      C                   Dump
      C                   SetOn                                        LRU7U8
      C                   Return
- 
+
      C                   EndSr
       *****************************************************************
       * SR_Process - Detail processing
       *****************************************************************
      C     SR_Process    BegSr
- 
+
      C                   Clear                   DS_FCLTYFN
      C                   Clear                   DS_LEFCLTQD
      C                   Clear                   GZSDBRCH
- 
+
      C                   Eval      FCXFCU = CNUM
      C                   Move      FACT          FCXFTP
      C                   Move      FCNO          FCXFNO
- 
+
      C                   Call      'GPACSBRCH'
      C                   Parm                    I#RTCD            7
      C                   Parm                    I#ERMS           50
      C                   Parm      BRCA          I#BRCD            3
      C                   Parm                    GZSDBRCH
- 
+
      C                   If        *In01 = *On
      C     KEY_FCLTYL5   Chain     FCLTYL5                            90
      C     KEY_LEFCLTLH  Chain     LEFCLTLH
@@ -360,13 +361,13 @@
      C     KEY_LEAGFYL2  Chain     LEAGFYL2
      C     KEY_LEAGFCL7  Chain     LEAGFCL7
      C                   EndIf
- 
+
      C     KEY_GLCUSL    Chain     GPGLCUSL
- 
+
      C                   If        TRCA = *Blanks
      C                   Eval      TRCA = 'FC'
      C                   EndIf
- 
+
      C                   Move      CNUM          PADCNUM
      C                   Move      FACT          PADFACT
      C                   Move      FCNO          PADFCNO
@@ -378,15 +379,15 @@
      C                   Move      CANM          PADCANM
      C                   Move      CAFT          PADCAFT
      C                   Move      CAFN          PADCAFN
- 
+
      C                   Eval      PADINUM = INUM
      C                   Eval      PADPOBN = POBN
      C                   Eval      PADPOCN = POCN
      C                   Eval      PADROBN = ROBN
      C                   Eval      PADROCN = ROCN
- 
+
      C                   Move      LPBR          PADLPBR
- 
+
      C                   If        DTAP <> *Zero
      C                   Eval      ZDAYNO = DTAP
      C                   EXSR      CENT20                                                   AR812802
@@ -398,7 +399,7 @@
      C                   EVAL      FDTAP = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        DTEX <> *Zero
      C                   Eval      ZDAYNO = DTEX
      C                   EXSR      CENT20                                                   AR812802
@@ -410,7 +411,7 @@
      C                   EVAL      FDTEX = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RVDT <> *Zero
      C                   Eval      ZDAYNO = RVDT
      C                   EXSR      CENT20                                                   AR812802
@@ -422,7 +423,7 @@
      C                   EVAL      FRVDT = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        CDTE <> *Zero
      C                   Eval      ZDAYNO = CDTE
      C                   EXSR      CENT20                                                   AR812802
@@ -434,7 +435,7 @@
      C                   EVAL      FCDTE = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        AVLD <> *Zero
      C                   Eval      ZDAYNO = AVLD
      C                   EXSR      CENT20                                                   AR812802
@@ -446,7 +447,7 @@
      C                   EVAL      FAVLD = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        JDTE <> *Zero
      C                   Eval      ZDAYNO = JDTE
      C                   EXSR      CENT20                                                   AR812802
@@ -458,7 +459,7 @@
      C                   EVAL      FJDTE  = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        COMD <> *Zero
      C                   Eval      ZDAYNO = COMD
      C                   EXSR      CENT20                                                   AR812802
@@ -470,7 +471,7 @@
      C                   EVAL      FCOMD = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        VDTC <> *Zero
      C                   Eval      ZDAYNO = VDTC
      C                   EXSR      CENT20                                                   AR812802
@@ -482,7 +483,7 @@
      C                   EVAL      FVDTC = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        ORED <> *Zero
      C                   Eval      ZDAYNO = ORED
      C                   EXSR      CENT20                                                   AR812802
@@ -494,7 +495,7 @@
      C                   EVAL      FORED = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        LCD  <> *Zero
      C                   Eval      ZDAYNO = LCD
      C                   EXSR      CENT20                                                   AR812802
@@ -506,7 +507,7 @@
      C                   EVAL      FLCD = %Date(CHARDATE)                                   AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RVCD <> *Zero
      C                   Eval      ZDAYNO = RVCD
      C                   EXSR      CENT20                                                   AR812802
@@ -518,7 +519,7 @@
      C                   EVAL      FRVCD = %Date(CHARDATE)                                  AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN0 <> *Zero
      C                   Eval      ZDAYNO = RUN0
      C                   EXSR      CENT20                                                   AR812802
@@ -530,7 +531,7 @@
      C                   EVAL      FRUN00 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN1 <> *Zero
      C                   Eval      ZDAYNO = RUN1
      C                   EXSR      CENT20                                                   AR812802
@@ -542,7 +543,7 @@
      C                   EVAL      FRUN01 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN2 <> *Zero
      C                   Eval      ZDAYNO = RUN2
      C                   EXSR      CENT20                                                   AR812802
@@ -554,7 +555,7 @@
      C                   EVAL      FRUN02 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN3 <> *Zero
      C                   Eval      ZDAYNO = RUN3
      C                   EXSR      CENT20                                                   AR812802
@@ -566,7 +567,7 @@
      C                   EVAL      FRUN03 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN4 <> *Zero
      C                   Eval      ZDAYNO = RUN4
      C                   EXSR      CENT20                                                   AR812802
@@ -578,7 +579,7 @@
      C                   EVAL      FRUN04 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN5 <> *Zero
      C                   Eval      ZDAYNO = RUN5
      C                   EXSR      CENT20                                                   AR812802
@@ -590,7 +591,7 @@
      C                   EVAL      FRUN05 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN6 <> *Zero
      C                   Eval      ZDAYNO = RUN6
      C                   EXSR      CENT20                                                   AR812802
@@ -602,7 +603,7 @@
      C                   EVAL      FRUN06 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN7 <> *Zero
      C                   Eval      ZDAYNO = RUN7
      C                   EXSR      CENT20                                                   AR812802
@@ -614,7 +615,7 @@
      C                   EVAL      FRUN07 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN8 <> *Zero
      C                   Eval      ZDAYNO = RUN8
      C                   EXSR      CENT20                                                   AR812802
@@ -626,7 +627,7 @@
      C                   EVAL      FRUN08 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   If        RUN9 <> *Zero
      C                   Eval      ZDAYNO = RUN9
      C                   EXSR      CENT20                                                   AR812802
@@ -638,7 +639,7 @@
      C                   EVAL      FRUN09 = %Date(CHARDATE)                                 AR812802
      C                   ENDIF                                                              AR812802
      C                   EndIf
- 
+
      C                   Eval      SSHPC = SHPC / 1000000000000
      C                   Eval      SFAMT = FAMT
      C                   Eval      SMTDH = MTDH
@@ -646,7 +647,7 @@
      C                   Eval      SMTDA = MTDA
      C                   Eval      SLPAM = LPAM
      C                   Eval      SCAMD = CAMD
- 
+
      C                   Eval      SOAM01 = OAM1
      C                   Eval      SOAM02 = OAM2
      C                   Eval      SOAM03 = OAM3
@@ -657,10 +658,10 @@
      C                   Eval      SOAM08 = OAM8
      C                   Eval      SOAM09 = OAM9
      C                   Eval      SOAM10 = OA10
- 
+
      C                   Eval      SQTDA  = QTDA
      C                   Eval      SYTDA  = YTDA
- 
+
      C                   Eval      ALCY01 = %SubSt(ALCY:1 :3)
      C                   Eval      ALCY02 = %SubSt(ALCY:4 :3)
      C                   Eval      ALCY03 = %SubSt(ALCY:7 :3)
@@ -673,27 +674,27 @@
      C                   Eval      ALCY10 = %SubSt(ALCY:28:3)
      C                   Eval      ALCY11 = %SubSt(ALCY:31:3)
      C                   Eval      ALCY12 = %SubSt(ALCY:34:3)
- 
+
      C                   Eval      DTPS01 = %SubSt(DTPS:1 :1)
      C                   Eval      DTPS02 = %SubSt(DTPS:2 :1)
      C                   Eval      DTPS03 = %SubSt(DTPS:3 :1)
      C                   Eval      DTPS04 = %SubSt(DTPS:4 :1)
      C                   Eval      DTPS05 = %SubSt(DTPS:5 :1)
- 
+
      C                   Eval      DTPX01 = %SubSt(DTPX:1 :1)
      C                   Eval      DTPX02 = %SubSt(DTPX:2 :1)
      C                   Eval      DTPX03 = %SubSt(DTPX:3 :1)
      C                   Eval      DTPX04 = %SubSt(DTPX:4 :1)
      C                   Eval      DTPX05 = %SubSt(DTPX:5 :1)
      C                   Eval      DTPX06 = %SubSt(DTPX:6 :1)
- 
+
      C                   Eval      RTPS01 = %SubSt(RTPS:1 :1)
      C                   Eval      RTPS02 = %SubSt(RTPS:2 :1)
      C                   Eval      RTPS03 = %SubSt(RTPS:3 :1)
      C                   Eval      RTPS04 = %SubSt(RTPS:4 :1)
      C                   Eval      RTPS05 = %SubSt(RTPS:5 :1)
      C                   Eval      RTPS06 = %SubSt(RTPS:6 :1)
- 
+
      C                   Eval      ALCYS  = %Trim(ALCY01) + ' ' +
      C                                      %Trim(ALCY02) + ' ' +
      C                                      %Trim(ALCY03) + ' ' +
@@ -707,52 +708,52 @@
      C                                      %Trim(ALCY11) + ' ' +
      C                                      %Trim(ALCY12)
      C                   Eval      ALCYS  = %Trim(ALCYS)
- 
+
      C                   Eval      BTB    = %Trim(BTB1)   + ' ' +
      C                                      %Trim(BTB2)   + ' ' +
      C                                      %Trim(BTB3)   + ' ' +
      C                                      %Trim(BTB4)   + ' ' +
      C                                      %Trim(BTB5)   + ' ' +
      C                                      %Trim(BTB6)
- 
+
      C                   Eval      DTP    = %Trim(DTP1)   + ' ' +
      C                                      %Trim(DTP2)   + ' ' +
      C                                      %Trim(DTP3)   + ' ' +
      C                                      %Trim(DTP4)
- 
+
      C                   Eval      NAR    = %Trim(NAR1)   + ' ' +
      C                                      %Trim(NAR2)   + ' ' +
      C                                      %Trim(NAR3)   + ' ' +
      C                                      %Trim(NAR4)
- 
+
      C                   If        CSEL = *Blanks
      C                   Eval      YNCSEL = 'N'
      C                   Else
      C                   Eval      YNCSEL = CSEL
      C                   EndIf
- 
+
      C                   If        SECI = *Blanks
      C                   Eval      YNSECI = 'N'
      C                   Else
      C                   Eval      YNSECI = SECI
      C                   EndIf
- 
+
      C                   Eval      PADFCXPOR = FCXPOR
      C                   Eval      SFCXOML   = FCXOML
- 
+
      C                   If        FCXCGP = *Zero
      C                   Eval      AFCXCGP = *Blanks
      C                   Else
      C                   Eval      AFCXCGP = %Char(FCXCGP)
      C                   EndIf
- 
+
      C                   Eval      SFCXCOF  = FCXCOF
      C                   Eval      SFCXCV2  = FCXCV2
      C                   Eval      CLE024   = #CLE024
      C                   Eval      CLE025   = #CLE025
      C                   Eval      CUSTZONE = A8ZONE
      C                   Eval      CGZONE = A8ZONE                                          MD025682
- 
+
      C                   Select
      C                   When      FDTEX < FRUN01 Or
      C                             FDTAP > FRUN01
@@ -760,7 +761,7 @@
      C                   Other
      C                   Eval      SAVAILAMT = SFAMT - SOAM02
      C                   EndSl
- 
+
      C                   IF        I_MODE = '*TSK'                                          MD022705
                                                                                             MD022705
      C     GZFCLTKEY     CHAIN     GZFCLTLVL1    GZFCLTDS                                   MD022705
@@ -773,7 +774,7 @@
      C                   ELSE                                                               MD022705
      C                   Write     FCLTLVD0
      C                   ENDIF                                                              MD022705
- 
+
      C                   EndSr
       *****************************************************************                     AR812802
       * Cent20     - Convert Midas date to *DMY format for 20xx.      *                     AR812802
@@ -791,12 +792,12 @@
       * SR_ZDATE2  - Convert Midas date to *DMY format
       *****************************************************************
      C     ZDATE2        BegSr
- 
+
      C                   Call      'ZDATE2'
      C                   Parm                    ZDAYNO            5 0
      C                   Parm      'D'           ZDATFM            1
      C                   Parm      *zero         ZDATE             6 0
      C                   Parm      *blank        ZADATE            7
- 
+
      C                   EndSr
       *****************************************************************

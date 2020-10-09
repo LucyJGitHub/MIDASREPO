@@ -28,6 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1096687A - All shadow postings CGL027 movements are near   *
       *  AR1069768 - Write correct error info to SHDOUTTD             *

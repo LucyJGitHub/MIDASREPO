@@ -46,6 +46,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *            Added hooks: CGL135_051, CGL135_052, CGL135_053    *
@@ -84,7 +85,7 @@
       *  CAP084 - MidasPlus Changes                                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -94,7 +95,7 @@
      F**********GLJENHL0  UF   E           K DISK    INFSR(*PSSR)                     BUG711 BUG2427
      FGLJENHL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG2427
       *
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,19 +107,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
@@ -127,27 +128,27 @@
      D LUser           S             10A                                                     BUG1175
      D TIMEtime        S               T                                                     BUG1175
      D TIMEchar        S             10A                                                     BUG1175
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D BITPScnFmt    E DS                  EXTNAME(GLBITPPD)
       * Deal in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D BITPFilFmt    E DS                  EXTNAME(GLJENPPD)
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
       ** Deal in file format
- 
+
       *                                                                                       CER001
       ** External DS for Bank Details                                                         CER001
       *                                                                                       CER001
@@ -182,7 +183,7 @@
      D PEADetail       S             15A                                                   AR1005162
      D/COPY WNCPYSRC,GLH00653
       **-----------------------------------------------------------------------
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                    BUG1175
       ** Java user information                                                               BUG1175
                                                                                               CSF011
@@ -204,14 +205,14 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D SGDNOSTRO       S              1                                                       CMM121
      D SBRNM           S             35                                                       CMM121
      D SBREF           S             35                                                       CMM121
      D/COPY WNCPYSRC,GLBITPZD01
- 
+
       *                                                                                       CER001
       ** Switchable Feature Field                                                             CER001
       *                                                                                       CER001
@@ -251,7 +252,7 @@
       *                                                                                     MD000091
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -263,7 +264,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       *                                                                                       CER001
       ** Access Bank details via access program                                               CER001
       ** (database error handling done in access program)                                     CER001
@@ -341,10 +342,10 @@
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C/COPY WNCPYSRC,GLH00655
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITP02
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   BITPFilFmt
      C                   CLEAR                   DDATSN                                      CSF011A
@@ -358,7 +359,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -371,7 +372,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      GLBITPRED
@@ -412,9 +413,9 @@
                                                                                               CER001
      C/COPY WNCPYSRC,GLH00657
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDBTNB'      FldNameArr(1)
@@ -475,7 +476,7 @@
      C     DDDLIT        IFEQ      *BLANKS
      C                   MOVE      'L'           DDDLIT
      C                   ENDIF
- 
+
       * If additional information is blank then set DDADIN = 'N'                              246418
      C                   IF        CGL013 = 'Y'                                               246418
      C                   IF        DDADI1 = *blanks                                           246418
@@ -527,7 +528,7 @@
       /COPY OFCPYSRCZ,CGL135_079                                                             CGL135A
      C                                           + RegData                                    CER001
      C                                           + ExtData                                    CER001
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -569,48 +570,48 @@
       *
       * Front Office ID READ
      C                   PARM      *BLANK        @FTRED           20
- 
+
      C                   ENDSR
       **********************************************************************
      C     GLBITPRTV     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'GLBITPRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)                CAP013
      C                   PARM                    ModeofOp          6            CAP013
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE        1
- 
+
       * Action Code
      C                   PARM                    DDACTN            1
- 
+
       * Action Code
      C                   PARM                    APFOTranID       20
- 
+
       * Batch Header Number
      C                   PARM                    DDBTNB
- 
+
       * Batch Item Number
      C                   PARM                    DDBINB
       *                                                                                     BUG23742
       ** CER030 feature                                                                     BUG23742
       *                                                                                     BUG23742
      C                   PARM                    CER030                                     BUG23742
- 
+
       * OUTPUTS
- 
+
       * (Current) deal in file format
      C                   PARM                    BITPFilFmt
- 
+
       * (Current) Additional Infor in File Format                                             246418
      C                   PARM                    BITPXFilFmt                                  246418
       *                                                                                     BUG23742
@@ -620,23 +621,23 @@
                                                                                               246418
       * OK - Action code
      C                   PARM                    DDActnOK          1
- 
+
       * OK - Batch Number
      C                   PARM                    DDBtnbBK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
       ** MT94x Messages Generation                                                            246418
      C                   PARM                    CGL013                                       246418
      C/COPY WNCPYSRC,GLBITPZC03
      C/COPY OFCPYSRCZ,CGL135_052                                                             CGL135A
- 
- 
+
+
      C                   ENDSR
       **********************************************************************                  CER001
       * Retrieve Outgoing Payments Extension Details                                          CER001
@@ -654,11 +655,11 @@
      C                   ENDSR                                                                CER001
       **********************************************************************
      C     GLBITPCVT     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'GLBITPCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -668,18 +669,18 @@
      C                   PARM                    BITPXFilFmt                                  246418
       ** MT94x Messages Generation                                                            246418
      C                   PARM                    CGL013                                       246418
- 
+
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    BITPScnfmt
- 
+
       * (Current) Item Additional Information in screen format                                246418
      C                   PARM                    BITPXScnFmt                                  246418
                                                                                               246418
      C/COPY OFCPYSRCZ,CGL135_053                                                             CGL135A
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
- 
+
      C                   ENDSR
       **********************************************************************                  CER001
       * Output Extension Data                                                                 CER001

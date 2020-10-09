@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *

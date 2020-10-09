@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOPOSNPD.                        *

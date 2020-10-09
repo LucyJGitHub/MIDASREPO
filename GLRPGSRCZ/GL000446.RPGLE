@@ -30,6 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG14826A - Transactions made using Equation functions were  *
       *      not reflected in the Projected Nostro Balances Enquiry   *
@@ -80,23 +81,23 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *Time Table File
      F*AF6PF**** IF   E             DISK    INFSR(*PSSR)                                     BG12067
      FAF610LF   IF   E           K DISK    INFSR(*PSSR)                                      BG12067
      F                                     USROPN
- 
+
       *Projected Nostro Account Movements File
      FAF710LF   UF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     COMMIT
- 
+
       *Projected Nostro Accounts Control file
      F*GLNOSTPD* UF   E             DISK    INFSR(*PSSR)                                     BG12067
      FGLNOSTPD  UF A E             DISK    INFSR(*PSSR)                                      BG12067
      F                                     USROPN
      F                                     COMMIT
- 
+
       *Extract Audit Report Print File
      FGL000446AUO    E             PRINTER INFSR(*PSSR)
      F                                     OFLIND(*IN99)
@@ -107,114 +108,114 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
- 
+
       **                                    134 141 DBFILE
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** Program Status Data Structure
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D*SVALKK***       C                   CONST('ConsumerBankingNarr')                     BUG14589
      D SVALCB          C                   CONST('CB')                                      BUG14589
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Compile time Array
      D CMDDLY          S             80    DIM(1) PERRCD(1) CTDATA
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ***SPOOL*Information*Data*Structure*for*ZSFILE*******************                      BG12134
      D*SPOOLU***       DS                                                                    BG12134
      D*SFILEU***              83     92                                                      BG12134
      D*SFNUMU***             123    124B 0
- 
+
       ** Projected Nostro Accounts Job Control Dataarea Layout File
      D GLNOSTCTL     E DS                  EXTNAME(GLNOSTCTL)
- 
+
       ** Data structure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Data structure for Account Movements file
      D RSACMT        E DS                  EXTNAME(RSACMTPD)
      D                                     PREFIX(RS)
- 
+
       ** Data structure
      D SVAL1           DS           200
      D SVAL11                  1      2
- 
+
       ** Data structure for Midas SD Narrative codes
      D SDNARR        E DS                  EXTNAME(SDNARRPD)
                                                                                              BG12067
       ** Data structure for Account Details File                                             BG12067
      D SDACNT        E DS                  EXTNAME(ACCNTAB)                                  BG12067
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Work Variable For Timestamp Field
      D O_TIMESTAMP     S             26    INZ
- 
+
       ** Work Variables For Sequence Number
      D TSEQNO          S              7  0
      D LSEQNO          S              7  0
- 
+
       ** Parameters For QCMDEXC
      D CMDLEN          S             15  5
      D DLYJOB          S             80A
- 
+
       ** Parameters For ZSFILE
      D PZSNUM          S              6  0
      D PSEQ            S              5A
      D PSENTY          S              3A
      D PZSERR          S              1A
- 
+
       ** Parameters For ZDATE1
      D @ERRFLAG        S              1A
      D DATEIN          S              6
      D DAYNOOUT        S              5P 0
- 
+
       ** Common Parameters For AORSACW0,AOBANKR0,AONOSTR0,AOMEMSU0,AOSVALR0
      D @RTCD           S              7A
      D @OPTN           S              7A
      D MAMT            S             15  0
      D VALDATE         S              5P 0
- 
+
       ** Parameters For AONOSTR0
      D P@CUST          S              6A
      D P@CYCD          S              3A
@@ -224,7 +225,7 @@
      D P@BRCD          S              3A
      D P@CSSN          S             10A
      D P@PNOI          S              1A
- 
+
       ** Parameters For AOACCTR0                                                             BG12067
      D P0RETL          S             10A                                                     BG12067
      D P0CNUM          S              6A                                                     BG12067
@@ -244,7 +245,7 @@
      D W0VDAT          S              5  0
      D W0AMT           S             15  0
      D W0FTOV          S              1A
- 
+
       ** Parameters For AOSVALR0
      D SVALK1          S             20A
      D SVALK2          S             20A
@@ -265,12 +266,12 @@
      D SVAL9           S            200A
      D SVALK0          S             20A
      D SVAL10          S            200A
- 
+
       ** Work Variables
      D WDATEA          S              6A
      D PSTDATE         S              5P 0
      D WNSTCD          S              5A
- 
+
      D @RUN            S              1
       *****************************************************************
       /EJECT
@@ -282,76 +283,76 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Retrive Sequence Number From Time table File
- 
+
      C                   EXSR      SRTMPF
- 
+
       ** Read sequence  number From Projected Nostro Accounts
       ** Control File
- 
+
      C                   READ(N)   GLNOSTPD
- 
+
      C                   EVAL      LSEQNO = NOLRSN
- 
+
       ** Read in Data Area GLNOSTCTL
- 
+
      C                   IN        GLNOSTCTL
- 
+
       ** Start of the main loop
- 
+
      C**********         DOW       NOSTOP <> 'STOP' AND                                      BG12067
      C**********                   AF6TIME <> O_TIMESTAMP                                    BG12067
      C                   DOW       NOSTOP <> 'STOP'                                          BG12067
                                                                                              BG12067
      C                   IF        AF6TIME <> O_TIMESTAMP                                    BG12067
      C                   EVAL      O_TIMESTAMP = AF6TIME
- 
+
       ** Read in Data Area GLNOSTCTL
- 
+
      C                   IN        GLNOSTCTL
- 
+
       ** Process till Data Area GLNOSTCTL is blank and last sequence
       ** number of Projected Nostro Accounts Control File(GLNOSTPD)
       ***is*less*than*or*equal*to*Time*table*File(AF6PF)************                         BG12067
       ** is less than or equal to Time table File(AF610LF)                                   BG12067
- 
+
      C                   DOW       NOSTOP <> 'STOP' AND
      C                             LSEQNO <= TSEQNO
      C     LSEQNO        SETLL     AF710LF
      C     LSEQNO        READE     AF710LF
- 
+
       ** Read in Data Area GLNOSTCTL
- 
+
      C                   IN        GLNOSTCTL
- 
+
       ** Process till Data Area GLNOSTCTL is blank And not the
       ** end of file(AF710LF)
- 
+
      C                   DOW       NOSTOP <> 'STOP' AND
      C                             NOT%EOF(AF710LF)
- 
+
       ** Execute Sub-Routine to update the Nostro Projections File
- 
+
      C                   EXSR      PROJAM
- 
+
       ** Read the next record from the file AF710LF with same sequence number
- 
+
      C     LSEQNO        READE     AF710LF
- 
+
       ** Read in Data Area GLNOSTCTL
- 
+
      C                   IN        GLNOSTCTL
- 
+
      C                   ENDDO
- 
+
       ** IF end of file(AF710LF) is reached increment last processed sequence
       ** number(LSEQNO) by 1
- 
+
      C                   IF        %EOF(AF710LF)
      C                   EVAL      LSEQNO = LSEQNO + 1
                                                                                            BUG14826A
@@ -363,11 +364,11 @@
      C                   ENDIF                                                             BUG14826A
                                                                                            BUG14826A
      C                   ENDIF
- 
+
       ** Read in Data Area GLNOSTCTL
- 
+
      C                   IN        GLNOSTCTL
- 
+
      C                   ENDDO
      C                   ENDIF                                                               BG12067
                                                                                              BG12067
@@ -375,22 +376,22 @@
                                                                                              BG12067
      C                   IN        GLNOSTCTL                                                 BG12067
                                                                                              BG12067
- 
+
       ** If STOP is not encountered delay the job by 30 seconds
- 
+
      C                   IF        NOSTOP <> 'STOP'
- 
+
      C                   MOVEA     CMDDLY(1)     DLYJOB
      C                   EVAL      CMDLEN = 80
- 
+
       ** Delay job by 30 seconds
- 
+
      C                   CALL(E)   'QCMDEXC'
      C                   PARM                    DLYJOB
      C                   PARM                    CMDLEN
- 
+
       ** If call ends in error
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = '*CALL'
@@ -398,29 +399,29 @@
      C                   EVAL      DBASE  = 001
      C                   EVAL      DBPROC = 'SR/ SRPROC'
      C                   OUT       LDA
- 
+
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
       ** Retrieve sequence number from time table file
- 
+
      C                   EXSR      SRTMPF
- 
+
       ** To Update Projected Nostro Accounts Control file
      C                   ELSE
      C                   EVAL      LSEQNO = *ZEROS
- 
+
      C                   EXSR      SRUPDLM
      C                   ENDIF
- 
+
       ** Read in Data Area GLNOSTCTL
      C                   IN        GLNOSTCTL
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -433,11 +434,11 @@
       * Calls: AOBANKR0                                               *                      BG12134
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** File opening section
- 
+
      C                   IF        Not %Open(AF710LF)
      C                   OPEN      AF710LF
      C                   ENDIF
@@ -445,32 +446,32 @@
      C                   IF        Not %Open(GLNOSTPD)
      C                   OPEN      GLNOSTPD
      C                   ENDIF
- 
+
       ** Define Data Areas GLNOSTCTL & LDA
- 
+
      C     *DTAARA       DEFINE                  GLNOSTCTL
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ***Registers*GL0446AU*via*RCF************************************                      BG12134
- 
+
      C**********         EXSR      SRRCFA                                                    BG12134
- 
+
       ** Initialization of fields DBASE,DBFILE,DBKEY
- 
+
      C                   EVAL      DBASE  = *ZEROS
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY  = *BLANKS
- 
+
       ** To retrieve the bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
       *
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -480,7 +481,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -494,27 +495,27 @@
       *  Calls: None.                                                 *
       *****************************************************************
      C     SRTMPF        BEGSR
- 
+
       ***Retrive*Sequence*Number*From*AF6PF****************************                      BG12067
       ** Retrive Sequence Number From AF610LF                                                BG12067
- 
+
      C**********         IF        Not %Open(AF6PF)                                          BG12067
      C**********         OPEN      AF6PF                                                     BG12067
      C                   IF        Not %Open(AF610LF)                                        BG12067
      C                   OPEN      AF610LF                                                   BG12067
      C                   ENDIF
- 
+
      C**********         READ      AF6PF                                                     BG12067
      C     *HIVAL        SETGT     AF610LF                                                   BG12067
      C                   READP     AF610LF                                                   BG12067
      C                   EVAL      TSEQNO  =  AF6SEQ
- 
+
      C**********         IF        %Open(AF6PF)                                              BG12067
      C**********         CLOSE     AF6PF                                                     BG12067
      C                   IF        %Open(AF610LF)                                            BG12067
      C                   CLOSE     AF610LF                                                   BG12067
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -561,16 +562,16 @@
       *                                                               *
       *  Calls: None.                                                 *
       *****************************************************************
- 
+
      C     SRUPDLM       BEGSR
- 
+
       ** Reading the Projected Nostro Accounts Control file
- 
+
      C     1             SETLL     GLNOSTPD
      C                   READ(E)   GLNOSTPD
- 
+
       ** Read ends in error
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLNOSTPD'
@@ -580,13 +581,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      NOLRSN = LSEQNO
- 
+
      C                   IF        NOT %EOF(GLNOSTPD)                                       BG12067
                                                                                             BG12067
       ** Update the Projected Nostro Accounts Control file
- 
+
      C                   UPDATE(E) GLNOSTD0
      C                   ELSE                                                               BG12067
                                                                                             BG12067
@@ -594,9 +595,9 @@
                                                                                             BG12067
      C                   WRITE(E)  GLNOSTD0                                                 BG12067
      C                   ENDIF                                                              BG12067
- 
+
       ** Update ends in error
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLNOSTPD'
@@ -606,11 +607,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Commit all changes
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -622,15 +623,15 @@
       *                                                               *
       *  Calls: AONOSTR0                                              *
       *****************************************************************
- 
+
      C     SRNOST        BEGSR
- 
+
      C                   EVAL      P@CYCD = %SUBST(AF7FUN :1:3)
      C                   EVAL      P@NONB = %SUBST(AF7FUN :4:2)
      C                   EVAL      WNSTCD = %SUBST(AF7FUN :1:5)
- 
+
       ** Verify the Nostro Codes in the MIDAS file
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
@@ -643,9 +644,9 @@
      C                   PARM      *BLANKS       P@CSSN
      C                   PARM      *BLANKS       P@PNOI
      C     SDNOST        PARM      *BLANKS       DSFDY
- 
+
       ** Call Ends In Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C******LOCK         IN        LDA                                                       BG12067
      C**********         EVAL      DBFILE = 'SDNOSTPD'                                       BG12067
@@ -656,7 +657,7 @@
      C**********         EXSR      *PSSR                                                     BG12067
      C                   GOTO      ENDSRN                                                    BG12067
      C                   ENDIF
- 
+
      C     ENDSRN        TAG                                                                 BG12067
      C                   ENDSR
       *****************************************************************
@@ -670,17 +671,17 @@
       *                                                               *
       *  Calls: ZDATE1                                                *
       *****************************************************************  --+
- 
+
      C     CVTDATE       BEGSR
- 
+
       ** To Convert date into Midas day number
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    DATEIN
      C                   PARM                    DAYNOOUT
      C                   PARM                    BJDFIN
      C                   PARM      *BLANKS       @ERRFLAG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -693,27 +694,27 @@
       *                                                               *
       *  Calls: None.                                                 *
       *****************************************************************
- 
+
      C     SRAUDT        BEGSR
- 
+
       ** Write the Output Report Header
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   IF        *INU7 = *ON
- 
+
       ** Write the DB Error Information
- 
+
      C                   WRITE     DBERROR
      C                   ENDIF
- 
+
       ** Write the footer
- 
+
      C                   WRITE     FOOTAU
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -726,9 +727,9 @@
       *                                                               *
       *  Calls: AOMEMSU0                                              *
       *****************************************************************
- 
+
      C     UPDNSSHD      BEGSR
- 
+
      C**********         MOVEL     A7CUST        W0CNUM                                      BG12067
      C**********         MOVEL     A7CYCD        W0CUCD                                      BG12067
      C**********         MOVEL     A7ACCD        W0ACCD                                      BG12067
@@ -772,9 +773,9 @@
      C                   IF        ATYP = 'R'                                                BG12067
                                                                                              BG12067
      C                   EVAL      W0RETL = ACNO                                             BG12067
- 
+
       ** To update the account shadow balances file
- 
+
      C                   CALL(E)   'AOMEMSU0'
      C                   PARM      *BLANKS       @RTCD
      C**********         PARM      *ZEROS        W0RETL                                      BG12067
@@ -788,9 +789,9 @@
      C                   PARM                    W0VDAT
      C                   PARM                    W0AMT
      C                   PARM      *BLANKS       W0FTOV
- 
+
       ** Call ends in error
- 
+
      C                   IF        %ERROR OR @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = '*CALL'
@@ -802,7 +803,7 @@
      C                   ENDIF
      C                   ENDIF                                                               BG12067
      C                   ENDIF                                                               BG12067
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -815,11 +816,11 @@
       *                                                               *
       *  Calls: AOSVALR0,AONARRR0,AORSACW0.                           *
       *****************************************************************
- 
+
      C     UPDRLMVT      BEGSR
- 
+
       ** Set fields of the Data Structure RSACMT
- 
+
      C**********         MOVEL     AF7CUSN       RSCUSN                                     BUG14597
      C                   MOVEL     AF7CCYD       RSCCYD
      C**********         MOVEL     AF7SNC        RSASNC                                     BUG14597
@@ -830,10 +831,10 @@
      C                   MOVEL     A7CUST        RSCUSN                                     BUG14597
      C                   MOVEL     A7ACSN        RSASNC                                     BUG14597
      C                   MOVEL     A7BRCD        RSBRCA                                     BUG14597
- 
+
       ** To get the system value(ConsumerBankingNarr) for the
       ** Narrative Code
- 
+
      C**********         CALL      'AOSVALR0'                                               BUG14589
      C**********         PARM      *BLANKS       @RTCD                                      BUG14589
      C**********         PARM      SVALKK        SVALK1                                     BUG14589
@@ -868,21 +869,21 @@
      C**********         OUT       LDA                                                      BUG14589
      C**********         EXSR      *PSSR                                                    BUG14589
      C**********         ENDIF                                                              BUG14589
- 
+
      C**********         MOVEL     SVAL11        RSNRTC                                     BUG14589
      C                   MOVEL     SVALCB        RSNRTC                                     BUG14589
      C                   MOVEL     SVALCB        SVAL11                                     BUG14589
- 
+
       ** To get the Narrative Description from the MIDAS file
- 
+
      C                   CALL      'AONARRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    SVAL11
      C     SDNARR        PARM      *BLANKS       DSFDY
- 
+
       ** Call ends in error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDNARRPD'
@@ -892,23 +893,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     ALDON         RSNRTD
      C                   MOVEL     '999998'      RSTNMR
      C                   MOVEL     AF7MVAM       RSMVAM
      C                   MOVEL     AF7DORC       RSDORC
      C                   MOVEL     A7ACCD        RSACDE
      C                   MOVEL     AF7FUN        RSFUND
- 
+
       ** To update the real time account movements file
- 
+
      C                   CALL      'AORSACW0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    MAMT
      C                   PARM      RSACMT        DSSDY
- 
+
       ** Call ends in error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = '*CALL'
@@ -918,7 +919,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -930,52 +931,52 @@
       *                                                               *
       *  Calls: AOPRONU0                                              *
       *****************************************************************
- 
+
      C     PROJAM        BEGSR
- 
+
      C                   EXSR      SRNOST
      C                   IF        @RTCD <> *BLANKS                                          BG12067
      C                   GOTO      NOUPD                                                     BG12067
      C                   ENDIF                                                               BG12067
- 
+
       ** Convert Value date(YYMMDD) to Midas Run Number
- 
+
      C                   MOVE      AF7VUDT       WDATEA
      C                   EVAL      WDATEA = %SUBST(WDATEA:3:4)
      C                             +%SUBST(WDATEA:1:2)
      C                   MOVE      WDATEA        DATEIN
      C                   MOVE      'M'           BJDFIN
- 
+
       ** Convert The Date to Midas Day Number
- 
+
      C                   EXSR      CVTDATE
- 
+
      C                   MOVE      DAYNOOUT      VALDATE
- 
+
       ** Convert Posting date(YYMMDD) to Midas Run Number
- 
+
      C                   MOVE      AF7PTDT       WDATEA
      C                   EVAL      WDATEA = %SUBST(WDATEA:3:4)
      C                             + %SUBST(WDATEA:1:2)
      C                   MOVE      WDATEA        DATEIN
      C                   MOVE      'M'           BJDFIN
- 
+
       ** Convert The Date to Midas Day Number
- 
+
      C                   EXSR      CVTDATE
      C                   MOVE      DAYNOOUT      PSTDATE
- 
+
       ** IF DORC is 1 (Credit)
- 
+
      C                   IF        AF7DORC = 1
      C                   EVAL      MAMT = (AF7MVAM * -1)
      C                   ELSE
- 
+
       ** IF DORC is 0 (Debit)
      C                   IF        AF7DORC = 0
      C                   EVAL      MAMT = AF7MVAM
      C                   ELSE
- 
+
       ** Error
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'AF710LF'
@@ -987,17 +988,17 @@
      C
      C                   ENDIF
      C                   ENDIF
- 
+
       ** To update the on-line Nostro balances file
- 
+
      C                   CALL(E)   'AOPRONU0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    WNSTCD
      C                   PARM                    VALDATE
      C                   PARM                    MAMT
- 
+
       ** Call ends in error
- 
+
      C                   IF        %ERROR OR @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = '*CALL'
@@ -1007,25 +1008,25 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EXSR      UPDNSSHD
- 
+
      C                   EXSR      UPDRLMVT
- 
+
       ** Delete Record from The AF710LF
- 
+
      C**********         DELETE    AF710LF                                                 BUG14826A
- 
+
      C                   IF        LSEQNO > NOLRSN
- 
+
       ** Update Projected Nostro Accounts Control file
- 
+
      C                   EXSR      SRUPDLM
      C                   ENDIF
- 
+
       ** Commit all the changes
      C                   COMMIT
- 
+
      C     NOUPD         TAG                                                                 BG12067
      C                   ENDSR
       *****************************************************************
@@ -1044,32 +1045,32 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPGM
      C                   EVAL      DBMOD = PSProcMOD
      C                   OUT       LDA
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
- 
+
       ** Rollback all changes
- 
+
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
- 
+
       ** Output Audit report and End Program
- 
+
      C                   EXSR      SRAUDT
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

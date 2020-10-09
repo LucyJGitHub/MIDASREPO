@@ -21,6 +21,7 @@
      F*****************************************************************
      F*                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040971 - GL0600 dumps due to account code set to zero.     *
       *             Call AOACODR0 with DSSFY instead as SDACODPD      *

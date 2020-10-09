@@ -78,6 +78,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -156,7 +157,7 @@
       *           structure to use as APIs.                           *
       *                                                               *
       *****************************************************************
- 
+
      F/COPY WNCPYSRC,IRSIRSSF01
       *****************************************************************
       ** +--------------------------------------+
@@ -176,43 +177,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FRA/IRS standard declares
      D***/COPY IRCPYSRC,STDDECLARE                                                          BUG11376
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** Array of error message IDs from IRC date schedule screens
      D @ErrAR          S                   DIM(10)
      D                                     LIKE(#MsgID)
@@ -234,36 +235,36 @@
      D WFldNamErr      S                   DIM(ArrayMax)                        CIR005
      D                                     LIKE(FldNameArr)                     CIR005
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrDlFilFmt    E DS                  EXTNAME(DEALSDG)
      D  WkCrAutDet          2201   2212                                                       CIR008
       * Current Deal in File Format
- 
+
      D CrDlXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
       ** Current Deal Extension in File Format                                                CLE025
                                                                                               CLE025
      D CrDlScnFmt    E DS                  EXTNAME(IRSIRSPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(IRVSIRSPD)
       * New Deal in File Format
      D  RSREC                716    784
      D  RSPAY                785   1343
      D  RSIRS               1345   1992
      D  WkNwAutDet          2132   2143                                                       CIR008
- 
+
      D NwDlXFilFmt   E DS                  EXTNAME(IRVXSIRPD)                                 CLE025
       * New Deal Extension in File Format                                                     CLE025
                                                                                               CLE025
      D NwDlScnFmt    E DS                  EXTNAME(IRSIRSPD)
       * New Deal in Screen Format
- 
+
      D*BsDayConv*************208    271                                                CIR005 218641
       ***Single*Currency*Business*Day*Conventions*layout                               CIR005 218641
      D**RCcy1****************242    271                                                CIR005 218641
@@ -282,35 +283,35 @@
                                                                                 CIR005
      D IRESIRS       E DS                  EXTNAME(IRESIRSPD)
       * Error indicators
- 
- 
+
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D ##RSIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
      D**FLIRS******************1    648                                         CSW097
      D  FLIRS                  1    650                                         CSW097
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##RSIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(IRSSEXPD)                    CAP004
       * IR SIRS Extra Data - File (D/B) format                                  CAP004
- 
+
      D @SETIN          DS
       ** Receive / Pay Settlement Method & Nostro
      D  @@RSCY                 1      3
@@ -323,7 +324,7 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
- 
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -333,20 +334,20 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
       *
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
      D  SCLCD        E                     EXTFLD(LCD)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
       ************                                                                     179510 200400
@@ -357,18 +358,18 @@
                                                                                               CGL014
      D DLUFBO        E DS                  EXTNAME(DLUFBOPD) DTAARA                           CGL014
       ** Up-front and Buy-out Details                                                         CGL014
- 
+
      D/COPY QWINDSRC,IRSIRSGDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Screen/Server input flag (passed to IRSIRSUPD to indicate              CAP004
       ** source of transaction.                                                 CAP004
      D ScreenInpt      S              1A                                        CAP004
@@ -409,14 +410,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,IRSIRSS009
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -498,10 +499,10 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,IRSIRSS010
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -3212,10 +3213,10 @@
      C                   EXSR      IFKS@M
      C                   EVAL      PLCcy = BJLCCY                               CIR005
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,IRSIRSS011
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

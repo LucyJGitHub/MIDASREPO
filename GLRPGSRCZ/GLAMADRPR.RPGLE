@@ -90,6 +90,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -180,21 +181,21 @@
       ** +--------------------------------------+
      F***ZATRNERRL0IF   E           K DISK    INFSR(*PSSR)                                    CGL029
      FZATRNERRL2IF   E           K DISK    INFSR(*PSSR)                                       CGL029
- 
+
      F***GLIAMADL0 IF   E           K DISK    INFSR(*PSSR)                                    CGL029
      FGLIAMADL2 IF   E           K DISK    INFSR(*PSSR)                                       CGL029
      F                                     RENAME(GLIAMADD0 : GLIAMADX0)
      F***GLIAMADL1 UF   E           K DISK    INFSR(*PSSR)                                    CGL029
      FGLIAMADL3 UF   E           K DISK    INFSR(*PSSR)                                       CGL029
      F                                     COMMIT
- 
+
      FTABTBRE   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(R_)
                                                                                               CSC011
      F***APILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                      CSC011 CGL029
      FAPILOGL1  UF   E           K DISK    INFSR(*PSSR) USROPN                                CGL029
      F                                     COMMIT                                             CSC011
- 
+
      FGLIAMLX1L0UF   E           K DISK    USROPN                                             CER001
      F                                     RENAME(GLIAMLXD6:RTVIDX1)                          CER001
      F                                     PREFIX(L:1)                                        CER001
@@ -210,7 +211,7 @@
       *                                                                                      LLN022A
      FGLIAMADY0 UF   E           K DISK    INFSR(*PSSR)                                      LLN022A
      F                                     RENAME(GLIAMADD0 : IAMADD0)                       LLN022A
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -222,52 +223,52 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
- 
+
+
       * Current Account in File Format
      D CrAcFilFmt    E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(C_)
@@ -293,8 +294,8 @@
      D                                     PREFIX(CD_)                                        CSD101
      D CAPWFilFmt1             1    146                                                       CSD101
      D CAPWFilFmtEx          214    223                                                       CSD101
- 
- 
+
+
       * (Current) Account in Screen Format - Master Details
      D CurAcMast     E DS                  EXTNAME(GLAMADPD)
      D                                     PREFIX(@)
@@ -310,8 +311,8 @@
       * (Current) Account in Screen Format - Other Details
      D CurAcOthe     E DS                  EXTNAME(GLAMODPD)
      D                                     PREFIX(@)
- 
- 
+
+
       * New Account in File Format
      D NwAcFilFmt    E DS                  EXTNAME(GLVAMADPD)
       * New Extn. Account layout -> ACCNTBXC
@@ -334,7 +335,7 @@
      D***NAPWFilFmtEx          101    110                                              CGL029 CSD101
      D NAPWFilFmt1             1    146                                                       CSD101
      D NAPWFilFmtEx          214    223                                                       CSD101
- 
+
      D P1RIFilFmt    E DS                  EXTNAME(GLVAMRIPD)                                 CGL029
      D                                     PREFIX(P1)                                         CGL029
      D P1RIFilFmt1             1    144                                                       CGL029
@@ -350,7 +351,7 @@
      D P1PWFilFmt1             1     33                                                       CGL029
      D P1PWFilFmtEx          101    110                                                       CGL029
       * Account in File Format (Extension File)                                               CGL029
- 
+
       * New Account in Screen Format - Master Details
      D NewAcMast     E DS                  EXTNAME(GLAMADPD)
       * New Account in Screen Format - Debit Details
@@ -361,8 +362,8 @@
      D NewAcComm     E DS                  EXTNAME(GLAMCOPD)
       * New Account in Screen Format - Other Details
      D NewAcOthe     E DS                  EXTNAME(GLAMODPD)
- 
- 
+
+
       * (Previous) Account in Screen Format - Master Details
      D PrvAcMast     E DS                  EXTNAME(GLAMADPD)
      D                                     PREFIX(@P)
@@ -378,15 +379,15 @@
       * (Previous) Account in Screen Format - Other Details
      D PrvAcOthe     E DS                  EXTNAME(GLAMODPD)
      D                                     PREFIX(@P)
- 
- 
+
+
       * Error indicators
      D OKAcMast      E DS                  EXTNAME(GLEAMADPD)
      D OKAcDebi      E DS                  EXTNAME(GLEAMDIPD)
      D OKAcCred      E DS                  EXTNAME(GLEAMCIPD)
      D OKAcComm      E DS                  EXTNAME(GLEAMCOPD)
      D OKAcOthe      E DS                  EXTNAME(GLEAMODPD)
- 
+
      D RETABLE       E DS                  EXTNAME(TABTBRE)
      D                                     PREFIX(R_)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
@@ -396,30 +397,30 @@
                                                                                               CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
       * External DS for Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
@@ -429,10 +430,10 @@
       *                                                                                       CER001
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D InfData       E DS                  EXTNAME(GLAMIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
       ** GL (AMAD) Extra Data - File (D/B) format                                             CAP086
@@ -448,7 +449,7 @@
      DSVAL1            DS           200                                                       CSD012
      DSVAL11                   1      1                                                       CSD012
                                                                                               CSD012
- 
+
      D/COPY QWINDSRC,GLAMADDTA                                                                189774
                                                                                               189774
      D DATALUX         DS          1024                                                       CER001
@@ -485,14 +486,14 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
@@ -506,35 +507,35 @@
      D FormatS         S             10A   INZ('GLACCNPD')                                    186718
      D*FormatO*********S*************10A   INZ('GLAMODPD')                                    186718
      D FormatO         S             10A   INZ('GLACCNPD')                                    186718
- 
+
      D FieldM          S             10A   INZ('DDACTN')
      D FieldD          S             10A   INZ('DDDRIB')
      D FieldC          S             10A   INZ('DDCRIB')
      D FieldS          S             10A   INZ('DDCEXA')
      D FieldO          S             10A   INZ('DDMINB')
- 
+
      D FieldNo         S              5P 0
- 
+
      D FldOffsetM      S              5P 0
      D FldOffsetD      S              5P 0
      D FldOffsetC      S              5P 0
      D FldOffsetS      S              5P 0
      D FldOffsetO      S              5P 0
- 
+
       ** End of fields for getting starting field number
       ** -------------------------------------------------------------------
- 
+
       ** Field to tell whether Commissions are to be displayed
      D CommDisp        S              1A
- 
- 
+
+
       ** Fields to hold Account Key to stop it from being overwritten
      D     ##DDCUSN    S                   LIKE(DDCUSN)
      D     ##DDCCY     S                   LIKE(DDCCY)
      D     ##DDACOD    S                   LIKE(DDACOD)
      D     ##DDACSQ    S                   LIKE(DDACSQ)
      D     ##DDBRCA    S                   LIKE(DDBRCA)
- 
+
                                                                                 CAP011
       ** Flags to indicate whether substitution is required in                  CAP011
       ** each of the various parts the transaction                              CAP011
@@ -543,7 +544,7 @@
      D RepCred         S              1A   inz('N')                             CAP011
      D RepComm         S              1A   inz('N')                             CAP011
      D RepOthe         S              1A   inz('N')                             CAP011
- 
+
       ** Fields defined for Enhancement CSC011                                                CSC011
      D CSC011          S              1A                                                      CSC011
      D CAP086          S              1A                                                      CAP086
@@ -597,14 +598,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,GLAMADR012
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -629,7 +630,7 @@
      C                   SETON                                        U7U8                    CSC022
      C                   ENDIF                                                                CSC022
      C                   END
- 
+
       * Clear externally-defined data structures to ensure that
       * packed decimal fields are correctly initialised; this is to
       * prevent decimal data errors in called procedures.
@@ -655,12 +656,12 @@
      C                   CLEAR                   NAPWFilFmt
      C                   EXSR      SRClear                                                    CGL029
      C                   ENDIF                                                                247342
- 
+
       /COPY WNCPYSRC,GLAMADR002
      C                   IF        ULX606 = 'Y'                                               CER001
      C                   CLEAR                   CrAcFilFmt                                   CER001
      C                   ENDIF                                                                CER001
- 
+
       * DO SCREEN: BROWSE INVALID ACCOUNTS
      C     @SCRN         IFEQ      'I'
      C                   EXSR      SCRN@I
@@ -755,10 +756,10 @@
      C                   ENDIF
       *
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,GLAMADR013
- 
+
       /EJECT                                                                                  CGL029
       *****************************************************************                       CGL029
       *                                                               *                       CGL029
@@ -1031,7 +1032,7 @@
      C                   MOVEL(P)  DDACSQ        ##DDACSQ
      C                   MOVEL(P)  DDBRCA        ##DDBRCA
      C     ZATRNKX0      CHAIN     GLIAMADX0                          99
- 
+
      C*****C_CNUM        IFNE      *ZERO                                                      CSD027
      C     C_CNUM        IFNE      *BLANKS                                                    CSD027
      C     C_CCY         ANDNE     *BLANK
@@ -1185,7 +1186,7 @@
       * SNDM@M - SEND A MESSAGE TO MAIN DETAILS SCREEN
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this Account,
@@ -1218,13 +1219,13 @@
      C     *IN99         DOWEQ     '0'
      C                   IF        ULX606 = 'N' or                                            CER001
      C                             (ULX606 = 'Y' and ABFIELDID <= FldOffsetM)                 CER001
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatM
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1237,7 +1238,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C                   ENDIF                                                                CER001
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
@@ -1251,7 +1252,7 @@
       * SNDM@D - SEND A MESSAGE TO DEBIT DETAILS SCREEN
       *****************************************************************
      C     SNDM@D        BEGSR
- 
+
      C                   Z-ADD     Idx           E
       *
       ** If there are fundamental errors in this Account,
@@ -1281,13 +1282,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatD
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1300,7 +1301,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
       *
@@ -1313,7 +1314,7 @@
       * SNDM@C - SEND A MESSAGE TO CREDIT DETAILS SCREEN
       *****************************************************************
      C     SNDM@C        BEGSR
- 
+
      C                   Z-ADD     Idx           E
       *
       ** If there are fundamental errors in this Account,
@@ -1343,13 +1344,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatC
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1362,7 +1363,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   ENDDO
       *
@@ -1375,7 +1376,7 @@
       * SNDM@S - SEND A MESSAGE TO COMMISSIONS DETAILS SCREEN
       *****************************************************************
      C     SNDM@S        BEGSR
- 
+
      C                   Z-ADD     Idx           E
       *
       ** If there are fundamental errors in this Account,
@@ -1405,13 +1406,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatS
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1424,7 +1425,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   ENDDO
       *
@@ -1437,7 +1438,7 @@
       * SNDM@O - SEND A MESSAGE TO OTHER DETAILS SCREEN
       *****************************************************************
      C     SNDM@O        BEGSR
- 
+
      C                   Z-ADD     Idx           E
       *
       ** If there are fundamental errors in this Account,
@@ -1467,13 +1468,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatO
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1486,7 +1487,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   ENDDO
       *
@@ -1526,9 +1527,9 @@
      C                   END
       *
       *----------------------------------------------------------------
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcMast     PrvAcMast
       *
      C
@@ -1675,24 +1676,24 @@
      C                   CALLB     'GLAMAD1VL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Screen Format
      C                   PARM                    WFMT              2
- 
+
       ** ICD
      C                   PARM                    RETABLE
- 
+
       ** Account Primary Details
      C                   PARM                    NewAcMast
                                                                                 180721
       ** Front Office Id                                                        180721
      C                   PARM                    FOTRID                         180721
- 
+
       * OUTPUTS :
- 
+
       ** Account Master Details OK inds
      C                   PARM                    OKAcMast
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1707,10 +1708,10 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_MVAL
- 
+
       * Full GL Account Number
      C                   PARM      *BLANK        WGLKEY           18
- 
+
       * IBAN Sequence                                                           CFT004
      C                   PARM                    DDIBSQ            3            CFT004
       * Valid Account layout (DS) from/to caller
@@ -1797,9 +1798,9 @@
       * SCRN@D - PROCESS DEBIT SCREEN
       *****************************************************************
      C     SCRN@D        BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewAcDebi     PrvAcDebi
       *                                                                         CAP014
       * If no changes are allowed, protect (but still validate)                 CAP014
@@ -1959,9 +1960,9 @@
       * SCRN@C - PROCESS CREDIT DETAILS SCREEN
       *****************************************************************
      C     SCRN@C        BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewAcCred     PrvAcCred
       *
       ** WRITE/READ DISPLAY - Credit Details Screen
@@ -2060,10 +2061,10 @@
      C                   PARM                    FOTRID                         180721
       *
       * OUTPUTS :
- 
+
       ** Account Credit details OK inds
      C                   PARM                    OKAcCred
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2076,7 +2077,7 @@
      C                   PARM                    WMsgDtaArr                                 AR847249
       ** Array index (3P0) from/to caller                                                   AR847249
      C                   PARM                    WIdx                                       AR847249
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NARIFilFmt
@@ -2117,7 +2118,7 @@
       * SCRN@S - PROCESS COMMISSION DETAILS SCREEN
       *****************************************************************
      C     SCRN@S        BEGSR
- 
+
       * IF INSERT                                                               176842
       * DO DEFAULTING FOR CHARGES & COMMISSIONS SCREEN                          176842
       * (Only do this once per transaction unless details on other screens      176842
@@ -2136,9 +2137,9 @@
      C**********         MOVEL     DDACCN        #DACCN           18                   176842 222427
      C**********         END                                                           176842 222427
      C                   END                                                    176842
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewAcComm     PrvAcComm
       *
       ** WRITE/READ DISPLAY - Commissions Details Screen
@@ -2256,7 +2257,7 @@
      C                   PARM                    DDCEXG1           8            176842
      C                   PARM                    DDDRMG1                        CDE002
      C                   PARM                    DDCRMG1                        CDE002
- 
+
      C                   ENDSR                                                  176842
       *****************************************************************
       /EJECT                                                                    176842
@@ -2303,7 +2304,7 @@
       ** Account Commissions Details
      C                   PARM                    NewAcMast
      C                   PARM                    NewAcComm
- 
+
       ** ICD
      C                   PARM                    RETABLE
       *
@@ -2311,10 +2312,10 @@
      C                   PARM                    CDE002                         CDE002
                                                                                 CDE002
       * OUTPUTS :
- 
+
       ** Account Credit details OK inds
      C                   PARM                    OKAcComm
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2328,7 +2329,7 @@
      C                   PARM                    WMsgDtaArr                                   208221
       * Array index (3P0) from/to caller                                                      208221
      C                   PARM                    WIdx              3 0                        208221
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NACOFilFmt
       *
@@ -2361,9 +2362,9 @@
       * SCRN@O - PROCESS OTHER DETAILS SCREEN
       *****************************************************************
      C     SCRN@O        BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewAcOthe     PrvAcOthe
       *
       ** WRITE/READ DISPLAY - Other Details Screen
@@ -2453,17 +2454,17 @@
      C                   PARM                    NewAcOthe
       *
       * OUTPUTS :
- 
+
       ** Account Credit details OK inds
      C                   PARM                    OKAcOthe
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller                       CER047
      C                   PARM                    WFldNamArr                                   CER047
      C                   PARM                    WMsgIDArr                                    CER047
@@ -2834,7 +2835,7 @@
      C                   PARM                    DDCEXG1           8
      C                   PARM                    DDDRMG1          12            CDE002
      C                   PARM                    DDCRMG1          12            CDE002
- 
+
       *
       * Update 'Current' TRADE with TRADE in Screen Format
       *
@@ -3748,14 +3749,14 @@
      C     ZATRNKX0      KLIST
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
- 
+
      C*****KAPILOGL0     KLIST                                                         CSC011 CGL029
      C     KAPILOGL1     KLIST                                                                CGL029
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                            CSC011 CGL029
      C                   KFLD                    KFrntAscID                                   CGL029
      C                   KFLD                    KTimeStamp                                   CSC011
- 
+
      C     K@KEY1        KLIST                                                                CER001
      C                   KFLD                    L1TMST                                       CER001
      C                   KFLD                    L1FOTR                                       CER001
@@ -3775,11 +3776,11 @@
      C                   PARM                    FormatM
      C                   PARM                    FieldM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetM = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the action code field; the debit
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -3788,11 +3789,11 @@
      C                   PARM                    FormatD
      C                   PARM                    FieldD
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetD = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the action code field; the credit
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -3801,11 +3802,11 @@
      C                   PARM                    FormatC
      C                   PARM                    FieldC
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetC = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the action code field; the commissions
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -3814,11 +3815,11 @@
      C                   PARM                    FormatS
      C                   PARM                    FieldS
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetS = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the action code field; the Other details
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -3827,7 +3828,7 @@
      C                   PARM                    FormatO
      C                   PARM                    FieldO
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetO = FieldNo - 1
      C                   ENDIF
@@ -3838,10 +3839,10 @@
       *
       ** Disable Roll Function Keys
      C                   MOVEL     'N'           @EIN25            1
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,GLAMADR014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

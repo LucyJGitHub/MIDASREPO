@@ -62,6 +62,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *

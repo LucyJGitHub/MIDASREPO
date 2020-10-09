@@ -9,9 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,7 +24,6 @@
 /*-------------------------------------------------------------------*/
 /*********************************************************************/
 /*                                                                   */
-/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       BUG5456 - Fixes for Commitment Control Changes (CSC022)     */
@@ -35,19 +33,19 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTCD &ACCD &OPTN)
- 
+
               DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
               DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
 /*  Program Input Parameters                                         */
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
 /**********  DCL        VAR(&ACCD) TYPE(*CHAR) LEN(18) */                                 /*CGL029*/
              DCL        VAR(&ACCD) TYPE(*CHAR) LEN(24)                                    /*CGL029*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(1)
- 
- 
+
+
 /*  Parameters of Account Details Access object AOACCTR0             */
- 
+
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&POPTN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PRETL) TYPE(*CHAR) LEN(10)
@@ -71,19 +69,19 @@
 /************DCL        VAR(&WSTR) TYPE(*DEC) LEN(2 0) VALUE(1) */                /*CSC022 BUG5456*/
              DCL        VAR(&WSTR) TYPE(*DEC) LEN(3 0) VALUE(1)                          /*BUG5456*/
              DCL        VAR(&WJOBCTR) TYPE(*DEC) LEN(3 0) VALUE(1)                       /*BUG5456*/
- 
+
 /* Declare variable CGL018 - flag for switchable feature             */
- 
+
              DCL        VAR(&CGL018) TYPE(*LGL) VALUE('0')
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
@@ -121,17 +119,17 @@
              ELSE       CMD(IF COND(&PRTN *NE '*NRF') THEN(GOTO +
                           CMDLBL(ABNOR)))                                                 /*CSC022*/
                                                                                           /*CSC022*/
- 
+
 /* Check for switchable featore CGL018                               */
- 
+
              CALL       PGM(AOSARDR0) +
                         PARM(&RTCD +
                              '*VERIFY' +
                              'CGL018' +
                              &PAOFMT)
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
@@ -142,7 +140,7 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Return Code Check */
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CGL018) VALUE('1'))
@@ -154,7 +152,7 @@
              ENDDO
              IF         COND(&CGL018 *EQ '0') THEN( +
                 GOTO CMDLBL(ENDPGM))
- 
+
 /* Prepare parameters for Account Details Access object AOACCTR0    */
              CHGVAR     VAR(&PBRCA) VALUE(%SUBSTRING(&ACCD 1 3))
              CHGVAR     VAR(&PCNUM) VALUE(%SUBSTRING(&ACCD 4 6))
@@ -170,7 +168,7 @@
                           VAR(&PRETL) VALUE(%SUBSTRING(&PAOFMT 190 +
                           10)))
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
@@ -181,33 +179,33 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CHGJOB     SWS(XXXXXX00)
              CALLPRC    PRC(GL001240) PARM(&PRTCD &OPTN &PBRCA +
                           &PCNUM &PCUCD &PACCD &PACSQ &PRETL)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC001240 ended abnormally - see job +
                           log') TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 /* Abnormal termination - interactive job */
- 
+
              IF         COND(&JOBTYPE = '1') THEN(DO)
- 
+
 /* (Set up messages for Midas information screen and call */
 /* appropriate module program to display screen)          */
- 
+
              ENDDO
- 
+
  ENDPGM:     ENDPGM

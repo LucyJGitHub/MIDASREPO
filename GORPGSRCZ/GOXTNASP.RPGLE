@@ -33,6 +33,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -50,14 +51,14 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEAMLL  IF   E           K DISK    INFSR(*PSSR)
      FMMDENSL0  IF   E           K DISK    INFSR(*PSSR)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -66,14 +67,14 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD**             179    198                                                       CGL029
      D  E_SETD               185    210
- 
- 
+
+
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
      D DEALDD        E DS                  EXTNAME(DEALSDD)
      D  DEALRONS     E                     EXTFLD(RONSQQ)                                     CGL029
      D  DEALPONS     E                     EXTFLD(PONSQQ)                                     CGL029
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D**W#PAYA**               3     14                                                       CGL029
@@ -90,72 +91,72 @@
      D  W#RECA                 3     20                                                       CGL029
      D  W#RECB                21     23                                                       CGL029
      D  W#RSCY                24     26                                                       CGL029
- 
- 
+
+
       ** DEFINE FIELDS FOR ZDATE10
      D                 DS
      D ZWDTIN                  1      8S 0
      D  ZWYYYY                 1      4S 0
      D  ZWMTH                  5      6S 0
      D  ZWDAY                  7      8S 0
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0          * RUN DATE
      C                   PARM                    I#DNWD            5 0          * DATE OF NXT W DAY
      C                   PARM                    I#PCOD            5 0          * PROJECTION DATE
      C                   PARM                    I#TVDI            1
      C                   PARM                    MMDENB
      C                   PARM                    DEALDD
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -170,11 +171,11 @@
      C                   PARM                    MMDENB
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C                   PARM                    DealDate          5 0            Midas day no.
      C                   PARM                    ValueDate         5 0            Midas day no.
      C                   PARM                    MaturityDate      5 0            Midas day no.
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETNASP'
      C                   EXSR      *PSSR
@@ -187,11 +188,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5

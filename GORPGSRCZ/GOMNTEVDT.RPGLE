@@ -26,67 +26,68 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** E V E N T    D E T A I L S
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
- 
+
      D/COPY GOCPYSRC,GOEVDARRS
- 
+
       **
       **   ENTRY PARAMETER LIST
       **
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
- 
+
       * INPUTS
      C                   PARM                    I#MODE           10
      C                   PARM                    I#TYPE            2
- 
+
       * Event
      C                   PARM                    E_EVNT
- 
+
       * Event Data Array
      C                   PARM                    #arevdt_WK
- 
+
       * Last/next Period?
      C                   PARM                    #LN_PERIOD        1
- 
+
       * OUTPUTS
       * Last Date
       * Next Date
      C                   PARM                    #LASTDT           5 0
      C                   PARM                    #NEXTDT           5 0
- 
- 
+
+
      C                   SELECT
- 
+
       * LOG EVENT DATE
- 
+
      C     I#MODE        WHENEQ    '*LOGEVDT'
- 
+
      C                   EXSR      LOGEVDT
- 
+
       * GET LAST AND NEXT EVENT DATES
- 
+
      C     I#MODE        WHENEQ    '*GETLNEVDT'
- 
+
      C                   EXSR      GETLNEVDT
- 
+
      C                   ENDSL
- 
+
       * RETURN
- 
+
      C                   RETURN
- 
+
       *********************************************************************
       /SPACE 5
       *********************************************************************
@@ -105,7 +106,7 @@
      C     *ZERO         LOOKUP    #_WKdat(#I)                            99     *
      C     *IN99         IFEQ      '1'
      C                   Z-ADD     E_PRDT        #_WKdat(#I)
- 
+
      C                   SELECT
      C     I#TYPE        WHENEQ    'IP'
      C                   MOVE      E_INTA        #_WKdta(#I)
@@ -116,7 +117,7 @@
      C     I#TYPE        WHENEQ    'MP'
      C                   MOVE      E_CFCT        #_WKdta(#I)
      C                   ENDSL
- 
+
      C                   ELSE
      C                   MOVEL     '*ARFULL'     I#RTCD
      C                   ENDIF
@@ -140,11 +141,11 @@
       * IF PROCESSING DATE IS A DATE IN THE ARRAY:
       *
      C     *IN99         IFEQ      '1'
- 
+
       * IF LAST PERIOD WANTED
- 
+
      C     #LN_PERIOD    IFEQ      'L'
- 
+
       *   NEXT DATE IS THIS DATE
       *   LAST DATE IS DATE PRIOR TO THAT
      C                   Z-ADD     E_PRDT        #NEXTDT
@@ -154,11 +155,11 @@
      C                   ELSE
      C                   Z-ADD     E_PRDT        #LASTDT
      C                   ENDIF
- 
+
       * IF NEXT PERIOD WANTED
- 
+
      C                   ELSE
- 
+
       *   LAST DATE IS THIS DATE
       *   NEXT DATE IS DATE AFTER THAT
      C                   Z-ADD     E_PRDT        #LASTDT
@@ -169,13 +170,13 @@
      C                   ELSE
      C                   Z-ADD     E_PRDT        #NEXTDT
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * ELSE FIND DATE AFTER PROCESSING DATE:
       *   NEXT DATE IS THIS DATE
       *   LAST DATE IS DATE PRIOR TO THAT
- 
+
      C                   ELSE
      C                   Z-ADD     1             #I
      C     E_PRDT        LOOKUP    #_WKdat(#I)                        99         *

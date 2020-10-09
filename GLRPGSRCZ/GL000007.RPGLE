@@ -20,6 +20,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -72,7 +73,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -81,7 +82,7 @@
       ** | Named constants                      |
       ** | ===============                      |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
       ** | ==========================           |
@@ -89,7 +90,7 @@
       *
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       * External DS for Branch Details
- 
+
      DACNT             DS           491
      D #CNUM                   2      7
      D #CCY                    8     10
@@ -103,12 +104,12 @@
       *
       ** Data structure for AOIBANR9
       *
- 
+
       ** +--------------------------------------+
       ** | Declared variables                   |
       ** | ==================                   |
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D @RTCD           S              7
      D @OPTN           S              7
@@ -122,7 +123,7 @@
       ** | executed at program activation.                                |
       ** |                                                                |
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -138,17 +139,17 @@
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
- 
+
      C     1             SETLL     ACCNTAB
      C                   READ      ACCNTAB
      C                   DOW       NOT %EOF(ACCNTAB)
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    BRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     BRCA          DBKEY
@@ -162,7 +163,7 @@
       *
      C                   IF        ATYP = 'R' AND RECI = 'D' AND
      C                             A8GENM = '5' AND IBAN = *BLANKS
- 
+
      C                   MOVE      CNUM          #CNUM
      C                   MOVE      CCY           #CCY
      C                   MOVE      ACOD          #ACOD
@@ -172,21 +173,21 @@
      C                   MOVE      ACNO          #ACNO
      C                   MOVE      IBAN          #IBAN
      C                   MOVE      IBSEQN        #IBSQ
- 
+
      C                   EXSR      GENIBAN
       *
      C                   MOVE      #IBAN         IBAN
- 
+
      C                   UPDATE    ACCNTABF
- 
+
      C                   ENDIF
- 
+
      C                   READ      ACCNTAB
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -199,11 +200,11 @@
       *                                                               *
       *****************************************************************
      C     GENIBAN       BEGSR
- 
+
      C                   CALL      'AOIBANR6'
      C                   PARM      *BLANKS       @RTCD
      C     ACNT          PARM      ACNT          DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     ACNT          DBKEY
@@ -212,15 +213,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANK
- 
+
      C                   MOVE      'Y'           @RUN
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
@@ -228,7 +229,7 @@
      C                   DUMP
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -40,25 +41,25 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXGL0  IF A E           K DISK    INFSR(*PSSR)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
      D DSSDY         E DS                  EXTNAME(DSSDY)                                   BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -67,38 +68,38 @@
       * OUTPUTS
      C                   PARM                    T_TRAP
      C                   PARM                    T_PRRN            5 0
- 
+
       * DETERMINE IF TRANSACTION TYPE/SUB TYPE TO BE EXTRACTED
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'GL'          I#MOD
      C                   MOVEL     ACOD          I#TRTP
      C                   MOVE      ACOD          I#TRST                                      BUG2312
- 
+
      C                   EXSR      DET_TSEX
       * No extract
      C     W#RTCD        IFEQ      '*NOEXT*'
      C                   MOVEL     '*NOEXT*'     I#RTCD
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -172,9 +173,9 @@
       * DETERMINE IF TRANSACTION TYPE/SUB TYPE TO BE EXTRACTED
       *****************************************************************
      C     DET_TSEX      BEGSR
- 
+
       /COPY GOCPYSRC,GODETTSEX
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -199,14 +200,14 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
- 
+
+
       * key list
- 
+
      C     GPUTXGK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_CNUM

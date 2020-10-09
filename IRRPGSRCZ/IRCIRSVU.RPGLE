@@ -107,6 +107,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRCIRSR to ensure buffer is       *

@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054870 - Management Limit Exposure for contingent account  *
       *             is incorrect                                      *
       *  MD052663 - Database error: Not authorized to object CREABCQ  *

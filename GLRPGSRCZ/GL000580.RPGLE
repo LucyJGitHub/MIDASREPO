@@ -29,6 +29,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CGL114A - CCR Interest Capitalisation                        *
@@ -76,7 +77,7 @@
      F                                     INFDS(SPOOLU)
      F                                     USROPN
      F                                     OFLIND(*IN82)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -97,56 +98,56 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Definition: First DS for Access Programs, Short Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Definition: First DS for Access Programs, Long Data Structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Definition: Bank Details Accessed Via Access Program.
- 
+
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
       ** Definition: Account Master Details Accessed Via Access Program.
- 
+
       ** File Information Data Structure for GL000580P1
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for GL000580AU
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       ** Entry Parameter
      D PRSeq           S              5
- 
+
       ** Access Object Parameters
      D PRtcd           S              7
      D POptn           S              7
@@ -156,19 +157,19 @@
      D PAccd           S             10
      D PAcsq           S              2
      D PBrca           S              3
- 
+
       ** Other fields
      D CPY2@           S             80
      D RqdLn1          S              3  0
      D DifLn1          S              4  0
      D WACCTFR         S              1
- 
+
       ** Parameters for ZSFILE
      D SEnty           S              3
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -179,33 +180,33 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Generate report validation
- 
+
      C                   IF        WACCTFR <> 'Y' OR
      C                             BDDICR  <> 'Y'
      C                   EXSR      SrAudit
      C                   ENDIF
- 
+
       ** Set file pointer to first record and do initial read.
- 
+
      C     *LOVAL        SETLL     GLSLACL8
      C                   READ      GLSLACL8
- 
+
      C                   IF        NOT %EOF(GLSLACL8)
      C                   EXSR      SrRCFP1
      C                   ELSE
      C                   EXSR      SrAudit
      C                   ENDIF
- 
+
      C                   DOW       NOT %EOF(GLSLACL8)
- 
+
       ** Retrieve Account details
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
@@ -216,7 +217,7 @@
      C                   PARM      SLFACS        PAcsq
      C                   PARM      SLFBRC        PBrca
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey  = PRetl+PCnum+PCucd+PAccd+PAcsq+PBrca
@@ -225,21 +226,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Output the details if Account type is Retail
- 
+
      C                   IF        ATYP = 'R' AND
      C                             LTAC = 0
      C                   EXSR      SrPrint
       ** Record count.
      C                   EVAL      NOREC = NOREC + 1
      C                   ENDIF
- 
+
      C                   READ      GLSLACL8
      C                   ENDDO
- 
+
      C                   EXSR      SrEnd
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -252,7 +253,7 @@
       *                                                               *
       *****************************************************************
      C     SrPrint       BEGSR
- 
+
      C                   EVAL      R1RFNO = SLRFNO
      C                   EVAL      R1FBRC = SLFBRC
      C                   EVAL      R1FCNU = SLFCNU
@@ -268,19 +269,19 @@
      C                   EVAL      R1TCNU = SLTCNU
      C                   EVAL      R1TACO = SLTACO
      C                   EVAL      R1TACS = SLTACS
- 
+
      C                   EVAL      RqdLn1 = 1
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** For initial print of details or overflow has occured, print the Header
       ** of the report.
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -294,36 +295,36 @@
       *                                                               *
       *****************************************************************
      C     SrAudit       BEGSR
- 
+
      C                   WRITE     HEADAU
      C                   WRITE     CONTROL
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** No records printed.
- 
+
      C                   IF        NOREC = 0
      C                   WRITE     NODTLS
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Close printer files.
- 
+
      C                   IF        %OPEN(GL000580AU)
      C                   CLOSE     GL000580AU
      C                   ENDIF
- 
+
      C                   IF        %OPEN(GL000580P1)
      C                   CLOSE     GL000580P1
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -337,28 +338,28 @@
       *                                                               *
       *****************************************************************
      C     SrRCFAU       BEGSR
- 
+
      C                   IF        NOT %OPEN(GL000580AU)
      C                   OPEN      GL000580AU
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PRSeq
      C                   PARM      *BLANKS       SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *BLANK        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSerr = 'Y'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -373,30 +374,30 @@
       *                                                               *
       *****************************************************************
      C     SrRCFP1       BEGSR
- 
+
      C                   IF        NOT %OPEN(GL000580P1)
      C                   OPEN      GL000580P1
- 
+
      C                   WRITE     HEADP1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PRSeq
      C                   PARM      *BLANKS       SEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *BLANK        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSerr = 'Y'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -411,25 +412,25 @@
       *                                                               *
       *****************************************************************
      C     SrEnd         BEGSR
- 
+
       ** Print detail report only if there are records to print.
- 
+
      C                   IF        %OPEN(GL000580P1)
      C                   EVAL      RqdLn1 = 4
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out report trailer.
- 
+
      C                   WRITE     TRAILP1
      C                   ENDIF
- 
+
       ** Write audit report.
- 
+
      C                   EXSR      SrAudit
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -443,29 +444,29 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRSeq
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Retrieve ACCTFR Data
- 
+
      C     *DTAARA       DEFINE    ACCTFR        WACCTFR
      C                   IN        WACCTFR
- 
+
      C                   EXSR      SrRCFAU
- 
+
       ** Retrieve Account Transfer Batch I/F Defaults
- 
+
      C                   READ      GLIPDFPD
- 
+
      C                   IF        %EOF(GLIPDFPD)
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey  = 'No REC'
@@ -474,14 +475,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve Bank Details.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey  = POptn
@@ -490,16 +491,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PRTLN1 = 0
      C                   EVAL      NOREC = 0
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -517,7 +518,7 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   EVAL      *INU7 = *ON
@@ -525,10 +526,10 @@
      C                   DUMP
      C                   EXSR      SrAudit
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

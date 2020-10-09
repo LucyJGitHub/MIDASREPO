@@ -39,6 +39,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL120 - GL COB Components Task Split                        *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

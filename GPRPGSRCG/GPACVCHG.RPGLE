@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BG3906 - (reopen) If T_UNUM is 9, set to 0 not 10.           *
@@ -52,38 +53,38 @@
      F                                     COMMIT
      FGPTRAPJ1  IF   E           K DISK    INFSR(*PSSR)
      F***GPZONEPD  IF   E             DISK    INFSR(*PSSR)                                    CLE024
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
      D/COPY GPCPYSRCG,GP_D_SPEC
       ** Data Area Giving Installation Control Details
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D  ConstHead1     C                   CONST('<?xml version="1.0" encoding')
      D  ConstHead2     C                   CONST('="UTF-8"?><calcManagerEvent ')
      D  ConstHead3     C                   CONST('xmlns="http://www.misys.com/')
@@ -94,19 +95,19 @@
      D  ConstDet2      C                   CONST('</paramName><paramValue>')
      D  ConstDet3      C                   CONST('</paramValue></eventParam>')
      D  ConstFoot      C                   CONST('</calcManagerEvent>')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D WQCMD           S            100    DIM(1)  CTDATA PERRCD(1)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PZONE           S             10
      D PFLUPD          S             10
      D PKEY            S             30
@@ -125,55 +126,55 @@
      D DTQLIB          S             10
      D DTQNAM          S             10
      D CHGTYPE         S              2
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PZONE
      C                   PARM                    PFLUPD
      C                   PARM                    PKEY
- 
+
       ** Key lists
- 
+
      C     KGVACA        KLIST
      C                   KFLD                    KZONE
      C                   KFLD                    KFLUPD
      C                   KFLD                    KKEY
- 
+
      C     KGTRAP        KLIST
      C                   KFLD                    KZONE
      C                   KFLD                    KSESN
- 
+
       ** Start commitment control
- 
+
      C                   MOVEA     WQCMD(1)      PCOMMAND
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCOMMAND
      C                   PARM      100           PLENGTH
- 
+
      C                   OPEN      GPTRAPL0
- 
+
      C                   EVAL      WRKID = *ZEROS
- 
+
       ** If record read from FWDRTFE or SDYLDRPD
- 
+
      C                   IF        PFLUPD = 'FWDRTFE' or PFLUPD = 'SDYLDRPD'
      C                             OR PFLUPD = 'SDCURRPD'                                     CLE024
- 
+
      C     PZONE         SETLL     GPTRAPJ1
      C     PZONE         READE     GPTRAPJ1
- 
+
      C                   DOW       NOT %EOF(GPTRAPJ1)
- 
+
      C                   IF        PKEY = P_CCY
- 
+
       ** Update file
- 
+
      C                   IF        T_ID <> WRKID
      C     T_ID          CHAIN     GOTRAPN0                           15
      C                   IF        *IN15 = *OFF
@@ -189,29 +190,29 @@
      C**********         EXSR      SRSNDXML                                                   CLE024
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WRKID = T_ID
      C                   ENDIF
- 
+
      C     PZONE         READE     GPTRAPJ1
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** If record read from PRICED
- 
+
      C                   IF        PFLUPD = 'PRICED'
- 
+
      C                   EVAL      KZONE = PZONE
      C                   EVAL      KSESN = PKEY
- 
+
      C     KGTRAP        SETLL     GPTRAPL2
      C     KGTRAP        READE     GPTRAPL2
- 
+
      C                   DOW       NOT %EOF(GPTRAPL2)
- 
+
       ** Update file
- 
+
      C                   IF        T_ID <> WRKID
      C     T_ID          CHAIN     GOTRAPN0                           15
      C                   IF        *IN15 = *OFF
@@ -223,33 +224,33 @@
      C**********         EXSR      SRSNDXML                                                   CLE024
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WRKID = T_ID
      C     KGTRAP        READE     GPTRAPL2
      C                   ENDDO
- 
+
      C                   ENDIF
- 
- 
+
+
       ** If record read from SDCURRPD
- 
+
      C************       IF        PFLUPD = 'SDCURRPD'                                        BG3906
      C                   IF        PFLUPD = 'SDCURRPDML'                                      BG3906
      C                   EXSR      SRSNDXML
- 
+
      C                   ENDIF
       ** Delete matching records
- 
+
      C                   EVAL      KZONE = PZONE
      C                   EVAL      KFLUPD = PFLUPD
      C                   IF        PFLUPD = 'SDCURRPDML'                                      BG3906
      C                   EVAL      KFLUPD = 'SDCURRPD'                                        BG3906
      C                   ENDIF                                                                BG3906
      C                   EVAL      KKEY = PKEY
- 
+
      C     KGVACA        SETLL     GPVACAL0
      C     KGVACA        READE     GPVACAL0
- 
+
      C                   DOW       NOT %EOF(GPVACAL0)
      C                   IF        KFLUPD <> 'SDCURRPD'                                       BG3906
      C                             OR KFLUPD = 'SDCURRPD'                                     BG3906
@@ -258,10 +259,10 @@
      C                   ENDIF                                                                BG3906
      C     KGVACA        READE     GPVACAL0
      C                   ENDDO
- 
+
      C                   CLOSE     GPTRAPL0
      C                   RETURN
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -269,9 +270,9 @@
       * SRSNDXML - Send Data to Data Queue                                *
       *                                                                   *
       *********************************************************************
- 
+
      C     SRSNDXML      BEGSR
- 
+
      C**********         IF        PFLUPD <> 'SDCURRPD'                                       CLE024
       ***Determine*change*type****************************************                        CLE024
       **********                                                                              CLE024
@@ -344,44 +345,44 @@
       **********                                                                              CLE024
      C**********         ENDIF                                                                CLE024
      C**********         ENDIF                                                                CLE024
- 
+
      C                   IF        PFLUPD =  'SDCURRPD'
      C                   EVAL      BUFFRS = ConstHead1 + ConstHead2 + ConstHead3
      C                                      + ConstHead4 + ConstHead5 +
      C                                      'RECALCULATE_ZONE' + ConstHead6 +
      C                                      ConstDet1 + 'ZONE' + ConstDet2 +
      C                                      %TRIM(PZONE) + ConstDet3 + ConstFoot
- 
+
       ** Send buffer to the data queue
- 
+
      C                   IF        BUFFRS <> *BLANKS
       *
       * Retrieve system id of global layer
      C                   CALL      'GPRTVLIB'
      C                   PARM                    System            2
      C                   EVAL      DTQLIB = System + 'GPLIB'
- 
+
      C                   CALL      'QSNDDTAQ'                           9999
      C                   PARM      'GPMLTRNNFY'  DTQNAM
      C                   PARM                    DTQLIB
      C                   PARM      500           DTQLEN
      C                   PARM                    BUFFRS
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /SPACE 5
       *****************************************************************
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -73,6 +73,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *

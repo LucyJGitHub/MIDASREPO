@@ -34,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR645170 - GL: Accounts is not present on file ACCNTAB but   *
       *             present in the Java Listview. Add commit to file  *
@@ -55,7 +56,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGPGLCUSLL2UF A E           K DISK    INFSR(*PSSR) COMMIT(D_COM)
 O    F                                     USROPN
      FGPAMADL1  UF A E           K DISK    PREFIX(H_) INFSR(*PSSR)
@@ -64,12 +65,12 @@ O
      FGZSDCUSTL1IF   E           K DISK    INFSR(*PSSR)                                       CER043
                                                                                               CER043
 O    D G_GPCUSTPD    E DS                  EXTNAME(GPCUSTPD)
- 
+
      D KBRCD           S              3A                                                      CER043
      D KCUST           S              6A                                                      CER043
                                                                                               CER043
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -98,19 +99,19 @@ O     * 'After'
      C                   EVAL      WCGZONE = CGZONE
      C                   EVAL      WCGCUST = CGCUST
 O    C                   CLEAR                   GPGLCUSL
- 
+
       * Move GPCUSTPD fields into layout for GPGLCUSLL2
      C                   EXSR      SET_OUT_CUST
- 
+
 O     * Update
 O    C                   UPDATE    GPGLCUSL
      C                   EXSR      UPDAMAD                                                  BUG16715
      C     CUGCUS        READE     GPGLCUSL                               98
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       * Set output fields for a local customer
       ********************************************************************
@@ -189,7 +190,7 @@ O    C                   UPDATE    GPGLCUSL
      C                   EVAL      CGCSID = BBCSID                                            CSF011
                                                                                               CER043
      C                   ENDIF                                                                CER043
- 
+
      C                   ENDSR
                                                                                            BUG16715
      C/SPACE 5                                                                             BUG16715
@@ -243,11 +244,11 @@ O    C                   OPEN      GPGLCUSLL2
      C     K_GPAMADL1    KLIST                                                              BUG16715
      C                   KFLD                    WCGBRCD                                    BUG16715
      C                   KFLD                    WCGCUST                                    BUG16715
- 
+
      C     *LIKE         DEFINE    CGBRCD        WCGBRCD
      C     *LIKE         DEFINE    CGZONE        WCGZONE
      C     *LIKE         DEFINE    CGCUST        WCGCUST
- 
+
      C     KLCUST        KLIST                                                                CER043
      C                   KFLD                    KBRCD                                        CER043
      C                   KFLD                    KCUST                                        CER043
@@ -259,15 +260,15 @@ O    C                   OPEN      GPGLCUSLL2
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -282,10 +283,10 @@ O    C                   OPEN      GPGLCUSLL2
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

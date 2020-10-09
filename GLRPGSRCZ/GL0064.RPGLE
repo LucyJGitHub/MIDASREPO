@@ -34,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -69,7 +70,7 @@
      FSTMTAH    O    E             DISK    USROPN
      FSTMTZX    O    E             DISK    USROPN
      FCGSTMTPD  O    E             DISK    USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -88,10 +89,10 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -100,7 +101,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -116,26 +117,26 @@
      D     pACSQ              23     24
      D     AccKey              4     24
       ** DS for Account Key
- 
+
      D##UDCR         E DS                  EXTNAME(CGUDCRPD)
       ** External DS for incomplete reference
       *
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC_)
       ** Retail Account Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Module File Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for Access Object Programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for Access Object Programs
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -157,14 +158,14 @@
       ** +----------------------------------------------------------------+
       ** Retrieve account details (Today's Cleared Balance)
      C                   EXSR      SRAcctDtls
- 
+
       ** Calculate Forward Balance
      C                   EXSR      SRCarrdFwd
- 
+
      C                   If        ##COPD <> 'Y'
       ** Output record to STMTHH, STMTAH, and STMTZX
      C                   EXSR      SRWriteSTMT
- 
+
      C                   Else
       ** Output record to CGSTMTPD
      C                   EXSR      SRWriteCGST
@@ -186,7 +187,7 @@
       /EJECT
       *****************************************************************
      C     SRAcctDtls    BegSr
- 
+
       ** Get the account details
      C                   Call      'AOACCTR0'
      C                   Parm      *Blanks       @Rtcd             7
@@ -207,15 +208,15 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SRCarrdFwd    BegSr
- 
+
      C                   Eval      TotalPost = *Zero
- 
+
       ** Accumulate Postings from after Start Date
      C                   Move      pBRCA         K@BRCA
      C                   Move      pCNUM         K@CNUM
@@ -232,29 +233,29 @@
      C                             CCY  = K@CCY      AND
      C                             ACOD = K@ACOD     AND
      C                             ACSQ = K@ACSQ
- 
+
      C                   If        DRCR = 1
      C                   Eval      TotalPost = TotalPost - PSTA
      C                   Else
      C                   Eval      TotalPost = TotalPost + PSTA
      C                   Endif
- 
+
      C                   Read      APOSTL4
      C                   EndDo
- 
+
       ** Carried Forward = Cleared Balance - Total Postings
      C**********         Eval      CarriedFwd = AC_CLBL - TotalPost                          BUG4844
      C                   Eval      CarriedFwd = AC_LDBL - TotalPost                          BUG4844
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SRWriteSTMT   BegSr
- 
+
      C                   Move      'H'           RECI
      C                   Write     STMTHHF
- 
+
      C                   Move      'D'           RECI
      C                   Move      AC_ATYP       ATYP
      C                   Move      pBRCA         BRCA
@@ -274,22 +275,22 @@
      C                   BITOFF    '1'           GLBT                                        BUG5808
      C                   BITON     '2'           GLBT                                        BUG5808
      C                   Write     STMTAHF
- 
+
      C                   Move      'T'           RECI
      C                   Z-Add     3             NORE1
      C                   Write     STMTZXF
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT
       *****************************************************************
      C     SRWriteCGST   BegSr
- 
+
      C                   MoveL     'STATEMENT'   SDPTYP
      C                   MoveL     'NORMAL'      SDPSTP
      C                   Move      pEndDate      SDUNXD
      C                   Move      'D'           SDRECI
- 
+
      C                   Move      'D'           RECI
      C                   Move      AC_ATYP       ATYP
      C                   Move      pBRCA         BRCA
@@ -305,7 +306,7 @@
      C                   Move      AC_YTDB       YTDB
      C                   BITON     '12'          GLBT
      C                   Write     @STMTPD
- 
+
      C                   EndSr
       *****************************************************************
       /EJECT
@@ -318,9 +319,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    FullAcctKey      24
      C                   PARM                    pStartDate        5 0
@@ -338,7 +339,7 @@
      C                   Parm      *Blanks       @Rtcd             7
      C                   Parm      '*FIRST  '    @Optn             7
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
      C     @RTCD         IfNE      *BLANKS
      C     *LOCK         In        LDA
      C                   Eval      DBPGM  =  PSProcPgm
@@ -348,13 +349,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Access MIDAS Modules details via access program
      C                   Call      'AOMMODR0'
      C                   Parm      *BLANK        @Rtcd
      C                   Parm      '*FIRST '     @Optn
      C     SDMMOD        Parm      SDMMOD        DSFDY
- 
+
      C     @RTCD         IfNE      *BLANKS
      C     *LOCK         In        LDA
      C                   Eval      DBPGM  =  PSProcPgm
@@ -364,7 +365,7 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** define KLIST for APOSTL4
      C     KeyAPOST      KLIST
      C                   KFLD                    K@BRCA            3
@@ -375,7 +376,7 @@
      C                   KFLD                    K@ACSQ            2 0
      C                   KFLD                    K@PSTD            5 0
      C                   KFLD                    K@DRCR            1 0
- 
+
      C                   Move      'N'           ##COPD            1
      C                   If        BGN1ST = 'Y'
      C                   MoveL     pCNUM         ##CUST
@@ -418,7 +419,7 @@
      C                   Open      STMTZX
      C**********         Endif                                                               BUG6708
      C**********         Endif                                                               BUG6708
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -13,7 +13,7 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050190           Date 04Apr18               *      
+      *  Prev Amend No. MD050190           Date 04Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD020772           Date 30Sep13               *
       *                 MD020656A          Date 30Sep13               *
@@ -38,8 +38,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD050190 - Low performance of GOCACTS components.            *
-      *           - Conditioned processing of ABC file GPACNTTD.      *      
+      *           - Conditioned processing of ABC file GPACNTTD.      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020772 - V_ABC SQL incorrect decimal places                *
       *           - Recompiled due to changes done in GPACNTTD.       *
@@ -60,7 +61,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZACCNTL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZACCNTAB O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -82,9 +83,9 @@ O    D G_ACCNTAB     E DS                  EXTNAME(GZACCNTAB ) PREFIX(G_)
      D CmdArray        S             80A   DIM(2) CTDATA PERRCD(1)                         MD020656A
      D Cmd             S             80A                                                   MD020656A
      D Len             S             15P 5                                                 MD020656A
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -186,7 +187,7 @@ O    C                   ENDIF
      C                   ENDIF                                                              MD020656
      C                   ENDIF                                                              MD050190
 O    C                   ENDIF
- 
+
      C                   IF        I#BFAF = 'B' OR Upd_Amad_Flg = 'Y'                         CGP017
       *                                                                                       CGP017
 O     * Generate GPAMADPD                                                                   BUG16715
@@ -206,7 +207,7 @@ O    C                   PARM                    I#ZONE                         
      C                   ENDIF                                                              MD050190
       *                                                                                       CGP017
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -244,7 +245,7 @@ O    C                   KFLD                    CCY
 O    C                   KFLD                    ACOD
 O    C                   KFLD                    ACSQ
 O    C                   KFLD                    BRCA
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -285,15 +286,15 @@ O    C                   KFLD                    BRCA
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -308,11 +309,11 @@ O    C                   KFLD                    BRCA
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
 ** CmdArray                                                                                MD020656A

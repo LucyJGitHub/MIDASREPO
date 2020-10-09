@@ -25,13 +25,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZSDBSRTL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSDBSRTPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -40,9 +41,9 @@ O    F                                     USROPN
 O
 O    D Z_SDBSRTPD    E DS                  EXTNAME(GZSDBSRTPD)
 O    D G_SDBSRTPD    E DS                  EXTNAME(GZSDBSRTPD) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -87,9 +88,9 @@ O    C                   ELSE
 O    C                   WRITE     W_SDBSRTD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -109,7 +110,7 @@ O    C     K_GZSDBSRTL1  KLIST
 O    C                   KFLD                    BAZONE
 O    C                   KFLD                    BACYCD
 O    C                   KFLD                    BABSRC
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -117,15 +118,15 @@ O    C                   KFLD                    BABSRC
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -140,10 +141,10 @@ O    C                   KFLD                    BABSRC
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

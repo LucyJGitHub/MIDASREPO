@@ -92,6 +92,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246 and MD025083                  *

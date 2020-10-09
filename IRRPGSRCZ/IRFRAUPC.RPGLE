@@ -45,6 +45,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  245219 - Missing deals in extension file DLDLDGQD (done from *
@@ -79,7 +80,7 @@
      F                                     RENAME(IRVFRAD0:IRVFRAD1)
      FIRVEFRAPD O    E             DISK
      F                                     RENAME(IRVFRAD0:IRVFRAERR)
- 
+
                                                                                               245219
       ** Midas DL IRS Deals Extension Details.                                                245219
      FDLDEALL5  UF A E           K DISK    INFSR(*PSSR)                                       245219
@@ -87,7 +88,7 @@
      F                                     IGNORE(DLDLDCD0)                                   245219
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,IRFRAUP008
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -106,19 +107,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -130,12 +131,12 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in FRA API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID LOAN & DEPOSIT
      D IRVFRA        E DS                  EXTNAME(IRVFRAPD)
- 
+
      D IRFRAUPC        DS             1    DTAARA(IRFRAUPC)
                                                                                               CIR008
       ** External DS for SAR Details                                                          CIR008
@@ -144,7 +145,7 @@
                                                                                               CIR008
       ** First DS for access programs, short data structure                                   CIR008
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CIR008
- 
+
      D Object          S             10A   INZ('IRFRAUPC')
      D LockObj         S             10A   INZ('IRFRALCK')                                    201589
      D Lib             S             10A   INZ('*LIBL')
@@ -163,28 +164,28 @@
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
      D WkActn          S              1A                                                      245219
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Switchable Feature Parameter                                                         CIR008
      D CIR008          S              1A                                                      CIR008
      D CAP056          S              1A                                                      CAP056
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,IRFRAUP009
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -193,7 +194,7 @@
      C*****************************************************************
                                                                                 CAP004
       /COPY WNCPYSRC,IRFRAUP001                                                 CAP004
- 
+
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APFRADTQ'                        CAP006
                                                                                 CAP006
@@ -232,17 +233,17 @@
      C                   PARM                    Return
                                                                                 CAP004
       /COPY WNCPYSRC,IRFRAUP002                                                 CAP004
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     IRVFRAPD
- 
+
       ** READ VALID LOANS & DEPOSITS
      C                   READ      IRVFRAD0                               99    *
      C     *IN99         DOWEQ     '0'
                                                                                 CAP004
       /COPY WNCPYSRC,IRFRAUP003                                                 CAP004
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
@@ -250,7 +251,7 @@
      C                   EVAL      ARRprLocn  = FRREPA
                                                                                 CAP004
       /COPY WNCPYSRC,IRFRAUP004                                                 CAP004
- 
+
       ** DL DATABASE UPDATE
      C     @@RTCD        IFNE      '*RECUPD'                                    CAP006
      C     FRCHTP        IFEQ      'I'
@@ -270,7 +271,7 @@
       /COPY WNCPYSRC,IRFRAUP005                                                 CAP004
      C                   END                                                    CAP006
      C                   END
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
@@ -306,9 +307,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID FORWARD RATE AGREEMENTS
      C                   READ      IRVFRAD0                               99    *
      C                   END
@@ -325,13 +326,13 @@
      C                   END
                                                                                 CAP004
       /COPY WNCPYSRC,IRFRAUP007                                                 CAP004
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,IRFRAUP010
- 
+
       *****************************************************************                       245219
       /EJECT                                                                                  245219
       *****************************************************************                       245219
@@ -433,24 +434,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -460,10 +461,10 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,IRFRAUP011
- 
+
      C                   ENDSR
      C****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE                                                                 CIR008

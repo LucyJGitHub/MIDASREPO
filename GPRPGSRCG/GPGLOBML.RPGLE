@@ -43,6 +43,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  262796 - READE not functioning.  Changed to CHAIN            *
       *         - Applied for MD054701.                               *
       *  MD046248 - Finastra Rebranding                               *

@@ -31,6 +31,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  AR645170 - GL: Accounts is not present on file ACCNTAB but   *
@@ -48,7 +49,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZSDACODL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSDACODPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -59,11 +60,11 @@ O    F                                     USROPN
 O
 O    D Z_SDACODPD    E DS                  EXTNAME(GZSDACODPD)
 O    D G_SDACODPD    E DS                  EXTNAME(GZSDACODPD) PREFIX(G_)
- 
+
      D SVA5NARR        S                   LIKE(G_A5NARR)                                     CGP017
      D SVA5ACSC        S                   LIKE(G_A5ACSC)                                     CGP017
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -115,7 +116,7 @@ O    C                   ELSE
 O    C                   WRITE     W_SDACODD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
                                                                                             BUG16715
      C/SPACE 5                                                                              BUG16715
@@ -163,7 +164,7 @@ O    C                   ENDIF
      C                   ENDDO                                                              BUG16715
                                                                                             BUG16715
      C                   ENDSR                                                              BUG16715
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -183,7 +184,7 @@ O
 O    C     K_GZSDACODL1  KLIST
 O    C                   KFLD                    A5ZONE
 O    C                   KFLD                    A5ACCD
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -191,15 +192,15 @@ O    C                   KFLD                    A5ACCD
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -214,10 +215,10 @@ O    C                   KFLD                    A5ACCD
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

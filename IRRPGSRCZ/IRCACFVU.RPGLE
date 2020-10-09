@@ -86,6 +86,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *

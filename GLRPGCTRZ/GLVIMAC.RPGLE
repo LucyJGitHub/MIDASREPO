@@ -56,6 +56,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055515 - Batch Item allows customer as blank to be         *
       *             accepted. Amend GLVIMAC to ensure that JE Items   *
       *             with blank Customer will not be allowed even when *

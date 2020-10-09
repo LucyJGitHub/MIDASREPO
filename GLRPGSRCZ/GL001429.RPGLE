@@ -35,6 +35,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -45,22 +46,22 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FGLNWACL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas GL Network Accounts - Update
       *
- 
+
      FGLNW94L0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas GL Network Accounts MT94x Details - Update
       *
- 
+
      FGLGS94L0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas GL MT941/2 Generation Schedules - Update
       *
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -76,12 +77,12 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -93,45 +94,45 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
      D DsBANK        E DS                  EXTNAME(SDBANKPD)
       ** Midas SD Bank details ICD
       *
- 
+
      D DsACCNT       E DS                  EXTNAME(ACCNTAB) PREFIX(AC_)
       ** Account details record format data structure
       *
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS (long) used as output parameter for Access Objects
       *
- 
+
       ** Declared variables
       ** ------------------
       *
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Key lists
       *
      C     KNetWkAc      KLIST
@@ -142,53 +143,53 @@
      C                   KFLD                    NAACOD
      C                   KFLD                    NAACSQ
      C                   KFLD                    NANATY
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** First read of GLNWACL0
       *
      C     *LOVAL        SETLL     GLNWACD0
      C                   READ      GLNWACD0                               99
- 
+
       ** Main loop on GLNWACL0 until end of file
       *  =======================================
  B1  C                   DOW       NOT *IN99
- 
+
       ** Verify the validity of the GL account
       *
      C                   EXSR      $RtvACCNT
- 
+
       ** Delete the network account if the GL account doesn't exist or is closed
       *
  B2  C                   IF        AccOK = 'N'
      C                   EXSR      $HldGS94
      C                   EXSR      $DelNW94
      C                   EXSR      $DelNWAC
- 
+
       ** Commit the changes done for the current network account
       *
      C                   COMMIT
  E2  C                   ENDIF
- 
+
       ** Rollback to avoid further unwanted changes and read next network account
       *
      C                   ROLBK
      C     KNetWkAc      SETGT     GLNWACD0
      C                   READ      GLNWACD0                               99
  E1  C                   ENDDO
- 
+
       ** Exit module
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $RtvACCNT : Retrieve an account record                                 *
       *------------------------------------------------------------------------*
@@ -197,7 +198,7 @@
      C                   MOVEL     NACNUM        @CNUM
      C                   MOVEL     NAACOD        @ACCD
      C                   MOVEL     NAACSQ        @ACSQ
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *Blanks       @RtCd
      C                   PARM      '*KEY'        @Optn
@@ -209,7 +210,7 @@
      C                   PARM                    @ACSQ             2
      C                   PARM      NABRCH        @BRCA             3
      C     DsACCNT       PARM                    DSSDY
- 
+
      C                   IF        @RtCd <> *Blanks AND @RtCd <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'ACCNTAB'                           *=======*
@@ -221,7 +222,7 @@
      C                   OUT       LDA                                          *=======*
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RtCd = '*NRF' OR AC_ACST = 'C'
      C                   MOVE      'N'           AccOK             1
      C                   ELSE
@@ -229,7 +230,7 @@
      C                   ENDIF
       *    ----------    ------
      C     @RtvACCNT     ENDSR
- 
+
       *========================================================================*
       * $HldGS94  : Holds all the generation schedules of a network account    *
       *------------------------------------------------------------------------*
@@ -237,16 +238,16 @@
       *    ----------    ------
      C     KNetWkAc      SETLL     GLGS94D0
      C     KNetWkAc      READE     GLGS94D0                               99
- 
+
      C                   DOW       NOT *IN99
      C                   EVAL      GSSTUS = 'HELD'
      C                   UPDATE    GLGS94D0
- 
+
      C     KNetWkAc      READE     GLGS94D0                               99
      C                   ENDDO
       *    ----------    ------
      C     @HldGS94      ENDSR
- 
+
       *========================================================================*
       * $DelNW94  : logically delete the MT94x details of a network account    *
       *------------------------------------------------------------------------*
@@ -254,19 +255,19 @@
       *    ----------    ------
      C     KNetWkAc      SETLL     GLNW94D0
      C     KNetWkAc      READE     GLNW94D0                               99
- 
+
      C                   DOW       NOT *IN99
      C                   EVAL      N4RECI = '*'
      C                   EVAL      N4LCDT = BJDNWD
      C                   EVAL      N4CHTP = 'D'
      C                   EVAL      N4USER = PSUser
      C                   UPDATE    GLNW94D0
- 
+
      C     KNetWkAc      READE     GLNW94D0                               99
      C                   ENDDO
       *    ----------    ------
      C     @DelNW94      ENDSR
- 
+
       *========================================================================*
       * $DelNWAC  : Logically delete a network account                         *
       *------------------------------------------------------------------------*
@@ -279,7 +280,7 @@
      C                   UPDATE    GLNWACD0
       *    ----------    ------
      C     @DelNWAC      ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -289,7 +290,7 @@
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -298,14 +299,14 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Retrieve the Bank's ICD to get the next working day number
       *
      C                   CALLB     'AOBANKR0'
      C                   PARM      *Blanks       @RtCd
      C                   PARM      '*KEY'        @Optn
      C     DsBANK        PARM                    DSSDY
- 
+
      C                   IF        @RtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBANKPD'                          *=======*
@@ -319,7 +320,7 @@
      C                   ENDIF
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
@@ -327,16 +328,16 @@
       *    ----------    ------
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'                           99
- 
+
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

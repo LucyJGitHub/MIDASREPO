@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR991378           Date 18Jun12               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 02Aug12               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -57,6 +58,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
+      *           The validation of Total being paid and Loan         *
+      *           Outstanding Principal should consider events being  *
+      *           Modelled by LEM (Loan Events Modeller)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -492,7 +497,7 @@
       ***  Flags to indicate whether substitution is required in
       ***  each of the various parts the transaction
      D RepScrn         S              1A   inz('N')
- 
+
       ** Parameters for ZASETINDFT
      D BQISDA          S              4
      D BQAGTY          S              6
@@ -551,6 +556,7 @@
      C                   MOVEL     Trans5001     TransIncom
      C                   MOVEL     InfData500    InfData                                      CAP086
      C                   MOVEL     Extdata500    Extdata
+     C                   MOVEL     DDSTAT        WDDSTAT          16                        AR991378
       *
       ***  Generate a timestamp for this transaction
       *
@@ -628,7 +634,7 @@
      C                   MOVEL     PRcvParm      S_Rec                                       BUG8529
      C                   MOVEL     PPayParm      S_Pay                                       BUG8529
      C                   EndIf                                                               BUG8529
- 
+
      C                   EXSR      DftSettmts
      C                   EXSR      ValidateSt
       *
@@ -691,7 +697,7 @@
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
@@ -750,7 +756,7 @@
       /COPY WNCPYSRC,LERPSCC015
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -870,7 +876,7 @@
      C                   IF        GHSUBS <> *blank
      C     GHSUBS        SCAN      TransIncom    SubForTRNN        2 0
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     '*FRONT'      ModeofOp
      C                   ELSE
@@ -975,13 +981,13 @@
       *                                                               *
       *****************************************************************
      C     DftSettmts    BEGSR
- 
+
       * If ANY of the Settlements fields have been entered, bypass this
       * routine.
       * Otherwise, use modules which will use Standard Settlement
       * Instructions to apply defaults.
      C                   IF        S_Rec = *blank AND S_Pay = *blank
- 
+
      C                   CALLB     'ZASETINDFT'
       ** Output
       ** Calling function type
@@ -1013,7 +1019,7 @@
                                                                                               CSD095
       ** Branch                                                                               CSD095
      C                   PARM      *BLANK        BlankBRCA                                    CSD095
- 
+
       ** Return
       ** Defaulted Payment Settlement Instruction in file format
      C                   PARM                    L_Pay
@@ -1021,26 +1027,26 @@
      C                   PARM                    L_Rec
       ** Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    L_FRI
- 
+
       ** The defaulted instructions are in file format, but the
       ** Settlements validation requires that they are in the input format.
       ** Therefore run them through a conversion module.
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    L_Pay
      C                   PARM                    L_Rec
      C                   PARM                    L_FRI
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    S_Pay
      C                   PARM                    S_Rec
      C                   PARM                    S_FRI
      C                   PARM      DDCURR        #TRCCY                                      CSF011A
      C                   PARM      DDCURR        #TPCCY                                      CSF011A
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1346,6 +1352,7 @@
       *                                                                                      BUG4960
       ***  Branch in CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN      3                         BUG4960
+     C                   PARM                    WDDSTAT                                    AR991378
       *
      C                   ENDSR
       *****************************************************************

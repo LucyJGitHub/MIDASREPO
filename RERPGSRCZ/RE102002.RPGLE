@@ -453,7 +453,8 @@
      C                   Movel     PSNDR         WSNDR
       *
       *  Retrieve Posting Value date
-     C                   Eval      WVDAT = %subst(PH30 : 25 : 6)
+     C**********         Eval      WVDAT = %subst(PH30 : 25 : 6)                           AR928996A
+     C                   Eval      WVDAT = %subst(PH30 : 31 : 6)                           AR928996A
      C                   Eval      WVDATD = DD + MM + YY
      C                   Movel     WVDATD        DateIn
      C                   Callb     'ZDATE1'                             90
@@ -474,7 +475,8 @@
      C                   Z-add     DayNoOut      @VALD
       *
       *  Retrieve Posting Currency
-     C                   Eval      WCCY  = %subst(P32B : 25 : 3)
+     C**********         Eval      WCCY  = %subst(P32B : 25 : 3)                           AR928996A
+     C                   Eval      WCCY  = %subst(P32B : 31 : 3)                           AR928996A
      C     WCCY          Chain     SDCURRLD                           60
      C                   If        *IN60 = *ON
      C     *LOCK         IN        LDA
@@ -486,7 +488,8 @@
      C                   Endif
 
       *  Retrieve Posting Amount
-     C                   Eval      WPSTA = %subst(P32B : 28 : 15)
+     C**********         Eval      WPSTA = %subst(P32B : 28 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(P32B : 34 : 15)                          AR928996A
      C                   Eval      X=%scan(',' : WPSTA)
       *
      C                   If        X > 0

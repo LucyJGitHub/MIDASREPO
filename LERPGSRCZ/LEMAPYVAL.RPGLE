@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR947411           Date 29Mar12               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039009           Date 26May16               *
       *                 MD038714           Date 09May16               *
       *                 MD037915           Date 24Feb16               *
@@ -65,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR947411  (Loan Events Modeller) - Replace warning message   *
+      *            LEM0050 by blocking error LEM0250.                 *
+      *            (CLE068 - CCR3)                                    *      
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039009 - Validation Changes on Auto-Settle indicator       *
@@ -1245,6 +1249,14 @@
       *
      C                   If        PrincAmntNum > WrkOutPrinc
       *
+      * If CLE068 is ON, replace LEM0050 by blocking error LEM0250                       AR947411
+     C                   If        CLE068 = 'Y'                                          AR947411
+     C                   MOVE      'N'           DDRPRIOK                                AR947411
+     C                   ADD       1             Idx                                     AR947411
+     C                   Eval      FldNameArr(Idx) = 'DDRPRI'                            AR947411
+     C                   MOVEL     'LEM0250'     MsgIdArr(Idx)                           AR947411
+     C                   ELSE                                                               AR947411
+      *
      C                   ADD       1             Widx
      C                   EVAL      WFldNamArr(Widx) = 'DDRPRI'
       *
@@ -1252,6 +1264,7 @@
       *
      C                   EVAL      WMsgIDArr(Widx) = 'LEM0050'
      C                   MOVE      'N'           DDRPRIOK
+     C                   END                                                                AR947411
       *
      C                   if        PD_AMTP = 'RE'
      C                   ADD       1             Widx
@@ -1757,6 +1770,18 @@
      C**********         ENDIF                                                       CLE134 MD020445
      C                   ENDIF                                                                240408
       *
+      *                                                                                     AR947411
+      * Check if CLE068 is switched ON                                                      AR947411
+     C                   CALLB     'AOSARDR0'                                               AR947411
+     C                   PARM      *BLANK        @RTCD                                      AR947411
+     C                   PARM      '*VERIFY'     @OPTN                                      AR947411
+     C                   PARM      'CLE068'      @SARD                                      AR947411
+      *                                                                                     AR947411
+     C     @RTCD         IFEQ      *BLANKS                                                  AR947411
+     C                   MOVE      'Y'           CLE068            1                        AR947411
+     C                   ELSE                                                               AR947411
+     C                   MOVE      'N'           CLE068                                     AR947411
+     C                   ENDIF                                                              AR947411
  
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and

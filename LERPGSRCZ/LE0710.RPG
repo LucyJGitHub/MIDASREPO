@@ -10,9 +10,10 @@
 0006 F*      LE0710 - FACILITY & COMMITMENT DETAILS BY PARENT PRINT      *
 0007 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
-0009 F*                                                                  *
-      *  Last Amend No. MD050457           Date 06Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                                                               *
+      *  Last Amend No. AR950498           Date 13Apr12               *
+      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR888974           Date 09Jan12               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -41,7 +42,13 @@
 0009 F*                    S01117              DATE 15/08/89             *
 0009 F*                                                                  *
 0009 F*------------------------------------------------------------------*
-0009 F*                                                                  *
+      *                                                               *
+      *  AR950498 - Facility availability should be zero if           *
+      *             availability date passed.                         *
+      *             If system value SetFcltyAvailToZero is 'Y' and    *
+      *             Facility Last Availability Date (AVLD) is earlier *
+      *             than run date, then display the available amount  *
+      *             as zero. (Child: AR950499)                        *
       *  MD050457 - Do not issue database error if customer is closed.*
       *             Patterned fix from 263371.                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -94,6 +101,7 @@
      FLEAGFYL4IF  E           K        DISK                                                 AR888974
      F            LEFCLTD0                          KRENAMELEAGLTD0                         AR888974
       ** Facilities Extension File                                                            CLE040
+     FFCLTYL1 IF  E           K        DISK                                                 AR950498
 0017 F*E0710P1O** F     132     OF     PRINTER                  S01124    S01117
      FLE0710P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
      FLE0710AUO   F     132            PRINTER      KINFDS SPOOLU         S01117
@@ -336,6 +344,7 @@
      I                                       12  12 DATF                  S01117
      I                                       13  13 MBIN                  S01117
      I**                                                                  S01117
+     I              'SetFcltyAvailToZero' C         #SVALK                                  AR950498
      I/COPY WNCPYSRC,LE0710I001
      C                     MOVEACPY@      BIS@   80
      C                     MOVE *OFF      *IN21                                               257022
@@ -523,6 +532,45 @@
      C                     Z-ADD12        DBASE                                               CLE040
      C                     GOTO END                                                           CLE040
      C                     ENDIF                                                              CLE040
+      *                                                                                     AR950498
+     C                     MOVEL#SVALK    SVALK1                                            AR950498
+      *                                                                                     AR950498
+     C                     CALL 'AOSVALR0'                                                  AR950498
+     C                     PARM           RTNCDE  7                                         AR950498
+     C                     PARM           SVALK1 20                                         AR950498
+     C                     PARM           SVAL1 200                                         AR950498
+     C                     PARM           SVALK2 20                                         AR950498
+     C                     PARM           SVAL2 200                                         AR950498
+     C                     PARM           SVALK3 20                                         AR950498
+     C                     PARM           SVAL3 200                                         AR950498
+     C                     PARM           SVALK4 20                                         AR950498
+     C                     PARM           SVAL4 200                                         AR950498
+     C                     PARM           SVALK5 20                                         AR950498
+     C                     PARM           SVAL5 200                                         AR950498
+     C                     PARM           SVALK6 20                                         AR950498
+     C                     PARM           SVAL6 200                                         AR950498
+     C                     PARM           SVALK7 20                                         AR950498
+     C                     PARM           SVAL7 200                                         AR950498
+     C                     PARM           SVALK8 20                                         AR950498
+     C                     PARM           SVAL8 200                                         AR950498
+     C                     PARM           SVALK9 20                                         AR950498
+     C                     PARM           SVAL9 200                                         AR950498
+     C                     PARM           SVALK0 20                                         AR950498
+     C                     PARM           SVAL10200                                         AR950498
+      *                                                                                     AR950498
+     C           RTNCDE    IFNE *BLANKS                                                     AR950498
+     C           RTNCDE    ANDNE'*NRF   '                                                   AR950498
+     C                     MOVE 'SDSVALPD'DBFILE                                            AR950498
+     C                     MOVELSVALK1    DBKEY                                             AR950498
+     C                     Z-ADD14        DBASE                                             AR950498
+     C                     MOVE *ON       *INU7                                             AR950498
+     C                     MOVE *ON       *INU8                                             AR950498
+     C                     MOVE *ON       *INLR                                             AR950498
+     C                     EXSR *PSSR                                                       AR950498
+     C                     GOTO END                                                         AR950498
+     C                     ENDIF                                                            AR950498
+     C                     MOVELSVAL1     SETZER  1                                         AR950498
+      *                                                                                     AR950498
      C/COPY WNCPYSRC,LEH00141
 0213 C**
 0214 C                     SETON                     40
@@ -531,6 +579,24 @@
      C                     SETOF                     41
 0217 C   02                SETON                     LR
 0218 C  N01                GOTO END
+      *                                                                                     AR950498
+      ** if system value SetFcltyAvailToZero current setting is Y,                          AR950498
+      ** check if Last Availability Date has passed run date, if yes                        AR950498
+      ** display available amount as zero                                                   AR950498
+      *                                                                                     AR950498
+     C           FCLTKY    KLIST                                                            AR950498
+     C                     KFLD           BRCA                                              AR950498
+     C                     KFLD           CNUM                                              AR950498
+     C                     KFLD           CFN1                                              AR950498
+     C                     KFLD           CFN2                                              AR950498
+      *                                                                                     AR950498
+     C           SETZER    IFEQ 'Y'                                                         AR950498
+     C           FCLTKY    CHAINFCLTYL1              38                                     MR950498
+     C           *IN38     IFEQ *OFF                                                        AR950498
+     C           AVLD      ANDLTRUND                                                        AR950498
+     C                     Z-ADD*ZERO     CAVL                                              AR950498
+     C                     ENDIF                                                            AR950498
+     C                     ENDIF                                                            AR950498
       *                                                                                       CLE040
       ** If either Credit Lines or Collateralised Lending is available,                       CLE040
       ** access Facilities Extension file                                                     CLE040

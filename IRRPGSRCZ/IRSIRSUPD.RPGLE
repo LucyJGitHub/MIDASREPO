@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031031           Date 24Feb15               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD056655           Date 21Sep20               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -118,6 +119,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056655 - Deal no already exists is encountered when NASP   *
+      *             transaction is entered                            *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -261,6 +264,8 @@
      F                                     COMMIT
      F                                     INCLUDE(DEALSDGF)
      F                                     INCLUDE(DEALSDFF)
+     FDLDLDGLM  IF   E           K DISK    PREFIX(WF)                                       MD056655
+     F                                     RENAME(DLDLDGD0:DLDLDGD1)                        MD056655
      FDLDLDGLN  UF A E           K DISK                                                       CLE025
      F                                     COMMIT                                             CLE025
       ** Deals Extension file                                                                 CLE025
@@ -1334,11 +1339,15 @@
       ** Set up deal extension file if Credit Lines is installed                              CLE025
                                                                                               CLE025
      C**********         IF        CLE025 = 'Y'                                      CLE025 MD031031
+     C                   MOVEL     RSDLNO        PDLNO                                      MD056655
+     C     PDLNO         CHAIN     DLDLDGD1                           75                    MD056655
+     C                   IF        *IN75 = *ON                                              MD056655
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   MOVEL     IRVXSIR       DEALEXT                                      CLE025
      C                   MOVEL     RSDLNO        F1DLNO                                       CDL038
      C                   MOVEL     RSBRCA        F1BRCA                                       248452
      C                   WRITE     DLDLDGD0                                                   CLE025
+     C                   ENDIF                                                              MD056655
      C**********         ENDIF                                                       CLE025 MD031031
       *
      C                   ENDSR

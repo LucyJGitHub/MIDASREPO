@@ -11,8 +11,9 @@
 0008 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036924           Date 06Nov19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. AR950498           Date 13Apr12               *
+      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -93,6 +94,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR950498 - Facility availability should be zero if           *
+      *             availability date passed.                         *
+      *             If system value SetFcltyAvailToZero is 'Y' and    *
+      *             Facility Last Availability Date (AVLD) is earlier *
+      *             than run date, then display the available amount  *
+      *             as zero. (Child: AR950499)                        *
       *  MD036924 - Allow user to enquire when customer is closed     *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
@@ -327,6 +334,7 @@
 0081 E**********          DAT        11  7               DATES OUTPUT     S01270
 0080 E                    DAY        12  5 0             DAYNOS INPUT     S01270
 0081 E                    DAT        12  7               DATES OUTPUT     S01270
+     E                    OAM        10 13 0                                                AR950498
 0082 E                    ACY       150  3               CURRENCY CODES
 0083 E                    ADP       150  1 0             CCY DEC. PLACES
      E                    POWR    1   7  7 3             Ccy conversion   158930
@@ -759,6 +767,19 @@
       ** DATA AREA OF MENU USER                                           S01117
      I                                       11  13 USRBCH                S01117
      I                                       17  17 BNKAUT                S01117
+     I            DS                                                                        AR950498
+     I                                        1 1300OAM                                     AR950498
+     I                                        1  130OAM1A                                   AR950498
+     I                                       14  260OAM2A                                   AR950498
+     I                                       27  390OAM3A                                   AR950498
+     I                                       40  520OAM4A                                   AR950498
+     I                                       53  650OAM5A                                   AR950498
+     I                                       66  780OAM6A                                   AR950498
+     I                                       79  910OAM7A                                   AR950498
+     I                                       92 1040OAM8A                                   AR950498
+     I                                      105 1170OAM9A                                   AR950498
+     I                                      118 1300OA10A                                   AR950498
+     I              'SetFcltyAvailToZero 'C         #SVALK                                  AR950498
      I***SDGELR*   E DSSDGELRPD                                                    MD035545 MD047993
      I**********    QQACCD                          ACCDQQ                         MD035545 MD047993
       **  External DS for general ledger details                                            MD035545
@@ -973,6 +994,8 @@
       ** Retrieve system value setting.                                                     MD035545
       *                                                                                     MD035545
      C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     MOVE *BLANKS   SETZER  1                                         AR950498
+     C                     MOVEL#SVALK    P@OP02                                            AR950498
      C                     CALL 'AOSVALR0'                                                  MD035545
      C                     PARM *BLANKS   @RTCD                                             MD035545
      C                     PARM           P@OP01 20                                         MD035545
@@ -1000,8 +1023,10 @@
       *                                                                                     MD035545
      C           @RTCD     IFNE '       '                                                   MD035545
      C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     MOVE 'N'       SETZER                                            AR950498
      C                     ELSE                                                             MD035545
      C                     MOVELP@VL01    WCALC6                                            MD035545
+     C                     MOVELP@VL02    SETZER                                            AR950498
      C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
      C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
      C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
@@ -1009,7 +1034,6 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
-      *                                                                                     MD035545
 0369 C* SET UP CURRENCY ARRAYS
 0370 C**********           MOVEL'20'      CCYKEY 12                       S01194
 0371 C**********           MOVE '1'       CCYKEY                          S01194
@@ -1808,6 +1832,21 @@
 0717 C                     SETOF                     202129
 0718 C                     SETOF                     305253
 0719 C                     SETON                     232550
+      *                                                                                     AR950498
+      ** if system value SetFcltyAvailToZero current setting is Y,                          AR950498
+      ** check if Last Availability Date has passed run date, if yes                        AR950498
+      ** display available amount as zero                                                   AR950498
+     I** RUN0-RUN9 loaded in array DAY,2 - DAY,11                                           AR950498
+     I** OAM1A-OA10A loaded in array OAM                                                    AR950498
+      *                                                                                     AR950498
+     C           SETZER    IFEQ 'Y'                                                         AR950498
+     C                     DO   10        N1      50                                        AR950498
+     C           N1        ADD  1         N2      50                                        AR950498
+     C           AVLD      IFLT DAY,N2                                                      AR950498
+     C                     Z-ADD*ZERO     OAM,N1                                            AR950498
+     C                     ENDIF                                                            AR950498
+     C                     ENDDO                                                            AR950498
+     C                     ENDIF                                                            AR950498
 0720 C*
 0721 C* IF THIS ONLY FACILITY REQUESTED, OUTPUT SCREEN WITH
 0722 C* '*COMPLETE*'

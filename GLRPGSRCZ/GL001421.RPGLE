@@ -14,8 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR661786           Date 15Sep14               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. 223783             Date 28May12               *
+      *  Prev Amend No. 222088             Date 28May12               *
+      *                 216936             Date 28May12               *
+      *                 212319             Date 28May12               *
+      *                 AR661786           Date 15Sep14               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR787620           Date 10Jun11               *
       *                 CRE075             Date 06Dec10               *
@@ -44,6 +48,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  222088 - Conditioning of CM narrative should account for     *
+      *           details on heirarchy, not ICD.                      *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  216936 - Text from CM ICD should not be present on           *
+      *           statements for top accounts                         *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  212319 - Default text for Zeo Balance account not reported   *
+      *           on statements                                       *
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  AR661786 - MT941/2 intra day show unauthorised and deleted FT*
       *             payments. Only include authorised transactions and*
       *             add checking for FX/MM and Sweeping.              *
@@ -79,29 +93,35 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FGLNW94L5  UF   E           K DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Network Accounts - MT94x - Live/Accnt+Dst.
- 
+
      FGLPOSTL0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
      F                                     PREFIX(GL)
       ** Midas GL Posting sorted by Network Account, Message Type, destination.
- 
+
      FGLNWKAPD  IF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL Network Activity Control File.
+                                                                                              212319
+     FREZSHLL1  IF   E           K DISK                   INFSR(*PSSR)                        212319
+      ** Midas RE Zero Balance/Sweeping Hierarchy links                                       212319
+                                                                                              222088
+     FREGAHDL0  IF   E           K DISK                   INFSR(*PSSR)                        222088
+      ** Midas RE Group Account Hierarchy Details                                             222088
                                                                                               CRE008
      FREGAHLJ2  IF   E           K DISK                   INFSR(*PSSR)                        CRE008
       ** Midas RE Group Account Hierarchy Links                                               CRE008
- 
+
      FMGF942PD  O    E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas MG MT942 Generation Extract - Account Detail.
- 
+
      FMGX942PD  O    E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas MG MT942 Generation Extract - Posting Detail.
- 
+
      FGL001421AUO    E             PRINTER USROPN         INFSR(*PSSR)
       ** Midas GL MT942 File Extract - Audit Report.
- 
+
       * Test for status of transaction                                                      AR661786
       *                                                                                     AR661786
      FINPAY     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
@@ -141,6 +161,8 @@
       * 27 - Access Network Account (LF/GLNW94L5)                              *
       * 28 - Access Postings        (LF/GLPOSTL0)                              *
       * 29 - Access Group Account   (LF/REGAHLJ2)                              *              CRE008
+      * 30 - Access T/S   Account   (LF/REZSHLL1)                              *              212319
+      * 35 - Access CM A/C Hierarchy (LF/REGAHDL0)                             *              222088
       * 40 - General Error                                                     *
       *                                                                        *
       * Database Error Indicators                                              *
@@ -154,11 +176,11 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -168,26 +190,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ---------------
- 
+
       ** Arrays and Data Structures
       ** --------------------------
- 
+
      D GLMR94        E DS                  EXTNAME(GLMR94PD)
       **  Data Structure for GL MT941/942 Messages Requests.
- 
+
      D GLposting     E DS                  EXTNAME(GLPOSTPD) PREFIX(GL)
       **  Data Structure for Posting detail in General Ledger format.
      D   EXMGADI1    E                     EXTFLD(MGADI1)                       Additional Inf 1
@@ -197,21 +219,21 @@
      D   EXMGADI5    E                     EXTFLD(MGADI5)                       Additional Inf 5
      D   EXMGADI6    E                     EXTFLD(MGADI6)                       Additional Inf 6
      D   EXMGAERI    E                     EXTFLD(MGAERI)                       ERI Indicator
- 
+
      D MGposting     E DS                  EXTNAME(MGX940PD)
       **  Data Structure for Posting detail in Message Genration Format.
      D QQACD1        E                     EXTFLD(QQACCD)                                     CGL029
      D/COPY WNCPYSRC,GLH00381
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
- 
+
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
       **  Data Structure for Network Details.
- 
+
      D GLACCNT       E DS                  EXTNAME(ACCNTAB)
       **  Data Structure for Account Details.
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Data Structure for Customer Details.
                                                                                               CRE008
@@ -220,29 +242,29 @@
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE008
      D                                     PREFIX(X_)                                         CRE008
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Second DS for access programs, short data structure.
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       **  Third DS for access programs, very long data structure.
- 
+
       ** Define an array for the non generated messages number
       ** contained in the DsCUST data structure
       *
      D  BBNGEN         S              3A   DIM(15)
      D                                     BASED(Pointer1)
      D  Pointer1       S               *   INZ(%Addr(BBNG01))
- 
+
       ** Declared variables
       ** ------------------
- 
+
      D MsgGenDate      S              5  0                                      Msg Generation Date
      D MsgGenTime      S              6  0                                      Msg Generation Time
- 
+
      D KeyNWRK         S                   LIKE(N4NWRK)                         Network
      D KeyBRCA         S                   LIKE(N4BRCA)                         Branch Code - Alpha
      D KeyCNUM         S                   LIKE(N4CNUM)                         Customer number
@@ -252,7 +274,7 @@
      D KeyNATY         S                   LIKE(N4NATY)                         Network Account Type
      D KeyDSTN         S                   LIKE(N4DSTN)                         Destination
      D KeyMTPY         S                   LIKE(GLMGMTPY)                       Message Type
- 
+
      D P@RTCD          S              7A                                        Return Code
      D P@SARD          S              6A                                        Sar           CRE008
      D P@OPTN          S              7A                                        Option
@@ -266,13 +288,13 @@
      D P@NWRK          S              6A                                        Network
      D P@KEY1          S             10A                                        Customer
      D P@KYST          S              7A                                        Key Status
- 
+
      D CRE008          S              1A                                                      CRE008
      D WkDebitAmn      S             15P 0                                      Debit Amount
      D WkNbDebit       S             10U 0                                      Nb of Debit
      D WkCredtAmn      S             15P 0                                      Credit Amount
      D WkNbCredt       S             10U 0                                      Nb of Credit
- 
+
      D WkErrRpt        S              1A   INZ('N')                             Error Reported
      D X               S              5U 0                                      Working Index
       *                                                                                     AR661786
@@ -288,117 +310,117 @@
      D PMsgTyp         S              3A                                                      CER030
       *                                                                                       CER030
      D/COPY WNCPYSRC,GLH00170
- 
+
       ** Input Specs
       ** -----------
- 
- 
+
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode                     Return code
      C                   PARM                    GLMR94                         Message Request
      C                   PARM                    MsgGenDate                     Msg Generation Date
      C                   PARM                    MsgGenTime                     Msg Generation Time
- 
+
       ** Initialize working fields.
- 
+
      C                   EXSR      $InitWkFld
- 
+
      C                   DO
- 
+
       ** Check if the network is active
- 
+
      C                   EXSR      $ChkNwrk
- 
+
      C   40              LEAVE
- 
+
       ** Retrieve Network Account details.
- 
+
      C                   EXSR      $RtvNwrkAc
- 
+
      C   40              LEAVE
- 
+
       ** Retrieve Account Details.
- 
+
      C                   EXSR      $RtvAccnt
- 
+
      C   40              LEAVE
- 
+
       ** Check if the customer allows MT942 generation.
- 
+
      C                   EXSR      $ChkCust
- 
+
      C   40              LEAVE
- 
+
       ** Process Posting Details
- 
+
      C                   EXSR      $MGX942PD
- 
+
      C   40              LEAVE
- 
+
       ** Check if the MT942 should be generated even there is no movement
- 
+
      C                   IF        N42GNM = 'N'                                 gen. even no mvnts
      C                             AND WkNbDebit = *ZEROS                       Nb of Debit
      C                             AND WkNbCredt = *ZEROS                       Nb of Credit
- 
+
      C                   EVAL      ReturnCode = 'NO MOVT'
- 
+
      C                   ELSE
- 
+
       ** Process Account Details
- 
+
      C                   EXSR      $MGF942PD
- 
+
      C   40              LEAVE
- 
+
       ** Update Network Account details.
- 
+
      C                   EXSR      $GLNW94PD
- 
+
      C   40              LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C   40              ROLBK
- 
+
       ** End of processing
      C/COPY WNCPYSRC,GLH00382
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *========================================================================*
       * $InitWkFld: Initialize working fields.                                 *
       *------------------------------------------------------------------------*
- 
+
      C     $InitWkFld    BEGSR
       *    ----------    -----
- 
+
      C                   EVAL      ReturnCode = *Blanks                         Return code
      C                   EVAL      MsgGenDate = *ZEROS                          Msg Generation Date
      C                   EVAL      MsgGenTime = *ZEROS                          Msg Generation Time
- 
+
      C                   EVAL      *IN40 = *OFF                                 General Indicator
- 
+
      C                   EVAL      WkDebitAmn = *ZEROS                          Debit Amount
      C                   EVAL      WkNbDebit  = *ZEROS                          Nb of Debit
      C                   EVAL      WkCredtAmn = *ZEROS                          Credit Amount
      C                   EVAL      WkNbCredt  = *ZEROS                          Nb of Credit
- 
+
       ** Load key fields
- 
+
      C                   EVAL      KeyNWRK = MRNWRK                             Network
      C                   EVAL      KeyBRCA = MRBRCA                             Branch
      C                   EVAL      KeyCNUM = MRCNUM                             Customer
@@ -408,27 +430,27 @@
      C                   EVAL      KeyNATY = MRNATY                             Net. Account Type
      C                   EVAL      KeyDSTN = MRDSTN                             Destination
      C                   EVAL      KeyMTPY = MRMTPY                             Message Type
- 
+
      C     @InitWkFld    ENDSR
       *    --------      -----
- 
+
       *========================================================================*
       * $ChkNwrk: Check if the Network is active.                              *
       *------------------------------------------------------------------------*
- 
+
      C     $ChkNwrk      BEGSR
       *    --------      -----
- 
+
       **  Check if the Network exists.
- 
+
      C                   CALLB     'AONWRKR1'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
      C                   PARM      MRNWRK        P@NWRK                         Network
      C     SDNWRK        PARM      SDNWRK        DSLDY
- 
+
       ** Add the issue on the audit report.
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRCMNT = 'Network ' + %TRIM(MRNWRK) +
@@ -436,9 +458,9 @@
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   GOTO      @ChkNwrk
      C                   ENDIF
- 
+
       **  Check if the Network authorizes MT942.
- 
+
      C                   IF        EDM942 <> 'Y'
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRCMNT = 'Network ' + %TRIM(MRNWRK) +
@@ -446,11 +468,11 @@
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   GOTO      @ChkNwrk
      C                   ENDIF
- 
+
       **  Check if the network is active.
- 
+
      C     MRNWRK        CHAIN     GLNWKAPD                           99
- 
+
      C                   IF        *IN99
      C                             OR NOT *IN99 AND MTSSTS <> 'A'
      C                   EVAL      *IN40 = *ON
@@ -459,17 +481,17 @@
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   GOTO      @ChkNwrk
      C                   ENDIF
- 
+
       *    ---------     -----
      C     @ChkNwrk      ENDSR
- 
+
       *========================================================================*
       * $RtvNwrkAc: Retrieve Network Account Details.                          *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvNwrkAc    BEGSR
       *    ----------    -----
- 
+
      C     KeyNwrkAc     CHAIN     GLNW94L5                           27
      C                   IF        *IN27
      C                             OR N4G942 <> 'Y'
@@ -478,21 +500,21 @@
      C                                       found'
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   ENDIF
- 
+
      C     @RtvNwrkAc    ENDSR
       *    ----------    -----
- 
+
       *========================================================================*
       * $RtvAccnt: Retrieve Account details.                                   *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvAccnt     BEGSR
       *    ---------     -----
- 
+
      C                   MOVE      MRCNUM        P@CNUM                         Customer
      C                   MOVE      MRACCD        P@ACCD                         Account code
      C                   MOVE      MRACSQ        P@ACSQ                         Account Sequence
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
@@ -503,36 +525,36 @@
      C                   PARM                    P@ACSQ                         Account Sequence
      C                   PARM      MRBRCA        P@BRCA                         Branch Code
      C     GLACCNT       PARM      GLACCNT       DSSDY
- 
+
       ** Add the issue on the audit report.
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRCMNT = 'Midas Account Detail not found'
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   ENDIF
- 
+
       *    ---------     -----
      C     @RtvAccnt     ENDSR
- 
+
       *========================================================================*
       * $ChkCust: Check if the customer allows MT942 generation.               *
       *------------------------------------------------------------------------*
- 
+
      C     $ChkCust      BEGSR
       *    --------      -----
- 
+
      C                   MOVEL(P)  MRCNUM        P@KEY1                         Customer
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
      C                   PARM                    P@KEY1                         Customer
      C                   PARM                    P@KYST                         Key Status
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Add the issue on the audit report.
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRCMNT = 'Customer ' + %TRIM(P@KEY1) +
@@ -540,9 +562,9 @@
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   GOTO      @ChkCust
      C                   ENDIF
- 
+
       ** Add the issue on the audit report.
- 
+
      C     '942'         LOOKUP    BBNGEN                                 99
      C                   IF        *IN99
      C                   EVAL      *IN40 = *ON
@@ -550,22 +572,22 @@
      C                                      ' does not allow MT942 generation'
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   ENDIF
- 
+
       *    ---------     -----
      C     @ChkCust      ENDSR
- 
+
       *========================================================================*
       * $MGX942PD: Extract Posting Details                                     *
       *------------------------------------------------------------------------*
- 
+
      C     $MGX942PD     BEGSR
       *    ---------     -----
- 
+
       ** Read Postings for this Network Account.
- 
+
      C     KeyPost       SETLL     GLPOSTD0
      C     KeyPost       READE     GLPOSTD0                               28
- 
+
      C                   DOW       NOT *IN28 AND NOT *IN40
       *                                                                                     AR661786
       ** Check for Authorised Status on Funds Transfer                                      AR661786
@@ -655,14 +677,14 @@
      C                   Endif                                                              AR661786
       *                                                                                     AR661786
      C                   Endif                                                              AR661786
- 
+
       ** Report only movements with a value date less or equal to the run date,
       ** and not yet flagged as processed.
- 
+
      C                   IF        GLMGPROC <> 'Y'
- 
+
       ** Calculate the Debit and Credit details
- 
+
      C                   IF        GLDRCR = 0                                   Debit
      C                   EVAL      WkNbDebit = WkNbDebit + 1                    Nb of Debit
      C                   EVAL      WkDebitAmn = WkDebitAmn + GLPSTA             Debit Amount
@@ -670,16 +692,16 @@
      C                   EVAL      WkNbCredt = WkNbCredt + 1                    Nb of Credit
      C                   EVAL      WkCredtAmn = WkCredtAmn + GLPSTA             Credit Amount
      C                   ENDIF
- 
+
       ** Report posting detail if the posting amount is equal to or greater than floor limit.
- 
+
      C                   IF        GLDRCR = 0                                   Debit
      C                             AND GLPSTA >= MR2FLD                         Floor Limit Debit
      C                             OR GLDRCR = 1                                Credit
      C                             AND GLPSTA >= MR2FLC                         Floor Limit Credit
- 
+
       ** If Extended narrative is allowed for the Network.
- 
+
      C                   IF        EDENRA = 'Y'
      C                   EVAL      EXMGADI1 =  GLMGADI1                         Additional Inf 1
      C                   EVAL      EXMGADI2 =  GLMGADI2                         Additional Inf 2
@@ -697,14 +719,14 @@
      C                   EVAL      EXMGADI6 =  *BLANKS                          Additional Inf 6
      C                   EVAL      EXMGAERI =  *BLANKS                          ERI Indicator
      C                   ENDIF
- 
+
       ** Format the posting details
- 
+
      C                   CALLB     'GL001432'                           99
      C                   PARM      *BLANKS       ReturnCode                     Return Code
      C                   PARM                    GLPosting                      GL Posting Detail
      C                   PARM      *BLANKS       MGPosting                      MG Posting Detail
- 
+
      C                   IF        ReturnCode = 'PSSR_ERROR'
      C                             OR *IN99 = *ON
      C                   EXSR      *PSSR
@@ -735,66 +757,66 @@
      C                             OR *IN99 = *ON                                             CER030
      C                   EXSR      *PSSR                                                      CER030
      C                   ENDIF                                                                CER030
- 
+
      C/COPY WNCPYSRC,GLH00171
      C                   IF        ReturnCode = *BLANKS
      C                             AND PRtcd = *BLANKS                                        CER030
      C/COPY WNCPYSRC,GLH00172
- 
+
       ** Add record in MT942 Generation Extract - Posting Detail
- 
+
      C                   WRITE     MGX942D0
- 
+
      C                   ELSE
- 
+
       ** Add the issue on the audit report.
- 
+
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRCMNT = 'Posting extract failed'
      C                   DUMP
      C                   EXSR      $AuditRpt                                    Report Issue
      C                   GOTO      @MGX942PD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       ** Re-extract postings from last statement
- 
+
      C                   WHEN      GLRECI = 'P'                                 Posting
      C                             AND N42RPL <> 'Y'                            Re-extract flag
      C                   EVAL      GLMGPROC = 'Y'                               Flagged as Processed
- 
+
       ** Re-extract shadow posting
- 
+
      C                   WHEN      GLRECI = 'S'                                 Shadow Posting
      C                             AND N42RAS <> 'Y'                            Re-extract flag
      C                   EVAL      GLMGPROC = 'Y'                               Flagged as Processed
      C                   ENDSL
- 
+
      C                   UPDATE    GLPOSTD0
- 
+
      C                   ENDIF
- 
+
       ** Read Next Posting for this Network Account.
- 
+
      C     KeyPost       READE     GLPOSTD0                               28
- 
+
      C                   ENDDO
- 
+
       *    ---------     -----
      C     @MGX942PD     ENDSR
- 
+
       *========================================================================*
       * $MGF942PD: Extract Account Details                                     *
       *------------------------------------------------------------------------*
- 
+
      C     $MGF942PD     BEGSR
       *    ---------     -----
- 
+
      C                   CLEAR                   MGF942D0
- 
+
      C                   EVAL      MGNWRK = MRNWRK                              Network
      C                   EVAL      MGBRCA = MRBRCA                              Branch Code - Alpha
      C                   EVAL      MGCNUM = MRCNUM                              Customer number
@@ -823,11 +845,32 @@
       *  instead                                                                              CRE008
      C                   IF        CRE008 = 'Y'                                               CRE008
      C     KeyAcntBl     Chain     REGAHLJ2                           29                      CRE008
+     C     KeyAcntBg     Chain     REZSHLL1                           30                      212319
+     C                   IF        *IN29 = *OFF                                               222088
+     C     CLHIER        CHAIN     REGAHDL0                           35                      222088
+     C                   IF        *IN35 = *ON                                                222088
+     C                   EXSR      *PSSR                                                      222088
+     C                   ENDIF                                                                222088
+     C                   ENDIF                                                                222088
      C                   Endif                                                                CRE008
       *                                                                                       CRE008
      C                   SELECT
+     C                   WHEN      CRE008 = 'Y' And                                           212319
+     C                             *IN30 = *OFF                                               212319
+     C                   EVAL      MGMIO1 = CMTXTZ                                            212319
+     C                   EVAL      MGMIO2 = %subst(CMTXTZ:66:65)                              212319
+     C                   EVAL      MGMIO3 = %subst(CMTXTZ:131:65)                             212319
+     C                   EVAL      MGMIO4 = %subst(CMTXTZ:196:5)                              212319
+     C                   EVAL      MGMIO5 = *blanks                                           212319
+     C                   EVAL      MGMIO6 = *blanks                                           212319
      C                   WHEN      CRE008 = 'Y' And                                           CRE008
      C                             *IN29 = *OFF                                               CRE008
+     C                             AND CLCCAT <> 'T'                                          216936
+     C                             AND GDTOPB = 'Y'                                           222088
+     C                             OR  CRE008 = 'Y'                                           222088
+     C                             AND *IN29 = *OFF                                           222088
+     C                             AND CLCCAT = 'T'                                           222088
+     C                             AND GDTOPB = 'N'                                           222088
      C                   EVAL      MGMIO1 = CMTXTG                                            CRE008
      C                   EVAL      MGMIO2 = %subst(CMTXTG:66:65)                              CRE008
      C                   EVAL      MGMIO3 = %subst(CMTXTG:131:65)                             CRE008
@@ -856,21 +899,21 @@
      C                   EVAL      MGSMDB = WkDebitAmn                          Sum of Debit Posting
      C                   EVAL      MGNBCR = WkNbCredt                           Number of Credit Pos
      C                   EVAL      MGSMCR = WkCredtAmn                          Sum of Crebit Postin
- 
+
      C                   WRITE     MGF942D0
- 
+
       *    ---------     -----
      C     @MGF942PD     ENDSR
- 
+
       *========================================================================*
       * $GLNW94PD: Update Network Account details.                             *
       *------------------------------------------------------------------------*
- 
+
      C     $GLNW94PD     BEGSR
       *    ---------     -----
- 
+
       ** Process MT942 Details.
- 
+
      C                   EVAL      N42LSP = N42LSP + 1                          Last Statement Page
      C                   EVAL      N42LSD = BJRDNB                              Last Statement Date
      C                   TIME                    N42LST                         Last Statement Time
@@ -878,54 +921,54 @@
      C                   EVAL      N42LDA = WkDebitAmn                          Sum of Debit Posting
      C                   EVAL      N42LCN = WkNbCredt                           Number of Credit Pos
      C                   EVAL      N42LCA = WkCredtAmn                          Sum of Crebit Postin
- 
+
      C                   UPDATE    GLNW94D0
- 
+
      C                   EVAL      MsgGenDate = N42LSD                          Msg Generation Date
      C                   EVAL      MsgGenTime = N42LST                          Msg Generation Time
- 
+
       *    ---------     -----
      C     @GLNW94PD     ENDSR
- 
+
       *========================================================================*
       * $AuditRpt: Report issues                                               *
       *------------------------------------------------------------------------*
- 
+
      C     $AuditRpt     BEGSR
       *    ---------     -----
- 
+
      C                   OPEN      GL001421AU
      C                   WRITE     HEADAU
      C                   WRITE     SUBTL
      C                   WRITE     DETAIL
      C                   WRITE     ENDRPT
      C                   CLOSE     GL001421AU
- 
+
      C                   EVAL      ReturnCode = 'ERROR'
      C                   EVAL      WkErrRpt = 'Y'                               Error Reported
- 
+
       *    ---------     -----
      C     @AuditRpt     ENDSR
- 
+
       *========================================================================*
       * *INSZR: Initial Sub-routine                                            *
       *------------------------------------------------------------------------*
- 
+
      C     *INZSR        BEGSR
       *    ------        -----
- 
+
       ** Initialise Copyright Array
- 
+
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Initialise LDA.
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     PSProcPgm     DBpgm
      C                   OUT       LDA
- 
+
       ** Retrieve Bank details.
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     P@RTCD                         Return Code
      C                   PARM      '*FIRST '     P@OPTN                         Option
@@ -952,9 +995,9 @@
                                                                                               CRE008
      C                   ENDIF                                                                CRE008
      C/COPY WNCPYSRC,GLH00384
- 
+
       ** Key to access Network Account.
- 
+
      C     KeyNwrkAc     KLIST
      C                   KFLD                    KeyNWRK                        Network
      C                   KFLD                    KeyBRCA                        Branch Code - Alpha
@@ -964,9 +1007,9 @@
      C                   KFLD                    KeyACSQ                        Account sequence num
      C                   KFLD                    KeyNATY                        Network Account Type
      C                   KFLD                    KeyDSTN                        Destination
- 
+
       ** Key to access Posting details.
- 
+
      C     KeyPost       KLIST
      C                   KFLD                    KeyNWRK                        Network
      C                   KFLD                    KeyBRCA                        Branch Code - Alpha
@@ -984,34 +1027,41 @@
      C                   KFLD                    KeyACOD                                      CRE008
      C                   KFLD                    KeyACSQ                                      CRE008
      C                   KFLD                    KeyBRCA                                      CRE008
- 
+
+     C     KeyAcntBg     KLIST                                                                212319
+     C                   KFLD                    KeyBRCA                                      212319
+     C                   KFLD                    KeyCNUM                                      212319
+     C                   KFLD                    KeyCCY                                       212319
+     C                   KFLD                    KeyACOD                                      212319
+     C                   KFLD                    KeyACSQ                                      212319
+                                                                                              212319
      C/COPY WNCPYSRC,GLH00173
       *    ------        -----
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
- 
+
      C     *PSSR         BEGSR
       *    -----         -----
- 
+
      C                   IF        ReturnCode = *BLANKS
      C                   EVAL      ReturnCode = 'PSSR_ERROR'
      C                   ENDIF
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
       *    -----         -----
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **CTDATA CPY@
 (c) Finastra International Limited 2002

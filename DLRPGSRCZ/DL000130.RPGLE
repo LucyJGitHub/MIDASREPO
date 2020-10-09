@@ -48,7 +48,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -394,7 +393,7 @@
 
      C                   EVAL      REPBRC = DFBRCA
      C                   EVAL      PBranch = DFBRCA
-     C                   EVAL      KDBRTT = DFFSEQ
+     C**********         EVAL      KDBRTT = DFFSEQ                                            CSD103
 
       ** Read Deals File
      C     DFDLNO        CHAIN     DEALS

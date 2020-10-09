@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD056303           Date 18Jul20               *
-      *  Prev Amend No. MD056187           Date 02Jul20               *
+      *  Last Amend No. MD056683           Date 14Sep20               *
+      *  Prev Amend No. MD056303           Date 18Jul20               *
+      *                 MD056187           Date 02Jul20               *
       *                 MD056170           Date 30Jun20               *
       *                 MD055939           Date 03Jun20               *
       *                 MD055900           Date 28May20               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056683 - MT199 Confirm is being generated for an IPAY where*
+      *             the credit goes to the Account with Bank          *
       *  MD056303 - Format error for Field 79 Line 3                  *
       *  MD056187 - Charges was deducted in the amount for MT199      *
       *             On Hold                                           *
@@ -771,7 +774,40 @@
      C                   EXSR      *PSSR
 
      C                   ENDIF
-
+                                                                                            MD056683
+      *                                                                                     MD056683
+      ** MT199 Status is ACSP Transferred through IPAY                                      MD056683
+      *                                                                                     MD056683
+     C                   ELSEIF    FTM199 = 'I'                                             MD056683
+                                                                                            MD056683
+     C                   EVAL      WIPRef = FTIPRF                                          MD056683
+     C     WIPRef        CHAIN     INPAY                                                    MD056683
+                                                                                            MD056683
+     C                   IF        %FOUND                                                   MD056683
+                                                                                            MD056683
+     C                   IF        AUIN = 'Y'                                               MD056683
+                                                                                            MD056683
+     C                   EVAL      WTag79L2Val = StsACSPT                                   MD056683
+      *                                                                                     MD056683
+      ** Use Account w/ Bank for Destination                                                MD056683
+      *                                                                                     MD056683
+     C                   EVAL      WDstT = ACBT                                             MD056683
+     C                   EVAL      WDst1 = ACBK                                             MD056683
+     C                   EVAL      WIOFlg = 'I'                                             MD056683
+     C                   EXSR      SrSvPyFld                                                MD056683
+     C                   EXSR      SRExtract                                                MD056683
+     C                   EVAL      WGenFlg = 'Y'                                            MD056683
+                                                                                            MD056683
+     C                   ENDIF                                                              MD056683
+                                                                                            MD056683
+     C                   ELSE                                                               MD056683
+     C     *LOCK         IN        LDA                                                      MD056683
+     C                   MOVE      '028'         DBASE                                      MD056683
+     C                   MOVEL     'WIPref'      DBKEY                                      MD056683
+     C                   MOVEL     'INPAY'       DBFILE                                     MD056683
+     C                   OUT       LDA                                                      MD056683
+     C                   EXSR      *PSSR                                                    MD056683
+     C                   ENDIF                                                              MD056683
       *
       ** MT199 Status is RJCT
       *
@@ -1215,7 +1251,6 @@
 
       *
       ** Get tag 20
-      ** found in internet. need to test
       *
      C                   EVAL      Wtag20a = %CHAR(KFMsgR)
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)

@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 259607             Date 08Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSD031             Date 10Apr06              */
+/*                      CSD031             Date 10Apr06              */
 /*                      CRE020             Date 20Jan04              */
 /*                      CSC023             Date 02Feb04              */
 /*                      CGP001             Date 23May03              */
@@ -70,6 +71,8 @@
 /*                        S01129             DATE  11/05/88         */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       259607 - Add override to file SECNTRL0 if calling           */
+/*                SE1910.                                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSD031 - Enhanced Centralised Static Data                   */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -644,6 +647,9 @@ CALLP:
              IF COND((%SST(&FMT 104 1) *EQ 'Y')) THEN(DO)             /*CPB001*/
                 CHGJOB SWS(XXX1XXXX)                                  /*CPB001*/
              ENDDO                                                    /*CPB001*/
+             IF         COND(&PARM = 'SE1910') THEN(DO)                                   /*259607*/
+                OVRDBF     FILE(SECNTRLX) TOFILE(SECNTRL0) SHARE(*NO)                     /*259607*/
+             ENDDO                                                                        /*259607*/
              CALL       PGM(&PARM)
              CHGJOB SWS(XXX0XXXX)                                     /*CPB001*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)

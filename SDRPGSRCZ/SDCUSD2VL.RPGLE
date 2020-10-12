@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT113             Date 01Apr20               *
-      *  Prev Amend No. CSD094             Date 29Aug18               *
+      *  Last Amend No. MD056981           Date 12Oct20               *
+      *  Prev Amend No. HUT113             Date 01Apr20               *
+      *                 CSD094             Date 29Aug18               *
       *                 MD051247           Date 17Jul18               *
       *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056981  - Customer Maintenance: Private Banking Error      *
+      *              Encountered During Input                         *
+      *              Amend  SDCUDPV048 and  SDCUDPV051                *
       *  HUT113 - Full PB Functionality in FM                         *
       *           (Upgrade HUT026 to FM2.1 SP22)                      *
       *           Addition of hook HUT113_109                         *

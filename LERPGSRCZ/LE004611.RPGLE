@@ -49,7 +49,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -118,60 +118,60 @@
       ** Ê F-specs                              Ê
       ** Ê =======                              Ê
       ** +--------------------------------------+
- 
+
       ** Midas LE Effective Interest Rate Detail File
      FLEEIRDL7  UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(LEEIRHD0)
      F                                     PREFIX(PR_:2)
- 
+
       ** Midas LE EIR Amortisation Over Period Detail
      FLEERAPL3  UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Effective Interest Rate Detail File
      FLEEIRDL3  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEEIRDD0:LEEIRDD3)
      F                                     PREFIX(CR_:2)
- 
+
       ** Midas LE EIR Present Cash Flow File
      FLEEIRPL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
- 
+
       ** Midas LE EIR Future Cash Flow File
      FLEEIRFL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
- 
+
       ** Midas LE Loan Details File
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      F                                     PREFIX(CL)
- 
+
       ** Midas EIR Loan Amount History File
      FLEHTRNL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas EIR Cash Flow Detail File
      FLECFSFL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas EIR Cash Flow Detail File
      FLECFLSL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LECFLSD0:LECFLSDF)
- 
+
       ** Midas LE Effective Interest Rate Amortisation file
      F*LEEIRAL5  IF   E           K DISK    INFSR(*PSSR)                                      240808
      F***LEEIRAL5  UF   E           K DISK    INFSR(*PSSR)                             240808 262600
- 
+
       * Midas LE Lending Fees File
      F***LEFEEDLI  IF   E           K DISK    INFSR(*PSSR)                                    CAS019
      FLEFEEDLN  IF   E           K DISK    INFSR(*PSSR)                                       CAS019
- 
+
       ** Midas LE Cashflows File for Amortisation Calc
      FLEAMRTL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
                                                                                               262628
       ** Midas LE EIR Calculation Audit Report                                                262628
      FLE004611P1O    E             PRINTER INFDS(SPOOL1)                                      262628
- 
+
       ****************************************************************
       /EJECT
       *****************************************************************
@@ -181,9 +181,9 @@
       ** +--------------------------------------+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D ##OX1           S             80    DIM(11) CTDATA PERRCD(1)
- 
+
       ***Array*for*determining*proportions*of*amounts*and*fees*********                       262600
      D*WFPropAmt       S             15P 0 DIM(99)                                            262600
      D*WFSeq****       S              2  0 DIM(99)                                            262600
@@ -195,7 +195,7 @@
       ** Ê External data areas                  Ê
       ** Ê ===================                  Ê
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -206,17 +206,17 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** +--------------------------------------+
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
       ** Ê ==========================           Ê
       ** +--------------------------------------+
- 
+
       ** Program Status Data Structure
       /COPY ZACPYSRC,PSDS
                                                                                               262628
@@ -226,48 +226,48 @@
      D  SFNUM1               123    124B 0                                                    262628
      D  OFLLN1               188    189B 0                                                    262628
      D  PRTLN1               367    368B 0                                                    262628
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Midas Modules details accessed via access program
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Hedging ICD Details
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)
- 
+
       ** Fee Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       * Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
                                                                                               262628
       ** External data structure for Currency Details                                         262628
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  262628
- 
+
       ** ZAEIRF Data Structure
      D ZAEIRF        E DS                  EXTNAME(ZAEIRFPD)
- 
+
       ** ZAAMRT Data Structure
      D ZAAMRT        E DS                  EXTNAME(ZAAMRTPD)
- 
+
       ** QCMDEXC Parameters
      D pMESOVR         S             80A
      D pMESLEN         S             15P 5 INZ(80)
- 
+
      D @RUN            S              1
      D @ICBS           S              1S 0
      D @NDYY           S              3S 0
- 
+
       ** ZINTDY Parameters
      D ZZINDY          S              5  0
      D ZZBEG           S              5  0
@@ -300,7 +300,7 @@
      D ZSENTY          S              3A                                                      262628
      D ZSNUM           S              6S 0                                                    262628
      D ZSERR           S              1A                                                      262628
- 
+
       ** Work Variables
      D wEvCD           S              5  0
      D wCFOpen         S              1A
@@ -331,34 +331,34 @@
      D PRtCd           S              7A                                                      262628
      D POpTn           S              7A                                                      262628
      D WPRVEIR         S              1A                                                    AR784436
- 
+
       ** Key fields
      D kEITRAN         S                   LIKE(EITRAN)
      D kEIDate         S                   LIKE(EIENDT)
      D kEIFSEQ         S                   LIKE(EIFSEQ)
- 
+
       ** Work fields for SR/SREIRCalc
       ** Input Parameter
      D*PInpTNRF*       S              6S 0                                                    CLE148
      D PInpTNRF        S              6A                                                      CLE148
      D PInpStartEff    S              5P 0
      D PInpEndEff      S              5P 0
- 
+
       ** Output Parameter
      D*POutEIR**       S             14P12                                                    262654
      D POutEIR         S             15P10                                                    262654
      D PReturnCode     S              7A
- 
+
       ** Whether or not *PSSR has been run previously
      D RunBefore       S              1A
- 
+
       ** Parameters for AOBANKR0
      D pRetCode        S              7A
      D pOption         S              7A
- 
+
       ** ZAAMRTCALC Parameter (Alpha)
      D PAmortDSA       S            200A
- 
+
       ** ZAAMRTCALC DS breakdown
      D PAmortDS        DS           200
      D  PPGMName                     10A   INZ('LE004611')
@@ -380,8 +380,8 @@
      D  wAmrtAmt                     17P 0
      D  pDrtPrcTdy                   15P 0
      D  pClnPrcTdy                   15P 0
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -392,11 +392,11 @@
       ** Ê executed at program activation.                                Ê
       ** Ê                                                                Ê
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Open Cash flow file
      C                   EVAL      wCFOpen = 'N'
      C                   OPEN      LEEIRPL0
@@ -404,16 +404,16 @@
      C                   OPEN      LEAMRTL0
      C                   EVAL      wAMRTOpen = 'Y'
      C                   EVAL      wCFOpen = 'Y'
- 
+
       ** Process cash flows for Amortisation over Period
      C                   EXSR      SRCFAmortPrd
- 
+
       ** Process cash flows for Amortisation over Life
      C                   EXSR      SRCFAmortLife
                                                                                               262628
       ** Print report footer                                                                  262628
      C                   EXSR      RepFooter                                                  262628
- 
+
       ** End program
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -428,15 +428,15 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCFAmortPrd  BEGSR
- 
+
       ** Read thru Amortisation Over Period Detail File
      C     *LOVAL        SETLL     LEERAPL3
      C                   READ      LEERAPL3
- 
+
      C                   DOW       NOT %EOF(LEERAPL3)
- 
+
      C                   EVAL      wERAPRec = 'Y'
       ** Check recalculation indicator
      C                   IF        EIRCAL = 'Y'
@@ -445,40 +445,40 @@
       ** Print report header                                                                  262628
      C                   EVAL      *IN50 = *ON                                                262628
      C                   EXSR      RepHeader                                                  262628
- 
+
       ** Clear cash flow records for next EIR processing
      C                   EXSR      SRClearCF
- 
+
       ** Save period details for present/future cashflow processing
      C                   EVAL      wEIENDT = EIENDT
      C                   EVAL      wEISTDT = EISTDT
      C                   EVAL      kEITRAN = EITRAN
- 
+
       ** Generate Present Cashflows
      C                   EVAL      kEIDate = EISTDT
      C                   EVAL      wEIFSEQ = EIFSEQ
      C                   EXSR      SRCFPresent
      C                   EVAL      kEIFSEQ = EIFSEQ
- 
+
       ** Generate Future Cashflows
      C                   EXSR      SRCFFuture
- 
+
       ** Determine EIR by calling calculator
      C                   EVAL      PInpTNRF = EITRAN
      C                   EVAL      PInpStartEff = EISTDT
      C                   EVAL      PInpEndEff   = EIENDT
      C                   EXSR      SREIRCalc
- 
+
       ** Amend Recalculation indicator to blank and update File
      C                   EVAL      EIRCAL = ' '
      C                   EVAL      EIEIR = wEffIntRate
      C                   UPDATE    LEERAPD0
      C                   ENDIF
- 
+
       ** Read Next Amortisation Over Period Detail File
      C                   READ      LEERAPL3
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1272,7 +1272,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCFFuture    BEGSR
                                                                                               262600
       ** If calculating EIR over a period which ends before Loan                              262600
@@ -1298,7 +1298,7 @@
      C                   EVAL      WkINTR = INTR                                              262600
      C                   ENDIF                                                                262600
      C                   ENDIF                                                                262600
- 
+
      C     KLoanDate     SETGT     LECFSFL0
      C     kEITRAN       READE     LECFSFL0
                                                                                               248603
@@ -1313,7 +1313,7 @@
      C**********                   AND LFFLDT <= wEIENDT                                      248603
      C                             AND LFFLDT <= POutDay                                      248603
      C                             AND LFLNRF = kEITRAN
- 
+
       ** Exclude shadow amounts in EIR computation                                            248260
      C                   IF        LFIOIN = 'S'                                               248260
      C     kEITRAN       READE     LECFSFL0                                                   248260
@@ -1349,10 +1349,10 @@
                                                                                               248260
       ** Cashflow Transaction Number
      C                   EVAL      EFTNMR = LFLNRF
- 
+
       ** Cashflow Date
      C                   EVAL      EFFLDT = LFFLDT
- 
+
       ** Cashflow Amount
      C**********         IF        LFFSEQ <> 0                                       BUG17290 262600
       ***A*non-zero fee sequence on the cashflow file denotes a fee                  BUG17290 262600
@@ -1385,17 +1385,17 @@
      C**********         ENDIF                                                       BUG17290 262600
       **********                                                                     BUG17290 262600
      C                   EVAL      EFCAMT = LFCAMT
- 
+
       ** Incoming/outgoing indicator
      C                   EVAL      EFIOIN = LFIOIN
- 
+
       ** No. of Days in Interest Year
      C                   EVAL      @ICBS = LFICBS
      C                   EXSR      SRDayNum
      C                   EVAL      EFNDYY = @NDYY
- 
+
       ** No.of Days from end of Effec
- 
+
      C                   Z-ADD     LFFLDT        ZZBEG
      C                   Z-ADD     wEIENDT       ZZEND
      C                   EXSR      SRZINTDY
@@ -1405,7 +1405,7 @@
      C                   WHEN      ZZINDY >= 0                                                248603
      C                   Z-ADD     ZZINDY        EFNDEI
      C                   ENDSL                                                                248603
- 
+
       ** Write Future Cash flow record to file
      C                   WRITE     ZAEIRFD0
      C                   EXSR      RepDetail                                                  262628
@@ -1460,7 +1460,7 @@
                                                                                               262600
      C                   ENDSL                                                                262600
      C                   ENDIF                                                                262600
- 
+
       ** Read Next Cashflow Record
      C     kEITRAN       READE     LECFSFL0
      C                   ENDDO
@@ -1528,7 +1528,7 @@
      C                   EVAL      LFFTYP = 'DUMM'                                            262628
      C                   EXSR      RepDetail                                                  262628
      C                   ENDIF                                                                262600
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1933,29 +1933,29 @@
       *                                                               *
       *****************************************************************
      C     SRClearCF     BEGSR
- 
+
      C                   IF        wCFOpen = 'Y'
      C                   CLOSE     LEEIRPL0
      C                   CLOSE     LEEIRFL0
      C                   EVAL      wCFOpen = 'N'
      C                   ENDIF
- 
+
      C                   MOVEL     ##OX1(9)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVEL     ##OX1(10)     pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   IF        wCFOpen = 'N'
      C                   OPEN      LEEIRPL0
      C                   OPEN      LEEIRFL0
      C                   EVAL      wCFOpen = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1969,22 +1969,22 @@
       *                                                               *
       *****************************************************************
      C     SRClearAMRT   BEGSR
- 
+
      C                   IF        wAMRTOpen = 'Y'
      C                   CLOSE     LEAMRTL0
      C                   EVAL      wAMRTOpen = 'N'
      C                   ENDIF
- 
+
      C                   MOVEL     ##OX1(11)     pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   IF        wAMRTOpen = 'N'
      C                   OPEN      LEAMRTL0
      C                   EVAL      wAMRTOpen = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1998,45 +1998,45 @@
       *                                                               *
       *****************************************************************
      C     SREIRCalc     BEGSR
- 
+
      C                   MOVEL     ##OX1(1)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVEL     ##OX1(2)      pMESOVR
- 
+
       * Override ZAEIRFPD
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   EVAL      POutEIR      = *ZERO
      C                   EVAL      PReturnCode  = *BLANKS
- 
+
      C                   CALLB     'ZAEIRCALC'
- 
+
       ** Input Parameter
      C                   PARM                    PInpTNRF
      C                   PARM                    PInpStartEff
      C                   PARM                    PInpEndEff
- 
+
       ** Output Parameter
      C                   PARM                    POutEIR
      C                   PARM                    PReturnCode
- 
+
      C                   MOVEL     ##OX1(3)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVEL     ##OX1(4)      pMESOVR
- 
+
       * Override ZAEIRFPD
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
       ** Save Effective Interest Rate for Adjustment Computation
      C                   EVAL      wEffIntRate = POutEIR
                                                                                               262628
@@ -2058,7 +2058,7 @@
                                                                                               262628
      C                   EVAL      REIR   = ZFIELD                                            262628
      C                   WRITE     LE004611D2                                                 262628
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2072,36 +2072,36 @@
       *                                                               *
       *****************************************************************
      C     SRAmortCalc   BEGSR
- 
- 
+
+
      C                   MOVEL     ##OX1(5)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVEL     ##OX1(7)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVE      PAMORTDS      PAmortDSA
- 
+
       ** Call Amortisation Calculator
      C                   CALLB     'ZAAMRTCALC'
      C                   PARM                    PAmortDSA
- 
+
      C                   MOVEL     PAmortDSA     PAMORTDS
- 
+
      C                   MOVEL     ##OX1(6)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   MOVEL     ##OX1(8)      pMESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    pMESOVR
      C                   PARM                    pMESLEN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2115,7 +2115,7 @@
       *                                                               *
       *****************************************************************
      C     SRDayNum      BEGSR
- 
+
       ** If No. of Days in a Year in Hedging ICD is blank, use
       ** the common processing in Midas which are the following.
      C                   IF        FSNDYR = *BLANKS
@@ -2124,26 +2124,26 @@
                                                                                               262665
       ** Calculation Methods are:
      C                   SELECT
- 
+
       ** 1  Actual/365
       ** 4  365/365 (excluding 29/02)
      C                   WHEN      @ICBS = 1 or @ICBS = 4
      C                   Z-ADD     365           @NDYY
- 
+
       ** 2  Actual/360
       ** 3  360/360 (sometimes called 30/360)
       ** 5  365/360 (excluding 29/02)
      C                   WHEN      @ICBS = 2 or @ICBS = 3 or
      C                             @ICBS = 5
      C                   Z-ADD     360           @NDYY
- 
+
       ** 6  Actual/366
      C                   WHEN      @ICBS = 6
      C                   Z-ADD     366           @NDYY
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
      C                   MOVE      FSNDYR        @NDYY
      C                   SELECT
      C                   WHEN      @NDYY  = 360
@@ -2153,9 +2153,9 @@
      C                   WHEN      @NDYY  = 366
      C                   EVAL      ZZCALC = '6'
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2171,14 +2171,14 @@
       *                                                               *
       *****************************************************************
      C     SRZINTDY      BEGSR
- 
+
      C                   CALLB     'ZINTDY'
      C                   PARM                    PRetCode
      C                   PARM                    ZZINDY
      C                   PARM                    ZZBEG
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  262628
@@ -2327,17 +2327,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Access Bank ICD
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
@@ -2347,13 +2347,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger
      C                   CALLB     'AOGELRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDGELRPD'
@@ -2362,18 +2362,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if the system is set to Last Day Accrual
      C                   IF        BKALDI <> 'Y'
      C                   EVAL      wAccInd = 'F'
      C                   ENDIF
- 
+
       ** Access Object for Hedge ICD
      C                   CALLB     'AOHEDGR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDHEDG        PARM      SDHEDG        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDHEDGPD'
@@ -2382,9 +2382,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Calculate Event Control Date
- 
+
      C                   IF        (BJDNWD - 1) > BKAPDT
      C                   EVAL      wEvCD = BKAPDT
      C                   ELSE
@@ -2400,20 +2400,20 @@
      C                   PARM                    SFILE1                                       262628
      C                   PARM                    ZSNUM                                        262628
      C                   PARM                    ZSERR                                        262628
- 
+
      C     KLoanDate     KLIST
      C                   KFLD                    kEITRAN
      C                   KFLD                    kEIDate
- 
+
      C     KFSeq         KLIST
      C                   KFLD                    kEITRAN
      C                   KFLD                    kEIFSEQ
- 
+
      C*****KTranFSeq     KLIST                                                                262600
      C**********         KFLD                    kEITRAN                                      262600
      C**********         KFLD                    kEIFSEQ                                      262600
      C**********         KFLD                    wEISTDT                                      262600
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2429,25 +2429,25 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2006

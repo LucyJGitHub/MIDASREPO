@@ -69,6 +69,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -137,19 +138,19 @@
       *  CAP076 - Lending API enhancements - Rollover details         *
       *                                                               *
       *****************************************************************
- 
+
      FCLOANX    UF A E           K DISK    COMMIT
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANZ1F)
      F                                     INFSR(*PSSR)
      F                                     USROPN
       * Midas LE Transaction Details Master File
- 
+
      F***LTRIX**** UF   F   43        DISK    INFSR(*PSSR)                                  AR322732
      FLTRIX     O  A F   45        DISK    INFSR(SRERR)                                     AR322732
      F                                     COMMIT
       * Midas LE Loans Transactions Index File
- 
+
      FSDCWHTL1  IF   E           K DISK    INFSR(SRERR)                                      BUG3760
       ** Compliance Watch Hit List                                                           BUG3760
                                                                                              BUG3760
@@ -178,12 +179,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -194,42 +195,42 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D CrLnFilFmtL   E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D CrLnFilFmtK   E DS                  EXTNAME(CLOANCK)
      D                                     PREFIX(CHK)
       ** Rename fields for Timestamp checking
- 
+
      D ValidloanL    E DS                  EXTNAME(LEVLERLPD)
      D                                     PREFIX(L_)
       ***  New Loan in File Format CL
- 
+
      D ValidloanK    E DS                  EXTNAME(LEVLERKPD)
       ***  New Loan in File Format CK
      D                                     PREFIX(K_)
- 
+
      D LERI_OK       E DS                  EXTNAME(LEELERIPD)
       * Error indicators
- 
- 
+
+
       **  Loan Details File
      D CLOANLDS      E DS                  EXTNAME(CloanCL)
- 
+
      D CLOANKDS      E DS                  EXTNAME(CloanCK)
      D  @KRECI       E                     EXTFLD(RECI)
      D  @KLNRF       E                     EXTFLD(LNRF)
@@ -243,32 +244,32 @@
      D  @KAFRT       E                     EXTFLD(AFRT)
      D  @KREPA       E                     EXTFLD(REPA)
      D  @KTMST       E                     EXTFLD(TMST)
- 
- 
+
+
       * Data Structures for use with access programs
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External data structure for SAR details
      D  SCLCD        E                     EXTFLD(LCD)
- 
+
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       ** EXTERNAL DS FOR CUSTOMER LENDING ICD
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                 BUG3760
       ** External DS for Customer Details                                                    BUG3760
                                                                                              BUG3760
@@ -300,14 +301,14 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D @Timestamp      S             26Z
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
      D T#TREF          S             26A                                                      CGL029
- 
+
       ** Fields used in call to ZF2C
      D DateIn          S              5  0
      D FirstCcy        S              3A
@@ -316,7 +317,7 @@
      D SecondLoc       S              3A
      D NumDaysFwd      S              2S 0
      D DayNumber       S              5  0
- 
+
      D CAS009          S              1                                                       CAS011
      D CAS016          S              1                                                       CAS019
      D CSD015          S              1                                                      BUG3760
@@ -354,13 +355,13 @@
                                                                                              BUG3760
       ** Fields used in call to ZTNLU1
      D PNatn           S              5P 0
- 
+
      D OVRDBF          C                   'OVRDBF FILE(CLOANX)-
      D                                       TOFILE(CLOAN) SHARE(*NO)'
- 
+
      D LNOST           S              2    DIM(3) CTDATA PERRCD(3)
       **  Array containing valid settlement types for loan ccy.
- 
+
      D XOT             S             25A   DIM(Elements) PERRCD(1) CTDATA                    BUG3760
       ** XML Opening Tags for the Compliance Engine                                          BUG3760
                                                                                              BUG3760
@@ -385,7 +386,7 @@
      D CHTPX           S              1                                                     AR322732
      D TNLUX           S              5P 0                                                  AR322732
      D BRCAX           S              3                                                     AR322732
- 
+
       ** Need to describe internally as only one format available
      I*LTRIX**** NS        1 CH                                                             AR322732
       ***Transaction*index*header**************************************                     AR322732
@@ -429,7 +430,7 @@
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -437,11 +438,11 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUSER = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
@@ -451,10 +452,10 @@
      C                   CALLB     'ZTNLU1'
      C                   PARM                    @@RTCD
      C                   PARM                    PNATN
- 
+
       ** If called from CTU and action is Authorise, need to perform
       ** update for Amend and Authorisation
- 
+
      C     @@CTU         IFEQ      'Y'
      C     @@ACTN        ANDEQ     'X'
      C     @@ACTN        OREQ      'Q'                                                        CLE030
@@ -462,18 +463,18 @@
      C                   EXSR      AMEND
      C                   EXSR      AUTHOR
      C                   ELSE
- 
+
       ** Amend or Authorise
- 
+
      C     @@ACTN        CASEQ     'A'           AMEND
      C     @@ACTN        CASEQ     'X'           AUTHOR
      C     @@ACTN        CASEQ     'Q'           AUTHOR                                       CLE030
      C                   ENDCS
- 
+
      C                   ENDIF
- 
+
       ** Data export for CCRM - Limits
- 
+
      C     CDE001        IFEQ      'Y'
      C                   MOVEL     L_CLLNRF      T#TREF
      C                   CALL      'DEWTTRIG'
@@ -482,10 +483,10 @@
      C                   PARM      'LOAN'        T#TCAT            4
      C                   PARM                    ResrvId          10                          CDE005
      C                   ENDIF
- 
+
       * Exit From Program
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -495,12 +496,12 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current Customer details
- 
+
      C                   MOVE      L_CLLNRF      MidasLnrf         6
- 
- 
+
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -534,8 +535,8 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
- 
+
+
      C                   CALLB     'LELERIRTV'
       * Inputs
       *
@@ -577,18 +578,18 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C                   IF        @TYPE = '1'
- 
+
      ** CloanCL
      C                   IF        CHTMST <> L_CLTMES
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -597,14 +598,14 @@
      C                   IF        CHKTMST <> K_CLTMES
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
      C                             DDLNRFOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C                 2 0
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError         132
@@ -616,11 +617,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -630,13 +631,13 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Loan record (CLOANCL)
- 
+
      C     L_CLLNRF      CHAIN     CLOANCLF                           99
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   MOVEL     L_CLLNRF      DBKEY
      C                   EVAL      DBFILE = 'CLOANCLF'                          ************
@@ -645,7 +646,7 @@
      C                   ENDIF
                                                                                               261894
      C                   MOVEL     CrLnFilFmtL   Z#BSTS                                       261894
- 
+
       ** If CAS009 is On, update LEEIRDPD records depending on                                CAS011
       ** action being done.                                                                   CAS011
       *                                                                                       CAS011
@@ -767,7 +768,7 @@
      C                   ENDIF                                                                CAS019
       ** Set Transaction Detail fields on amend
       ** (only the fields changed by the Rollover function)
- 
+
      C                   EVAL      RLDT = L_CLRLDT
      C                   EVAL      NROD = L_CLNROD
      C                   EVAL      RLFQ = L_CLRLFQ
@@ -827,20 +828,20 @@
       **********                                                                   AR826115 MD034840
      C**********         EVAL      SPIN = ' '                                      AR826115 MD034840
      C**********         ENDIF                                                     AR826115 MD034840
- 
+
       *
       ** Update Record
- 
+
      C                   UPDATE    CLOANCLF
- 
+
      C                   MOVEL     CLOANLDS      Z#ASTS                                       261894
- 
+
       ** Access Loan record (CLOANCLK)
- 
+
      C     L_CLLNRF      CHAIN     CLOANCKF                           99
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   MOVEL     L_CLLNRF      DBKEY
      C                   EVAL      DBFILE = 'CLOANCKF'                          ************
@@ -849,10 +850,10 @@
      C                   ENDIF
                                                                                               261894
      C                   MOVEL     CrLnFilFmtK   Z#BSTK                                       261894
- 
+
       ** Set Transaction Detail fields on amend
       ** (only the fields changed by the Rollover function)
- 
+
      C                   EVAL      RDST = K_CLRDST
      C                   EVAL      ORVD = K_CLORVD
      C                   EVAL      THRN = K_CLTHRN
@@ -927,7 +928,7 @@
      C                   EVAL      CHTP = K_CLCHTP
       *
      C                   Z-ADD     BJRDNB        LCD
- 
+
       ** Timestamp (use same as CLOANCL)
      C                   EVAL      TMST=TimeStamp
       ***Front*Office*ID***********************************************                       243232
@@ -1044,12 +1045,12 @@
      C                   ENDIF                                                               BUG3760
                                                                                              BUG3760
      C                   ENDIF                                                               BUG3760
- 
+
       *
       ** Update Record
- 
+
      C                   UPDATE    CLOANCKF
- 
+
      C                   MOVEL     CLOANKDS      Z#ASTK                                       261894
                                                                                               261894
      C                   EXSR      SRSHDW                                                     261894
@@ -1062,8 +1063,8 @@
      C     L_CLAUTH      OREQ      'Y'                                                        CAP086
      C                   EXSR      AUTHOR
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1073,23 +1074,23 @@
       *                                                              *
       ****************************************************************
      C     AUTHOR        BEGSR
- 
+
       ** Access Loan record (CLOANCLK)
- 
+
      C     L_CLLNRF      CHAIN     CLOANCKF                           99
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   MOVEL     L_CLLNRF      DBKEY
      C                   EVAL      DBFILE = 'CLOANCKF'                          ************
      C                   EVAL      DBASE  = 004                                 * DBERR 004*
      C                   EXSR      SRERR                                        ************
      C                   ENDIF
- 
+
       ** Set Transaction Detail fields on authorise
       ** (only the fields changed by the Rollover function)
- 
+
       **  If Release Authorisation feature is on set rollover status                          CLE030
      C     CLE030        IFEQ      'Y'                                                        CLE030
      C                   MOVE      K_CLRSTS      RSTS                                         CLE030
@@ -1117,7 +1118,7 @@
       *
       ** Last Change Type
      C                   EVAL      CHTP = K_CLCHTP
- 
+
       ** Timestamp
       ** Generate only if subroutine is not called from subr AMEND
       ** and not called from CTU
@@ -1132,12 +1133,12 @@
      C**********         EVAL      FRNT=K_CLFRNT                                              243232
       ** Associated Front Office ID
      C                   EVAL      AFRT=K_CLAFRT
- 
+
       *
       ** Update Record
- 
+
      C                   UPDATE    CLOANCKF
- 
+
       *
       **  For Discount loans, update LTRIX.
       *
@@ -1146,9 +1147,9 @@
      C     L_CLPTYP      OREQ      67
      C                   EXSR      SRLTRX
      C                   ENDIF
- 
- 
- 
+
+
+
      C                   ENDSR
       *****************************************************************                      BUG3760
       /EJECT                                                                                 BUG3760
@@ -1506,9 +1507,9 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    @CURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBKEY  = @CURR
      C                   EVAL      DBFILE = 'SDCURRPD'                          ************
@@ -1558,9 +1559,9 @@
      C**********         ENDIF                                                              AR322732
      C******IN85         IFEQ      *ON                                                      AR322732
      C******INU8         OREQ      *ON                                                      AR322732
- 
+
       ** Database error
- 
+
      C**********         EVAL      DBKEY  = '1     '                                        AR322732
      C**********         EVAL      DBFILE = 'LTRIX   '                          ************AR322732
      C**********         EVAL      DBASE  = 006                                 * DBERR 006*AR322732
@@ -1581,9 +1582,9 @@
       **  Access next available LTRIX record.
      C*****LXRRN         CHAIN     LTRIX                              85                    AR322732
      C******IN85         IFEQ      *ON                                                      AR322732
- 
+
       ** Database error
- 
+
      C**********         MOVEL     LXRRN         DBKEY                                      AR322732
      C**********         EVAL      DBFILE = 'LTRIX   '                          ************AR322732
      C**********         EVAL      DBASE  = 007                                 * DBERR 007*AR322732
@@ -1614,12 +1615,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
- 
+
+
       **  Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       * Return Code
      C                   PARM                    @@RTCD            7
       * Action Code
@@ -1649,15 +1650,15 @@
      C                   EVAL      DBASE  = 900                                 * DBERR 900 *
      C                   EXSR      SRERR                                        *************
      C                   ENDIF
- 
+
       ** Check if CDE001 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CDE001'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
      C                   MOVE      'Y'           CDE001            1
      C                   ELSE
@@ -1671,7 +1672,7 @@
      C                   EXSR      SRERR                                        *************
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** Access Customer Lending ICD via access program
       *  (database error handling done in access program)
@@ -1886,15 +1887,15 @@
      C                   ENDIF                                                               BUG9507
                                                                                              BUG9507
      C                   ENDIF                                                               BUG9507
- 
+
       ** OVRDBF CLOANX to CLOAN then OPEN CLOANX
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBF)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBF        QCMD             70
      C                   PARM                    LENGTH           15 5
      C                   OPEN      CLOANX
- 
+
       ** Determine if CAS009 is ON                                                            CAS011
       *                                                                                       CAS011
      C                   CALLB     'AOSARDR0'                                                 CAS011
@@ -1995,19 +1996,19 @@
       *                                                              *
       ****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'LELERIUPD'   DBPGM            10
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       **  Terminate the Program
- 
+
      C                   RETURN
- 
- 
+
+
      C                   ENDSR
       ****************************************************************
       /COPY ZACPYSRC,PSSR_ILE

@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -46,15 +47,15 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Risk Participant Details file
      FLEPARTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -66,105 +67,105 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY includes the standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Participant Details in file format
      D LEPARTPDFmt   E DS                  EXTNAME(LEPARTPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** RUNDAT DATA AREA
      D RUNDAT          DS
      D  MBIN                  13     13
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * CLEAR OUTPUTS
- 
+
      C                   CLEAR                   LEPARTPDFmt
      C                   MOVE      'Y'           S#ACTNok
      C                   MOVE      'Y'           S#CSSNok
      C                   MOVE      *BLANK        S#CNUM
- 
+
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIdArr
      C                   MOVE      *BLANK        MsgDtaArr
@@ -190,9 +191,9 @@
      C     S#CSSNok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** If not insert, check risk participant exists
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      CHKLEPART
      C                   ENDIF
@@ -210,18 +211,18 @@
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      VLDAUT
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ***********************************************************
       /SPACE 5
       ***********************************************************
       ** Valididate the action code
       ***********************************************************
      C     VALACTN       BEGSR
- 
+
      C     P#MODE        IFEQ      'B'
- 
+
      C     S#ACTN        IFNE      'I'
      C     S#ACTN        ANDNE     'A'
      C     S#ACTN        ANDNE     'D'
@@ -230,9 +231,9 @@
      C                   MOVEL     'S#ACTN '     FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     S#ACTN        IFNE      'E'
      C     S#ACTN        ANDNE     'I'
      C     S#ACTN        ANDNE     'A'
@@ -242,9 +243,9 @@
      C                   MOVEL     'S#ACTN '     FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -252,9 +253,9 @@
       **  Validate key fields (Customer)
       ***********************************************************
      C     VLDKEY        BEGSR
- 
+
       ** Validate Customer
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -359,40 +360,40 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM                    RESPMODE          1
- 
+
       * Action and customer
      C                   PARM                    S#ACTN            1
      C                   PARM                    S#CSSN           10
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC            6
      C                   PARM                    S#PMFT            3
      C                   PARM                    S#PMFN            2
- 
+
       * Prime facility branch
      C                   PARM                    FcbrBranch        3
       *
       * OUTPUTS
- 
+
       * Participant Details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Action and customer OK indicators
      C                   PARM                    S#ACTNok          1
      C                   PARM                    S#CSSNok          1
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
       *
@@ -403,7 +404,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Ix                3 0
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -436,18 +437,18 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *  GET MBIN FROM DTAARA/RUNDAT
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
      C     *LIKE         DEFINE    MNUM          K#MNUM
- 
+
       ** Key lists
- 
+
      C     LEPARTK       KLIST
      C                   KFLD                    FcbrBranch
      C                   KFLD                    K#CNUM
@@ -460,9 +461,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

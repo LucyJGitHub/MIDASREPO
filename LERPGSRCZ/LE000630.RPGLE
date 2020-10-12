@@ -35,6 +35,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD027418 - Exclude loan if it is not yet authorised and      *
       *             last action was insert.                           *
       *  MD026971 - Issue either overridable error or warning         *

@@ -26,6 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD037229 - Remove the validation of town after ISO code in   *

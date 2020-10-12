@@ -37,7 +37,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

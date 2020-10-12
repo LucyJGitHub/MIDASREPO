@@ -77,6 +77,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055874 - Reversal entries generated for retail account     *
       *             which is still attached to the facility. When the *
       *             facility of a retail account is changed, ensure   *

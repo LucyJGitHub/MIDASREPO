@@ -31,6 +31,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CLE042 - Extended Loan Sub Type                              *
@@ -46,25 +47,25 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FLEIRPRTL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEIRPRTD0 : LEIRPRTX0)
      FLEIRPRTL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FAPILSETL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APILSETD0:APILSETX0)
      FAPILSETL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** API Invalid log file by Type/FO Id/Time
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN
      F                                     COMMIT
- 
+
      FLERPRTDDF CF   E             WORKSTN INFSR(*PSSR)
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -73,55 +74,55 @@
       ** Standard D-specs
       ** ================
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D #EI             S              1    DIM(25)
- 
+
       ** Risk Participant Details in screen format
      D RPRT          E DS                  EXTNAME(LERPRTPD)
- 
+
       ** Risk Participant Details OK indicator
      D RPRT_OK       E DS                  EXTNAME(LEERPRTPD)
- 
+
       ** Risk Participant Details in file format
      D LEPARTPDFmt   E DS                  EXTNAME(LEPARTPD)
      D***LeRPRTREC             72    140                                                      CGL029
@@ -130,7 +131,7 @@
      D  LeRPRTPAY            155    699                                                       CGL029
      D  LeRPRTRECEx          792    809                                                       CGL029
      D  LeRPRTPAYEx          810    827                                                       CGL029
- 
+
       ** New Risk Paticipant Details Details in file format
      D LEVRPRTPD     E DS                  EXTNAME(LEVRPRTPD)
      D***V_REC**               72    140                                                      CGL029
@@ -139,7 +140,7 @@
      D  V_PAY                155    699                                                       CGL029
      D  V_RECEx              793    810                                                       CGL029
      D  V_PAYEx              811    828                                                       CGL029
- 
+
       ** Settlement Details in file format
      D APILSETPDFmt  E DS                  EXTNAME(APILSETPD)
      D***APILSETREC           100    174                                                      CGL029
@@ -147,60 +148,60 @@
      D  APILSETREC           100    180                                                       CGL029
      D  APILSETPAY           181    755                                                       CGL029
      D @PARM3        E DS                  EXTNAME(SDSETLPD)                                  222373
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD) PREFIX(F_)
      D  F_RECEx               21     81                                                       CGL029
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD) PREFIX(F_)
      D  F_PayEx               21    575                                                       CGL029
- 
+
       ** Current Risk Participant Details in screen format
      D C_RPRT        E DS                  EXTNAME(LERPRTPD)
      D                                     PREFIX(C_)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status data area
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Module details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Retail details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       ** API details
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** EXTERNAL DS FOR SAR DETAILS
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)                                        CLE042
      D SCA_TYLC      E                     EXTFLD(TYLC)                                       CLE042
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data structure for passing a parameter to synon screen
       ** handling program.
      D SETLIB        E DS                  EXTNAME(SETLIAB) INZ
      D QQRONS1       E                     EXTFLD(QQRONS)                                     CGL029
      D QQPONS1       E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       ** Data structure for passing a parameter to synon screen
       ** handling program.
      D SETLIZ        E DS                  EXTNAME(SETLIAZ)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Timestamp
      D @XTMSTSEL       S             26Z
      D @XREPNSEL       S              5S 0
@@ -212,19 +213,19 @@
      D POPTN           S              7A
      D PSARD           S              6A
      D SLNRF           S              6                                                       222373
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
@@ -235,37 +236,37 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * DO SCREEN: BROWSE INVALID TRANSACTIONS
      C     @SCRN         IFEQ      'B'
      C                   EXSR      SCRN@B
      C                   END
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   END
- 
+
       * SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
- 
+
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
- 
+
       * DO FILE UPDATES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
- 
+
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
@@ -442,16 +443,16 @@
      C                   CLEAR                   F_REC
      C                   CLEAR                   F_PAY
      C     APILSETX      CHAIN     APILSETX0                          99
- 
+
       ** Risk Participant settlement instructions
- 
+
      C                   MOVEL     APILSETREC    F_REC
      C                   MOVEL     APILSETPAY    F_PAY
- 
+
      C                   EXSR      SET_FL2SC
- 
+
       * Access primary facility
- 
+
      C                   EXSR      ACSPFA
      C                   MOVEL     FcbrBranch    S#BRCA
      C                   MOVEL     FccyFCCY      S#FCCY
@@ -463,9 +464,9 @@
      C     Idx           IFNE      0
      C                   MOVEL     *BLANK        S#ACTN
      C                   ELSE
- 
+
       * Retrieve current transaction
- 
+
      C                   EXSR      RTVTRAN
       *
       * If errors occurred in access of current transaction
@@ -475,14 +476,14 @@
      C                   MOVEL     *BLANK        S#ACTN
      C                   ENDIF
      C                   ENDIF
- 
+
       * Send the error messages to the main details screen
- 
+
      C                   EXSR      SNDM@M
      C                   EXSR      SET_SCEI
- 
+
       * Reset Settlement Screen Setup indicator
- 
+
      C                   MOVE      'N'           SSCR_SetUp
       *
       * GO TO MAIN DETAILS SCREEN
@@ -505,7 +506,7 @@
       * SNDM@M - SEND A MESSAGE TO MAIN DETAILS SCREEN
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -571,7 +572,7 @@
      C                   ELSE
      C                   MOVEL     '1'           *IN67
      C                   END
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   MOVEL     '1'           *IN09
      C                   ELSE
@@ -604,13 +605,13 @@
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
      C                   Z-ADD     0             WIdx
- 
+
       ** Reset screen error indicators
- 
+
      C                   EXSR      RESET_SCEI
- 
+
       **  Clear Message subfile
- 
+
      C                   EXSR      CLEARM
       *
       * CK/3 - END PROGRAM
@@ -697,7 +698,7 @@
       *
       * Risk participant details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY
@@ -707,17 +708,17 @@
       *
       * Risk Participant Details in screen format
      C                   PARM                    C_RPRT
- 
+
       * Syndicate member details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#SRNM           20
      C                   PARM                    S#SRTN           10
- 
+
       * Introducing customer details
      C                   PARM                    S#IRNM           20
      C                   PARM                    S#IRTN           10
- 
+
      C                   CALLB     'LERPRTAMD'
       *
       * INPUTS
@@ -770,16 +771,16 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Risk Participant Details in screen format
      C                   PARM                    RPRT
- 
+
       * Agent number
      C                   PARM                    S#ANUM            6
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -797,9 +798,9 @@
       * Front office inputs (if mode = 'B')
      C                   PARM                    R1PCOB            3
      C                   PARM                    R1TNRF           15
- 
+
       * OUTPUTS
- 
+
       * Field OK flags
      C                   PARM                    RPRT_OK
       *
@@ -824,7 +825,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       * Valid Risk Participant Details
      C                   PARM                    LEVRPRTPD
       *
@@ -911,48 +912,48 @@
       * SCRN@S - PROCESS SCREEN: SETTLEMENT DETAILS
       *****************************************************************
      C     SCRN@S        BEGSR
- 
+
       ** Setup the settlement screen fields (SETLIAB/SETLIAZ)
- 
+
      C     SSCR_SetUp    IFEQ      'N'
      C                   EXSR      SETUP_SSCR
      C                   MOVE      'Y'           SSCR_SetUp        1
      C                   ENDIF
- 
+
       ** Call extended settlements input
- 
+
      C                   CALL      'SD2400'
      C                   PARM                    @RTCD
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
      C                   PARM                    SLNRF                                        222373
      C                   PARM                    @PARM3                                       222373
- 
+
       ** Terminate the program if database error returned
- 
+
      C     PMDBSE        IFNE      *ZERO
- 
+
      C                   MOVEL     PMDBFL        DBFILE
      C                   MOVE      PMDBSE        DBASE
      C                   MOVEL     PMDBKY        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVE      'N'           PMFRST
- 
+
       ** If CF/3 taken in settlements screen, end the program
- 
+
      C     PMCMDP        IFEQ      '03'
      C                   MOVE      '1'           *INKC
       *
      C                   ELSE
- 
+
       ** If settlement details not valid (or no validation done)
       ** return to the main screen and send a message
       ** Otherwise, update the file fields with the screen fields
- 
+
      C     PMSDTV        IFNE      'Y'
- 
+
      C                   MOVE      '1'           *INKL
      C     PMERCD        IFNE      *BLANK
      C                   MOVEL     'LEA1020'     ZAMSID
@@ -960,11 +961,11 @@
      C                   MOVEL     'LEX9991'     ZAMSID
      C                   ENDIF
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
      C                   EXSR      SET_SC2FL
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * CK/3 - END PROGRAM
@@ -1019,7 +1020,7 @@
      C                   Else
      C                   MOVEL     DDFRNT        ASFRNT
      C                   EndIf
- 
+
      C                   EVAL      ASAFRT = DDAFRT
      C                   EVAL      ASREPA = DDREPA
      C                   EVAL      ASSTMP = XTMST
@@ -1032,13 +1033,13 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN            1
- 
+
       * Risk Participant Details in file format
      C                   PARM                    LEVRPRTPD
       *
@@ -1075,24 +1076,24 @@
      C  N99              DELETE    LEIRPRTD0
      C     APILSETK      CHAIN     APILSETD0                          99
      C  N99              DELETE    APILSETD0
- 
+
       ** Delete invalid record from the log file
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
      C                   EVAL      KMsgType = 'LERPRT'
      C                   EVAL      KFrntOffID = DDFRNT
      C                   EVAL      KTimeStamp = XTMST
- 
+
      C     KAPLOG        CHAIN     APILOGL0                           99
- 
+
      C                   IF        *IN99 = *OFF
      C                   DELETE    APILOGL0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   COMMIT
      C                   END
       *
@@ -1122,9 +1123,9 @@
       * ENDP - END PROGRAM
       *****************************************************************
      C     ENDP          BEGSR
- 
+
       ** Close the extended settlements program and end processing
- 
+
      C                   MOVE      'T'           PMTERM
      C                   CALL      'SD2400'
      C                   PARM                    @RTCD
@@ -1132,7 +1133,7 @@
      C                   PARM                    SETLIZ
      C                   PARM                    SLNRF                                        222373
      C                   PARM                    @PARM3                                       222373
- 
+
      C                   MOVEL     'T'           @SCRN
      C                   ENDSR
       *****************************************************************
@@ -1141,9 +1142,9 @@
       * Setup the settlement screen fields (SETLIAB/SETLIAZ)          *
       *****************************************************************
      C     SETUP_SSCR    BEGSR
- 
+
       ** Set action, customer, currencies and branch for settlement screen
- 
+
      C                   MOVE      S#ACTN        PMACTC
      C                   MOVE      'LEND'        PMCPGM
      C                   MOVEL     S#CNUM        PMCSNM
@@ -1159,9 +1160,9 @@
      C                   MOVE      'Y'           PMFRST
      C                   MOVE      'N'           PMVALO
      C                   Z-ADD     BJRDNB        PMRUND
- 
+
       ** Determine if pay & receive settlement screen will be protected
- 
+
      C     @OPSEL        IFEQ      'N'
      C                   MOVE      'Y'           PMPRCV
      C                   MOVE      'Y'           PMPPAY
@@ -1169,13 +1170,13 @@
      C                   MOVE      'N'           PMPRCV
      C                   MOVE      'N'           PMPPAY
      C                   ENDIF
- 
+
       ** Set settlement details valid flag
- 
+
      C                   MOVE      'N'           PMSDTV
- 
+
       ** Move settlement file fields to screen fields
- 
+
      C                   EXSR      SET_FL2SC
       *
      C     EDETP@S       ENDSR
@@ -1185,17 +1186,17 @@
       * Move settlement file fields to screen fields (SETLIAB/SETLIAZ)*
       *****************************************************************
      C     SET_FL2SC     BEGSR
- 
+
      C                   CALLB     'LESTFL2SC'
       *
       * INPUTS
       *
       * Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
       *
@@ -1204,7 +1205,7 @@
       * Screen receive and payment instructions
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1212,27 +1213,27 @@
       * Move settlement screen fields to file fields                  *
       *****************************************************************
      C     SET_SC2FL     BEGSR
- 
+
      C                   CALLB     'LESTSC2FL'
       *
       * INPUTS
       *
       * Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Screen receive and payment instructions
      C                   PARM                    SETLIB
      C                   PARM                    SETLIZ
       *
       * OUTPUTS
       *
- 
+
       * File Receive instructions
      C                   PARM                    F_REC
- 
+
       * File Payment instructions
      C                   PARM                    F_PAY
- 
+
      C**********         MOVEL     F_REC         V_REC                                        CGL029
      C                   MOVEL     F_RECEx       V_REC                                        CGL029
      C                   MOVEL     F_FLRSTM      ASRSTM                                       CGL029
@@ -1241,7 +1242,7 @@
      C                   MOVEL     F_PayEx       V_PAY                                        CGL029
      C                   MOVEL     F_FLPSTM      ASPSTM                                       CGL029
      C                   MOVEL     F_FLPONS      V_PayEx                                      CGL029
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1249,17 +1250,17 @@
       * Access Primary Facility                                       *
       *****************************************************************
      C     ACSPFA        BEGSR
- 
+
      C                   CALLB     'LE002520'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC            6
      C                   PARM                    S#PMFT            3
@@ -1267,7 +1268,7 @@
       *
       * OUTPUTS
       *
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -1288,19 +1289,19 @@
      C                   PARM                    FccaCANM          6                          CSD027
      C                   PARM                    FccaCAFT          3 0
      C                   PARM                    FccaCAFN          2 0
- 
+
       * Primary customer name & town
      C                   PARM                    S#PRNM           20
      C                   PARM                    S#PRTN           10
- 
+
       * Agent customer number, name & town
      C                   PARM                    S#ANUM            6
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Primary facility amount edited
      C                   PARM                    S#FAMT           14
- 
+
       * Field OK flags
      C                   PARM                    S#PMFCOK          1
      C                   PARM                    S#PMFTOK          1
@@ -1318,7 +1319,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1326,40 +1327,40 @@
       * RTVTRAN - RETRIEVE TRANSACTION
       *****************************************************************
      C     RTVTRAN       BEGSR
- 
+
      C                   CALLB     'LERPRTRTV'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action and customer
      C                   PARM                    S#ACTN
      C                   PARM                    S#CSSN
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC
      C                   PARM                    S#PMFT
      C                   PARM                    S#PMFN
- 
+
       * Prime facility branch
      C                   PARM                    FcbrBranch
       *
       * OUTPUTS
- 
+
       * Participant Details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Action and customer OK indicators
      C                   PARM                    S#ACTNok
      C                   PARM                    S#CSSNok
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
       *
@@ -1370,7 +1371,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM      *zero         Idx
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1378,13 +1379,13 @@
       * Set screen error indicators                                   *
       *****************************************************************
      C     SET_SCEI      BEGSR
- 
+
       * Move 'OK' flags into array (for checking)
- 
+
      C                   MOVEA     RPRT_OK       #EI
- 
+
       * Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     2             #C                2 0
      C                   Z-ADD     41            #E                2 0
       *
@@ -1396,10 +1397,10 @@
      C                   ADD       1             #C
      C                   ADD       1             #E
      C                   END
- 
+
       *  Do while error messages found
       *  Write error messages to subfile
- 
+
      C                   Z-ADD     1             #C
      C     #C            DOWLE     ArrayMax
      C     FldNameArr(#C)ANDNE     *BLANKS
@@ -1407,10 +1408,10 @@
      C                   EXSR      ZASNMS
      C                   ADD       1             #C
      C                   ENDDO
- 
+
       *  Do while warning messages found
       *  Write warning messages to subfile
- 
+
      C                   Z-ADD     1             #C
      C     #C            DOWLE     ArrayMax
      C     WFldNamArr(#C)ANDNE     *BLANKS
@@ -1418,7 +1419,7 @@
      C                   EXSR      ZASNMS
      C                   ADD       1             #C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1455,7 +1456,7 @@
      C     ZAPGMQ        IFEQ      *BLANK
      C                   MOVEL     PSProcName    ZAPGMQ
      C                   END
- 
+
      C                   CALL      'Y2SNMGC'                            9999
      C                   PARM                    ZAPGMQ           10
      C                   PARM                    ZAPGRL            5
@@ -1541,52 +1542,52 @@
       * Start on Browse Screen
       *
      C                   MOVEL     'B'           @SCRN             1
- 
+
       * Screen fields
      C                   MOVE      PSUser        S#USER
      C                   MOVE      PSJobName     S#WSID
      C                   MOVE      BJMRDT        S#RUNA
      C                   MOVE      PSProcName    ##PGM
- 
+
       * Subfile indicators
      C                   MOVE      *ON           *IN25
- 
+
       * Disable settlements screen
      C                   MOVE      *OFF          *IN69
- 
+
       ** SETLIAZ parameters
- 
+
      C                   MOVE      BGRTBN        PMRETP
      C                   MOVE      BMRANR        PMRETS
- 
+
       * Message file
      C                   MOVEL     'LERMSGF   '  ZAMSGF
- 
+
       ** Message Type
      C                   MOVEL     'RPRT'        @MSGTYPE          4
      C                   MOVEL     'LERPRT'      @XMSGTYP         32
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   OPEN      APILOGL0
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CSC011'
@@ -1595,7 +1596,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * Key Lists
@@ -1617,12 +1618,12 @@
      C                   KFLD                    @XMSGTYP
      C                   KFLD                    DDFRNT
      C                   KFLD                    @XTMSTSEL
- 
+
      C     KAPLOG        KLIST
      C                   KFLD                    KMsgType
      C                   KFLD                    KFrntOffID
      C                   KFLD                    KTimeStamp
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

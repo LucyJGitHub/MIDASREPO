@@ -47,6 +47,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -85,12 +86,12 @@
       *  CAP084 - Midas Plus API development                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** Ê F-specs                              Ê
       ** Ê =======                              Ê
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
@@ -100,17 +101,17 @@
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the                          CLE148
       ** corresponding fields in the PSDS /COPY member, so that member                        CLE148
       ** must be included where this one is used.                                             CLE148
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
      D TranScnFmt    E DS                  EXTNAME(LERPSCPD)
       ** Deal in Screen Format
- 
+
      D TranScnFmt2   E DS                  EXTNAME(LERPS2PD)                                  CLE106
       ** Deal in Screen Format 2                                                              CLE106
                                                                                               CLE106
@@ -122,13 +123,13 @@
                                                                                               CLE106
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** Screen Receive Instructions
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** Screen Payment Instructions
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** Screen FRA/IRS Instructions
- 
+
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
@@ -138,17 +139,17 @@
      D  REC                  335    389                                                       TCA081
      D  PAY                  404    948                                                       TCA081
       ** Deal in File Format
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D**FLREC***               1     69                                                       TCA081
      D  FLREC                 21     75                                                       TCA081
       ** File Receive Instructions
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D**FLPAY***               1    559                                                       TCA081
      D  FLPAY                 21    565                                                       TCA081
       ** File Payment Instructions
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
      D WCustomer       S             10                                                       CSF011
@@ -158,11 +159,11 @@
                                                                                               CSF011
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** File FRA/IRS Instructions
- 
+
       **--------------------------------------------------------------------------------------------
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** *ENTRY parameters
      D AuthComp        S              1
      D FwdBck          S              1
@@ -171,7 +172,7 @@
      D DDVDAT_In       S              6
      D Buffer          S           6000
      D APIRetc         S              1
- 
+
       ** LERPSCRED parameters
      D @@MODE          S              6
      D @DDACTN         S              1
@@ -186,7 +187,7 @@
      D @SQRED          S              3
      D @VDRED          S              6
      D @FTRED          S             20
- 
+
       ** LERPSCRTV parameters
      D ModeofOp        S              6
      D*DDActnOK********S              1                                                       CLE106
@@ -252,20 +253,20 @@
      C                   CLEAR                   ##RECS
      C                   CLEAR                   ##PAYS
      C                   IF        @DDACTN = *BLANK
- 
+
      C                   IF        AuthComp = 'X'
      C                   EVAL      @DDACTN = 'X'
      C                   ELSE
      C                   EVAL      @DDACTN = 'E'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        FwdBck = 'F'
      C                   EVAL      @RDFWD = 'Y'
      C                   EVAL      @RDBCK = 'N'
      C                   ELSE
- 
+
      C                   IF        FwdBck = 'B'
      C                   EVAL      @RDFWD = 'N'
      C                   EVAL      @RDBCK = 'Y'
@@ -273,9 +274,9 @@
      C                   EVAL      @RDFWD = 'N'
      C                   EVAL      @RDBCK = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        @RDFWD =  'Y' OR @RDBCK = 'Y'
      C                   EXSR      LERPSCRED
      C                   ELSE
@@ -285,16 +286,16 @@
      C                   EVAL      @ERRMS = *BLANK
      C                   EVAL      @ERRDTA = *BLANK                                           CLE148
      C                   ENDIF
- 
+
       ** If deal read and no error message returned
      C                   IF        @LNRED <> *BLANK AND @ERRMS = *BLANK
- 
+
       ** Retrieve deal details
      C                   EVAL      @DDLNRF = @LNRED
      C                   EVAL      @DDSEQN = @SQRED
      C                   EVAL      @DDVDAT = @VDRED
      C                   EVAL      ARFOTranID = @FTRED
- 
+
      C                   EXSR      LERPSCRTV
      C     CLE106        IFEQ      'Y'                                                        CLE106
      C                   EVAL      DDLUTN = PCRF                                              CLE106
@@ -305,7 +306,7 @@
       *                                                                                       CLE034
      C                   EVAL      DDSTAL = STAL                                              CLE034
      C                   ENDIF                                                                CLE034
- 
+
       ** Convert to screeen format
      C                   IF        Idx = 0
      C                   EXSR      LERPSCCVT
@@ -315,27 +316,27 @@
      C                   EXSR      LERPSCCVA                                                  CLE106
      C                   ENDIF                                                                CLE106
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CSF011
       ** Populate Customer Name on Input fields                                               CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
- 
+
      C                   IF        @ERRMS <> *BLANK
      C                   EVAL      APIRetc = '0'
      C                   EVAL      FldNameArr(1) = 'DDLNRF'
      C                   EVAL      MsgIDArr(1) = @ERRMS
      C                   EVAL      MsgDtaArr(1) = @ERRDTA                                     CLE148
      C                   ENDIF
- 
+
       ** Build buffer with required output
      C                   EVAL                    Buffer = TranScnfmt
      C                                           + TranScnfmt2                                CLE106
      C                                           + ##RECS  + ##PAYS
      C                                           + Infdata                                    246771
      C                                           + ExtData                                    246771
- 
+
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -397,7 +398,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
@@ -511,140 +512,140 @@
      C                   ENDIF                                                                CLE148
       *                                                                                       CLE148
      C                   MOVEL     PSysVal1      wLoanAlpha                                   CLE148
- 
+
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LERPSCM01
       *
      C                   ENDSR
       **********************************************************************
      C     LERPSCRED     BEGSR
- 
+
      C                   CALLB     'LERPSCRED'
- 
+
       ** INPUT PARAMETERS
       ** RETURN CODE
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ** @@MODE = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** @@MODE = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM      '      '      @@MODE
- 
+
       ** ACTION CODE
      C                   PARM                    @DDACTN
- 
+
       ** Deal number pointer
      C                   PARM      DDLNRF_In     @DDLNRF
- 
+
       ** Sequence pointer
      C                   PARM      DDSEQN_In     @DDSEQN
- 
+
       ** Value date pointer
      C                   PARM      DDVDAT_In     @DDVDAT
- 
+
       ** Front Office ID
      C                   PARM                    @DDFRTN
- 
+
       ** READ FORWARDS
      C                   PARM                    @RDFWD
- 
+
       ** READ BACKWARDS
      C                   PARM                    @RDBCK
- 
+
       ** OUTPUT PARAMETERS
       ** ERROR MESSAGE
      C                   PARM                    wLoanAlpha                                   CLE148
      C                   PARM      *BLANK        @ERRMS
      C                   PARM      *BLANK        @ERRDTA                                      CLE148
- 
+
       ** Loan number
      C                   PARM                    @LNRED
- 
+
       ** Sequence
      C                   PARM                    @SQRED
- 
+
       ** Value date
      C                   PARM                    @VDRED
- 
+
       ** Front Office ID READ
      C                   PARM      *BLANK        @FTRED
- 
+
      C                   ENDSR
       **********************************************************************
      C     LERPSCRTV     BEGSR
- 
+
      C                   CALLB     'LERPSCRTV'
- 
+
       ** INPUTS
       ** Return code
      C                   PARM      *BLANKS       ReturnCode
- 
+
       ** ModeofOp = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** ModeofOp = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp
- 
+
       ** Response mode
      C                   PARM      'S'           ARRESPMODE
- 
+
       ** Action Code
      C                   PARM                    @DDACTN
- 
+
       ** Front Office Transaction ID
      C                   PARM                    ARFOTranID
- 
+
       ** (Midas) Transaction Number
      C                   PARM                    @DDLNRF
- 
+
       **(Midas) Sequence no.
      C                   PARM                    @DDSEQN
- 
+
       ** (Midas) Value date
      C                   PARM                    @DDVDAT
- 
+
       ** OUTPUTS
       ** (Current) deal in file format
      C                   PARM                    DealFilFmt
- 
+
       ** OK - Action code
      C                   PARM      *BLANK        DDActnOK
- 
+
       ** OK - Transaction Number
      C                   PARM      *BLANK        DDLnrfOK
- 
+
       ** OK - Sequence no.
      C                   PARM      *BLANK        DDSeqnOK
- 
+
       ** OK - Value Date
      C                   PARM      *BLANK        DDVdatOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   PARM                    PRcvParm                                     TDA070
      C                   PARM                    PPayParm                                    BUG8529
      C                   PARM                    WrkLnDetails                               MD021356
- 
+
      C                   ENDSR
       **********************************************************************
      C     LERPSCCVT     BEGSR
- 
+
      C                   CALLB     'LERPSCCVT'
- 
+
       ** INPUTS
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       ** (Current) Deal in file format
      C                   PARM                    DealFilfmt
- 
+
       ** OUTPUTS
       ** (Current) Deal in screen format
      C                   PARM                    TranScnfmt
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -663,8 +664,8 @@
       /EJECT                                                                                  CLE106
       *****************************************************************
      C     ZASETINCVT    BEGSR
- 
- 
+
+
      C                   EVAL      FLREC = REC
      C                   EVAL      FLPAY = PAY
       *                                                                                       TCA081
@@ -686,14 +687,14 @@
      C                   MOVE      SCCY          FLRSCY                                       CLE031
      C                   MOVE      PSCY          FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    ##PAYF
      C                   PARM                    ##RECF
      C                   PARM                    ##FRIF
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    ##PAYS
      C                   PARM                    ##RECS

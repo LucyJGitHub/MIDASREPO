@@ -41,6 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -66,12 +67,12 @@
       *           use as API's.                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      FFCLTYXFN  IF   E           K DISK    INFSR(*PSSR) PREFIX(PFN)
      F                                     IGNORE(FCLTYFMF:FCLTYHHF:FCLTYZZF)
@@ -81,7 +82,7 @@
      FLEFCLTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:FCLTL2)
      FLEPARTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -93,157 +94,157 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D OVRDBF          C                   'OVRDBF FILE(FCLTYXFN)-
      D                                       TOFILE(FCLTY) SHARE(*NO)'
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Funding Participant Details in screen format
      D FPRT          E DS                  EXTNAME(LEFPRTPD)
- 
+
       ** Funding Participant Details in file format 'A'
      D VFCLM         E DS                  EXTNAME(LEVFCLMPD)
- 
+
       ** Funding Participant Details in file format 'B'
      D VFCLN         E DS                  EXTNAME(LEVFCLNPD)
- 
+
       ** Prime Facility details for record 'A'
      D PrimeFM       E DS                  EXTNAME(FCLTYFM)
- 
+
       ** Prime Facility details for record 'B'
      D PrimeFN       E DS                  EXTNAME(FCLTYFN) PREFIX(PFN)
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
- 
+
       ** Funding Participant Details OK indicator
      D FPRT_OK       E DS                  EXTNAME(LEEFPRTPD)
- 
- 
+
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Facility Type Details
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
- 
+
       ** Alternate Name and Addresses
      D SDALTN        E DS                  EXTNAME(SDALTNPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D                                     PREFIX(SC_)
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D WProcDate       S                   LIKE(BJRDNB)
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
- 
+
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set up Key fields
- 
+
      C                   MOVE      FcbrBranch    K#BRCA
      C                   MOVE      S#PMFC        K#PMFC
      C                   MOVE      S#PMFT        K#PMFT
      C                   MOVE      S#PMFN        K#PMFN
- 
+
       ** Clear output fields
- 
+
      C                   MOVE      *BLANKS       S#SRNM
      C                   MOVE      *BLANKS       S#SRTN
      C                   MOVE      *BLANKS       S#IRNM
      C                   MOVE      *BLANKS       S#IRTN
- 
+
      C                   MOVEL     *ALL'Y'       FPRT_OK
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIDArr
@@ -255,7 +256,7 @@
      C                   Z-ADD     0             Wx
      C                   CLEAR                   VFCLM
      C                   CLEAR                   VFCLN
- 
+
       *
       ** Validate Syndicate Member
       *
@@ -298,22 +299,22 @@
       **  Validate Alternate Name and Address Code
       *
      C                   EXSR      VLDALT
- 
+
       * Set fields on insert
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   EXSR      SR_INSERT
      C                   ENDIF
       *
       * Set fields on Amend Or Reverse
- 
+
      C     S#ACTN        IFEQ      'A'
      C     S#ACTN        OREQ      'R'
      C                   EXSR      SR_AMEND
      C                   ENDIF
       *
      C     ENDVAL        TAG
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -322,18 +323,18 @@
       * VLDCUS   : Validate Syndicate Member                          *
       *****************************************************************
      C     VLDCUS        BEGSR
- 
+
       **  The Syndicate member must be entered
- 
+
      C     S#CSSN        IFEQ      *BLANKS
- 
+
      C                   MOVE      'N'           S#CSSNok
      C                   ADD       1             Ix
      C                   MOVEL     'S#CSSN      'FldNameArr(Ix)
      C                   MOVEL     'LEP0004'     MsgIdArr(Ix)
       *
      C                   ELSE
- 
+
       ** Access the Customer Details file
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '       '     @RTCD
@@ -355,10 +356,10 @@
      C                   MOVEL     BBCUST        S#CNUM
      C                   MOVEL     BBCRNM        S#SRNM
      C                   MOVEL     BBCRTN        S#SRTN
- 
+
       * If insert
       * the funding participant can't already exist
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   MOVE      BBCUST        K#CNUM
      C     K#LTL3        CHAIN     LEFCLTL2                           70
@@ -369,7 +370,7 @@
      C                   MOVEL     'LEP0006'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       * The syndicate member can't be a parent
      C     BBPAIN        IFEQ      'P'
      C                   MOVE      'N'           S#CSSNok
@@ -377,7 +378,7 @@
      C                   MOVEL     'S#CSSN      'FldNameArr(Ix)
      C                   MOVEL     'LEP0028'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       * Funding Participant is not allowed to be the Syndicate agent
      C                   MOVEL     BBCUST        W#CUST
      C     FcbrSYCU      IFEQ      W#CUST
@@ -400,12 +401,12 @@
       *
       **  The Facility Type must be entered
      C     S#FACT        IFEQ      *BLANKS
- 
+
      C                   MOVE      'N'           S#FACTok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FACT      'FldNameArr(Ix)
      C                   MOVEL     'LEP0009'     MsgIdArr(Ix)
- 
+
      C                   ELSE
       *
      C                   CALL      'AOFACTR0'
@@ -434,19 +435,19 @@
       * VLDJDT   : Validate Joining Date                              *
       *****************************************************************
      C     VLDJDT        BEGSR
- 
+
      C                   Z-ADD     *ZERO         W#JDTE
       *
       ** If the joining date is not defined, default it to the run date
      C     S#JDTE        IFEQ      *BLANKS
- 
+
      C                   MOVE      WProcDate     ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         S#JDTE
      C                   MOVE      WProcDate     W#JDTE
       *
      C                   ELSE
- 
+
       ** The date must be valid
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#JDTE        ZFIELD
@@ -457,7 +458,7 @@
      C                   MOVE      ZFIELD        ZDATEI
      C                   EXSR      ZDATE1
      C                   END
- 
+
      C     ZALIGNok      IFEQ      'N'
      C     ErrorFlag     OREQ      'Y'
       *
@@ -467,7 +468,7 @@
      C                   MOVEL     'LEP0011'     MsgIdArr(Ix)
       *
      C                   ELSE
- 
+
      C                   MOVE      ZDAYNO        W#JDTE
       *
      C     W#JDTE        IFGT      WProcdate
@@ -480,7 +481,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -501,10 +502,10 @@
      C                   PARM      S#ANUM        @CNUM            10
      C                   PARM                    @CNST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   MOVE      *BLANKS       S#INUM
      C                   MOVEL(P)  BBCUST        S#INUM
- 
+
      C                   ENDIF
       *
       ** Access the Customer Details file
@@ -537,13 +538,13 @@
       *
       ** If the value date is not defined, default it to the run date
      C     S#VDTC        IFEQ      *BLANKS
- 
+
      C                   MOVE      WProcDate     ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         S#VDTC
       *
      C                   ELSE
- 
+
       ** The date must be valid
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#VDTC        ZFIELD
@@ -554,7 +555,7 @@
      C                   MOVE      ZFIELD        ZDATEI
      C                   EXSR      ZDATE1
      C                   END
- 
+
      C     ZALIGNok      IFEQ      'N'
      C     ErrorFlag     OREQ      'Y'
       *
@@ -765,7 +766,7 @@
       * VLDSKM   : Validate Skim                                      *
       *****************************************************************
      C     VLDSKM        BEGSR
- 
+
      C                   Z-ADD     *ZERO         W#SKIR
      C                   Z-ADD     *ZERO         W#SKFR
       *
@@ -880,7 +881,7 @@
       * CALCSO   : Calculate total share                              *
       *****************************************************************
      C     CALCSO        BEGSR
- 
+
      C                   Z-ADD     0             W#TFAM           15 0
      C                   Z-ADD     0             W#TSHP           15 0
      C                   Z-ADD     0             W#EXPS           13 0
@@ -904,7 +905,7 @@
       * CALCAV   : Calculate available share                          *
       *****************************************************************
      C     CALCAV        BEGSR
- 
+
      C     S#ACTN        IFEQ      'A'
      C                   MOVE      S#CNUM        K#CNUM
      C                   MOVE      S#FACT        K#FACT
@@ -961,37 +962,37 @@
       * SETF_I   : Set fields exclusively on insert                   *
       *****************************************************************
      C     SETF_I        BEGSR
- 
+
       ** Joining date
- 
+
      C                   MOVE      S#JDTE        ZDATEI
      C                   EXSR      ZDATE1
      C                   MOVE      ZDAYNO        FPJDTE
- 
+
       ** Start Date should be defaulted to the later of prime facility
       ** start date or the participant joining date
- 
+
      C     FPJDTE        IFGT      FPDTAP
      C                   MOVE      FPJDTE        FPDTAP
      C                   ENDIF
- 
+
       ** Closing date should be within the range of the approval date
       ** and the expiry date.
- 
+
      C     FPCDTE        IFLT      FPDTAP
      C                   Z-ADD     FPDTAP        FPCDTE
      C                   ENDIF
- 
+
       ** PC Originating branch
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F1PCOB        FPPCOB
      C                   ELSE
      C                   MOVE      *BLANKS       FPPCOB
      C                   ENDIF
- 
+
       ** PC transaction reference
- 
+
      C     P#MODE        IFEQ      'B'
      C     F1TNRF        ANDNE     *BLANK
      C                   MOVE      F1TNRF        FPPCRF
@@ -1028,29 +1029,29 @@
      C                   PARM                    PCNUM            10
      C                   PARM                    PCNST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     '003'         DBASE
      C                   MOVEL     PCNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     BBACOC        FPACOF
       *
      C                   ENDIF
- 
+
       **   Participant facility Indicator
- 
+
      C     FcbrBICN      IFEQ      S#CNUM
      C                   MOVE      'I'           FPPRTR
      C                   ELSE
      C                   MOVE      'P'           FPPRTR
      C                   ENDIF
- 
+
       ** There should be no C/A facility for the funding participant
       ** if the participant is created against a tranche facility.
- 
+
      C     TRCA          IFEQ      'TR'
      C                   MOVE      *BLANKS       FPTRCA
      C**********         Z-ADD     0             FPCANM                                       CSD027
@@ -1058,7 +1059,7 @@
      C                   Z-ADD     0             FPCAFT
      C                   Z-ADD     0             FPCAFN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -1066,19 +1067,19 @@
       * SR_INSERT : Setup required for the insert action              *
       *****************************************************************
      C     SR_INSERT     BEGSR
- 
+
       ** Determine facility sequence number
- 
+
      C                   EXSR      DETFCNO
      C     Ix            CABNE     0             EINSERT
- 
+
       ** Access the prime facility record so details can be defaulted.
- 
+
      C                   MOVE      S#PMFC        K#CNUM
      C                   MOVE      S#PMFT        K#FACT
      C                   MOVE      S#PMFN        K#FCNO
      C                   MOVE      'A'           K#RCTP
- 
+
      C     K#FCTY        CHAIN     FCLTYFMF                           70
      C     *IN70         IFEQ      *ON
      C                   MOVEL     'FCLTYFM '    DBFILE                         * DBERR 09 *
@@ -1086,12 +1087,12 @@
      C                   MOVEL     S#PMFC        DBKEY                          ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Move the defaulted values into the Valid DS
      C                   MOVEL     PrimeFM       VFCLM
      C                   MOVEL     RONS          FPRONS                                       CGL029
      C                   MOVEL     PONS          FPPONS                                       CGL029
- 
+
      C                   MOVE      S#CNUM        FPCNUM
      C                   MOVE      S#FACT        FPFACT
      C                   Z-ADD     K4FCNO        FPFCNO
@@ -1107,24 +1108,24 @@
      C                   Z-ADD     0             FPYTDA
      C**********         Z-ADD     0             FPANUM                                       CSD027
      C                   EVAL      FPANUM  = *BLANKS                                          CSD027
- 
+
       * Set fields exclusively on insert
- 
+
      C                   EXSR      SETF_I
- 
+
       * Set fields on insert and amend
- 
+
      C                   EXSR      SETF_IA
- 
+
      C                   Z-ADD     WProcDate     FPORED
- 
+
       **  Access prime facility record so details can be defaulted.
- 
+
      C                   MOVE      S#PMFC        K#CNUM
      C                   MOVE      S#PMFT        K#FACT
      C                   MOVE      S#PMFN        K#FCNO
      C                   MOVE      'B'           K#RCTP
- 
+
      C     K#FCTY        CHAIN     PFCLTYFNF                          70
      C     *IN70         IFEQ      *ON
      C                   MOVEL     'FCLTYFN '    DBFILE
@@ -1132,10 +1133,10 @@
      C                   MOVEL     S#PMFC        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Move the defaulted values into the Valid DS
      C                   MOVEL     PrimeFN       VFCLN
- 
+
      C                   MOVE      S#CNUM        FNCNUM
      C                   MOVE      S#FACT        FNFACT
      C                   MOVE      K4FCNO        FNFCNO
@@ -1157,7 +1158,7 @@
      C                   Z-ADD     0             FNOAM8
      C                   Z-ADD     0             FNOAM9
      C                   Z-ADD     0             FNOA10
- 
+
      C     EINSERT       ENDSR
       *****************************************************************
       /SPACE 5
@@ -1165,30 +1166,30 @@
       * SETF_IA  : Set fields on insert and amend                     *
       *****************************************************************
      C     SETF_IA       BEGSR
- 
+
       * TNLU, last change date, last change type
- 
+
      C                   EXSR      ZTNLU1
      C                   Z-ADD     NATN          FPTNLU
      C                   Z-ADD     WProcDate     FPLCD
      C                   MOVE      S#ACTN        FPCHTP
- 
+
       ** Introducing customer
- 
+
      C                   MOVEL     S#INUM        FPINUM
- 
+
       ** Value date
- 
+
      C                   MOVE      S#VDTC        ZDATEI
      C                   EXSR      ZDATE1
      C                   MOVE      ZDAYNO        FPVDTC
- 
+
       ** Share Type
- 
+
      C                   MOVE      S#SHTP        FPSHTP
- 
+
       ** Facility Amount & Share Percentage
- 
+
      C     S#SHTP        IFEQ      'A'
       *
       * Facility amount
@@ -1236,17 +1237,17 @@
      C                   MOVE      P#FAMT        FPFAMT
       *
      C                   ENDIF
- 
+
       ** Recourse indicator
- 
+
      C                   MOVE      S#RCSI        FPRCSI
- 
+
       ** Agreement/Participan indicator
- 
+
      C                   MOVE      S#PASI        FPPASI
- 
+
       ** Skim interest rate & sign
- 
+
      C                   MOVE      *BLANK        ZFIELD
      C                   MOVE      S#SKIR        ZFIELD
      C                   Z-ADD     4             ZADIG
@@ -1259,9 +1260,9 @@
      C                   ELSE
      C                   MOVE      S#SKIS        FPSKIS
      C                   ENDIF
- 
+
       ** Skim funding rate & sign
- 
+
      C                   MOVE      *BLANK        ZFIELD
      C                   MOVE      S#SKFR        ZFIELD
      C                   Z-ADD     4             ZADIG
@@ -1274,13 +1275,13 @@
      C                   ELSE
      C                   MOVE      S#SKFS        FPSKFS
      C                   ENDIF
- 
+
       * Facility status
- 
+
      C                   MOVE      'A'           FPFSTS
- 
+
       ** Input, authorize, amend user
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      F1IUSR        FPIUSR
      C                   MOVE      F1XUSR        FPXUSR
@@ -1293,13 +1294,13 @@
      C                   MOVE      PsUser        FPXUSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Name & Address Code
- 
+
      C                   MOVE      S#NACD        FPNACD
- 
+
       ** Receive Settlement details
- 
+
      C                   MOVE      FLRSTM        FPRSTM
      C                   MOVE      FLRONS        FPRONS
      C                   MOVEL     FLRIBN        FPRIBN
@@ -1307,9 +1308,9 @@
      C                   MOVE      FLROBN        FPROBN
      C                   MOVE      FLROCN        FPROCN
      C                   MOVE      FLROBR        FPOSDB
- 
+
       ** Payment Settlement details
- 
+
      C                   MOVE      FLPSTM        FPPSTM
      C                   MOVE      FLPONS        FPPONS
      C                   MOVE      FLPIBN        FPPIBN
@@ -1347,7 +1348,7 @@
      C                   MOVE      FLRSCY        FPSCCY                                       CLE031
      C                   MOVE      FLPSCY        FPPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1355,15 +1356,15 @@
       * SR_AMEND : Setup required for the amend action                *
       *****************************************************************
      C     SR_AMEND      BEGSR
- 
+
       ** Set up the key to the facility file
- 
+
      C                   MOVE      S#CNUM        K#CNUM
      C                   MOVE      S#FACT        K#FACT
      C                   MOVE      S#FCNO        K#FCNO
- 
+
       ** Access facility record type 'A'
- 
+
      C                   MOVE      'A'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFMF                           70
       *
@@ -1378,30 +1379,30 @@
      C                   MOVEL     '*RECUPD   '  RetCodeIn
      C                   GOTO      EAMEND
      C                   ENDIF
- 
+
       * Move the defaulted values into the Valid DS
      C                   MOVEL     PrimeFM       VFCLM
      C                   MOVEL     RONS          FPRONS                                       CGL029
      C                   MOVEL     PONS          FPPONS                                       CGL029
       *
       * Set fields on insert and amend
- 
+
      C                   EXSR      SETF_IA
- 
+
       ** Access facility record type 'B'
- 
+
      C                   MOVE      'B'           K#RCTP
      C     K#FCTY        CHAIN     PFCLTYFNF                          70
- 
+
       * Move the defaulted values into the valid DS
      C                   MOVEL     PrimeFN       VFCLN
- 
+
       ** Update facility record type 'B'
- 
+
      C                   Z-ADD     NATN          FNTNLU
      C                   Z-ADD     WProcDate     FNLCD
      C                   MOVE      S#ACTN        FNCHTP
- 
+
      C     EAMEND        ENDSR
       *****************************************************************
       /SPACE 5
@@ -1413,7 +1414,7 @@
      C                   MOVE      S#CNUM        K#CNUM
      C                   MOVE      S#FACT        K#FACT
      C                   Z-ADD     1             K4FCNO
- 
+
      C     K#FCTYP       SETLL     FCLTY                                  70
       *
      C                   MOVE      'N'           W#EXIT            1
@@ -1435,7 +1436,7 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1471,11 +1472,11 @@
       /SPACE 5
       *****************************************************************
      C     ZTNLU1        BEGSR
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM                    RetCodeOut
      C                   PARM                    NATN              5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1483,23 +1484,23 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Funding Participant Details in screen format
      C                   PARM                    FPRT
- 
+
       * Agent number
      C                   PARM                    S#ANUM            6
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -1513,10 +1514,10 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * TNLU of funding participant record on FCLTYFM/FN
      C                   PARM                    H#TNLU            5 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM                    F1PCOB            3
      C                   PARM                    F1TNRF           15
@@ -1525,7 +1526,7 @@
      C                   PARM                    F1AUSR           10
       *
       * OUTPUTS
- 
+
       * Field OK flags
      C                   PARM                    FPRT_OK
       *
@@ -1554,7 +1555,7 @@
      C                   PARM                    VFCLM
       * Valid Funding Participant Record 'B'
      C                   PARM                    VFCLN
- 
+
      C     *LIKE         DEFINE    FcbrSYCU      W#CUST
      C     *LIKE         DEFINE    ZDAYNO        W#JDTE
      C     *LIKE         DEFINE    SHPC          W#SHRC
@@ -1562,43 +1563,43 @@
      C     *LIKE         DEFINE    SKFR          W#SKFR
      C     *LIKE         DEFINE    FAMT          W#AVAM
      C     *LIKE         DEFINE    SHPC          W#AVPC
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
- 
+
      C     *LIKE         DEFINE    FcbrBranch    K#BRCA
      C     *LIKE         DEFINE    PMFC          K#PMFC
      C     *LIKE         DEFINE    PMFT          K#PMFT
      C     *LIKE         DEFINE    PMFN          K#PMFN
      C     *LIKE         DEFINE    FCNO          K4FCNO
      C     *LIKE         DEFINE    RCTP          K#RCTP
- 
+
       * Key lists
- 
+
      C     K#LTL0        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
- 
+
      C     K#LTL2        KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#PMFC
      C                   KFLD                    K#PMFT
      C                   KFLD                    K#PMFN
- 
+
      C     K#LTL3        KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#PMFC
      C                   KFLD                    K#PMFT
      C                   KFLD                    K#PMFN
      C                   KFLD                    K#CNUM
- 
+
      C     K#FCTYP       KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
      C                   KFLD                    K4FCNO
- 
+
      C     K#FCTY        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -1619,26 +1620,26 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   EVAL      DBKEY = 'CSC011'
@@ -1646,13 +1647,13 @@
      C                   EVAL      DBASE = 905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
@@ -1671,9 +1672,9 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** OVRDBF FCLTYXFN to FCLTY then OPEN FCLTYX
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBF)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBF        QCMD             70
@@ -1683,9 +1684,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

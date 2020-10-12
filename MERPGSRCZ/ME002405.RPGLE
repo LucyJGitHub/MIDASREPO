@@ -34,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -45,17 +46,17 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
- 
+
      FGLGS94L1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLGS94D0:GLGS94D1)
       ** Midas GL MT941/942 Generation Schedules - Retrieve
       *
- 
+
      FGLMR94L2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLMR94D0:GLMR94D2)
       ** Midas GL MT941/942 Messages Requests - "SUBMITTED"
       *
- 
+
      FME002405DFCF   E             WORKSTN SFILE(ME002405S0:S0RRN)
       ** Midas ME MT941/2 Generation Schedules Browse Display
       *
@@ -116,11 +117,11 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
- 
+
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -132,53 +133,53 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)
       ** User Informations DS
       *
- 
+
      D PrvFilRcd     E DS                  EXTNAME(GLGS94PD) PREFIX(PRV_)
       ** Previous Generation Schedule File Record (i.e. initial state of the record)
       *
- 
+
      D NewFilRcd     E DS                  EXTNAME(GLGS94PD)
       ** New Generation Schedule File Record (i.e. new state after amendments)
       *
- 
+
      D DsNW94        E DS                  EXTNAME(GLNW94PD)
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
       ** Network Account MT94x Details record format data structure
       *
- 
+
      D DsACCNT       E DS                  EXTNAME(ACCNTAB) PREFIX(AC_)
       ** Account details record format data structure
       *
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS (long) used as output parameter for Access Objects
       *
- 
+
       ** Really used key
       *
      D KeyUsed         DS
@@ -193,7 +194,7 @@
      D  KeyMTPY                            LIKE(GSMTPY)
      D  KeySDTE                            LIKE(GSSDTE)
      D  KeySTIM                            LIKE(GSSTIM)
- 
+
       ** Position key
       *
      D KeyPos          DS
@@ -208,7 +209,7 @@
      D  KeyPosMTPY                         LIKE(GSMTPY)
      D  KeyPosSDTE                         LIKE(GSSDTE)
      D  KeyPosSTIM                         LIKE(GSSTIM)
- 
+
       ** Saved key
       *
      D KeySav          DS
@@ -223,32 +224,32 @@
      D  KeySavMTPY                         LIKE(GSMTPY)
      D  KeySavSDTE                         LIKE(GSSDTE)
      D  KeySavSTIM                         LIKE(GSSTIM)
- 
+
       ** Declared variables
       ** ------------------
       *
- 
+
       ** Valid action codes for current user
       *
      D ValActCd        S              1    DIM(11)
- 
+
       ** Error indicators array
       *
      D IN40_TO_70      S              1    DIM(31)
- 
+
       ** Parameters for QSNDDTAQ
- 
+
      D PDataQueue      S             10    INZ('GLM94XDQ  ')
      D PLibrary        S             10    INZ('*LIBL     ')
      D PDataLength     S              5  0 INZ(1)
      D PData           S              1    INZ('C')
- 
- 
+
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -258,7 +259,7 @@
      C                   PARM                    CommitIndI        1
      C                   PARM                    DsNW94
      C                   PARM                    MsgType           3
- 
+
       ** Key lists
       *
      C     KGLGS94L1     KLIST
@@ -273,7 +274,7 @@
      C                   KFLD                    KeyMTPY
      C                   KFLD                    KeySDTE
      C                   KFLD                    KeySTIM
- 
+
      C     KGLGS94L1P    KLIST
      C                   KFLD                    KeyNWRK
      C                   KFLD                    KeyBRCA
@@ -284,7 +285,7 @@
      C                   KFLD                    KeyNATY
      C                   KFLD                    KeyDSTN
      C                   KFLD                    KeyMTPY
- 
+
      C     KGLMR94L2     KLIST
      C                   KFLD                    KeyNWRK
      C                   KFLD                    KeyBRCA
@@ -298,41 +299,41 @@
      C                   KFLD                    MRSORQ
      C                   KFLD                    MRSDTE
      C                   KFLD                    S0STIM
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR SR
- 
+
       ** Initialize the subfile
       *
      C                   EXSR      $IniSubFil
- 
+
       ** Load the subfile
       *
      C                   EXSR      $LoadSubfl
- 
+
       ** Main loop (based on F3 and F12 indicators)
       *  ------------------------------------------
      C                   DOW       NOT *INKC AND NOT *INKL
- 
+
       ** -- Informational message if the subfile is empty
       *
      C  N22              MOVE      'ME00001'     ZAMSID
      C  N22              EXSR      $ZaSndMsg
- 
+
       ** -- Display the screen (header, error messages, key fields and subfile)
       *
      C                   WRITE     ME002405H0
      C                   WRITE     #MSGCTL
      C                   WRITE     ME002405F0
      C                   EXFMT     ME002405C0
- 
+
       ** -- Clear the error messages subfile
       *
      C                   EXSR      $ClrErrSF
- 
+
       ** -- Action keys management
       *     ----------------------
       ** ---- F3 ==> Exit Module
@@ -342,7 +343,7 @@
      C                   MOVEL (P) '*EXIT'       RetCodeOut
      C                   ITER
      C                   ENDIF
- 
+
       ** ---- F5 ==> Refresh screen: .Restore selection fields
       **                             .Re-load subfile
       *
@@ -351,61 +352,61 @@
      C                   EXSR      $LoadSubfl
      C                   ITER
      C                   ENDIF
- 
+
       ** ---- F9 ==> Add a record
       *
      C                   IF        *INKI
      C                   EXSR      $InsertRcd
- 
+
       ** ------ If F3 taken during the addition process => Exit
       *
      C                   IF        RetCodeIn = '*EXIT'
      C                   MOVEL (P) '*EXIT'       RetCodeOut
      C                   LEAVE
      C                   ENDIF
- 
+
       ** ------ Re-load subfile
       *
      C                   EXSR      $IniSubFil
      C                   EXSR      $LoadSubfl
      C                   ITER
      C                   ENDIF
- 
+
       ** ---- F12 ==> Previous Screen
       *
      C                   IF        *INKL
      C                   MOVEL (P) '*PRV'        RetCodeOut
      C                   ITER
      C                   ENDIF
- 
+
       ** ---- Roll-Up
       *
      C                   IF        *IN25
- 
+
       ** ------ Restore stored key value and reposition file in order to
       **        continue subfile filling from the right point
       *
      C                   MOVEL     KeyPos        KeyUsed
- 
+
      C     KGLGS94L1     CHAIN     GLGS94D1                           27
- 
+
       ** ------ Load Subfile
       *
      C                   EXSR      $LoadSubfl
      C                   ITER
      C                   ENDIF
- 
+
       ** -- Action codes management (If *in22 is on, the subfile exists)
       *     -----------------------
      C   22              EXSR      $ValActCde
- 
+
       ** ---- If there is no subfile, or if no action code has been entered,
       **      the control should return to the caller
       *
      C                   IF        NOT *IN22 OR NoActCode = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
       ** ---- If no error process action codes, else redisplay the screen
       *
      C                   IF        ValidCodes = 'Y'  AND *IN22
@@ -413,17 +414,17 @@
      C                   ELSE
      C                   ITER
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** End Program
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $ValActCde: Validate action codes                                      *
       *------------------------------------------------------------------------*
@@ -433,20 +434,20 @@
       *
      C                   MOVE      'Y'           ValidCodes        1
      C                   Z-ADD     1             S0RRN
- 
+
       ** Reset the "No action code" indicator
       *
      C                   MOVE      'Y'           NoActCode         1
- 
+
       ** Check if action code is within the action code array and
       ** correct according to the displayed record values
       *
      C                   READC     ME002405S0                             99
- 
+
  B1  C                   DOW       NOT *IN99
      C                   MOVE      *Off          *IN24
      C                   MOVE      *Off          *IN41
- 
+
       ** -- Only process non blank action codes
       **    (In order to have them processed by the next subroutine, their
       **     Modified Data Tag is reset to ON by using *IN24 - SFLNXTCHG -)
@@ -455,7 +456,7 @@
      C                   MOVE      'N'           NoActCode
      C                   MOVE      *On           *IN24
      C     S0ACTCDE      LOOKUP    ValActCd                               99
- 
+
       ** ---- Invalid Action Code
       *
  B3  C                   IF        NOT *IN99
@@ -470,7 +471,7 @@
      C                   EXSR      $ZaSndMsg
      C                   MOVE      'N'           ValidCodes
  E3  C                   ENDIF
- 
+
       ** ---- Warning message if Deletion and at least one submitted
       **      Message Request exists for the current Schedule
       *
@@ -496,15 +497,15 @@
      C   99              MOVE      'N'           ValidCodes
      C   99              MOVE      'Y'           S0WARN1
  E3  C                   ENDIF
- 
+
  E2  C                   ENDIF
- 
+
      C                   UPDATE    ME002405S0
      C                   READC     ME002405S0                             99
  E1  C                   ENDDO
       *    ----------    ------
      C     @ValActCde    ENDSR
- 
+
       *========================================================================*
       * $PrcActCde: Process action codes                                       *
       *------------------------------------------------------------------------*
@@ -514,13 +515,13 @@
       *
      C                   Z-ADD     1             S0RRN
      C                   READC     ME002405S0                             99
- 
+
  B1  C                   DOW       NOT *IN99
      C                   MOVE      *Off          *IN41
      C                   MOVE      *Off          *IN24
- 
+
  B2  C                   SELECT
- 
+
       ** Delete Record
       *
  X2  C                   WHEN      S0ACTCDE = 'D'
@@ -541,7 +542,7 @@
       *
      C                   GOTO      FPrcActCde
  E3  C                   ENDIF
- 
+
       ** Hold or Release a record
       *
  X2  C                   WHEN      S0ACTCDE = 'H' OR S0ACTCDE = 'R'
@@ -570,7 +571,7 @@
      C   41              UPDATE    ME002405S0
      C                   GOTO      FPrcActCde
  E3  C                   ENDIF
- 
+
       ** View the generated requests
       *
  X2  C                   WHEN      S0ACTCDE = 'M'
@@ -596,18 +597,18 @@
      C   41              UPDATE    ME002405S0
      C                   GOTO      FPrcActCde
  E3  C                   ENDIF
- 
+
  E2  C                   ENDSL
- 
+
      C                   READC     ME002405S0                             99
  E1  C                   ENDDO
- 
+
       ** All the action codes have been processed ==> Re-load the subfile
       *
      C                   CLEAR                   KeyUsed
      C                   EXSR      $IniSubFil
      C                   EXSR      $LoadSubfl
- 
+
      C     FPrcActCde    TAG
       *    ----------    ------
       ** If F3 taken during the process ==> Exit
@@ -618,7 +619,7 @@
      C                   ENDIF
       *    ----------    ------
      C     @PrcActCde    ENDSR
- 
+
       *========================================================================*
       * $InsertRcd: Insert a new record                                        *
       *------------------------------------------------------------------------*
@@ -637,7 +638,7 @@
      C                   EVAL      KeyMTPY = MsgType
      C                   CLEAR                   KeySDTE
      C                   CLEAR                   KeySTIM
- 
+
       ** Call the Generation Schedule full screen display controller
       *
      C                   CALLB     'ME002410'
@@ -650,7 +651,7 @@
      C                   PARM                    N42FLC
       *    ----------    ------
      C     @InsertRcd    ENDSR
- 
+
       *========================================================================*
       * $DeletRcd : Delete a record                                            *
       *------------------------------------------------------------------------*
@@ -680,7 +681,7 @@
       *
      C                   MOVEL     @ODate        KeySDTE
      C                   EVAL      KeySTIM = S0STIM
- 
+
       ** Call the Generation Schedule full screen display controller
       *
      C                   CALLB     'ME002410'
@@ -693,7 +694,7 @@
      C                   PARM                    N42FLC
       *    ----------    ------
      C     @DeletRcd     ENDSR
- 
+
       *========================================================================*
       * $ProcRcd  : Process a record (Hold / Release)                          *
       *------------------------------------------------------------------------*
@@ -723,7 +724,7 @@
       *
      C                   MOVEL     @ODate        KeySDTE
      C                   EVAL      KeySTIM = S0STIM
- 
+
       ** Call the Generation Schedules database updater
       *
      C     KGLGS94L1     CHAIN     GLGS94D1                           27
@@ -732,9 +733,9 @@
      C   27              EXSR      $ZaSndMsg
      C   27              MOVEL(P)  '*MSG'        RetCodeIn
      C   27              GOTO      @ProcRcd
- 
+
      C                   EVAL      PrvFilRcd = NewFilRcd
- 
+
      C                   CALLB     'ME002460'
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      ZAPGM         CallerOut        10
@@ -746,7 +747,7 @@
      C                   PARM                    @2FLC            15 0                        222373
       *    ----------    ------
      C     @ProcRcd      ENDSR
- 
+
       *========================================================================*
       * $ViewRqst : View the requests generated by the current schedule        *
       *------------------------------------------------------------------------*
@@ -776,7 +777,7 @@
       *
      C                   MOVEL     @ODate        KeySDTE
      C                   EVAL      KeySTIM = S0STIM
- 
+
       ** Call the Generated Scheduled Requests browse display
       *
      C     KGLGS94L1     CHAIN     GLGS94D1                           27
@@ -785,7 +786,7 @@
      C   27              EXSR      $ZaSndMsg
      C   27              MOVEL(P)  '*MSG'        RetCodeIn
      C   27              GOTO      @ViewRqst
- 
+
      C                   CALLB     'ME002505'
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      OptionIn      OptionOut        10
@@ -794,7 +795,7 @@
      C                   PARM                    NewFilRcd
       *    ----------    ------
      C     @ViewRqst     ENDSR
- 
+
       *========================================================================*
       * $IniSubFil: Initialise Subfile                                         *
       *------------------------------------------------------------------------*
@@ -805,30 +806,30 @@
      C                   MOVE      *Off          *IN21
      C                   WRITE     ME002405C0
      C                   MOVE      *On           *IN21
- 
+
       ** Reset the saving field of the subfile line number
       *
      C                   Z-ADD     0             WSavRRN
- 
+
       ** Restore key values corresponding to selection criteria
       *
      C                   MOVE      KeySav        KeyUsed
- 
+
       ** Position within GLGS94L1
       *
      C     KGLGS94L1     SETLL     GLGS94D1
- 
+
       ** First read of GLGS94L1 taking into account the fixed part of the key
       *
      C     KGLGS94L1P    READE     GLGS94D1                               27
- 
+
       ** Reset error indicators (40 - 70)
       *
      C                   MOVEA     *Zeros        IN40_TO_70
      C                   MOVEA     IN40_TO_70    *IN(40)
       *    ----------    ------
      C     @IniSubFil    ENDSR
- 
+
       *========================================================================*
       * $LoadSubfl: Load a subfile page                                        *
       *------------------------------------------------------------------------*
@@ -838,15 +839,15 @@
      C                   Z-ADD     0             WCount            2 0
      C                   MOVE      *Blanks       S0ACTCDE
      C                   MOVE      *Off          *IN41
- 
+
       ** Fill subfile loop
       *
  B1  C                   DOW       NOT *IN27 AND WCount < 11
- 
+
       ** -- Call the select record subroutine
       *
      C                   EXSR      $SelectRcd
- 
+
       ** -- If the record is selected, write the corresponding subfile record
       *
  B2  C                   IF        SelectRec = 'Y'
@@ -855,31 +856,31 @@
      C                   ADD       1             WCount
      C                   WRITE     ME002405S0
  E2  C                   ENDIF
- 
+
       ** -- Current reading
       *
      C     KGLGS94L1P    READE     GLGS94D1                               27
  E1  C                   ENDDO
- 
+
       ** Save the number of the last subfile record written
       ** and set up the page to display
       *
      C                   Z-ADD     S0RRN         WSavRRN           4 0
      C                   Z-ADD     S0RRN         C0RRN
- 
+
       ** Default end of subfile to Yes
       *
      C                   MOVE      *On           *IN23
- 
+
       ** Continue loop to see if there is remaining records to display,
       ** in order to set correctly the end of subfile indicator
       *
  B1  C                   DOW       NOT *IN27 AND *IN23
- 
+
       ** -- Call the select record subroutine
       *
      C                   EXSR      $SelectRcd
- 
+
       ** -- If the record is selected :
       *
       **    . Set end of subfile to No
@@ -901,18 +902,18 @@
      C                   MOVE      GSSTIM        KeyPosSTIM
      C                   LEAVE
  E2  C                   ENDIF
- 
+
       ** -- Current reading
       *
      C     KGLGS94L1P    READE     GLGS94D1                               27
  E1  C                   ENDDO
- 
+
       ** Do not display the subfile if it is empty
       *                                                               >><<==
      C     S0RRN         COMP      0                                  22
       *    ----------    ------
      C     @LoadSubfl    ENDSR
- 
+
       *========================================================================*
       * $SelectRcd: Tests if a record has to be displayed                      *
       *------------------------------------------------------------------------*
@@ -921,7 +922,7 @@
       ** Default the select record flag to Yes (Parameter returned by the routine)
       *
      C                   MOVE      'Y'           SelectRec         1
- 
+
       ** For each SELECTION criterion check if it is not blank and, if not,
       ** if its value exists in the corresponding field of the current file record
       *
@@ -929,14 +930,14 @@
       *
       *    ----------    ------
      C     @SelectRcd    ENDSR
- 
+
       *========================================================================*
       * $FillSF   : Load the subfile record with the current file record values*
       *------------------------------------------------------------------------*
      C     $FillSF       BEGSR
       *    ----------    ------
      C                   CLEAR                   ME002405S0
- 
+
  B1  C                   IF        GSSDTE <> 0
      C                   MOVEL(P)  GSSDTE        @IDate
       *
@@ -957,7 +958,7 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
  B1  C                   IF        GSEDTE <> 0
      C                   MOVEL(P)  GSEDTE        @IDate
       *
@@ -978,14 +979,14 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
      C                   EVAL      S0SPRD = GSSPRD
      C                   EVAL      S0STIM = GSSTIM
      C                   EVAL      S0ETIM = GSETIM
      C                   EVAL      S0STUS = GSSTUS
       *    ----------    ------
      C     @FillSF       ENDSR
- 
+
       *========================================================================*
       * $ClrErrSF : Clear program message queue                                *
       *------------------------------------------------------------------------*
@@ -996,7 +997,7 @@
      C                   PARM                    ZAPGRL
       *    ----------    ------
      C     @ClrErrSF     ENDSR
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
@@ -1011,7 +1012,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $RtvACCNT : Retrieve an account record                                 *
       *------------------------------------------------------------------------*
@@ -1020,7 +1021,7 @@
      C                   MOVEL     F0CNUM        @CNUM
      C                   MOVEL     F0ACCD        @ACCD
      C                   MOVEL     F0ACSQ        @ACSQ
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *Blanks       @RtCd
      C                   PARM      '*KEY'        @Optn
@@ -1032,13 +1033,13 @@
      C                   PARM                    @ACSQ             2
      C                   PARM      F0BRCA        @BRCA             3
      C     DsACCNT       PARM                    DSSDY
- 
+
      C                   IF        @RtCd <> *Blanks
      C                   CLEAR                   DsACCNT
      C                   ENDIF
       *    ----------    ------
      C     @RtvACCNT     ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -1047,7 +1048,7 @@
       ** Initialise copyright array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
      C                   IF        CallerIn <> *Blanks
@@ -1055,17 +1056,17 @@
      C                   ELSE
      C                   MOVEL     PSProcPgm     ZAPGM
      C                   ENDIF
- 
+
      C                   MOVEL(P)  'MEMSG'       ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** If the associated MT94x Details record doesn't allow the generation on
       ** schedule for the current message type, immediate return to the caller
       *
@@ -1073,17 +1074,17 @@
      C                             (MsgType = '942' AND N42AGS <> 'Y')
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT
      C     AGDFF         COMP      'M'                                    98
- 
+
       ** Retrieve default branch for current user
       *
      C                   IN        ZMUSER
      C                   MOVE      DBRN          WUserBrch         3
- 
+
       ** Initialize available action codes array
       *
  B1  C                   SELECT
@@ -1104,13 +1105,13 @@
      C                   OUT       LDA                                          *=======*
      C                   EXSR      *PSSR
  E1  C                   ENDSL
- 
+
       ** Validate each action code for the current user
       *
  B1  C     1             DO        10            X                 3 0
- 
+
  B2  C                   IF        ValActCd(X) <> *Blank
- 
+
       ** -- Check authority for user and branch if multi-branching system
       *
  B3  C                   IF        AGMBIN = 'Y'
@@ -1118,7 +1119,7 @@
      C                   PARM      ValActCd(X)   WActCode          1
      C                   PARM                    WUserBrch
      C                   PARM      0             WReturn           1 0
- 
+
       ** -- Check authority for user if single-branching system
       *
  X3  C                   ELSE
@@ -1126,24 +1127,24 @@
      C                   PARM      ValActCd(X)   WActCode
      C                   PARM      0             WReturn
  E3  C                   ENDIF
- 
+
  B3  C                   IF        WReturn = 0
      C                   MOVE      *On           *IN(X)
  X3  C                   ELSE
      C                   MOVE      *Off          *IN(X)
      C                   MOVE      *Blank        ValActCd(X)
  E3  C                   ENDIF
- 
+
  E2  C                   ENDIF
- 
+
  E1  C                   ENDDO
- 
+
       ** Clear key DS's
       *
      C                   CLEAR                   KeyUsed
      C                   CLEAR                   KeyPos
      C                   CLEAR                   KeySav
- 
+
       ** Set up the fixed part of the save key DS with the values received in
       ** the Network Account MT94x Details and Message Type parameters
       *
@@ -1156,12 +1157,12 @@
      C                   EVAL      KeySavNATY = N4NATY
      C                   EVAL      KeySavDSTN = N4DSTN
      C                   EVAL      KeySavMTPY = MsgType
- 
+
       ** Set up of the header and key fields formats (ME002405H0/F0)
       ** with the values received as parameters
       *
      C                   EVAL      H0MGTP = 'MT' + MsgType
- 
+
      C                   EVAL      F0NWRK = N4NWRK
      C                   EVAL      F0BRCA = N4BRCA
      C                   EVAL      F0CNUM = N4CNUM
@@ -1170,25 +1171,25 @@
      C                   EVAL      F0ACSQ = N4ACSQ
      C                   EVAL      F0NATY = N4NATY
      C                   EVAL      F0DSTN = N4DSTN
- 
+
      C                   EXSR      $RtvACCNT
      C                   EVAL      F0ACNO = AC_ACNO
      C                   EVAL      F0ANAM = AC_ANAM
- 
+
      C     N4RECI        COMP      '*'                                    13
- 
+
       ** Allows F12
       *
      C                   EVAL      *IN12 = *On
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * $InitProc : Initiate Process                                           *
       *------------------------------------------------------------------------*
      C     $InitProc     BEGSR
       *    ---------     ------
- 
+
       ** Send a 'C' to data queue GLM94XDQ to initiate process
       *
      C                   CALL      'QSNDDTAQ'
@@ -1196,10 +1197,10 @@
      C                   PARM                    PLibrary
      C                   PARM                    PDataLength
      C                   PARM                    PData
- 
+
       *    ----------    ------
      C     @InitProc     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit Program                                               *
       *------------------------------------------------------------------------*
@@ -1209,24 +1210,24 @@
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'                           99
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

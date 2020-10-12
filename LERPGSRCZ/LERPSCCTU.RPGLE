@@ -58,6 +58,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -1065,7 +1066,7 @@
      C                   MOVE      P1LNRF        P2LNRF
      C                   MOVE      P1VDAT        P2VDAT
      C                   MOVE      P1LASN        P2LASN
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

@@ -56,6 +56,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *

@@ -57,6 +57,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -415,7 +416,7 @@
      D WrkDDPASD              14     14A
      D WrkCntrMR              15     15  0
      D WrkReactFacil          16     16
- 
+
       ** Data structure for data area commitment control                                      CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  ComitJobs              4    103A                                                      CSC022
@@ -716,7 +717,7 @@
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
@@ -775,7 +776,7 @@
       /COPY WNCPYSRC,LEMAPYC015
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -895,7 +896,7 @@
      C                   IF        GHSUBS <> *blank
      C     GHSUBS        SCAN      TransIncom    SubForTRNN        2 0
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     '*FRONT'      ModeofOp
      C                   ELSE

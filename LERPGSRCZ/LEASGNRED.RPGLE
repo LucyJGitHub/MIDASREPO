@@ -28,22 +28,23 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CLE042 - Extended Loan Sub Type (Recompile)                  *
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Transaction details file - by transaction number
      FLEPARTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPARTD0:LEPARTD2)
- 
+
       **********************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -55,49 +56,49 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D @@TRNN          DS
       ** First DS for access programs, short data structure
      D  KBRCA                  1      3
@@ -110,7 +111,7 @@
      D  KMNUM                 15     20A                                                      CSD027
      D  KINUM                 21     26A                                                      CSD027
      D  KVDTC                 27     29P 0
- 
+
      D PARKEY          DS
       ** DS of all key fields read from LEPARTL2
      D  BRCA                   1      3
@@ -123,7 +124,7 @@
      D  MNUM                  15     20A                                                      CSD027
      D  INUM                  21     26A                                                      CSD027
      D  VDTC                  27     29P 0
- 
+
      D DDTRNN          DS
       ** DS of all key fields incoming from *PLIST
      D  DDBRCA_IN              1      3
@@ -136,12 +137,12 @@
      D  DDMNUM_IN             15     20A                                                      CSD027
      D  DDINUM_IN             21     26A                                                      CSD027
      D  DDVDTC_IN             27     29P 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -205,10 +206,10 @@
       * Input parameters :
       * Return code
      C                   PARM                    RetCodeIn
- 
+
       * Action code
      C                   PARM                    DDACTN            1
- 
+
       * Transaction reference
      C                   PARM                    DDBRCA            3
      C                   PARM                    DDCNUM            6
@@ -217,20 +218,20 @@
      C                   PARM                    DDMNUM            6
      C                   PARM                    DDINUM            6
      C                   PARM                    DDVDTC            5
- 
+
       * Read forwards
      C                   PARM                    @RDFWD            1
- 
+
       * Read backwards
      C                   PARM                    @RDBCK            1
- 
+
       * Output Parameters :
       * Error meassage
      C                   PARM                    @ERRMS            7
- 
+
       * Transaction read
      C                   PARM                    @TRRED           29
- 
+
       * Front Office ID READ
      C                   PARM                    @FTRED           20
       *

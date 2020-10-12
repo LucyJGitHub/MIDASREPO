@@ -36,6 +36,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -54,12 +55,12 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,84 +72,84 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D CrLnScnFmt    E DS                  EXTNAME(LEASGNPD)
       * Deal in screen format
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D CrLnFilFmt    E DS                  EXTNAME(LEPARTPD)
       ** Current Assignment Details in file format
      D  ASGNRecIns            72    140
      D  ASGNPayIns           141    699
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D  FLREC                  1     69
       * Receive settlement instructions in file format
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D  FLPAY                  1    559
       * Pay settlement instructions in file format
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       *** External DS for customer details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *** External DS for bank details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  Second DS for access programs, long data structure
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  Second DS for access programs, short data structure
- 
+
       **-----------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
- 
+
      D Trnn_In         DS
       ** DS of all key fields read from LEPARTL2
      D  DDBRCA_IN              1      3
@@ -161,17 +162,17 @@
      D  DDMNUM_IN             15     20A                                                      CSD027
      D  DDINUM_IN             21     26A                                                      CSD027
      D  DDVDTC_IN             27     29P 0
- 
+
       ** Data structure for additional Assignment Screen details
      D ASGNScnFmtAdd   DS            17
      D  S#FAMT                 1     14
      D  S#FCCY                15     17
- 
+
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
       /EJECT
       **********************************************************************
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   CrLnFilFmt
      C     DDACTN        IFEQ      *BLANK
@@ -181,7 +182,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -194,7 +195,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LEASGNRED
@@ -220,7 +221,7 @@
      C                   MOVEL     DDFCNO        DDFCNO_IN
       *
       ** In case 10A is a shortname, convert back to a 6,0 customer number.
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -287,7 +288,7 @@
      C                   Parm                    BJDFIN
      C                   Parm                    ErrorFlag         1
      C                   Z-Add     DaynoOut      In_VDTC
- 
+
      C                   EXSR      LEASGNRTV
       *
       * Access primary facility
@@ -318,20 +319,20 @@
      C                   EXSR      LEASGNCVT
      C                   EXSR      ZASETINCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDCNUM     ' FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       * Build buffer with required output
      C                   EVAL                    Buffer = CrLnScnFmt
      C                                           + ASGNScnFmtAdd
      C                                           + ##RECS  + ##PAYS
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -360,12 +361,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF '
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,LEASGNM01
       *
@@ -436,13 +437,13 @@
       * Front Office ID READ
      C                   PARM      *BLANK        @FTRED           20
       *
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     LEASGNRTV     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'LEASGNRTV'
@@ -454,35 +455,35 @@
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action and assigned to and assigned from customers
      C                   PARM                    S#ACTN            1
      C                   PARM                    S#ASTS           10
      C                   PARM                    S#ASFS           10
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC            6
      C                   PARM                    S#PMFT            3
      C                   PARM                    S#PMFN            2
- 
+
       * Prime facility branch
      C                   PARM                    FcbrBranch        3
- 
+
       * Value date of change
      C                   PARM                    In_VDTC           5 0
       *
       * OUTPUTS
       * Assignment Details in file format
      C                   PARM                    CrLnFilFmt
- 
+
       * Action and customer OK indicators
      C                   PARM                    S#ACTNok          1
      C                   PARM                    S#ASTSok          1
      C                   PARM                    S#ASFSok          1
- 
+
       * Assigned to customer number
      C                   PARM                    S#ASTN            6
- 
+
       * Assigned from customer number
      C                   PARM                    S#ASFN            6
       *
@@ -493,13 +494,13 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Ix                3 0
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     LEASGNCVT     BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'LEASGNCVT'
@@ -510,7 +511,7 @@
       *
       * Assignment details in file format
      C                   PARM                    CrLnFilFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY          3
@@ -519,19 +520,19 @@
       * OUTPUTS
       * Assignment Details in screen format
      C                   PARM                    CrLnScnFmt
- 
+
       * Assigned to customer details
      C                   PARM                    S#ASTN            6
      C                   PARM                    S#ASTX           10
      C                   PARM                    S#ATNM           20
      C                   PARM                    S#ATTN           10
- 
+
       * Assigned from customer details
      C                   PARM                    S#ASFN            6
      C                   PARM                    S#ASFX           10
      C                   PARM                    S#AFNM           20
      C                   PARM                    S#AFTN           10
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -594,19 +595,19 @@
       * ACSPFA - Access Primary Facility                              *
       *                                                               *
       *****************************************************************
- 
+
      C     ACSPFA        BEGSR
- 
+
      C                   CALLB     'LE002500'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC
      C                   PARM                    S#PMFT
@@ -614,7 +615,7 @@
       *
       * OUTPUTS
       *
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -635,19 +636,19 @@
      C                   PARM                    FccaCANM          6                          CSD027
      C                   PARM                    FccaCAFT          3 0
      C                   PARM                    FccaCAFN          2 0
- 
+
       * Primary customer name & town
      C                   PARM                    S#PRNM           20
      C                   PARM                    S#PRTN           10
- 
+
       * Agent customer number, name & town
      C                   PARM                    S#ANUM            6
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Primary facility amount edited
      C                   PARM                    S#FAMT           14
- 
+
       * Field OK flags
      C                   PARM                    S#PMFCOK          1
      C                   PARM                    S#PMFTOK          1
@@ -665,11 +666,11 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
       * Populate primary facility fields
- 
+
      C                   MOVE      FccyFCCY      S#FCCY
- 
+
      C                   ENDSR
       **********************************************************************
       ** The following /COPY contains the standard program status

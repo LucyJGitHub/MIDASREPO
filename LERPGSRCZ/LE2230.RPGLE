@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -65,64 +66,64 @@
       *  CLE034 - Lending Enhancements.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas LE Settlement Allocation by Transaction and Sequence
      FLESTALL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL1)
- 
+
       ** Midas LE Settlement Allocation by Transaction and Sequence
      FLESTALL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL2)
- 
+
       ** Midas LE Settlement Allocation by Transaction and Sequence
      FLESTALLX  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTALX)
- 
+
       ** Midas LE Settlement Allocation by Transaction (Live)
      FLESTALL5  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL5)
- 
+
       ** Midas LE Settlement Allocation by Transaction and Sequence (Access)
      FLESTALL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL6)
- 
+
       ** Midas LE Settlement Allocation by Transaction and Sequence (Update)
      FLESTALL7  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL7)
      F                                     COMMIT
- 
+
       ** Midas LE Settlement Allocation by Transaction (All)
      FLESTALL9  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LESTALD0:LESTAL9)
- 
+
       ** Midas LE Settlement Allocation Input Invalid Data by
       ** Transaction and Repair Number
      FLEISTLL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEISTLD0:LEISTL1)
      F                                     COMMIT
- 
+
       ** API Invalid Log File by Type/FO Id/Timestamp
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN
      F                                     RENAME(APILOGD0:APILOG0)
      F                                     COMMIT
- 
+
       ** API Invalid Log File
      FAPILOGPD  UF A E           K DISK    INFSR(*PSSR) USROPN
      F                                     COMMIT
- 
+
       ** API Valid Log File
      FAPVLOGPD  UF A E           K DISK    INFSR(*PSSR) USROPN
      F                                     COMMIT
- 
+
       ** Midas LE Settlement Allocation Input Invalid Data
      FLEISTLPD  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Settlements Allocation Input Display File
      FLE2230DF  CF   E             WORKSTN SFILE(LE2230S0:WRRN0)
      F                                     SFILE(LE2230S1:WRRN1)
@@ -130,120 +131,120 @@
       ** Before Image of Settlement Allocations                                               219608
      FLEBSTLPD  O    E             DISK    INFSR(*PSSR) USROPN                                219608
      F                                     RENAME(LESTALD0:LEBSTLD0)                          219608
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition.
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all of the defined fields
       ** in the PSDS. They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named Constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WConst1         C                   'Settlement09Customer'
      D*WConst2*********C                   'Settlement09AccountC'                             218782
      D WConst2         C                   'Settlement09AccCode '                             218782
      D WConst3         C                   'Settlement09Postings'                             218782
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Bank Details Data Structure
      D LEPD          E DS                  EXTNAME(LE2230PD)
      D                                     OCCURS(2000)
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details Data Structure
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Branch Details Data Structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Currency Details Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Account Code Details Data Structure
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D QQACCD1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** Account Details Data Structure
      D ACCNTB        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC)
- 
+
       ** Nostro Code Details Data Structure
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** Switchable Features Data Structure
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Midas Settlement Details Format
      D SETLIAB       E DS                  EXTNAME(SETLIAB)
- 
+
       ** Midas Settle/Detail Format including Control Parms
      D SETLIAZ       E DS                  EXTNAME(SETLIAZ)
- 
+
       ** Midas Settlement Details Format (Backup)
      D XSETLIB       E DS                  EXTNAME(SETLIAB)
      D                                     PREFIX(X)
- 
+
       ** Midas Settle/Detail Format including Control Parms (Backup)
      D XSETLIZ       E DS                  EXTNAME(SETLIAZ)
      D                                     PREFIX(X)
      D @PARM3        E DS                  EXTNAME(SDSETLPD)                                  222373
- 
+
       ** Transmitted message format
      D PINPP         E DS                  EXTNAME(LES1MFPD)
- 
+
       ** Rundate Details Data Structure
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
- 
+
       ** SD Layout Details Data Structure
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Midas 24x7 Status Data Structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** Midas PF Reflecting Data Structure
      D*LEALLO***     E DS                  EXTNAME(LEALLO) DTAARA(LEALLO)                     CLE148
      D LEALLO        E DS                  EXTNAME(LEALLO)                                    CLE148
- 
+
       ** Sequence Number Array A
      D WArSEQN0        S              5  0 DIM(9999)
- 
+
       ** Sequence Number Array B
      D WArSEQN1        S              5  0 DIM(9999)
- 
+
       ** Sequence Number Array
      D WArXSEQ         S              5  0 DIM(9999)
- 
+
       ** Receive Percentage Arrays
      D WArRPcg         S             12  9 DIM(9999)
                                                                                               CLE038
@@ -255,20 +256,20 @@
                                                                                               CLE038
       ** Receive Transaction Amount Arrays                                                    CLE038
      D WArRTAmt        S             13  0 DIM(9999)                                          CLE038
- 
+
       ** Receive Method Arrays
      D WArRMtd         S              2A   DIM(9999)
- 
+
       ** Receive Currency Arrays
      D WArRCcy         S              3A   DIM(9999)
- 
+
       ** Receive Account Arrays
      D*WArRAcc******** S             12A   DIM(9999)                                          CGL029
      D WArRAcc         S             18A   DIM(9999)                                          CGL029
- 
+
       ** Receive Branch Arrays
      D WArRBrc         S              3A   DIM(9999)
- 
+
       ** Pay Percentage Arrays
      D WArPPcg         S             12  9 DIM(9999)
                                                                                               CLE038
@@ -280,49 +281,49 @@
                                                                                               CLE038
       ** Pay Transaction Amount Arrays                                                        CLE038
      D WArPTAmt        S             13  0 DIM(9999)                                          CLE038
- 
+
       ** Pay Method Arrays
      D WArPMtd         S              2A   DIM(9999)
- 
+
       ** Pay Currency Arrays
      D WArPCcy         S              3A   DIM(9999)
- 
+
       ** Pay Account Arrays
      D*WArPAcc******** S             12A   DIM(9999)                                          CGL029
      D WArPAcc         S             18A   DIM(9999)                                          CGL029
- 
+
       ** Pay Branch Arrays
      D WArPBrc         S              3A   DIM(9999)
- 
+
       ** Receive Currency/Location Input Arrays
      D WArRICL         S              6A   DIM(9999)
- 
+
       ** Receive Currency/Location Output Arrays
      D WArROCL         S              6A   DIM(9999)
- 
+
       ** Receive Currency Output Arrays
      D WArRCcyP        S              3A   DIM(20)
- 
+
       ** Receive Location Output Arrays
      D WArRLocP        S              3A   DIM(20)
- 
+
       ** Pay Currency/Location Input Arrays
      D WArPICL         S              6A   DIM(9999)
- 
+
       ** Pay Currency/Location Output Arrays
      D WArPOCL         S              6A   DIM(9999)
- 
+
       ** Pay Currency Output Arrays
      D WArPCcyP        S              3A   DIM(20)
- 
+
       ** Pay Location Output Arrays
      D WArPLocP        S              3A   DIM(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry Parameters
      D PType           S              4A
      D PLnRef          S              6A
@@ -345,7 +346,7 @@
      D ParentPCRef     S             15A
      D PORED           S              5A                                                      CLE038
      D PAllcAmt        S             13P 0                                                    CLE038
- 
+
       ** Access Object Parameters
      D PRetCode        S              7A
      D POption         S              7A
@@ -386,14 +387,14 @@
      D PNONB           S              2A
      D PPNOI           S              1A
      D P#FMT           S            400A
- 
+
       ** LE2031 Parameters
      D PInvFilNm       S              8A
      D PRprNum         S              5  0
      D PSupSysOn       S              1A
      D PPCTrnRef       S             15A
      D PTrnTmStm       S             26Z
- 
+
       ** Y2SNMGC/Y2RVMGC Parameters
      D ZAPGMQ          S             10A
      D ZAPGRL          S              5A
@@ -403,7 +404,7 @@
      D ZAMSDA          S            132A
      D ZAMSTP          S              7A
      D ZAMSTX          S            132A
- 
+
       ** ZEDIT/ZASIGN Parameters
      D ZAsignOk        S              1A
      D ZField          S             16A
@@ -427,12 +428,12 @@
      D ZCDPI           S              1P 0                                                    CLE038
      D ZCDPO           S              1P 0                                                    CLE038
      D ZAMTCO          S             15P 0                                                    CLE038
- 
+
       ** ZDATE9 Parameters
      D ZDateIn         S              5  0
      D ZDateOut        S              8  0
      D ZRTN            S              1A
- 
+
       ** Key Fields
      D WType           S              4A
      D*WLnRef***       S              6  0                                                    CLE148
@@ -449,7 +450,7 @@
      D WSequence       S              5  0
      D WMsgType        S              8A
      D WFrOffId        S             20
- 
+
       ** Working Variables
      D CEU004          S              1A
      D CLE031          S              1A
@@ -559,58 +560,58 @@
      D WBefore         S              1A                                                      219608
      D PRTCD           S              7A                                                      CLE148
      D PUPDT           S              1A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦  *INZSR is automatically executed at program activation.   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   DOU       WFormat = 'END'
- 
+
      C                   IF        WFormat = 'SUB'
      C                   EXSR      SRLOAD
      C                   ENDIF
- 
+
      C                   IF        WFormat = 'DET'
      C                   EXSR      SRFLDT
      C                   ENDIF
- 
+
      C                   IF        WFormat = 'VAL'
      C                   EXSR      SRVAL
      C                   ENDIF
- 
+
      C                   IF        WFormat = 'FULL'
      C                   EXSR      SRFULL
      C                   ENDIF
- 
+
      C                   IF        WFormat = 'DB'
      C                   EXSR      SRDB
      C                   ENDIF
- 
+
      C                   IF        WFormat = 'END'
      C                   EXSR      SREND
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -620,7 +621,7 @@
       *                                                               *
       *****************************************************************
      C     SRINIT        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PType
      C                   PARM                    PLnRef
@@ -645,53 +646,53 @@
      C                   PARM                    ParentPCRef
      C                   PARM                    PORED                                        CLE038
      C                   PARM                    PAllcAmt                                     CLE038
- 
+
      C                   EVAL      WFirst = 'Y'
      C                   EVAL      WBefore = ' '                                              219608
- 
+
      C                   IF        PMPRCV = 'Y' AND
      C                             PMACTC <> 'E' AND
      C                             PMACTC <> 'D'
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN60 = *ON
      C                   ENDIF
- 
+
      C                   IF        PMPPAY = 'Y' AND
      C                             PMACTC <> 'E' AND
      C                             PMACTC <> 'D'
      C                   EVAL      *IN41 = *ON
      C                   EVAL      *IN61 = *ON
      C                   ENDIF
- 
+
      C                   IF        PMode <> 'B'
      C                   OPEN      LE2230DF
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMACTC = 'D'
      C                   EVAL      WFormat = 'END'
      C                   EVAL      PMCMDP = '12'                                              221960
      C                   WHEN      PMACTC = 'I'
      C                   EVAL      WAction = 'I'
      C                   EVAL      WFormat = 'DET'
- 
+
      C                   OTHER
      C                   EVAL      WAction = PMACTC
      C                   IF        WAction = 'X'
      C                   EVAL      WAction = 'E'
      C                   ENDIF
      C                   EVAL      WFormat = 'SUB'
- 
+
      C                   ENDSL
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -701,15 +702,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger Details
- 
+
      C**********         CALL      'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDGELRPD'
@@ -719,57 +720,57 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get Receive Currency Details
- 
+
      C                   EVAL      PCurr = PMRCCY
      C                   EXSR      SRAOCURR
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      WRcvInCcy = A6INCY
      C                   EVAL      WRecDP    = A6NBDP                                         CLE038
      C                   EVAL      WRecSpot  = A6SPRT                                         CLE038
      C                   EVAL      WRecMDI   = A6MDIN                                         CLE038
      C                   ENDIF
- 
+
       ** Get Pay Currency Details
- 
+
      C                   EVAL      PCurr = PMPCCY
      C                   EXSR      SRAOCURR
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      WPayInCcy = A6INCY
      C                   EVAL      WPayDP    = A6NBDP                                         CLE038
      C                   EVAL      WPaySpot  = A6SPRT                                         CLE038
      C                   EVAL      WPayMDI   = A6MDIN                                         CLE038
      C                   ENDIF
- 
+
       ** Check if Switchable Feature CSC011 (24x7 Midas Availability) is on
- 
+
      C                   EVAL      CSC011 = 'N'
      C                   EVAL      PSard = 'CSC011'
      C                   EXSR      SRAOSARD
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   ENDIF
- 
+
       ** Check if Switchable Feature CEU004 (Transaction Settlement - Lending) is on
- 
+
      C                   EVAL      CEU004 = 'N'
      C                   EVAL      PSard = 'CEU004'
      C                   EXSR      SRAOSARD
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      CEU004 = 'Y'
      C                   ENDIF
- 
+
       ** Check if Switchable Feature CLE031 (Lending Enhancements) is on
- 
+
      C                   EVAL      CLE031 = 'N'
      C                   EVAL      PSard = 'CLE031'
      C                   EXSR      SRAOSARD
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      CLE031 = 'Y'
      C                   ENDIF
@@ -789,55 +790,55 @@
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
                                                                                               CLE038
- 
+
       ** Check if Switchable Feature CLE033 is on
- 
+
      C                   EVAL      CLE033 = 'N'
      C                   EVAL      PSard = 'CLE033'
      C                   EXSR      SRAOSARD
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      CLE033 = 'Y'
      C                   ENDIF
- 
+
       ** If CLE033 is on
- 
+
      C                   IF        CLE033 = 'Y'
- 
+
       ** Retrieve Settlement 09 Customer
       ** & Settlement09Postings value - use settlement currency?                              218782
- 
+
      C                   EVAL      PSysValK1 = WConst1
      C                   EVAL      PSysValK2 = WConst3                                        218782
      C                   EXSR      SRAOSVAL
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      WSetl09Cus = PSysVal1
      C                   EVAL      WSetl09Ccy = PSysVal2                                      218782
      C                   ENDIF
- 
+
       ** Retrieve Settlement 09 Account Code
- 
+
      C                   EVAL      PSysValK1 = WConst2
      C                   EXSR      SRAOSVAL
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   EVAL      WSetl09AcCd = PSysVal1
      C                   ENDIF
- 
+
       ** Get Account Code Details of Settlement 09
- 
+
      C                   EVAL      PAcod = WSetl09AcCd
      C                   EXSR      SRAOACOD
- 
+
      C                   ENDIF
- 
+
       ** Set Settle Amended to blanks
- 
+
      C                   EVAL      PSetlAmd = *BLANKS
- 
+
       ** Set the system information display fields
- 
+
      C                   EVAL      #0RUNA = BJMRDT
      C                   EVAL      #1RUNA = BJMRDT
      C                   EVAL      #0USER = PSUser
@@ -882,27 +883,27 @@
      C                   MOVE      ZField        #0AMT                                        CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
       ** Retrieve dataarea details
- 
+
      C                   IN        RUNDAT
      C                   IN        SDSTAT
      C                   IN        SC24X7
- 
+
      C                   EVAL      *IN92 = *ON
- 
+
      C                   EVAL      XSETLIB = SETLIAB
      C                   EVAL      XSETLIZ = SETLIAZ
      C                   EVAL      XACTC = PMACTC
      C                   EVAL      XPRCV = PMPRCV
      C                   EVAL      XPPAY = PMPPAY
- 
+
      C                   IF        PMode = 'B' AND
      C                             PMACTC <> 'D'
      C                   EVAL      WFormat = 'END'
      C                   EXSR      SRBATCH
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -912,9 +913,9 @@
       *                                                               *
       *****************************************************************
      C     SRSUB         BEGSR
- 
+
      C                   DOU       WVErr = 'N'
- 
+
      C                   IF        WVErr = 'Y'
      C                   IF        WTErr <> 'Y'
      C                   EVAL      *IN90 = *ON
@@ -925,7 +926,7 @@
      C                   ENDIF
      C                   WRITE     LE2230C2
      C                   ENDIF
- 
+
      C                   EVAL      WSAction = ' '
      C                   EVAL      WF9 = 'N'
      C                   EVAL      WVErr = 'N'
@@ -934,42 +935,42 @@
      C                   IF        WAction <> 'D'
      C                   MOVEA     *ZEROS        WArSEQN1
      C                   ENDIF
- 
+
      C                   WRITE     LE2230F1
- 
+
      C                   EVAL      #1RLRN = 1
      C                   WRITE     LE2230C1
      C                   READ      LE2230C1
- 
+
      C                   SELECT
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      PMCMDP = '03'
      C                   EVAL      WFormat = 'END'
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      PMCMDP = '12'
      C                   EVAL      WFormat = 'END'
- 
+
      C                   WHEN      *INKI = *ON  AND
      C                             WAction = 'A'
      C                   EVAL      WF9 = 'Y'
      C                   EVAL      WFormat = 'DET'
- 
+
      C                   OTHER
- 
+
      C                   IF        WAction <> 'D'
- 
+
      C                   READC     LE2230S1                               15
- 
+
      C                   EVAL      WCnt1 = *ZERO
- 
+
      C                   DOW       *IN15 = *OFF
- 
+
      C                   EVAL      WSAction = #1ACTN
- 
+
      C                   IF        PMode <> 'F'
- 
+
      C                   IF        WAction = 'E' AND
      C                             WSAction <> 'E' AND
      C                             WSAction <> ' ' OR
@@ -994,7 +995,7 @@
      C                   ENDIF
      C                   EVAL      WXAction = WSAction
      C                   ENDIF
- 
+
      C                   IF        WVErr <> 'Y' AND
      C                             WSAction <> ' '
      C                   EVAL      WXAction = *BLANKS
@@ -1012,9 +1013,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        WSAction = 'U' OR
      C                             WSAction = 'Q'
      C                   IF        WSAction = 'U'
@@ -1033,22 +1034,22 @@
      C                   EVAL      WVErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READC     LE2230S1                               15
      C                   ENDDO
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WFormat = 'DB'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDDO
- 
+
      C                   EXSR      SRCLRM
      C                   WRITE     LE2230C2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1058,26 +1059,26 @@
       *                                                               *
       *****************************************************************
      C     SRINVL        BEGSR
- 
+
      C                   IN        SDSTAT
      C                   IN        SC24X7
- 
+
      C                   IF        CSC011 = *ON AND
      C                             S1SUPP = LIBR
      C                   EVAL      WSupSys = 'Y'
      C                   ELSE
      C                   EVAL      WSupSys = 'N'
      C                   ENDIF
- 
+
       ** Call invalid lending transaction maintenance
- 
+
      C                   CALL      'LE2031'
      C                   PARM      'LEISTLPD'    PInvFilNm
      C                   PARM      XREPN         PRprNum
      C**********         PARM      WSupSys       PSupSysOn                                    222373
      C**********         PARM      IPCRF         PPCTrnRef                                    222373
      C**********         PARM      ITMST         PTrnTmStm                                    222373
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1087,7 +1088,7 @@
       *                                                               *
       *****************************************************************
      C     SRLOAD        BEGSR
- 
+
      C                   EVAL      WType = PType
      C                   IF        PType = 'PTSO'                                             CLE038
      C                   EVAL      WType = 'LOAN'                                             CLE038
@@ -1099,31 +1100,31 @@
      C                   MOVE      PCusFees      WCusFees
      C                   MOVE      PFclFees      WFclFees
      C                   MOVE      PFeeSeq       WFeeSeq
- 
+
       ** If mode is repair
- 
+
      C                   IF        PMode = 'F'
- 
+
      C     KFLDS3        SETLL     LEISTL1
      C     KFLDS3        READE     LEISTL1
- 
+
      C                   IF        NOT %FOUND(LEISTLL1)
      C                   EVAL      PNoDetails = 'Y'
      C                   EVAL      WFormat = 'DET'
      C                   ELSE
- 
+
      C                   EVAL      WRRN0 = *ZERO
      C                   EVAL      WcntX = *ZERO
- 
+
      C                   EVAL      *IN97 = *ON
      C                   WRITE     LE2230C0
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   EVAL      *IN98 = *ON
- 
+
      C                   DOW       %FOUND(LEISTLL1) AND
      C                             *IN98 = *ON
- 
+
      C                   EVAL      WCntX = *ZERO
      C                   EVAL      *IN21 = *OFF
      C                   EVAL      *IN22 = *OFF
@@ -1133,15 +1134,15 @@
      C                   EVAL      *IN26 = *OFF
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      *IN28 = *OFF
- 
+
      C                   DOW       %FOUND(LEISTLL1) AND
      C                             WCntX < 13
- 
+
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      WCntX = WCntX + 1
- 
+
       ** Receive Settlement
- 
+
      C                   EVAL      #0RPCG = IRCPC
      C                   EVAL      #0RAMT = IRCPC                                             CLE038
      C                   EVAL      #0RCBA = IRCBA                                             CLE038
@@ -1161,9 +1162,9 @@
      C**********         EVAL      #0RACC = %SUBST(IRONS:4:12)                                CGL029
      C                   EVAL      #0RACC = %SUBST(IRONS:4:18)                                CGL029
      C                   ENDIF
- 
+
       ** Payment Settlement
- 
+
      C                   EVAL      #0PPCG = IPYPC
      C                   EVAL      #0PAMT = IPYPC                                             CLE038
      C                   EVAL      #0PYBA = IPYBA                                             CLE038
@@ -1183,22 +1184,22 @@
      C**********         EVAL      #0PACC = %SUBST(IPONS:4:12)                                CGL029
      C                   EVAL      #0PACC = %SUBST(IPONS:4:18)                                CGL029
      C                   ENDIF
- 
+
      C                   WRITE     LE2230S0
- 
+
      C     KFLDS3        READE     LEISTL1
      C                   ENDDO
- 
+
      C                   EVAL      WSRRN0 = WRRN0
      C                   EXSR      SRSUB
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Not repair mode
- 
+
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      WAction = 'E' OR
      C                             WAction = 'D'
@@ -1221,24 +1222,24 @@
      C                   EVAL      *IN41 = *OFF
      C                   ENDIF
      C                   ENDSL
- 
+
       ** Get the latest sequence (including deleted records)
- 
+
      C     KFLDS5        SETLL     LESTAL9
      C     KFLDS5        READE(N)  LESTAL9                                50
- 
+
      C                   DOW       *IN50 = *OFF
      C                   EVAL      WMFSequence = SEQ
      C     KFLDS5        READE     LESTAL9                                50
      C                   ENDDO
- 
+
       ** Load subfile of live records
- 
+
      C     KFLDS5        SETLL     LESTAL5
      C     KFLDS5        READE(N)  LESTAL5                                96
- 
+
      C                   EXSR      SRDEFT
- 
+
      C                   IF        *IN96 = *ON
      C                   EVAL      PNoDetails = 'Y'
      C                   EVAL      WFormat = 'DET'
@@ -1250,7 +1251,7 @@
      C                   EVAL      *IN61 = *ON
      C                   ENDIF
      C                   ELSE
- 
+
      C                   MOVE      TMST          PTimeStamp
      C                   EVAL      *IN21 = *OFF
      C                   EVAL      WRRN1 = *ZERO
@@ -1260,11 +1261,11 @@
      C                   EVAL      WFTotPAmt = *ZERO                                          CLE038
      C                   EVAL      WFTotRTAmt = *ZERO                                         CLE038
      C                   EVAL      WFTotPTAmt = *ZERO                                         CLE038
- 
+
      C                   EVAL      *IN97 = *ON
      C                   WRITE     LE2230C1
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   DOW       *IN96 = *OFF
       *                                                                                       219608
       ** Save 'before' image of Settlement Allocation (but                                    219608
@@ -1279,7 +1280,7 @@
      C                   CLOSE     LEBSTLPD                                                   219608
      C                   ENDIF                                                                219608
      C                   ENDIF                                                                219608
- 
+
      C                   EVAL      WRRN1 = WRRN1 + 1
      C                   EVAL      #1ACTN = *BLANKS
      C                   EVAL      #1SEQ = SEQ
@@ -1288,14 +1289,14 @@
      C                   ENDIF
      C                   EVAL      WFTotRcv = WFTotRcv + RCPC
      C                   EVAL      WFTotPay = WFTotPay + PYPC
- 
+
       ** Receive Settlement
- 
+
      C                   IF        WAction = 'E' OR
      C                             WAction = 'D' OR
      C                             WAction = 'A' AND
      C                             *IN60 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      RCPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -1379,7 +1380,7 @@
      C                   EVAL      WFTotRTAmt = WFTotRTAmt + ZAMTCO                           CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDIF
      C                   IF        WAction = 'A' AND                                          CLE038
      C                             *IN60 = *ON                                                CLE038
@@ -1390,14 +1391,14 @@
      C                   SETOFF                                       52                      CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
       ** Payment Settlement
- 
+
      C                   IF        WAction = 'E' OR
      C                             WAction = 'D' OR
      C                             WAction = 'A' AND
      C                             *IN61 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      PYPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -1482,7 +1483,7 @@
      C                   EVAL      WFTotPTAmt = WFTotPTAmt + ZAMTCO                           CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDIF
      C                   IF        WAction = 'A' AND                                          CLE038
      C                             *IN61 = *ON                                                CLE038
@@ -1493,11 +1494,11 @@
      C                   SETOFF                                       53                      CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   EXSR      SRFRFD
- 
+
      C                   WRITE     LE2230S1
- 
+
      C     KFLDS5        READE     LESTAL5                                96
                                                                                               219608
      C                   IF        *IN96 = *ON                                                219608
@@ -1505,14 +1506,14 @@
      C                   ENDIF                                                                219608
                                                                                               219608
      C                   ENDDO
- 
+
      C                   IF        WRRN1 = *ZERO
- 
+
      C                   EVAL      WF9 = 'Y'
      C                   EVAL      WFormat = 'DET'
- 
+
      C                   ELSE
- 
+
      C                   IF        WFirst <> 'Y'
      C                   IF        WAction = 'A'
      C     CLE038        IFEQ      'Y'                                                        CLE038
@@ -1555,14 +1556,14 @@
      C                   ELSE
      C                   EVAL      WFirst = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SRSUB
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1572,17 +1573,17 @@
       *                                                               *
       *****************************************************************
      C     SRDEFT        BEGSR
- 
+
      C                   IF        *IN96 = *ON
- 
+
      C                   IF        PType = 'ROLL'
      C                   EVAL      WType = 'LOAN'
      C     KFLDS5        SETLL     LESTAL5
      C     KFLDS5        READE     LESTAL5                                96
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1592,7 +1593,7 @@
       *                                                               *
       *****************************************************************
      C     SRBATCH       BEGSR
- 
+
      C                   EVAL      WType = PType
      C                   IF        PType = 'PTSO'                                             CLE038
      C                   EVAL      WType = 'LOAN'                                             CLE038
@@ -1607,32 +1608,32 @@
      C                   MOVE      PCusFees      WCusFees
      C                   MOVE      PFclFees      WFclFees
      C                   MOVE      PFeeSeq       WFeeSeq
- 
+
      C     1             DO        2000          @X                5 0                        197145
      C     @X            OCCUR     LEPD
      C                   CLEAR                   LEPD
      C                   END
      C                   Z-ADD     0             @X
- 
+
      C     KFLDS6        SETLL     LESTALX
      C     KFLDS6        READE(N)  LESTALX                                30
- 
+
      C     *IN30         IFEQ      *ON
      C                   EVAL      ZAMSID = 'ESM0827'
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
      C                   DOW       *IN30 = *OFF
- 
+
      C                   ADD       1             @X
      C     @X            OCCUR     LEPD
- 
+
      C                   EVAL      WArSEQN0(@X) = SEQ
- 
+
       ** Receive Settlement
- 
+
      C                   IF        *IN60 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      RCPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -1677,13 +1678,13 @@
      C                   EXSR      ZEDIT                                                      CLE038
      C                   MOVE      ZFIELD        #0REXR                                       CLE038
      C                   MOVE      REXI          #0REXI                                       CLE038
- 
+
      C                   ENDIF
- 
+
       ** Payment Settlement
- 
+
      C                   IF        *IN61 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      PYPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -1728,14 +1729,14 @@
      C                   EXSR      ZEDIT                                                      CLE038
      C                   MOVE      ZFIELD        #0PEXR                                       CLE038
      C                   MOVE      PEXI          #0PEXI                                       CLE038
- 
+
      C                   ENDIF
- 
+
      C     KFLDS6        READE(N)  LESTALX                                30
      C                   ENDDO
- 
+
      C                   EXSR      SRVAL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1745,11 +1746,11 @@
       *                                                               *
       *****************************************************************
      C     SRFLDT        BEGSR
- 
+
      C                   IF        WAction = 'I' OR
      C                             WF9 = 'Y' OR
      C                             PNoDetails = 'Y'
- 
+
      C                   EVAL      *IN80 = *ON
      C                   EVAL      *IN81 = *OFF
      C                   EVAL      *IN82 = *OFF
@@ -1759,21 +1760,21 @@
      C                   IF        *IN61 = *OFF
      C                   EVAL      *IN41 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      WSAction = ' '
      C                   MOVEA     *ZEROS        WArSEQN0
      C                   EXSR      SRRESET
      C                   EVAL      WRRN0 = *ZERO
      C                   EVAL      WcntX = *ZERO
- 
+
      C                   EVAL      *IN97 = *ON
      C                   WRITE     LE2230C0
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   IF        WF9 <> 'Y'
- 
+
      C                   EXSR      SRFRXD
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      100000000000  ZField
      C                   Z-ADD     9             ZADEC
@@ -1815,23 +1816,23 @@
      C                   SETOFF                                       53                      CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      #0RLRN = WRRN0
      C                   EVAL      WCntX = WCntX + 1
      C                   EVAL      *IN90 = *ON
      C                   WRITE     LE2230S0
      C                   EVAL      *IN90 = *OFF
- 
+
      C                   EVAL      *IN98 = *ON
- 
+
      C                   DOW       *IN98 = *ON
- 
+
      C                   IF        WCntX > 1
      C                   EVAL      WCntX = *ZERO
      C                   EXSR      SRRESET
      C                   ENDIF
- 
+
      C                   EVAL      #0RPCG = *BLANKS
      C                   EVAL      #0RAMT = *BLANKS                                           CLE038
      C                   EVAL      #0RMTD = *BLANKS
@@ -1842,31 +1843,31 @@
      C                   EVAL      #0PMTD = *BLANKS
      C                   EVAL      #0PCCY = *BLANKS
      C                   EVAL      #0PACC = *BLANKS
- 
+
      C                   DOW       WCntX < 13  AND
      C                             WRRN0 < 10000
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      WCntX = WCntX + 1
      C                   WRITE     LE2230S0
      C                   ENDDO
- 
+
      C                   IF        WRRN0 = 9999
      C                   EVAL      *IN96 = *ON
      C                   ENDIF
- 
+
      C                   EVAL      WSRRN0 = WRRN0
      C                   EXSR      SRDET
      C                   ENDDO
- 
+
      C                   ELSE
- 
+
      C                   EVAL      *IN98 = *ON
- 
+
      C                   DOW       *IN98 = *ON
- 
+
      C                   EVAL      WCntX = *ZERO
      C                   EXSR      SRRESET
- 
+
      C                   EVAL      #0RPCG = *BLANKS
      C                   EVAL      #0RAMT = *BLANKS                                           CLE038
      C                   EVAL      #0RMTD = *BLANKS
@@ -1877,24 +1878,24 @@
      C                   EVAL      #0PMTD = *BLANKS
      C                   EVAL      #0PCCY = *BLANKS
      C                   EVAL      #0PACC = *BLANKS
- 
+
      C                   DOW       WCntX < 13
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      WCntX = WCntX + 1
      C                   WRITE     LE2230S0
      C                   ENDDO
- 
+
      C                   EVAL      #0RLRN = 1
      C                   EVAL      WSRRN0 = WRRN0
      C                   EXSR      SRDET
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Amend or Delete
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WType = PType
      C                   IF        PType = 'PTSO'                                             CLE038
      C                   EVAL      WType = 'LOAN'                                             CLE038
@@ -1906,7 +1907,7 @@
      C                   MOVE      PCusFees      WCusFees
      C                   MOVE      PFclFees      WFclFees
      C                   MOVE      PFeeSeq       WFeeSeq
- 
+
      C                   IF        WAction = 'D'
      C                   EVAL      *IN80 = *ON
      C                   EVAL      *IN81 = *OFF
@@ -1914,7 +1915,7 @@
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN41 = *ON
      C                   ENDIF
- 
+
      C                   IF        WAction = 'A'
      C                   IF        WSAction = 'A'
      C                   EVAL      *IN80 = *ON
@@ -1934,34 +1935,34 @@
      C                   EVAL      *IN41 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EXSR      SRRESET
      C                   EVAL      WRRN0 = *ZERO
      C                   EVAL      #0RLRN = *ZERO
      C                   EVAL      WcntX = *ZERO
      C                   EVAL      WCnt2 = 1
- 
+
      C                   EVAL      *IN97 = *ON
      C                   WRITE     LE2230C0
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   DOW       WCnt2 <= WCnt1
- 
+
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      #0RLRN = #0RLRN + 1
      C                   EVAL      WSequence = WArSEQN1(WCnt2)
- 
+
       ** If mode is repair
- 
+
      C                   IF        PMode = 'F'
- 
+
      C     KFLDS3        SETLL     LEISTL1
      C     KFLDS3        READE     LEISTL1                                11
- 
+
      C                   IF        *IN11 = *OFF
- 
+
       ** Receive Settlement
- 
+
      C                   EVAL      #0RPCG = IRCPC
      C                   EVAL      #0RAMT = IRCPC                                             CLE038
      C                   EVAL      #0RCBA = IRCBA                                             CLE038
@@ -1981,9 +1982,9 @@
      C**********         EVAL      #0RACC = %SUBST(IRONS:4:12)                                CGL029
      C                   EVAL      #0RACC = %SUBST(IRONS:4:18)                                CGL029
      C                   ENDIF
- 
+
       ** Payment Settlement
- 
+
      C                   EVAL      #0PPCG = IPYPC
      C                   EVAL      #0PAMT = IPYPC                                             CLE038
      C                   EVAL      #0PYBA = IPYBA                                             CLE038
@@ -2003,24 +2004,24 @@
      C**********         EVAL      #0PACC = %SUBST(IPONS:4:12)                                CGL029
      C                   EVAL      #0PACC = %SUBST(IPONS:4:18)                                CGL029
      C                   ENDIF
- 
+
      C                   EVAL      WRRN0 = WRRN0 + 1
      C                   EVAL      #0RLRN = #0RLRN + 1
      C                   WRITE     LE2230S0
- 
+
      C                   ENDIF
- 
+
       ** Not repair mode
- 
+
      C                   ELSE
- 
+
      C     KFLDS2        SETLL     LESTAL6
      C     KFLDS2        READE(N)  LESTAL6
- 
+
       ** Receive Settlement
- 
+
      C                   IF        *IN60 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      RCPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -2059,7 +2060,7 @@
      C                   EXSR      ZEDIT                                                      CLE038
      C                   MOVE      ZField        #0RAMT                                       CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDIF
                                                                                               CLE038
      C                   IF        *IN60 = *ON                                                CLE038
@@ -2070,11 +2071,11 @@
      C                   SETOFF                                       52                      CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
       ** Payment Settlement
- 
+
      C                   IF        *IN61 = *OFF
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      PYPC          ZField
      C                   Z-ADD     9             ZADEC
@@ -2113,7 +2114,7 @@
      C                   EXSR      ZEDIT                                                      CLE038
      C                   MOVE      ZField        #0PAMT                                       CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDIF
      C                   IF        *IN61 = *ON                                                CLE038
      C                   EVAL      #0PYBA = PYBA                                              CLE038
@@ -2123,22 +2124,22 @@
      C                   SETOFF                                       53                      CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   WRITE     LE2230S0
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WCnt2 = WCnt2 + 1
      C                   ENDDO
- 
+
      C                   IF        WCnt2 > WCnt1
      C                   EVAL      *IN96 = *ON
      C                   ENDIF
- 
+
      C                   EXSR      SRDET
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2148,9 +2149,9 @@
       *                                                               *
       *****************************************************************
      C     SRDET         BEGSR
- 
+
      C                   DOU       WVErr = 'N'
- 
+
      C                   IF        WVErr = 'Y'
      C                   IF        WTErr <> 'Y' AND
      C                             WXErr <> 'Y'
@@ -2162,13 +2163,13 @@
      C                   ENDIF
      C                   WRITE     LE2230C2
      C                   ENDIF
- 
+
      C                   EVAL      WVErr = 'N'
      C                   EVAL      WTErr = 'N'
      C                   EVAL      WXErr = 'N'
- 
+
      C                   WRITE     LE2230F1
- 
+
      C                   IF        WAction = 'A' AND
      C                             WVErr <> 'Y' AND
      C                             WTErr <> 'Y'
@@ -2178,12 +2179,12 @@
      C                   ENDIF
      C                   WRITE     LE2230C0
      C                   READ      LE2230C0
- 
+
      C                   EVAL      #0RPCG = #0RAMT                                            CLE038
      C                   EVAL      #0PPCG = #0PAMT                                            CLE038
                                                                                               CLE038
      C                   SELECT
- 
+
      C                   WHEN      *IN98 = *ON
      C                   IF        WAction = 'I' OR
      C                             WF9 = 'Y' OR
@@ -2191,11 +2192,11 @@
      C                   EVAL      WRRN0 = WSRRN0
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      PMCMDP = '03'
      C                   EVAL      WFormat = 'END'
- 
+
      C                   WHEN      *INKL = *ON
      C                   IF        WAction = 'I' OR
      C                             PNoDetails = 'Y'
@@ -2206,12 +2207,12 @@
      C                             PNoDetails <> 'Y'
      C                   EVAL      WFormat = 'SUB'
      C                   ENDIF
- 
+
      C                   WHEN      *INKJ = *ON AND
      C                             WAction = 'A' AND
      C                             WSAction = 'D'
      C                   EVAL      WFormat = 'DB'
- 
+
      C                   OTHER
      C                   IF        WSAction = 'D'
      C                   EVAL      ZAMSID = 'ESM0821'
@@ -2222,13 +2223,13 @@
      C                   EXSR      SRCLRM
      C                   EXSR      SRVAL
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDDO
- 
+
      C                   EXSR      SRCLRM
      C                   WRITE     LE2230C2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2238,7 +2239,7 @@
       *                                                               *
       *****************************************************************
      C     SRVAL         BEGSR
- 
+
      C                   EXSR      SRRESET
      C                   EVAL      WRcvSetlCcy = *BLANKS
      C                   EVAL      WRcvSetlLoc = *BLANKS
@@ -2248,17 +2249,17 @@
      C                   EVAL      WPCcyLoc = *BLANKS
      C                   EVAL      WPercentNum = *ZEROS
      C                   EVAL      WAmountNum = *ZEROS                                        CLE038
- 
+
      C                   IF        PMode <> 'B'
      C                   READC     LE2230S0                               15
      C                   ELSE
      C                   Z-ADD     1             @Y                5 0
      C     @Y            OCCUR     LEPD
      C                   ENDIF
- 
+
      C                   DOW       *IN15 = *OFF and PMode <> 'B'
      C                             OR @Y <= @X and PMode = 'B'
- 
+
      C                   EVAL      #0RPCG = #0RAMT                                            CLE038
      C                   EVAL      #0PPCG = #0PAMT                                            CLE038
                                                                                               CLE038
@@ -2272,11 +2273,11 @@
      C                             #0PMTD <> *BLANKS OR
      C                             #0PCCY <> *BLANKS OR
      C                             #0PACC <> *BLANKS
- 
+
      C                   IF        *IN60 = *OFF
- 
+
       ** Validate Receive Settlement
- 
+
      C                   EVAL      WPRInd = 'R'
      C                   EVAL      WSPercentage = #0RPCG
      C                   EVAL      WSMethod = #0RMTD
@@ -2286,7 +2287,7 @@
      C                   EVAL      WSByAmt = #0RCBA                                           CLE038
      C                   EVAL      WSAmount = #0RAMT                                          CLE038
      C                   EXSR      SRVBYA                                                     CLE038
- 
+
      C     WSByAmt       IFEQ      'A'                                                        CLE038
      C*****              EXSR      SRVAMT1                                                    CLE038
      C                   ELSE                                                                 CLE038
@@ -2313,7 +2314,7 @@
      C                   ENDIF                                                                CLE038
      C                   ENDIF
      C                   ENDIF                                                                CLE038
- 
+
      C                   IF        WCErr <> 'Y' AND
      C                             WAErr <> 'Y'
      C                   IF        PMode <> 'B'
@@ -2322,7 +2323,7 @@
      C                   EVAL      WArRICL(@Y) = WRCcyLoc
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WPErr = 'Y' OR
      C                             WMErr = 'Y' OR
      C                             WCErr = 'Y' OR
@@ -2332,13 +2333,13 @@
      C                             WOErr = 'Y'                                                CLE038
      C                   EVAL      WVErr = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
- 
+
       ** Validate Payment Settlement
- 
+
      C                   EVAL      WPRInd = 'P'
      C                   EVAL      WSPercentage =  #0PPCG
      C                   EVAL      WSMethod = #0PMTD
@@ -2348,7 +2349,7 @@
      C                   EVAL      WSByAmt = #0PYBA                                           CLE038
      C                   EVAL      WSAmount = #0PAMT                                          CLE038
      C                   EXSR      SRVBYA                                                     CLE038
- 
+
      C     WSByAmt       IFEQ      'A'                                                        CLE038
      C*****              EXSR      SRVAMT1                                                    CLE038
      C                   ELSE                                                                 CLE038
@@ -2375,7 +2376,7 @@
      C                   ENDIF                                                                CLE038
      C                   ENDIF
      C                   ENDIF                                                                CLE038
- 
+
      C                   IF        WCErr <> 'Y' AND
      C                             WAErr <> 'Y'
      C                   IF        PMode <> 'B'
@@ -2384,7 +2385,7 @@
      C                   EVAL      WArPICL(@Y) = WPCcyLoc
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WPErr = 'Y' OR
      C                             WMErr = 'Y' OR
      C                             WCErr = 'Y' OR
@@ -2394,11 +2395,11 @@
      C                             WOErr = 'Y'                                                CLE038
      C                   EVAL      WVErr = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WVErr = 'Y'
      C                   EVAL      *IN15 = *ON
      C                   ELSE
@@ -2422,24 +2423,24 @@
      C     @Y            OCCUR     LEPD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** No More error in validations
- 
+
      C                   IF        WAction = 'I' OR
      C                             PNoDetails = 'Y'
      C                   IF        WVErr <> 'Y'
- 
+
       ** Compute Total Receive/Payment Percentage
- 
+
      C                   EVAL      WTotRcv = 0
      C                   EVAL      WTotPay = 0
      C                   EVAL      WTotRcvAmt = 0                                             CLE038
      C                   EVAL      WTotPayAmt = 0                                             CLE038
- 
+
      C                   EVAL      WCntC = 1
- 
+
      C                   DOW       WCntC <= WRMax and PMode <> 'B'
      C                             OR WCntC <= @X and PMode = 'B'                             197145
      C                   IF        PMode <> 'B'
@@ -2463,10 +2464,10 @@
      C                   ENDIF
      C                   EVAL      WCntC = WCntC + 1
      C                   ENDDO
- 
+
       ** Total Receive Percentage and Total Payment Percentage
       ** should be equal to 100
- 
+
      C***********        IF        WTotRcv <> 100 AND                                         CLE038
      C***********                  *IN60 = *OFF                                               CLE038
      C                   IF        *IN60 = *OFF                                               CLE038
@@ -2487,7 +2488,7 @@
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF
- 
+
      C***********        IF        WTotPay <> 100 AND                                         CLE038
      C***********                  *IN61 = *OFF                                               CLE038
      C                   IF        *IN61 = *OFF                                               CLE038
@@ -2508,14 +2509,14 @@
      C                   ENDIF                                                                CLE038
      C                   ENDIF                                                                CLE038
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WTErr <> 'Y'
      C                   EVAL      WFormat = 'FULL'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CLE038
@@ -2844,16 +2845,16 @@
       *                                                               *
       *****************************************************************
      C     SRVPCT        BEGSR
- 
+
      C                   EVAL      WPErr = 'N'
- 
+
      C                   MOVE      *Blanks       ZFld17
      C                   MOVE      WSPercentage  ZFld17
      C                   Z-ADD     9             ZADEC
      C                   Z-ADD     3             ZADIG
- 
+
      C                   EXSR      ZASIGN
- 
+
      C                   IF        WSPercentage <> *Blanks AND
      C                             ZAsignOk = 'N'
      C                   EVAL      ZAMSID = 'ESM0824'
@@ -2866,13 +2867,13 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WPErr = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WPErr <> 'Y'
- 
+
      C                   MOVE      ZOUT15        WPercentNum
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WPRInd = 'P'
      C                   IF        WPercentNum = *ZERO
      C                   EVAL      #0PPCG = *BLANKS
@@ -2899,7 +2900,7 @@
      C                   ELSE
      C                   EVAL      WArPPcg(@Y) = WPercentNum
      C                   ENDIF
- 
+
      C                   WHEN      WPRInd = 'R'
      C                   IF        WPercentNum = *ZERO
      C                   EVAL      #0RPCG = *BLANKS
@@ -2926,10 +2927,10 @@
      C                   ELSE
      C                   EVAL      WArRPcg(@Y) = WPercentNum
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2939,14 +2940,14 @@
       *                                                               *
       *****************************************************************
      C     SRVCCY        BEGSR
- 
+
      C                   EVAL      WCErr = 'N'
- 
+
      C                   IF        WSCurrency <> *BLANKS
- 
+
      C                   IF        CLE031 <> 'Y' AND
      C                             CEU004 <> 'Y'
- 
+
      C                   EVAL      ZAMSID = 'ESM0848'
      C                   SELECT
      C                   WHEN      WPRInd = 'P'
@@ -2956,14 +2957,14 @@
      C                   ENDSL
      C                   EXSR      ZASNMS
      C                   EVAL      WCErr = 'Y'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PCurr = WSCurrency
      C                   EXSR      SRAOCURR
- 
+
      C                   IF        PRetCode <> *BLANKS
- 
+
      C                   EVAL      ZAMSID = 'ESM0848'
      C                   SELECT
      C                   WHEN      WPRInd = 'P'
@@ -2974,20 +2975,20 @@
      C                   ENDSL
      C                   EXSR      ZASNMS
      C                   EVAL      WCErr = 'Y'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WSCurrency = A6CYCD
      C                   EVAL      WInCurrency = A6INCY
      C                   EVAL      WSCcyDP = A6NBDP                                           CLE038
- 
+
      C     WSMethod      IFEQ      '09'                                                       CLE038
      C     CLE033        ANDEQ     'Y'                                                        CLE038
      C     WSetl09Ccy    ANDEQ     'T'                                                        CLE038
      C**  Do nothing                                                                          CLE038
      C                   ELSE                                                                 CLE038
      C                   IF        CEU004 = 'Y'
- 
+
      C**********         IF        WPRInd = 'R' AND                                           219070
      C**********                   WRcvInCcy = 'Y' OR                                         219070
      C**********                   WPRInd = 'R' AND                                           219070
@@ -3032,7 +3033,7 @@
      C**********         ENDIF
                                                                                               219070
      C                   ELSE
- 
+
      C                   IF        CLE031 <> 'Y'
      C                   EVAL      ZAMSID = 'ESM0844'
      C                   SELECT
@@ -3044,19 +3045,19 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WCErr = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WCErr <> 'Y'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WPRInd = 'P'
      C                   MOVE      WSCurrency    #0PCCY
      C                   EVAL      %SUBST(WPCcyLoc:1) = WSCurrency
@@ -3065,7 +3066,7 @@
      C                   ELSE
      C                   EVAL      WArPCcy(@Y) = WSCurrency
      C                   ENDIF
- 
+
      C                   WHEN      WPRInd = 'R'
      C                   MOVE      WSCurrency    #0RCCY
      C                   EVAL      %SUBST(WRCcyLoc:1) = WSCurrency
@@ -3074,7 +3075,7 @@
      C                   ELSE
      C                   EVAL      WArRCcy(@Y) = WSCurrency
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDIF
                                                                                               CLE038
@@ -3089,7 +3090,7 @@
      C                   EVAL      WSCcyDP = WRecDP                                           CLE038
      C                   ENDSL                                                                CLE038
      C                   ENDIF                                                                CLE038
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3099,11 +3100,11 @@
       *                                                               *
       *****************************************************************
      C     SRVMTH        BEGSR
- 
+
      C                   EVAL      WMErr = 'N'
- 
+
      C                   EVAL      WSetlCcy = WSCurrency
- 
+
      C**********         IF        WSetlCcy = *BLANKS                                         218782
      C                   IF        WSetlCcy = *BLANKS OR                                      218782
      C                             WSetl09Ccy ='T' AND WSMethod = '09'                        218782
@@ -3114,9 +3115,9 @@
      C                   EVAL      WSetlCcy = PMPCCY
      C                   ENDSL
      C                   ENDIF
- 
+
       ** Case 1
- 
+
      C                   IF        WSMethod = '00'
      C                   IF        WSAccount <> *BLANKS OR
      C                             WSCurrency <> *BLANKS
@@ -3132,9 +3133,9 @@
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 2
- 
+
      C                   IF        CLE033 <> 'Y' OR
      C                             CLE033 = 'Y' AND
      C                             WSMethod <> '09'
@@ -3161,9 +3162,9 @@
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 3
- 
+
      C                   IF        WSMethod = '04' OR
      C                             WSMethod = '14'
      C                   IF        PMRETP <> 'Y'
@@ -3179,9 +3180,9 @@
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 4
- 
+
      C                   IF        WSMethod = '04'
      C                   EVAL      WrkACID = PMCSNM
      C                   EVAL      WrkCYCD = WSetlCcy
@@ -3207,9 +3208,9 @@
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 5
- 
+
      C                   IF        WSMethod = '07' AND
      C                             WSetlCcy <> 'USD'
      C                   EVAL      ZAMSID  = 'ESM0935'
@@ -3223,9 +3224,9 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
- 
+
       ** Case 6
- 
+
      C                   IF        WSMethod = '14' AND
      C                             PMRETS <> 'Y'
      C                   EVAL      ZAMSID  = 'ESM0936'
@@ -3239,9 +3240,9 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
- 
+
       ** Case 7
- 
+
      C                   IF        CLE033 = 'Y' AND
      C                             WSMethod = '09' AND
      C                             A5ACTY = 'R'
@@ -3266,11 +3267,11 @@
      C                   EVAL      WMErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 8
- 
+
      C                   IF        AGMBIN = 'Y'
- 
+
      C                   IF        CLE033 <> 'Y' AND
      C                             WSMethod <> '04' AND
      C                             WSMethod <> '05' OR
@@ -3280,11 +3281,11 @@
      C                             WSMethod <> '09'
      C                   EVAL      WSBranch = *BLANKS
      C                   ELSE
- 
+
      C                   IF        CLE033 = 'Y' AND
      C                             WSMethod = '09'
      C                   ELSE
- 
+
      C                   IF        WSBranch = *BLANKS
      C                   EVAL      ZAMSID  = 'ESM0882'
      C                   SELECT
@@ -3297,7 +3298,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WMErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      PBranch = WSBranch
      C                   EXSR      SRAOBRCH
      C                   IF        PRetCode = '*NOSEL'
@@ -3312,7 +3313,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WMErr = 'Y'
      C                   ELSE
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      ZAMSID  = 'ESM0881'
      C                   SELECT
@@ -3325,21 +3326,21 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WMErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      WSBranch = PBranch
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WMErr <> 'Y'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WPRInd = 'P'
      C                   MOVE      WSMethod      #0PMTD
      C                   IF        PMode <> 'B'
@@ -3347,7 +3348,7 @@
      C                   ELSE
      C                   EVAL      WArPMtd(@Y) = WSMethod
      C                   ENDIF
- 
+
      C                   WHEN      WPRInd = 'R'
      C                   MOVE      WSMethod      #0RMTD
      C                   IF        PMode <> 'B'
@@ -3355,7 +3356,7 @@
      C                   ELSE
      C                   EVAL      WArRMtd(@Y) = WSMethod
      C                   ENDIF
- 
+
      C                   ENDSL
      C*                                                                                       219793
      C                   IF        WSMethod = '01' OR                                         219793
@@ -3367,7 +3368,7 @@
      C                   ENDIF                                                                219793
      C*                                                                                       219793
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3377,11 +3378,11 @@
       *                                                               *
       *****************************************************************
      C     SRVACT        BEGSR
- 
+
      C                   EVAL      WAErr = 'N'
- 
+
       ** Case 1
- 
+
      C                   IF        WSMethod = '00' OR
      C                             WSMethod = '04' OR
      C                             WSMethod = '06'
@@ -3398,19 +3399,19 @@
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 2
- 
+
      C                   IF        WSMethod = '01' OR
      C                             WSMethod = '02' OR
      C                             WSMethod = '07' OR
      C                             WSMethod = '08' OR
      C                             WSMethod = '12'
- 
+
      C                   EVAL      WNostro = WSAccount
      C                   TESTN                   WNostro              02
      C     '?'           SCAN      WNostro                                03
- 
+
      C                   IF        *IN02 = *OFF AND
      C                             *IN03 = *OFF OR
      C                             %SUBST(WSAccount:3) <> *BLANKS
@@ -3425,7 +3426,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      WrkCYCD = WSetlCcy
      C                   EVAL      WrkNONB = WSAccount
      C                   EXSR      SRAONOST
@@ -3442,7 +3443,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   IF        PRetCode = '*NOSEL'
      C                   EVAL      ZAMSID  = 'ESM0867'
      C                   SELECT
@@ -3454,7 +3455,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      WrkACID = A7CUST
      C                   EVAL      WrkCYCD = WSetlCcy
      C                   MOVE      A7ACSN        WrkACSQ
@@ -3477,7 +3478,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   IF        AGMBIN = 'N'
      C                   IF        BJSBRC <> A7BRCD
      C                   EVAL      ZAMSID  = 'ESM0501'
@@ -3492,15 +3493,15 @@
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 3
- 
+
      C                   IF        WSMethod = '03' AND
      C                             WSAccount <> *BLANKS
      C                   EVAL      WCustomer = WSAccount
@@ -3519,17 +3520,17 @@
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 4
- 
+
      C                   IF        WSMethod = '05'
- 
+
      C                   IF        AGMBIN = 'Y'
      C                   EVAL      WSBranch = %SUBST(WSAccount:1:3)
      C**********         EVAL      WAccount = %SUBST(WSAccount:4:12)                          CGL029
      C                   EVAL      WAccount = %SUBST(WSAccount:4:18)                          CGL029
      C                   EVAL      WAcodSeq = %SUBST(WSAccount:10:12)                         CSD031
- 
+
      C**********         IF        %SUBST(WAccount:11:2) = *BLANKS OR                         CGL029
      C**********                   %SUBST(WAccount:11:2) = '00'                               CGL029
      C**********         EVAL      %SUBST(WAccount:11:2) = '01'                               CGL029
@@ -3537,7 +3538,7 @@
      C                             %SUBST(WAccount:17:2) = '00'                               CGL029
      C                   EVAL      %SUBST(WAccount:17:2) = '01'                               CGL029
      C                   ENDIF
- 
+
      C*****              TESTN                   WAccount             02                      CSD031
      C                   TESTN                   WAcodSeq             02                      CSD031
      C                   IF        *IN02 = *OFF
@@ -3552,7 +3553,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      WrkACID = %SUBST(WAccount:1:6)
      C                   EVAL      WrkCYCD = WSetlCcy
      C**********         EVAL      WrkACCD = %SUBST(WAccount:7:4)                             CGL029
@@ -3560,17 +3561,17 @@
      C                   EVAL      WrkACCD = %SUBST(WAccount:7:10)                            CGL029
      C                   EVAL      WrkACSQ = %SUBST(WAccount:17:2)                            CGL029
      C                   EVAL      WrkBRCA = WSBranch
- 
+
      C                   IF        AGMBIN = 'N'
      C                   EVAL      WrkBRCA = BJSBRC
      C                   ENDIF
- 
+
      C                   EXSR      SRAOACCV
- 
+
      C                   IF        PRetCode <> *BLANKS OR
      C                             ACRECI <> 'D' OR
      C                             ACACST = 'C'
- 
+
      C                   IF        CEU004 = 'Y' AND
      C                             WrkCYCD = 'EUR' AND
      C                             PRetCode = '*NRF' OR
@@ -3593,7 +3594,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      ZAMSID  = 'ESM0940'
      C                   SELECT
      C                   WHEN      WPRInd = 'P'
@@ -3604,20 +3605,20 @@
      C                   ENDSL
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 5
- 
+
      C                   IF        WSMethod = '14'
- 
+
      C                   EVAL      WRetail = WSAccount
      C                   TESTN                   WRetail              02
- 
+
      C                   IF        *IN02 = *OFF OR
      C                             %SUBST(WSAccount:11) <> *BLANKS
      C                   EVAL      ZAMSID  = 'ESM0941'
@@ -3631,19 +3632,19 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   EVAL      WrkACID = WRetail
      C                   EVAL      WrkCYCD = *BLANKS
      C                   EVAL      WrkACCD = *BLANKS
      C                   EVAL      WrkACSQ = *BLANKS
      C                   EVAL      WrkBRCA = *BLANKS
- 
+
      C                   EXSR      SRAOACCV
- 
+
      C                   IF        PRetCode <> *BLANKS OR
      C                             ACRECI <> 'D' OR
      C                             ACACST = 'C'
- 
+
      C                   IF        CEU004 = 'Y' AND
      C                             WrkCYCD = 'EUR' AND
      C                             PRetCode = '*NRF' OR
@@ -3677,11 +3678,11 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
      C                   TESTB     '2'           ACRETB                   04
      C                   TESTB     '3'           ACRETB                   05
- 
+
      C                   IF        *IN04 = *ON OR
      C                             *IN05 = *ON
      C                   EVAL      ZAMSID  = 'ESM0992'
@@ -3695,11 +3696,11 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WSBranch = *BLANKS
      C                   EVAL      WSBranch = ACBRCA
      C                   ENDIF
- 
+
      C                   IF        WSCurrency <> *BLANKS AND
      C                             WSCurrency <> ACCCY OR
      C                             WSCurrency = *BLANKS AND
@@ -3719,7 +3720,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WAErr = 'Y'
      C                   ELSE
- 
+
      C                   IF        AGMBIN = 'N'
      C                   IF        BJSBRC <> A7BRCD
      C                   EVAL      ZAMSID  = 'ESM0887'
@@ -3734,16 +3735,16 @@
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Case 6
- 
+
      C                   IF        ZAMSID = *BLANKS
- 
+
      C                   IF        WSMethod = '01' OR
      C                             WSMethod = '02' OR
      C                             WSMethod = '04' OR
@@ -3752,7 +3753,7 @@
      C                             WSMethod = '08' OR
      C                             WSMethod = '12' OR
      C                             WSMethod = '14'
- 
+
      C                   IF        PMDTRC < ACDACO
      C                   IF        CEU004 <> 'Y' OR
      C                             WAction = 'I' OR
@@ -3769,7 +3770,7 @@
      C                   EVAL      WAErr = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        ACATYP = 'R'
      C                   IF        WPRInd = 'R' AND
      C                             *IN60 = *OFF OR
@@ -3790,14 +3791,14 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WAErr <> 'Y'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WPRInd = 'P'
      C                   MOVEL     WSBranch      #0PACC
      C                   MOVEL     WSAccount     #0PACC
@@ -3826,7 +3827,7 @@
      C                   EVAL      WArPBrc(@Y) = *BLANKS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   WHEN      WPRInd = 'R'
      C                   MOVEL     WSBranch      #0RACC
      C                   MOVE      WSAccount     #0RACC
@@ -3855,10 +3856,10 @@
      C                   EVAL      WArRBrc(@Y) = *BLANKS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3868,12 +3869,12 @@
       *                                                               *
       *****************************************************************
      C     SRFULL        BEGSR
- 
+
      C                   IF        WAction <> 'E' AND
      C                             WSAction <> 'E'
- 
+
      C                   EVAL      WCntC = 1
- 
+
      C                   DOW       WCntC <= WRMax and PMode <> 'B'
      C                             OR WCntC <= @X and PMode = 'B'                             197145
      C                   IF        WAction = 'I' OR
@@ -3884,9 +3885,9 @@
      C                   ELSE
      C                   EVAL      WcR = WArSEQN1(WCntC)
      C                   ENDIF
- 
+
      C                   IF        WcR <> *ZERO
- 
+
      C                   IF        WF9 = 'Y'
      C                   EVAL      WrkSequence = WMFSequence
      C                   EVAL      WMFSequence = WMFSequence + 1
@@ -3897,10 +3898,10 @@
      C                   EVAL      WrkSequence = WcR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      SETLIAB = XSETLIB
      C                   EVAL      SETLIAZ = XSETLIZ
- 
+
      C                   SELECT
      C                   WHEN      PMode = 'B' AND
      C                             WAction = 'I'
@@ -3913,7 +3914,7 @@
      C                   EXSR      SRCLRF
      C                   EXSR      SRTOEX
      C                   ENDSL
- 
+
      C                   IF        PMode = 'B'
      C                   CALL      'SD2410'
      C                   PARM                    SETLIAB
@@ -3942,69 +3943,69 @@
      C                   PARM                    PLnRef
      C                   PARM                    @PARM3                                       222373
      C                   ENDIF
- 
+
      C                   EVAL      PMACTC = WACTC
      C                   EVAL      PMPRCV = WPRCV
      C                   EVAL      PMPPAY = WPPAY
- 
+
      C                   IF        PMSDTV = 'Y'
      C                   EXSR      SRDB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WCntC = WCntC + 1
      C                   ENDDO
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMode = 'B'
      C                   EVAL      WFormat = 'END'
- 
+
      C                   WHEN      WAction = 'I' OR
      C                             PNoDetails = 'Y'
      C                   EVAL      WFormat = 'END'
- 
+
      C                   WHEN      WAction = 'A'
      C                   EVAL      WFormat = 'SUB'
- 
+
      C                   ENDSL
- 
+
       ** Enquire
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WCntC = 1
      C                   EVAL      WcR = WArSEQN1(WCntC)
- 
+
      C                   DOW       WcR <> *ZERO
- 
+
      C                   EVAL      WrkSequence = WcR
- 
+
      C                   EXSR      SRSETF
- 
+
      C                   CALL      'SD2400'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    SETLIAB
      C                   PARM                    SETLIAZ
      C                   PARM                    PLnRef
      C                   PARM                    @PARM3                                       222373
- 
+
      C                   EVAL      WCntC = WCntC + 1
      C                   EVAL      WcR = WArSEQN1(WCntC)
      C                   ENDDO
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMode = 'B'
      C                   EVAL      WFormat = 'END'
      C                   OTHER
      C                   EVAL      WFormat = 'SUB'
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4014,7 +4015,7 @@
       *                                                               *
       *****************************************************************
      C     SRSETF        BEGSR
- 
+
      C                   EVAL      WType = PType
      C                   IF        PType = 'PTSO'                                             CLE038
      C                   EVAL      WType = 'LOAN'                                             CLE038
@@ -4030,7 +4031,7 @@
      C                   MOVE      PFclFees      WFclFees
      C                   MOVE      PFeeSeq       WFeeSeq
      C                   EVAL      WSequence = WrkSequence
- 
+
      C                   SELECT
      C                   WHEN      PMode = 'B' AND
      C                             WAction = 'I'
@@ -4045,12 +4046,12 @@
      C     KFLDS2        SETLL     LESTAL7
      C     KFLDS2        READE     LESTAL7
      C                   ENDSL
- 
+
      C                   IF        WAction <> 'D' AND
      C                             WSAction <> 'D'
      C                   EXSR      SRTOEX
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4060,7 +4061,7 @@
       *                                                               *
       *****************************************************************
      C     SRCLRF        BEGSR
- 
+
      C                   EVAL      RSTM = *ZEROS
      C                   EVAL      RONS = *BLANKS
      C**********         EVAL      ROBN = *ZEROS                                              CSD027
@@ -4122,7 +4123,7 @@
      C                   EVAL      PEXR = *ZEROS
      C                   EVAL      PEXI = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4132,11 +4133,11 @@
       *                                                               *
       *****************************************************************
      C     SRTOEX        BEGSR
- 
+
      C                   EVAL      WACTC = PMACTC
      C                   EVAL      WPRCV = PMPRCV
      C                   EVAL      WPPAY = PMPPAY
- 
+
      C                   IF        WAction = 'E' OR
      C                             WSAction = 'E'
      C                   EVAL      PMACTC = 'E'
@@ -4151,10 +4152,10 @@
      C                   EVAL      PMPPAY = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WAction <> 'E' AND
      C                             WSAction <> 'E'
- 
+
      C                   IF        *IN60 = *OFF
      C                   MOVE      WArRMtd(WCntC)PMRSTM
      C                   EVAL      PMRONS = WArRAcc(WCntC)
@@ -4165,7 +4166,7 @@
      C                   EVAL      RCAM   = WArRAmt(WCntC)                                    CLE038
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C                   MOVE      WArPMtd(WCntC)PMPSTM
      C                   EVAL      PMPONS = WArPAcc(WCntC)
@@ -4176,12 +4177,12 @@
      C                   EVAL      PYAM   = WArPAmt(WCntC)                                    CLE038
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WAction = 'E' OR
      C                             WSAction = 'E'
- 
+
      C                   IF        *IN60 = *OFF
      C                   MOVE      RSTM          PMRSTM
      C                   IF        ROBR = *BLANKS
@@ -4190,7 +4191,7 @@
      C                   EVAL      PMROBR = ROBR
      C                   EVAL      PMRSCY = RSCY
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C                   MOVE      PSTM          PMPSTM
      C                   IF        POBR = *BLANKS
@@ -4199,7 +4200,7 @@
      C                   EVAL      PMPOBR = POBR
      C                   EVAL      PMPSCY = PSCY
      C                   ENDIF
- 
+
      C                   ELSE
       *
      C************       IF        RCPC = *ZEROS                                              CLE038
@@ -4217,7 +4218,7 @@
      C                   EVAL      PMPPAY = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        *IN60 = *OFF
      C**********         IF        ROBN <> *ZERO                                              CSD027
      C                   IF        ROBN <> *BLANKS                                            CSD027
@@ -4239,7 +4240,7 @@
      C                   EVAL      PMRIBN = RIBN
      C                   EVAL      PMRIBA = RIBA
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C**********         IF        POBN <> *ZERO                                              CSD027
      C                   IF        POBN <> *BLANKS                                            CSD027
@@ -4261,7 +4262,7 @@
      C                   EVAL      PMPIBN = PIBN
      C                   EVAL      PMPIBA = PIBA
      C*************      ENDIF                                                                221859
- 
+
      C                   EVAL      PARCRN = RCRN
      C                   EVAL      PMRCRA = RCRA
      C                   EVAL      PARVNO = RVNO
@@ -4287,9 +4288,9 @@
      C                   EVAL      PMBENN = BENN
      C                   EVAL      PMIC72 = IC72
      C                   ENDIF                                                                221859
- 
+
      C                   IF        CLE031 = 'Y'
- 
+
      C                   IF        *IN60 = *OFF OR
      C                             WAction = 'E' OR
      C                             WSAction = 'E'
@@ -4304,7 +4305,7 @@
      C                   ENDIF
      C                   EVAL      PMREXI = REXI
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF OR
      C                             WAction = 'E' OR
      C                             WSAction = 'E'
@@ -4319,9 +4320,9 @@
      C                   ENDIF
      C                   EVAL      PMPEXI = PEXI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4331,7 +4332,7 @@
       *                                                               *
       *****************************************************************
      C     SRFRFD        BEGSR
- 
+
      C                   IF        WAction = 'E' OR
      C                             WAction = 'D' OR
      C                             WAction = 'A' AND
@@ -4356,7 +4357,7 @@
      C                   EVAL      #1RIBA = RIBA
      C                   EVAL      #1RCCY = RSCY
      C                   ENDIF
- 
+
      C                   IF        WAction = 'E' OR
      C                             WAction = 'D' OR
      C                             WAction = 'A' AND
@@ -4381,7 +4382,7 @@
      C                   EVAL      #1PIBA = PIBA
      C                   EVAL      #1PCCY = PSCY
      C                   ENDIF
- 
+
      C                   EVAL      #1RCRN = RCRN
      C                   EVAL      #1RCRA = RCRA
      C                   EVAL      #1RVNO = RVNO
@@ -4435,7 +4436,7 @@
      C                   EVAL      #1PEXI = PEXI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4445,7 +4446,7 @@
       *                                                               *
       *****************************************************************
      C     SRFRXD        BEGSR
- 
+
      C                   IF        *IN60 = *OFF
      C                   MOVEL     PMRSTM        #0RMTD
      C                   IF        PMROBR <> *BLANKS AND
@@ -4466,7 +4467,7 @@
      C                   EVAL      #0RIBA = PMRIBA
      C                   EVAL      #0RCCY = PMRSCY
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C                   MOVEL     PMPSTM        #0PMTD
      C                   IF        PMPOBR <> *BLANKS AND
@@ -4487,7 +4488,7 @@
      C                   EVAL      #0PIBA = PMPIBA
      C                   EVAL      #0PCCY = PMPSCY
      C                   ENDIF
- 
+
      C                   EVAL      #0RCRN = PARCRN
      C                   EVAL      #0RCRA = PMRCRA
      C                   EVAL      #0RVNO = PARVNO
@@ -4519,7 +4520,7 @@
      C                   EVAL      #0PEXI = PMPEXI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4529,7 +4530,7 @@
       *                                                               *
       *****************************************************************
      C     SRFRXF        BEGSR
- 
+
      C                   IF        *IN60 = *OFF
      C                   MOVE      PMRSTM        RSTM
      C                   MOVE      PMROBR        ROBR
@@ -4544,7 +4545,7 @@
      C                   EVAL      RIBA = PMRIBA
      C                   EVAL      RSCY = PMRSCY
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C                   MOVE      PMPSTM        PSTM
      C                   MOVE      PMPOBR        POBR
@@ -4559,7 +4560,7 @@
      C                   EVAL      PIBA = PMPIBA
      C                   EVAL      PSCY = PMPSCY
      C                   ENDIF
- 
+
      C                   EVAL      RCRN = PARCRN
      C                   EVAL      RCRA = PMRCRA
      C                   EVAL      RVNO = PARVNO
@@ -4580,7 +4581,7 @@
      C                   EVAL      BTB6 = PMBTB6
      C                   EVAL      CVMR = PMCVMR
      C                   EVAL      IC72 = PMIC72
- 
+
      C                   IF        CLE031 = 'Y'
      C                   IF        *IN60 = *OFF
      C                   MOVE      *BLANKS       ZFLD17
@@ -4601,7 +4602,7 @@
      C                   EVAL      PEXI = PMPEXI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4611,7 +4612,7 @@
       *                                                               *
       *****************************************************************
      C     SRFILE        BEGSR
- 
+
      C                   EVAL      RECI = 'D'
      C                   EVAL      TYPE = PType
      C                   IF        PType = 'PTSO'                                             CLE038
@@ -4630,7 +4631,7 @@
      C                   EVAL      RCBA = WArRByAmt                                           CLE038
      C                   EVAL      PYBA = WArPByAmt                                           CLE038
      C                   EVAL      CCY  = PMRCCY                                              CLE038
- 
+
      C                   IF        PMode <> 'B'
      C                   IF        WAction = 'I' OR
      C                             WF9 = 'Y' OR
@@ -4649,13 +4650,13 @@
      C**********         EVAL      PCLAST = PCNEXT                                            CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
- 
+
      C                   EVAL      PTRF = ParentPCRef
      C                   ENDIF
- 
+
      C                   EXSR      SRCLRF
      C                   EXSR      SRFRXF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4665,14 +4666,14 @@
       *                                                               *
       *****************************************************************
      C     SRDB          BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WAction = 'I' OR
      C                             WF9 = 'Y' OR
      C                             PNoDetails = 'Y'
      C                   EXSR      SRINS
- 
+
      C                   WHEN      WAction = 'A' AND
      C                             WSAction <> 'D' OR
      C                             WAction = 'U'
@@ -4682,13 +4683,13 @@
      C                   ELSE
      C                   EVAL      WFormat = 'SUB'
      C                   ENDIF
- 
+
      C                   WHEN      WAction = 'A' AND
      C                             WSAction = 'D' OR
      C                             WAction = 'D'
- 
+
      C                   EVAL      WCntC = 1
- 
+
      C                   EVAL      WrkSequence = WArSEQN1(WCntC)
      C                   DOW       WrkSequence <> *ZERO
      C                   EXSR      SRSETF
@@ -4696,7 +4697,7 @@
      C                   EVAL      WCntC = WCntC + 1
      C                   EVAL      WrkSequence = WArSEQN1(WCntC)
      C                   ENDDO
- 
+
      C                   IF        PMode = 'B'
      C                   EVAL      WFormat = 'END'
      C                   ELSE
@@ -4708,9 +4709,9 @@
      C                   EVAL      WFormat = 'SUB'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4720,47 +4721,47 @@
       *                                                               *
       *****************************************************************
      C     SRAMD         BEGSR
- 
+
      C                   IF        WSAction = 'A' OR
      C                             WSAction = 'U'
- 
+
      C                   EVAL      PSetlAmd = 'Y'
- 
+
      C                   MOVE      PLnRef        LNRF
      C                   MOVE      PLnAmdVDat    VDAT
      C                   MOVE      PLnAmdSeq     LASQ
      C                   MOVE      PCusFees      CNUM
      C                   MOVE      PFclFees      FACL
      C                   MOVE      PFeeSeq       FESQ
- 
+
      C                   IF        *IN60 = *OFF
      C                   Z-ADD     WArRPcg(WCntC)RCPC
      C                   Z-ADD     WArRAmt(WCntC)RCAM                                         CLE038
      C                   MOVEL     WArRByAmt     RCBA                                         CLE038
      C                   ENDIF
- 
+
      C                   IF        *IN61 = *OFF
      C                   Z-ADD     WArPPcg(WCntC)PYPC
      C                   Z-ADD     WArPAmt(WCntC)PYAM                                         CLE038
      C                   MOVEL     WArPByAmt     PYBA                                         CLE038
      C                   ENDIF
      C                   EVAL      CCY  = PMRCCY                                              CLE038
- 
+
      C                   EXSR      SRCLRF
      C                   EXSR      SRFRXF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WAction = 'D' OR
      C                             WSAction = 'D'
      C                   EVAL      RECI = 'R'
      C                   ENDIF
- 
+
      C                   UPDATE    LESTAL7
- 
+
      C                   IN        SDSTAT
      C                   IN        SC24X7
- 
+
      C                   IF        PMode <> 'B'
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = 'LIBR'
@@ -4769,7 +4770,7 @@
      C                   EXSR      APLGTR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PMode = 'F'
      C                   EVAL      WSequence = XREPN
      C     KFLDS3        SETLL     LEISTL1
@@ -4782,7 +4783,7 @@
      C                   EXSR      LOGDEL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4792,7 +4793,7 @@
       *                                                               *
       *****************************************************************
      C     SRINS         BEGSR
- 
+
      C                   EVAL      WType = PType
      C                   IF        PType = 'PTSO'                                             CLE038
      C                   EVAL      WType = 'LOAN'                                             CLE038
@@ -4808,13 +4809,13 @@
      C                   MOVE      PFclFees      WFclFees
      C                   MOVE      PFeeSeq       WFeeSeq
      C                   EVAL      WSequence = WrkSequence
- 
+
      C                   IF        PMODE <> 'B'
      C*****KFLDS1        SETGT     LESTALX                                                    227714
      C*****KFLDS1        READPE    LESTALX                                30                  227714
      C     KFLDS6        SETGT     LESTALX                                                    227714
      C     KFLDS6        READPE    LESTALX                                30                  227714
- 
+
      C                   IF        *IN30 = *OFF
      C                   EVAL      SEQ = SEQ + 1
      C                   EVAL      TMST = TMST
@@ -4825,9 +4826,9 @@
      C                   MOVE      TMST          PTimeStamp
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WrkSequence = SEQ
- 
+
      C                   IF        PMode <> 'B'
      C                   IF        WAction = 'I' OR
      C                             WF9 = 'Y' OR
@@ -4836,27 +4837,27 @@
      C                   EXSR      SRAOBRCH
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EXSR      SRFILE
- 
+
      C                   IF        PMode <> 'B'
      C                   WRITE     LESTAL7
      C                   ENDIF
- 
+
      C                   IF        PMode <> 'B'
- 
+
      C                   IN        SDSTAT
      C                   IN        SC24X7
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EXSR      LOG247
      C                   EVAL      WLogValid = 'V'
      C                   EXSR      APLGTR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        PMode = 'F'
      C                   EVAL      WSequence = XREPN
      C     KFLDS3        SETLL     LEISTL1
@@ -4869,7 +4870,7 @@
      C                   EXSR      LOGDEL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4879,16 +4880,16 @@
       *                                                               *
       *****************************************************************
      C     SREND         BEGSR
- 
+
      C                   EVAL      PErrors = WError
- 
+
       ** Receive Settlement Currency and Location
- 
+
      C                   IF        *IN60 = *OFF
- 
+
      C                   EVAL      WcI = 1
      C                   EVAL      WcO = 0
- 
+
      C                   DOW       WcI <= WRMax and PMode <> 'B'
      C                             OR WcI <= @X and PMode = 'B'                               197145
      C     WArRICL(WcI)  LOOKUP    WArROCL                                22
@@ -4901,19 +4902,19 @@
      C                   ENDIF
      C                   EVAL      WcI = WcI + 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArRCcyP      PRcvSetlCcy
      C                   MOVEA     WArRLocP      PRcvSetlLoc
- 
+
      C                   ENDIF
- 
+
       ** Pay Settlement Currency and Location
- 
+
      C                   IF        *IN61 = *OFF
- 
+
      C                   EVAL      WcI = 1
      C                   EVAL      WcO = 0
- 
+
      C                   DOW       WcI <= WRMax and PMode <> 'B'
      C                             OR WcI <= @X and PMode = 'B'                               197145
      C     WArPICL(WcI)  LOOKUP    WArPOCL                                22
@@ -4926,18 +4927,18 @@
      C                   ENDIF
      C                   EVAL      WcI = WcI + 1
      C                   ENDDO
- 
+
      C                   MOVEA     WArPCcyP      PPaySetlCcy
      C                   MOVEA     WArPLocP      PPaySetlLoc
- 
+
      C                   ENDIF
- 
+
       ** Revalidate Pay/Receive Percentage
- 
+
      C                   IF        PMCMDP = '12' AND
      C                             WAction <> 'E' AND
      C                             WAction <> 'D'
- 
+
      C                   EVAL      WTotRcv = 0
      C                   EVAL      WTotPay = 0
      C                   EVAL      WTotRcvAmt = 0                                             CLE038
@@ -4950,10 +4951,10 @@
      C                   IF        PTimeStamp <> *BLANKS
      C                   MOVE      PTimeStamp    WTimeStamp
      C                   ENDIF
- 
+
      C     KFLDS7        SETLL     LESTAL1
      C     KFLDS7        READE(N)  LESTAL1                                50
- 
+
      C                   DOW       *IN50 = *OFF
      C                   EVAL      WCntC = WCntc + 1
      C                   EVAL      WTotRcv = WTotRcv + RCPC
@@ -5032,7 +5033,7 @@
       *                                                                                       CLE038
      C     KFLDS7        READE     LESTAL1                                50
      C                   ENDDO
- 
+
      C                   IF        WCntC = *ZERO
      C                   EVAL      PMSDTV = 'N'
      C                   EVAL      PMERCD = *BLANKS
@@ -5079,17 +5080,17 @@
      C**********         ENDIF                                                                CLE038
      C                   ENDSL                                                                CLE038
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      PMACTC = XACTC
      C                   EVAL      PMPRCV = XPRCV
      C                   EVAL      PMPPAY = XPPAY
- 
+
      C                   IF        PMode <> 'B'
      C                   CLOSE     LE2230DF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5099,21 +5100,21 @@
       *                                                               *
       *****************************************************************
      C     LOGDEL        BEGSR
- 
+
      C                   EVAL      WMsgType = 'LE' + 'STAL'
      C                   EVAL      WFrOffId = PCRF
      C                   EVAL      WTimeStamp = TMST
- 
+
      C                   OPEN      APILOGL0
- 
+
      C     KFLDS4        CHAIN     APILOG0
- 
+
      C                   IF        %FOUND(APILOGL0)
      C                   DELETE    APILOG0
      C                   ENDIF
- 
+
      C                   CLOSE     APILOGL0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5227,7 +5228,7 @@
      C*                  EVAL      SA1PTF = ParentPCRef
       *
      C*                  ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5237,24 +5238,24 @@
       *                                                               *
       *****************************************************************
      C     APLGTR        BEGSR
- 
+
      C                   EVAL      APTRAN = 'STAL'
      C                   EVAL      APSTMS = TMST
      C                   EVAL      APMTYP = 'LE' + 'STAL'
      C                   EVAL      APSOFC = PCRF
- 
+
      C                   IF        WLogValid = 'V'
      C                   OPEN      APVLOGPD
      C                   WRITE     APVLOGD0
      C                   CLOSE     APVLOGPD
      C                   ENDIF
- 
+
      C                   IF        WLogValid = 'I'
      C                   OPEN      APILOGPD
      C                   WRITE     APILOGD0
      C                   CLOSE     APILOGPD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5264,11 +5265,11 @@
       *                                                               *
       *****************************************************************
      C     SRCLRM        BEGSR
- 
+
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGMQ
      C                   PARM      '*SAME'       ZAPGRL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5278,14 +5279,14 @@
       *                                                               *
       *****************************************************************
      C     ZASNMS        BEGSR
- 
+
      C                   IF        PMode = 'B' OR
      C                             PMode = 'P'
- 
+
      C                   EXSR      SRBERR
- 
+
      C                   ELSE
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGMQ
      C                   PARM                    ZAPGRL
@@ -5293,9 +5294,9 @@
      C                   PARM                    ZAMSGF
      C                   PARM                    ZAMSDA
      C                   PARM                    ZAMSTP
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5305,7 +5306,7 @@
       *                                                               *
       *****************************************************************
      C     SRBERR        BEGSR
- 
+
      C                   DUMP
      C                   CALL      'Y2RVMGC'
      C                   PARM                    PRetCode
@@ -5313,14 +5314,14 @@
      C                   PARM                    ZAMSGF
      C                   PARM                    ZAMSDA
      C                   PARM                    ZAMSTX
- 
+
      C*                  IF        WBError = 'Y'
- 
+
      C*                  IF        RepairLoc = 'B'
- 
+
      C*                  CALL      'LEC0215'
      C*                  PARM                    XREPN
- 
+
      C*                  EVAL      XREPN
      C*                  EVAL      XMSID
      C*                  EVAL      ITYPE
@@ -5374,19 +5375,19 @@
      C*                  EVAL      IPEXR
      C*                  EVAL      IPEXI
      C*                  EVAL      IPTRF
- 
+
      C*                  WRITE     LEISTLD0
- 
+
      C*                  IF        CSC011 = 'Y' AND
      C*                            S1SUPP = LIBR
      C*                  EXSR      LOG247
      C*                  EVAL      WLogValid = 'I'
      C*                  EXSR      APLGTR
      C*                  ENDIF
- 
+
      C*                  ENDIF
      C*                  ENDIF
- 
+
      C                   IF        PMode = 'B'
      C*                  EVAL      DETAILS
      C                   ENDIF
@@ -5406,7 +5407,7 @@
       *
      C                   MOVE      '1'           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5416,15 +5417,15 @@
       *                                                               *
       *****************************************************************
      C     SRAOCURR      BEGSR
- 
+
       ** Access Currency Details
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5434,15 +5435,15 @@
       *                                                               *
       *****************************************************************
      C     SRAOACOD      BEGSR
- 
+
       ** Access Account Code Details
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PAcod
      C     SDACOD        PARM      SDACOD        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDACODPD'
@@ -5453,7 +5454,7 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5463,9 +5464,9 @@
       *                                                               *
       *****************************************************************
      C     SRAOBRCH      BEGSR
- 
+
       ** Access Branch Code Details
- 
+
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRetCode
@@ -5473,7 +5474,7 @@
      C                   PARM                    PBranch
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5483,9 +5484,9 @@
       *                                                               *
       *****************************************************************
      C     SRAOACCV      BEGSR
- 
+
       ** Access Account Identifier
- 
+
      C                   CALL      'AOACCTV0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      WrkACID       PACID
@@ -5496,7 +5497,7 @@
      C                   PARM      *BLANKS       PTYPA
      C                   PARM      *BLANKS       PNONB
      C     ACCNTB        PARM      ACCNTB        P#FMT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5506,9 +5507,9 @@
       *                                                               *
       *****************************************************************
      C     SRAOACCR      BEGSR
- 
+
       ** Access Account Details
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
@@ -5519,7 +5520,7 @@
      C                   PARM      WrkACSQ       PACSQ
      C                   PARM      WrkBRCA       PBRCA
      C     ACCNTB        PARM      ACCNTB        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5529,9 +5530,9 @@
       *                                                               *
       *****************************************************************
      C     SRAONOST      BEGSR
- 
+
       ** Access Nostro Code Details
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
@@ -5544,11 +5545,11 @@
      C                   PARM      *BLANKS       PACID
      C                   PARM      *BLANKS       PPNOI
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   IF        PRetCode = *BLANKS
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WPRInd = 'R'
      C                   EVAL      WRcvSetlCcy = A7CYCD
      C                   EVAL      WRcvSetlLoc = %SUBST(A7NOSN:8:3)
@@ -5556,9 +5557,9 @@
      C                   EVAL      WPaySetlCcy = A7CYCD
      C                   EVAL      WPaySetlLoc = %SUBST(A7NOSN:8:3)
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5568,15 +5569,15 @@
       *                                                               *
       *****************************************************************
      C     SRAOSARD      BEGSR
- 
+
       ** Access Switchable Features File
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*VERIFY'     POption
      C                   PARM                    PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS AND
      C                             PRetCode <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -5587,7 +5588,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5597,9 +5598,9 @@
       *                                                               *
       *****************************************************************
      C     SRAOSVAL      BEGSR
- 
+
       ** Access System Values
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM                    PSysValK1
@@ -5622,7 +5623,7 @@
      C                   PARM                    PSysVal9
      C                   PARM                    PSysValK10
      C                   PARM                    PSysVal10
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDSVALJ0'
@@ -5632,7 +5633,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5642,11 +5643,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZField
      C                   PARM                    ZADEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5655,9 +5656,9 @@
       *  ZASIGN - Validate and right aligned numeric fields           *
       *                                                               *
       *****************************************************************
- 
+
      C     ZASIGN        BEGSR
- 
+
      C                   CALLB     'ZASIGN'
      C                   PARM                    ZAsignOk
      C                   PARM                    ZFLD17
@@ -5666,7 +5667,7 @@
      C                   PARM                    ZSDCSP
      C                   PARM                    ZOUT15
      C                   PARM                    ZFSIGN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CLE038
@@ -5715,9 +5716,9 @@
       *  SRRESET - Reset Error Indicators                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRESET       BEGSR
- 
+
      C                   EVAL      *IN22 = *OFF
      C                   EVAL      *IN23 = *OFF
      C                   EVAL      *IN24 = *OFF
@@ -5726,7 +5727,7 @@
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      *IN28 = *OFF
      C                   EVAL      *IN29 = *OFF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5736,9 +5737,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Settlement Allocations File Key List 1
- 
+
      C     KFLDS1        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WTimeStamp
@@ -5749,9 +5750,9 @@
      C                   KFLD                    WFclFees
      C                   KFLD                    WFeeSeq
      C                   KFLD                    WSequence
- 
+
       ** Settlement Allocations File Key List 2
- 
+
      C     KFLDS2        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WLnRef
@@ -5761,9 +5762,9 @@
      C                   KFLD                    WFclFees
      C                   KFLD                    WFeeSeq
      C                   KFLD                    WSequence
- 
+
       ** Settlement Allocations Invalid File Key List
- 
+
      C     KFLDS3        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WTimeStamp
@@ -5774,16 +5775,16 @@
      C                   KFLD                    WFclFees
      C                   KFLD                    WFeeSeq
      C                   KFLD                    WSequence
- 
+
       ** API Invalid Log File Key List
- 
+
      C     KFLDS4        KLIST
      C                   KFLD                    WMsgType
      C                   KFLD                    WFrOffId
      C                   KFLD                    WTimeStamp
- 
+
       ** Settlement Allocations File Key List
- 
+
      C     KFLDS5        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WLnRef
@@ -5792,9 +5793,9 @@
      C                   KFLD                    WCusFees
      C                   KFLD                    WFclFees
      C                   KFLD                    WFeeSeq
- 
+
       ** Settlement Allocations File Key List 6 for LESTALLX
- 
+
      C     KFLDS6        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WTimeStamp
@@ -5804,27 +5805,27 @@
      C                   KFLD                    WCusFees
      C                   KFLD                    WFclFees
      C                   KFLD                    WFeeSeq
- 
+
       ** Settlement Allocations File Key List 7
- 
+
      C     KFLDS7        KLIST
      C                   KFLD                    WType
      C                   KFLD                    WTimeStamp
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line sets the Program, Module, and
       ** Procedure names for Database Error Processing.
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       *****************************************************************
       * *PSSR  - Program exception error routine                      *
       *          Called automatically if a program error occurs,      *
@@ -5832,14 +5833,14 @@
       *          This subroutine DUMPs the program just once.         *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     PMODE         IFNE      'B'
      C                   ROLBK
      C                   ENDIF
- 
+
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C     @RUN          IFEQ      *BLANK
      C                   MOVE      'Y'           @RUN              1
      C                   DUMP
@@ -5849,7 +5850,7 @@
      C                   CALL      'DBERRCTL'
      C                   ENDIF
      C                   ENDIF
- 
+
      C     PMODE         IFEQ      'B'
      C     PMODE         OREQ      'P'
      C     PMDBSE        IFEQ      0
@@ -5861,12 +5862,12 @@
      C                   MOVEL     'LEL0035 '    ZAMSID
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

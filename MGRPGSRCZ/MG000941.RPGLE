@@ -50,6 +50,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
       *           Identification.                                     *

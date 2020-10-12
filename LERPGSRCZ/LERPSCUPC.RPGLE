@@ -34,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
@@ -644,7 +645,7 @@ E004 C                   ENDIF
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CLE005
      C                   END
- 
+
       *  Check if an existing DBU_RPSC job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589

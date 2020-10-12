@@ -19,8 +19,8 @@
       *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
-      *                 MD054317           Date 09Sep19               *      
-      *                 MD047554           Date 11Oct17               *      
+      *                 MD054317           Date 09Sep19               *
+      *                 MD047554           Date 11Oct17               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR943686           Date 23Sep16               *
@@ -87,13 +87,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054035 - Prevent file locking of LEFEED                    *
-      *  MD054317 - PDCL X not generated for freq based repayment     *            
+      *  MD054317 - PDCL X not generated for freq based repayment     *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed RE. Check the change of the  *
-      *             autosettle indicator and call LE2041.             *      
+      *             autosettle indicator and call LE2041.             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031: System generating wrong projected move-   *
@@ -920,7 +921,7 @@
       *****************************************************************
       * MAIN - Main body                                              *
       *****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C                   CALL      'SFC000026'                                                CAP084
      C                   PARM      *BLANKS       USER             10                          CAP084
@@ -1943,7 +1944,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      PEXR = RPPEXR                                              CLE031
      C                   EVAL      PEXI = RPPEXI                                              CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   IF        CLE154 = 'Y'                                             MD040830
      C                   EVAL      REPT = RPREPT                                            MD040830
      C                   ENDIF                                                              MD040830
@@ -4754,7 +4755,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   EVAL      WPEAInd = 'Y'                                              CSC054
      C                   ENDIF                                                                CSC024
      C                   ENDIF                                                                CSC024
- 
+
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CAS011
       ** Check if switchable feature CAS009 is installed                                      CAS011
@@ -4830,7 +4831,7 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVEL     'N'           CLE134            1                        AR806351
      C                   ENDIF                                                              AR806351
                                                                                             AR806351
- 
+
       ** Check if Watch List Element (CSD083) is on                                           CSD083
                                                                                               CSD083
      C                   CALLB     'AOSARDR0'                                                 CSD083

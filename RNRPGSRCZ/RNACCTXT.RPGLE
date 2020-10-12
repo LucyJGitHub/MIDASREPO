@@ -1,7 +1,7 @@
      h debug   alwnull(*usrctl)
      h fixnbr(*zoned : *inputpacked)
      h copyright('(c) Finastra International Limited 2005')
- 
+
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FRS General Ledger (Account) Extract')           *
@@ -36,6 +36,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG11372 - Get interest rates for tiered and threshold types.*
@@ -60,27 +61,27 @@
       *  CRN001 - FRS Regulatory Reporting                            *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      fmrtrapl0  if   e           k disk    infsr(*pssr)
- 
+
      fgpregbj0  if   e           k disk    infsr(*pssr)
- 
+
      f****gpacodxl0 if   e       k disk    infsr(*pssr)                                      BUG9760
- 
+
      ft_rnamad  if   e           k disk    infsr(*pssr)
      f                                     rename(t_rnamad:t_rnamadf)
      f                                     prefix(x#)
- 
+
      fmravbll0  if   e           k disk    infsr(*pssr)
- 
+
      ft__dfboo  if a e           k disk    infsr(*pssr)
      f                                     rename(t__dfboo: t__dfboof)
- 
+
       * Midas Retail History - CR and DR Rate Change Records                                BUG10530
      frehrcj    if   e           k disk    infsr(*pssr)                                     BUG10530
      f                                     prefix(rc)                                       BUG10530
@@ -93,17 +94,17 @@
      frn_prlamo o    e             disk    infsr(*pssr)
      frn_custacco    e             disk    infsr(*pssr)
      frn_cuaamo o    e             disk    infsr(*pssr)
- 
+
      frn_genledao    e             disk    infsr(*pssr)  usropn
      frn_cusaccao    e             disk    infsr(*pssr)  usropn
- 
+
      frn_genleduo    e             disk    infsr(*pssr)  usropn
      frn_proflouo    e             disk    infsr(*pssr)  usropn
      frn_cusaccuo    e             disk    infsr(*pssr)  usropn
- 
+
      frnaupnpd  o    e             disk    infsr(*pssr)
      frnxcpnpd  o    e             disk    infsr(*pssr)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -111,10 +112,10 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       /copy zacpysrc,psds
       /copy rncpysrc,rnpssrdfn
- 
+
      d cpy@            s             80    dim(1) ctdata perrcd(1)
      d dsfdy         e ds
      d dssdy         e ds                  extname(dssdy)
@@ -123,11 +124,11 @@
      d sdcurr        e ds                  extname(sdcurrpd)
      d sdcust        e ds                  extname(sdcustpd)
      d accntab       e ds                  extname(accntab)
- 
+
      d pRaid           s                   like(rbraid)
      d runDatIso       s               d
      d evtDatIso       s               d
- 
+
       ** Parameters for AOSVALR0 and GPAOSVALR0
      d pValDs          ds
      d  pValK1                       20
@@ -150,7 +151,7 @@
      d  pVal9                       200
      d  pValK10                      20
      d  pVal10                      200
- 
+
      d pRtnCod         s              7
      d pOption         s              7
      d pKey1           s             10
@@ -171,14 +172,14 @@
      d pAccd           s             10
      d pAcsq           s              2
      d pBrca           s              3
- 
+
      d zFreq           s              1
      d zDayno          s              5  0
      d zMday           s              2  0
      d zCcy            s              3
      d zLoc            s              3
      d zDfin           s              1
- 
+
      d                 ds
      d excusn
      d expacc
@@ -187,10 +188,10 @@
      d excusnN                        6    overlay(excusn)                                   CSD027A
      d expaccN                       10s 0 overlay(expacc)
      d exacsqN                        2s 0 overlay(exacsq)
- 
+
      d kExsub          s                   like(exsub)
      d                                     inz('ACCT')
- 
+
      d****CGP010       s               n                                                     BUG9760
      d CRN002          s               n
      d CRN006          s               n
@@ -199,17 +200,17 @@
      d AcBalExp        s              1
      d extnFound       s               n
      d avblFound       s               n
- 
+
      d dupKey          c                   01021
- 
+
      d rtnProduct      s                   like(product)
      d rtnPrdclaUS     s                   like(prdclaus)
- 
+
      d strPlAcc        S                   like(product)
      d endPlAcc        S                   like(product)
      d strCusAcc       S                   like(product)
      d endCusAcc       S                   like(product)
- 
+
       ** Parameters for RNPRODMAP
      d pERMS           s             30
      d pAccountCode    s             10
@@ -230,7 +231,7 @@
      d pCollateralTy   S              5
      d pProduct        S             10  0
      d pCntOfClauses   S              5  0
- 
+
      d @wBals          s             18  0 dim(11) ascend                       work array  BUG11372
      d @wBalsR         s             18  5 dim(11)                              work array  BUG11372
      d @wRates         s             11  7 dim(11)                              work array  BUG11372
@@ -283,30 +284,30 @@
      d wBalGap         s                   like(wbal1)                          diff % bals BUG11372
                                                                                             BUG11732
       /copy rncpysrc,rnrgaudfn
- 
+
       /copy rncpysrc,rndaycnv
       /copy rncpysrc,rnamtcnv
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Declaratives                         ¦
       ** ¦ ============                         ¦
       ** +--------------------------------------+
- 
+
      c*****kGpacodx      klist                                                               BUG9760
      c**********         kfld                    pZone                                       BUG9760
      c**********         kfld                    expacc                                      BUG9760
- 
+
      c     kAccount      klist
      c                   kfld                    exbrch
      c                   kfld                    excusnN
      c                   kfld                    excycd
      c                   kfld                    expaccN
      c                   kfld                    exacsqN
- 
+
      c     *entry        plist
      c                   parm                    pRaid
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -317,17 +318,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      c                   exsr      main
- 
+
      c                   exsr      bootstrap
- 
+
      c                   exsr      closedown
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -335,35 +336,35 @@
       *  MAIN   -  Main subroutine                                    *
       *                                                               *
       *****************************************************************
- 
+
      c     main          begsr
- 
+
      c     kExsub        setll     mrtrapl0
      c     kExsub        reade     mrtrapl0
      c                   dow       not %eof
- 
+
       ** Check if record is to be extracted.
      c                   eval      rgIx = %lookup(exbrch:aBrcd:1:rgEl)
      c                   if        (   rgIx        >  0
      c                             and aNxDt(rgIx) <= evtDatIso )
- 
+
       ** Get Product Code.
      c                   exsr      getProdCode
      c                   select
      c                   when      rtnProduct  > 0
      c                   exsr      mapData
- 
+
      c                   when      rtnProduct  < 0
      c                   exsr      wrtExcptn
      c                   endsl
- 
+
      c                   endif
- 
+
      c     kExsub        reade     mrtrapl0
      c                   enddo
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -372,19 +373,19 @@
       *                                                               *
       *****************************************************************
      c     mapData       begsr
- 
+
       ** Get customer details.
      c                   eval      pKey1       = excusn
      c                   exsr      getCust
- 
+
       ** Get account and account extension details.
      c                   exsr      getAccnt
- 
+
       ** Get average balance.
      c                   exsr      getAverageBal
- 
+
      c                   select
- 
+
       ** Profit & Loss accounts
      c                   when          rtnProduct >= strPlAcc
      c                             and rtnProduct <= endPlAcc
@@ -399,18 +400,18 @@
      c                   clear                   t__prlamo
      c                   exsr      commonFlds
      c                   exsr      proflosRec
- 
+
      c                   if        CRN006
      c                   exsr      proflouRec
      c                   endif
- 
+
      c                   exsr      prlamoRec
      c                   endif                                                              BUG10541
- 
+
       ** Customer accounts
      c                   when          rtnProduct >= strCusAcc
      c                             and rtnProduct <= endCusAcc
- 
+
      c                   if            exaamt     <> 0
      c                             and exoaam     <> 0
      c                   eval      splitDrCr       = *on
@@ -418,14 +419,14 @@
      c                   eval      splitDrCr       = *off
      c                   exsr      isBalInCr
      c                   endif
- 
+
      c                   clear                   t__custacc
      c                   clear                   t__cusacca
      c                   clear                   t__cusaccu
      c                   clear                   t__cuaamo
      c                   exsr      commonFlds
      c                   exsr      custaccRec
- 
+
       ** General Ledger accounts
      c                   other
      c                   clear                   t__geneled
@@ -434,21 +435,21 @@
      c                   clear                   t__gelamo
      c                   exsr      commonFlds
      c                   exsr      geneledRec
- 
+
      c                   if        CRN002
      c                   exsr      genledaRec
      c                   endif
- 
+
      c                   if        CRN006
      c                   exsr      genleduRec
      c                   endif
- 
+
      c                   exsr      gelamoRec
- 
+
      c                   endsl
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -458,31 +459,31 @@
       *                                                               *
       *****************************************************************
      c     commonFlds    begsr
- 
+
      c                   eval      product     = rtnProduct
      c                   eval      statusl2    = 5
      c                   move      runDatIso     validon
      c                   eval      lottypfk    = aPosLot(rgIx)
      c                   eval      aPosLotUsed(rgIx) = *on
- 
+
      c                   eval      counref     = bbbrcd
      c                                         + '-'
      c                                         + excusn
- 
+
       ** Set up limit ref only if account is linked to a facility.
      c                   if        exfcus     <> *blanks
      c                   eval      pKey1       = exfcus
      c                   exsr      getCust
- 
+
      c                   eval      limiref     = bbbrcd
      c                                         + '-'
      c                                         + exfcus
      c                                         + exftyp
      c                                         + exfcno
      c                   endif
- 
+
      c                   eval      sourref     = pZone
- 
+
       ***Use*Global*A/c*code*if*feature*is*on.**********                                     BUG9760
      c**********         if        CGP010                                                    BUG9760
      c*****kGpacodx      chain     gpacodxl0                                                 BUG9760
@@ -499,30 +500,30 @@
      c**********         eval      glentre     = pZone                                       BUG9760
      c**********                               + expacc                                      BUG9760
      c**********         endif                                                               BUG9760
- 
+
      c**********         eval      glref       = exbrch                                      BUG9760
      c                   eval      contref     = exbrch                                      BUG9760
      c                                         + excusn
      c                                         + excycd
      c                                         + expacc
      c                                         + exacsq
- 
+
      c**********         eval      gldetre     = glref                                       BUG9760
      c**********         eval      glentre     = glref                                       BUG9760
- 
+
      c**********         eval      contref     = glref                                       BUG9760
- 
+
       ** Get internal customer details.
      c                   eval      pKey1       = exbicn
      c                   exsr      getCust
- 
+
      c                   eval      intparre    = bbbrcd
      c                                         + '-'
      c                                         + exbicn
- 
+
      c                   eval      deal        = rnDayCnv(daco)
      c                   eval      maturity    = rnDayCnv(extdat)
- 
+
      c                   if           expacs   = 'AS'
      c                             or expacs   = 'EX'
      c                             or expacs   = 'CO'
@@ -533,14 +534,14 @@
      c                   else
      c                   eval      plindi      = 2
      c                   endif
- 
+
       ** Get account currency details.
      c                   eval      pCcy        = excycd
      c                   exsr      getCcy
- 
+
      c                   eval      isocurr     = excycd
      c                   eval      value       = rnDayCnv(extdat)
- 
+
       ** Set fields derived from the extension record.
      c                   if        extnFound
      c                   move      x#loclfund    locafund
@@ -558,14 +559,14 @@
      c                   eval      leasing     = 0                                          BUG10804
      c                   eval      recogniz    = 0                                          BUG10804
      c                   eval      tangible    = 0                                          BUG10804
- 
+
       ** Get US Product Code.
      c                   if        CRN006
      c                   exsr      getProdCodeUS
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -574,7 +575,7 @@
       *                                                               *
       *****************************************************************
      c     isBalInCr     begsr
- 
+
      c                   if            (   AcBalExp = 'C'
      c                                 and exrtcb   < 0   )
      c                             or  (   AcBalExp = 'L'
@@ -583,9 +584,9 @@
      c                   else
      c                   eval      balIsInCr   = *off
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -594,10 +595,10 @@
       *                                                               *
       *****************************************************************
      c     proflosRec    begsr
- 
+
      c                   eval      posiref     = contref                                     BUG9703
      c                   eval      PosiType    = 9
- 
+
       ** Since value of the plindi field set in sr. commonFlds is not correct for
       ** this profit and loss record, need to set to value as follow:
      c                   select
@@ -608,11 +609,11 @@
      c                   other
      c                   eval      plindi      = 3
      c                   endsl
- 
+
      c                   write     t__proflos
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -621,11 +622,11 @@
       *                                                               *
       *****************************************************************
      c     proflouRec    begsr
- 
+
      c                   write     t__proflou
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -634,7 +635,7 @@
       *                                                               *
       *****************************************************************
      c     prlamoRec     begsr
- 
+
       ** Original CCY amount
      c                   if        AcBalExp    = 'C'
       ** use cleared balance
@@ -644,7 +645,7 @@
      c                   eval      dcindi      = 1
      c                   endif
      c                   eval      ocaamunt    = %abs(exrtcb)
- 
+
      c                   else
       ** use principal amount
      c                   eval      ocaamunt    = expamt
@@ -654,23 +655,23 @@
      c                   eval      dcindi      = 1
      c                   endif
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
      c                                                  : aRpCySprt(rgIx)
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
- 
+
       ** Amount type
      c                   eval      typamunt    = 1
- 
+
      c                   write     t__prlamo
- 
+
      c                   exsr      wrtAudit
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -681,7 +682,7 @@
       *                                                               *
       *****************************************************************
      c     custaccRec    begsr
- 
+
      c                   eval      opening     = rnDayCnv(daco)
      c                   eval      nexintfi    = rnDayCnv(extdat)
      c                   eval      nextroll    = rnDayCnv(extdat)
@@ -689,11 +690,11 @@
      c                   eval      lastroll    = rnDayCnv(extdat)
      c                   eval      typintra    = 3
      c                   eval      posiref     = contref
- 
+
       ** Using Debit values.
      c                   if        splitDrCr
      c                             or not balIsInCr
- 
+
      c                   eval      nextsett    = rnDayCnv(ndid)
      c                   eval      alindi      = 1                                          BUG11372
                                                                                             BUG10530
@@ -728,7 +729,7 @@
      c                   endif                                                              BUG10530
                                                                                             BUG10530
      c*******************eval      alindi      = 1                                          BUG11372
- 
+
      c                   select
      c                   when      dric        = 1
      c                   eval      indacoba    = 15
@@ -749,23 +750,23 @@
      c                   other
      c                   eval      indacoba    = 0
      c                   endsl
- 
+
      c                   if        splitDrCr
      c                   eval      posiref     = %trimr(contref)
      c                                         + 'D'
      c                   endif
- 
+
      c                   write     t__custacc
      c                   exsr      cusaccaRec
      c                   exsr      cusaccuRec
      c                   exsr      cuaamoRec
- 
+
      c                   endif
- 
+
       ** Using Credit values.
      c                   if        splitDrCr
      c                             or balIsInCr
- 
+
      c                   eval      nextsett    = rnDayCnv(ncid)
      c                   eval      alindi      = 2                                          BUG11372
                                                                                             BUG10530
@@ -799,7 +800,7 @@
      c                   endif                                                              BUG10530
                                                                                             BUG10530
      c*******************eval      alindi      = 2                                          BUG11372
- 
+
      c                   select
      c                   when      cric        = 1
      c                   eval      indacoba    = 15
@@ -820,21 +821,21 @@
      c                   other
      c                   eval      indacoba    = 0
      c                   endsl
- 
+
      c                   if        splitDrCr
      c                   eval      posiref     = %trimr(contref)
      c                                         + 'C'
      c                   endif
- 
+
      c                   write     t__custacc
      c                   exsr      cusaccaRec
      c                   exsr      cusaccuRec
      c                   exsr      cuaamoRec
- 
+
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT                                                                                BUG11372
       *****************************************************************                     BUG11372
@@ -1144,13 +1145,13 @@
       *                                                               *
       *****************************************************************
      c     cusaccaRec    begsr
- 
+
      c                   if        CRN002
      c                   write     t__cusacca
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1161,14 +1162,14 @@
       *                                                               *
       *****************************************************************
      c     cusaccuRec    begsr
- 
+
      c                   if        CRN006
      c                   eval      prdclaus    = rtnPrdclaUS                                 BUG9762
      c                   write     t__cusaccu
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1183,13 +1184,13 @@
       *                                                               *
       *****************************************************************
      c     cuaamoRec     begsr
- 
+
       ** Using Debit values.
      c                   if        alindi      = 1
- 
+
       ** Account balance.
      c                   eval      dcindi      = 1
- 
+
      c                   select
      c                   when      not splitDrCr
      c                   if        AcBalExp    = 'C'
@@ -1197,14 +1198,14 @@
      c                   else
      c                   eval      ocaamunt    = expamt
      c                   endif
- 
+
      c                   when      AcBalExp    = 'C'
      c                   if        exrtcb      > 0
      c                   eval      ocaamunt    = exrtcb
      c                   else
      c                   eval      ocaamunt    = 0
      c                   endif
- 
+
      c                   other
      c                   if        expdci      = 0
      c                   eval      ocaamunt    = expamt
@@ -1212,7 +1213,7 @@
      c                   eval      ocaamunt    = 0
      c                   endif
      c                   endsl
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1220,11 +1221,11 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 1
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** Accrued interest.
      c                   if        splitDrCr
      c                             or  exaamt <> 0
@@ -1234,7 +1235,7 @@
      c                   eval      dcindi      = 2
      c                   eval      ocaamunt    = exoaam
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1242,18 +1243,18 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 20
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** Average Quarterly Balance.
      c                   if        avblFound
- 
+
      c                   if        splitDrCr
      c                   eval      dcindi      = 1
      c                   eval      ocaamunt    = avbldr
- 
+
      c                   else
      c                   if        avblnt      > 0
      c                   eval      dcindi      = 1
@@ -1262,7 +1263,7 @@
      c                   endif
      c                   eval      ocaamunt    = %abs(avblnt)
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1270,19 +1271,19 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 64
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
      c                   endif
- 
- 
+
+
       ** Using Credit values.
      c                   else
- 
+
       ** Account balance.
      c                   eval      dcindi      = 2
- 
+
      c                   select
      c                   when      not splitDrCr
      c                   if        AcBalExp    = 'C'
@@ -1290,14 +1291,14 @@
      c                   else
      c                   eval      ocaamunt    = expamt
      c                   endif
- 
+
      c                   when      AcBalExp    = 'C'
      c                   if        exrtcb      < 0
      c                   eval      ocaamunt    = %abs(exrtcb)
      c                   else
      c                   eval      ocaamunt    = 0
      c                   endif
- 
+
      c                   other
      c                   if        expdci      = 1
      c                   eval      ocaamunt    = expamt
@@ -1305,7 +1306,7 @@
      c                   eval      ocaamunt    = 0
      c                   endif
      c                   endsl
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1313,11 +1314,11 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 1
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** Accrued interest.
      c                   if        splitDrCr
      c                             or  exoaam <> 0
@@ -1327,7 +1328,7 @@
      c                   eval      dcindi      = 1
      c                   eval      ocaamunt    = exaamt
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1335,18 +1336,18 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 20
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** Average Quarterly Balance.
      c                   if        avblFound
- 
+
      c                   if        splitDrCr
      c                   eval      dcindi      = 2
      c                   eval      ocaamunt    = %abs(avblcr)
- 
+
      c                   else
      c                   if        avblnt      > 0
      c                   eval      dcindi      = 1
@@ -1355,7 +1356,7 @@
      c                   endif
      c                   eval      ocaamunt    = %abs(avblnt)
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1363,16 +1364,16 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 64
- 
+
      c                   write     t__cuaamo
- 
+
      c                   exsr      wrtAudit
      c                   endif
- 
+
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1381,11 +1382,11 @@
       *                                                               *
       *****************************************************************
      c     geneledRec    begsr
- 
+
      c                   eval      glref       = contref                                     BUG9760
      c                   eval      gldetre     = glref                                       BUG9760
      c                   eval      glentre     = glref                                       BUG9760
- 
+
      c                   if           expacs   = 'AS'                                       BUG11350
      c                             or expacs   = 'EX'                                       BUG11350
      c                             or expacs   = 'CO'                                       BUG11350
@@ -1402,11 +1403,11 @@
      c                   else
      c                   eval      thirindi    = 0
      c                   endif
- 
+
      c                   write     t__geneled
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1415,11 +1416,11 @@
       *                                                               *
       *****************************************************************
      c     genledaRec    begsr
- 
+
      c                   write     t__genleda
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1428,13 +1429,13 @@
       *                                                               *
       *****************************************************************
      c     genleduRec    begsr
- 
+
      c                   eval      prdclaus    = rtnPrdclaUS
- 
+
      c                   write     t__genledu
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1443,11 +1444,11 @@
       *                                                               *
       *****************************************************************
      c     gelamoRec     begsr
- 
+
       ** output Amount records:
       ** --------------------
       ** 1) Cleared Balance.
- 
+
       ** Original CCY amount
      c                   if        AcBalExp    = 'C'
       ** use cleared balance:
@@ -1457,7 +1458,7 @@
      c                   eval      dcindi      = 1
      c                   endif
      c                   eval      ocaamunt    = %abs(exrtcb)
- 
+
      c                   else
       ** use principal amount
      c                   eval      ocaamunt    = expamt
@@ -1467,41 +1468,41 @@
      c                   eval      dcindi      = 1
      c                   endif
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
      c                                                  : aRpCySprt(rgIx)
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
- 
+
       ** Type of amount = book value (1)
      c                   eval      typamunt    = 1
- 
- 
+
+
       ** General ledger type
      c                   if        exstat      = 'S'
      c                   eval      gltype      = 1
      c                   else
      c                   eval      gltype      = 2
      c                   endif
- 
+
      c                   write     t__gelamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** ------------------
       ** 2) Original Cost.
- 
+
      c                   eval      gltype      = 2
      c                   eval      dcindi      = 1
- 
+
      c                   if        extnFound
      c                   eval      ocaamunt    = x#origcost
      c                   else
      c                   eval      ocaamunt    = 0
      c                   endif
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
@@ -1509,42 +1510,42 @@
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
      c                   eval      typamunt    = 26
- 
+
      c                   write     t__gelamo
- 
+
      c                   exsr      wrtAudit
- 
+
       ** -----------------------------
       ** 3) Quarterly Average Balance.
- 
+
      c                   if        avblFound
- 
+
      c                   eval      gltype      = 2
- 
+
      c                   if        avblnt      > 0
      c                   eval      dcindi      = 1
      c                   else
      c                   eval      dcindi      = 2
      c                   endif
- 
+
      c                   eval      ocaamunt    = %abs(avblnt)
- 
+
      c                   eval      rcaamunt    = rnAmtCnv(ocaamunt
      c                                                  : a6sprt
      c                                                  : a6mdin
      c                                                  : aRpCySprt(rgIx)
      c                                                  : aRpCyMdin(rgIx)
      c                                                  : aRpCyNbdp(rgIx) )
- 
+
      c                   eval      typamunt    = 64
- 
+
      c                   write     t__gelamo
- 
+
      c                   exsr      wrtAudit
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -1553,7 +1554,7 @@
       *                                                                   *
       *********************************************************************
      c     getProdCode   begsr
- 
+
       * Product mappings
      c                   callb     'RNPRODMAP'
      c                   parm      *blanks       pRtnCod
@@ -1576,7 +1577,7 @@
      c                   parm                    pCollateralTy
      c     rtnProduct    parm                    pProduct
      c                   parm                    pCntOfClauses
- 
+
       ** If not found, issue a database error
      c                   if        pRtnCod    <> *blanks
      c                   eval      wDbfile     = 'T_FRSMAPR'
@@ -1584,9 +1585,9 @@
      c                   eval      wDbkey      = pAccountCode
      c                   exsr      *pssr
      c                   endif
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1595,9 +1596,9 @@
       *                                                                   *
       *********************************************************************
      c     GetProdCodeUS begsr
- 
+
      c                   callb     'RNPRODMAPU'
- 
+
      c                   parm      *blanks       pRtnCod
      c                   parm                    pERMS
      c                   parm      expacc        pAccountCode
@@ -1618,8 +1619,8 @@
      c                   parm                    pCollateralTy
      c     rtnPrdclaUS   parm                    pProduct
      c                   parm                    pCntOfClauses
- 
- 
+
+
       ** If not found, issue a database error
      c                   if        pRtnCod <> *blanks
      c                   eval      wDbfile     = 'T_FRSMAPR'
@@ -1627,13 +1628,13 @@
      c                   eval      wDbkey      = pAccountCode
      c                   exsr      *pssr
      c                   endif
- 
+
      c                   if        rtnPrdclaUS < 0
      c                   eval      rtnPrdclaUS = 0
      c                   endif
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1642,7 +1643,7 @@
       *                                                               *
       *****************************************************************
      c     getCust       begsr
- 
+
      c                   callb     'AOCUSTR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1657,9 +1658,9 @@
      c                   eval      wDbkey      = pKey1                                      BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1668,7 +1669,7 @@
       *                                                               *
       *****************************************************************
      c     getAccnt      begsr
- 
+
      c                   callb     'AOACCTR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1691,13 +1692,13 @@
      c                                         + pBrca                                      BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
       * Get extension record.
      c     kAccount      chain     t_rnamadf
      c                   eval      extnFound   = %found
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1707,23 +1708,23 @@
       *                                                               *
       *****************************************************************
      c     getAverageBal begsr
- 
+
      c     kAccount      setll     mravbll0
      c     kAccount      reade     mravbll0
      c                   dow       not %eof
- 
+
      c                   if        (   cafi    = 'C'
      c                             and pertyp  = 'Q' )
      c                   leave
      c                   endif
- 
+
      c     kAccount      reade     mravbll0
      c                   enddo
- 
+
      c                   eval      avblFound   = not %eof
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1732,7 +1733,7 @@
       *                                                               *
       *****************************************************************
      c     getCcy        begsr
- 
+
      c                   callb     'AOCURRR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1746,9 +1747,9 @@
      c                   eval      wDbkey      = pCcy                                       BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1757,7 +1758,7 @@
       *                                                               *
       *****************************************************************
      c     wrtAudit      begsr
- 
+
      c                   eval      auregaut    = aRaid(rgIx)
      c                   eval      autrncls    = exsub
      c                   eval      aucntref    = contref
@@ -1777,9 +1778,9 @@
      C                   eval      audci       = 'C'
      C                   endif
      c                   write     rnaupnpdf
- 
+
      c                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1788,7 +1789,7 @@
       *                                                               *
       *****************************************************************
      c     wrtExcptn     begsr
- 
+
      c                   eval      xcregaut    = aRaid(rgIx)
      c                   eval      xctrncls    = exsub
      c                   eval      xccntref    = exbrch
@@ -1801,9 +1802,9 @@
      c                   eval      xctrty      = extrty
      c                   eval      xctrst      = extrst
      c                   write     rnxcpnpdf
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1812,30 +1813,30 @@
       *                                                                   *
       *********************************************************************
      c     bootstrap     begsr
- 
+
       ** Loop thru used lots
      c                   for       rgIx        = 1 to rgEl
- 
+
       ** Write to t__dfboo if not existing
      c                   if        aPosLotUsed(rgIx)
      c     aPosLot(rgIx) setll     t__dfboof
- 
+
      c                   if        not %equal
      c                   eval      lottypfk    = aPosLot(rgIx)
- 
+
      c                   monitor
      c                   write     t__dfboof
      c                   on-error  dupKey
      c                   endmon
- 
+
      C                   endif
- 
+
      C                   endif
- 
+
      C                   endfor
- 
+
      C                   endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1844,12 +1845,12 @@
       *                                                               *
       *****************************************************************
      c     closedown     begsr
- 
+
      c                   eval      *inlr       = *on
      c                   return
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *****************************************************************
@@ -1860,7 +1861,7 @@
       *                                                               *
       *****************************************************************
      c     *inzsr        begsr
- 
+
       ** Get zone.
      c                   callb     'GOGETZONE'
      c                   parm      *blanks       pRtnCod
@@ -1872,16 +1873,16 @@
      c                   parm                    pDnwd
      c                   parm                    pBccy
      c                   parm                    pNjob
- 
+
      c                   if        pRtnCod    <> *blanks
      c                   eval      wDbfile     = 'GPZONEPD'
      c                   eval      wDbase      = 5
      c                   eval      wDbkey      = pZone
      c                   exsr      *pssr
      c                   endif
- 
+
       *---------------------------------------------------------------------
- 
+
       ** Get bank details.
      c                   callb     'AOBANKR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
@@ -1895,9 +1896,9 @@
      c                   eval      wDbkey      = pOption                                    BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   eval      runDatIso   = %date(rnDayCnv(bjrdnb))
- 
+
       * Get general ledger details.
      c                   callb     'AOGELRR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
@@ -1911,27 +1912,27 @@
      c                   eval      wDbkey      = pOption                                    BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
       * Derive event control date.
      c                   if        bkapdt      < bjdnwd
      c                   eval      evtDatIso   = %date(rnDayCnv(bkapdt))
      c                   else
      c                   eval      evtDatIso   = %date(rnDayCnv(bjdnwd - 1))
      c                   endif
- 
+
       *---------------------------------------------------------------------
- 
+
       ** Midas GP System Values
      c                   eval      pValDs      = *blanks
- 
+
       ** P & L Account Product Code start and end
      c                   eval      pValK1      = 'P&LAcProdCodRngStr'
      c                   eval      pValK2      = 'P&LAcProdCodRngEnd'
- 
+
       ** Customer Account Product Code start and end
      c                   eval      pValK3      = 'CusAcProdCodRngStr'
      c                   eval      pValK4      = 'CusAcProdCodRngEnd'
- 
+
      c                   call      'GPAOSVALR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -1962,19 +1963,19 @@
      c                   eval      wDbkey      = pValK1                                     BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
       ** Trim spaces and convert to packed decimal
      c                   eval      strPlAcc    = %dec( %trim( pVal1 ): 6: 0 )
      c                   eval      endPlAcc    = %dec( %trim( pVal2 ): 6: 0 )
      c                   eval      strCusAcc   = %dec( %trim( pVal3 ): 6: 0 )
      c                   eval      endCusAcc   = %dec( %trim( pVal4 ): 6: 0 )
- 
+
       ** Midas AO System Values
      c                   eval      pValDs      = *blanks
- 
+
       ** A/C Balance Export
      c                   eval      pValK1      = 'AccountBalExport'
- 
+
      c                   call      'AOSVALR0'
      c**********         parm      '*DBERR'      pRtnCod                                    BUG10501
      c                   parm      *blanks       pRtnCod                                    BUG10501
@@ -2005,15 +2006,15 @@
      c                   eval      wDbkey      = pValK1                                     BUG10501
      c                   exsr      *pssr                                                    BUG10501
      c                   endif                                                              BUG10501
- 
+
      c                   eval      AcBalExp    = pVal1
- 
+
       *---------------------------------------------------------------------
- 
+
       /copy rncpysrc,rnrgaulod
- 
+
       *---------------------------------------------------------------------
- 
+
       ***Check*for*feature*CGP010.***************************                                BUG9760
      c**********         callb     'AOSARDR0'                                                BUG9760
      c**********         parm      *blanks       pRtnCod                                     BUG9760
@@ -2031,64 +2032,64 @@
      c**********         eval      wDbmod      = 'AOSARDR0'                                  BUG9760
      c**********         exsr      *pssr                                                     BUG9760
      c**********         endif                                                               BUG9760
- 
+
       ** Check for feature CRN002.
      c                   callb     'AOSARDR0'
      c                   parm      *blanks       pRtnCod
      c                   parm      '*VERIFY'     pOption
      c                   parm      'CRN002'      pSar
- 
+
      c                   if        pRtnCod     = *blanks
      c                   eval      CRN002      = *on
- 
+
      c                   elseif    pRtnCod     = '*NRF'
      c                   eval      CRN002      = *off
- 
+
      c                   else
      c                   eval      wDbase      = 4
      c                   eval      wDbmod      = 'AOSARDR0'
      c                   exsr      *pssr
      c                   endif
- 
+
       ** Feature CRN002 is present
      c                   if        CRN002
      c                   open      rn_cusacca
      c                   open      rn_genleda
      c                   endif
- 
+
       ** Check if enhancement CRN006 is on
- 
+
      c                   callb     'AOSARDR0'
      c                   parm      *blanks       pRtnCod
      c                   parm      '*VERIFY'     pOption
      c                   parm      'CRN006'      pSar
- 
+
      c                   if        pRtnCod     = *blank
      c                   eval      CRN006      = *on
- 
+
      c                   elseif    pRtnCod     = '*NRF'
      c                   eval      CRN006      = *off
- 
+
      c                   else
      c                   eval      wDbase      = 6
      c                   eval      wDbmod      = 'AOSARDR0'
      c                   exsr      *pssr
      c                   endif
- 
+
       ** Feature CRN006 is present
      c                   if        CRN006
      c                   open      rn_cusaccu
      c                   open      rn_genledu
      c                   open      rn_proflou
      c                   endif
- 
+
      c                   endsr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
       /copy rncpysrc,rnpssrsr
       *****************************************************************
- 
+
 **ctdata cpy@
 (c) Finastra International Limited 2005

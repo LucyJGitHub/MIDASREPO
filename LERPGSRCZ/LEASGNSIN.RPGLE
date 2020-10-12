@@ -46,6 +46,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -65,17 +66,17 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       **  Facilities File
      FLEFCLTL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       **  Assignment Details File
      FLEPARTL2  IF   E           K DISK    INFSR(*PSSR)
- 
+
       **  Assignment Details File
      FLEPARTPD  O    E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPARTD0:LEPARTWRT)
- 
+
      FLEASGNDDF CF   E             WORKSTN INFSR(*PSSR)
      F                                     SFILE(LEASGNS1:RRN1)
       *****************************************************************
@@ -116,7 +117,7 @@
       *    90-99   Used by standard subroutine                        *
       *****************************************************************
       /SPACE 5
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -128,113 +129,113 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
       ** Error indicators
      D #EI             S              1    DIM(25)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Assignment Details in screen format
      D ASGN          E DS                  EXTNAME(LEASGNPD)
- 
+
       ** Assignment Details OK indicator
      D ASGN_OK       E DS                  EXTNAME(LEEASGNPD)
- 
- 
+
+
       ** Assignment Details in file format
      D LEPARTPDFmt   E DS                  EXTNAME(LEPARTPD)
      D  LepartREC             72    140
      D  LepartPAY            141    699
- 
+
       ** New Assignment Details in file format
      D LEVASGNPD     E DS                  EXTNAME(LEVASGNPD)
      D  V_REC                 72    140
      D  V_PAY                141    699
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
      D  FLREC                  1     69
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
      D  FLPAY                  1    559
- 
+
       * File Fra/irs instructions
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
- 
+
       * Screen Receive instructions
      D S_REC         E DS                  EXTNAME(SDESSRPD)
- 
+
       * Screen Payment instructions
      D S_PAY         E DS                  EXTNAME(SDESSPPD)
- 
+
       * Screen Fra/irs instructions
      D S_FRI         E DS                  EXTNAME(SDESSFPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Module details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Retail details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** IN Message Format
      D P#INMF        E DS                  EXTNAME(LER1MFPD)
      D QQPONSX       E                     EXTFLD(QQPONS)                                     CGL029
      D QQRONSX       E                     EXTFLD(QQRONS)                                     CGL029
- 
+
       ** OUT Message Format
      D P#OUMF        E DS                  EXTNAME(LER2MFPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
                                                                                               CSD095
@@ -245,14 +246,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SKASGNS001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -262,57 +263,57 @@
      C
       * Initialisation
      C                   EXSR      INITPR
- 
+
       * Access primary facility
- 
+
      C                   MOVE      R1CNUM        S#PMFC
      C                   MOVE      R1FACT        S#PMFT
      C                   MOVE      R1FCNO        S#PMFN
- 
+
      C                   EXSR      ACSPFA
- 
+
       * End if any errors
- 
+
      C     Idx           IFNE      0
      C                   MOVEL     'FCLTYFM '    DBFILE
      C                   Z-ADD     1             DBASE
      C                   MOVEL     S#PMFC        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Populate primary facility fields
- 
+
      C                   MOVE      FcbrBranch    S#BRCA
      C                   MOVE      FccyFCCY      S#FCCY
- 
+
       * Build Subfile
      C                   EXSR      BLDSFL
- 
+
       * Display Screen
      C                   EXSR      REVIEW
- 
+
       *  Terminate program
      C                   EXSR      CF03
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       * Build subfile                                                 *
       *****************************************************************
      C     BLDSFL        BEGSR
- 
+
       * Reset subfile RRN
      C                   Z-ADD     *ZEROS        RRN1              4 0
- 
+
       * Reset Settlement Screen Setup indicator
      C                   MOVE      'N'           SSCR_SetUp
- 
+
       **  Clear subfile
      C                   MOVEA     '000'         *IN(30)
      C                   WRITE     LEASGNC1
- 
+
       **  Read all syndicate members
- 
+
      C                   MOVE      FcbrBranch    K#BRCA
      C                   MOVE      S#PMFC        K#PMFC
      C                   MOVE      S#PMFT        K#PMFT
@@ -324,24 +325,24 @@
       *
      C                   MOVE      *BLANKS       S#SEL
      C                   MOVE      *OFF          *IN36
- 
+
       * History Flag
- 
+
      C     VDTC          IFLT      BJRDNB
      C                   MOVE      'H'           S#HIST
      C                   ELSE
      C                   MOVE      *BLANKS       S#HIST
      C                   ENDIF
- 
+
       * Assignment Convert
- 
+
      C                   EXSR      ASGNCVT
- 
+
       * Hidden fields in subfile record
- 
+
      C                   MOVEL     S#ASFS        H#ASFS
      C                   Z-ADD     VDTC          H#VDTC
- 
+
       * Increment subfile RRN
      C                   ADD       1             RRN1
       *
@@ -349,26 +350,26 @@
      C     PFCLTK        READE     LEPARTL2                               70
       *
      C                   ENDDO
- 
+
       ** Set on subfile display indicators.
- 
+
      C     RRN1          IFGT      0
- 
+
      C                   MOVEA     '111'         *IN(30)
- 
+
       *  Records found
      C                   MOVE      *OFF          *IN65
- 
+
       *  Position subfile
      C                   Z-ADD     1             ##SFRC
       *
      C                   ELSE
- 
+
       *  Records not found
      C                   MOVEA     '010'         *IN(30)
      C                   MOVE      *ON           *IN65
      C                   Z-ADD     0             ##SFRC
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -378,13 +379,13 @@
       * Process Review Screen                                         *
       *****************************************************************
      C     REVIEW        BEGSR
- 
+
       **  Clear Message subfile
- 
+
      C                   EXSR      CLEARM
- 
+
       ** Display the screen until CF/3 or CF/12 taken
- 
+
      C     *IN03         DOWEQ     *OFF
      C     *IN12         ANDEQ     *OFF
       *
@@ -393,27 +394,27 @@
      C                   WRITE     #MSGCTL
      C   65              WRITE     LEASGNF4
      C                   EXFMT     LEASGNC1
- 
+
       **  Clear Message subfile
- 
+
      C                   EXSR      CLEARM
- 
+
       **  Record current screen
- 
+
      C                   MOVE      'SFL'         CurrentSCR        3
- 
+
       **  F3  - Exit
      C     *IN03         CASEQ     '1'           CF03
- 
+
       **  F5 - Refresh
      C     *IN05         CASEQ     '1'           CF05
- 
+
       **  F9 - Add
      C     *IN09         CASEQ     '1'           CF09
- 
+
       **  F12 - Previous
      C     *IN12         CASEQ     '1'           CF03
- 
+
       **  Enter Key Processing - Process subfile selection
      C                   CAS                     PROSEL
       *
@@ -447,16 +448,16 @@
       * Refresh Screen                                                *
       *****************************************************************
      C     CF05          BEGSR
- 
+
       ** Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       ** If the current screen is the Subfile
- 
+
      C     CurrentSCR    IFEQ      'SFL'
- 
+
       ** Clear Selection field
- 
+
      C     *IN65         IFEQ      *OFF
      C     1             CHAIN     LEASGNS1                           70
      C     *IN70         DOWEQ     *OFF
@@ -467,25 +468,25 @@
      C                   READC     LEASGNS1                               70
      C                   ENDDO
      C                   ENDIF
- 
+
       ** Position to first page
- 
+
      C                   Z-ADD     1             ##SFRC
       *
      C                   ELSE
- 
+
       ** If the current screen is the Insert screen
       ** Clear screen fields and reset screen error indicators
- 
+
      C     CurrentSCR    IFEQ      'INS'
      C                   EXSR      CLR_SYN
      C                   EXSR      RESET_SCEI
       *
      C                   ELSE
- 
+
       ** If the current screen is the Amend screen
       ** Re-display the screen fields and reset screen error indicators
- 
+
      C     CurrentSCR    IFEQ      'AMD'
      C                   EXSR      POPSCR
      C                   EXSR      RESET_SCEI
@@ -502,7 +503,7 @@
       * Insert a record                                               *
       *****************************************************************
      C     CF09          BEGSR
- 
+
       **  Clear screen fields
      C                   EXSR      CLR_SYN
       *
@@ -510,13 +511,13 @@
      C                   MOVE      *OFF          *IN12
      C                   MOVE      *OFF          *IN67
      C                   MOVE      *OFF          *IN68
- 
+
      C                   Z-ADD     0             P_WIdx
       *
      C                   MOVE      'INS'         CurrentSCR        3
- 
+
       ** Display the screen until CF/3 or CF/12 taken
- 
+
      C     *IN03         DOWEQ     *OFF
      C     *IN12         ANDEQ     *OFF
       *
@@ -524,29 +525,29 @@
      C                   WRITE     LEASGNF1
      C                   WRITE     #MSGCTL
      C                   EXFMT     LEASGNF3
- 
+
       **  Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       **  F3  - Exit
      C     *IN03         CASEQ     '1'           CF03
- 
+
       **  F5  - Refresh
      C     *IN05         CASEQ     '1'           CF05
- 
+
       **  F12 - Previous
      C     *IN12         CASEQ     '1'           CF12
- 
+
       **  F14 - Settlements
      C     *IN14         CASEQ     '1'           CF14
- 
+
       **  Enter Key Processing - Validate the syndicate member details
      C                   CAS                     VAL_SYND
       *
      C                   ENDCS
       *
      C                   ENDDO
- 
+
       * Setoff 'add' and 'previous screen' indicators
      C                   MOVE      *OFF          *IN09
      C                   MOVE      *OFF          *IN12
@@ -558,28 +559,28 @@
       * Process the reversal screen                                   *
       *****************************************************************
      C     CF10          BEGSR
- 
+
       ** Clear Message subfile
- 
+
      C                   EXSR      CLEARM
      C                   MOVEL     LEPARTPDFmt   LEVASGNPD
      C**********         MOVEL     S#ACTN        ASTYLC                         CAP084
- 
+
       ** Update the database
- 
+
      C                   EXSR      UPD_DBASE
- 
+
       ** If there were errors in database update
       ** report them
- 
+
      C     RetCodeOut    IFEQ      '*RECUPD'
- 
+
      C                   ROLBK
      C                   MOVEL     'LEP0026'     ZAMSID
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
- 
+
      C     RetCodeOut    IFNE      *BLANK
      C                   ROLBK
      C     MsgIDArr(1)   IFNE      *BLANK
@@ -588,28 +589,28 @@
      C                   MOVEL     'LEL0035'     ZAMSID
      C                   ENDIF
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
       **  Display Message (Record deleted)
- 
+
      C                   MOVEL     'LEK0023'     ZAMSID
      C                   EXSR      ZASNMS
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Rebuild the subfile
- 
+
      C                   EXSR      BLDSFL
- 
+
       **  Move to previous screen
      C                   MOVE      *ON           *IN12
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -617,19 +618,19 @@
       * Previous screen                                               *
       *****************************************************************
      C     CF12          BEGSR
- 
+
       ** Clear Message subfile
- 
+
      C                   EXSR      CLEARM
- 
+
       ** Reset screen error indicators
- 
+
      C                   EXSR      RESET_SCEI
       *
      C                   MOVE      'N'           SSCR_SetUp
- 
+
       ** Reset subfile error indicators
- 
+
      C     *IN65         IFEQ      *OFF
      C     S#ACTN        ANDNE     'I'
      C     ##RRN1        CHAIN     LEASGNS1                           70
@@ -650,9 +651,9 @@
       *
      C                   Z-ADD     BJRDNB        ##DATP
      C                   Z-ADD     BJRDNB        ##DATR
- 
+
       ** Setup the settlement screen fields
- 
+
      C     SSCR_SetUp    IFEQ      'N'
      C                   EXSR      SETUP_SSCR
      C                   MOVE      'Y'           SSCR_SetUp        1
@@ -744,7 +745,7 @@
      C     *IN12         CASEQ     '1'           CF12
       *
       * Set fields on insert and amend
- 
+
      C     S#ACTN        CASEQ     'I'           SETF_IA
      C     S#ACTN        CASEQ     'A'           SETF_IA
      C                   END
@@ -756,22 +757,22 @@
       * Process selection from subfile screen                         *
       *****************************************************************
      C     PROSEL        BEGSR
- 
+
       **  Process selection only if records exist on subfile
- 
+
      C     *IN65         IFEQ      *OFF
- 
+
       **  Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       **  Validate all changes in the subfile
- 
+
      C                   MOVE      'N'           SubfilErr         1
- 
+
      C                   EXSR      VLDSFL
- 
+
       **  If no errors in the subfile, execute the valid option subroutine
- 
+
      C     SubfilErr     IFEQ      'N'
       *
      C                   SELECT
@@ -787,10 +788,10 @@
       *
      C                   ENDIF
      C                   ENDIF
- 
+
       * If this function is being called on facility authorisation
       * and there are no subfile records, end now
- 
+
      C     R1ACTN        IFEQ      'X'
      C     *IN65         IFEQ      *ON
      C     ##CNT1        OREQ      *ZEROS
@@ -809,7 +810,7 @@
      C     VLDSFL        BEGSR
       *
      C                   Z-ADD     *ZEROS        ##CNT1            3 0
- 
+
       **  Read all changed records
      C                   READC     LEASGNS1                               70
      C     *IN70         DOWEQ     *OFF
@@ -838,23 +839,23 @@
      C                   ENDIF
       *
      C                   UPDATE    LEASGNS1
- 
+
       **  Read next changed record
      C                   READC     LEASGNS1                               70
       *
      C                   ENDDO
- 
+
       **  More than one selection
      C     ##CNT1        IFGT      1
       *
      C                   MOVE      'Y'           SubfilErr
- 
+
       **  Display Message
      C                   MOVEL     'LEP0027'     ZAMSID
      C                   EXSR      ZASNMS
       *
      C                   ELSE
- 
+
       **  No selection made therefore do nothing
      C     ##CNT1        IFEQ      0
      C                   MOVEL     'Y'           SubfilErr
@@ -868,28 +869,28 @@
       * Validate subfile selection for Enquiry                        *
       *****************************************************************
      C     VLDENQ        BEGSR
- 
+
       **  Only 'E' can be used to make a valid selection
- 
+
      C     S#SEL         IFNE      'E'
- 
+
      C                   MOVE      *ON           *IN36
- 
+
       **  Display Error Message if not already displayed
      C     SubfilErr     IFEQ      'N'
      C                   MOVEL     'LEK0030'     ZAMSID
      C                   EXSR      ZASNMS
      C                   MOVEL     'Y'           SubfilErr
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      ASGNRTV
- 
+
       * If an error was detected
      C     Idx           IFNE      0
      C                   MOVE      *ON           *IN36
- 
+
       * Send messages to the screen
      C     SubfilErr     IFEQ      'N'
      C                   CLEAR                   ASGN_OK
@@ -897,7 +898,7 @@
      C                   MOVEL     'Y'           SubfilErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -907,30 +908,30 @@
       * Validate subfile selection - Amend, Reverse and Enquire
       *****************************************************************
      C     VLDALL        BEGSR
- 
+
       **  Only 'A' 'E' or 'R' can be used to make a valid selection
- 
+
      C     S#SEL         IFNE      'E'
      C     S#SEL         ANDNE     'A'
      C     S#SEL         ANDNE     'R'
- 
+
      C                   MOVE      *ON           *IN36
- 
+
       **  Display Error Message if not already displayed
      C     SubfilErr     IFEQ      'N'
      C                   MOVEL     'LEK0030'     ZAMSID
      C                   EXSR      ZASNMS
      C                   MOVEL     'Y'           SubfilErr
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      ASGNRTV
- 
+
       * If an error was detected
      C     Idx           IFNE      0
      C                   MOVE      *ON           *IN36
- 
+
       * Send messages to the screen
      C     SubfilErr     IFEQ      'N'
      C                   CLEAR                   ASGN_OK
@@ -938,7 +939,7 @@
      C                   MOVEL     'Y'           SubfilErr
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -948,36 +949,36 @@
       * Process enquiry screen                                        *
       *****************************************************************
      C     ENQRYS        BEGSR
- 
+
       **  Move file fields to screen fields
- 
+
      C                   EXSR      POPSCR
       *
      C                   MOVE      *OFF          *IN12
      C                   MOVE      *ON           *IN67
      C                   MOVE      *OFF          *IN68
- 
+
       ** Display the screen until CF/3 or CF/12 taken
- 
+
      C     *IN03         DOWEQ     *OFF
      C     *IN12         ANDEQ     *OFF
       *
      C                   WRITE     LEASGNF1
      C                   WRITE     #MSGCTL
      C                   EXFMT     LEASGNF3
- 
+
       **  Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       **  F3  - Exit
      C     *IN03         CASEQ     '1'           CF03
- 
+
       **  F12- Previous
      C     *IN12         CASEQ     '1'           CF12
- 
+
       **  F14 - Settlements
      C     *IN14         CASEQ     '1'           CF14
- 
+
       **  Process Window
      C                   CAS                     SRWNDW
       *
@@ -992,43 +993,43 @@
       * Process Amend Screen                                          *
       *****************************************************************
      C     AMENDS        BEGSR
- 
+
       **  Move file fields to screen fields
- 
+
      C                   EXSR      POPSCR
       *
      C                   MOVE      *OFF          *IN12
      C                   MOVE      *OFF          *IN67
      C                   MOVE      *OFF          *IN68
- 
+
      C                   Z-ADD     0             P_WIdx
- 
+
      C                   MOVE      'AMD'         CurrentSCR        3
- 
+
       ** Display the screen until CF/3 or CF/12 taken
- 
+
      C     *IN03         DOWEQ     *OFF
      C     *IN12         ANDEQ     *OFF
       *
      C                   WRITE     LEASGNF1
      C                   WRITE     #MSGCTL
      C                   EXFMT     LEASGNF3
- 
+
       **  Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       **  F3  - Exit
      C     *IN03         CASEQ     '1'           CF03
- 
+
       **  F5  - Refresh
      C     *IN05         CASEQ     '1'           CF05
- 
+
       **  F12 - Previous
      C     *IN12         CASEQ     '1'           CF12
- 
+
       **  F14 - Settlements
      C     *IN14         CASEQ     '1'           CF14
- 
+
       **  Enter Key Processing
      C                   CAS                     VAL_SYND
       *
@@ -1043,18 +1044,18 @@
       * Process reversal screen                                       *
       *****************************************************************
      C     REVERS        BEGSR
- 
+
       **  Move file fields to screen fields
- 
+
      C                   EXSR      POPSCR
       *
      C                   MOVE      *OFF          *IN10
      C                   MOVE      *OFF          *IN12
      C                   MOVE      *ON           *IN67
      C                   MOVE      *ON           *IN68
- 
+
       **  Display the screen until CF/3, CF/10 or CF/12 taken
- 
+
      C     *IN03         DOWEQ     *OFF
      C     *IN10         ANDEQ     *OFF
      C     *IN12         ANDEQ     *OFF
@@ -1062,22 +1063,22 @@
      C                   WRITE     LEASGNF1
      C                   WRITE     #MSGCTL
      C                   EXFMT     LEASGNF3
- 
+
       **  Clear Message subfile
      C                   EXSR      CLEARM
- 
+
       **  F3  - Exit
      C     *IN03         CASEQ     '1'           CF03
- 
+
       **  F10- Reverse
      C     *IN10         CASEQ     '1'           CF10
- 
+
       **  F12- Previous
      C     *IN12         CASEQ     '1'           CF12
- 
+
       **  F14 - Settlements
      C     *IN14         CASEQ     '1'           CF14
- 
+
       **  Enter Processing
      C                   CAS                     ENTER
       *
@@ -1092,7 +1093,7 @@
       * Enter processing                                              *
       *****************************************************************
      C     ENTER         BEGSR
- 
+
       **  Display Message
      C                   MOVEL     'LEK0027'     ZAMSID
      C                   EXSR      ZASNMS
@@ -1104,16 +1105,16 @@
       * Move file fields to screen fields                             *
       *****************************************************************
      C     POPSCR        BEGSR
- 
+
       **  Chain to subfile
      C     ##RRN1        CHAIN     LEASGNS1                           70
- 
+
       ** Assignment Retrieve
- 
+
      C                   EXSR      ASGNRTV
- 
+
       ** Assignment settlement instructions
- 
+
      C                   MOVEL     LepartREC     F_REC
      C                   MOVEL     LepartPAY     F_PAY
      C                   MOVE      CVMR          FLCVMR
@@ -1134,9 +1135,9 @@
      C                   MOVE      SCCY          FLRSCY                                       CLE031
      C                   MOVE      PSCY          FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       * Assignment Convert
- 
+
      C                   EXSR      ASGNCVT
       *
      C                   ENDSR
@@ -1146,34 +1147,34 @@
       * Validate Syndicate member details                             *
       *****************************************************************
      C     VAL_SYND      BEGSR
- 
+
       ** Reset screen error indicators
- 
+
      C                   EXSR      RESET_SCEI
- 
+
       ** Clear Message subfile
- 
+
      C                   EXSR      CLEARM
- 
+
       ** Validate assignment details
- 
+
      C                   EXSR      ASGNVAL
- 
+
       ** If there are errors in the assignment details screen
       ** or if there are warnings that haven't been output
       ** set screen error indicators (and send messages to the screen)
- 
+
      C     Idx           IFNE      0
      C     WIdx          ORNE      P_WIdx
      C                   Z-ADD     WIdx          P_WIdx            3 0
      C                   EXSR      SET_SCEI
      C                   GOTO      EVAL_SYND
      C                   ENDIF
- 
+
       ** If this is an insert and the settlements screen has not been called
       ** display the settlements screen
       ** (If CF/3 is taken from the settlements screen, then exit)
- 
+
      C     S#ACTN        IFEQ      'I'
      C     SSCR_SetUp    ANDEQ     'N'
      C                   EXSR      CF14
@@ -1181,19 +1182,19 @@
      C                   GOTO      EVAL_SYND
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If there are errors in the settlement screen
       ** or if there are warnings that haven't been output
       ** set screen error indicators (and send messages to the screen)
- 
+
      C     Idx           IFNE      0
      C     WIdx          ORNE      P_WIdx
      C                   Z-ADD     WIdx          P_WIdx            3 0
      C                   GOTO      EVAL_SYND
      C                   ENDIF
- 
+
       ** Call the window
- 
+
      C                   EXSR      SRWNDW
       *
       * CF/3 taken from the window
@@ -1209,22 +1210,22 @@
      C                   GOTO      EVAL_SYND
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Update the database
- 
+
      C                   EXSR      UPD_DBASE
- 
+
       ** If there were errors in database update
       ** report them
- 
+
      C     RetCodeOut    IFEQ      '*RECUPD'
- 
+
      C                   ROLBK
      C                   MOVEL     'LEP0026'     ZAMSID
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
- 
+
      C     RetCodeOut    IFNE      *BLANK
      C                   ROLBK
      C     MsgIDArr(1)   IFNE      *BLANK
@@ -1233,29 +1234,29 @@
      C                   MOVEL     'LEL0035'     ZAMSID
      C                   ENDIF
      C                   EXSR      ZASNMS
- 
+
      C                   ELSE
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
       **  Display Message (Record added or updated)
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   MOVEL     'LEK0021'     ZAMSID
      C                   ELSE
      C                   MOVEL     'LEK0022'     ZAMSID
      C                   ENDIF
      C                   EXSR      ZASNMS
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Rebuild the subfile
- 
+
      C                   EXSR      BLDSFL
- 
+
       **  Move to previous screen
      C                   MOVE      *ON           *IN12
       *
@@ -1266,9 +1267,9 @@
       * Setup the settlement screen fields (SETLIAB/SETLIAZ)          *
       *****************************************************************
      C     SETUP_SSCR    BEGSR
- 
+
       ** Determine if pay & receive settlement screen will be protected
- 
+
      C     S#ACTN        IFEQ      'E'
      C     S#ACTN        OREQ      'R'
      C                   MOVE      'Y'           ##PREC
@@ -1277,11 +1278,11 @@
      C                   MOVE      'N'           ##PREC
      C                   MOVE      'N'           ##PPAY
      C                   ENDIF
- 
+
       ** If amend, enquire or reverse
       ** move settlement file fields to screen fields
       ** Else clear settlement screen fields
- 
+
      C     S#ACTN        IFEQ      'A'
      C     S#ACTN        OREQ      'E'
      C     S#ACTN        OREQ      'R'
@@ -1432,13 +1433,13 @@
       * Set screen error indicators                                   *
       *****************************************************************
      C     SET_SCEI      BEGSR
- 
+
       * Move 'OK' flags into array (for checking)
- 
+
      C                   MOVEA     ASGN_OK       #EI
- 
+
       * Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     2             #C                2 0
      C                   Z-ADD     41            #E                2 0
       *
@@ -1450,10 +1451,10 @@
      C                   ADD       1             #C
      C                   ADD       1             #E
      C                   END
- 
+
       *  Do while error messages found
       *  Write error messages to subfile
- 
+
      C                   Z-ADD     1             #C
      C     #C            DOWLE     ArrayMax
      C     FldNameArr(#C)ANDNE     *BLANKS
@@ -1461,10 +1462,10 @@
      C                   EXSR      ZASNMS
      C                   ADD       1             #C
      C                   ENDDO
- 
+
       *  Do while warning messages found
       *  Write warning messages to subfile
- 
+
      C                   Z-ADD     1             #C
      C     #C            DOWLE     ArrayMax
      C     WFldNamArr(#C)ANDNE     *BLANKS
@@ -1472,7 +1473,7 @@
      C                   EXSR      ZASNMS
      C                   ADD       1             #C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1495,7 +1496,7 @@
      C     SRWNDW        BEGSR
       *
      C/COPY QWINDSRC,LEASGNMOV1
- 
+
       **  Call window manager WN0010
      C                   CALL      'WN0010'
      C                   PARM      'LEASGNSIN'   #PGM             10
@@ -1504,7 +1505,7 @@
      C                   PARM                    DATA           1024
      C                   PARM      *BLANK        #RTRN             7
      C                   PARM                    SPAREX          256
- 
+
       ** Process return code
      C     #RTRN         IFNE      *BLANK
      C                   MOVEL     #RTRN         ZAMSID
@@ -1527,13 +1528,13 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN
- 
+
       * Assignment Details in file format
      C                   PARM                    LEVASGNPD
       *
@@ -1562,48 +1563,48 @@
       *  Assignment retrieve                                          *
       *****************************************************************
      C     ASGNRTV       BEGSR
- 
+
      C                   CALLB     'LEASGNRTV'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action and assigned to and assigned from customers
      C                   PARM      S#SEL         S#ACTN
      C                   PARM      S#ASTX        S#ASTS
      C                   PARM      H#ASFS        S#ASFS
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC
      C                   PARM                    S#PMFT
      C                   PARM                    S#PMFN
- 
+
       * Prime facility branch
      C                   PARM                    FcbrBranch
- 
+
       * Value date of change
      C                   PARM      H#VDTC        In_VDTC           5 0
       *
       * OUTPUTS
- 
+
       * Assignment Details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Action and customer OK indicators
      C                   PARM                    S#ACTNok
      C                   PARM                    S#ASTSok
      C                   PARM                    S#ASFSok
- 
+
       * Assigned to customer number
      C                   PARM                    S#ASTN            6
- 
+
       * Assigned from customer number
      C                   PARM                    S#ASFN            6
       *
@@ -1614,7 +1615,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM      *zero         Idx
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1622,20 +1623,20 @@
       *  Assignment validation                                        *
       *****************************************************************
      C     ASGNVAL       BEGSR
- 
+
      C                   CALLB     'LEASGNVAL'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Assignment Details in screen format
      C                   PARM                    ASGN
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -1649,13 +1650,13 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM      *BLANKS       R1PCOB            3
      C                   PARM      *BLANKS       R1TNRF           15
       *
       * OUTPUTS
- 
+
       * Field OK flags
      C                   PARM                    ASGN_OK
       *
@@ -1683,10 +1684,10 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx
- 
+
       * Valid Assignment
      C                   PARM                    LEVASGNPD
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1694,7 +1695,7 @@
       *  Assignment Convert                                           *
       *****************************************************************
      C     ASGNCVT       BEGSR
- 
+
      C                   CALLB     'LEASGNCVT'
       *
       * INPUTS
@@ -1704,7 +1705,7 @@
       *
       * Assignment details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY
@@ -1714,19 +1715,19 @@
       *
       * Assignment Details in screen format
      C                   PARM                    ASGN
- 
+
       * Assigned to customer details
      C                   PARM                    S#ASTN            6
      C                   PARM                    S#ASTX           10
      C                   PARM                    S#ATNM           20
      C                   PARM                    S#ATTN           10
- 
+
       * Assigned from customer details
      C                   PARM                    S#ASFN            6
      C                   PARM                    S#ASFX           10
      C                   PARM                    S#AFNM           20
      C                   PARM                    S#AFTN           10
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1734,14 +1735,14 @@
       * SETF_IA  : Set fields on insert and amend                     *
       *****************************************************************
      C     SETF_IA       BEGSR
- 
+
       ** Receive Settlement details
- 
+
      C                   MOVE      FLREC         V_REC
      C                   MOVE      FLROBR        ASOSDB
- 
+
       ** Payment Settlement details
- 
+
      C                   MOVE      FLPAY         V_PAY
      C                   MOVE      FLPOBR        ASOMDB
      C                   MOVE      FLCVMR        ASCVMR
@@ -1759,7 +1760,7 @@
      C                   MOVE      FLRSCY        ASSCCY                                       CLE031
      C                   MOVE      FLPSCY        ASPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1842,39 +1843,39 @@
      C                   EXSR      *PSSR                                                      CLE031
      C                   ENDIF                                                                CLE031
      C                   ENDIF                                                                CLE031
- 
+
       * Screen fields
      C                   MOVE      PSUser        S#USER
      C                   MOVE      PSJobName     S#WSID
      C                   MOVE      BJMRDT        S#RUNA
- 
+
      C                   MOVE      PSProcName    ##PGM
- 
+
       * Subfile indicators
      C                   MOVE      *ON           *IN25
      C                   Z-ADD     1             ##SFRC
- 
+
       * Enquiry mode
      C     P#MODE        IFEQ      'E'
      C                   MOVE      *ON           *IN66
      C                   ENDIF
- 
+
       * Enable settlements screen
      C                   MOVE      *ON           *IN69
- 
+
      C                   MOVE      'N'           EarlyExit         1
- 
+
      C                   MOVEL     'LERMSGF '    ZAMSGF
- 
+
       ** Key fields
- 
+
      C     *LIKE         DEFINE    BRCA          K#BRCA
      C     *LIKE         DEFINE    CNUM          K#PMFC
      C     *LIKE         DEFINE    FACT          K#PMFT
      C     *LIKE         DEFINE    FCNO          K#PMFN
- 
+
       ** Key lists
- 
+
      C     PFCLTK        KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#PMFC
@@ -1888,17 +1889,17 @@
       * Access Primary Facility                                       *
       *****************************************************************
      C     ACSPFA        BEGSR
- 
+
      C                   CALLB     'LE002500'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC            6
      C                   PARM                    S#PMFT            3
@@ -1906,7 +1907,7 @@
       *
       * OUTPUTS
       *
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -1927,19 +1928,19 @@
      C                   PARM                    FccaCANM          6                          CSD027
      C                   PARM                    FccaCAFT          3 0
      C                   PARM                    FccaCAFN          2 0
- 
+
       * Primary customer name & town
      C                   PARM                    S#PRNM           20
      C                   PARM                    S#PRTN           10
- 
+
       * Agent customer number, name & town
      C                   PARM                    S#ANUM            6
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Primary facility amount edited
      C                   PARM                    S#FAMT           14
- 
+
       * Field OK flags
      C                   PARM                    S#PMFCOK          1
      C                   PARM                    S#PMFTOK          1
@@ -1957,7 +1958,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1969,7 +1970,7 @@
      C     ZAPGMQ        IFEQ      *BLANK
      C                   MOVEL     PSProcName    ZAPGMQ
      C                   END
- 
+
      C                   CALL      'Y2SNMGC'                            9999
      C                   PARM                    ZAPGMQ           10
      C                   PARM                    ZAPGRL            5

@@ -113,6 +113,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD053942 - Incorrect defaulting of DDEXRT for loan fees. Add *
       *             exchange rate default process for loan fee only   *
       *             when fee currency not equal to loan currency.     *

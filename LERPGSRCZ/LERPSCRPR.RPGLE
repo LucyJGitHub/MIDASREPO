@@ -48,6 +48,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -220,21 +221,21 @@
       ***  File receive instructions
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** File payment instructions
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ***  File FRA/IRS instructions
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ***  Screen receive instructions
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ***  Screen payment instructions
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ***  Screen FRA/IRS instructions
       *
@@ -702,7 +703,7 @@
      C                   EXSR      SDtDtaSubs
      C                   END
      C                   END
- 
+
      C                   END
       *
       ***  If action code, or loan number, or value date, or sequence were NOT OK
@@ -739,7 +740,7 @@
       * SNDM@M - Send a message to first screen
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ***  If there are fundamental errors in this transaction

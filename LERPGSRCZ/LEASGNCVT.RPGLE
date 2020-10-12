@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -46,12 +47,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -63,112 +64,112 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Assignment Details in file format
      D LEPARTPDFmt   E DS                  EXTNAME(LEPARTPD)
- 
+
       ** Assignment Details in screen format
      D ASGN          E DS                  EXTNAME(LEASGNPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set output screen fields
- 
+
      C                   EXSR      SETFLD
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       ** Set output screen fields
       *****************************************************************
      C     SETFLD        BEGSR
- 
+
       *
       * Primary facility
       **~~~~~~~~~~~~~~~~~
      C                   MOVEL     CNUM          S#PMFC
      C                   MOVEL     FACT          S#PMFT
      C                   MOVEL     FCNO          S#PMFN
- 
+
       * Assigned to customer
       **~~~~~~~~~~~~~~~~~~~~
- 
+
      C                   MOVEL     MNUM          S#ASTN
- 
+
       * Assigned to customer details
       **~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      C                   MOVE      *BLANK        @CNUM
@@ -187,7 +188,7 @@
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANK        S#ASTS
      C                   MOVEL     BBCUST        S#ASTS
      C                   MOVEL     BBCSSN        S#ASTX
@@ -206,7 +207,7 @@
       *
       * Assigned from customer details
       **~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
+
      C                   MOVE      *BLANK        @CNUM
      C                   MOVE      INUM          @CNUM
      C                   CALLB     'AOCUSTR0'
@@ -223,7 +224,7 @@
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANK        S#ASFS
      C                   MOVEL     BBCUST        S#ASFS
      C                   MOVEL     BBCSSN        S#ASFX
@@ -251,7 +252,7 @@
       ** Share Type
       *  ~~~~~~~~~~
      C                   MOVE      SHTP          S#SHTP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -277,7 +278,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -287,7 +288,7 @@
       *
       * Assignment details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY          3
@@ -297,19 +298,19 @@
       *
       * Assignment Details in screen format
      C                   PARM                    ASGN
- 
+
       * Assigned to customer details
      C                   PARM                    S#ASTN            6
      C                   PARM                    S#ASTX           10
      C                   PARM                    S#ATNM           20
      C                   PARM                    S#ATTN           10
- 
+
       * Assigned from customer details
      C                   PARM                    S#ASFN            6
      C                   PARM                    S#ASFX           10
      C                   PARM                    S#AFNM           20
      C                   PARM                    S#AFTN           10
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -330,9 +331,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

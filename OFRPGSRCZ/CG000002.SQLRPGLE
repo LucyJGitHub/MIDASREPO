@@ -30,6 +30,7 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032162A - Set Last Statement Date = 1Jan72 for CM fmt      *
       *  MD032161 - New requirements in the set-up of the Start Date  *

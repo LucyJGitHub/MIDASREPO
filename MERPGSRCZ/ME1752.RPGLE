@@ -41,6 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -58,80 +59,80 @@
       *                                                               *
       *****************************************************************
      FOTPAYBB   IF   E           K DISK    INFSR(*PSSR)
- 
+
      FME1752P1  O    E             PRINTER
      F                                     INFDS(SPOOL1)
- 
+
      FME1752P2  O    E             PRINTER
      F                                     INFDS(SPOOL2)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Midas FT general address data structure
- 
+
       /COPY FTCPYSRC,SFTADDRILE
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
      D SPOOL2          DS
      D  SFILE2                83     92
      D  SFNUM2               123    124B 0
      D  OFLLN2               188    189B 0
      D  PRTLN2               367    368B 0
- 
+
       ** External data structures for Bank Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Branch details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAC#      E                     EXTFLD(QQDFAC)
- 
+
       ** Customer details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for Account
- 
+
      D SDACCNT       E DS                  EXTNAME(ACCNTAB)
- 
+
       ** External DS for Midas modules details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Nostro customer number
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Data Structures for Access Objects
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data Structures for SAR details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  LCD#         E                     EXTFLD(LCD)
- 
+
       ** External data structure for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Outgoing message
- 
+
      D MEOUFM        E DS                  EXTNAME(MEOUFMPD)
                                                                                             BUG15195
      D SDACUS        E DS                  EXTNAME(SDACUSPD)                                BUG15195
@@ -145,7 +146,7 @@
       * BIC directory parameter ME1400                                                      BUG15195
      D MEBICD        E DS                  Extname(MEBICDPD)                                BUG15195
       *                                                                                     BUG15195
- 
+
      D ORDCST          DS           175
      D  ORC1                   1     35
      D  ORC2                  36     70
@@ -205,7 +206,7 @@
      D WIdx            S              5  0
      D WCount1         S              5  0
      D WCount2         S              5  0
- 
+
      D CSW024          S              1A
                                                                                               CSW207
      D CSW207          S              1A                                                      CSW207
@@ -233,22 +234,22 @@
      D WCNUM           S              6A                                                      CSW207
      D WACOD           S             10A                                                      CSW207
      D WACSQ           S              2A                                                      CSW207
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      C/TITLE Main Processing
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Perform Detail Processing
- 
+
      C                   EXSR      SRPROCESS
      C                   EVAL      *INLR = *ON
- 
+
       *================================================================
       *  P R O G R A M   E N D                                        *
       *================================================================
@@ -258,17 +259,17 @@
       *  *INZSR - Subroutine to do Program Initialisation.            *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Parameter Entry
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PSEQ
      C                   PARM                    PETTY
- 
+
       ** Parameter List for Calling AOOUFMR0
- 
+
      C     PLAOOUFMR0    PLIST
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY'        P@OPTN
@@ -282,9 +283,9 @@
      C                   PARM      WNostro       P@NOS
      C                   PARM                    P@ACT
      C     MEOUFM        PARM      MEOUFM        DSSDY
- 
+
       ** Initialise LDA field
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = *ZEROS
@@ -293,17 +294,17 @@
      C                   EVAL      DBMOD  = *BLANKS
      C                   EVAL      DBPGM  = 'ME1752'
      C                   OUT       LDA
- 
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error
- 
+
      C                   IF        P@RTCD<> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 1
@@ -312,9 +313,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Module Details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*FIRST '     P@OPTN
@@ -330,15 +331,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Check if feature CSW024 is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*VERIFY'     P@OPTN
      C                   PARM      'CSW024'      P@SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        P@RTCD <> *BLANKS  AND  P@RTCD <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SCSARDPD'
@@ -347,17 +348,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      CSW024 = 'Y'
      C                   ELSE
      C                   EVAL      CSW024 = 'N'
      C                   ENDIF
- 
+
       ** Report Work fields
- 
+
      C                   EVAL      WDIFLN = *ZEROS
- 
+
       *                                                                                       CSW207
       ** Check if SWIFT 2007 is installed                                                     CSW207
       *                                                                                       CSW207
@@ -370,7 +371,7 @@
      C                   ENDIF                                                                CSW207
       *                                                                                       CSW207
      C                   ENDSR
- 
+
       *****************************************************************
       /TITLE SR/SRPROCESS
       *****************************************************************
@@ -378,21 +379,21 @@
       *  SRPROCESS - Subroutine to do the Detail Processing           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPROCESS     BEGSR
- 
+
       ** Read first record from file
- 
+
      C                   READ      OTPAYBB
- 
+
       ** Do Until End of File
- 
+
      C                   DOW       NOT %EOF(OTPAYBB)
- 
+
       ** select non-authorised and process report lines
- 
+
      C                   IF        AUIN <> 'Y'
- 
+
      C                   EXSR      SROUFM
                                                                                               CSW207
      C                   IF        CSW207 = 'Y' AND                                           CSW207
@@ -418,9 +419,9 @@
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
      C                   ENDIF                                                                CSW207
- 
+
      C                   DO        2             WIdx
- 
+
      C                   IF        WIdx = 1
      C**********         EVAL      P@ACT = 'ACCOUNTLINE'                                    BUG13798
      C                   EVAL      P@ACT = 'ACOUNTLINE'                                     BUG13798
@@ -428,16 +429,16 @@
      C**********         EVAL      P@ACT = 'ACCOUNTIBAN'                                    BUG13798
      C                   EVAL      P@ACT = 'ACOUNTIBAN'                                     BUG13798
      C                   ENDIF
- 
+
      C                   CALL      'AOOUFMR0'    PLAOOUFMR0
- 
+
      C                   IF        P@RTCD = *BLANKS
- 
+
      C                   EVAL      ExcptReport = *OFF
      C                   EVAL      WarngReport = *OFF
- 
+
       ** Exception report
- 
+
      C                   IF        (OMFLAG = 'P'                 AND
      C                             (%SUBST(ORC1 : 1 : 1) = '/'   OR
      C                              %SUBST(BNC1 : 1 : 1) = '/')) OR
@@ -446,38 +447,38 @@
      C                              %SUBST(BNC1 : 1 : 1) <> '/'))
      C                   EVAL      ExcptReport = *ON
      C                   ENDIF
- 
+
       ** Warning report
- 
+
      C                   IF        OMFLAG = 'W'                 AND
      C                             (%SUBST(ORC1 : 1 : 1) <> '/' OR
      C                              %SUBST(BNC1 : 1 : 1) <> '/')
      C                   EVAL      WarngReport = *ON
      C                   ENDIF
- 
+
      C                   IF        ExcptReport = *ON OR
      C                             WarngReport = *ON
      C                   EXSR      SRREPORT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Read next record
- 
+
      C                   READ      OTPAYBB
- 
+
       ** End of Do Until End of Valid Records
- 
+
      C                   ENDDO
- 
+
       ** Write end of report
- 
+
      C                   EXSR      SRWEND
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -487,13 +488,13 @@
       *  SRREPORT - Process Report Lines                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRREPORT      BEGSR
- 
+
      C                   EXSR      SRFORMAT
- 
+
       ** If branch is not the same as previous branch, new page
- 
+
      C                   IF        R1BRCA <> BRCA OR
      C                             R2BRCA <> BRCA
       *
@@ -523,13 +524,13 @@
      C**********         WRITE     HEADP2                                                   BUG13798
      C**********         ENDIF                                                              BUG13798
      C                   ENDIF
- 
+
       ** Write Detail
- 
+
      C                   EXSR      SRWREC
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /TITLE SR/SRFORMAT
       *****************************************************************
@@ -537,13 +538,13 @@
       *  SRFORMAT - Subroutine to Format Details                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFORMAT      BEGSR
- 
+
       ** Populate printer file detail fields
- 
+
      C                   IF        ExcptReport = *ON
- 
+
      C                   EVAL      R1PREF = PREF
      C                   EVAL      R1ACTP = P@ACT
      C                   EVAL      R1VALU = OMFLAG
@@ -552,9 +553,9 @@
      C                   IF        P@ERR = 2
      C                   MOVE      *ALL'*'       R1FLDN
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      R2PREF = PREF
      C                   EVAL      R2ACTP = P@ACT
      C                   EVAL      R2VALU = OMFLAG
@@ -563,11 +564,11 @@
      C                   IF        P@ERR = 2
      C                   MOVE      *ALL'*'       R2FLDN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /TITLE SR/SRWREC
       *****************************************************************
@@ -575,16 +576,16 @@
       *  SRWREC - Subroutine to Write a Detail Record to the Report   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWREC        BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page
- 
+
      C                   EVAL      WRqdln = 2
- 
+
      C                   IF        ExcptReport = *ON
- 
+
      C                   IF        Wcount1 = 0    OR                                        BUG13798
      C                             R1BRCA <> BRCA OR                                        BUG13798
      C                             R2BRCA <> BRCA                                           BUG13798
@@ -596,9 +597,9 @@
      C                   WRITE     HEADP1
      C                   ENDIF
      C                   WRITE     DTLP1
- 
+
      C                   ELSE
- 
+
      C                   IF        Wcount2 = 0    OR                                        BUG13798
      C                             R1BRCA <> BRCA OR                                        BUG13798
      C                             R2BRCA <> BRCA                                           BUG13798
@@ -610,11 +611,11 @@
      C                   WRITE     HEADP2
      C                   ENDIF
      C                   WRITE     DTLP2
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /TITLE SR/SRWP1END
       *****************************************************************
@@ -622,14 +623,14 @@
       *  SRWEND - Subroutine to Write End of Report.                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWEND        BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page
- 
+
      C                   EVAL      WRqdln = 4
- 
+
      C                   IF        WCount1 > *ZERO
      C                   EVAL      WDifln = OFLLN1 - PRTLN1
      C                   IF        WDifln < WRqdln
@@ -637,7 +638,7 @@
      C                   ENDIF
      C                   WRITE     TRAILP1
      C                   ENDIF
- 
+
      C                   IF        WCount2 > *ZERO
      C                   EVAL      WDifln = OFLLN2 - PRTLN2
      C                   IF        WDifln < WRqdln
@@ -645,9 +646,9 @@
      C                   ENDIF
      C                   WRITE     TRAILP2
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *****************************************************************
       /TITLE SR/*PSSR
@@ -656,7 +657,7 @@
       *  *PSSR  - Error control subroutine                            *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
       *
      C                   EVAL      *INU7 = *ON
@@ -682,9 +683,9 @@
       *  SROUFM - Retrieve Outgoing Message Field Management          *
       *                                                               *
       *****************************************************************
- 
+
      C     SROUFM        BEGSR
- 
+
      C                   Eval      P@TYP = *BLANKS                                          BUG15195
      C                   Eval      Paccount = *BLANKS                                       BUG15195
      C                   Eval      Wcountry = *BLANKS                                       BUG15195
@@ -692,36 +693,36 @@
      C                   EVAL      Pacctyp = *BLANKS                                        BUG15195
      C                   EVAL      @@IBAN = *BLANKS                                           CSW207
      C                   EVAL      WEntryType = ODMTT
- 
+
       ** Retrive Customer Details
- 
- 
+
+
       ** Network
- 
+
      C                   If        STMT = 8
      C                   EVAL      WNetwork = 'SWIFT'
      C                   ELSE
      C                   EVAL      WNetwork = 'Telex'
      C                   ENDIF
- 
+
       ** Message tag
- 
+
      C                   EVAL      WFieldTag = ':50K:'
- 
+
      C                   IF        ODMTT  = 'S'      OR
      C                             BBCSID <> *BLANKS OR
      C                             CSW024 = 'Y'      AND
      C                             BBCBEI <> *BLANKS
      C                   EVAL      WFieldTag = ':50A:'
      C                   ENDIF
- 
+
       ** Sender's branch
- 
+
      C                   EVAL      P@BRCD = BBBRCD
      C                   EVAL      P@BRCD4A = BBBRCD                                        BUG13798
- 
+
       ** Country of location
- 
+
      C                   SELECT
      C                   WHEN      DSTT = 'A'
      C                   EVAL      WCountry = ' '
@@ -877,9 +878,9 @@
      C                   Eval      P@TYP = *BLANKS                                          BUG15195
      C                   Eval      Pacctyp = 'S'                                            BUG15195
                                                                                             BUG15195
- 
+
       ** ordcst is the swift address
- 
+
      C                   OTHER                                                              BUG15195
      C                   IF        (%LEN(%TRIM(ORC1)) = 7 AND                               BUG15195
      C                             %SUBST(ORDCST:1:1) = '/') OR                             BUG15195
@@ -937,9 +938,9 @@
      C                   Eval      P@TYP = *BLANKS                                          BUG15195
                                                                                             BUG15195
      C                   ENDSL                                                              BUG15195
- 
+
      C                   OTHER
- 
+
      C                   CALL      'AOACCTV1'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      *BLANKS       P@TYP
@@ -947,9 +948,9 @@
      C                   PARM                    DSSDY
                                                                                               CSW207
      C                   EVAL      PAcctyp = *Blanks                                          CSW207
- 
+
      C                   SELECT
- 
+
      C                   WHEN      P@TYP = '*RETAIL' OR
      C                             P@TYP = '*LEDGER'
      C                   EVAL      SDACCNT = DSSDY
@@ -965,14 +966,14 @@
      C**********         EVAL      PAccount = %Subst(ORC1:2:34)                      CSW207 BUG15195
      C                   EVAL      PAccount = BRCA + PCUST + CCY                            BUG15195
      C                                      + WACODC + WACSQC                               BUG15195
- 
+
      C                   WHEN      P@TYP = '*NOSTRO'
      C                   EVAL      SDNOST    = DSSDY
      C                   EVAL      WCustomer = A7CUST
      C                   EVAL      PAcctyp = 'N'                                              CSW207
      C                   EVAL      PCurrency = %Subst(ORC1:2:3)                               CSW207
      C                   EVAL      PNostro = %Subst(ORC1:5:2)                                 CSW207
- 
+
      C                   WHEN      P@TYP = '*CUSTNO' OR
      C                             P@TYP = '*SHNAME'
      C                   EVAL      SDCUST    = DSSDY
@@ -985,18 +986,18 @@
      C                   EVAL      PCust = %Subst(ORC1:1:6)                                   CSW207
      C                   ENDIF                                                                CSW207
      C                   EndIf                                                                CSW207
- 
+
      C                   ENDSL
- 
+
      C                   ENDSL
- 
+
       ** Currency
- 
+
      C                   EVAL      WCurrency = PDCY
- 
+
       ** Determine from where to get Nostro: Sender Correspondent
       ** or Destination (1st field)
- 
+
      C                   EVAL      WAddress = ' '
      C                   IF        SNCO <> *BLANKS
      C                   EVAL      WAddress = SNCO
@@ -1005,21 +1006,21 @@
      C                   EVAL      WAddress = DST1
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Prepare to extract the nostro number
- 
+
      C                   SELECT
      C                   WHEN      WEntryType = 'P' OR
      C                             WEntryType = 'G'
- 
+
       ** Check if multi-branch to determine how the branch is retrieved.
- 
+
      C                   IF        BGMBIN = 'Y'
      C                   EVAL      P@Brcd = ADPBRC
      C                   ELSE
      C                   EVAL      P@Brcd = BJSBRC
      C                   ENDIF
- 
+
      C                   IF        WEntryType = 'P'
      C                   EVAL      P@Cust = ADPCNM
      C                   EVAL      P@Accd = ADPACD
@@ -1031,9 +1032,9 @@
      C                   EVAL      P@ACSQ = ADGASQ
      C                   EVAL      P@CYCD = WCurrency
      C                   ENDIF
- 
+
      C                   WHEN      WEntryType = 'R'
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY'        P@OPTN
@@ -1044,7 +1045,7 @@
      C                   PARM      *BLANKS       P@ACSQ
      C                   PARM      *BLANKS       P@BRCD
      C     SDACCNT       PARM      SDACCNT       DSSDY
- 
+
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      P@CUST = CNUM
      C                   EVAL      P@ACCD = %EDITC(ACOD:'X')
@@ -1052,14 +1053,14 @@
      C                   EVAL      P@BRCD = BRCA
      C                   EVAL      P@ACSQ = %EDITC(ACSQ:'X')
      C                   ENDIF
- 
+
      C                   WHEN      WEntryType = 'I'
      C                   CALL      'AOIBANR4'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY'        P@OPTN
      C                   PARM      WAddress      P@IBAN
      C     SDACCNT       PARM      SDACCNT       DSSDY
- 
+
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      @@IBAN = 'Y'                                               CSW207
      C                   EVAL      P@CUST = CNUM
@@ -1068,31 +1069,31 @@
      C                   EVAL      P@BRCD = BRCA
      C                   EVAL      P@ACSQ = %EDITC(ACSQ:'X')
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       ** Retrieve nostro number for diffent types
- 
+
      C                   SELECT
- 
+
       ** For Entry Type 'N', just get it directly from input
- 
+
      C                   WHEN      WEntryType = 'N'
      C                   EVAL      WNostro = ADNOSN
- 
- 
+
+
       ** For Entry Type 'F', just get it directly from input
- 
+
      C                   WHEN      WEntryType = 'F'
      C                   EVAL      WNostro = ADFNNB
- 
+
       ** For other types, get it from SDNOSTPD
- 
+
      C                   WHEN      WEntryType = 'P' Or
      C                             WEntryType = 'G' Or
      C                             WEntryType = 'R' Or
      C                             WEntryType = 'I'
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY'        P@OPTN
@@ -1105,11 +1106,11 @@
      C                   PARM      *BLANKS       P@CSSN
      C                   PARM      *BLANKS       P@PNOI
      C     SDNOST        PARM      SDNOST        DSSDY
- 
+
      C                   If        P@RTCD = *BLANKS
      C                   EVAL      WNostro = A7NONB
      C                   ENDIF
- 
+
      C                   ENDSL
                                                                                               CSW207
       ** Validate 50F Format                                                                  CSW207
@@ -1164,9 +1165,9 @@
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
      C                   ENDIF                                                                CSW207
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /TITLE SR/SRRCFP
       *****************************************************************
@@ -1176,66 +1177,66 @@
       *****************************************************************
       *
      C     SRRCFP        BEGSR
- 
+
       ** Ensure Report Spool File recorded by RCF
- 
+
      C                   Z-ADD     SFNUM1        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQ
      C                   PARM                    PETTY
      C                   PARM      SFILE1        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANK        PZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Ensure Report Spool File recorded by RCF
- 
+
      C                   Z-ADD     SFNUM2        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQ
      C                   PARM                    PETTY
      C                   PARM      SFILE2        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANK        PZSERR
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       /TITLE SR/SRCUST
       *****************************************************************
       *                                                               *
       *  SRCUST   - Check for Customer                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUST        BEGSR
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY'        P@OPTN
      C                   PARM      WCustomer     P@CUST
      C                   PARM      *BLANKS       P@ERRC
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************

@@ -35,6 +35,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -53,19 +54,19 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Facilities File
      FLEFCLTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FC_)
       **  Risk Participant Details File
      FLEPARTL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(PA_)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -77,93 +78,93 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------
       ** The following /COPY includes the standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Risk Participant Details in screen format
      D RPRT          E DS                  EXTNAME(LERPRTPD)
- 
+
       ** Risk Participant Details in file format
      D VRPRT         E DS                  EXTNAME(LEVRPRTPD)
- 
+
       ** Risk Participant Details OK indicator
      D RPRT_OK       E DS                  EXTNAME(LEERPRTPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Base Rate Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** External DS for Loan Type / Sub Type Details
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D WProcDate       S                   LIKE(BJRDNB)
      D PRTCD           S              7A
@@ -172,43 +173,43 @@
       *                                                                                       CLE148
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set up Key fields
- 
+
      C                   MOVE      FcbrBranch    K#BRCA
      C                   MOVE      S#PMFC        K#PMFC
      C                   MOVE      S#PMFT        K#PMFT
      C                   MOVE      S#PMFN        K#PMFN
- 
+
       ** Clear output fields
- 
+
      C                   MOVE      *BLANKS       S#SRNM
      C                   MOVE      *BLANKS       S#SRTN
      C                   MOVE      *BLANKS       S#IRNM
      C                   MOVE      *BLANKS       S#IRTN
- 
+
      C                   MOVEL     *ALL'Y'       RPRT_OK
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIDArr
@@ -249,9 +250,9 @@
       **  Validate Risk Participation Loan Type/Sub-type
       *
      C                   EXSR      VLDLON
- 
+
       * Set fields on insert, amend or delete
- 
+
      C     S#ACTN        IFEQ      'I'
      C     S#ACTN        OREQ      'A'
      C     S#ACTN        OREQ      'D'
@@ -259,7 +260,7 @@
      C                   ENDIF
       *
      C     ENDVAL        TAG
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -268,11 +269,11 @@
       * Validate Syndicated Customer                                  *
       *****************************************************************
      C     VLDCUS        BEGSR
- 
+
       **  The Syndicate member must be entered
- 
+
      C     S#CSSN        IFEQ      *BLANKS
- 
+
      C                   MOVE      'N'           S#CSSNOK
      C                   ADD       1             Ix
      C                   MOVEL     'S#CSSN      'FldNameArr(Ix)
@@ -302,14 +303,14 @@
      C                   MOVEL     BBCUST        S#CNUM
      C                   MOVEL     BBCRNM        S#SRNM
      C                   MOVEL     BBCRTN        S#SRTN
- 
+
       * If insert
       * the risk participant can't already exist
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   MOVE      S#CNUM        K#MNUM
      C     LEPARTK       CHAIN     LEPARTL1                           70
- 
+
      C     *IN70         IFEQ      *OFF
      C                   MOVE      'N'           S#CSSNOK
      C                   ADD       1             Ix
@@ -340,10 +341,10 @@
      C                   PARM      S#ANUM        @CNUM            10
      C                   PARM                    @CNST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   MOVE      *BLANKS       S#INUM
      C                   MOVEL(P)  BBCUST        S#INUM
- 
+
      C                   ENDIF
       *
       **  Access the Customer Details file
@@ -377,13 +378,13 @@
       *
       ** If the joining date is not defined, default it to the run date
      C     S#JDTE        IFEQ      *BLANKS
- 
+
      C                   MOVE      WProcDate     ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         S#JDTE
       *
      C                   ELSE
- 
+
       ** The date must be valid
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#JDTE        ZFIELD
@@ -394,7 +395,7 @@
      C                   MOVE      ZFIELD        ZDATEI
      C                   EXSR      ZDATE1
      C                   END
- 
+
      C     ZALIGNok      IFEQ      'N'
      C     ErrorFlag     OREQ      'Y'
       *
@@ -402,7 +403,7 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#JDTE      'FldNameArr(Ix)
      C                   MOVEL     'LEK0003'     MsgIdArr(Ix)
- 
+
      C                   ELSE
       *
      C     ZDAYNO        IFGT      WProcDate
@@ -442,7 +443,7 @@
       *
       **  Validate the Share %/amount
      C     S#SHAR        IFEQ      *BLANK
- 
+
      C                   MOVE      'N'           S#SHAROK
      C                   ADD       1             Ix
      C                   MOVEL     'S#SHAR      'FldNameArr(Ix)
@@ -480,9 +481,9 @@
      C                   MOVE      ZFIELD        W#SHAR
      C                   EXSR      ZEDIT2
      C                   MOVE      ZFIELD        S#SHAR
- 
+
       **  Calculate Amount if share type is percentage
- 
+
      C     S#SHTP        IFEQ      'P'
      C                   MOVE      W#FAMT        P#PAMT           13
      C                   MOVE      W#SHAR        P#SHPC           15
@@ -499,10 +500,10 @@
      C                   MOVE      W#SHAR        W#RISK
      C                   ENDIF
       *
- 
+
       ** Access funding participants to calculate amount of prime facility
       ** which has been sold. Use this to calculate share still held.
- 
+
      C     PFCLTK        SETLL     LEFCLTL2
      C     PFCLTK        READE     LEFCLTL2                               80
      C     *IN80         DOWEQ     '0'
@@ -511,12 +512,12 @@
      C                   ENDIF
      C     PFCLTK        READE     LEFCLTL2                               80
      C                   ENDDO
- 
+
      C                   ADD       W#FAMT        W#FPAM
- 
+
       ** Access current risk particpations against prime
       ** facility to determine portion which has already been sold.
- 
+
      C                   Z-ADD     0             W#SHAM           13 0
       *
      C     PFCLTK        SETLL     LEPARTL1
@@ -525,30 +526,30 @@
      C                   ADD       PA_SHAM       W#SHAM
      C     PFCLTK        READE     LEPARTL1                               80
      C                   ENDDO
- 
+
      C                   ADD       W#SHAM        W#RISK
- 
+
       ** If action is to amend an existing part sold, subtract original
- 
+
      C     S#ACTN        IFEQ      'A'
      C                   MOVE      S#CNUM        K#MNUM
      C     LEPARTK       CHAIN     LEPARTL1                           70
      C                   SUB       PA_SHAM       W#RISK
      C                   ENDIF
- 
+
       ** Total risk sold should not exceed retained portion of facility
- 
+
      C     W#RISK        IFGT      W#FPAM
      C                   MOVE      'N'           S#SHAROK
      C                   ADD       1             Ix
      C                   MOVEL     'S#SHAR      'FldNameArr(Ix)
      C                   MOVEL     'LEK0033'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -726,38 +727,38 @@
       * SETF_IA  : Set fields on insert and amend                     *
       *****************************************************************
      C     SETF_IA       BEGSR
- 
+
       ** Branch, customer, facility type & facility number
- 
+
      C                   MOVE      FcbrBranch    ASBRCA
      C                   MOVE      S#PMFC        ASCNUM
      C                   MOVE      S#PMFT        ASFACT
      C                   MOVE      S#PMFN        ASFCNO
- 
+
       ** Member
- 
+
      C                   MOVE      S#CNUM        ASMNUM
- 
+
       ** Introducing customer
- 
+
      C                   MOVEL     S#INUM        ASINUM
- 
+
       ** Joining date
- 
+
      C                   MOVE      S#JDTE        ZDATEI
      C                   EXSR      ZDATE1
      C                   MOVE      ZDAYNO        ASJDTE
- 
+
       ** Currency
- 
+
      C                   MOVE      FccyFCCY      ASCCY
- 
+
       ** Share type
- 
+
      C                   MOVE      S#SHTP        ASSHTP
- 
+
       ** If share type = 'A' -> share amount/percentage
- 
+
      C     S#SHTP        IFEQ      'A'
      C                   MOVE      *BLANK        ZFIELD
      C                   MOVE      S#SHAR        ZFIELD
@@ -776,9 +777,9 @@
      C                   PARM                    P#SHTP
      C                   MOVE      P#SHPC        ASSHPC
      C                   ENDIF
- 
+
       ** If share type = 'P' -> share amount/percentage
- 
+
      C     S#SHTP        IFEQ      'P'
      C                   MOVE      *BLANK        ZFIELD
      C                   MOVE      S#SHAR        ZFIELD
@@ -797,9 +798,9 @@
      C                   PARM                    P#SHTP
      C                   MOVE      P#FAMT        ASSHAM
      C                   ENDIF
- 
+
       * Fee details
- 
+
      C                   MOVE      S#FEBR        ASFEBR
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      S#FERA        ZFIELD
@@ -808,19 +809,19 @@
      C                   EXSR      ZALIGN2
      C                   MOVE      ZFIELD        ASFERA
      C                   MOVE      S#FERS        ASFERS
- 
+
       * Default loan type/sub type
- 
+
      C                   MOVE      S#DRTP        ASDRTP
      C                   MOVE      S#DRST        ASDRST
      C                   MOVE      S#DRCL        ASDRCL                                       CLE042
- 
+
       * Participant Assignment Indicator
- 
+
      C                   MOVE      'R'           ASPTAI
- 
+
       * PC transaction reference
- 
+
      C     P#MODE        IFEQ      'B'
      C     R1TNRF        ANDNE     *BLANK
      C                   MOVE      R1TNRF        ASPCRF
@@ -844,15 +845,15 @@
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
      C                   ENDIF
- 
+
       * PC originating branch
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVE      R1PCOB        ASPCOB
      C                   ELSE
      C                   MOVE      *BLANKS       ASPCOB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C     ZEDIT2        BEGSR
@@ -866,23 +867,23 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Risk Participant Details in screen format
      C                   PARM                    RPRT
- 
+
       * Agent number
      C                   PARM                    S#ANUM            6
- 
+
       * Prime Facility amount
       * Prime Facility branch
       * Prime Facility branch details
@@ -896,13 +897,13 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
- 
+
       * Front office inputs (if mode = 'B')
      C                   PARM                    R1PCOB            3
      C                   PARM                    R1TNRF           15
       *
       * OUTPUTS
- 
+
       * Field OK flags
      C                   PARM                    RPRT_OK
       *
@@ -927,31 +928,31 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       * Valid Risk Participant
      C                   PARM                    VRPRT
- 
+
      C     *LIKE         DEFINE    PA_BRCA       K#BRCA
      C     *LIKE         DEFINE    PA_CNUM       K#PMFC
      C     *LIKE         DEFINE    PA_FACT       K#PMFT
      C     *LIKE         DEFINE    PA_FCNO       K#PMFN
      C     *LIKE         DEFINE    PA_MNUM       K#MNUM
- 
+
       * Key lists
- 
+
      C     PFCLTK        KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#PMFC
      C                   KFLD                    K#PMFT
      C                   KFLD                    K#PMFN
- 
+
      C     LEPARTK       KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#PMFC
      C                   KFLD                    K#PMFT
      C                   KFLD                    K#PMFN
      C                   KFLD                    K#MNUM
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -967,26 +968,26 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C                   MOVEL     '*ERROR'      RetCodeIn
      C                   EVAL      DBKEY = 'CSC011'
@@ -994,13 +995,13 @@
      C                   EVAL      DBASE = 905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
@@ -1012,9 +1013,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

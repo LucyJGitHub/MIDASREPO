@@ -46,6 +46,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -170,9 +171,9 @@
       *
       **  Array containing possible actions on MT920 Request.
      D ACT             S             80    DIM(4) CTDATA PERRCD(1)
- 
+
       ** Fields used in call to Module ZDATE1
- 
+
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D Errorflag       S              1A
@@ -184,7 +185,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -327,13 +328,13 @@
      D StCheck         S              5U 0                                      Start Check Position
      D StResul         S              5U 0                                      Start Result Posit.
      D Result          S                   LIKE(P@MIDA)                         Result Field
- 
+
       ** Parameters for QSNDDTAQ
      D PDataQueue      S             10    INZ('GLM94XDQ  ')
      D PLibrary        S             10    INZ('*LIBL     ')
      D PDataLength     S              5  0 INZ(1)
      D PData           S              1    INZ('C')
- 
+
       *
       **  External data structure for Switchable Feature Details.
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
@@ -375,9 +376,9 @@
       *
       **  Second DS for access programs, long data structure.
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D/COPY MGCPYSRC,MGCMNFCTDC
- 
+
       *
       *****************************************************************
       /SPACE 3
@@ -719,7 +720,7 @@
       *
       ** Send a 'C' to data queue GLM94XDQ to initiate process
       *
- 
+
      C                   CALL      'QSNDDTAQ'
      C                   PARM                    PDataQueue
      C                   PARM                    PLibrary
@@ -1042,7 +1043,7 @@
      C                   PARM      *Blanks       @ICUST            1            O:Custome
      C                   PARM      *Blanks       @ICNST            1            O:Counter
      C                   PARM      *Blanks       @IBICD            1            O:Bic fou
- 
+
      C                   IF        @ICUST = 'Y'
       ** Access the network account file with the destination in customer number format.
      C                   EVAL      KDSTN  = BBCUST

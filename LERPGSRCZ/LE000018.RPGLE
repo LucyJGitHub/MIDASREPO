@@ -28,7 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -63,14 +63,14 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas LE Loan Types/Sub-types Update index
      FSDLOANL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE initialisation program (AYACAI) - Audit file
      FLE000018AUO    E             PRINTER
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -80,31 +80,31 @@
       ** +--------------------------------------+
       ** Copyright statement array
      D WCPY@           S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Program Status Data Structure
      D PSDS           SDS
      D  ##PGM            *PROC
      D  JOB                  244    253
      D  WSID                 244    246
      D  USER                 254    263
- 
+
       ** Parameters for access object programs
      D PRTCD           S              7
      D POPTN           S              7
- 
+
       ** Other work fields
      D WBIS@           S             80
      D WDUMP           S              1
- 
+
      ******************************************************************
       /EJECT
       *****************************************************************
@@ -112,30 +112,30 @@
       * MAIN - Main Processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Process Loan Types/Sub-types File
      C     *LOVAL        SETLL     SDLOANL0
      C                   READ      SDLOANL0
- 
+
      C                   DOW       NOT %EOF(SDLOANL0)
      C                   EVAL      WCOUNT = WCOUNT + 1
- 
+
       ** Set all blank AYACAI to 'N'
      C                   IF        AYACAI = *BLANK
      C                   EVAL      AYACAI = 'N'
      C                   UPDATE    @AYRECK
      C                   EVAL      WPROCESSED = WPROCESSED + 1
      C                   ENDIF
- 
+
      C                   READ      SDLOANL0
      C                   ENDDO
- 
+
       ** Commit changes
      C                   COMMIT
- 
+
       ** Write audit report
      C                   EXSR      SRAudit
- 
+
      C                   EVAL      *INLR = *ON
       *****************************************************************
       /EJECT
@@ -145,17 +145,17 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Write audit report header
      C                   WRITE     HEADAU
- 
+
       ** Write audit report details
      C                   IF        WCOUNT <> 0
      C                   WRITE     CONTROL
      C                   ELSE
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -165,9 +165,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     WCPY@         WBIS@
- 
+
       ** Set up Local Data Area (LDA)
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
@@ -177,13 +177,13 @@
      C                   EVAL      DBPGM  = 'LE000018'
      C                   EVAL      DBASE = *ZERO
      C                   OUT       LDA
- 
+
       ** Access bank details
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -192,11 +192,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise counters
      C                   EVAL      WCOUNT  = *ZERO
      C                   EVAL      WPROCESSED = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -206,23 +206,23 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WDUMP = *BLANKS
      C                   EVAL      WDUMP = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       ** Write audit report header
      C                   WRITE     HEADAU
- 
+
       ** Write database error details
      C                   WRITE     DBERROR
- 
+
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
 ** WCPY@

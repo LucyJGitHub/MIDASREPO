@@ -31,7 +31,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  MD054782 - SQNO and TSEQ conflicting with other file.        *
       *             Rename to @@FSQNO and @@FTSEQ.                    *
       *  AR674226 - Manual transaction reached 999. Increase the size *

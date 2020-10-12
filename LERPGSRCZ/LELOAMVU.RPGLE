@@ -102,6 +102,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -980,7 +981,7 @@
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
      C                   ENDIF                                                              MD029046
-     C                   ENDIF                                                              MD029046      
+     C                   ENDIF                                                              MD029046
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066

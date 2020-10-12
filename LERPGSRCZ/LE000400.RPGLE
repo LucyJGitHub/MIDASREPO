@@ -16,7 +16,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054707 - CER050 Comp LEC06A 00010 failed during COB Run    *
       *                                                               *

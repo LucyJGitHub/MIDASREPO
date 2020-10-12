@@ -881,16 +881,16 @@
      C                   EXSR      SetupValid
      C                   ENDIF
       *
-      ** Output PI to new file                                                             AR991378
-      *                                                                                    AR991378
-     C                   IF        Idx = 0 and CLE068 = 'Y' and DDATYP = 'PI'              AR991378
-     C                   MOVEL     WDDASTS       WCALLP           10                       AR991378
-     C                   IF        WCALLP  = 'LEMCStart' or                                AR991378
-     C                             WCALLP  = 'LEMC     ' or                                AR991378
-     C                             WCALLP  = 'LEMCEnd  '                                   AR991378
-     C                   EXSR      SRLEME                                                  AR991378
-     C                   END                                                               AR991378
-     C                   END                                                               AR991378
+      ** Output PI to new file                                                              AR991378
+      *                                                                                     AR991378
+     C                   IF        Idx = 0 and CLE068 = 'Y' and DDATYP = 'PI'               AR991378
+     C                   MOVEL     WDDASTS       WCALLP           10                        AR991378
+     C                   IF        WCALLP  = 'LEMCStart' or                                 AR991378
+     C                             WCALLP  = 'LEMC     ' or                                 AR991378
+     C                             WCALLP  = 'LEMCEnd  '                                    AR991378
+     C                   EXSR      SRLEME                                                   AR991378
+     C                   END                                                                AR991378
+     C                   END                                                                AR991378
       *
       /COPY WNCPYSRC,LELOAMV018
       *
@@ -6112,7 +6112,7 @@
 
       ** Valid Loan Amendment layout (DS) from/to caller
      C                   PARM                    ValidLoam
-     C                   PARM                    WDDASTS          16                       AR991378
+     C                   PARM                    WDDASTS          16                        AR991378
       *
      C                   MOVE      WFTTFRT       FTTFRT            3 0          213496
       *

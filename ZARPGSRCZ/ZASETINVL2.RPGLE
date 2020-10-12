@@ -20,6 +20,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD052228 - Overridable message Settlement account is         *
       *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *

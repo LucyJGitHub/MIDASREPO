@@ -25,6 +25,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1056715 - Loan reference field name for this file was      *
       *              changed from MCLNRF to MCLOAN (Recompile)        *

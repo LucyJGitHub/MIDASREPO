@@ -26,6 +26,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************

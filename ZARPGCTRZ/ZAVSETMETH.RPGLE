@@ -41,6 +41,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -71,122 +72,122 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D TABSET          S              2    DIM(11) CTDATA PERRCD(11)
- 
+
      D Msgdata1        DS            45
       **  Data structure to hold the data for screen messages.
      D  @DATA1                 1     25
      D  @DATA2                26     45
- 
+
      D SDACNT        E DS                  EXTNAME(ACCNTAB)
       ** EXTERNAL DS FOR ACCOUNT DETAILS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message fields received as a parameter
      D Msgid1          S                   LIKE(#Msgid)
      D Msgid2          S                   LIKE(#Msgid)
- 
+
       ** Interest Settlement Account field in error (DDINSA).
       ** (This field also validated by this program)
      D DDINSAOK        S              1A
- 
+
       ** Interest Counterparty Nostro field in error (DDINOS) also validated
       ** (This field also validated by this program)
      D DDINOSOK        S              1A
- 
+
       ** Enhanced Rollover Processing Indicator - received as a parameter
      D S01434          S              1A
- 
+
       ** Deal Currency - received as a parameter
      D DDCCY           S              3A
- 
+
       ** Interest Settlement Currency - received as a parameter
      D DDISCY          S              3A
- 
+
       ** Interest Paid Seperately Indicator - received as a parameter
      D DDIPDS          S              1A
- 
+
       ** Interest Settlement Method - received as a parameter
      D DDIMET          S              2A
- 
+
       ** Retail Banking Indicator - received as a parameter
      D BGRTBN          S              1A
- 
+
       ** Customer - received as a parameter
      D*IKCNUM***       S              6S 0                                                    CSD027
      D IKCNUM          S              6A                                                      CSD027
- 
+
       ** Retail Account Code - received as a parameter
      D***BMACCD          S              4A                                                    CGL029
      D BMACCD          S             10A                                                      CGL029
- 
+
       ** Branch Code - received as a parameter
      D DDBRCA          S              3A
- 
+
       ** Branch Internal Customer - received as a parameter
      D A8BICN          S              6A
- 
+
       ** General Ledger Account Code - received as a parameter
      D***BKACCD          S              4A                                                    CGL029
      D BKACCD          S             10A                                                      CGL029
- 
+
       ** Yankee Doller Currency Code - received as a parameter
      D BLUSCY          S              3A
- 
+
       ** Interest Settlement Account - received as a parameter
      D***DDINSA          S             15A                                                    CGL029
      D DDINSA          S             21A                                                      CGL029
- 
+
       ** Interest Counterparty Nostro - received as a parameter
      D DDINOS          S             10A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -194,14 +195,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -215,17 +216,17 @@
      C                   ELSE
      C                   MOVEL     DDCCY         EffSetCcy
      C                   ENDIF
- 
+
       ** *--------------------------------------------*
       ** * Validate Interest Settlement Method        *
       ** *--------------------------------------------*
- 
+
       ** Only validate if Enhanced Rollovers processing switched on
      C     S01434        IFEQ      'Y'
- 
+
      C     DDIPDS        IFEQ      'Y'
      C     DDIMET        LOOKUP    TABSET                                 85
- 
+
       ** Has to be a valid settlement method
      C     *IN85         IFEQ      '0'
      C     DDIMET        IFNE      *BLANKS
@@ -234,7 +235,7 @@
      C                   MOVEL     'MMM0631'     Msgid1
      C                   END
      C                   ELSE
- 
+
       ** Retail module has to be switched on for methods 04 and 14
      C                   SETOFF                                       85
      C     DDIMET        IFEQ      '04'
@@ -245,7 +246,7 @@
      C                   MOVEL     'MMM0632'     Msgid1
      C                   END
      C                   END
- 
+
       ** Prime Retail account has to exist for settlement method 04
      C     *IN85         IFEQ      '0'
      C     DDIMET        ANDEQ     '04'
@@ -261,35 +262,35 @@
      C                   PARM      '01'          @ACSN             2
      C                   PARM      DDBRCA        @DSNB             3
      C     SDACNT        PARM      SDACNT        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   SETON                                        85
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0633'     Msgid1
- 
+
      C                   ELSE
- 
+
      C     RECI          IFNE      'D'
      C                   SETON                                        85
      C                   MOVE      'Y'           ErrorFound
- 
+
       ** Concatenate customer, currency, a/c code & a/c sequence.
       ** The original CAT opcode lines have been replaced by the following
       ** EVAL statement because the CATs appear to work differently in
       ** ILE RPG from OPM.
- 
+
      C                   EVAL      MsgData1 = @CNUM + '-' + @CYCD
      C                                        + '-' + @ACCD + '-' + @ACSN
- 
+
      C                   MOVEL     'BBM0130'     Msgid1
      C                   END
      C                   END
      C                   END
- 
+
       ** Computer Suspense account has to exist for method 06
      C     *IN85         IFEQ      '0'
      C     DDIMET        ANDEQ     '06'
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -301,7 +302,7 @@
      C                   PARM      '01'          @ACSN             2
      C                   PARM      DDBRCA        @DSNB             3
      C     SDACNT        PARM      SDACNT        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   SETON                                        85
      C                   MOVE      'Y'           ErrorFound
@@ -310,20 +311,20 @@
      C     RECI          IFNE      'D'
      C                   SETON                                        85
      C                   MOVE      'Y'           ErrorFound
- 
+
       ** Concatenate customer, currency, a/c code & a/c sequence.
       ** The original CAT opcode lines have been replaced by the following
       ** EVAL statement because the CATs appear to work differently in
       ** ILE RPG from OPM.
- 
+
      C                   EVAL      MsgData1 = @CNUM + '-' + @CYCD
      C                                        + '-' + @ACCD + '-' + @ACSN
- 
+
      C                   MOVEL     'BBM0130'     Msgid1
      C                   END
      C                   END
      C                   END
- 
+
       ** Deal currency has to be USD for settlement method 07
      C     *IN85         IFEQ      '0'
      C     DDIMET        ANDEQ     '07'
@@ -335,16 +336,16 @@
      C                   MOVEL     BLUSCY        MsgData1
      C                   END
      C                   END
- 
+
      C                   ELSE
- 
+
      C** Should not be input if Interest Paid Separately is No
      C     DDIMET        IFNE      *BLANKS
      C                   SETON                                        85
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0650'     Msgid1
      C                   END
- 
+
      C     DDINOS        IFNE      *BLANKS
      C                   MOVE      'N'           DDINOSOK
      C                   MOVE      'Y'           ErrorFound
@@ -356,14 +357,14 @@
      C                   MOVE      *BLANKS       DDINSA
      C                   MOVE      *BLANKS       DDINOS
      C                   END
- 
+
       ** If an error was found, set the return code appropriately
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -375,9 +376,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -399,13 +400,13 @@
      C                   PARM                    BLUSCY
      C                   PARM                    DDINSA
      C                   PARM                    DDINOS
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

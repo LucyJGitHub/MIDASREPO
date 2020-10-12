@@ -40,6 +40,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR863274 - Valid GL account not accepted                     *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -49,7 +50,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -68,51 +69,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** Map variable names to indicators to allow use of names instead
       ** of numbers; base the following data structure on a pointer to
       ** the indicator array.
      D Indicators      DS                  BASED(pIndicator)
      D  StrFound              99     99
- 
+
       ** Set the indicator array pointer
      D pIndicator      S               *   INZ(%Addr(*In))
- 
+
      D                 DS
       **  Data structure for Interest Settlement Account
      D**@@INSA**               1     15                                                       CGL029
@@ -134,69 +135,69 @@
      D  IBRCA                 19     21                                                       CGL029
      D  IZ011                 11     21                                                       CGL029
      D  IINSN                  1     18                                                       CGL029
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** EXTERNAL DS FOR ACCOUNT DETAILS
      D SDACNT        E DS                  EXTNAME(ACCNTAB)
- 
+
       ** EXTERNAL DS FOR NOSTRO DETAILS
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Decimal point
      D DecPoint        C                   CONST('.')
- 
+
       ** Comma
      D Comma           C                   CONST(',')
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** ==========
       ** Parameters
- 
+
       ** Message ID
      D MsgID1          S                   LIKE(#MsgID)
- 
+
       ** Message data
      D MsgData1        S                   LIKE(#MsgData)
- 
+
       ** Interest settlement account identifier
      D*DDINSA***       S             15A                                                      CGL029
      D DDINSA          S             21A                                                      CGL029
- 
+
       ** Deal Currency
      D DDCCY           S              3A
- 
+
       ** Interest Settlement Currency
      D DDISCY          S              3A
- 
+
       ** Interest settlement method
      D DDIMET          S              2A
- 
+
       ** Interest paid separately
      D DDIPDS          S              1A
- 
+
       ** Settlement Method OK flag
      D SetMethOK       S              1A
- 
+
       ** Switchable feature S01434 (Enhanced Rollovers) on
      D S01434          S              1A
- 
+
       ** End of parameters
       ** =================
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -204,7 +205,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -212,10 +213,10 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error found flag to prevent problems on later calls
      C                   RESET                   ErrorFound
- 
+
      C*
      C** Move screen fields into field so can be checked
      C*
@@ -234,7 +235,7 @@
      C     DDIPDS        IFEQ      'Y'
       ** If no error in settlement method
      C                   IF        SetMethOK <> 'N'
- 
+
      C** Some settlement methods do not require a settlement account
      C     DDIMET        IFEQ      *BLANKS
      C     DDIMET        OREQ      '00'
@@ -342,15 +343,15 @@
      C                   MOVEL     'MMM0642'     MsgID1
      C                   ELSE
      C     RECI          IFNE      'D'
- 
+
       ** Concatenate customer, currency, a/c code & a/c sequence.
       ** The orogonal CAT opcodes lines have been replaced by the following
       ** EVAL statement because the CATs appear to work differently in
       ** ILE RPG from OPM.
- 
+
      C                   EVAL      MsgData1 = @CNUM + '-' + @CYCD
      C                                        + '-' + @ACCD + '-' + @ACSN
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'BBM0130'     MsgID1
      C                   END
@@ -367,12 +368,12 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0643'     MsgID1
      C                   ELSE
- 
+
       ** The following condition was added because of an apparent difference
       ** in response between OPM and ILE code; the existing numeric check
       ** causes a decimal data error if the alpha field contains a decimal
       ** point or a comma.
- 
+
       ** Note that indicator 99 is mapped to the variable StrFound.
       ** If both scans fail, then no decimal point or comma
       ** has been entered, so the existing validation can be carried out.
@@ -384,12 +385,12 @@
      C     Comma         SCAN      IRETL                                  99
      C                   ENDIF
      C                   IF        StrFound = False
- 
+
      C                   MOVE      IRETL         WWRETL           10 0
      C                   MOVE      WWRETL        WARETL           10
- 
+
      C                   ENDIF
- 
+
      C     IRETL         IFNE      WARETL
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0644'     MsgID1
@@ -411,7 +412,7 @@
      C                   MOVEL     'MMM0645'     MsgID1
      C                   ELSE
      C     RECI          IFNE      'D'
- 
+
      C                   MOVEL(P)  @RETL         MsgData1
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'BBM0130'     MsgID1
@@ -442,15 +443,15 @@
      C                   ELSE
      C                   MOVE      *BLANKS       @@INSA
      C                   END
- 
+
       *
       ** Set return code
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -462,9 +463,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Incoming return code (10A)
      C                   PARM                    RetCodeIn
@@ -486,16 +487,16 @@
      C                   PARM                    DDCCY
       ** Interest settlement currency (3A, from transaction)
      C                   PARM                    DDISCY
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C     InzEnd        ENDSR                                                  *** InzEnd ***
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

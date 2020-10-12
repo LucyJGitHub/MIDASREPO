@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR991378           Date 18Jun12               *      
-      *  Prev Amend No. MD024811           Date 24Jan20               *
-      *                 MD029046           Date 27Nov19               *
+      *  Last Amend No. MD024811           Date 24Jan20               *
+      *  Prev Amend No. MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
@@ -101,10 +100,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
-      *           The validation of Total being paid and Loan         *
-      *           Outstanding Principal should consider events being  *
-      *           Modelled by LEM (Loan Events Modeller)              *      
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -636,14 +631,6 @@
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInLOAM
      C                   MOVEL     Trans5002     TranInLOA2                                   CLE106
-     C                   MOVEL     DDASTS        WDDASTS          16                        AR991378
-      *                                                                                     AR991378
-      * Clear WDDSTAT if UpdateYN is not Y                                                  AR991378
-     C     UpdateYN      IFNE      'Y'                                                      AR991378
-     C     DDACTN        ANDNE     'R'                                                      AR991378
-     C                   CLEAR                   WDDASTS                                    AR991378
-     C                   ENDIF                                                              AR991378
-      *                                                                                     AR991378
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   MOVEL     Extdata500    Extdata
 
@@ -1525,7 +1512,6 @@
 
       ** Valid Loan Amendment layout (DS) from/to caller
      C                   PARM                    ValidLoam
-     C                   PARM                    WDDASTS                                    AR991378
 
                                                                                              CSF011A
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A

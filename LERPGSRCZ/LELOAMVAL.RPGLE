@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR991378           Date 18Jun12               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD034449           Date 24Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
@@ -99,11 +98,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR991378 - Loans Events Modeller (CLE068)                    *
-      *           The validation of Total being paid and Loan         *
-      *           Outstanding Principal should consider events being  *
-      *           Modelled by LEM (Loan Events Modeller)              *
-      *           (Child AR991379)                                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
@@ -277,10 +271,6 @@
       ** Compliance Watch Hit List                                                           BUG3760
       *                                                                                      BUG3760
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG3760
-     FLEMEVEPD  O    E             DISK    INFSR(*PSSR)                                     AR991378
-     FLELOAML3  IF   E           K DISK    INFSR(*PSSR)                                     AR991378
-     F                                     RENAME(LOAMSDKF:LELOAMDC)                        AR991378
-     F                                     PREFIX(LM_)                                      AR991378
                                                                                               CLE134
       ** PDCL Loans link file                                                                 CLE134
                                                                                               CLE134
@@ -880,17 +870,6 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
-      *
-      ** Output PI to new file                                                              AR991378
-      *                                                                                     AR991378
-     C                   IF        Idx = 0 and CLE068 = 'Y' and DDATYP = 'PI'               AR991378
-     C                   MOVEL     WDDASTS       WCALLP           10                        AR991378
-     C                   IF        WCALLP  = 'LEMCStart' or                                 AR991378
-     C                             WCALLP  = 'LEMC     ' or                                 AR991378
-     C                             WCALLP  = 'LEMCEnd  '                                    AR991378
-     C                   EXSR      SRLEME                                                   AR991378
-     C                   END                                                                AR991378
-     C                   END                                                                AR991378
       *
       /COPY WNCPYSRC,LELOAMV018
       *
@@ -3764,58 +3743,6 @@
      C                   ENDIF
       *
      C     EXVSTPA       ENDSR
-      *****************************************************************                     AR991378
-      /EJECT                                                                                AR991378
-      *****************************************************************                     AR991378
-      * SRLEME  - Output PI to new file LEMEVEPD                      *                     AR991378
-      *****************************************************************                     AR991378
-     C     SRLEME        BEGSR                                                              AR991378
-      *                                                                                     AR991378
-      * If Action code is 'A', access existing Loan event PI, output a record to            AR991378
-      *    LEMEVEPD with action 'R' for the PI on LOAMSDK and a record with 'I' for the     AR991378
-      *    data on  screen.                                                                 AR991378
-     C     DDACTN        IFEQ      'A'                                                      AR991378
-     C     DDACTN        OREQ      'I'                                                      AR991378
-      *                                                                                     AR991378
-     C     DDACTN        IFEQ      'A'                                                      AR991378
-     C                   MOVE      DDLOAN        WKLNR                                      AR991378
-     C                   MOVE      VDAYNO        WKVDT                                      AR991378
-     C                   MOVE      DDSEQN        WKLSN                                      AR991378
-     C                   MOVE      DDCURR        LMCCY                                      AR991378
-      *                                                                                     AR991378
-      * access record on LOAMSDK - Output 'R' (Reverse)                                     AR991378
-      *                                                                                     AR991378
-     C     KLAKEY        CHAIN     LELOAML3                                                 AR991378
-     C                   If        %FOUND(LELOAML3)                                         AR991378
-     C                   EVAL      LMACTN = 'R'                                             AR991378
-     C                   MOVE      DDLOAN        LMLNRF                                     AR991378
-     C                   MOVE      VDAYNO        LMVDAT                                     AR991378
-     C                   MOVE      DDSEQN        LMLASN                                     AR991378
-     C                   MOVE      DDCURR        LMCCY                                      AR991378
-     C                   EVAL      LMATYP = DDATYP                                          AR991378
-     C                   EVAL      LMPRAM = LM_PRAM                                         AR991378
-     C                   EVAL      LMINTA = 0                                               AR991378
-     C                   EVAL      LMAUTO = 'Y'                                             AR991378
-     C                   WRITE     LEMEVED0                                                 AR991378
-     C                   ENDIF                                                              AR991378
-      *                                                                                     AR991378
-     C                   ENDIF                                                              AR991378
-      *                                                                                     AR991378
-      * Output record with 'I'                                                              AR991378
-     C                   EVAL      LMACTN = 'I'                                             AR991378
-     C                   MOVE      DDLOAN        LMLNRF                                     AR991378
-     C                   MOVE      VDAYNO        LMVDAT                                     AR991378
-     C                   MOVE      DDSEQN        LMLASN                                     AR991378
-     C                   MOVE      DDCURR        LMCCY                                      AR991378
-     C                   EVAL      LMATYP = DDATYP                                          AR991378
-     C                   EVAL      LMPRAM = WLAMT                                           AR991378
-     C                   EVAL      LMINTA = 0                                               AR991378
-     C                   EVAL      LMAUTO = 'Y'                                             AR991378
-     C                   WRITE     LEMEVED0                                                 AR991378
-     C                   ENDIF                                                              AR991378
-      *                                                                                     AR991378
-     C                   ENDSR                                                              AR991378
-      *                                                                                     AR991378
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6112,7 +6039,6 @@
 
       ** Valid Loan Amendment layout (DS) from/to caller
      C                   PARM                    ValidLoam
-     C                   PARM                    WDDASTS          16                        AR991378
       *
      C                   MOVE      WFTTFRT       FTTFRT            3 0          213496
       *
@@ -6172,19 +6098,6 @@
       *
       /COPY WNCPYSRC,LELOAMV027
       *                                                                                       CLE025
-      *                                                                                     AR991378
-     C                   CALLB     'AOSARDR0'                                               AR991378
-     C                   PARM      *BLANKS       @RtCd                                      AR991378
-     C                   PARM      '*VERIFY'     @Optn                                      AR991378
-     C                   PARM      'CLE068'      @SARD                                      AR991378
-     C     SCSARD        PARM      SCSARD        DSFDY                                      AR991378
-      *                                                                                     AR991378
-     C                   IF        @RtCd = *BLANKS                                          AR991378
-     C                   MOVEL     'Y'           CLE068            1                        AR991378
-     C                   ELSE                                                               AR991378
-     C                   MOVEL     'N'           CLE068                                     AR991378
-     C                   ENDIF                                                              AR991378
-                                                                                            AR991378
       ** Check if Credit Lines feature is installed                                           CLE025
       *                                                                                       CLE025
      C                   CALLB     'AOSARDR0'                                                 CLE025

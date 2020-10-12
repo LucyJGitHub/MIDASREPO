@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR991378           Date 18Jun12               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. MD029046           Date 27Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -48,10 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
-      *           The validation of Total being paid and Loan         *
-      *           Outstanding Principal should consider events being  *
-      *           Modelled by LEM (Loan Events Modeller)              *      
       *  MD029046 - Default Principal Increase settlement from        *
       *             SSI (standard settlement instructions) before     *
       *             trying to default from loan.                      *
@@ -999,7 +994,6 @@
  
       * Valid amendment layout (DS) from/to caller
      C                   PARM                    N_LOAM_F
-     C                   PARM                    DDSTAT                                     AR991378
       *
       * If errors returned
      C                   IF        Idx <> 0

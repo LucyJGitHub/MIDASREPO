@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR947411           Date 29Mar12               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD039009           Date 26May16               *
       *                 MD038714           Date 09May16               *
       *                 MD037915           Date 24Feb16               *
@@ -66,9 +65,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR947411  (Loan Events Modeller) - Replace warning message   *
-      *            LEM0050 by blocking error LEM0250.                 *
-      *            (CLE068 - CCR3)                                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039009 - Validation Changes on Auto-Settle indicator       *
@@ -149,7 +145,7 @@
      F                                     IGNORE(CLOANHHF)                                   245383
      F                                     IGNORE(CLOANCKF)                                   245383
      F                                     IGNORE(CLOANZ1F)                                   245383
-
+ 
       ** PDCL Loans link file                                                                 CLE134
                                                                                               CLE134
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
@@ -172,59 +168,59 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
-
+ 
      D NwMaPyScnFmt  E DS                  EXTNAME(LEMAPYPD)
       ***  Manual Repayments in screen format
-
+ 
      D*NwMaP2ScnFmt  E DS                  EXTNAME(LEMAP2PD)                           244552 244955
       ***  Manual Repayments in screen format 2                                        244552 244955
                                                                                        244552 244955
@@ -234,38 +230,38 @@
      D PDLoAmFilFmt  E DS                  EXTNAME(LOAMSDK)
       ***  PD/RE in file format
      D                                     PREFIX(PD_)
-
+ 
      D LoanFilFmt    E DS                  EXTNAME(CLOANCL) prefix(CL_)
       ***  Loan Details
-
+ 
      D NwMaPyFilFmt  E DS                  EXTNAME(LEVMAPYPD)
       ***  Manual Repayments in file format
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *** External DS for Bank Details
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       *** External DS for Currency Details
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       *** External DS for Customer Details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Short DS for access programs
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Long DS for access programs
-
+ 
      D ZMUSER          DS            17
      D  USRBCH                11     13
-
-
-
+ 
+ 
+ 
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
-
+ 
       ** Work fields for bank data
      D WKDFIN          S                   LIKE(BJDFIN)
      D WKRDNB          S                   LIKE(BJRDNB)
@@ -273,18 +269,18 @@
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         240408
      D*WPARM1***       S             20A   INZ('AutoAdjSchedRepaymnt')              CLE134 AR1070996
      D*WPARM1***       S             20A   INZ('PDCLAutoAdjSchedRep')             AR1070996 MD020445
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
       *
      D ErrorMaPy     E DS                  EXTNAME(LEEMAPYPD)
-
+ 
      D ExtData       E DS                  EXTNAME(LEMAEXPD)
       * LE Manual Repayment extende details
-
+ 
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -293,49 +289,49 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       **                                                                   
       **   Initial processing is performed automatically: the *inzsr is    
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
-
+ 
      c                   EXSR      ValCustomer
       *
      C     DDCUSTOK      IFEQ      'Y'
-
+ 
       ***  Retrieve currency details
-
+ 
      C                   EXSR      ValCurrency                                               BUG8124
      C                   CALLB     'AOCURRR0'
      c                   parm      *BLANKS       PRTCD             7
      C                   PARM      '*KEY   '     POTPN             7
      C                   PARM                    DDSCCY
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
       ***  Validate Past due Flag
-
+ 
      C                   if        CLE007 = 'Y'
      C                   EXSR      ValPastDue
      C                   Endif
-
+ 
       ***  Validate Principal Amount and Sign
-
+ 
      C                   EXSR      ValPrincAmnt
-
+ 
       ***  Validate Interest Amount and Sign
-
+ 
      C                   EXSR      ValIntrAmnt
                                                                                             MD037915
       ***  Validate Principal and Interest Amount and Sign                                  MD037915
@@ -344,25 +340,25 @@
      C                   If        CLE134 = 'Y'                                             MD037915
      C                   EXSR      ValPrinInt                                               MD037915
      C                   EndIf                                                              MD037915
-
+ 
       ***  Validate Penality Amount and Sign
-
+ 
      C                   EXSR      ValPenalAmnt
-
+ 
       ***  Validate Total Amount and Sign
-
+ 
      C                   EXSR      ValTotalAmnt
-
+ 
       ***  Validate Write off indicator
-
+ 
      C                   EXSR      ValWriteOff
       *
      C                   If        CLE134 = 'Y'                                               CLE164
      C                   EXSR      ValDDAuto                                                  CLE164
      C                   EndIf                                                                CLE164
-
+ 
       ***  IF all fields Correcly input, do Complex validation
-
+ 
      C                   IF        DDRPRIOK = 'Y' and DDPSIGOK = 'Y' and        Principal Amount
      C                             DDRINTOK = 'Y' and DDISIGOK = 'Y' and        Interest Amount
      C                             DDRPENOK = 'Y' and DDRPIGOK = 'Y' and        Penality Amount
@@ -374,15 +370,15 @@
      C                   Endif
       *
      C                   if        idx = 0
-
+ 
       ***  Prepare output Record LOAMSDK Format to PUT in NwMaPyFilFmt
-
+ 
      C                   if        DDACTN = 'I'
      C                   EXSR      CrtValidFilFmt
      C                   Endif
       *
      C                   Endif
-
+ 
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -413,7 +409,7 @@
      c                   PARM                    KeyCust
      c                   PARM      *BLANKS       Dummy             7
      c     SDCUST        PARM      SDCUST        DSSDY
-
+ 
      C                   if        Prtcd <> *blanks
      C                   if        PRTCD = '*NOSEL '
      C                   MOVE      'N'           DDCUSTOK
@@ -435,7 +431,7 @@
      C                   GOTO      EndValCust
      C                   Endif                                                  *nosel
      C                   Endif                                                  PRTCD
-
+ 
      C**********         MOVEL(p)  BBCUST        DDCUST                                       CSD027
      C**********         MOVEL(p)  CL_CNUM       WrkLoanCust       6                          CSD027
      C                   MOVEL     BBCUST        DDCUST                                       CSD027
@@ -453,7 +449,7 @@
      C                   MOVEL     'LEM0036'     MsgIdArr(Idx)
      C                   GOTO      EndValCust
      C                   Endif
-
+ 
      C     CL_PTYP       IFEQ      64                                                         240408
      C     CL_PTYP       OREQ      65                                                         240408
      C     CL_PTYP       OREQ      68                                                         240408
@@ -562,7 +558,7 @@
       *
      C                   EVAL      MsgIDArr(Idx) = 'LEM0029'
      C                   MOVE      'N'           DDPASDOK
-
+ 
      C                   Endif                                                  DDPASD
      C                   Endif                                                  WrkReactFacil
       *
@@ -865,13 +861,13 @@
                                                                                               CLE164
       ** Input of Auto Settle of 'C' or 'N' should be prevented when loan                   MD039009
       ** is a PDCL with Auto Settle <> 'C'                                                  MD039009
-
+ 
      C**********         If        CL_AUTO <> 'C' and DDAuto = 'C'                   CLE164 MD039009
      C**********         ADD       1             Widx                                CLE164 MD039009
      C**********         EVAL      WFldNamArr(Widx) = 'DDAUTO'                       CLE164 MD039009
      C**********         EVAL      WMsgIDArr(Widx) = '5047353'                       CLE164 MD039009
      C**********         Endif                                                       CLE164 MD039009
-
+ 
      C                   If        CL_AUTO <> 'C' and (DDAuto = 'C'                         MD039009
      C                             or DDAuto = 'N')                                         MD039009
      C                   ADD       1             Idx                                        MD039009
@@ -1093,7 +1089,7 @@
      C                             ((WrkRemainInt * CL_WTRT) / 100)             Tax %age
       *
      C                   Endif
-
+ 
       *
      C                   If        CL_WTIN = 'G' and WrkMaximum  < 0 and               Maximum
      C                             IntrAmntNum < WrkMaximum    or                 -100 < -50
@@ -1203,16 +1199,16 @@
      C                   ELSE
      C                   EVAL      DDRSIG = ' '
      C                   ENDIF
-
+ 
      C                   IF        TotalAmntNum <> 0
      C                   Z-ADD     TotalAmntNum  WRKTOTAL         13 0
-
+ 
      C                   IF        WRKTOTAL < 0
      C                   MULT      -1            WRKTOTAL
      C                   ENDIF
-
+ 
      C                   MOVE(P)   WRKTOTAL      ZFIELD
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
@@ -1249,14 +1245,6 @@
       *
      C                   If        PrincAmntNum > WrkOutPrinc
       *
-      * If CLE068 is ON, replace LEM0050 by blocking error LEM0250                          AR947411
-     C                   If        CLE068 = 'Y'                                             AR947411
-     C                   MOVE      'N'           DDRPRIOK                                   AR947411
-     C                   ADD       1             Idx                                        AR947411
-     C                   Eval      FldNameArr(Idx) = 'DDRPRI'                               AR947411
-     C                   MOVEL     'LEM0250'     MsgIdArr(Idx)                              AR947411
-     C                   ELSE                                                               AR947411
-      *
      C                   ADD       1             Widx
      C                   EVAL      WFldNamArr(Widx) = 'DDRPRI'
       *
@@ -1264,7 +1252,6 @@
       *
      C                   EVAL      WMsgIDArr(Widx) = 'LEM0050'
      C                   MOVE      'N'           DDRPRIOK
-     C                   END                                                                AR947411
       *
      C                   if        PD_AMTP = 'RE'
      C                   ADD       1             Widx
@@ -1430,7 +1417,7 @@
      c                   Eval(H)   WrkWHoldTax = IntrAmntNum * (CL_WTRT / 100)
      C                   Eval      IntrAmnTNum = IntrAMntNum - WrkWHoldTax
      C                   Endif
-
+ 
      C                   Endif
       *
      C     CLE134        IFEQ      'Y'                                                        CLE134
@@ -1590,7 +1577,7 @@
      C                   MOVE      'Y'           MRPDGN
      C                   ENDIF
      C                   MOVE      DDSTAL        MRSTAL                                       CLE034
-
+ 
      C                   ENDSR
       *****************************************************************                       245383
       /EJECT                                                                                  245383
@@ -1624,7 +1611,7 @@
       * *inzsr - Program Initialisation routine                       *
       *****************************************************************
      C     *inzsr        BEGSR
-
+ 
      C     *entry        PLIST
       ***  Inputs
      C                   PARM                    RespMode          1            Response mode
@@ -1770,25 +1757,13 @@
      C**********         ENDIF                                                       CLE134 MD020445
      C                   ENDIF                                                                240408
       *
-      *                                                                                     AR947411
-      * Check if CLE068 is switched ON                                                      AR947411
-     C                   CALLB     'AOSARDR0'                                               AR947411
-     C                   PARM      *BLANK        @RTCD                                      AR947411
-     C                   PARM      '*VERIFY'     @OPTN                                      AR947411
-     C                   PARM      'CLE068'      @SARD                                      AR947411
-      *                                                                                     AR947411
-     C     @RTCD         IFEQ      *BLANKS                                                  AR947411
-     C                   MOVE      'Y'           CLE068            1                        AR947411
-     C                   ELSE                                                               AR947411
-     C                   MOVE      'N'           CLE068                                     AR947411
-     C                   ENDIF                                                              AR947411
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -26,9 +26,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR991378           Date 18Jun12               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE154             Date 02Aug12               *
       *                 CDL094             Date 11Jun14               *
       *                 AR868380           Date 11Jun13               *
@@ -57,10 +56,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
-      *           The validation of Total being paid and Loan         *
-      *           Outstanding Principal should consider events being  *
-      *           Modelled by LEM (Loan Events Modeller)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -766,7 +761,6 @@
       *                                                                                      BUG4960
       ***  Branch in CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN      3                         BUG4960
-     C                   PARM      *BLANKS       WDDSTAT          16                        AR991378
       *
      C                   ENDSR
       *****************************************************************
@@ -1069,7 +1063,7 @@
      C                   MOVE      P1LNRF        P2LNRF
      C                   MOVE      P1VDAT        P2VDAT
      C                   MOVE      P1LASN        P2LASN
-
+ 
      C                   ENDSR
       *****************************************************************
       /SPACE 5

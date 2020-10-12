@@ -19,9 +19,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR991378           Date 18Jun12               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -68,10 +67,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
-      *           The validation of Total being paid and Loan         *
-      *           Outstanding Principal should consider events being  *
-      *           Modelled by LEM (Loan Events Modeller)              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -574,13 +569,6 @@
      C                   EVAL      TranInRPS2 = Trans5002                                     CLE106
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   EVAL      Extdata = Extdata500
-     C                   MOVEL     DDSTAT        WDDSTAT          16                        AR991378
-      *                                                                                     AR991378
-      * If UpdateYN not 'Y', then do not output LEMEVEPD                                    AR991378
-     C     UpdateYN      IFNE      'Y'                                                      AR991378
-     C     DDACTN        ANDNE     'R'                                                      AR991378
-     C                   CLEAR                   WDDSTAT                                    AR991378
-     C                   ENDIF                                                              AR991378
                                                                                             BUG13350
       ***Set*up*Amendment*Type*field*to*be*'RE'************************            BUG13350 BUG13710
      C**********         EVAL      DDATYP = 'RE'                                   BUG13350 BUG13710
@@ -1066,7 +1054,6 @@
                                                                                              BUG4960
       ** Branch from CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN                                BUG4960
-     C                   PARM                    WDDSTAT          16                        AR991378
 
       ** Return actual transaction details to screen fields                                   CLE106
                                                                                               CLE106

@@ -2289,7 +2289,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
       ** Start Date Current Average Period                                                  BUG7217R
       *                                                                                     BUG7217R
@@ -2871,7 +2872,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C*********          Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
      C                   IF        UINFD >= BJRDNB                                          MD036601
      C                             and UINFD <= UNICD                                       MD036601

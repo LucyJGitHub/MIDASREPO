@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038257           Date 13Apr16               *
+      *  Last Amend No. AR1091377          Date 19Apr13               *
+      *  Prev Amend No. AR991378           Date 18Jun12               *
+      *                 AR947411           Date 29Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD038257           Date 13Apr16               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE164             Date 18Aug14               *
       *                 MD025679A          Date 12May14               *
@@ -47,6 +50,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1091377 - Loan Events Modeller (CLE068) issues error msg   *
+      *              LES0257 eventhough the loan is not yet overpaid. *
+      *              Calculate WPRIN properly. (Child: AR1091379)     *
+      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
+      *           The validation of Total being paid and Loan         *
+      *           Outstanding Principal should consider events being  *
+      *           Modelled by LEM (Loan Events Modeller)              *
+      *  AR947411  (Loan Events Modeller) - Replace warning message   *
+      *            LES0157 by blocking error LES0257.                 *
+      *            (CLE068 - CCR3)                                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038257 - Incorrect Default value for Auto settle indicator *
       *           - Get the value of auto settle indicator of the     *
@@ -121,6 +134,10 @@
      F                                     IGNORE(LOAMSDHF)
      F                                     IGNORE(LOAMSZ1F)
      F                                     PREFIX(LO_)
+     FLEMEVEL1  UF A E           K DISK    INFSR(*PSSR)                                     AR991378
+     FLELOAML3  IF   E           K DISK    INFSR(*PSSR)                                     AR991378
+     F                                     RENAME(LOAMSDKF:LELOAMDC)                        AR991378
+     F                                     PREFIX(LM_)                                      AR991378
       *
       /COPY WNCPYSRC,LERPSCV101
       *
@@ -357,6 +374,12 @@
       *
      C                   EXSR      RESETERRS
       *
+      * Output LEMEVEPD                                                                     AR991378
+     C     DDACTN        IFNE      'E'                                                      AR991378
+     C     CLE068        ANDEQ     'Y'                                                      AR991378
+     C                   EXSR      SRLEMA                                                   AR991378
+     C                   END                                                                AR991378
+      *                                                                                     AR991378
       ***  For Authorisation of a Complete Repayment, validate as Insert
       *
      C     DDACTN        IFEQ      'I'
@@ -721,6 +744,70 @@
      C                   ENDIF
       *
      C     ENDVDAT       ENDSR
+      *****************************************************************                     AR991378
+      *  SRLEDT - Convert date                                        *                     AR991378
+      *****************************************************************                     AR991378
+     C     SRLEDT        BEGSR                                                              AR991378
+      *                                                                                     AR991378
+      ***  Value date should not be blanks                                                  AR991378
+      *                                                                                     AR991378
+     C                   MOVE      *ZEROS        WVDATE            5 0                      AR991378
+     C     DDVDAT        IFEQ      *BLANKS                                                  AR991378
+     C                   GOTO      ENDSRDT                                                  AR991378
+     C                   END                                                                AR991378
+      *                                                                                     AR991378
+      ***  Value date should be numeric and in valid date format                            AR991378
+      *                                                                                     AR991378
+     C                   MOVEL     DDVDAT        WFLD7N            6 0                      AR991378
+     C                   MOVEL     WFLD7N        WFLD6A            6                        AR991378
+     C     DDVDAT        IFNE      WFLD6A                                                   AR991378
+     C                   GOTO      ENDSRDT                                                  AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+     C                   MOVE      DDVDAT        ZDATE                                      AR991378
+     C                   MOVE      BJDFIN        ZDATFM                                     AR991378
+     C                   CALL      'ZDATE1'                                                 AR991378
+     C                   PARM      *BLANKS       ZERR              7                        AR991378
+     C                   PARM                    ZDATE             6 0                      AR991378
+     C                   PARM                    ZDATFM            1                        AR991378
+     C                   PARM                    ZDAYNO            5 0                      AR991378
+      *                                                                                     AR991378
+     C     ZERR          IFNE      *BLANKS                                                  AR991378
+     C                   GOTO      ENDSRDT                                                  AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+     C                   Z-ADD     ZDAYNO        WVDATE                                     AR991378
+      *                                                                                     AR991378
+     C     ENDSRDT       ENDSR                                                              AR991378
+      *                                                                                     AR991378
+      *****************************************************************                     AR991378
+      *  SRLECY - Validate the currency code                          *                     AR991378
+      *****************************************************************                     AR991378
+     C     SRLECY        BEGSR                                                              AR991378
+      *                                                                                     AR991378
+      ***  Entry in Currency field is mandatory                                             AR991378
+      *                                                                                     AR991378
+     C                   Z-ADD     0             WCCYDP            1 0                      AR991378
+     C     DDCURR        IFEQ      *BLANKS                                                  AR991378
+     C                   GOTO      ENDSRCY                                                  AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+      ***  Must be a valid currency                                                         AR991378
+      *                                                                                     AR991378
+     C                   CALLB     'AOCURRR0'                                               AR991378
+     C                   PARM      '*BLANK  '    @RTCD                                      AR991378
+     C                   PARM      '*KEY    '    @OPTN                                      AR991378
+     C     DDCURR        PARM      DDCURR        @CURR             3                        AR991378
+     C     SDCURR        PARM      SDCURR        DSSDY                                      AR991378
+      *                                                                                     AR991378
+     C     @RTCD         IFNE      *BLANKS                                                  AR991378
+     C                   GOTO      ENDSRCY                                                  AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+     C                   Z-ADD     A6NBDP        WCCYDP                                     AR991378
+      *                                                                                     AR991378
+     C     ENDSRCY       ENDSR                                                              AR991378
+      *                                                                                     AR991378
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -877,10 +964,22 @@
      C                   ENDIF
      C                   ENDIF
       *
+      * if WDDSTAT= 'LEMCStart' or 'LEMC', then don't do the validation against             AR991378
+      *    Principal                                                                        AR991378
+      *                                                                                     AR991378
+     C                   MOVE      'Y'           WCHKAM            1                        AR991378
+     C     CLE068        IFEQ      'Y'                                                      AR991378
+     C     WDDSTAT       IFEQ      'LEMCStart'                                              AR991378
+     C     WDDSTAT       OREQ      'LEMC     '                                              AR991378
+     C                   MOVE      'N'           WCHKAM                                     AR991378
+     C                   ENDIF                                                              AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
       ***  Must be less or equal the outstanding principal of the related
       ***  loan, taking into account all manual repayment and repayment
       ***  schedule entered against it
       *
+     C     WCHKAM        IFEQ      'Y'                                                      AR991378
      C     DDSAMTOK      IFEQ      'Y'
      C                   MOVE      DDSEQN        WSEQN             3 0
      C                   Z-ADD     CL_CPAM       WPRIN            13 0
@@ -1367,10 +1466,33 @@
      C                   ENDIF
      C                   Z-ADD     WNAMT         WLAMT
      C                   ENDIF
+     C*                                                                                     AR991378
+     C     CLE068        IFEQ      'Y'                                                      AR991378
+     C**********         ADD       WLMTOT        WPRIN                            AR991378 AR1091377
+      *                                                                                    AR1091377
+      ** Return the total amount of reversed repayments generated                          AR1091377
+      ** from Loan Events Modeller if there is any.                                        AR1091377
+      *                                                                                    AR1091377
+     C                   ADD       RVMPRAM       WPRIN                                     AR1091377
+     C                   ENDIF                                                              AR991378
       *
+      * if CLE068 is ON, clear WAMNT so that check is always processed                      AR947411
+      *                                                                                     AR947411
+     C     CLE068        IFEQ      'Y'                                                      AR947411
+     C                   CLEAR                   WAMNT                                      AR947411
+     C                   END                                                                AR947411
+      *                                                                                     AR947411
      C     DDACTN        IFNE      'X'
      C     WLAMT         IFGT      WPRIN
      C     WLAMT         ANDNE     WAMNT
+      *                                                                                     AR947411
+     C     CLE068        IFEQ      'Y'                                                      AR947411
+     C                   MOVE      'N'           DDSAMTOK                                   AR947411
+     C                   ADD       1             Idx                                        AR947411
+     C                   MOVEL     'DDSAMT'      FldNamXAr(Idx)                             AR947411
+     C                   MOVEL     'LES0257'     MsgIDXAr(Idx)                              AR947411
+     C                   ELSE                                                               AR947411
+      *                                                                                     AR947411
      C*****WESAMT        IFEQ      *BLANKS                                                   BUG4351
      C*****WESAMT        OREQ      'Y'                                                       BUG4351
      C*****WLAMT         ANDNE     WSLAMT                                                    BUG4351
@@ -1380,16 +1502,161 @@
      C                   ADD       1             WId
      C                   MOVEL     'DDSAMT'      WFldNmXAr(WId)
      C                   MOVEL     'LES0157'     WMsgIDXAr(WId)
+     C                   ENDIF                                                              AR947411
      C**********         ENDIF                                                               BUG4351
      C                   ENDIF
      C                   Z-ADD     WLAMT         WAMNT            13 0
      C                   Z-ADD     W#LAMT        WLAMT
      C                   ENDIF
+     C                   END                                                                AR991378
       *
      C                   ENDIF
      C                   ENDIF
       *
      C     ENDSAMT       ENDSR
+      *****************************************************************                     AR991378
+      * SRLEMA  - Additional Process for Loan Events Modeller (LEM)   *                     AR991378
+      *****************************************************************                     AR991378
+      *                                                                                     AR991378
+     C     SRLEMA        BEGSR                                                              AR991378
+      *                                                                                     AR991378
+      * Retrieve Currency details and convert date                                          AR991378
+     C                   EXSR      SRLEDT                                                   AR991378
+     C                   EXSR      SRLECY                                                   AR991378
+      *                                                                                     AR991378
+     C                   Z-ADD     0             WLMTOT           15 0                      AR991378
+      *                                                                                     AR991378
+     C     WDDSTAT       IFEQ      'LEMCStart'                                              AR991378
+     C     WDDSTAT       OREQ      'LEMC     '                                              AR991378
+      *                                                                                     AR991378
+      * conver screen amount to numeric format                                              AR991378
+     C                   MOVE      'Y'           WLEMOK            1                        AR991378
+     C     DDSAMT        IFNE      *BLANKS                                                  AR991378
+     C                   Z-ADD     *ZEROS        WLEMA            13 0                      AR991378
+     C                   MOVE      *BLANKS       ZFIELD           16                        AR991378
+     C                   MOVE      DDSAMT        ZFIELD                                     AR991378
+     C                   Z-ADD     WCCYDP        ZADEC                                      AR991378
+     C     13            SUB       WCCYDP        ZADIG                                      AR991378
+     C                   CALL      'ZALIGN'                                                 AR991378
+     C                   PARM      *BLANKS       @RTCD                                      AR991378
+     C                   PARM                    ZFIELD           16                        AR991378
+     C                   PARM                    ZADEC             1 0                      AR991378
+     C                   PARM                    ZADIG             2 0                      AR991378
+     C                   PARM      *BLANKS       ZRVAL            16                        AR991378
+      *                                                                                     AR991378
+     C                   MOVE      ZRVAL         WLEMA                                      AR991378
+      *                                                                                     AR991378
+     C     @RTCD         IFNE      *BLANKS                                                  AR991378
+     C     WLEMA         OREQ      0                                                        AR991378
+     C                   MOVE      'N'           WLEMOK                                     AR991378
+     C                   END                                                                AR991378
+     C                   END                                                                AR991378
+      *                                                                                     AR991378
+      * If amount is correct                                                                AR991378
+     C     WLEMOK        IFEQ      'Y'                                                      AR991378
+      *                                                                                     AR991378
+      * Output record to LEMEVEPD                                                           AR991378
+      * If Action code is 'A', access existing Loan event PI, output a record to            AR991378
+      *    LEMEVEPD with action 'R' for the PI on LOAMSDK and a record with 'I' for the     AR991378
+      *    data on  screen.                                                                 AR991378
+      *                                                                                     AR991378
+      * If WDDSTAT= 'LEMCStart' or 'LEMC' do not check Principal                            AR991378
+     C                   MOVE      'N'           WCHKAM                                     AR991378
+      *                                                                                     AR991378
+     C     DDACTN        IFEQ      'A'                                                      AR991378
+     C                   MOVE      DDLNRF        WKLNR                                      AR991378
+     C                   MOVE      WVDATE        WKVDT                                      AR991378
+     C                   MOVE      DDSEQN        WKLSN                                      AR991378
+      *                                                                                     AR991378
+      * access record on LOAMSDK - Output 'R' (Reverse)                                     AR991378
+      *                                                                                     AR991378
+     C     KLAKEY        CHAIN     LELOAML3                                                 AR991378
+     C                   If        %FOUND(LELOAML3)                                         AR991378
+     C                   EVAL      LMACTN = 'R'                                             AR991378
+     C                   MOVE      DDLNRF        LMLNRF                                     AR991378
+     C                   MOVE      WVDATE        LMVDAT                                     AR991378
+     C                   MOVE      DDSEQN        LMLASN                                     AR991378
+     C                   MOVE      DDCURR        LMCCY                                      AR991378
+     C                   EVAL      LMATYP = 'RE'                                            AR991378
+     C                   EVAL      LMPRAM = LM_PRAM                                         AR991378
+     C                   EVAL      LMINTA = 0                                               AR991378
+     C                   EVAL      LMAUTO = DDAUTO                                          AR991378
+     C                   WRITE     LEMEVED0                                                 AR991378
+     C                   ENDIF                                                              AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+      * Output record to LEMEVEPD                                                           AR991378
+     C                   EVAL      LMACTN = DDACTN                                          AR991378
+     C     LMACTN        IFEQ      'A'                                                      AR991378
+     C                   EVAL      LMACTN = 'I'                                             AR991378
+     C                   END                                                                AR991378
+     C                   MOVE      DDLNRF        LMLNRF                                     AR991378
+     C                   MOVE      WVDATE        LMVDAT                                     AR991378
+     C                   MOVE      DDSEQN        LMLASN                                     AR991378
+     C                   MOVE      DDCURR        LMCCY                                      AR991378
+     C                   EVAL      LMATYP = 'RE'                                            AR991378
+     C                   EVAL      LMPRAM = WLEMA                                           AR991378
+     C                   EVAL      LMINTA = 0                                               AR991378
+     C                   EVAL      LMAUTO = DDAUTO                                          AR991378
+     C                   WRITE     LEMEVED0                                                 AR991378
+      *                                                                                     AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+      * If WDDSTAT= 'LEMCEnd', calculate total of previous events                           AR991378
+     C     WDDSTAT       IFEQ      'LEMCEnd'                                                AR991378
+     C                   EXSR      SRLEMT                                                   AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+     C                   ENDSR                                                              AR991378
+      *                                                                                     AR991378
+      *****************************************************************                     AR991378
+      * SRLEMT  - Read LEMEVEPD to calculate Total                    *                     AR991378
+      *****************************************************************                     AR991378
+      *                                                                                     AR991378
+     C     SRLEMT        BEGSR                                                              AR991378
+      *                                                                                     AR991378
+      ** Initialise field that will hold the reversed                                      AR1091377
+      ** repayment schedule generated from modeller                                        AR1091377
+      *                                                                                    AR1091377
+     C                   Z-ADD     0             RVMPRAM          13 0                     AR1091377
+      *                                                                                    AR1091377
+     C     *LIKE         DEFINE    LMPRAM        WLMIMP                                     AR991378
+      *                                                                                     AR991378
+     C     CL_LNRF       SETLL     LEMEVEL1                                                 AR991378
+     C     CL_LNRF       READE     LEMEVEL1                               07                AR991378
+     C     *IN07         DOWEQ     *OFF                                                     AR991378
+     C     LMACTN        IFNE      '*'                                                      AR991378
+     C     LMAUTO        IFEQ      'Y'                                                      AR991378
+      *                                                                                     AR991378
+     C                   CLEAR                   WLMIMP                                     AR991378
+     C                   Z-ADD     LMPRAM        WLMIMP                                     AR991378
+     C     LMACTN        IFEQ      'R'                                                      AR991378
+     C     LMACTN        OREQ      'I'                                                      AR991378
+      *                                                                                     AR991378
+     C     LMATYP        IFEQ      'RE'                                                     AR991378
+     C     WLMIMP        MULT      -1            WLMIMP                                     AR991378
+     C                   END                                                                AR991378
+      *                                                                                     AR991378
+     C     LMACTN        IFEQ      'R'                                                      AR991378
+     C     WLMIMP        MULT      -1            WLMIMP                                     AR991378
+     C                   ADD       LMPRAM        RVMPRAM                                   AR1091377
+     C                   END                                                                AR991378
+     C                   ADD       WLMIMP        WLMTOT                                     AR991378
+     C                   END                                                                AR991378
+      *                                                                                     AR991378
+      * delete record on LEMEVEPD                                                           AR991378
+     C                   MOVE      '*'           LMACTN                                     AR991378
+     C                   UPDATE    LEMEVED0                                                 AR991378
+     C                   ENDIF                                                              AR991378
+     C                   ENDIF                                                              AR991378
+      *                                                                                     AR991378
+      * read next record                                                                    AR991378
+     C     CL_LNRF       READE     LEMEVEL1                               07                AR991378
+     C                   ENDDO                                                              AR991378
+      *                                                                                     AR991378
+     C                   ENDSR                                                              AR991378
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1606,6 +1873,7 @@
       *                                                                                      BUG4960
       ***  Branch in CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN      3                         BUG4960
+     C                   PARM                    WDDSTAT          16                        AR991378
       *
       ***  Move program name into *LDA field.
       *
@@ -1682,6 +1950,19 @@
      C                   MOVE      'Y'           CLE134                                       CLE134
      C                   END                                                                  CLE134
                                                                                               CLE134
+      *                                                                                     AR947411
+      * Check if CLE068 is switched ON                                                      AR947411
+     C                   CALLB     'AOSARDR0'                                               AR947411
+     C                   PARM      *BLANK        @RTCD                                      AR947411
+     C                   PARM      '*VERIFY'     @OPTN                                      AR947411
+     C                   PARM      'CLE068'      @SARD                                      AR947411
+      *                                                                                     AR947411
+     C     @RTCD         IFEQ      *BLANKS                                                  AR947411
+     C                   MOVE      'Y'           CLE068            1                        AR947411
+     C                   ELSE                                                               AR947411
+     C                   MOVE      'N'           CLE068                                     AR947411
+     C                   ENDIF                                                              AR947411
+      *                                                                                     AR947411
       ** Access System Values file SDSVALPD                                                   CLE036
       *                                                                                       CLE036
      C                   EVAL      WPARM = *BLANKS                                            CLE036
@@ -1775,6 +2056,12 @@
      C**********         KFLD                    K@LNRF            6 0                        CLE148
      C                   KFLD                    K@LNRF            6                          CLE148
      C                   KFLD                    K@RCDT            1
+      *                                                                                     AR991378
+     C     KLAKEY        KLIST                                                              AR991378
+     C                   KFLD                    WKLNR             6                        AR991378
+     C                   KFLD                    WKVDT             5 0                      AR991378
+     C                   KFLD                    WKLSN             3 0                      AR991378
+      *                                                                                     AR991378
       *
       ***  Key list for Facility
       *

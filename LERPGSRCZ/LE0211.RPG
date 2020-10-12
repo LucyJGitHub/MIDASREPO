@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD027847           Date 06Nov19               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. AR953522B          Date 01Mar13               *
+      *  Pres Amend No. AR953522           Date 25May12               *
+      *                 MD027847           Date 06Nov19               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD052558           Date 10Jan19               *
       *                 MD050139           Date 23Mar18               *
@@ -158,6 +160,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR953522B - Additional problem raised. FI narrative is wrong *
+      *              on Prime Facility and first event is duplicated  *
+      *              if From Date is entered.                         *
+      *              - Rename CNUM of CLOAN and MLOAN files           *
+      *              - Re-read LEFCENPD only if DTAP is greater or    *
+      *                equal to specified date (Child: AR953523B)     *
+      *  AR953522 - Syndicated facility increase issues. Rename fields*
+      *             in LEFCLTL4 and LEFCENL0 files. Extend ATP@ array *
+      *             for Syndicated Facility Decrease narrative.       *
+      *             Re-read LEFCENPD file to display the first record *
+      *             read. (Child: AR953523)                           *      
       *  MD027847 - First record displayed twice for CA facility      *
       *             enquired with date. Update FSTRT to 'Y' when first*
       *             record is not backvalue 'FS' to prevent resetting *
@@ -476,7 +489,8 @@
      E**********          ATP@    1  50 41                                             CLE106 246233
      E/COPY WNCPYSRC,LEH00055
      E**********          ATP@    1  55 41                                             246233 CLE148
-     E                    ATP@    1  56 41                                                    CLE148
+     E**********          ATP@    1  56 41                                           CLE148 AR953522
+     E                    ATP@    1  61 41                                                  AR953522
      E/COPY WNCPYSRC,LEH00056
       ** Array containing Narrative
       *
@@ -644,7 +658,35 @@
       *                                                                                     AR674759
      ILEFCLT4                                                                               AR674759
      I              FAMT                            FAMTL4                                  AR674759
+     I              PRTR                            PRTRL4                                  AR953522
+     I              RECI                            RECIL4                                  AR953522
+     I              CNUM                            CNUML4                                  AR953522
+     I              FACT                            FACTL4                                  AR953522
+     I              FCNO                            FCNOL4                                  AR953522
+     I              RCTP                            RCTPL4                                  AR953522
+     I              BRCA                            BRCAL4                                  AR953522
+     I              FCTI                            FCTIL4                                  AR953522
+     I              FCCY                            FCCYL4                                  AR953522
+     I              PMFC                            PMFCL4                                  AR953522
+     I              PMFT                            PMFTL4                                  AR953522
+     I              PMFN                            PMFNL4                                  AR953522
+     I              TRCA                            TRCAL4                                  AR953522
       *                                                                                     AR674759
+      ** Rename field in LEFCENPD                                                           AR953522
+      *                                                                                     AR953522
+     ILEFCEND0                                                                              AR953522
+     I              RECI                            RECIL0                                  AR953522
+     I              CNUM                            CNUML0                                  AR953522
+     I              FACT                            FACTL0                                  AR953522
+     I              FCNO                            FCNOL0                                  AR953522
+      *                                                                                     AR953522
+      ** Rename CNUM from CLOAN and MLOAN                                                  AR953522B
+      *                                                                                    AR953522B
+     ICLONF                                                                                AR953522B
+     I              CNUM                            CNUMCL                                 AR953522B
+     IMCLONCLF                                                                             AR953522B
+     I              CNUM                            CNUMML                                 AR953522B
+      *                                                                                    AR953522B      
      ILDA       E DSLDA                         256
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -799,6 +841,7 @@
      C                     MOVE *OFF      *IN51                                             BUG22126
      C                     EXSR SRCLRS
      C                     MOVE 'N'       FSTRT   1                                         BUG21833
+     C                     MOVE *BLANKS   WCUST                                             AR953522
       *
       ** Validate subfile control record
       *
@@ -2076,8 +2119,20 @@
      C           FSTRT     IFEQ 'N'                                                        BUG21833B
      C           TRCA      ANDEQ'CA'                                                       BUG21833B
      C           TYPE2     ANDNE'FS'                                                       BUG21833B
+     C           DTAP      ANDGEWVLDT                                                      AR953522B
      C           *LOVAL    SETLLLEFCENL0                                                   BUG21833B
      C                     ENDIF                                                           BUG21833B
+      *                                                                                     AR953522
+      ** Re-read LEFCENPD file                                                              AR953522
+      *                                                                                     AR953522
+     C           FSTRT     IFEQ 'N'                                                         AR953522
+     C           TRCA      ANDNE'CA'                                                        AR953522
+     C           TYPE2     ANDNE'FS'                                                        AR953522
+     C           WLE213    ANDEQ'Y'                                                         AR953522
+     C           DTAP      ANDGEWVLDT                                                      AR953522B
+     C           *LOVAL    SETLLLEFCENL0                                                    AR953522
+     C                     ENDIF                                                            AR953522
+      *                                                                                     AR953522     
      C                     MOVE 'Y'       FSTRT                                            BUG21833A
      C                     ENDIF
       *                                                                                      BUG7847
@@ -2110,8 +2165,20 @@
      C           FSTRT     IFEQ 'N'                                                        BUG21833B
      C           TRCA      ANDEQ'CA'                                                       BUG21833B
      C           TYPE2     ANDNE'FS'                                                       BUG21833B
+     C           DTAP      ANDGEWVLDT                                                      AR953522B
      C           *LOVAL    SETLLLEFCENL0                                                   BUG21833B
      C                     ENDIF                                                           BUG21833B
+      *                                                                                     AR953522
+      ** Re-read LEFCENPD file                                                              AR953522
+      *                                                                                     AR953522
+     C           FSTRT     IFEQ 'N'                                                         AR953522
+     C           TRCA      ANDNE'CA'                                                        AR953522
+     C           TYPE2     ANDNE'FS'                                                        AR953522
+     C           WLE213    ANDEQ'Y'                                                         AR953522
+     C           DTAP      ANDGEWVLDT                                                      AR953522B
+     C           *LOVAL    SETLLLEFCENL0                                                    AR953522
+     C                     ENDIF                                                            AR953522
+      *                                                                                     AR953522
      C                     MOVE 'Y'       FSTRT                                            BUG21833A
      C                     ENDIF                                          128980
       *                                                                                      BUG7847
@@ -3036,6 +3103,10 @@
      C                     MOVE FADEAL    WDEAL7                                             BUG8261
      C                     MOVE WDEAL7    WDEAL   9                                          BUG8261
      C                     MOVELWFATP     WDEAL                                              BUG8261
+     C                     MOVEL'-'       WCUST7                                            AR953522
+     C                     MOVE CNUM      WCUST7                                            AR953522
+     C                     MOVE WCUST7    WCUST                                             AR953522
+     C                     MOVELWFATP     WCUST                                             AR953522
      C                     ENDIF                                                             BUG8261
       *                                                                   128980
      C                     OTHER                                          128980
@@ -3114,7 +3185,35 @@
      C                     ENDIF
       *
      C           WFATP     IFEQ 'FD'
+      *                                                                                     AR953522
+     C           CNUM      IFEQ *ZEROS                                                      AR953522
+     C           SYIN      OREQ 'N'                                                         AR953522
      C                     MOVEAATP@,2    SFATP
+     C                     ELSE                                                             AR953522
+      *                                                                                     AR953522
+      ** check participant type                                                             AR953522
+      *                                                                                     AR953522
+     C                     MOVELCNUM      WCNUM                                             AR953522
+     C                     MOVE FACT      WFACT                                             AR953522
+     C                     MOVE FCNO      WFCNO                                             AR953522
+     C                     MOVEL'A'       WRCDT                                             AR953522
+     C           FCLKY     CHAINFCLTY                80                                     AR953522
+      *                                                                                     AR953522
+     C                     SELEC                                                            AR953522
+     C           PRTR      WHEQ 'A'                                                         AR953522
+     C                     MOVEAATP@,56   SFATP                                             AR953522
+     C           PRTR      WHEQ 'I'                                                         AR953522
+     C                     MOVEAATP@,57   SFATP                                             AR953522
+     C           PRTR      WHEQ 'P'                                                         AR953522
+     C                     MOVEAATP@,58   SFATP                                             AR953522
+     C           PRTR      WHEQ 'R'                                                         AR953522
+     C                     MOVEAATP@,59   SFATP                                             AR953522
+     C           PRTR      WHEQ 'S'                                                         AR953522
+     C                     MOVEAATP@,60   SFATP                                             AR953522
+     C                     ENDSL                                                            AR953522
+     C                     MOVELWCUST     SFATP                                             AR953522
+     C                     ENDIF                                                            AR953522
+      *                                                                                     AR953522
      C                     ENDIF
       *
      C           WFATP     IFEQ 'FR'
@@ -4453,6 +4552,11 @@ FI-999999 Fclty Inc for Internal Part                                           
 FI-999999 Fclty Inc for Funding Part                                                          246233
 FI-999999 Fclty Inc for Risk Part                                                             246233
 FI-999999 Fclty Inc for Sub-Part Part                                                         246233
+FD-999999 Fclty Dec for Agent Part                                                          AR953522
+FD-999999 Fclty Dec for Internal Part                                                       AR953522
+FD-999999 Fclty Dec for Funding Part                                                        AR953522
+FD-999999 Fclty Dec for Risk Part                                                           AR953522
+FD-999999 Fclty Dec for Sub-Part Part                                                       AR953522
      X/COPY WNCPYSRC,LEH00080                                                               AR936915
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461

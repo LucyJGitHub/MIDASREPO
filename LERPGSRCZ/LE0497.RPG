@@ -15,8 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055874           Date 22May20               *
-      *  Prev Amend No. MD055724           Date 22May20               *
+      *  Last Amend No. MD031014           Date 30Jan14               *
+      *  Prev Amend No. MD025308A          Date 12May14               *
+      *                 MD025308           Date 17Feb14               *
+      *                 MD055874           Date 22May20               *
+      *                 MD055724           Date 22May20               *
       *                 MD055146           Date 04Feb20               *
       *                 AR674226           Date 04Dec19               *
       *                 AR796467           Date 03Aug19               *
@@ -84,6 +87,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031014 - Contingent Facility Accounting for Nordea NYK     *
+      *             (a) Suppress key '190C P S R'                     *
+      *             (b) Suppress key '190C P S A'                     *
+      *             (c) Use Original Borrower For Facility Decrease   *
+      *                 Contingent Accounting                         *
+      *  MD025308A - In case of Syndication, facility file accessed   *
+      *              with Prime Customer causing field PMFC to        *
+      *              be overriden.                                    *
+      *  MD025308 - Change to the Contingent Facilities Accounting so *
+      *             so that Original Borrower is used as the Customer *
+      *             of the Posting when the Facility is an 'Internal' *
+      *             Facility of an Agent syndicated Facility and the  *
+      *             Facility A/c key action is Facility Increase,     *
+      *             Facility Decrease, Loan Amount Drawn, Loan Amount *
       *  MD055874 - Reversal entry on detached account reported on    *
       *             LE0497P1 but with incorrect branch. Save branch   *
       *             read from LECLHIPD to variable FABRCA before      *
@@ -520,6 +537,11 @@
       ** Long data structure for access objects
       *
      I/COPY ZSRSRC,ZFRPEDZ2
+     I              'FcltySyndOriginPurch'C         WPARMF                                  MD025308
+     I              'ContFacAcctNordeaNYK'C         WPARMG                                  MD031014
+     I              '190C P S R    '      C         WACKY1                                  MD031014
+     I              '190C P S A    '      C         WACKY2                                  MD031014
+      *                                                                                     MD025308
       *
      C/TITLE Main Processing
       *
@@ -909,6 +931,66 @@
      C                     EXSR *PSSR                                                         CLE025
      C                     ENDIF                                                              CLE025
      C                     ENDIF                                                              CLE025
+      *                                                                                     MD025308
+      ** Check current setting of system value.                                             MD025308
+      *                                                                                     MD025308
+     C                     CALL 'AOSVALR0'                                                  MD025308
+     C                     PARM           PRTCD                                             MD025308
+     C                     PARM WPARMF    SVALK1 20                                         MD025308
+     C                     PARM           SVAL1 200                                         MD025308
+     C                     PARM *BLANK    SVALK2 20                                         MD025308
+     C                     PARM           SVAL2 200                                         MD025308
+     C                     PARM *BLANK    SVALK3 20                                         MD025308
+     C                     PARM           SVAL3 200                                         MD025308
+     C                     PARM *BLANK    SVALK4 20                                         MD025308
+     C                     PARM           SVAL4 200                                         MD025308
+     C                     PARM *BLANK    SVALK5 20                                         MD025308
+     C                     PARM           SVAL5 200                                         MD025308
+     C                     PARM *BLANK    SVALK6 20                                         MD025308
+     C                     PARM           SVAL6 200                                         MD025308
+     C                     PARM *BLANK    SVALK7 20                                         MD025308
+     C                     PARM           SVAL7 200                                         MD025308
+     C                     PARM *BLANK    SVALK8 20                                         MD025308
+     C                     PARM           SVAL8 200                                         MD025308
+     C                     PARM *BLANK    SVALK9 20                                         MD025308
+     C                     PARM           SVAL9 200                                         MD025308
+     C                     PARM *BLANK    SVALK0 20                                         MD025308
+     C                     PARM           SVAL10200                                         MD025308
+      *                                                                                     MD025308
+     C           PRTCD     IFNE *BLANK                                                      MD025308
+     C                     MOVEL'A'       WFCUST  1                                         MD025308
+     C                     ELSE                                                             MD025308
+     C                     MOVELSVAL1     WFCUST                                            MD025308
+     C                     ENDIF                                                            MD025308
+      *                                                                                     MD031014
+      ** Check current setting of system value                                              MD031014
+      *                                                                                     MD031014
+     C                     CALL 'AOSVALR0'                                                  MD031014
+     C                     PARM           PRTCD                                             MD031014
+     C                     PARM WPARMG    SVALK1 20                                         MD031014
+     C                     PARM           SVAL1 200                                         MD031014
+     C                     PARM *BLANK    SVALK2 20                                         MD031014
+     C                     PARM           SVAL2 200                                         MD031014
+     C                     PARM *BLANK    SVALK3 20                                         MD031014
+     C                     PARM           SVAL3 200                                         MD031014
+     C                     PARM *BLANK    SVALK4 20                                         MD031014
+     C                     PARM           SVAL4 200                                         MD031014
+     C                     PARM *BLANK    SVALK5 20                                         MD031014
+     C                     PARM           SVAL5 200                                         MD031014
+     C                     PARM *BLANK    SVALK6 20                                         MD031014
+     C                     PARM           SVAL6 200                                         MD031014
+     C                     PARM *BLANK    SVALK7 20                                         MD031014
+     C                     PARM           SVAL7 200                                         MD031014
+     C                     PARM *BLANK    SVALK8 20                                         MD031014
+     C                     PARM           SVAL8 200                                         MD031014
+     C                     PARM *BLANK    SVALK9 20                                         MD031014
+     C                     PARM           SVAL9 200                                         MD031014
+     C                     PARM *BLANK    SVALK0 20                                         MD031014
+     C                     PARM           SVAL10200                                         MD031014
+      *                                                                                     MD031014
+     C           PRTCD     IFEQ *BLANK                                                      MD031014
+     C                     MOVELSVAL1     WCFANY  1                                         MD031014
+     C                     ENDIF                                                            MD031014
       *                                                                                    AR1059786
       ** Check current setting of system value.                                            AR1059786
       *                                                                                    AR1059786
@@ -1038,6 +1120,9 @@
      C                     EXSR *PSSR
      C                     ENDIF
       *
+      ** Save Prime Facility Customer                                                      MD025308A
+     C                     MOVELPMFC      SPMFC   6                                        MD025308A
+      *                                                                                    MD025308A
      C                     ENDSR
       *
       *****************************************************************
@@ -1785,9 +1870,25 @@
      C                     Z-ADD0         LKREVI
      C                     ENDIF
       *
+     C           WFCUST    IFEQ 'O'                                                         MD025308
+     C           WPART     ANDEQ'I'                                                         MD025308
+     C           WRECO     ANDEQ'R'                                                         MD025308
+     C           WSYND     ANDEQ'S'                                                         MD025308
+     C           WTYPE     IFEQ 'I'                                                         MD025308
+     C           WTYPE     OREQ 'D'                                                         MD025308
+     C           WTYPE     OREQ 'A'                                                         MD025308
+     C           WTYPE     OREQ 'R'                                                         MD025308
+     C                     EXSR SRORBW                                                      MD025308
+     C                     ENDIF                                                            MD025308
+     C                     ENDIF                                                            MD025308
+      *                                                                                     MD025308
       ** Write the record in PF/LKEYCFD then increment a/c keys
       ** generated counter.
       *
+     C           WCFANY    IFNE 'Y'                                                         MD031014
+     C           WCFANY    OREQ 'Y'                                                         MD031014
+     C           LKAKEY    ANDNEWACKY1                                                      MD031014
+     C           LKAKEY    ANDNEWACKY2                                                      MD031014
      C                     WRITELKEYFEDF
      C                     ADD  1         WNORE
       *
@@ -1795,6 +1896,7 @@
       *
      C                     EXSR SRREPT
      C                     EXSR SRHASH
+     C                     END                                                              MD031014
       *
      C                     ENDSR
       *
@@ -2524,6 +2626,32 @@
       *                                                                                     CLE075AR
      C                     ENDSR                                                            CLE075AR
       *****************************************************************                     CLE075AR
+      /TITLE SR/SRORBW                                                                      MD025308
+      *****************************************************************                     MD025308
+      *                                                                                     MD025308
+     C           SRORBW    BEGSR                                                            MD025308
+      *                                                                                     MD025308
+     C           WTYPE     IFEQ 'A'                                                         MD025308
+     C           WTYPE     OREQ 'R'                                                         MD025308
+     C                     MOVELOLNO      LKOLNO                                            MD025308
+     C                     ENDIF                                                            MD025308
+      *                                                                                     MD025308
+     C           WTYPE     IFEQ 'I'                                                         MD025308
+     C           WTYPE     OREQ 'D'                                                         MD025308
+     C**********           MOVELPMFC      LKOLNO                                  MD025308 MD025308A
+     C                     MOVELSPMFC     LKOLNO                                           MD025308A
+     C                     ENDIF                                                            MD025308
+      *                                                                                     MD031014
+      ** Use original Borrower of Nordea NYK Contingent Facility Acctg                      MD031014
+      **  for Facility Decrease                                                             MD031014
+     C           WCFANY    IFEQ 'Y'                                                         MD031014
+     C           WTYPE     ANDEQ'D'                                                         MD031014
+     C                     MOVELOLNO      LKOLNO                                            MD031014
+     C                     ENDIF                                                            MD031014
+      *                                                                                     MD025308
+     C                     ENDSR                                                            MD025308
+      *                                                                                     MD025308
+      *****************************************************************                     MD025308
       /TITLE SR/ZFRPED
      C/COPY ZSRSRC,ZFRPEDZ3
 **  CPY@

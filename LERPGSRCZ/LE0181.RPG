@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036924           Date 06Nov19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. AR920117           Date 11Apr12               *
+      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -87,6 +88,10 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR920117 - Outstanding loan by facility enquiry cannot page  *
+      *             down to see other loans. Process subfile records  *
+      *             correctly for participant facility. Apply part of *
+      *             fix 225032. (Child: AR920121)                     *
       *  MD036924 - Correct error message is displayed when customer  *
       *             is closed                                         *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
@@ -99,7 +104,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD031845 - Reduce SDINT by 1 and increase SAINT by 3.        *
       *           - Recompile due to change in LE0181FM.              *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
@@ -213,7 +218,8 @@
      F            FCLTYFNF                          KIGNORE
      F            FCLTYZZF                          KIGNORE
      FSDCURRPDIF  E                    DISK         KINFSR *PSSR      UC
-     FLELOANL7IF  E           K        DISK         KINFSR *PSSR          125469
+     F***LELOANL7IF  E           K        DISK         KINFSR *PSSR                  125469 AR920117
+     FLELOANLIIF  E           K        DISK         KINFSR *PSSR                            AR920117
      F            CLOANCLF                          KRENAMELOANL7         125469
      FLEPDUEL2IF  E           K        DISK         KINFSR *PSSR                              264060
      FLELOANLZIF  E           K        DISK         KINFSR *PSSR                              264060
@@ -444,6 +450,7 @@
      C/COPY WNCPYSRC,LE0181C008
      C**********           Z-ADD*ZERO     #LNNO   60                                          CLE148
      C                     MOVEL*BLANKS   #LNNO   6                                           CLE148
+     C                     MOVEL*BLANKS   @LNNO   6                                         AR920117
      C/COPY WNCPYSRC,LE0181C009
      C*
      C* IF FIRST CYCLE AND PROGRAM REQUESTED FROM MENU, DISPLAY SCREEN
@@ -793,6 +800,14 @@
      C                     KFLD           W#PTFC  6                                           CSD027
      C                     KFLD           W#PTFT  30                      125469
      C                     KFLD           W#PTFN  20                      125469
+      *                                                                                     AR920117
+      ** Key list for LELOANLI                                                              AR920117
+      *                                                                                     AR920117
+     C           LOANYK    KLIST                                                            AR920117
+     C                     KFLD           W#PTFC                                            AR920117
+     C                     KFLD           W#PTFT                                            AR920117
+     C                     KFLD           W#PTFN                                            AR920117
+     C                     KFLD           @LNNO   6                                         AR920117
      C*
      C                     ENDSR
      C*
@@ -1200,14 +1215,18 @@
      C/COPY WNCPYSRC,LE0181C012
      C**********           Z-ADD*ZERO     $LNNO   60                                          CLE148
      C                     MOVEL*BLANKS   $LNNO   6                                           CLE148
+     C                     MOVEL*BLANKS   LNNO1   6                                         AR920117
       *                                                                   159495
-     C           *IN19     IFEQ *ON                                       159495
-     C           *IN18     OREQ *ON                                       159495
+     C********** *IN19     IFEQ *ON                                                  159495 AR920117
+     C********** *IN18     OREQ *ON                                                  159495 AR920117
+     C           *IN18     IFEQ *ON                                                         AR920117
      C**********           Z-ADDLNNO      #LNNO   60                                   159495 CLE148
      C                     MOVELLNNO      #LNNO                                               CLE148
+     C                     MOVELLNNO      @LNNO                                             AR920117
      C                     ELSE                                           159495
      C**********           Z-ADD*ZERO     #LNNO   60                                   159495 CLE148
      C                     MOVE *BLANKS   #LNNO                                               CLE148
+     C                     MOVE *BLANKS   @LNNO                                             AR920117
      C                     ENDIF                                          159495
      C*
      C* IF TOP OF THIS PAGE LOAN NUMBER IS EQUAL TO ZERO OR EQUAL TO
@@ -1215,7 +1234,9 @@
      C*
      C********** #LNNO     IFEQ *ZERO                                                         CLE148
      C           #LNNO     IFEQ *BLANKS                                                       CLE148
+     C           @LNNO     ANDEQ*BLANKS                                                     AR920117
      C           #LNNO     OREQ FLNNO
+     C           @LNNO     OREQ FLNNO                                                       AR920117
      C                     SETOF                     46
      C                     END
      C/COPY WNCPYSRC,LE0181C013
@@ -1307,18 +1328,21 @@
      C                     MOVE #FACT     W#PTFT                          125469
      C                     MOVE #FCNO     W#PTFN                          125469
       *                                                                   125469
-     C           LOAN7     SETLLLOANL7                                    125469
+     C********** LOAN7     SETLLLOANL7                                               125469 AR920117
+     C           LOANYK    SETLLLOANL7                                                      AR920117
      C                     EXSR READPT                                    125469
       *                                                                   125469
      C/COPY WNCPYSRC,LE0181C024
      C           *IN60     IFEQ *OFF                                      125469
      C**********           Z-ADDLNRF      $LNNO            *TOP OF THIS PA             125469 CLE148
      C**********           Z-ADDLNRF      LNNO                                         125469 CLE148
-     C                     MOVELLNRF      $LNNO                                               CLE148
+     C**********           MOVELLNRF      $LNNO                                      CLE148 AR920117
      C                     MOVELLNRF      LNNO                                                CLE148
+     C                     MOVELLNRF      LNNO1                                             AR920117
      C                     ELSE                                           125469
      C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
-     C                     MOVE *BLANKS   #LNNO                                               CLE148
+     C**********           MOVE *BLANKS   #LNNO                                      CLE148 AR920117
+     C                     MOVE *BLANKS   @LNNO                                             AR920117
      C                     ENDIF                                          125469
      C/COPY WNCPYSRC,LE0181C025
       *                                                                   125469
@@ -1339,6 +1363,7 @@
       *                                                                   125469
      C           FIRSTR    IFNE 'Y'                                       125469
      C           *IN60     ANDEQ'0'                                       125469
+     C           FLNNO     ANDEQ' '                                                         AR920117
      C/COPY WNCPYSRC,LE0181C026
      C**********           Z-ADDLNRF      FLNNO   60                                   125469 CLE148
      C                     MOVELLNRF      FLNNO                                               CLE148
@@ -1354,11 +1379,13 @@
      C           *IN60     IFEQ *OFF                                      125469
      C**********           Z-ADDLNRF      #LNNO            *TOP OF NEXT PA             125469 CLE148
      C**********           Z-ADDLNRF      LNNO                                         125469 CLE148
-     C                     MOVELLNRF      #LNNO                                               CLE148
+     C**********           MOVELLNRF      #LNNO                                      CLE148 AR920117
+     C                     MOVELLNRF      @LNNO                                             AR920117
      C                     MOVELLNRF      LNNO                                                CLE148
      C                     ELSE                                           125469
      C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
-     C                     MOVEL*BLANKS   #LNNO                                               CLE148
+     C**********           MOVEL*BLANKS   #LNNO                                      CLE148 AR920117
+     C                     MOVEL*BLANKS   @LNNO                                             AR920117
      C                     ENDIF                                          125469
      C/COPY WNCPYSRC,LE0181C029
       *                                                                   125469
@@ -1370,7 +1397,8 @@
      C                     MOVELLNRF      LNNO                                                CLE148
      C           *IN60     IFEQ *ON                                       125469
      C**********           Z-ADD*ZERO     #LNNO                                        125469 CLE148
-     C                     MOVEL*BLANKS   #LNNO                                               CLE148
+     C**********           MOVEL*BLANKS   #LNNO                                      CLE148 AR920117
+     C                     MOVEL*BLANKS   @LNNO                                             AR920117
      C                     ENDIF                                          125469
      C                     ENDIF                                          125469
      C                     ENDDO                                          125469
@@ -1386,6 +1414,12 @@
      C                     SETOF                     45
      C                     MOVE *ON       *IN64                           159495
      C                     END
+      *                                                                                     AR920117
+     C           #LNNO     IFEQ *BLANKS                                                     AR920117
+     C           @LNNO     ANDEQ*BLANKS                                                     AR920117
+     C                     MOVE '0'       *IN45                                             AR920117
+     C                     MOVE '1'       *IN64                                             AR920117
+     C                     ENDIF                                                            AR920117
      C/COPY WNCPYSRC,LE0181C031
      C*
      C* 43 ON - NO RECORDS ON SUBFILE
@@ -1899,6 +1933,49 @@
      C  N60                MOVELLNNO      #LNNO                                               CLE148
      C   60                MOVEL*BLANKS   #LNNO                                               CLE148
      C/COPY WNCPYSRC,LE0181C042
+      *                                                                                     AR920117
+      ** Set file pointer for LF/LOANL7                                                     AR920117
+      *                                                                                     AR920117
+     C                     MOVELLNNO1     @LNNO                                             AR920117
+      *                                                                                     AR920117
+      ** Set file pointer after top of this page loan number and read                       AR920117
+      ** previous record                                                                    AR920117
+      *                                                                                     AR920117
+     C           LOANYK    SETGTLOANL7                                                      AR920117
+     C                     READPLOANL7                   60                                 AR920117
+      *                                                                                     AR920117
+      ** Do while not start of file and subfile page not full                               AR920117
+      *                                                                                     AR920117
+     C           *IN60     DOWEQ'0'                                                         AR920117
+     C           RRN       ANDLT#COUNT                                                      AR920117
+      *                                                                                     AR920117
+      ** If customer number or facility type or facility number have                        AR920117
+      ** changed, treat as start of file                                                    AR920117
+      *                                                                                     AR920117
+     C           PTFC      IFNE W#PTFC                                                      AR920117
+     C           PTFT      ORNE W#PTFT                                                      AR920117
+     C           PTFN      ORNE W#PTFN                                                      AR920117
+     C                     SETON                         60                                 AR920117
+      *                                                                                     AR920117
+      ** Otherwise, continue reading backwards through file                                 AR920117
+      *                                                                                     AR920117
+     C                     ELSE                                                             AR920117
+      *                                                                                     AR920117
+     C                     READPLOANL7                   60                                 AR920117
+      *                                                                                     AR920117
+      ** Add 1 to count of records read                                                     AR920117
+      *                                                                                     AR920117
+     C                     ADD  1         RRN                                               AR920117
+     C                     ENDIF                                                            AR920117
+     C                     ENDDO                                                            AR920117
+      *                                                                                     AR920117
+      ** Reset top of this page loan number                                                 AR920117
+      *                                                                                     AR920117
+     C           *IN60     IFEQ '0'                                                         AR920117
+     C                     MOVELLNRF      @LNNO            *Top of page                     AR920117
+     C                     ELSE                                                             AR920117
+     C                     MOVEL*BLANKS   @LNNO                                             AR920117
+     C                     ENDIF                                                            AR920117
      C*
      C* FILL NEXT PAGE OF SUBFILE
      C*

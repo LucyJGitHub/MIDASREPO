@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027517           Date 08Jul14               *
-      *  Prev Amend No. AR896408           Date 31Jan19               *
+      *  Last Amend No. AR918343           Date 25Apr12               *
+      *  Prev Amend No. MD027517           Date 08Jul14               *
+      *                 AR896408           Date 31Jan1F               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031311           Date 13Jun16               *
@@ -71,6 +72,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918343 - Tried to remove drawing types from facility but   *
+      *             BFM did not allow.                                *
+      *             Defaulting of drawing types should only occured   *
+      *             during insert and at the start (Child: AR918344)  *
       *  MD027517 - Also validate Last Availability of CA against TR. *
       *             Extend validation of 244684.                      *
       *  AR896408 - Validation in subroutine VCDTE                    *
@@ -493,6 +498,9 @@
 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
+     D XXCSSN          S                   LIKE(DDCSSN)                                     AR918343
+     D XXFACT          S                   LIKE(DDFACT)                                     AR918343
+     D XXFCNO          S                   LIKE(DDFCNO)                                     AR918343
 
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
@@ -521,6 +529,12 @@
      C                   IN        ZMUSER                                                    BUG8550
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
+     C     DDCSSN        IFNE      XXCSSN                                                   AR918343
+     C     DDFACT        ORNE      XXFACT                                                   AR918343
+     C     DDFCNO        ORNE      XXFCNO                                                   AR918343
+     C                   MOVE      'Y'           DRWTPDFLT         1                        AR918343
+     C                   ENDIF                                                              AR918343
+      *                                                                                     AR918343
      C                   EXSR      RESETERRS
       *
       ** Call Validation Modules in Sequence
@@ -608,6 +622,10 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
+      *                                                                                     AR918343
+     C                   MOVE      DDCSSN        XXCSSN                                     AR918343
+     C                   MOVE      DDFACT        XXFACT                                     AR918343
+     C                   MOVE      DDFCNO        XXFCNO                                     AR918343
       *
       * RETURN
      C                   RETURN
@@ -889,6 +907,9 @@
      C                   ENDIF                                                              AR785547
      C                   ELSE                                                               AR785547
       *   Default to all if no entry made.
+      *                                                                                     AR918343
+     C     DDACTN        IFEQ      'I'                                                      AR918343
+     C     DRWTPDFLT     ANDEQ     'Y'                                                      AR918343
      C                   MOVE      'C'           DDDTS1
      C                   MOVE      'T'           DDDTS2
      C                   MOVE      'D'           DDDTS3
@@ -902,6 +923,7 @@
      C     DDSYIN        ANDNE     'Y'                                                       BUG3723
      C                   MOVE      'F'           DDDTS6                                      BUG3723
      C                   ENDIF                                                               BUG3723
+     C                   ENDIF                                                              AR918343
      C                   ENDIF                                                              AR785547
       *
      C                   ELSE
@@ -1038,6 +1060,8 @@
      C                   MOVE      DDDTS6        DDDTS6A                                     BUG3723
      C                   ENDIF                                                               BUG3723
       *
+     C                   MOVE      'N'           DRWTPDFLT                                  AR918343
+      *                                                                                     AR918343
      C                   ENDSR
       *****************************************************************
      C/EJECT

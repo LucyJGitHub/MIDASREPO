@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *  Last Amend No. AR991378           Date 18Jun12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 02Aug12               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR991378 (Child  AR991379). Loans Events Modeller (CLE068)   *
+      *           The validation of Total being paid and Loan         *
+      *           Outstanding Principal should consider events being  *
+      *           Modelled by LEM (Loan Events Modeller)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD036070 - No way to go back to main deal details screen     *
@@ -730,6 +735,7 @@
       *                                                                                      BUG4960
       ***  Branch in CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN      3                         BUG4960
+     C                   PARM      *BLANKS       WDDSTAT          16                        AR991378
       *
       ***  Update Repayment schedule in file format
       *

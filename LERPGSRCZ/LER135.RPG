@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054240           Date 22Apr20               *
-      *  Prev Amend No. MD055069           Date 26Feb20               *
+      *  Last Amend No. MD028354           Date 01Oct14               *
+      *  Prev Amend No. MD054240           Date 22Apr20               *
+      *                 MD055069           Date 26Feb20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD054703           Date 14Jan20               *
       *                 MD023855           Date 14Jan20               *
@@ -293,6 +294,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD028354 - Process fee due date that falls on the next month *
+      *             on ANWD-COB run following the month-end run.      *
       *  MD054240 - Lending fees incorrect calculation of accruals    *
       *             when GL accrual indicator is changed. Reverse     *
       *             part of fixes 245081 and MD052410.                *
@@ -2443,6 +2446,7 @@
      C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
+     C                     MOVE ' '       ATYP                                              MD028354
      C/COPY WNCPYSRC,LER135CCP2                                           S01408
       *
      C                     MOVE *BLANKS   LKSCCY                          179741
@@ -3771,7 +3775,14 @@
       *                                                                                       258414
      C           FENPYD    IFLE BJDNWD                                                        258414
      C           FENPYD    ANDNE0                                                             258414
+     C           WDELAY    ANDEQ' '                                                         MD028354
      C           FEPEND    ORLE BJDNWD                                                        258414
+     C           WDELAY    ANDEQ' '                                                         MD028354
+     C           FEPEND    ORLE BKAPDT                                                      MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
+     C           FENPYD    ORLE BKAPDT                                                      MD028354
+     C           FENPYD    ANDNE0                                                           MD028354
+     C           WDELAY    ANDEQ'Y'                                                         MD028354
       *****************************************************************                209380 258414
      C/COPY WNCPYSRC,LER135C002
      C*                                                                   100428
@@ -10182,6 +10193,7 @@
      C                     END
       *
      C                     Z-ADDGDAYNO    SMDY    50                      MOF60
+     C                     MOVE ' '       WDELAY  1                                         MD028354
       *
       ** Check whether the start of the new month falls between RUND
       ** and the date of next working day and if so make the start of
@@ -10201,6 +10213,7 @@
      C           BJDNWD    SUB  1         CODT
      C           BKAPDT    IFLT CODT
      C                     Z-ADDBKAPDT    CODT
+     C                     MOVE 'Y'       WDELAY                                            MD028354
      C                     END
      C                     END
       *

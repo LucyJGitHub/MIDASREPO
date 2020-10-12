@@ -2838,7 +2838,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
      C                   ENDSR
      C****************************************************************
@@ -3424,7 +3425,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
      C                   IF        UINFD >= BJRDNB                                          MD036601
      C                             and UINFD <= UNICD                                       MD036601

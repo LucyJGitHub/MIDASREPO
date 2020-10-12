@@ -366,7 +366,8 @@
      C                   IF        NSEIN = 'Y'
       *
      C                   IF        AYIBRT = 0                                                 CLE134
-     C                   IF        AYIBSR <> 0                                             AR1073112
+     C**********         IF        AYIBSR <> 0                                      AR1073112 CSD103
+     C                   IF        AYIBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AYIBSR        @KEY2
       *
@@ -378,8 +379,10 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AYIBSR <> *ZEROS                                       262691
-     C                             OR  AYIBSR = *ZEROS                                        262691
+     C**********                   AND AYIBSR <> *ZEROS                                262691 CSD103
+     C                             AND AYIBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYIBSR = *ZEROS                                 262691 CSD103
+     C                             OR  AYIBSR = *BLANKS                                       CSD103
      C                             AND AYIRSP = *ZEROS                                        262691
      C                   EVAL      DDORLNOK = 'N'
      C                   EVAL      Idx += 1
@@ -388,7 +391,8 @@
      C                   ENDIF
      C                   ENDIF                                                             AR1073112
      C                   ELSE                                                                 CLE134
-     C                   IF        AYIBSR <> 0                                                CLE134
+     C**********         IF        AYIBSR <> 0                                         CLE134 CSD103
+     C                   IF        AYIBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDORLNOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDORLN'                                  CLE134

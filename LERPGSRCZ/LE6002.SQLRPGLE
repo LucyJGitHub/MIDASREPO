@@ -3307,7 +3307,8 @@
      C     NBRA          COMP      *BLANKS                            87                      CSD103
      C   88              MOVE      BRTT          BRTKEY
      C     *IN88         Ifeq      *On
-     C     Brtkey        andeq     0
+     C*****Brtkey        andeq     0                                                          CSD103
+     C     Brtkey        andeq     *BLANKS                                                    CSD103
      C                   Move      BRTTPH        BRTKEY
      C                   Endif
      C   87              MOVE      NBRA          BRTKEY

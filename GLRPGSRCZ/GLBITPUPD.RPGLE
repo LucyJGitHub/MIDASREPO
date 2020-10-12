@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041767           Date 25Jun20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No  MD056651           Date 05Oct20               *
+      *  Prev Amend No. MD041767           Date 25Jun20               *
+      *                 CSD102             Date 08Jan19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
       *                 MD047741           Date 31Jan18               *
@@ -91,6 +92,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056651 - BITH HashItemNo Input increments during UPDATE    *
       *  MD041767 - COB Component GLC0263 failed. Added *IN43 in the  *
       *             condition to ensure that when record was not read *
       *             in CHQBKPD, WRITE will be executed and not UPDATE *
@@ -1507,10 +1509,10 @@ E1   C                   ENDIF                                                  
       *
      C                   ADD       1             BRHINC
                                                                                               CGL148
-     C     CGL148        Ifeq      'Y'                                                        CGL148
-     C     JAVAUSER      ANDEQ     'Y'                                                      MD025083
-     C                   z-add     BRHINC        BRHINI                                       CGL148
-     C                   Endif                                                                CGL148
+     C*****CGL148        Ifeq      'Y'                                               CGL148 MD056651
+     C*****JAVAUSER      ANDEQ     'Y'                                             MD025083 MD056651                                             
+     C***********        z-add     BRHINC        BRHINI                              CGL148 MD056651
+     C***********        Endif                                                       CGL148 MD056651
       *                                                                                       CAP084
       ** If it is an update then delete the original amount from the calculated               CAP084
       ** amount as the new amount has now been added to it.                                   CAP084
@@ -1586,6 +1588,10 @@ E1   C                   ENDIF                                                  
       ** Reduce Hash Item No. calculated by 1.                                                CAP084
       *                                                                                       CAP084
      C                   SUB       1             BRHINC                                       CAP084
+     C     CGL148        Ifeq      'Y'                                                      MD056651
+     C     JAVAUSER      ANDEQ     'Y'                                                      MD056651                                                
+     C                   z-add     BRHINC        BRHINI                                     MD056651
+     C                   Endif                                                              MD056651
                                                                                               CAP084
      C                   ENDIF                                                                CAP084
      C                   ENDIF                                                                CAP084

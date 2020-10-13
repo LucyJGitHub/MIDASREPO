@@ -1251,7 +1251,6 @@
 
       *
       ** Get tag 20
-      ** found in internet. need to test
       *
      C                   EVAL      Wtag20a = %CHAR(KFMsgR)
      C                   EVALR     Wtag20a = '00000000' + %TRIM(Wtag20a)

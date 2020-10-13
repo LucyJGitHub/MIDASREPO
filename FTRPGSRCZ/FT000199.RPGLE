@@ -11,13 +11,24 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055939           Date 03Jun20               *
-      *  Prev Amend No. MD055900           Date 28May20               *
+      *  Last Amend No. MD056683           Date 14Sep20               *
+      *  Prev Amend No. MD056303           Date 18Jul20               *
+      *                 MD056187           Date 02Jul20               *
+      *                 MD056170           Date 30Jun20               *
+      *                 MD055939           Date 03Jun20               *
+      *                 MD055900           Date 28May20               *
       *                 MD055883           Date 22May20               *
       *                 CSW220  *CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056683 - MT199 Confirm is being generated for an IPAY where*
+      *             the credit goes to the Account with Bank          *
+      *  MD056303 - Format error for Field 79 Line 3                  *
+      *  MD056187 - Charges was deducted in the amount for MT199      *
+      *             On Hold                                           *
+      *  MD056170 - MT199 for Transferred is not generated when       *
+      *             Destination = Retail Account                      *
       *  MD055939 - MT199 ACCC & ACSP Field 79 Line 4 Currency should *
       *             get its value from Transaction                    *
       *           - Amount for MT199 Transferred should Include       *
@@ -77,6 +88,9 @@
      F                                     IGNORE(TABLET5F:TABTE10F)
      F                                     INFSR(*PSSR)
 
+      ** Retail Accounts file                                                               MD056170
+     FACNUMA    IF   E           K DISK    RENAME(ACCNTABF:ACNUMAF)                         MD056170
+                                                                                            MD056170
       ** New Logical file that will filter MT199
      FMEINFTL6  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
@@ -251,18 +265,24 @@
      D WTag21Val       S             15A
      D WTag79L1Val     S             17A
      D WTag79L2Val     S             11A
-     D WTag79L3Val     S             27A
+     D***WTag79L3Val     S             27A                                                  MD056303
+     D WTag79L3Val     S             25A                                                    MD056303
      D WTag79L4Val     S             22A
 
       ** Work Variables
      D WIPRef          S             15A
      D WOPRef          S             15A
-     D WSender         S             12A
+     D***WSender         S             12A                                                  MD056303
+     D WSender         S             11A                                                    MD056303
+     D WBIC            S              8A                                                    MD056303
+     D WBranch         S              3A                                                    MD056303
      D WReceiver       S             12A
      D WTag20a         S              8A
      D WTag20b         S              6A
-     D WTag79L3a       S             14A
-     D WTag79L3b       S             13A
+     D***WTag79L3a       S             14A                                                  MD056303
+     D***WTag79L3b       S             13A                                                  MD056303
+     D WTag79L3a       S             13A                                                    MD056303
+     D WTag79L3b       S             12A                                                    MD056303
      D WGenFlg         S              1A
      D WIOFlg          S              1A                                                    MD055939
      D CR              S              1A
@@ -273,6 +293,8 @@
      D WDstT           S              1A
      D WDst1           S             35A
      D WSWIFT          S             11A
+     D WDstBIC         S              8A                                                    MD056303
+     D WDstBrch        S              3A                                                    MD056303
      D WCNum           S             10A
      D WKey            S              5A
      D PACCD           S             10A
@@ -284,6 +306,8 @@
      D @PNOI           S              1A
      D @KEY1           S             10A
      D @KYST           S              7A
+     D WRetl           S             10A                                                    MD056170
+     D WACNO           S             10  0                                                  MD056170
 
       ** Variables for getting formatted SWIFT date and time
      D WCurDTFlg       S              1A   INZ('Y')
@@ -750,6 +774,40 @@
      C                   EXSR      *PSSR
 
      C                   ENDIF
+                                                                                            MD056683
+      *                                                                                     MD056683
+      ** MT199 Status is ACSP Transferred through IPAY                                      MD056683
+      *                                                                                     MD056683
+     C                   ELSEIF    FTM199 = 'I'                                             MD056683
+                                                                                            MD056683
+     C                   EVAL      WIPRef = FTIPRF                                          MD056683
+     C     WIPRef        CHAIN     INPAY                                                    MD056683
+                                                                                            MD056683
+     C                   IF        %FOUND                                                   MD056683
+                                                                                            MD056683
+     C                   IF        AUIN = 'Y'                                               MD056683
+                                                                                            MD056683
+     C                   EVAL      WTag79L2Val = StsACSPT                                   MD056683
+      *                                                                                     MD056683
+      ** Use Account w/ Bank for Destination                                                MD056683
+      *                                                                                     MD056683
+     C                   EVAL      WDstT = ACBT                                             MD056683
+     C                   EVAL      WDst1 = ACBK                                             MD056683
+     C                   EVAL      WIOFlg = 'I'                                             MD056683
+     C                   EXSR      SrSvPyFld                                                MD056683
+     C                   EXSR      SRExtract                                                MD056683
+     C                   EVAL      WGenFlg = 'Y'                                            MD056683
+                                                                                            MD056683
+     C                   ENDIF                                                              MD056683
+                                                                                            MD056683
+     C                   ELSE                                                               MD056683
+     C     *LOCK         IN        LDA                                                      MD056683
+     C                   MOVE      '028'         DBASE                                      MD056683
+     C                   MOVEL     'WIPref'      DBKEY                                      MD056683
+     C                   MOVEL     'INPAY'       DBFILE                                     MD056683
+     C                   OUT       LDA                                                      MD056683
+     C                   EXSR      *PSSR                                                    MD056683
+     C                   ENDIF                                                              MD056683
 
       *
       ** MT199 Status is RJCT
@@ -775,7 +833,7 @@
 
      C                   IF        %FOUND
 
-     C                   EVAL      WIOFlg = 'O'                                             MD055939
+     C**********         EVAL      WIOFlg = 'O'                                    MD055939 MD056187
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -796,7 +854,7 @@
 
      C                   IF        %FOUND
 
-     C                   EVAL      WIOFlg = 'I'                                             MD055939
+     C**********         EVAL      WIOFlg = 'I'                                    MD055939 MD056187
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -907,6 +965,8 @@
      C                   EVAL      WIPRef = *BLANKS
      C                   EVAL      WOPRef = *BLANKS
      C                   EVAL      WSender = *BLANKS
+     C                   EVAL      WBIC = *BLANKS                                           MD056303
+     C                   EVAL      WBranch = *BLANKS                                        MD056303
       ** WReceiver not blanked since its value comes from system value
      C                   EVAL      WTag20a = *BLANKS
       ** WTag20b not blanked since it is the rundate
@@ -921,6 +981,8 @@
      C                   EVAL      WDstT = *BLANKS
      C                   EVAL      WDst1 = *BLANKS
      C                   EVAL      WSWIFT = *BLANKS
+     C                   EVAL      WDstBIC = *BLANKS                                        MD056303
+     C                   EVAL      WDstBrch = *BLANKS                                       MD056303
      C                   EVAL      WCNum = *BLANKS
      C                   EVAL      WKey = *BLANKS
 
@@ -990,6 +1052,7 @@
      C                   EVAL      WTrnId = PREF
      C                   EVAL      WPyTp = PYTP
      C                   EVAL      WPySt = PYST
+     C                   IF        FTM199 <> 'H'                                            MD056187
      C                   EVAL      WIAmnt = PYAM
      C                   EVAL      WICcy = PCCY                                             MD055939
                                                                                             MD055939
@@ -997,6 +1060,7 @@
      C                   EXSR      SrCalcChgs                                               MD055939
      C                   EVAL      WIAmnt = WIAmnt - WChgs + WRChgs                         MD055939
      C                   ENDIF                                                              MD055939
+     C                   ENDIF                                                              MD056187
 
      C                   ENDSR
       *****************************************************************
@@ -1243,7 +1307,11 @@
      C     KFMsgR        CHAIN     MEINCRL1
      C                   IF        %FOUND
 
-     C                   EVAL      WSender = %SUBST(CRMOR:7:12)
+     C**********         EVAL      WSender = %SUBST(CRMOR:7:12)                             MD056303
+     C                   EVAL      WBIC = %SUBST(CRMOR:7:8)                                 MD056303
+     C                   EVAL      WBranch = %SUBST(CRMOR:16:3)                             MD056303
+     C                   EVAL      WSender = WBIC + WBranch                                 MD056303
+                                                                                            MD056303
       ** Save the value of Incoming Message Currency
      C**********         EVAL      WICcy = CRCYCD                                           MD055939
      C                   EVAL      WIMCcy = CRCYCD                                          MD055939
@@ -1371,6 +1439,22 @@
      C                   WHEN      WDstT = 'C'
      C                   EVAL      WCNum = %SUBST(WDst1:1:10)
       *
+     C                   WHEN      WDstT = 'R'                                              MD056170
+     C                   MOVE      *BLANK        WRetl                                      MD056170
+     C                   EVAL      WRetl  = (%SUBST(WDST1:1:10))                            MD056170
+     C                   MOVE      WRetl         WACNO                                      MD056170
+     C     WACNO         CHAIN     ACNUMAF                                                  MD056170
+     C                   IF        %FOUND                                                   MD056170
+     C                   MOVE      CNUM          WCNum                                      MD056170
+     C                   ELSE                                                               MD056170
+     C     *LOCK         IN        LDA                                                      MD056170
+     C                   MOVE      '027'         DBASE                                      MD056170
+     C                   MOVEL     'WACNO'       DBKEY                                      MD056170
+     C                   MOVEL     'ACNUMA'      DBFILE                                     MD056170
+     C                   OUT       LDA                                                      MD056170
+     C                   EXSR      *PSSR                                                    MD056170
+     C                   ENDIF                                                              MD056170
+      *                                                                                     MD056170
      C                   OTHER
      C                   EVAL      WCNum = %SUBST(WDst1:1:6)
      C                   ENDSL
@@ -1386,7 +1470,16 @@
       *
      C                   IF        @RTCD = *BLANKS
      C                   IF        BBCSID <> *BLANKS
-     C                   MOVEL     BBCSID        WSWIFT
+     C**********         MOVEL     BBCSID        WSWIFT                                     MD056303
+     C                   EVAL      WDstBIC = %SUBST(BBCSID:1:8)                             MD056303
+     C                   EVAL      WDstBrch = %SUBST(BBCSID:9:3)                            MD056303
+      *                                                                                     MD056303
+     C                   IF        WDstBrch = *BLANKS                                       MD056303
+     C                   EVAL      WDstBrch = 'XXX'                                         MD056303
+     C                   ENDIF                                                              MD056303
+      *                                                                                     MD056303
+     C                   EVAL      WSWIFT = WDstBIC + WDstBrch                              MD056303
+      *                                                                                     MD056303
      C                   ENDIF
      C                   ELSE
      C                   MOVEL     'SDCUSTPD'    DBFILE
@@ -1436,7 +1529,8 @@
 
       ** Convert transaction settlement date to YYMMDD
      C                   CALL      'ZM0060'                             15
-     C                   PARM      SLDT          ZMDAY
+     C**********         PARM      SLDT          ZMDAY                                      MD056187
+     C                   PARM      PVDT          ZMDAY                                      MD056187
      C                   PARM                    ZMDATE
 
      C     *IN15         IFEQ      '1'

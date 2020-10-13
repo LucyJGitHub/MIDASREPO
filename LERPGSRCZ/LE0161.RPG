@@ -9,9 +9,10 @@
      F*     LE0161 - OUTSTANDING FACILITIES BY CUSTOMER ENQUIRY          *
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                                  *
-      *  Last Amend No. MD036924           Date 06Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                                                               *
+      *  Last Amend No. AR950498           Date 13Apr12               *
+      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -59,7 +60,13 @@
      F*                 S01311             DATE 30JAN91                  *
      F*                                                                  *
      F*------------------------------------------------------------------*
-     F*                                                                  *
+      *                                                               *
+      *  AR950498 - Facility availability should be zero if           *
+      *             availability date passed.                         *
+      *             If system value SetFcltyAvailToZero is 'Y' and    *
+      *             Facility Last Availability Date (AVLD) is earlier *
+      *             than run date, then display the available amount  *
+      *             as zero. (Child: AR950499)                        *
       *  MD036924 - Allow user to enquire when customer is closed     *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -304,6 +311,7 @@
      I              'CLE023OnUseSpot'     C         SVALKK                                    260453
      I/COPY WNCPYSRC,LEH00908
       *                                                                                       260453
+     I              'SetFcltyAvailToZero' C         SVALKB                                  AR950498
       /COPY ZSRSRC,ZFRPEDZ2
       /EJECT
      C********************************************************************
@@ -554,7 +562,8 @@
      C                     PARM           @RTCD                                               260453
      C                     PARM SVALKK    SVALK1 20                                           260453
      C                     PARM           SVAL1 200                                           260453
-     C                     PARM *BLANK    SVALK2 20                                           260453
+     C**********           PARM *BLANK    SVALK2 20                                  260453 AR950498
+     C                     PARM SVALKB    SVALK2 20                                         AR950498
      C                     PARM           SVAL2 200                                           260453
      C                     PARM *BLANK    SVALK3 20                                           260453
      C                     PARM           SVAL3 200                                           260453
@@ -582,6 +591,7 @@
      C                     EXSR *PSSR                                                         260453
      C                     ENDIF                                                              260453
      C                     MOVE SVAL11    WFLD    1                                           260453
+     C                     MOVELSVAL2     SETZER  1                                         AR950498
       *                                                                                       260453
       ** Determine if Current Exposure at Spot Rate should be                                 260453
       ** displayed.                                                                           260453
@@ -1651,6 +1661,15 @@
      C                     ELSE                                           185905
      C                     Z-ADD0         CAVL                            185905
      C                     ENDIF                                          185905
+      *                                                                                     AR950498
+      ** if system value SetFcltyAvailToZero current setting is Y,                          AR950498
+      ** check if Last Availability Date has passed run date, if yes                        AR950498
+      ** display available amount as zero                                                   AR950498
+      *                                                                                     AR950498
+     C           SETZER    IFEQ 'Y'                                                         AR950498
+     C           AVLD      ANDLTRUND                                                        AR950498
+     C                     Z-ADD*ZERO     CAVL                                              AR950498
+     C                     ENDIF                                                            AR950498
      C*
      C/COPY WNCPYSRC,LE0161C002
      C* EDIT CURRENT AVAILABLE AMOUNT FOR OUTPUT TO SCREEN

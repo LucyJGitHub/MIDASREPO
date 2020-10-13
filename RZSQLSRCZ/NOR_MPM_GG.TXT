@@ -1,0 +1,327 @@
+--    *****************************************************************
+--    *                                                               *
+--    *  Midas - RZ Developments                                      *
+--    *                                                               *
+--    *  NOR_MPM_GG Run Archiving Procedure                           *
+--    *                                                               *
+--    *  Function:  This SQL script call MMM Archiving                *
+--    *                                                               *
+--    *  Called By: Manually on command line using RUNSQLSTM          *
+--    *  Note:                                                        *
+--    *        Replace all gg with the MMM system's correct           *
+--    *        global prefix before executing on the command line.    *
+--    *                                                               *
+--    *   Last Amend No. AR1084152 *Create    Date 31Jan13            *
+--    *                                                               *
+--    *---------------------------------------------------------------*
+--    *  AR1084152 - Automate MPM dbase and archiving during CoB      *
+--    *            - (Child:AR1084154)                                *
+--    *****************************************************************
+ 
+-- Include if procedure found
+   Drop Procedure ggMPM4/Archiving_Tasks      ;
+ 
+   Create Procedure ggMPM4/Archiving_Tasks ( )
+ 
+       Language SQL
+       Specific ggMPM4/ArcTasks
+       Dynamic Result Sets 0
+       Modifies SQL Data
+       Disallow Debug Mode
+       Old savepoint level
+       Commit on return No
+ 
+   Begin
+ 
+/* -----------------------------------------------------------------------
+   Get work to do from the HOSTGROUPARCHIVE table and for each row
+   returned in the cursor, do the relevant archiving
+   -----------------------------------------------------------------------
+*/
+   Declare #SignalString    VarChar(100);
+        Declare #Recs_Count          Integer Default 0;
+   Declare #HostGroupId         Numeric(4,0) ;
+   Declare #ArchiveSuccess      Numeric(1,0) ;
+   Declare #ArchiveRuntime      Timestamp ;
+   Declare #PurgeDate           Timestamp ;
+ 
+/* Nordea London Host Group */
+   Set #HostGroupId = 1000 ;
+ 
+/* Clear any leftover records from the work file*/
+ 
+   Delete From ggMPM4/HostGroupArchive;
+ 
+   Insert Into ggMPM4/HostGroupArchive Values(1, 1000, 1, Null, Null);
+ 
+   Delete From  ggMPM4/ArchiveKey ;
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted from ggMPM4/ArchiveKey';
+ 
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+/*Work out the purge date to use*/
+ 
+Select (Timestamp(Current_Date, Current_Time)
+                - ArchiveOffSet Days)
+       Into #purgeDate From ggMPM4/HostGroup
+            Where HostGroupId = #HostGroupId;
+ 
+/*Insert all the keys for messages that need to be archived*/
+ 
+Insert Into ggMPM4/ArchiveKey
+            (
+               MessageId,
+               HostGroupId
+             )
+ 
+     Select MessageId,
+            #HostGroupId  From ggMPM4/Messages
+            WHERE
+            HOSTID IN (
+                    SELECT HOSTID FROM ggMPM4/HOSTSYSTEM
+                    WHERE HOSTGROUPID = #hostGroupID)
+                AND QUEUE NOT IN (
+                    SELECT OPTIONVALUE FROM ggMPM4/USEROPTIONS
+                    WHERE USERNAME = 'SYSTEM'
+                    AND CUSTOMERID = 1
+                    AND OPTIONPARAMETER LIKE 'preventArchiveQueue%'
+                )
+                AND
+                (
+                    (
+                        MESSAGESTATUS <> 'U' AND
+                        DIRECTION = 'O' AND
+                        INTERNALMESSAGETYPE <> 'P' AND
+                        INTERNALMESSAGETYPE <> 'R' AND
+                        SYSTEMARRIVALTIME <= #purgeDate
+  ) OR
+          (
+              DIRECTION ='I' AND
+              SYSTEMARRIVALTIME <= #purgeDate
+          ) OR
+          (
+                      MESSAGESTATUS <> 'U' AND
+                      DIRECTION = 'O' AND
+                      (
+                          INTERNALMESSAGETYPE = 'P' OR
+                          INTERNALMESSAGETYPE = 'R'
+                      ) AND
+                      TIMESTAMP(VALUEDATE || '235959') <= #purgeDate
+                  )
+                      );
+ 
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows for archiving ggMPM4/ArchiveKey';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+/* Do not try to archive records that already exist in archive library */
+ 
+Delete From
+    ggMPM4/ArchiveKey a
+Where Exists
+        (Select
+                MessageId, HostGroupID
+         From
+                ggARC4/Messages b
+         Where
+                a.MessageId = b.MessageId );
+ 
+ 
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted dupl ggMPM4/ArchiveKey';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+/* Move data into the Archive dbase based on the ArchiveKey tbl */
+ 
+Insert Into ggARC4/Messages
+     Select *
+         From ggMPM4/Messages a
+     Where Exists
+     (
+         Select
+           MessageId
+         From ggMPM4/ArchiveKey b
+         Where
+              a.MessageId = b.MessageId
+     );
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows archived from ggMPM4/Messages';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Insert Into
+    ggARC4/ExternalReferenceKeys
+    Select *
+         From ggMPM4/ExternalReferenceKeys a
+    Where Exists
+     (
+        Select
+          MessageId
+        From ggMPM4/ArchiveKey b
+        Where
+            a.MessageId = b.MessageId
+    );
+ 
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+#Recs_Count || ' rows archived from ggMPM4/ExternalReferenceKeys';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Insert Into
+    ggARC4/Audits
+    Select *
+        From ggMPM4/Audits a
+    Where Exists
+    (
+        Select
+          MessageId
+        From
+          ggMPM4/ArchiveKey b
+        Where
+          a.MessageId = b.MessageId
+    );
+ 
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows archived from ggMPM4/Audits';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Insert Into
+    ggARC4/MessageNotes
+    Select *
+        From ggMPM4/MessageNotes a
+    Where Exists
+    (
+        Select
+          MessageId
+        From
+          ggMPM4/ArchiveKey b
+        Where
+          a.MessageId = b.MessageId
+    );
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows archived from ggMPM4/MessageNotes';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+/* Delete all the data that has just been moved into the Archive library */
+Delete From
+    ggMPM4/Audits a
+Where Exists
+(
+    Select
+        MessageId
+    From
+        ggMPM4/ArchiveKey b
+    Where
+        a.MessageId = b.MessageId
+);
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted from ggMPM4/Audits';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Delete From
+    ggMPM4/ExternalReferenceKeys a
+Where Exists
+(
+    Select
+        MessageId
+    From
+        ggMPM4/ArchiveKey b
+    Where
+        a.MessageId = b.MessageId
+);
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+#Recs_Count || ' rows deleted from ggMPM4/ExternalReferenceKeys';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Delete From
+    ggMPM4/MessageNotes          a
+Where Exists
+(
+    Select
+        MessageId
+    From
+        ggMPM4/ArchiveKey b
+    Where
+        a.MessageId = b.MessageId
+);
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted from ggMPM4/MsgNotes';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+Delete From
+    ggMPM4/Messages              a
+Where Exists
+(
+    Select
+        MessageId
+    From
+        ggMPM4/ArchiveKey b
+    Where
+        a.MessageId = b.MessageId
+);
+        Get Diagnostics #Recs_Count = Row_Count;
+        Set #SignalString =  #Recs_Count;
+        Set #SignalString =
+        #Recs_Count || ' rows deleted from ggMPM4/Messages';
+      Signal SqlState '01001'
+             Set Message_Text = #SignalString;
+ 
+ 
+/* Finally, UPDATE the row in the HOSTGROUPARCHIVE table to say done */
+Update
+    ggMPM4/HostGroupArchive
+Set
+    ArchiveSuccess = 2,
+    ArchiveRunTime = TIMESTAMP(CURRENT_DATE, CURRENT_TIME),
+    Comments = ''
+Where
+        HostGroupId = #HostGroupId
+        and ArchiveSuccess=1
+        AND ArchiveRunTime IS NULL;
+ 
+  COMMIT;
+ 
+  EXITARCPRC: SET #HostGroupId = NULL;
+ 
+  END;
+ 
+ ;                                                                              :
+  label on           **********/**********                                      :
+   is 'Purge MPM records from ggMPM4 to ggARC4           ';                     :
+                                                                                :

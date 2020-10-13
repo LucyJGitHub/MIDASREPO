@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD056313           Date 21Sep20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +138,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1318,6 +1320,7 @@
                                                                                              BUG4482
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
+     C                   MOVEL     DealFilFmt    ValidDeal                                  MD056313
      C                   EVAL      IKINTR = HKINTR                                         MD037869A
      C                   EVAL      IKSPRD = HKSPRD                                         MD037869A
      C                   EXSR      ValidateTr                                                BUG4482
@@ -2713,7 +2716,7 @@
      C                   EVAL      W#CCY = *BLANKS                                          MD022656
      C     PayDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PPAY                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -2724,7 +2727,7 @@
      C                   ENDIF                                                                260428
      C     RecDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PREC                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A

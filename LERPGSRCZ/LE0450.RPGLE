@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. MD056223           Date 15Jul20               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *       
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -423,6 +424,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056223 - CLE031: Incorrect Posting narratives in           *
+      *             Fee postings with conversion                      *
+      *           - The amount and currency of the posting narratives *
+      *             of Cross currency settlements P and S records     *
+      *             whose narrative codes defined as 03 are now       *
+      *             formatted based on the format string defined in   *
+      *             Narrative Codes File SDNARRPD.                    *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
@@ -2067,6 +2075,7 @@
      D PDCLPayAc       S              1A                                                    MD050007
      D PDCLPIAcc       S              1A                                                    MD050018
       *                                                                                       CLE134
+     D VALUE_DATE      C                   CONST(1)                                         MD056223
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
@@ -2092,6 +2101,7 @@
      D wRepIntr        S             13P 0 INZ(*ZEROS)                                      MD054326
      D wAvail          S             13P 0 INZ(*ZEROS)                                      MD054326
      D isInterest      S              1A   INZ(*On)                                         MD053565
+     D wEvent          S              1S 0 INZ(*ZEROS)                                      MD056223
      I*                                                                   S01408
       *                                                                                       CLE134
      ILKEYF1DF                                                                                CLE134
@@ -7098,6 +7108,7 @@ L118 I                             P   72   77 7RTSPL
       ** IF Settlement type is 14 and OSAC is not blanks,                                     262597
       ** then retrieve settlement branch from settlement a/c                                  262597
       *                                                                                       262597
+     C                   EVAL      wEvent = VALUE_DATE                                      MD056223
      C                   EVAL      wGenNewKey = *ON                                         MD051883
      C                   EVAL      wNinthPos = *BLANKS                                      MD051883
      C                   MOVE      *BLANKS       AKY910            2                        MD051883
@@ -7609,6 +7620,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C                   ENDIF
      C                   EVAL      wGenNewKey = *OFF                                        MD051883
+     C                   EVAL      wEvent = 0                                               MD056223
 1154 C**
 1155 C                   ENDSR
 1156 C**
@@ -7686,6 +7698,7 @@ L118 I                             P   72   77 7RTSPL
 1202 C**
       ** CLE134 - Past Due Call Loans process                                                 CLE134
       *                                                                                       CLE134
+     C                   EVAL      wEvent = VALUE_DATE                                      MD056223
      C                   EVAL      wGenNewKey = *ON                                         MD051883
      C                   MOVE      'N'           WPDCLL                                       CLE134
      C                   MOVE      'N'           WPDCLA                                       CLE134
@@ -7940,6 +7953,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
 1221 C**
      C                   EVAL      wGenNewKey = *OFF                                        MD051883
+     C                   EVAL      wEvent = 0                                               MD056223
 1222 C                   ENDSR
 1223 C**
 1224 C**
@@ -18875,6 +18889,13 @@ C    C                   ENDIF                                                  
      C                   ENDIF                                                              MD054326
      C                   ENDIF                                                              MD054326
      C                   ENDIF                                                              MD054326
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                     MD051883
@@ -18899,6 +18920,8 @@ C    C                   ENDIF                                                  
      C                   MOVE      'V'           AKY(10)                                    MD054132
      C                   ENDIF                                                              MD054132
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   EVAL      KOTHA = *ZEROS                                           MD056223
+     C                   EVAL      KOTHC = *BLANKS                                          MD056223
      C                   EXSR      AKYOUT                                                   MD051883
      C                   ENDIF                                                              MD054132
      C                   MOVE      SAV3          AKY(3)                                     MD051883
@@ -18929,6 +18952,13 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C                   MOVE      WSCCY         CCYL
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                       CLE031
@@ -18960,6 +18990,13 @@ C    C                   ENDIF                                                  
      C                   MOVE      BJCYCD        CCYL
      C                   Z-ADD     BSAMT         ACAMNT
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                       CLE031
@@ -18969,6 +19006,13 @@ C    C                   ENDIF                                                  
      C                   MOVEA     ' S'          AKY(9)
      C                   MOVEA     WSCCY         AKY(6)
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
                                                                                             MD049745
@@ -18991,6 +19035,8 @@ C    C                   ENDIF                                                  
      C     WPROC         ANDNE     'Y'
      C                   MOVE      LKSCSV        LKSCCY
      C                   ENDIF
+     C                   EVAL      KOTHA = *ZEROS                                           MD056223
+     C                   EVAL      KOTHC = *BLANKS                                          MD056223
      C                   ENDSR
       *****************************************************************                       CLE031
      C/EJECT                                                                                  CLE031
@@ -21527,7 +21573,9 @@ C    C                   ENDIF                                                  
      O                  53                       56 '1'                                    AR1056323
      O                  21                       56 '1'                                    AR1056323
      O                       Z13                 63P                                       AR1056323
+     O                       KOTHA               63P                                        MD056223
      O                       Z13                 73P                                       AR1056323
+     O                       KOTHC               66                                         MD056223
      O                       VDATL               76P                                       AR1056323
      O                       SLIDL               79P                                       AR1056323
      O               79      FEPSTD              79P                                       AR1056323

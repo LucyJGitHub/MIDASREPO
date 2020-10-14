@@ -1,5 +1,6 @@
      H DEBUG
-     H CVTOPT (*GRAPHIC)                                                                    MD054955
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*DF***RPGBASE*******************************************************                       CSD053
 /**** *  RPGBNOCVT                                                    *              CSD053 MD054955
@@ -21,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -48,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  245055 - Review 241824.                                      *

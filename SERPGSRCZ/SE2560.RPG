@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056768           Date 08Oct20               *
-      *  Prev Amend No. AR324886           Date 08Apr20               *
+      *  Last Amend No. MD056904           Date 08Oct20               *
+      *  Prev Amend No. MD056768           Date 08Oct20               *
+      *                 AR324886           Date 08Apr20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -62,6 +63,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD056904 - Database error in SEC0302 10007 component.        *
+      *             Ensure that no other position settlements exist   *
+      *             before dropping off extension file records.       *     
       *  MD056768 - File out of balance in SEC0612E 00001 component   *
       *             Ensure that POSETA audit file is updated with the *
       *             current number of live records after drop off.    *
@@ -165,6 +169,8 @@
       *                                                                                       CRE020
      FPOSETDY1UF  E           K        DISK                                                   095907
      FPOSETDY2UF  E           K        DISK                                                   095907
+     FPOSET2  IF  E           K        DISK                                                 MD056904
+     F            POSETDF                           KRENAMEPOSETD0                          MD056904
      FSE2560AUO   E                    PRINTER
      F                                              KINFDS SPOOLU         E29170
      FSE2560P1O   E                    PRINTER                        UC
@@ -236,6 +242,24 @@
      I***********                           139 167 DBKEY                 S01117
      I***********                           168 175 DBPGM                 S01117
      I***********                           176 177 DBASE                 S01117
+     IPOSETD0                                                                               MD056904
+     I              RECI                            RECIY                                   MD056904
+     I              PBCA                            PBCAY                                   MD056904
+     I              PSSH                            PSSHY                                   MD056904
+     I              PCPY                            PCPYY                                   MD056904
+     I              PDUD                            PDUDY                                   MD056904
+     I              PEVT                            PEVTY                                   MD056904
+     I              PAUI                            PAUIY                                   MD056904
+     I              PSCU                            PSCUY                                   MD056904
+     I              PSMT                            PSMTY                                   MD056904
+     I              PSAT                            PSATY                                   MD056904
+     I              TNLU                            TNLUY                                   MD056904
+     I              PSVL                            PSVLY                                   MD056904
+     I              PTFR                            PTFRY                                   MD056904
+     I              TXBS                            TXBSY                                   MD056904
+     I              EXCD                            EXCDY                                   MD056904
+     I              BNFO                            BNFOY                                   MD056904
+     I              PSEA                            PSEAY                                   MD056904
      ILDA         DS                            256
      I                                      134 183 DBLOT                 S01117
      I                                      134 141 DBFILE                S01117
@@ -903,15 +927,25 @@
      C***        RECIX     IFNE 'M'                                       E14884              095907
      C****       RECIX     ANDNE'R'                                                    203832 095907
      C*                                                                                       095907
-     C* DROP MT5XX EXTENSION FILES                                                            095907
+     C**DROP*MT5XX*EXTENSION*FILES*************************************              095907 MD056904
+      ** Delete position settlement from the main file                                      MD056904
      C*                                                                                       095907
+     C                     DELETPOSETDF                                                     MD056904
+      *                                                                                     MD056904     
       ** Deleted LIVE records                                                               MD056768
       *                                                                                     MD056768
      C           RECIX     IFEQ 'D'                                                         MD056768
      C                     ADD  1         LVDEL   50                                        MD056768
      C                     ENDIF                                                            MD056768
       *                                                                                     MD056768
+      ** Check other position settlement                                                    MD056904
+      *                                                                                     MD056904
+     C           KEY1      CHAINPOSET2               38                                     MD056904
+      *                                                                                     MD056904
+      ** Delete MT5xx extension records w/o position settlement                             MD056904
+      *                                                                                     MD056904      
      C           S01401    IFEQ 'Y'                                                           095907
+     C           *IN38     ANDEQ'1'                                                         MD056904
      C           KEY1      CHAINPOSETDY1             34                                       095907
      C           *IN34     IFEQ '0'                                                           095907
      C                     DELETPOSETDD1                                                      095907
@@ -921,7 +955,7 @@
      C                     DELETPOSETDD2                                                      095907
      C                     END                                                                095907
      C                     END                                                                095907
-     C                     DELETPOSETDF                                                       095907
+     C**********           DELETPOSETDF                                              095907 MD056904
      C************         ADD  1         PSDEL                           E14884              095907
      C                     ADD  1         PSDEL   50                                          095907
      C*********************ADD  1         PSDEL6                                       095907 243026

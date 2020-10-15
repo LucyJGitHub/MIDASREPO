@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056655           Date 21Sep20               *
-      *  Prev Amend No. MD031031           Date 13Mar15               *
+      *  Last Amend No. MD056655A          Date 09Oct20               *
+      *  Prev Amend No. MD056655           Date 21Sep20               *
+      *                 MD031031           Date 13Mar15               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056655A - Deal no already exists is encountered when NASP  *
+      *              transaction is entered; error in SOAP exists     *
       *  MD056655 - Deal no already exists is encountered when NASP   *
       *             transaction is entered                            *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
@@ -545,6 +548,8 @@
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
+     C     PSJobName     IFNE      'QZDASOINIT'                                            MD056655A
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            MD056655A
      C                   MOVEL     DLNO          PDLNO             6                        MD056655
      C     PDLNO         CHAIN     DLDLDED1                           75                    MD056655
      C                   IF        *IN75 = *ON                                              MD056655
@@ -552,6 +557,7 @@
      C                   Eval      F1BRCA = BRCA                                            MD031031
      C                   WRITE     DLDLDED0                                                 MD031031
      C                   ENDIF                                                              MD056655
+     C                   ENDIF                                                             MD056655A
      C/COPY WNCPYSRC,MMNASSDC02
       *
      C                   ENDSR
@@ -1259,6 +1265,19 @@
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
      C                   ENDIF                                                                CRE020
+      *                                                                                    MD056655A
+     C                   CALLB     'ZACRTVJOBA'                         90                 MD056655A
+     C                   PARM                    PSJobName                                 MD056655A
+     C                   PARM                    PSUser                                    MD056655A
+     C                   PARM                    PSJobNo                                   MD056655A
+     C                   PARM                    JobType           5                       MD056655A
+      *                                                                                    MD056655A
+     C     *IN90         IFEQ      '1'                                                     MD056655A
+     C                   EVAL      DBFile = 'ZACRTVJOBA'                                   MD056655A
+     C                   EVAL      DBase = 904                                             MD056655A
+     C                   EVAL      DBKey = '*CALL'                                         MD056655A
+     C                   EXSR      SRERR                                                   MD056655A
+     C                   ENDIF                                                             MD056655A
      C*
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and

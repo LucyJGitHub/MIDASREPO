@@ -382,13 +382,20 @@
       *                                                                                       CSD103
      C                   MOVEL     BABADJ        IntBadj                                      CSD103
      C                   MOVE      BABADJ        DecBadj                                      CSD103
+     C     BABADJ        IFLT      0                                                          CSD103
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CSD103
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CSD103
+     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CSD103
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CSD103
+     C                   ELSE                                                                 CSD103
      C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
      C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
      C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
-     C                                                                                        CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
      C                   MOVE      *BLANKS       @@ALPH                                       CSD103
      C                   MOVEA     ArrayBadj     @@ALPH                                       CSD103
-     C                   CALLB     'ZA0840'                                                   CSD103
+     C                   CALLB     'ZA0841'                                                   CSD103
      C                   PARM      *BLANK        RetCodeOut                                   CSD103
      C                   PARM                    @@ALPH                         Display field CSD103
      C                   PARM      8             @@IDP                          no.of dec.plcsCSD103

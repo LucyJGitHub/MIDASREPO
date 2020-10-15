@@ -84,6 +84,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
+     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
+     F                                     RENAME(@BAREDG:SDBSRTXX)                           CSD103
 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDBSRTV001
@@ -155,6 +157,8 @@
       ** +--------------------------------------+
       ** Alpha Num Base Rate Code                                                             CSD103
      D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+     D Uppercase       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                       CSD103
+     D Numbers         C                   '0123456789'                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -164,6 +168,9 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
+     D ArrayBadj       S              1A   DIM(17)                                            CSD103
+      * Incoming Benchmark Adjustment in screen format                                        CSD103
+                                                                                              CSD103
      D BaseRateIn    E DS                  EXTNAME(SDBSRSPD)
       * Incoming Base Rate in screen format
 
@@ -227,6 +234,9 @@
      D  DDAVOP                22     22                                                       CSD103
      D  DDBRAC                23     24                                                       CSD103
      D  DDWGHT                25     25                                                       CSD103
+                                                                                              CSD103
+     D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
+     D                                     PREFIX(W)                                          CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -269,6 +279,13 @@
                                                                                               CSC011
      D #1TESTN         S              1A                                                     BUG3124
                                                                                              BUG3124
+     D #1CHARPOS       S              2  0                                                    CSD103
+                                                                                              CSD103
+     D #2CHARPOS       S              2  0                                                    CSD103
+                                                                                              CSD103
+     D IntBadj         S              5A                                                      CSD103
+     D DecBadj         S              8A                                                      CSD103
+                                                                                              CSD103
       ** Alpha field for numeric validation                                                   240065
      D @@ALPH          S             16A                                                      240065
       ** Millions/Thousands id (Y=function on)                                                240065
@@ -408,7 +425,307 @@
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
       *                                                                                       CSD103
-     C                   EXSR      FMTBADJ                                                    CSD103
+      * Validate Backward-Looking Rate                                                        CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      'N'           DDBLRT                         Default: N    CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFNE      'N'                                                        CSD103
+     C     DDBLRT        ANDNE     'Y'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBLRTOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBLRT'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049400'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   Z-ADD     *ZEROS        WDAY              2 0                        CSD103
+     C                   MOVE      Numbers       NUMBLANK         11                          CSD103
+     C                   MOVEL     ' '           NUMBLANK                                     CSD103
+      *                                                                                       CSD103
+      * Validate Lookback Days                                                                CSD103
+      *                                                                                       CSD103
+     C     DDLBDY        IFEQ      *BLANKS                                      Default: 00   CSD103
+     C                   MOVE      '00'          DDLBDY                                       CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDLBDY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
+     C                   MOVEL     DDLBDY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
+      *                                                                                       CSD103
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
+     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDLBDYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDLBDY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049423'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDLBDY        WDAY                                         CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDLBDYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDLBDY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049420'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Lockout Days                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDLODY        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      '00'          DDLODY                         Default: 00   CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDLODY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
+     C                   MOVEL     DDLODY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
+      *                                                                                       CSD103
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
+     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDLODYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDLODY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049424'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDLODY        WDAY                                         CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDLODYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDLODY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049421'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Payment Delay Days                                                           CSD103
+      *                                                                                       CSD103
+     C     DDPDLY        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      '00'          DDPDLY                         Default: 00   CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDPDLY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
+     C                   MOVEL     DDPDLY        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
+      *                                                                                       CSD103
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
+     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDPDLYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDPDLY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049425'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDPDLY        WDAY                                         CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDPDLYOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDPDLY'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049422'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Benchmark Adjustment                                                         CSD103
+      *                                                                                       CSD103
+     C     DDBADJ        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      '0'           DDBADJ                         Default: 0    CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
+     C                   MOVE      DDBADJ        @@ALPH                                       CSD103
+     C                   CALLB     'ZA0841'                                                   CSD103
+     C                   PARM      *BLANK        RetCodeOut                                   CSD103
+     C                   PARM                    @@ALPH                         Display field CSD103
+     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
+     C                   PARM      5             @@IINT                         no.of integersCSD103
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
+     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
+     C                   PARM      *ZERO         @@AMT                          File field    CSD103
+     C                   PARM                    BNDCSP                                       CSD103
+	  *                                                                                      CSD103
+     C     @@ERCD        IFNE      0                                                          CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBADJOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049426'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
+     C                   MOVEL     DDBADJ        IntBadj                                      CSD103
+     C                   MOVE      DDBADJ        DecBadj                                      CSD103
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
+     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
+      *                                                                                       CSD103
+     C     '-'           SCAN      @@ALPH        PTBADJ            2 0                        CSD103
+     C     PTBADJ        IFNE      0                                                          CSD103
+     C                   MOVE      '-'           PZFSign                                      CSD103
+     C                   MOVEA     '- '          ArrayBadj(8)                                 CSD103
+     C                   ENDIF                                                                CSD103
+     C                   MOVEA     ArrayBadj     PZFld17                                      CSD103
+      *                                                                                       CSD103
+     C                   CALLB     'ZASIGN'                                                   CSD103
+     C                   PARM      'Y'           PZASignOk                                    CSD103
+     C                   PARM                    PZFld17                                      CSD103
+     C                   PARM      5             PZDig                                        CSD103
+     C                   PARM      8             PZDec                                        CSD103
+     C                   PARM      BNDCSP        PZSDCSP                                      CSD103
+     C                   PARM                    PZOut15                                      CSD103
+     C                   PARM                    PZFSign                                      CSD103
+     C                   MOVE      PZOut15       WNumBadj         13 8                        CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C     WNumBadj      ANDNE     *ZEROS                                                     CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBADJOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049401'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Averaging Option                                                             CSD103
+      *                                                                                       CSD103
+     C     DDAVOP        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      '0'           DDAVOP                         Default: 0    CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDAVOP        IFNE      '0'                                                        CSD103
+     C     DDAVOP        ANDNE     '1'                                                        CSD103
+     C     DDAVOP        ANDNE     '2'                                                        CSD103
+     C     DDAVOP        ANDNE     '3'                                                        CSD103
+     C     DDAVOP        ANDNE     '4'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDAVOPOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049403'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'Y'                                                        CSD103
+     C     DDAVOP        ANDEQ     '0'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDAVOPOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049404'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C     DDAVOP        ANDNE     '0'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDAVOPOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049405'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Base Rate for Accrual                                                        CSD103
+      *                                                                                       CSD103
+     C     DDBRAC        IFNE      *BLANKS                                                    CSD103
+      *                                                                                       CSD103
+     C                   SETOFF                                       93                      CSD103
+     C                   MOVE      DDCYCD        WBACYCD                                      CSD103
+     C                   MOVE      DDBRAC        WBABSRC                                      CSD103
+     C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             93                      CSD103
+     C     *IN93         IFEQ      '1'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBRACOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
+     C                   MOVEL     '5049407'     MsgIdArr(Ix)                                 CSD103
+     C                   SETOFF                                       93                      CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C                   MOVE      'N'           DDBRACOK                                     CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
+     C                   MOVEL     '5049417'     MsgIdArr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     DDDGMA        IFEQ      '01D'                                                      CSD103
+     C     DDDGMA        OREQ      'O  '                                                      CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBRACOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
+     C                   MOVEL     '5049409'     MsgIdArr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     DDAVOP        IFNE      '1'                                                        CSD103
+     C     DDAVOP        ANDNE     '2'                                                        CSD103
+     C     DDAVOP        ANDNE     '3'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBRACOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBRAC'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049406'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+      * Validate Weight Convention                                                            CSD103
+      *                                                                                       CSD103
+     C     DDWGHT        IFEQ      *BLANKS                                                    CSD103
+     C                   MOVE      '1'           DDWGHT                         Default: 1    CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDWGHT        IFNE      '1'                                                        CSD103
+     C     DDWGHT        ANDNE     '2'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDWGHTOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049408'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
@@ -853,6 +1170,38 @@
       * Update error info with that returned from the validation module
 
      C                   EXSR      UPDATERRS
+      *                                                                                       CSD103
+      * Validate Designated Maturity if changed                                               CSD103
+      *                                                                                       CSD103
+     C                   SETOFF                                       909192                  CSD103
+     C     *LOVAL        SETLL     SDBSRTXX                                                   CSD103
+     C                   DOW       *IN90 = *OFF                                               CSD103
+     C                   READ      SDBSRTXX      SDBSRTDS                 90                  CSD103
+      *  if this base rate is used as Base Rate for Accrual                                   CSD103
+     C     WBACYCD       IFEQ      DDCYCD                                                     CSD103
+     C     WBABRAC       ANDEQ     DDBSRC                                                     CSD103
+     C                   SETON                                        91                      CSD103
+     C                   LEAVE                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDDO                                                                CSD103
+      *                                                                                       CSD103
+     C     *IN91         IFEQ      *ON                                                        CSD103
+     C                   MOVE      DDCYCD        WBACYCD                                      CSD103
+     C                   MOVE      DDBSRC        WBABSRC                                      CSD103
+     C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             92                      CSD103
+     C     *IN92         IFEQ      '0'                                                        CSD103
+      *  check if the Designated Maturity of this base rate was changed                       CSD103
+     C     WBADGMA       IFNE      DDDGMA                                                     CSD103
+     C*                  EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDDGMAOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDDGMA'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049412'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   SETOFF                                       909192                  CSD103
       *
      C                   ENDSR
       *****************************************************************                       CSD006
@@ -961,31 +1310,6 @@
      C                   EXSR      UPDATERRS                                                  CSD006
       *                                                                                       CSD006
      C                   ENDSR                                                                CSD006
-      *****************************************************************                       CSD103
-     C/EJECT                                                                                  CSD103
-      *****************************************************************                       CSD103
-      ** FMTBADJ - Validate benchmark adjustment                                              CSD103
-      *****************************************************************                       CSD103
-     C     FMTBADJ       BEGSR                                                                CSD103
-      *                                                                                       CSD103
-      ** Validate Benchmark Adjustment                                                        CSD103
-      ** Ensure rate is correctly formatted                                                   CSD103
-      *                                                                                       CSD103
-     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
-     C                   MOVE      DDBADJ        @@ALPH                                       CSD103
-     C                   CALLB     'ZA0840'                                                   CSD103
-     C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM                    @@ALPH                         Display field CSD103
-     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
-     C                   PARM      5             @@IINT                         no.of integersCSD103
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
-     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
-     C                   PARM      *ZERO         @@AMT                          File field    CSD103
-     C                   PARM                    BNDCSP                                       CSD103
-	  *                                                                                      CSD103
-     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
-      *                                                                                       CSD103
-     C                   ENDSR                                                                CSD103
       *****************************************************************
       /EJECT                                                                                 BUG3124
       *****************************************************************                      BUG3124
@@ -1013,6 +1337,46 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDBSRN'                                 BUG3124
      C                   EVAL      MsgIdXAr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      Uppercase     ALPHAVAL         36                          CSD103
+     C                   MOVEL     Numbers       ALPHAVAL                                     CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDBSRC        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      ALPHAVAL      #1CHARPOS                                    CSD103
+     C                   MOVEL     DDBSRC        #1TESTN                                      CSD103
+     C     #1TESTN       SCAN      ALPHAVAL      #2CHARPOS                                    CSD103
+      *                                                                                       CSD103
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
+     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C     DDBSRC        OREQ      '00'                                                       CSD103
+     C                   MOVE      'N'           DDBSRCOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBSRC'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049402'     MsgIdXAr(Ix)                                 CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     DDACTN        IFEQ      'D'                                                        CSD103
+     C                   SETOFF                                       9091                    CSD103
+     C     *LOVAL        SETLL     SDBSRTXX                                                   CSD103
+     C                   DOW       *IN90 = *OFF                                               CSD103
+     C                   READ      SDBSRTXX      SDBSRTDS                 90                  CSD103
+      *  if this base rate is used as Base Rate for Accrual                                   CSD103
+     C     WBACYCD       IFEQ      DDCYCD                                                     CSD103
+     C     WBABRAC       ANDEQ     DDBSRC                                                     CSD103
+     C                   SETON                                        91                      CSD103
+     C                   LEAVE                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDDO                                                                CSD103
+      *                                                                                       CSD103
+     C     *IN91         IFEQ      *ON                                                        CSD103
+     C                   MOVE      'N'           DDBSRCOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBSRC'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049410'     MsgIdXAr(Ix)                                 CSD103
+     C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
                                                                                              BUG3124
                                                                                              BUG3124
@@ -1051,14 +1415,13 @@
      C                   MOVE      DDLBDY        BVLBDY                                       CSD103
      C                   MOVE      DDLODY        BVLODY                                       CSD103
      C                   MOVE      DDPDLY        BVPDLY                                       CSD103
-     C                                                                                        CSD103
-     C                   CALLB     'ZALIGN'                                                   CSD103
-     C                   PARM      *BLANKS       WZRetCode         7                          CSD103
-     C                   PARM      DDBADJ        WZFld16          16                          CSD103
-     C                   PARM      8             WZDec             1 0                        CSD103
-     C                   PARM      5             WZDig             2 0                        CSD103
-     C                   MOVE      WZFld16       BVBADJ                                       CSD103
-     C                                                                                        CSD103
+      *                                                                                       CSD103
+     C     PTBADJ        IFNE      0                                                          CSD103
+     C                   Z-SUB     WNumBadj      BVBADJ                                       CSD103
+     C                   ELSE                                                                 CSD103
+     C                   Z-ADD     WNumBadj      BVBADJ                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
      C                   MOVE      DDAVOP        BVAVOP                                       CSD103
      C                   MOVE      DDBRAC        BVBRAC                                       CSD103
      C                   MOVE      DDWGHT        BVWGHT                                       CSD103
@@ -1283,6 +1646,10 @@
      C                   ELSE                                                                 CSD103
      C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
      C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     SDBSRTKEY     KLIST                                                                CSD103
+     C                   KFLD                    WBACYCD                                      CSD103
+     C                   KFLD                    WBABSRC                                      CSD103
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

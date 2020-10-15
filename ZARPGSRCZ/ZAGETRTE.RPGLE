@@ -3,7 +3,7 @@
 000102200903     H COPYRIGHT('(c) Finastra International Limited 2020')
 000104200903      *****************************************************************
 000105200904/*STD *  RPGBASEBND                                                   *
-000106200924/*EXI *  TEXT('Midas SD API - Get rates from base rates file')        *
+000106201015/*EXI *  TEXT('Midas SD API - Get Rate from Base Rates File')         *
 000107200903      *****************************************************************
 000108200903      *                                                               *
 000109200924      *  Midas - Midas Standing Data API - Get rates from base rates  *
@@ -215,118 +215,166 @@
 002026200923     D    pProvFlag                   1a
 002027200923
 002028200923     D   ProvFlag      S               n
-002029200916
-002030200916      /free
-002031200916
+002029201015     D   notInHist     S               n   inz(False)
+002030200916
+002031200916      /free
 002032200916
-002033200916                    chain (pCCY:pBRC:pHDT) SDBSHSL1;
-002034200916
-002035200916                    if %found(SDBSHSL1);
-002036200916
-002037200923                         pRetVal = G0CBSR;
+002033200916
+002034200916                    chain (pCCY:pBRC:pHDT) SDBSHSL1;
+002035201015
+002036201015                    // if an exact match is found in SDBSHSPD retrieve the record
+002037200916                    if %found(SDBSHSL1);
 002038200916
-002039200916                    else;
+002039200923                         pRetVal = G0CBSR;
 002040200916
-002041200916                         setll (pCCY:pBRC:pHDT) SDBSHSL1;
+002041200916                    else;
 002042200916
-002043200916                         if %equal(SDBSHSL1);
-002044200916
-002045200923                              pRetVal = G0CBSR;
-002046200916
-002047200916                         elseif %found(SDBSHSL1);
+002043201015                         // Use SETLL to position the record to the next highest matching entry
+002044200916                         setll (pCCY:pBRC:pHDT) SDBSHSL1;
+002045200916
+002046201015                         // if the record found is having the exact match retrieve the record
+002047200916                         if %equal(SDBSHSL1);
 002048200916
-002049200916                              readp SDBSHSL1;
+002049200923                              pRetVal = G0CBSR;
 002050200916
-002051200916                              if %eof(SDBSHSL1);
-002052200916
-002053200916                                   read SDBSHSL1;
-002054200916
-002055200916                                   if %found(SDBSHSL1);
+002051201015                         // if the record found has a value greater than the key specified
+002052200916                         elseif %found(SDBSHSL1);
+002053200916
+002054201015                              //go to the previous record to retrieve the needed information
+002055200916                              readp SDBSHSL1;
 002056200916
-002057200923                                        ProvFlag = True;
-002058200923                                        pRetVal = G0CBSR;
-002059200916
-002060200916                                   endif;
-002061200916
-002062200916                              else;
-002063200916
-002064200916                                   if (pCCY = G0CYCD) and (pBRC = G0BSRC);
-002065200916
-002066200923                                        ProvFlag = True;
-002067200923                                        pRetVal = G0CBSR;
-002068200916
-002069200916                                   endif;
-002070200916
-002071200916                              endif;
-002072200916
-002073200916                         else;
-002074200916
-002075200916                              readp SDBSHSL1;
-002076200916
-002077200916                              if (pCCY = G0CYCD) and (pBRC = G0BSRC);
-002078200916
-002079200923                                   ProvFlag = True;
-002080200923                                   pRetVal = G0CBSR;
-002081200916
-002082200916                              else;
-002083200916
-002084200923                                  pRetVal = GetBaseRate( pCCY
-002085200916                                                       :pBRC
-002086200916                                                       :pHDT );
-002087200923                                  ProvFlag = True;
-002088200916
-002089200916                              endif;
-002090200916
-002091200916                         endif;
-002092200916
-002093200916                    endif;
-002094200916
-002095200916                    if  (BJRDNB < pHDT) and ProvFlag;
-002096200923                         pProvFlag = 'Y';
-002097200916                    endif;
-002098200923
-002099200923                    return;
-002100200916
-002101200916      /end-free
-002102200916     P   getHistRate   E
-002103200916
-002104200916      *****************************************************************
-002105200916      /EJECT
-002106200916      *****************************************************************
-002107200916      *                                                               *
-002108200916      *  getBaseRate - Get base rates from file SDBSRTPD              *
-002109200916      *  ===========   This subroutine will be called when there are  *
-002110200916      *                no records defined in SDBSHSPD                 *
-002111200916      *                                                               *
-002112200916      *  Called By: getHistRate                                       *
-002113200916      *                                                               *
-002114200916      *  Calls: getSDBSRT                                             *
-002115200916      *                                                               *
-002116200916      *****************************************************************
-002117200916
-002118200916     P getBaseRate     B
-002119200916     D getBaseRate     PI            11P 7
-002120200916     D    pCCY                        3a
-002121200916     D    pBRC                        2a
-002122200916     D    pHDT                        5  0
-002123200916     D   retVal        S             11P 7
-002124200916
-002125200916      /free
-002126200916                    pRtCd = *blanks;
-002127200916                    pOptn = '*KEY';
-002128200916                    retVal = 0;
-002129200916                    callp getSDBSRT(pRtCd:
-002130200916                                    pOptn:
-002131200916                                    pCCY:
-002132200916                                    pBRC:
-002133200916                                    dssdy);
-002134200916                    if pRtCd = *blanks;
-002135200916                        sdbsrt = dssdy;
-002136200916                        retVal = BANBRT;
-002137200916                    endif;
-002138200916                    return retVal;
-002139200916      /end-free
-002140200916
-002141200916     P   getBaseRate   E
-002142200910
-002143200903
+002057201015
+002058200916                              if %eof(SDBSHSL1);
+002059201015
+002060201015                                   // move forward to retrieve the correct information
+002061200916                                   read SDBSHSL1;
+002062200916
+002063200916                                   if %found(SDBSHSL1);
+002064200916
+002065200923                                        ProvFlag = True;
+002066200923                                        pRetVal = G0CBSR;
+002067200916
+002068200916                                   endif;
+002069200916
+002070200916                              else;
+002071200916
+002072201015                                   // ensure that the current record read is having the same ccy
+002073201015                                   // and base rate code
+002074200916                                   if (pCCY = G0CYCD) and (pBRC = G0BSRC);
+002075200916
+002076200923                                        ProvFlag = True;
+002077200923                                        pRetVal = G0CBSR;
+002078201015
+002079201015                                   else;
+002080201015
+002081201015                                        // otherwise, use only the ccy and base rate code to get the
+002082201015                                        //  first occurence of the needed information
+002083201015                                        chain (pCCY:pBRC) SDBSHSL1;
+002084201015                                        if %found(SDBSHSL1);
+002085201015                                             ProvFlag = True;
+002086201015                                             pRetVal = G0CBSR;
+002087201015                                        else;
+002088201015
+002089201015                                             // if still none is found this means that it does
+002090201015                                             // not exist in SDBSHSPD, use the main base rate file
+002091201015                                             // instead
+002092201015                                             notInHist = True;
+002093201015
+002094201015                                        endif;
+002095201015
+002096200916                                   endif;
+002097200916
+002098200916                              endif;
+002099200916
+002100200916                         else;
+002101200916
+002102201015                              // this will be executed when the key values specified in SETLL is
+002103201015                              // greater than the last record on the file SDBSHSPD, read the
+002104201015                              //  previous record
+002105200916                              readp SDBSHSL1;
+002106200916
+002107201015                              // ensure that the current record read is having the same ccy
+002108201015                              // and base rate code
+002109201015
+002110200916                              if (pCCY = G0CYCD) and (pBRC = G0BSRC);
+002111200916
+002112201015                                   ProvFlag = True;
+002113200923                                   pRetVal = G0CBSR;
+002114200916
+002115200916                              else;
+002116201015
+002117201015                                   // if still none is found this means that it does
+002118201015                                   // not exist in SDBSHSPD, use the main base rate file
+002119201015                                   // instead
+002120201015                                   notInHist = True;
+002121200916
+002122200916                              endif;
+002123200916
+002124200916                         endif;
+002125200916
+002126200916                    endif;
+002127201015
+002128201015                    // if record does not exist in SDBSHSPD, retrieve the information from
+002129201015                    // SDBSRTPD
+002130201015                    if NotInHist;
+002131201015                         pRetVal = GetBaseRate( pCCY
+002132201015                                               :pBRC
+002133201015                                               :pHDT
+002134201015                                              );
+002135201015                         ProvFlag = True;
+002136201015                    endif;
+002137201015
+002138201015                    // if the record retrieved from base rates history file is not an
+002139201015                    // exact match we will flag those as provisional rates.
+002140201015                    // However, the flag returned to the calling program will be set to 'Yes'
+002141201015                    // only when the current rundate is less than the history date
+002142201015
+002143200916                    if  (BJRDNB < pHDT) and ProvFlag;
+002144200923                         pProvFlag = 'Y';
+002145200916                    endif;
+002146200923
+002147200923                    return;
+002148200916
+002149200916      /end-free
+002150200916     P   getHistRate   E
+002151200916
+002152200916      *****************************************************************
+002153200916      /EJECT
+002154200916      *****************************************************************
+002155200916      *                                                               *
+002156200916      *  getBaseRate - Get base rates from file SDBSRTPD              *
+002157200916      *  ===========   This subroutine will be called when there are  *
+002158200916      *                no records defined in SDBSHSPD                 *
+002159200916      *                                                               *
+002160200916      *  Called By: getHistRate                                       *
+002161200916      *                                                               *
+002162200916      *  Calls: getSDBSRT                                             *
+002163200916      *                                                               *
+002164200916      *****************************************************************
+002165200916
+002166200916     P getBaseRate     B
+002167200916     D getBaseRate     PI            11P 7
+002168200916     D    pCCY                        3a
+002169200916     D    pBRC                        2a
+002170200916     D    pHDT                        5  0
+002171200916     D   retVal        S             11P 7
+002172200916
+002173200916      /free
+002174200916                    pRtCd = *blanks;
+002175200916                    pOptn = '*KEY';
+002176200916                    retVal = 0;
+002177200916                    callp getSDBSRT(pRtCd:
+002178200916                                    pOptn:
+002179200916                                    pCCY:
+002180200916                                    pBRC:
+002181200916                                    dssdy);
+002182200916                    if pRtCd = *blanks;
+002183200916                        sdbsrt = dssdy;
+002184200916                        retVal = BANBRT;
+002185200916                    endif;
+002186200916                    return retVal;
+002187200916      /end-free
+002188200916
+002189200916     P   getBaseRate   E
+002190200910
+002191200903

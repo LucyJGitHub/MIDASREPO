@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD050212           Date 02Apr18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
       *                 MD041578           Date 23Sep16               *
       *                 MD041407           Date 19Sep16               *
       *                 MD041389           Date 19Sep16               *
@@ -46,8 +45,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
-      *             file SDCRSHL0 for update                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD041578 - Last Action User is not displayed in the          *
@@ -326,9 +323,6 @@
 
      D***PDESC           S             60    DIM(8) CTDATA PERRCD(1)                          CGL157
      D PDESC           S             60    DIM(11) CTDATA PERRCD(1)                           CGL157
-      ** Override Database Table                                                            MD056982
-     D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                          MD056982
-     D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                          MD056982
 
      D RetCode         S              7A
      D PFileNam        S             10A
@@ -389,7 +383,6 @@
      D WBJACC          S             34A                                                    MD027295
      D WAJACC          S             34A                                                    MD027295
      D WWLLSR          S             10A                                                    MD028949
-     D WMsgLen         S             15P 5 INZ(50)                                          MD056982
 
       ** Parameter for Access Object
      D PRtcd           S              7A
@@ -415,9 +408,6 @@
      C                   EVAL      WBJACC = PBefJACC                                        MD027295
      C                   EVAL      WAJACC = PAftJACC                                        MD027295
      C                   EVAL      CustRefNum = *BLANKS                                    MD030161A
-     C                   CALL      'QCMDEXC'                                                MD056982
-     C                   PARM                    ##OV1                                      MD056982
-     C                   PARM                    WMsgLen                                    MD056982
      C                   IF        PBefCUST = *BLANKS AND                                   MD027295
      C                             PAftCUST = *BLANKS AND                                   MD027295
      C                             PBefACUS = *BLANKS AND                                   MD027295
@@ -1036,9 +1026,6 @@
      C                   ENDIF                                                              MD027295
                                                                                             MD027295
      C                   EXSR      SRProcessDtl2                                            MD027295
-     C                   CALL      'QCMDEXC'                                                MD056982
-     C                   PARM                    ##OV2                                      MD056982
-     C                   PARM                    WMsgLen                                    MD056982
 
      C                   EVAL      *INLR = *ON
 
@@ -1870,7 +1857,3 @@ FATCA Information Complete flag changed to 'x'
 CRS indicia changed
 CRS indicia electronic search
 CRS Subject to Reporting Change
-**CTDATA ##OV1
-OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)
-**CTDATA ##OV2
-DLTOVR FILE(SDCRSHL1)

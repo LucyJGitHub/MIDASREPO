@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD050212           Date 02Apr18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
       *                 MD051230           Date 08Jun18               *
       *                 MD040734           Date 23Aug16               *
       *               . CGL177             Date 11Jan16               *
@@ -32,8 +31,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
-      *             file SDCRSHL0 for update                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
@@ -75,9 +72,7 @@
      F**********                           COMMIT(PCommitNAHL)                     MD033947 MD051230
                                                                                               CGL157
       ** Midas SD - CRS Customer Details update                                               CGL157
-     F***SDCRSHL1  UF   E           K DISK    INFSR(*PSSR)                           CGL157 MD056982
-     FSDCRSHL0  UF   E           K DISK    INFSR(*PSSR)                                     MD056982
-     F                                     COMMIT(PCommitCUSD)                              MD056982
+     FSDCRSHL1  UF   E           K DISK    INFSR(*PSSR)                                       CGL157
                                                                                               CGL157
       ** Midas SD CRS Customer Details retrieval index                                        CGL157
      FSDCRSDL2  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
@@ -984,11 +979,9 @@
       *****************************************************************                       CGL157
      C     SrCRSExcCust  BEGSR                                                                CGL157
                                                                                               CGL157
-     C*****P_Cust        CHAIN     SDCRSHL1                                          CGL157 MD056982
-     C     P_Cust        CHAIN     SDCRSHL0                                                 MD056982
+     C     P_Cust        CHAIN     SDCRSHL1                                                   CGL157
                                                                                               CGL157
-     C**********         IF        %FOUND(SDCRSHL1)                                  CGL157 MD056982
-     C                   IF        %FOUND(SDCRSHL0)                                         MD056982
+     C                   IF        %FOUND(SDCRSHL1)                                           CGL157
                                                                                               CGL157
      C                   EVAL      WArrCnt = 0                                                CGL157
                                                                                               CGL157

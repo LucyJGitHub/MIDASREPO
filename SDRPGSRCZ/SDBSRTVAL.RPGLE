@@ -698,7 +698,6 @@
       *                                                                                       CSD103
      C     DDAVOP        IFNE      '1'                                                        CSD103
      C     DDAVOP        ANDNE     '2'                                                        CSD103
-     C     DDAVOP        ANDNE     '3'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDBRACOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103

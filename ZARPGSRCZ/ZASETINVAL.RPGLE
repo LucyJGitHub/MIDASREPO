@@ -143,6 +143,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056313 - Warning message is missing when inserting MM deal *
+      *             with blocked settlement account                   *
       *  MD052922 - Settlement Payment Customer details blank on WIP  *
       *             during dummy amend and reverse (SETL API).        *
       *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
@@ -2191,6 +2193,11 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
      C                   MOVE      'N'           DDRonxOK                                     CLE168
      C                   ENDIF                                                                CLE168
+     C                   ELSE                                                               MD056313
+     C                   ADD       1             WIdx                                       MD056313
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD056313
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                              MD056313
+     C                   MOVE      'W'           DDRonxOK                                   MD056313
      C                   ENDIF                                                                CLE168
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168
@@ -2519,6 +2526,11 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
      C                   MOVE      'N'           DDRonxOK                                     CLE168
      C                   ENDIF                                                                CLE168
+     C                   ELSE                                                               MD056313
+     C                   ADD       1             WIdx                                       MD056313
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD056313
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                              MD056313
+     C                   MOVE      'W'           DDRonxOK                                   MD056313
      C                   ENDIF                                                                CLE168
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168
@@ -2685,6 +2697,11 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
      C                   MOVE      'N'           DDRonxOK                                     CLE168
      C                   ENDIF                                                                CLE168
+     C                   ELSE                                                               MD056313
+     C                   ADD       1             WIdx                                       MD056313
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD056313
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                              MD056313
+     C                   MOVE      'W'           DDRonxOK                                   MD056313
      C                   ENDIF                                                                CLE168
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168
@@ -2811,6 +2828,11 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
      C                   MOVE      'N'           DDRonxOK                                     CLE168
      C                   ENDIF                                                                CLE168
+     C                   ELSE                                                               MD056313
+     C                   ADD       1             WIdx                                       MD056313
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD056313
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                              MD056313
+     C                   MOVE      'W'           DDRonxOK                                   MD056313
      C                   ENDIF                                                                CLE168
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168

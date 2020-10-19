@@ -101,7 +101,7 @@
 000365200903      ** ¦ =========================            ¦
 000366200903      ** +--------------------------------------+
 000367201001
-000368200930     D sdlibor       e ds                  extname(SDLIBRFLD)
+000368201015     D sdlibor       e ds                  extname(SDLIBRFLD)
 000369200930     D dssdy         e ds                  extname(DSSDY)
 000370201001     D scsard        e ds                  extname(SCSARDPD)
 000371200904
@@ -131,40 +131,44 @@
 000395201001     D pReturnCode     s              7A
 000396201001     D pOption         s              7A
 000397201001     D pSard           s              6A
-000398200925
-000399200903      ** +--------------------------------------+
-000400200903      ** ¦ Array declaration                    ¦
-000401200903      ** ¦ ==================                   ¦
+000398201014     D wrkRATE         s             20p15 inz(0)
+000399201014     D wrkEFRT         s             20p15 inz(0)
+000401200925
 000402200903      ** +--------------------------------------+
-000403200903
-000404200910      /free
-000405200903
-000406200903       // ** +--- Start of Main processing -----------------------------------+
-000407200903       // ** ¦                                                                ¦
-000408200903       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-000409200903       // ** ¦ executed at program activation.                                ¦
+000403200903      ** ¦ Array declaration                    ¦
+000404200903      ** ¦ ==================                   ¦
+000405200903      ** +--------------------------------------+
+000406200903
+000407200910      /free
+000408200903
+000409200903       // ** +--- Start of Main processing -----------------------------------+
 000410200903       // ** ¦                                                                ¦
-000411200903       // ** +----------------------------------------------------------------+
-000412200903
-000413201001                   select;
-000414201001
-000416201001                        when option = OPT_ACCRUE;
-000417200930
-000418201001                             exsr getAccrualRate;
+000411200903       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+000412200903       // ** ¦ executed at program activation.                                ¦
+000413200903       // ** ¦                                                                ¦
+000414200903       // ** +----------------------------------------------------------------+
+000415200903
+000416201001                   select;
+000417201001
+000418201001                        when option = OPT_ACCRUE;
 000419200930
-000420201001                        when option = OPT_INTRST;
+000420201001                             exsr getAccrualRate;
 000421200930
-000422201001                             exsr getInterestRate;
-000423201001
-000424201001                   endsl;
-000425200925
-000426200925                   exsr calculateEffRate;
-000427201001
-000428201001                   exsr computeInterestAmount;
-000429200925
-000430200903                   *Inlr = *On;
-000431200930
-000432200903                   return;
+000422201001                        when option = OPT_INTRST;
+000423200930
+000424201001                             exsr getInterestRate;
+000425201001
+000426201001                   endsl;
+000427200925
+000428200925                   exsr calculateEffRate;
+000429201001
+000430201001                   exsr computeInterestAmount;
+000431201013
+000432201013                   liborfields = sdlibor;
+000433200925
+000434200903                   *Inlr = *On;
+000435200930
+000436200903                   return;
 001622200903
 001884200903
 001885200903       //*************************************************************
@@ -260,7 +264,7 @@
 002067200925                               callp calculateRate(
 002068200925                                                     TCCY
 002069200925                                                   : BRAC
-002070200925                                                   : CALC
+002070201014                                                   : CALB
 002071200925                                                   : STDT
 002072200925                                                   : ENDT
 002073200925                                                   : LBAC
@@ -269,14 +273,14 @@
 002076200925                                                   : WGHT
 002077200925                                                   : INCE
 002078200925                                                   : PRFL
-002079200925                                                   : RATE
+002079201014                                                   : wrkRATE
 002080200925                                                  );
 002081200925
 002082200925                          // This option allows banks to do their own external compounding.
 002083200925                          // They would then feed the result of this manual compounding
 002084200925                          // into the compounded rate field in the deal to be used for accrual.
 002087200930                          when avop = '4';
-002088200925                               RATE = CART;
+002088201014                               wrkRATE = CART;
 002089201001
 002090200925                     endsl;
 002091200925
@@ -312,10 +316,10 @@
 002121200930                              AVOP = '2' or
 002122200930                              AVOP = '3';
 002123200925
-002124200925                              if LBAC = LODY;
-002125200925                                   BACK = LBAC;
-002126200925                              elseif LBAC > LODY;
-002127200925                                   BACK = LBAC;
+002124201018                              if LBDY = LODY;
+002125201018                                   BACK = LBDY;
+002126201018                              elseif LBDY > LODY;
+002127201018                                   BACK = LBDY;
 002128200925                              else;
 002129200925                                   BACK = LODY;
 002130200925                              endif;
@@ -335,13 +339,13 @@
 002144200930                                                : wBaseRate
 002145200925                                                : PRFL
 002146200925                                               );
-002147200930                              RATE = wBaseRate;
+002147201014                              wrkRATE = wBaseRate;
 002148200925
 002149200925                         // This option allows banks to do their own external compounding.
 002150200925                         // They would then feed the result of this manual compounding
 002151200925                         // into the compounded rate field in the deal to be used for accrual.
 002152200930                         when AVOP = '4';
-002153200925                              RATE = CART;
+002153201014                              wrkRATE = CART;
 002154200925                    endsl;
 002155200925
 002156200925       endsr;
@@ -361,76 +365,78 @@
 002170200925                    select;
 002171200925
 002172200925                         when SPIN = 'A';
-002173200930                              EFRT = RATE + SPRD;
+002173201014                              wrkEFRT = wrkRATE + SPRD;
 002174200925
 002175200925                         when SPIN = 'S';
-002176200930                              EFRT = RATE - SPRD;
+002176201014                              wrkEFRT = wrkRATE - SPRD;
 002177200925
 002178200925                         when SPIN = 'P';
-002179200930                              EFRT = RATE * (SPRD/100);
+002179201014                              wrkEFRT = wrkRATE * (SPRD/100);
 002181200925
-002182200925                    endsl;
-002183200925
-002184200925       endsr;
+002182201014                         other;
+002183201014                              wrkEFRT = wrkRATE;
+002184200925                    endsl;
 002185200925
-002186200903      /end-free
-002187201001
-002188201001       //*************************************************************
-002189201001       /EJECT
+002186200925       endsr;
+002187200925
+002188200903      /end-free
+002189201001
 002190201001       //*************************************************************
-002191201001       //                                                            *
-002192201001       // computeInterestAmount - Compute Interest Amount            *
+002191201001       /EJECT
+002192201001       //*************************************************************
 002193201001       //                                                            *
-002194201001       // Called by: Main processing                                 *
+002194201001       // computeInterestAmount - Compute Interest Amount            *
 002195201001       //                                                            *
-002196201001       //  Calls: None                                               *
+002196201001       // Called by: Main processing                                 *
 002197201001       //                                                            *
-002198201001       //*************************************************************
-002199201001
-002200201001       begsr computeInterestAmount;
+002198201001       //  Calls: None                                               *
+002199201001       //                                                            *
+002200201001       //*************************************************************
 002201201001
-002202201001                    callp getIntrstDays(
-002203201001                                           pRetCodeIn
-002204201001                                         : pIntrstDays
-002205201001                                         : STDT
-002206201001                                         : ENDT
-002207201001                                         : CALC
-002208201001                                         : pNoIntrstDays
-002210201001                                       );
-002211201001
-002212201001                    wrkField1 = PAMT * EFRT;
-002213201001
-002214201001                    select;
-002215201001
-002216201001                          when CALC = '6';
-002217201001
-002218201001                               wrkField2 = wrkField1 * pNoIntrstDays;
-002219201001
-002220201001                          other;
-002221201001
-002222201001                               wrkField2 = wrkField1 * pIntrstDays;
-002223201001
-002224201001                    endsl;
-002225201001
-002226201001                    select;
-002227201001
-002228201001                          when CALC = '2' or
-002229201001                               CALC = '3' or
-002230201001                               CALC = '5' or
-002231201001                               CALC = '7' and
-002232201001                               CIR004 = 'Y' or
-002233201001                               CALC = ' ';
-002234201001
-002235201001                               INTA = wrkField2 / 36000;
-002236201001
-002237201001                          when CALC = '1' or
-002238201001                               CALC = '4';
+002202201001       begsr computeInterestAmount;
+002203201001
+002204201001                    callp getIntrstDays(
+002205201001                                           pRetCodeIn
+002206201001                                         : pIntrstDays
+002207201001                                         : STDT
+002208201001                                         : ENDT
+002209201014                                         : CALB
+002210201001                                         : pNoIntrstDays
+002211201001                                       );
+002212201001
+002213201014                    wrkField1 = PAMT * wrkEFRT;
+002214201001
+002215201001                    select;
+002216201001
+002217201014                          when CALB = '6';
+002218201001
+002219201001                               wrkField2 = wrkField1 * pNoIntrstDays;
+002220201001
+002221201001                          other;
+002222201001
+002223201001                               wrkField2 = wrkField1 * pIntrstDays;
+002224201001
+002225201001                    endsl;
+002226201001
+002227201001                    select;
+002228201001
+002229201014                          when CALB = '2' or
+002230201014                               CALB = '3' or
+002231201014                               CALB = '5' or
+002232201014                               CALB = '7' and
+002233201001                               CIR004 = 'Y' or
+002234201014                               CALB = ' ';
+002235201001
+002236201014                               TNTA = wrkField2 / 36000;
+002237201001
+002238201014                          when CALB = '1' or
+002239201014                               CALB = '4';
 002242201001
-002243201001                               INTA = wrkField2 / 36500;
+002243201014                               TNTA = wrkField2 / 36500;
 002244201001
-002245201001                          when CALC = '6';
+002245201014                          when CALB = '6';
 002247201001
-002248201001                               INTA = wrkField2 / 36600;
+002248201014                               TNTA = wrkField2 / 36600;
 002249201001
 002250201001                    endsl;
 002252201001

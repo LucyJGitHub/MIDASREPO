@@ -21,12 +21,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056648 - Adding pending “Standing Data Authorisation” items*
+      *  MD056648 - Adding pending Standing Data Authorisation items  *
       *             to Fusion Midas Dashboard.                        *
       *             Fix error on implicit open and count should be    *
       *             alphanumeric.                                     *
       *  AR572523 - Created to count the number of unauthorised items *
-      *             per API. (Child: AR572524). Applied for MD-41403. *
+      *             per API. (Child: AR572524).                       *
       *           - Applied for MD056648.                             *
       *                                                               *
       *****************************************************************
@@ -44,8 +44,8 @@
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ F-specs                              ¦
-      ** ¦ =======                              ¦
+      ** | F-specs                              |
+      ** | =======                              |
       ** +--------------------------------------+
       *****************************************************************
      FGPZONEL2  IF   E           K DISK
@@ -53,11 +53,11 @@
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
-      ** ¦ D-specs                              ¦
-      ** ¦ =======                              ¦
+      ** | D-specs                              |
+      ** | =======                              |
       ** +--------------------------------------+
      D Value           S             50A
-     D*CountN**********S              5S 0                                                  MD056648
+     D*CountN***       S              5S 0                                                  MD056648
      D                 DS                                                                   MD056648
      D CountN                  1      5  0                                                  MD056648
      D CountA                  1      5                                                     MD056648
@@ -86,18 +86,18 @@
       *
 
       ** +--------------------------------------+
-      ** ¦ Named constants                      ¦
-      ** ¦ ===============                      ¦
+      ** | Named constants                      |
+      ** | ===============                      |
       ** +--------------------------------------+
 
       ** +--------------------------------------+
-      ** ¦ Arrays and Data Structures           ¦
-      ** ¦ ==========================           ¦
+      ** | Arrays and Data Structures           |
+      ** | ==========================           |
       ** +--------------------------------------+
 
       ** +--------------------------------------+
-      ** ¦ Declared variables                   ¦
-      ** ¦ ==================                   ¦
+      ** | Declared variables                   |
+      ** | ==================                   |
       ** +--------------------------------------+
 
      D @RUN            S              1
@@ -107,8 +107,8 @@
       *****************************************************************
       *
       ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦                                                                ¦
+      ** |                                                                |
+      ** |                                                                |
       ** +----------------------------------------------------------------+
 
       *********************************************************************
@@ -132,7 +132,7 @@
      C     LIBR          Chain     GPZONEL2
      C                   EVAL      System_ID  = ZOMSYS
      C                   EXSR      UpdateCount
-     C*******************OPEN      GPDWNLL0                                                 MD056648
+     C**********         OPEN      GPDWNLL0                                                 MD056648
      C/COPY GOCPYSRC,GOUPD_DWNL
      C                   CLOSE     GPDWNLL0
 
@@ -157,7 +157,7 @@
      C                   If        SQLCOD <> *ZEROS
      C                   Exsr      *PSSR
      C                   Else
-     C*******************Eval      VALUE = %CHAR(COUNTN)                                    MD056648
+     C**********         Eval      VALUE = %CHAR(COUNTN)                                    MD056648
      C                   Eval      VALUE = COUNTA                                           MD056648
      C                   EndIf
      C                   EndSr

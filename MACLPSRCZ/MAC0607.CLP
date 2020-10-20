@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD039095           Date 16Apr19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056839           Date 16Oct20              */
+/*       Prev Amend No. MD039095           Date 16Apr19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -27,6 +28,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056839 - MA No spool files should be cleared if ODACLR    */
+/*                  equal to 'N'.                                    */
+/*                - Revert changes of MD039095 for this program only.*/
 /*       MD039095 - CLROUTQ automatically if auto clear in optical   */
 /*                  ICD is Y else prompt operator.                   */
 /*       MD046248 - Finastra Rebranding                              */
@@ -130,9 +134,9 @@ READ:  rcvf    rcdfmt(MAARCHD0)
 
        CHGVAR     VAR(&CLEAR) VALUE('N')                              /*089636*/
        IF         COND(%SST(&FMT 12 1) *EQ 'Y') THEN(DO)              /*089636*/
-       CHGVAR     VAR(&CLEAR) VALUE('Y')                                                /*MD039095*/
-       ENDDO                                                                            /*MD039095*/
-       ELSE  (DO)                                                                       /*MD039095*/
+/******CHGVAR     VAR(&CLEAR) VALUE('Y') */                                    /*MD039095 MD056839*/
+/******ENDDO                             */                                    /*MD039095 MD056839*/
+/******ELSE  (DO)                        */                                    /*MD039095 MD056839*/
 /*/COPY WNCPYSRC,MAC0607001                                          */
              CHGVAR     VAR(%SUBSTRING(&MSG 18 10)) VALUE(&EAAOTQ)    /*LN1079*/
              SNDUSRMSG  MSG(&MSG) VALUES('Y' 'N') +

@@ -134,9 +134,9 @@ READ:  rcvf    rcdfmt(MAARCHD0)
 
        CHGVAR     VAR(&CLEAR) VALUE('N')                              /*089636*/
        IF         COND(%SST(&FMT 12 1) *EQ 'Y') THEN(DO)              /*089636*/
-/******CHGVAR     VAR(&CLEAR) VALUE('Y') */                                    /*MD039095 MD056839*/
-/******ENDDO                             */                                    /*MD039095 MD056839*/
-/******ELSE  (DO)                        */                                    /*MD039095 MD056839*/
+/******CHGVAR     VAR(&CLEAR) VALUE('Y')                                    */ /*MD039095 MD056839*/
+/******ENDDO                                                                */ /*MD039095 MD056839*/
+/******ELSE  (DO)                                                           */ /*MD039095 MD056839*/
 /*/COPY WNCPYSRC,MAC0607001                                          */
              CHGVAR     VAR(%SUBSTRING(&MSG 18 10)) VALUE(&EAAOTQ)    /*LN1079*/
              SNDUSRMSG  MSG(&MSG) VALUES('Y' 'N') +

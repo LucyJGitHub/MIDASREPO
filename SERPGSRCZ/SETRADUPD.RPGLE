@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 258848             Date 22May20               *
-      *  Prev Amend No. 248683             Date 22May20               *
+      *  Last Amend No. MD056996           Date 19Oct20               *
+      *  Prev Amend No. 258848             Date 22May20               *
+      *                 248683             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD020922           Date 26Jun13               *
@@ -122,6 +123,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056996 - In a 2 node system where trades are processed     *
+      *             symulaneously, a duplicate record error was       *
+      *             encountered in writing to BKPHPD file. Fix was to *
+      *             ensure that the duplicate record will be ignored  *
+      *             and no database error will be encountered.        *
       *  258848 - Corrected incorporation of fix 230335.              *
       *  248683 - 'B' record in TRADSDX2 is not being written during  *
       *           TRADE REPAIR. Amended program to write 'B' record to*
@@ -2451,8 +2457,12 @@
      C                   Z-ADD     *ZEROS        NAVP                                         CSE065
      C                   Z-ADD     *ZEROS        BKVAMT                                       CSE065
      C                   Z-ADD     *ZEROS        EQTAMT                                       CSE065
-     C                   WRITE     BKPHDDF
+     C**********         WRITE     BKPHDDF                                                  MD056996
+     C                   WRITE(E)  BKPHDDF                                                  MD056996
+     C                   IF        %ERROR AND %STATUS = 01021                               MD056996
+     C                   ELSE                                                               MD056996
      C                   ADD       1             BK_NOR
+     C                   ENDIF                                                              MD056996
      C*
      C                   END
      C*
@@ -2502,8 +2512,12 @@
      C                   Z-ADD     *ZEROS        NAVP                                         CSE065
      C                   Z-ADD     *ZEROS        BKVAMT                                       CSE065
      C                   Z-ADD     *ZEROS        EQTAMT                                       CSE065
-     C                   WRITE     BKPHDDF
+     C**********         WRITE     BKPHDDF                                                  MD056996
+     C                   WRITE(E)  BKPHDDF                                                  MD056996
+     C                   IF        %ERROR AND %STATUS = 01021                               MD056996
+     C                   ELSE                                                               MD056996
      C                   ADD       1             BK_NOR
+     C                   ENDIF                                                              MD056996
      C*
      C                   END
      C*

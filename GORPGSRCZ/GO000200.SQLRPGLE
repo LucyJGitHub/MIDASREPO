@@ -57,7 +57,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      D Value           S             50A
-     D*CountN**********S              5S 0                                                  MD056648
+     D*CountN***       S              5S 0                                                  MD056648
      D                 DS                                                                   MD056648
      D CountN                  1      5  0                                                  MD056648
      D CountA                  1      5                                                     MD056648
@@ -132,7 +132,7 @@
      C     LIBR          Chain     GPZONEL2
      C                   EVAL      System_ID  = ZOMSYS
      C                   EXSR      UpdateCount
-     C*******************OPEN      GPDWNLL0                                                 MD056648
+     C**********         OPEN      GPDWNLL0                                                 MD056648
      C/COPY GOCPYSRC,GOUPD_DWNL
      C                   CLOSE     GPDWNLL0
 
@@ -157,7 +157,7 @@
      C                   If        SQLCOD <> *ZEROS
      C                   Exsr      *PSSR
      C                   Else
-     C*******************Eval      VALUE = %CHAR(COUNTN)                                    MD056648
+     C**********         Eval      VALUE = %CHAR(COUNTN)                                    MD056648
      C                   Eval      VALUE = COUNTA                                           MD056648
      C                   EndIf
      C                   EndSr

@@ -166,8 +166,8 @@
      C     DDBRTCA       ANDNE     'C'                                                        CRE007
      C     DDBRTCA       ANDNE     'B'                                                        CRE007
      C     DDBRTCA       ANDNE     'R'                                                        CRE007
-      * Allow blanks.                                                                         198865
-     C     DDBRTCA       ANDNE     ' '                                                        198865
+      **Allow blanks.********                                                          198865 259496
+     C*****DDBRTCA*****  ANDNE     ' '                                                 198865 259496
       *                                                                                       CRE007
      C                   Move      'N'           DDBRTCAOk
      C                   Add       1             Idx

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR706553           Date 22May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056770           Date 19Oct20               *
+      *  Prev Amend No. AR706553           Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,6 +68,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056770 - GLC0340 03035 - GL0340 DBASE Error 4 due to blank *
+      *             currency in posting.                              *
+      *           - Settlement method '1 ' being received in Midas    *
+      *             should be validated as invalid for consistency.   *
       *  AR706553 - Trades Input API processing error, incorrect Pay  *
       *             To/From branch is defaulted. Patterned after fix  *
       *             245195. (Child: AR706554)                         *
@@ -993,6 +998,7 @@
      C                   ELSE
 
      C     DDSMTH        IFLT      '00'
+     C     DDSMTH        OREQ      '1 '                                                     MD056770
      C     DDSMTH        OREQ      '09'
      C     DDSMTH        OREQ      '10'
      C     DDSMTH        OREQ      '11'

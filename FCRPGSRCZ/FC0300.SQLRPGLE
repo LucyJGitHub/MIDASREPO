@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD057014           Date 16Oct20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -50,6 +51,7 @@
      F*                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD057014 - FCC0304 job is looping. Correct SQLCODE.             *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -707,7 +709,8 @@
      C+ fetch next from BCursor into :FCREPT :NullInds2                                     MD055265
      C/END-EXEC                                                                             MD055265
      C                   SETOFF                                       80                    MD055265
-     C                   IF        SQLCODE = 0                                              MD055265
+     C**********         IF        SQLCODE = 0                                     MD055265 MD057014
+     C                   IF        SQLCODE = 100                                            MD057014
      C                   SETON                                        80                    MD055265
      C                   ENDIF                                                              MD055265
       *

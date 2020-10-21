@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 264029             Date 22Feb10               *
+      *  Last Amend No. 251045             Date 13Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 264029             Date 22Feb10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,7 +34,8 @@
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  251045 - Array index out of range on IR Swap Validation      *
+      *         - Applied for MD056603                                *
       *  MD046248 - Finastra Rebranding                               *
       *  264029 - Reverse fix 233467 is transferred to IRSIRSVU and   *
       *           IRCIRSVU since this is blocking the user from       *
@@ -297,22 +299,25 @@
       ** Must be greater than or equal to Our Interest Accrual
       ** Control Date.
       *
-     C                   IF        WUNPCD <= #1UIAC
- 
+     C**********         IF        WUNPCD <= #1UIAC                                           251045
+     C                   IF        WUNPCD <  #1UIAC                                           251045
+
      C                   IF        #1DTYP = 'RS' or
      C                             (CIR006 = 'Y' and (#1DTYP = 'RP' or
      C                             #1DTYP = 'RR' or #1DTYP = 'RF'))
- 
+
+     C                   EVAL      Idx = Idx + 1                                              251045
      C                   EVAL      MsgIdXAr(Idx) = 'RS00041'
  
      C                   ELSE
- 
+
+     C                   EVAL      Idx = Idx + 1                                              251045
      C                   EVAL      MsgIdXAr(Idx) = 'RS00042'
  
      C                   ENDIF
  
      C                   EVAL      OKONPCD = 'N'
-     C                   EVAL      Idx = Idx + 1
+     C**********         EVAL      Idx = Idx + 1                                              251045
      C                   EVAL      FldNamXAr(Idx) = 'SONPCD    '
  
      C                   GOTO      ESRValONPCD
@@ -322,8 +327,10 @@
       ** Must be greater than or equal to Their Interest Accrual
       ** Control Date.
       *
-     C                   IF         #1DTYP = 'RS' and WUNPCD <= #1TIAC or
-     C                             (CIR006 ='Y' and WUNPCD <= #1TIAC and
+     C**********         IF         #1DTYP = 'RS' and WUNPCD <= #1TIAC or                     251045
+     C**********                   (CIR006 ='Y' and WUNPCD <= #1TIAC and                      251045
+     C                   IF         #1DTYP = 'RS' and WUNPCD < #1TIAC or                      251045
+     C                             (CIR006 ='Y' and WUNPCD < #1TIAC and                       251045
      C                             (#1DTYP = 'RP' or #1DTYP = 'RR' or
      C                              #1DTYP = 'RF'))
  
@@ -449,8 +456,9 @@
       ** Must be greater than or equal to Their Interest Accrual
       ** Control Date.
       *
-     C                   IF        WTNPCD <= #1TIAC
- 
+     C**********         IF        WTNPCD <= #1TIAC                                           251045
+     C                   IF        WTNPCD <  #1TIAC                                           251045
+
      C                   EVAL      OKTNPCD = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'STNPCD    '

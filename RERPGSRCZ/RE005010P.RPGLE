@@ -16,12 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. HUT107             Date 27May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056940           Date 19Oct20               *
+      *  Prev Amend No. HUT107             Date 27May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056940 - Incorrect Details Reflected in Secondary Tax      *
+      *             Amount column of DL005010P1 and RE005010P1        *
       *  HUT107 - Additional 3rd Party Trust Indicator                *
       *           (Upgrade HUT016 to FM2.1 SP22)                      *
       *           Addition of hooks HUT107_007 to HUT107_010          *
@@ -277,7 +280,8 @@
      C                   PARM      '*MSG    '    @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      BJLCCY        @DCCY             3
-     C     SDCURR        PARM      SDCURR        DSFDY
+     C*****SDCURR        PARM      SDCURR        DSFDY                                      MD056940
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD056940
       *
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -337,7 +341,8 @@
      C                   PARM      '*MSG    '    @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      CCY           @DCCY             3
-     C     SDCURR        PARM      SDCURR        DSFDY
+     C*****SDCURR        PARM      SDCURR        DSFDY                                      MD056940
+     C     SDCURR        PARM      SDCURR        DSSDY                                      MD056940
      C*
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -355,7 +360,8 @@
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      CUSTA         @DCST            10
      C                   PARM      *BLANKS       @KYST             7
-     C     SDCUST        PARM      SDCUST        DSFDY
+     C*****SDCUST        PARM      SDCUST        DSFDY                                      MD056940
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD056940
      C*
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -423,6 +429,40 @@
      C                   MOVE      @EN           NTBSAT
       *
      C                   END                                                    ** END 03
+      *                                                                                     MD056940
+     C                   ELSE                                                               MD056940
+      * Tax Code Blank                                                                      MD056940
+      ** Format Main Tax Amount using ZFRPED                                                MD056940
+     C                   MOVE      *BLANKS       @ENUM                                      MD056940
+     C                   Z-ADD     0             ZFLD15                                     MD056940
+     C                   MOVE      'J'           ZECODE                                     MD056940
+     C                   MOVE      A6NBDP        ZDECS                                      MD056940
+      *                                                                                     MD056940
+     C                   CALLB     'ZFRPED'                                                 MD056940
+     C                   PARM                    ZFLD15                                     MD056940
+     C                   PARM                    ZDECS                                      MD056940
+     C                   PARM                    ZECODE                                     MD056940
+     C                   PARM                    ZOUT22                                     MD056940
+     C                   PARM                    ZWRK25                                     MD056940
+      *                                                                                     MD056940
+     C                   MOVE      ZOUT22        @ENUM                                      MD056940
+     C                   MOVE      @EN           NTDLAT                                     MD056940
+      *                                                                                     MD056940
+      ** Format Main Tax Amount in Local Ccy using ZFRPED                                   MD056940
+     C                   MOVE      *BLANKS       @ENUM                                      MD056940
+     C                   Z-ADD     0             ZFLD15                                     MD056940
+     C                   MOVE      'J'           ZECODE                                     MD056940
+     C                   MOVE      BCCDP         ZDECS                                      MD056940
+     C*                                                                                     MD056940
+     C                   CALLB     'ZFRPED'                                                 MD056940
+     C                   PARM                    ZFLD15                                     MD056940
+     C                   PARM                    ZDECS                                      MD056940
+     C                   PARM                    ZECODE                                     MD056940
+     C                   PARM                    ZOUT22                                     MD056940
+     C                   PARM                    ZWRK25                                     MD056940
+      *                                                                                     MD056940
+     C                   MOVE      ZOUT22        @ENUM                                      MD056940
+     C                   MOVE      @EN           NTBSAT                                     MD056940
       *
      C                   END                                                    ** END 02
       *
@@ -482,6 +522,40 @@
      C                   MOVE      @EN           LTBSAT
       *
      C                   END                                                    ** END 06
+      *                                                                                     MD056940
+     C                   ELSE                                                               MD056940
+      * Tax Code2 Blank                                                                     MD056940
+      ** Format Secondary Tax Amount using ZFRPED                                           MD056940
+     C                   MOVE      *BLANKS       @ENUM                                      MD056940
+     C                   Z-ADD     0             ZFLD15                                     MD056940
+     C                   MOVE      'J'           ZECODE                                     MD056940
+     C                   MOVE      A6NBDP        ZDECS                                      MD056940
+     C*                                                                                     MD056940
+     C                   CALLB     'ZFRPED'                                                 MD056940
+     C                   PARM                    ZFLD15                                     MD056940
+     C                   PARM                    ZDECS                                      MD056940
+     C                   PARM                    ZECODE                                     MD056940
+     C                   PARM                    ZOUT22                                     MD056940
+     C                   PARM                    ZWRK25                                     MD056940
+      *                                                                                     MD056940
+     C                   MOVE      ZOUT22        @ENUM                                      MD056940
+     C                   MOVE      @EN           LTDLAT                                     MD056940
+      *                                                                                     MD056940
+      ** Format Secondary Tax Amount in Local Ccy using ZFRPED                              MD056940
+     C                   MOVE      *BLANKS       @ENUM                                      MD056940
+     C                   Z-ADD     0             ZFLD15                                     MD056940
+     C                   MOVE      'J'           ZECODE                                     MD056940
+     C                   MOVE      BCCDP         ZDECS                                      MD056940
+     C*                                                                                     MD056940
+     C                   CALLB     'ZFRPED'                                                 MD056940
+     C                   PARM                    ZFLD15                                     MD056940
+     C                   PARM                    ZDECS                                      MD056940
+     C                   PARM                    ZECODE                                     MD056940
+     C                   PARM                    ZOUT22                                     MD056940
+     C                   PARM                    ZWRK25                                     MD056940
+      *                                                                                     MD056940
+     C                   MOVE      ZOUT22        @ENUM                                      MD056940
+     C                   MOVE      @EN           LTBSAT                                     MD056940
       *
      C                   END                                                    ** END 05
       *

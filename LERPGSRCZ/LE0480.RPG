@@ -724,6 +724,7 @@
       *           WHEN S.R.GLINTC IS PERFORMED.                       *
       *                                                               *
       *****************************************************************
+     FSDLIBRF1IF  E           K        DISK                                                   XXX172
 0013 F*CLOAN***IP**F*****400  7AI     2 DISK                              S01270
 0013 F*CLOAN***IP**F*****434  7AI     2 DISK                        S01270S01220
 0013 F***CLOAN***IP**F     436  7AI     2 DISK                      S01220S01486
@@ -773,7 +774,8 @@
      F***LVNTXEL O   F    1070            DISK                                         218992 CGL029
      F*LVNTXEL*O***F****1124            DISK                                           CGL029 CLE042
      F*LVNTXEL*O   F    1128            DISK                                           CLE042 CLE154
-     FLVNTXEL O   F    1129            DISK                                                   CLE154
+     F***LVNTXEL O   F    1129            DISK                                         CLE154 CLE172
+     FLVNTXEL O   F    1130            DISK                                                   CLE172
      F***LVNTXZZ O   F     400            DISK                                             AR1078776
      FLVNTXZZ UF  E                    DISK                      A                         AR1078776
      FEMTE1H1 O   F     128            DISK                      A    U1
@@ -1680,6 +1682,11 @@
      I              MCUN                            TMCUN                                  AR1078776
      I              RECJ                            TRECJ                                  AR1078776
      I              NONE                            TNONE                                  AR1078776
+      *                                                                                       XXX172
+      ** Rename SDLIBF0  fields                                                               XXX172
+      *                                                                                       XXX172
+     ISDLIBF0                                                                                 XXX172
+     I              LNRF                            LLNRF                                     XXX172
      I/COPY WNCPYSRC,LE0480I002
 0527 I*
 0528 I*    DATA STRUCTURE FOR S/LVNTX OUTPUT KEYS
@@ -1933,6 +1940,7 @@
      I                                        8  10 NRLC                  S01195
      ISDSTPD    E DSSDSTPDPD                                                                  CER049
      ISDLIBF    E DSSDLIBRFLD                                                                 CLE172
+     I              LNRF                            LBLNRF                                    CLE172
      I              BLRT                            LBBLRT                                    CLE172
      I              AVOP                            LBAVOP                                    CLE172
      I              CART                            LBCART                                    CLE172
@@ -1947,16 +1955,14 @@
      I              SPIN                            LBSPIN                                    CLE172
      I              LBAC                            LBLBAC                                    CLE172
      I              TCCY                            LBTCCY                                    CLE172
-     I              CALC                            LBCALC                                    CLE172
+     I              CALB                            LBCALB                                    CLE172
      I              STDT                            LBSTDT                                    CLE172
      I              ENDT                            LBENDT                                    CLE172
      I              VALU                            LBVALU                                    CLE172
      I              INCE                            LBINCE                                    CLE172
      I              PRFL                            LBPRFL                                    CLE172
-     I              RATE                            LBRATE                                    CLE172
-     I              EFRT                            LBEFRT                                    CLE172
      I              PAMT                            LBPAMT                                    CLE172
-     I              INTA                            LBINTA                                    CLE172
+     I              TNTA                            LBTNTA                                    CLE172
       *                                                                                       CER049
      ISDACCT    E DSACCNTAB                                                                   CER049
      I              RECI                            ACRECI                                    CER049
@@ -1967,6 +1973,7 @@
      I              PTFR                            ACPTFR                                 AR1092898
       ** Account Details                                                                      CER049
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I              '999999'              C         TMPL                                      XXX172
       **                                                                  S01195
      I/COPY ZSRSRC,ZHOLI                                                  S01195
      I/COPY ZSRSRC,ZINTDYZ1                                               066550
@@ -2609,7 +2616,7 @@
      C                     GOTO END                                                           CLE036
      C                     ENDIF                                                              CLE036
      C                     ENDIF                                                              CLE036
-     *                                                                                       CLE172
+      *                                                                                       CLE172
       ** Determine if CLE172 is installed                                                     CLE172
       *                                                                                       CLE172
      C                     CALL 'AOSARDR0'                                                    CLE172
@@ -3221,8 +3228,12 @@
       *                                                                                       CLE172
       ** If CLE172 is switched ON, move LIBOR related fields to                               CLE172
       ** data structure SDLIBF                                                                CLE172
-     C           CLE172    IFEQ *ON                                                           CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C           *IN02     ANDEQ*ON
      C                     CLEARSDLIBF                                                        CLE172
+      ****---------------- DELETE LATER ****                                                  XXXXXX
+     C                     EXSR SRLINI                                                        XXXXXX
+     ****----------------- DELETE LATER ****                                                  XXXXXX
      C                     EXSR SRLBIN                                                        CLE172
      C                     ENDIF                                                              CLE172
      C                     MOVELLTYP      WKLTY1  1                                           CLE134
@@ -4487,7 +4498,8 @@
 0945 C**
 0946 C           BRTCHN    BEGSR                           **BRTCHN**
 0947 C**
-     C           BRTKEY    IFNE 0                                                           CLE075AF
+     C********** BRTKEY    IFNE 0                                                    CLE075AF CSD103
+     C           BRTKEY    IFNE *BLANKS                                                       CSD103
      C                     MOVELCCY       KEYBAS                                            CLE075AF
      C                     MOVE BRTKEY    KEYBAS                                            CLE075AF
      C                     ADD  1         BSRSEQ                                            CLE075AF
@@ -5160,6 +5172,19 @@
 1104 C**
      C/COPY WNCPYSRC,LE0480C020
 1104 C**                                                                  CLE033
+     C           CLE172    IFEQ 'Y'                                       CLE172
+     C                     MOVEL*BLANKS   PRVFL   1                       CLE172
+     C           EVTYPE    IFEQ 'I2'                                      CLE172
+     C           EVTYPE    OREQ 'M2'                                      CLE172
+     C           EVTYPE    OREQ 'R2'                                      CLE172
+     C           EVTYPE    OREQ 'P2'                                      CLE172
+     C           EVTYPE    OREQ 'MY'                                      CLE172
+     C           EVTYPE    OREQ 'RY'                                      CLE172
+     C           EVTYPE    OREQ 'IY'                                      CLE172
+     C                     MOVEL##PRFL    PRVFL                           CLE172
+     C                     ENDIF                                          CLE172
+     C                     ENDIF                                          CLE172
+      *                                                                   CLE172
      C           CLE033    IFEQ 'Y'                                       CLE033
      C           SETTYP    ANDEQ09                                        CLE033
      C           SETAC     ANDNE*BLANKS                                   CLE033
@@ -5194,20 +5219,17 @@
 1125 C                     Z-ADDEFFINT    ZIRATE
      C*                                                                   S01408
      C/COPY WNCPYSRC,LE0480CCP4                                           S01408
-     C*                                                                   S01408
-     *                                                                                       CLE172
-      ** If LIBOR Deregulation - Lending Feature is switched ON, overwrite the                CLE172
-      ** rate with the computed rate returned by ZARTVRAT                                     CLE172
       *                                                                                       CLE172
-     C           CLE172    IFEQ *ON                                                           CLE172
+      ** If LIBOR Deregulation - Lending Feature is switched ON, overwrite the                CLE172
+      ** interest amount returned by ZACMPINT                                                 CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVEL*BLANKS   ##PRFL  1                                           CLE172
      C                     Z-ADDZIBEG     LBSTDT                                              CLE172
      C                     Z-ADDZIEND     LBENDT                                              CLE172
      C                     Z-ADDZIEND     LBVALU                                              CLE172
      C                     MOVEL'N'       LBINCE                                              CLE172
      C                     MOVEL' '       LBPRFL                                              CLE172
-     C                     Z-ADD0         LBRATE                                              CLE172
-     C                     Z-ADD0         LBEFRT                                              CLE172
-     C                     Z-ADD0         LBINTA                                              CLE172
      C                     Z-ADDZIAMT     LBPAMT                                              CLE172
      C                     CALL 'ZACMPINT'                                                    CLE172
      C                     PARM '*INTMT*' @OPTN                                               CLE172
@@ -5215,12 +5237,13 @@
      C           SDLIBF    PARM SDLIBF    DSSDY                                               CLE172
       *                                                                                       CLE172
      C           @RTCD     IFEQ *BLANKS                                                       CLE172
-     C                     Z-ADDLBINTA    ZINTR                                               CLE172
+     C                     Z-ADDLBTNTA    ZINTR                                               CLE172
+     C                     MOVELLBPRFL    ##PRFL                                              CLE172
      C                     ELSE                                                               CLE172
      C           *LOCK     IN   LDA                                                           CLE172
      C                     MOVEL'LE0480'  DBPGM                                               CLE172
      C                     MOVEL'SDBSHSPD'DBFILE                                              CLE172
-     C                     MOVELBLRT      DBKEY                                               CLE172
+     C                     MOVELLBBRST    DBKEY                                               CLE172
      C                     Z-ADD99        DBASE                                               CLE172
      C                     OUT  LDA                                                           CLE172
      C                     SETON                     U7U8LR                                   CLE172
@@ -5390,6 +5413,7 @@
      C                     Z-ADD*ZEROS    REXRX                                               218992
      C                     Z-ADD*ZEROS    PEXRX                                               218992
 1197 C**
+     C                     MOVEL*BLANKS   PRVFL                                               CLE172
 1198 C**   OUTPUT RECORD TO FILE
 1199 C                     EXSR RECOUT
 1200 C**
@@ -5434,6 +5458,7 @@
      C           WINNTR    ADD  PDNN      WINNTR                                            MD020854
      C                     ENDIF                                                            MD020854
       *                                                                                     MD020854
+     C                     MOVEL*BLANKS   PRVFL                                               CLE172
 1232 C**   OUTPUT RECORD TO FILE
 1233 C                     EXSR RECOUT
       *                                                                                     AR727923
@@ -5487,32 +5512,31 @@
      C                     Z-ADDINTBAS    ZICALC                                              221708
      C                     Z-ADDEFFINT    ZIRATE                                              221708
      C/COPY WNCPYSRC,LEH01340
-     *                                                                                       CLE172
+      *                                                                                       CLE172
       ** If LIBOR Deregulation - Lending Feature is switched ON, overwrite the                CLE172
       ** rate with the computed rate returned by ZACMPINT                                     CLE172
       *                                                                                       CLE172
-     C           CLE172    IFEQ *ON                                                           CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVEL*BLANKS   ##PRFL                                              CLE172
      C                     Z-ADDZIBEG     LBSTDT                                              CLE172
      C                     Z-ADDZIEND     LBENDT                                              CLE172
      C                     Z-ADDZIEND     LBVALU                                              CLE172
      C                     MOVEL'N'       LBINCE                                              CLE172
      C                     MOVEL' '       LBPRFL                                              CLE172
-     C                     Z-ADD0         LBRATE                                              CLE172
-     C                     Z-ADD0         LBEFRT                                              CLE172
-     C                     Z-ADD0         LBINTA                                              CLE172
      C                     Z-ADDZIAMT     LBPAMT                                              CLE172
-     C                     CALL 'ZARTVRAT'                                                    CLE172
+     C                     CALL 'ZACMPINT'                                                    CLE172
      C                     PARM '*INTMT*' @OPTN                                               CLE172
      C                     PARM '       ' @RTCD                                               CLE172
      C           SDLIBF    PARM SDLIBF    DSSDY                                               CLE172
       *                                                                                       CLE172
      C           @RTCD     IFEQ *BLANKS                                                       CLE172
-     C                     Z-ADDLBINTA    ZINTR                                               CLE172
+     C                     Z-ADDLBTNTA    ZINTR                                               CLE172
+     C                     MOVELLBPRFL    ##PRFL                                              CLE172
      C                     ELSE                                                               CLE172
      C           *LOCK     IN   LDA                                                           CLE172
      C                     MOVEL'LE0480'  DBPGM                                               CLE172
      C                     MOVEL'SDBSHSPD'DBFILE                                              CLE172
-     C                     MOVELBLRT      DBKEY                                               CLE172
+     C                     MOVELLBBRST    DBKEY                                               CLE172
      C                     Z-ADD99        DBASE                                               CLE172
      C                     OUT  LDA                                                           CLE172
      C                     SETON                     U7U8LR                                   CLE172
@@ -12440,27 +12464,27 @@
      C           SRLBIN    BEGSR                                                              CLE172
       *                                                                                       CLE172
       ** Backward Looking Term Rate                                                           CLE172
-     C                     MOVELBLRT      LBBLRT                                              CLE172
+     C                     MOVELBLRTL     LBBLRT                                              CLE172
       ** Averaging Option                                                                     CLE172
-     C                     MOVELAVOP      LBAVOP                                              CLE172
+     C                     MOVELAVOPL     LBAVOP                                              CLE172
       ** Compounded/Average Rate                                                              CLE172
-     C                     Z-ADDCART      LBCART                                              CLE172
+     C                     Z-ADDCARTL     LBCART                                              CLE172
       ** Lookback Days for Settlement                                                         CLE172
-     C                     Z-ADDLBDY      LBLBDY                                              CLE172
+     C                     Z-ADDLBDYL     LBLBDY                                              CLE172
       ** Lockout Days                                                                         CLE172
-     C                     Z-ADDLODY      LBLODY                                              CLE172
+     C                     Z-ADDLODYL     LBLODY                                              CLE172
       ** Payment Delay Days                                                                   CLE172
-     C                     Z-ADDPLDY      LBPLDY                                              CLE172
+     C                     Z-ADDPLDYL     LBPLDY                                              CLE172
       ** Benchmark Adjustment                                                                 CLE172
-     C                     Z-ADDBADJ      LBBADJ                                              CLE172
+     C                     Z-ADDBADJL     LBBADJ                                              CLE172
       ** Weight Convention                                                                    CLE172
-     C                     MOVELWGHT      LBWGHT                                              CLE172
+     C                     MOVELWGHTL     LBWGHT                                              CLE172
       ** Base Rate for Accrual                                                                CLE172
-     C                     MOVELBRAC      LBBRAC                                              CLE172
+     C                     MOVELBRACL     LBBRAC                                              CLE172
       ** Lookback Days for Accrual                                                            CLE172
-     C                     MOVELLBAC      LBLBAC                                              CLE172
+     C                     MOVELLBACL     LBLBAC                                              CLE172
       ** Base Rate Code for Settlement                                                        CLE172
-     C                     MOVELBLRT      LBBRST                                              CLE172
+     C                     MOVELBRTT      LBBRST                                              CLE172
       ** Spread Rate                                                                          CLE172
      C                     Z-ADDRTSP      LBSPRD                                              CLE172
       ** Spread Indicator                                                                     CLE172
@@ -12468,32 +12492,35 @@
       ** Transaction Currency                                                                 CLE172
      C                     MOVELCCY       LBTCCY                                              CLE172
       ** Calculation Basis                                                                    CLE172
-     C                     MOVELICBS      LBCALC                                              CLE172
+     C                     MOVELICBS      LBCALB                                              CLE172
       *                                                                                       CLE172
      C                     ENDSR                                                              CLE172
       *                                                                                       CLE172
-      *****************************************************************                       XXX103
-      /EJECT                                                                                  XXX103
-      *****************************************************************                       XXX103
-      *                                                               *                       XXX103
-      *  SRLINI - Subroutine to initialise LIBOR related fields       *                       XXX103
-      *           from CLOANCL - *** DELETE LATER ***                 *                       XXX103
-      *                                                               *                       XXX103
-      *****************************************************************                       XXX103
-      *                                                                                       XXX103
-     C           SRLINI    BEGSR                                                              XXX103
-     C                     MOVEL'Y'       BLRT    1                                           XXX103
-     C                     MOVEL'1'       AVOP    1                                           XXX103
-     C                     Z-ADD0         CART   117                                          XXX103
-     C                     Z-ADD0         LBDY    20                                          XXX103
-     C                     Z-ADD0         LODY    20                                          XXX103
-     C                     Z-ADD0         PLDY    20                                          XXX103
-     C                     Z-ADD0         BADJ    20                                          XXX103
-     C                     MOVEL'1'       WGHT    1                                           XXX103
-     C                     MOVEL'12'      BRAC    2                                           XXX103
-     C                     Z-ADD0         LBAC    20                                          XXX103
-     C                     ENDSR                                                              XXX103
-      *                                                                                       XXX103
+      *****************************************************************                       XXX172
+      /EJECT                                                                                  XXX172
+      *****************************************************************                       XXX172
+      *                                                               *                       XXX172
+      *  SRLINI - Subroutine to initialise LIBOR related fields       *                       XXX172
+      *           from CLOANCL - *** DELETE LATER ***                 *                       XXX172
+      *                                                               *                       XXX172
+      *****************************************************************                       XXX172
+      *                                                                                       XXX172
+     C           SRLINI    BEGSR                                                              XXX172
+     C           LNRF      CHAINSDLIBF0              55                                       XXX172
+     C   55      TMPL      CHAINSDLIBF0              55                                       XXX172
+     C                     MOVELBLRT      BLRTL   1                                           XXX172
+     C                     MOVELAVOP      AVOPL   1                                           XXX172
+     C                     Z-ADDCART      CARTL  117                                          XXX172
+     C                     Z-ADDLBDY      LBDYL   20                                          XXX172
+     C                     Z-ADDLODY      LODYL   20                                          XXX172
+     C                     Z-ADDPLDY      PLDYL   20                                          XXX172
+     C                     Z-ADDBADJ      BADJL   20                                          XXX172
+     C                     MOVELWGHT      WGHTL   1                                           XXX172
+     C                     MOVELBRAC      BRACL   2                                           XXX172
+     C                     Z-ADDLBAC      LBACL   20                                          XXX172
+     C                     MOVELBRTT      BRSTL   2                                           XXX172
+     C                     ENDSR                                                              XXX172
+      *                                                                                       XXX172
       ****************************************************************                      MD021605
      C/COPY WNCPYSRC,LE0480C015
      C/COPY ZSRSRC,ZDATE1Z2
@@ -12646,6 +12673,7 @@
      O                 28 51           1129 '1'                                               CLE154
      O                 28 52           1129 '2'                                               CLE154
      O                 28 53           1129 '3'                                               CLE154
+     O                         PRVFL   1130                                                   CLE172
       *                                                                   CEU004
       * CEU004 Change - 1st new event created for non-blank setlement ccy.CEU004
       *                                                                   CEU004
@@ -12742,6 +12770,7 @@
      O                 28 51           1129 '1'                                               CLE154
      O                 28 52           1129 '2'                                               CLE154
      O                 28 53           1129 '3'                                               CLE154
+     O                         PRVFL   1130                                                   CLE172
       *                                                                   CEU004
       ** CEU004 Change - 2nd new event created for non-blank setlement ccyCEU004
       *                                                                   CEU004

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD055082           Date 16Jan20               *
+      *  Last Amend No. MD056601           Date 02Oct20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD055082           Date 16Jan20               *
       *                 MD052276           Date 16Jan19               *
       *                 MD051329           Date 18Jun18               *
       *                 MD050278           Date 08May18               *
@@ -108,6 +109,12 @@
       *                                                                *
       *----------------------------------------------------------------*
       *                                                                *
+      *  MD056601 - Component LERC20 ran a long duration during COB.  *
+      *             Redesign fix 203521 to improve performance:       *
+      *             1. check if RC exists in HISACTL2 that coincides  *
+      *             with BV loan repayment. If found then use the     *
+      *             revolving credit change record, else:             *
+      *             2. do a single read in FACHISA using HISUPD.      *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -331,6 +338,8 @@
      F            LOAMSDKF                          KRENAMEACTNPDKF                           CLE134
      FLELOMKL5IF  E           K        DISK                                                 AR649939
      F            LOAMSDKF                          KRENAMELOMNEWF                          AR649939
+     FHISACTL2IF  E           K        DISK                                                 MD056601
+     F            HISACTF                           KRENAMEH2SACTF                          MD056601
      FLER020P1O   E             50     PRINTER      KINFDS SPOOL      UC
       * Main report of Facility Reductions due to Repayments
       *
@@ -590,6 +599,53 @@
      I              CLAS                            CLAS2                                   AR649939
      I              DFCL                            DFCL2                                   AR649939
      I              SLCL                            SLCL2                                   AR649939
+      *                                                                                     MD056601
+     IH2SACTF                                                                               MD056601
+     I              BRCA                            B2CA                                    MD056601
+     I              HACNUM                          H2CNUM                                  MD056601
+     I              HAFCTY                          H2FCTY                                  MD056601
+     I              HADATE                          H2DATE                                  MD056601
+     I              HASEQ                           H2SEQ                                   MD056601
+     I              HALOAN                          H2LOAN                                  MD056601
+     I              HAACTN                          H2ACTN                                  MD056601
+     I              HAAAMT                          H2AAMT                                  MD056601
+     I              HAPART                          H2PART                                  MD056601
+     I              HALCRF                          H2LCRF                                  MD056601
+     I              GEDT                            G2DT                                    MD056601
+     I              QQSQNO                          Q2SQNO                                  MD056601
+     I              HAECIN                          H2ECIN                                  MD056601
+     I              HARCIN                          H2RCIN                                  MD056601
+     I              HAGASS                          H2GASS                                  MD056601
+     I              HATRRC                          H2TRRC                                  MD056601
+     I              HAOLRC                          H2OLRC                                  MD056601
+     I              QQTSEQ                          Q2TSEQ                                  MD056601
+     I              HALUCY                          H2LUCY                                  MD056601
+     I              HALUAM                          H2LUAM                                  MD056601
+     I              HAEXRT                          H2EXRT                                  MD056601
+     I              HARTMD                          H2RTMD                                  MD056601
+     I              HAPTYP                          H2PTYP                                  MD056601
+     I              HARCSI                          H2RCSI                                  MD056601
+     I              HALPFI                          H2LPFI                                  MD056601
+     I              HADEAL                          H2DEAL                                  MD056601
+     I              HAMCY                           H2MCY                                   MD056601
+     I              HAACBR                          H2ACBR                                  MD056601
+     I              HAACCU                          H2ACCU                                  MD056601
+     I              HAACCY                          H2ACCY                                  MD056601
+     I              HAACCD                          H2ACCD                                  MD056601
+     I              HAACSQ                          H2ACSQ                                  MD056601
+     I              HAACNO                          H2ACNO                                  MD056601
+     I              HATTEO                          H2TTEO                                  MD056601
+     I              HAPTEO                          H2PTEO                                  MD056601
+     I              HAEXCY                          H2EXCY                                  MD056601
+     I              HATVAL                          H2TVAL                                  MD056601
+     I              HAWEIG                          H2WEIG                                  MD056601
+     I              HAWCPC                          H2WCPC                                  MD056601
+     I              HAINOF                          H2INOF                                  MD056601
+     I              HAFXMT                          H2FXMT                                  MD056601
+     I              HAFXPC                          H2FXPC                                  MD056601
+     I              HARIND                          H2RIND                                  MD056601
+     I              HASQNO                          H2SQNO                                  MD056601
+     I              HATSEQ                          H2TSEQ                                  MD056601
       *
      I            DS
       *  Old Facility Amount
@@ -1117,61 +1173,88 @@
      C**********           Z-ADD*ZEROS    WKFCUS  60                                   203521 CSD027
      C                     MOVE *BLANKS   WKFCUS  6                                           CSD027
      C                     Z-ADD*ZEROS    WK@FAC  50                                          203521
-      *                                                                                       203521
-      ** Read through HISUPD to retrieve the latest RC action and use                         203521
-      ** this as the Revolving credit indicator                                               203521
-      *                                                                                       203521
+      ***********                                                                    203521 MD056601
+      ***Read*through*HISUPD*to*retrieve*the*latest*RC*action*and*use**              203521 MD056601
+      ***this*as*the*Revolving*credit*indicator************************              203521 MD056601
+      ***********                                                                    203521 MD056601
      C********** HISKEY    SETLLHISUPD                                                 179594 203521
-     C           KEY002    SETLLHISUPD                                                        203521
-     C                     MOVEA'00'      *IN,11                          179594
+     C********** KEY002    SETLLHISUPD                                               203521 MD056601
+     C**********           MOVEA'00'      *IN,11                                     179594 MD056601
      C**********           READ HISUPD                   13                            179594 203521
-     C           KEY002    READEHISUPD                   13                                   203521
-     C           *IN13     IFEQ '0'                                                           203521
-     C           *IN11     IFEQ '1'                                                           203521
-     C                     MOVE FADATE    WKDATE  50                                          203521
-     C                     ELSE                                                               203521
-     C                     MOVE HADATE    WKDATE                                              203521
-     C                     ENDIF                                                              203521
-     C                     ENDIF                                                              203521
-      *                                                                   179594
+     C********** KEY002    READEHISUPD                   13                          203521 MD056601
+     C********** *IN13     IFEQ '0'                                                  203521 MD056601
+     C********** *IN11     IFEQ '1'                                                  203521 MD056601
+     C**********           MOVE FADATE    WKDATE  50                                 203521 MD056601
+     C**********           ELSE                                                      203521 MD056601
+     C**********           MOVE HADATE    WKDATE                                     203521 MD056601
+     C**********           ENDIF                                                     203521 MD056601
+     C**********           ENDIF                                                     203521 MD056601
+      **********                                                                     179594 MD056601
      C********** *IN13     DOUEQ'1'                                                    179594 203521
-     C           *IN13     DOWEQ'0'                                                           203521
-     C           VDAT      ANDGEWKDATE                                                        203521
-      *                                                                   179594
-     C           *IN11     IFEQ '1'                                       179594
-     C                     MOVE FAACTN    WKACTN  2                       179594
+     C********** *IN13     DOWEQ'0'                                                  203521 MD056601
+     C********** VDAT      ANDGEWKDATE                                               203521 MD056601
+      **********                                                                     179594 MD056601
+     C********** *IN11     IFEQ '1'                                                  179594 MD056601
+     C**********           MOVE FAACTN    WKACTN  2                                  179594 MD056601
      C***********          MOVE FADATE    WKDATE  50                                   179594 203521
-     C                     MOVE FARCIN    WKRCIN  1                       179594
-     C                     MOVE BRCA      WKFCLB                                              203521
-     C                     MOVE FACNUM    WKFCUS                                              203521
-     C                     MOVE FAFCTY    WK@FAC                                              203521
-     C                     ENDIF                                          179594
-      *                                                                   179594
-     C           *IN12     IFEQ '1'                                       179594
-     C                     MOVE HAACTN    WKACTN  2                       179594
+     C**********           MOVE FARCIN    WKRCIN  1                                  179594 MD056601
+     C**********           MOVE BRCA      WKFCLB                                     203521 MD056601
+     C**********           MOVE FACNUM    WKFCUS                                     203521 MD056601
+     C**********           MOVE FAFCTY    WK@FAC                                     203521 MD056601
+     C**********           ENDIF                                                     179594 MD056601
+      **********                                                                     179594 MD056601
+     C********** *IN12     IFEQ '1'                                                  179594 MD056601
+     C**********           MOVE HAACTN    WKACTN  2                                  179594 MD056601
      C**********           MOVE HADATE    WKDATE  50                                   179594 203521
-     C                     MOVE HARCIN    WKRCIN  1                       179594
-     C                     MOVE BRCA      WKFCLB                                              203521
-     C                     MOVE HACNUM    WKFCUS                                              203521
-     C                     MOVE HAFCTY    WK@FAC                                              203521
-     C                     ENDIF                                          179594
-      *                                                                   179594
-     C           WKACTN    IFEQ 'RC'                                      179594
+     C**********           MOVE HARCIN    WKRCIN  1                                  179594 MD056601
+     C**********           MOVE BRCA      WKFCLB                                     203521 MD056601
+     C**********           MOVE HACNUM    WKFCUS                                     203521 MD056601
+     C**********           MOVE HAFCTY    WK@FAC                                     203521 MD056601
+     C**********           ENDIF                                                     179594 MD056601
+      **********                                                                     179594 MD056601
+     C********** WKACTN    IFEQ 'RC'                                                 179594 MD056601
      C**********           LEAVE                                                       179594 203521
-     C                     MOVE 'Y'       WRCCHG                                              203521
-     C                     MOVE WKRCIN    WREVIN                                              203521
-     C                     ENDIF                                          179594
-      *                                                                   179594
-     C                     MOVEA'00'      *IN,11                          179594
-     C           KEY002    READEHISUPD                   13               179594
-     C           *IN13     IFEQ '0'                                                           203521
-     C           *IN11     IFEQ '1'                                                           203521
-     C                     MOVE FADATE    WKDATE                                              203521
-     C                     ELSE                                                               203521
-     C                     MOVE HADATE    WKDATE                                              203521
-     C                     ENDIF                                                              203521
-     C                     ENDIF                                                              203521
-     C                     ENDDO                                          179594
+     C**********           MOVE 'Y'       WRCCHG                                     203521 MD056601
+     C**********           MOVE WKRCIN    WREVIN                                     203521 MD056601
+     C**********           ENDIF                                                     179594 MD056601
+      **********                                                                     179594 MD056601
+     C**********           MOVEA'00'      *IN,11                                     179594 MD056601
+     C********** KEY002    READEHISUPD                   13                          179594 MD056601
+     C********** *IN13     IFEQ '0'                                                  203521 MD056601
+     C********** *IN11     IFEQ '1'                                                  203521 MD056601
+     C**********           MOVE FADATE    WKDATE                                     203521 MD056601
+     C**********           ELSE                                                      203521 MD056601
+     C**********           MOVE HADATE    WKDATE                                     203521 MD056601
+     C**********           ENDIF                                                     203521 MD056601
+     C**********           ENDIF                                                     203521 MD056601
+     C**********           ENDDO                                                     179594 MD056601
+      *                                                                                     MD056601
+     C           HISKEY    SETGTHISACTL2                                                    MD056601
+     C           KEY002    REDPEHISACTL2                 18                                 MD056601
+     C           *IN18     DOWEQ'0'                                                         MD056601
+     C           H2ACTN    IFEQ 'RC'                                                        MD056601
+     C                     MOVE B2CA      WKFCLB                                            MD056601
+     C                     MOVE H2CNUM    WKFCUS                                            MD056601
+     C                     MOVE H2FCTY    WK@FAC                                            MD056601
+     C                     MOVE H2RCIN    WREVIN                                            MD056601
+     C                     MOVE 'Y'       WRCCHG                                            MD056601
+     C                     LEAVE                                                            MD056601
+     C                     ENDIF                                                            MD056601
+     C           KEY002    REDPEHISACTL2                 18                                 MD056601
+     C                     ENDDO                                                            MD056601
+      *                                                                                     MD056601
+     C           WRCCHG    IFEQ 'N'                                                         MD056601
+     C           HISKEY    SETGTHISUPD                                                      MD056601
+     C           KEY002    REDPEFACHISAF                 19                                 MD056601
+     C           *IN19     IFEQ '1'                                                         MD056601
+     C           RVCR      CABEQ'Y'       AEXIT                                             MD056601
+     C                     ELSE                                                             MD056601
+     C                     MOVE FARCIN    WKRCIN  1                                         MD056601
+     C                     MOVE BRCA      WKFCLB                                            MD056601
+     C                     MOVE FACNUM    WKFCUS                                            MD056601
+     C                     MOVE FAFCTY    WK@FAC                                            MD056601
+     C                     ENDIF                                                            MD056601
+     C                     ENDIF                                                            MD056601
       *                                                                   179594
      C           FCLB      IFEQ WKFCLB                                    179594
      C           FCUS      ANDEQWKFCUS                                    179594

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034505           Date 26May15               *
+      *  Last Amend No. CLE172             Date 05Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034505           Date 26May15               *
       *                 AR868380           Date 10Jun13               *
       *                 CLE134             Date 01Aug12               *
       *                 BUG27966A          Date 05Aug10               *
@@ -55,46 +57,49 @@
       *                 172073             Date 27Oct00               *
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CFT004             Date 27Jul99               *
-      * Midas DBA 3.00 ---------------- Base ----------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 141213             Date 23Aug98               *
-      *                  CAP002             Date 01May98                 *
-     F*                  125373B            DATE  18FEB98                *
-     F*                  122960             DATE  15SEP97                *
-     F*                  122601             DATE  04SEP97                *
-     F*                  CCB002             DATE  11JUL96                *
-     F*                  082738             DATE  17MAR95                *
-     F*                  080050             DATE  26JAN95                *
-     F*                  068347             DATE  18MAR94                *
-     F*                  S01435             DATE  11SEP93                *
-     F*                  053418             DATE  03JUN93                *
-     F*                  S01414             DATE  29MAR93                *
-     F*                  041693             DATE  05JAN93                *
-     F*                  045014             DATE  07DEC92                *
-     F*                  031876             DATE  28OCT92                *
-     F*                                                                  *
-     F*------------------------------------------------------------------*
-     F*                                                                  *
+      *                  CAP002             Date 01May98              *
+      *                  125373B            DATE  18FEB98             *
+      *                  122960             DATE  15SEP97             *
+      *                  122601             DATE  04SEP97             *
+      *                  CCB002             DATE  11JUL96             *
+      *                  082738             DATE  17MAR95             *
+      *                  080050             DATE  26JAN95             *
+      *                  068347             DATE  18MAR94             *
+      *                  S01435             DATE  11SEP93             *
+      *                  053418             DATE  03JUN93             *
+      *                  S01414             DATE  29MAR93             *
+      *                  041693             DATE  05JAN93             *
+      *                  045014             DATE  07DEC92             *
+      *                  031876             DATE  28OCT92             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE172 - Libor Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
-      *  MD034505 - Database error encountered when Ordering Customer    *
-      *             is a Customer Number or Accountline                  *
-      *           - Partially applied BUG19263                           *
-      *           - Applied for MD-37748                                 *
+      *  MD034505 - Database error encountered when Ordering Customer *
+      *             is a Customer Number or Accountline               *
+      *           - Partially applied BUG19263                        *
+      *           - Applied for MD-37748                              *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
       *             calling program if file locking occurred on       *
       *             online position files. (Child: AR868381)          *
-      *  CLE134 - Past Due Call Loan Processing                          *
-      *  BUG27966A - Improve run-time performance                        *
-      *            - Only occurences and array elements that were        *
-      *              populated should be processed                       *
-      *  CAP205 - Teller Related APIs - Account Balance Check            *
-      *  CAP204 - Teller Related APIs - Account Transfer                 *
-      *  248460 - Can't use CALLB, as there is a RCLRSC somewhere...     *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  BUG27966A - Improve run-time performance                     *
+      *            - Only occurences and array elements that were     *
+      *              populated should be processed                    *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  248460 - Can't use CALLB, as there is a RCLRSC somewhere...  *
       *  246761 - Posting Date is incorrectly calculated.             *
-      *  CPK027 - Fix 243307 applied incorrectly (NB. at this release    *
-      *           only, fix is correct at later releases)                *
-      *  243307 - Prevents commitment control error from occurring       *
-      *           (CPF4293) during file OPEN.                            *
-      *  CRE026 - Consumer Banking (Recompile)                           *
+      *  CPK027 - Fix 243307 applied incorrectly (NB. at this release *
+      *           only, fix is correct at later releases)             *
+      *  243307 - Prevents commitment control error from occurring    *
+      *           (CPF4293) during file OPEN.                         *
+      *  CRE026 - Consumer Banking (Recompile)                        *
       *  BUG12821-Decimal data error occured due to wrong data        *
       *           mapping. Applied fix 241290.                        *
       *  241290 - Incorrect DR/CR indicator for sell amount of a CX   *
@@ -104,12 +109,12 @@
       *  232494 - Database error in AOSPOSU0 when using IPN1 and FTMG *
       *  BUG8796 - Add checking on SDNOSTPD when ATYP = 'N' If no     *
       *            record found, ##NOS should not be set to 'Y'       *
-      *  206839 - 172073 causes the key for chaining to SDNOSTPD not to  *
-      *           be setup, leaving the values from the last time a      *
-      *           nostro was processed. As a result, non-nostro accounts *
-      *           are causing updates to nostro positions.               *
-      *           If an account is not found, the processing should      *
-      *           simply be skipped altogether.                          *
+      *  206839 - 172073 causes the key for chaining to SDNOSTPD not  *
+      *           to be setup, leaving the values from the last time  *
+      *           a nostro was processed. As a result, non-nostro     *
+      *           accounts are causing updates to nostro positions.   *
+      *           If an account is not found, the processing should   *
+      *           simply be skipped altogether.                       *
       *  BUG10860 - DR/CR indicator on account movements file not     *
       *             maintained                                        *
       *  BUG7370 - When no record is found in PRONOPN, do not zeroise *
@@ -131,8 +136,9 @@
       *           because sequence is being concatenated for A#SEQ.   *
       *  197145 - Dumps and settlement instructions are lost for      *
       *           deals                                               *
-      *  187042 - Set up the fields for the posting details to allow the *
-      *           correct update of the projected account movements.     *
+      *  187042 - Set up the fields for the posting details to allow  *
+      *           the correct update of the projected account         *
+      *           movements.                                          *
       *  181176 - Include Branch Code among the fields used for       *
       *           checking duplicate records in subroutine SRRPST.    *
       *  174470 - Data structure fields for posting details should be *
@@ -140,47 +146,49 @@
       *  172073 - Prevent occurrence of DB error when amending a loan *
       *           settled through closed accounts(start/maturity).    *
       *           Applied fix 147942.                                 *
-     F*  CFT004 - International Bank Account Number                      *
-     F*           Allow Account Type = 'I' for IBAN                      *
-      *  141213 - Fix 125373B will corrupt the database if errors occur. *
+      *  CFT004 - International Bank Account Number                   *
+      *           Allow Account Type = 'I' for IBAN                   *
+      *  141213 - Fix 125373B will corrupt the database if errors     *
+      *           occur.                                              *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
       *           been created (in AOPGMSRC).                         *
       *           ILE modules can make a bound call to the module.    *
       *           OPM programs can make a dynamic call to the *PGM.   *
-     F*     125373B- Remove DB error if account not found: DUMP pgm and  *
-     F*              continue processing                                 *
-     F*     122960 - Do not rollback lending updates in batch mode.      *
-     F*     122601 - Schedule repayment did not update retail projected  *
-     F*              movement.                                           *
-     F*     CCB002 - COB Performance Enhancements                        *
-     F*              Access now via access object                        *
-     F*              MEMOS is now accessed via GL/RE key rather than     *
-     F*              old relative record number.                         *
-     F*     082738 - Allow update of OLPOS with no settlement            *
-     F*     080050 - Narrative code on RSACMTPD changed to               *
-     F*              alphanumeric.                                       *
-     F*     068347 - Suppress Account movement duplicates.               *
-     F*     S01435 - Incoming Message Management.                        *
-     F*              Add action start to improve performance             *
-     F*     053418 - Incoming payments not appearing on projected        *
-     F*              account movements enquiry. Add new program, FT0055, *
-     F*              to control update of OLPOS, MEMOS and PRONO.        *
-     F*     S01414 - Book Code and Profit Centre Incorporation.          *
-     F*              Rename of profit centre field on ACCNTABF           *
-     F*                                                                  *
-     F*     041693 - Delivered as part of fix.                           *
-     F*                                                                  *
-     F*     045014 - Add call to AOCNTLR0 for access control             *
-     F*              Include SDMMODL1 processing                         *
-     F*              Add primary transaction                             *
-     F*              Correct OLPOS processing - sign incorrect for       *
-     F*              outgoing amounts                                    *
-     F*                                                                  *
-     F*     031876 - New program to control update to OLPOS, MEMOS       *
-     F*              and PRONO.                                          *
-     F*                                                                  *
-     F*****************************************************************
+      *     125373B- Remove DB error if account not found: DUMP pgm   *
+      *              and continue processing                          *
+      *     122960 - Do not rollback lending updates in batch mode.   *
+      *     122601 - Schedule repayment did not update retail         *
+      *              projected movement.                              *
+      *     CCB002 - COB Performance Enhancements                     *
+      *              Access now via access object                     *
+      *              MEMOS is now accessed via GL/RE key rather than  *
+      *              old relative record number.                      *
+      *     082738 - Allow update of OLPOS with no settlement         *
+      *     080050 - Narrative code on RSACMTPD changed to            *
+      *              alphanumeric.                                    *
+      *     068347 - Suppress Account movement duplicates.            *
+      *     S01435 - Incoming Message Management.                     *
+      *              Add action start to improve performance          *
+      *     053418 - Incoming payments not appearing on projected     *
+      *              account movements enquiry. Add new program,      *
+      *              FT0055, to control update of OLPOS, MEMOS        *
+      *                and PRONO.                                     *
+      *     S01414 - Book Code and Profit Centre Incorporation.       *
+      *              Rename of profit centre field on ACCNTABF        *
+      *                                                               *
+      *     041693 - Delivered as part of fix.                        *
+      *                                                               *
+      *     045014 - Add call to AOCNTLR0 for access control          *
+      *              Include SDMMODL1 processing                      *
+      *              Add primary transaction                          *
+      *              Correct OLPOS processing - sign incorrect for    *
+      *              outgoing amounts                                 *
+      *                                                               *
+      *     031876 - New program to control update to OLPOS, MEMOS    *
+      *              and PRONO.                                       *
+      *                                                               *
+      *****************************************************************
      FACCNT     IF   E           K DISK    INFSR(SRFILE)
      F                                     USROPN
      F                                     IGNORE(ACCNTAAF)
@@ -393,6 +401,7 @@
       *                                                                                       CLE134
      D  W#XRFI               155    157                                                       CLE134
      D  W#XRFN               158    167  0                                                    CLE134
+     D  W#PRFL               168    168                                                       CLE172
       *
       *  File structure to allow call to AORSACW0 program
       *
@@ -495,6 +504,7 @@
       *                                                                                       CLE134
      D  I#XRFI               162    164                                                       CLE134
      D  I#XRFN               165    174  0                                                    CLE134
+     D  I#PRFL               175    175                                                       CLE172
      D/COPY WNCPYSRC,AOSPOSU0D1
       *                                                                   045014
       *  Input parameters data structure for AOCNTLR0                     045014
@@ -1079,6 +1089,7 @@
      C     CAP205        IFEQ      'Y'                                                        CAP205
      C                   MOVEL     I#MTYP        W#MTYP                                       CAP205
      C                   ENDIF                                                                CAP205
+     C                   MOVEL     I#PRFL        W#PRFL                                       CLE172
       *
       *  If a nostro add to nostro array
       *
@@ -1507,6 +1518,7 @@
      C                   MOVEL     *BLANKS       ETYP                                         CAP205
      C                   MOVEL     W#MTYP        MTYP                                         CAP205
      C                   ENDIF                                                                CAP205
+     C                   MOVEL     W#PRFL        PRFL                                         CLE172
      C/COPY WNCPYSRC,AOSPOSU0C3
       *
      C**********         CALLB     'AORSACW0'                           9090                  248460

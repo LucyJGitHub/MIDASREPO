@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056237           Date 20Jul20               *
-      *  Prev Amend No. MD054940           Date 13Feb20               *
+      *  Last Amend No. MD057025           Date 21Oct20               *
+      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *                 MD054940           Date 13Feb20               *
       *                 MD054905           Date 04Dec19               *
       *                 MD051055           Date 31Aug16               *
       *                 MD040953           Date 31Aug16               *
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057025 - Cannot enquire details of Controlling Person in   *
+      *             Approved Report.                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
       *             correctly get data from file.                     *
@@ -1483,6 +1486,7 @@
                                                                                             MD054940
      C                   WHEN      MGELMT = 'ControllingPerson'
      C                   EVAL      D5COPR = MGDATA
+     C                   EVAL      D5MGSQ = MGSEQU                                          MD057025
 
      C                   WHEN      MGELMT = 'Individual'                                    MD054940
      C                   EVAL      KTopElmN4 = 'Individual'                                 MD054940
@@ -1510,8 +1514,8 @@
      C                   EVAL      D5FNME = MGDATA
      C                   EVAL      KTopElmName = 'Name'
      C                   EVAL      KMGSEQU = MGSEQU
-     C                   EVAL      D5FNME = *BLANKS                                       
-     C                   EVAL      D5LNME = *BLANKS                                        
+     C                   EVAL      D5FNME = *BLANKS
+     C                   EVAL      D5LNME = *BLANKS
 
      C     KAcctN3       SETLL     GLCRMDLB
      C                   READ      GLCRMDLB
@@ -1636,11 +1640,13 @@
      C                   EVAL      WsSeqNo = 1001
      C                   EVAL      KMsgRID = PMsgRId
      C                   EVAL      KTopElm = 'ControllingPerson'
-     C                   EVAL      KSeqNo2 = WsSeqNo
+     C**********         EVAL      KSeqNo2 = WsSeqNo                                        MD057025
+     C                   EVAL      KSeqNo2 = D5MGSQ                                         MD057025
 
 
      C     KAcctNo       SETLL     GLCRMDL8
-     C                   READ      GLCRMDL8
+     C**********         READ      GLCRMDL8                                                 MD057025
+     C     KAcctNo       READE     GLCRMDL8                                                 MD057025
      C                   DOW       NOT %EOF(GLCRMDL8)
      C                             AND PMsgRId = MGMSID
      C                             AND WxACNO = MGACNO
@@ -1705,16 +1711,17 @@
 
      C**********         WHEN      MGELMT = 'CountryInfo'                                   MD054940
      C                   IF        MGELMT = 'CountryInfo'                                   MD054940
-     C                   IF        D5COPR = WxCOPR
-     C                   GOTO      RGACPT
-     C                   ENDIF
+     C**********         IF        D5COPR = WxCOPR                                          MD057025
+     C**********         GOTO      RGACPT                                                   MD057025
+     C**********         ENDIF                                                              MD057025
      C                   ENDIF                                                              MD054940
 
      C     KAcctN4       READE     GLCRMDLD                                                 MD054940
      C                   ENDDO                                                              MD054940
      C                   ENDSL
 
-     C                   READ      GLCRMDL8
+     C**********         READ      GLCRMDL8                                                 MD057025
+     C     KAcctNo       READE     GLCRMDL8                                                 MD057025
 
      C                   ENDDO
 

@@ -155,7 +155,7 @@
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
       *
-     C**********         Move      DDCRIB        SACRIB            2 0                        CSD103
+     C*********          Move      DDCRIB        SACRIB            2 0                        CSD103
      C                   Move      DDCRIB        SACRIB            2                          CSD103
      C                   MOVE      DDCICT        SACICT            2 0
      C                   MOVE      DDCCST        SACCST            5 0

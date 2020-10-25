@@ -352,7 +352,8 @@
      C                   EVAL      MsgIdXAr(Idx) = '5045663'
      C                   ENDIF
      C                   ELSE                                                                 CLE134
-     C                   IF        AYPBSR <> 0                                                CLE134
+     C**********         IF        AYPBSR <> 0                                         CLE134 CSD103
+     C                   IF        AYPBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDORLNOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDORLN'                                  CLE134
@@ -405,7 +406,8 @@
      C                   ELSE
       *
      C                   IF        AUCBRT = 0                                                 CLE134
-     C                   IF        AUCBSR <> 0                                             AR1075853
+     C**********         IF        AUCBSR <> 0                                      AR1075853 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AUCBSR        @KEY2
       *
@@ -417,8 +419,10 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AUCBSR <> *ZEROS                                       262691
-     C                             OR  AUCBSR = *ZEROS                                        262691
+     C**********                   AND AUCBSR <> *ZEROS                                262691 CSD103
+     C                             AND AUCBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AUCBSR = *ZEROS                                 262691 CSD103
+     C                             OR  AUCBSR = *BLANKS                                       CSD103
      C                             AND AUCRSP = *ZEROS                                        262691
      C                   EVAL      DDFECUOK = 'N'
      C                   EVAL      Idx += 1
@@ -426,7 +430,8 @@
      C                   EVAL      MsgIdXAr(Idx) = '5045789'
      C                   ENDIF
      C                   ELSE                                                                 CLE134
-     C                   IF        AUCBSR <> 0                                                CLE134
+     C**********         IF        AUCBSR <> 0                                         CLE134 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDFECUOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDFECU'                                  CLE134

@@ -2247,14 +2247,14 @@
 
       ** Spread Indicators
 
-     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS               SAND CSD103
-     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS                   CSD103
+     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND                CSD103
+     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS AND               CSD103
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
 
-     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS               SAND CSD103
-     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS                   CSD103
+     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND                CSD103
+     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS AND               CSD103
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF
@@ -2586,14 +2586,14 @@
 
       ** Spread Indicators
 
-     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS               SAND CSD103
-     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS                   CSD103
+     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND                CSD103
+     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS AND               CSD103
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
 
-     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS               SAND CSD103
-     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS                   CSD103
+     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND                CSD103
+     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS AND               CSD103
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF

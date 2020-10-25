@@ -68,7 +68,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1630,9 +1629,11 @@
                                                                                               CRE015
       ** DR interest base rate type                                                           CRE015
                                                                                               CRE015
-     C                   IF        ArrFil(X).E2DRIB <> *ZEROS                                 CRE015
-     C                   EVAL      ArrScn(X).RWDRIB =                                         CRE015
-     C                             %EDITC(ArrFil(X).E2DRIB : 'X')                             CRE015
+     C**********         IF        ArrFil(X).E2DRIB <> *ZEROS                          CRE015 CSD103
+     C                   IF        ArrFil(X).E2DRIB <> *BLANKS                                CSD103
+     C**********         EVAL      ArrScn(X).RWDRIB =                                  CRE015 CSD103
+     C**********                   %EDITC(ArrFil(X).E2DRIB : 'X')                      CRE015 CSD103
+     C                   EVAL      ArrScn(X).RWDRIB = ArrFil(X).E2DRIB                        CSD103
      C                   ENDIF                                                                CRE015
                                                                                               CRE015
       ** DR interest rate spread and sign                                                     CRE015
@@ -1739,9 +1740,11 @@
                                                                                               CRE015
       ** CR interest base rate type                                                           CRE015
                                                                                               CRE015
-     C                   IF        ArrFil(X).E2CRIB <> *ZEROS                                 CRE015
-     C                   EVAL      ArrScn(X).RWCRIB =                                         CRE015
-     C                             %EDITC(ArrFil(X).E2CRIB : 'X')                             CRE015
+     C**********         IF        ArrFil(X).E2CRIB <> *ZEROS                          CRE015 CSD103
+     C                   IF        ArrFil(X).E2CRIB <> *BLANKS                                CSD103
+     C**********         EVAL      ArrScn(X).RWCRIB =                                  CRE015 CSD103
+     C**********                   %EDITC(ArrFil(X).E2CRIB : 'X')                      CRE015 CSD103
+     C                   EVAL      ArrScn(X).RWCRIB = ArrFil(X).E2CRIB                        CSD103
      C                   ENDIF                                                                CRE015
                                                                                               CRE015
       ** CR interest rate spread and sign                                                     CRE015

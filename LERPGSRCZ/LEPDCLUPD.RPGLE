@@ -124,12 +124,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Loan Amendments for Updating
      FLOAMS     UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(LA_)
- 
+
       ** Loans file C
      FCLOAN     UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
@@ -137,52 +137,52 @@
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      F                                     PREFIX(C1)
- 
+
       ** Customer Lending Facility file
      FFCLTY     UF   E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
- 
+
       ** Fees file - update
      FLEFEEDL0  UF   E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
       ** Loan Transaction Index Detail
      F***LTRIX**     UF   F   43        DISK    COMMIT                                      AR322731
      FLTRIX     O  A F   45        DISK    COMMIT                                           AR322731
      F                                     INFSR(*PSSR)
      F                                     INFDS(FLDTX)
- 
+
       ** Loan Link file
      FLEPDUEPD  O    E             DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
       ** Fee Link file
      FLEPDUFPD  O    E             DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
       ** Record extension
      FCLONCLQD  O    E             DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
       ** Penalties file
      FLEPRATL1  IF   E           K DISK
- 
+
       ** Midas historic base rates by code + date
      FSDBSHSL1  IF   E           K DISK
- 
+
       ** Midas PM Portfolio Defns by Front Office ID
      FPMPORTL1  IF   E           K DISK
- 
+
       ** SD Branch Codes by Customer Number
      FSDBRCHL5  IF   E           K DISK
- 
+
       ** LE Facility Amendements
      FLEFCAML3  IF   E           K DISK
      F                                     RENAME(LEFCAMPF:LEFCAMD3)
      F                                     PREFIX(FC_)                                      AR724682
- 
+
       ** Loan Amendments for Updating
      FLELOMKL3  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
@@ -192,7 +192,7 @@
      F                                     PREFIX(LA_)
       *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -200,66 +200,66 @@
       **
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** For CCy Conversion
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
- 
+
      D***@BIC***         S              6    DIM(150)                                      AR214141A
      D @BIC            S              6    DIM(999)                                        AR214141A
      D SHSETT          S             40A
      D WFSEQ           S              2  0                                                    263289
- 
+
      D                 DS
      D  WPRME                  1     12
      D  WLPFI                  1      1
      D  WPTFC                  2      7
      D  WPTFT                  8     10  0
      D  WPTFN                 11     12  0
- 
+
      D DSBCN           S              3  0 INZ DIM(9)
      D DSBCE           S              3  0 INZ DIM(9)
- 
+
      D DSRCN           S              3  0 INZ DIM(9)
      D DSRCE           S              3  0 INZ DIM(9)
- 
+
       ** Data structure for database error message
      D                 DS
      D  WFCUS                         6
@@ -267,7 +267,7 @@
      D***WFSEQ**                       2  0                                                   263289
      D  WFCSQ                         2  0                                                    263289
      D  WDBKEY                       11
- 
+
       ** Data structure of rundates
      D                 DS
      D  RUN0                   1      3P 0
@@ -282,7 +282,7 @@
      D  RUN9                  28     30P 0
      D  RUNS                   1     30P 0
      D                                     DIM(10) ASCEND
- 
+
       ** Data structure of drawn amounts
      D                 DS
      D  OAM1                   1      7P 0
@@ -297,15 +297,15 @@
      D  OA10                  64     70P 0
      D  OAM                    1     70P 0
      D                                     DIM(10)
- 
+
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
- 
+
       ** Work file of update to LE position files
      D Z#ASTK          DS          2048
      D Z#BSTK          DS          2048
- 
+
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -315,7 +315,7 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
- 
+
       ** Output parameters on call to AOPLCSR1
      D O@PARM          DS           256
      D  O#BOOK                 1      2
@@ -323,7 +323,7 @@
      D  O#BICN                 7     12
      D  O#CRNM                13     22
      D  O#ACOF                23     24
- 
+
       ** Fields used for update of MEMOS, PRONO etc
      D                 DS
      D  Z#ADTA                 1    256
@@ -340,14 +340,14 @@
      D  SHREPT                82     82  0
      D  SHAUTO                83     83
      D  SHTIST                85    124
- 
+
      D  Z#ADTB               257    512
      D  SHOSBR               261    263
      D  SHCHTP               317    317
- 
+
      D  Z#ADTD               769   1024
      D  SHPNAM              1001   1007P 0
- 
+
      D  Z#ADTE              1025   1280
      D  SHSCCY              1061   1063
      D  SHICCY              1064   1066
@@ -357,143 +357,143 @@
      D  SHPEXR              1101   1107P 8
      D  SHPEXI              1108   1108
      D   SHSTAL             1109   1109
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S             26Z
- 
+
       ** Externally desc'd DS for valid PDCL data
      D LEVPDCL       E DS                  EXTNAME(LEVPDCLPD)
- 
+
       ** Current transaction record in file format Loan
      D PDCLFilFmtLoanE DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(C_)
- 
+
       ** Current transaction record in file format Loan 2
      D PDCLFilFmtLoaKE DS                  EXTNAME(CLOANCK)
      D                                     PREFIX(K_)
- 
+
       ** Current transaction record in file format Fee
      D PDCLFilFmtFee E DS                  EXTNAME(LEFEED)
      D                                     PREFIX(E_)
- 
+
       ** Current transaction record in file format Facility
      D PDCLFilFmtFctyE DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(M_)
- 
+
       ** AO data structre
      D DSSDY         E DS
      D DSFDY         E DS
- 
+
       ** Fee codes
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** Currency Info
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Portfolio ICD
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
- 
+
       ** Portfolio management customer details
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
- 
+
       ** Base Rate Info
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC2       E                     EXTFLD(QQDFAC)
- 
+
       ** DS for getting the system prefix when CSC011 is installed
      D SC24X7        E DS                  EXTNAME(SC24X7)
- 
+
       ** Branches Data Structure
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Data structure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for loan ICD details
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** Data structure for loan ICD details
      D SDLOAN1       E DS                  EXTNAME(SDLOANPD)
      D                                     PREFIX(@)
- 
+
       ** Data structure for Lending ICD
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** Data structure for Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Data structure for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Data structure for Next Available Loan Number
      D SDLENO        E DS                  EXTNAME(SDLENOPD)
- 
+
       ** Externally desc'd DS for valid loan Details CL
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
- 
+
       ** Externally desc'd DS for valid loan Details CL
      D LEVCliK       E DS                  EXTNAME(LEVCLIKPD)
      D                                     PREFIX(R_)
- 
+
       ** Data Structure for PF/LTRIX
      D FLDTX           DS
      D  TXSTS            *STATUS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Dummy message ID and message file fields for use on the calls
       ** to ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D @@RTCD          S              7A
- 
+
      D PFNCCD          S              8A
- 
+
       ** Parameters for AOWLCCR0
      D PCUST           S             10A
      D PSTKEY          S              7A
- 
+
       ** Parameters for AOCUSTR0
      D @Return         S              6A
      D @Type           S              1A
- 
+
       ** Parameters for ZARTVJOBA
      D CSC011          S              1A
- 
+
      D NBCDY           S              3  0
      D NBCSD           S              5  0
      D NRCDY           S              3  0
      D NRCSD           S              5  0
- 
+
      D @@MODE          S              6A
      D @@RSMD          S              1A
      D ACTN            S              1A
      D FOTRID          S             20A
      D Ix              S              3P 0
- 
+
      D C               S              2P 0
      D DBError         S            132A
      D MsgSndRtn       S             10A
- 
+
       ** Establish the transaction type
      D RecordType      S              1A
      DLoan             C                   CONST('1')
      DFeeLoan          C                   CONST('2')
      DFeeFacility      C                   CONST('3')
- 
+
      DTXT01            C                   CONST('Original Loan Ref ')
      DTXT02            C                   CONST('Original Fee  Ref ')
- 
+
      D LOANTYPE        S              4A
- 
+
       ** Setup keys for master files
      DWFECU            S              6
      DWFFAC            S              5  0
@@ -508,7 +508,7 @@
      DWRCDT            S              1
      DWLASN            S              3  0
      DWLSEQ            S                   LIKE(L_CLLASQ)
- 
+
       ** System Value Parameter
      D SeqFlg          S              1A
      D POP01           S             20A
@@ -531,7 +531,7 @@
      D PVL09           S            200A
      D POP10           S             20A
      D PVL10           S            200A
- 
+
       ** Work Variables
      D ZZAMT           S             15  3
      D ZZAMTI          S             15  0
@@ -541,7 +541,7 @@
      D ZZWK2           S              4  0
      D ZZWK3           S             15  0
      D ZZNEGD          S              5
- 
+
      D ZMDI1           S              1
      D ZRATE1          S             13  8
      D ZNBDP1          S              1  0
@@ -558,7 +558,7 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
      D WAMTP           S              2
      D*WBRTT****       S              2                                                       CSD103
      D WBRTT           S              2A                                                      CSD103
@@ -571,7 +571,7 @@
      D PCURR           S              3
      D PBRAT           S              2
      D WBRTE           S             11  7
- 
+
      D WNACD           S              1
      D WOSBR           S              3
      D WRSTM           S              2  0
@@ -586,19 +586,19 @@
      D WPONS           S             18
      D WOSAC           S             18
      D WBASR           S             11  7
- 
+
      D W#1ST3          S              3
      D W1ST11          S             11
- 
+
      D*PCNEXT***       S              8  0                                                    CLE148
      D PCNEXT          S              8                                                       CLE148
- 
+
      D WPCRF           S             15
- 
+
      D @PRANG          S              2
- 
+
      D @BRCA           S              3
- 
+
      D PPTIN           S              1
      D PGNTF           S              1
      D PTDT1           S             35
@@ -606,49 +606,49 @@
      D PTDT3           S             35
      D PTREF           S             15
      D W#SEQ           S              4  0
- 
+
      D ReservId        S             10
- 
+
      D CallModCode     S              3
- 
+
      D WAUTOA          S              1
      D WAUTOY          S              1
      D PFPTF           S              1
- 
+
      D WPLON           S              6
- 
+
      D WRK24           S             24
- 
+
      D WrkPart         S              1
- 
+
      D WRVCRC          S              1
      D WVLDT           S              5  0
- 
+
      D CDPF            S              1  0
- 
+
      D WSPRTF          S             13  8
      D WMDINF          S              1
- 
+
      D SPRME           S             12
- 
+
      D PRI1            S              1  0
- 
+
      D ZDAYNO          S              5  0
      D ZNRDYS          S              2  0
      D ZDYNBR          S              5  0
      D ZCCY            S              3
      D ZLOC            S              3
- 
+
      D NATN            S              5  0
- 
+
      D RRNA            S              5  0
- 
+
      D DDACTN          S              1
      D DDFRNT          S             20
      D WIUSR           S             10
- 
+
      D RtnCode         S              7
- 
+
      D CGL058          S              1
      D CLE002          S              1
      D CLE005          S              1
@@ -659,34 +659,34 @@
      D CLE028          S              1
      D CLE031          S              1
      D CEU004          S              1
- 
+
      D WKLNR           S              6
      D WKVDT           S              5  0
      D WKLSN           S              3  0
- 
+
      D WRCDT1          S              1
- 
+
      D PLoanType       S              2
      D PLSubType       S              2
      D PLClass         S              4
- 
+
      D WFCOD           S              2
- 
+
      D @FECD           S              2
- 
+
      D @KEY1           S              3
      D @KEY2           S              2
      D @KEY3           S             10
      D @CCY            S              3
      D @KYST           S              7
- 
+
      D @BRCD           S              3
- 
+
      D WRK_139         S             13  9
- 
+
      D WMDINC          S              1
      D WSPRTC          S             13  8
- 
+
      D PRTNC           S              1
      D PBOOK           S              2
      D PTRTP           S              5
@@ -697,56 +697,56 @@
      D PACOF           S              2
      D PCNUM           S              6
      D PPRFC           S              4
- 
+
      D WPTCS           S              1
- 
+
      D WORLN           S              6
      D WLOANT          S              6
      D WFSEQT          S              2
      D WFACLT          S              5
- 
+
      D WFCXR           S             13  8
      D WROFXR          S              1
- 
+
      D OFCXRT          S             15  9
- 
+
      D PRAM_Fac        S             13  0
- 
+
      D WrkPRAMS        S             13  0
- 
+
      D DAYNO           S              5  0
      D ENDAY           S              5  0
- 
+
      D FCBAL           S             13  0
- 
+
      D WKSWRI          S              1
- 
+
      D WTCCY           S              3
      D WCMDI           S              1
      D WCAXR           S             13  8
- 
+
      D WRVCRF          S              1
- 
+
      D CDPC            S              1  0
- 
+
      D WTRCA           S              1
- 
+
      D ICUSTN          S              6
- 
+
      D CX              S              1  0
      D I               S              3  0
      D X               S              2  0
      D W               S              3  0
- 
+
      D AOOULE          S              1
      D SETT09          S              1
- 
+
      D IN17            S              1
- 
+
      D LXRRN           S              5  0
      D PRTCD           S              7                                                       CLE148
      D PUPDT           S              1                                                       CLE148
- 
+
       ** Working DS with Amounts
      D                 DS
      D  PRAMR                  1     13  0
@@ -755,7 +755,7 @@
      D  TAMTR                 40     52  0
      D  WTXAR                 53     65  0
      D  SAMT                   1     65
- 
+
       ** Loan Amendment Current Amount in numeric  (on Valid format
       ** LOAMSDKF)
      D  OPRAM                 66     78  0
@@ -764,9 +764,9 @@
      D  OTAMT                105    117  0
      D  OWTXA                118    130  0
      D  OAMT                  66    130
- 
+
       ** Input Amount in numeric  (on Valid format LEVMAPY)
- 
+
       ** Take on account - Principal
      D WTLPR           DS
      D  WKPABR                 1      3
@@ -774,7 +774,7 @@
      D  WKPACY                10     12
      D  WKPAAC                13     22  0
      D  WKPASE                23     24  0
- 
+
       ** Take on account - Interest
      D WTLIN           DS
      D  WKIABR                 1      3
@@ -782,7 +782,7 @@
      D  WKIACY                10     12
      D  WKIAAC                13     22  0
      D  WKIASE                23     24  0
- 
+
       ** Take on account - Fee
      D WPDFA           DS
      D  WKFABR                 1      3
@@ -790,28 +790,28 @@
      D  WKFACY                10     12
      D  WKFAAC                13     22  0
      D  WKFASE                23     24  0
- 
+
       ** DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
- 
+
      D  OldSettlDS     DS
- 
+
       ** Old settlement details
      D  OSETP                  1      2  0
      D  OOSAC                  3     20
      D  OTSEN                 21     30
      D  OFACO                 31     40
      D  OLDSET                 1     40
- 
+
      D  NewSettlDS     DS
- 
+
       ** New settlement details
      D  WTYP                   1      2
      D  WOURS                  3     20
      D  WTHRS                 21     30
      D  WFACO                 31     40
      D  WSETT                  1     40
- 
+
       ** Dummy timestamp
      D TimeStmpDS      DS
      D  RetYear                1      4A   INZ('0001')
@@ -828,7 +828,7 @@
      D                        20     20A   INZ('.')
      D  RetMilli              21     23A   INZ('000')
      D  RetMicro              24     26A   INZ('000')
- 
+
       ** LTRIX file
      I***LTRIX**     NS        1 CH                                                         AR322731
      I**********                        1    1  RECI                                        AR322731
@@ -844,7 +844,7 @@
      I**********                   P   30   32 0NLAR                                        AR322731
      I**********                       33   33 0STPI                                        AR322731
      I**********                   P   38   40 0TNLU                                        AR322731
- 
+
       ** Loan transactions index file - Detail record
      I***LTRIX**     NS        1 CD    2 CA                                                 AR322731
      I*********OR         1 CD    2 CL                                                      AR322731
@@ -870,13 +870,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -884,50 +884,50 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Insert transaction
- 
+
      C                   IF        DDACTN = 'I'
- 
+
      C                   IF        RecordType = Loan
- 
+
       ** Process LOAN for PRINCIPAL
- 
+
      C     NSEIN         IFEQ      'N'                                                        263415
      C     NSEIN         OREQ      'Y'                                                        263415
      C     NPDPR         ANDNE     0                                                          263415
      C                   EXSR      LOANPRINC
      C                   ENDIF                                                                263415
- 
+
      C                   IF        NSEIN = 'Y'
      C                             AND NPDIN <> 0                                             263415
- 
+
       ** Process LOAN for INTEREST
- 
+
      C                   EXSR      LOANINTER
- 
+
      C                   ENDIF
- 
+
       ** Process LOAN AMENDMENTS
- 
+
      C                   EXSR      SETLOAMS
- 
+
      C                   ELSE
- 
+
       ** Process FEE for AMOUNT
- 
+
      C                   EXSR      FEEAMOUNT
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Exit from Program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -935,31 +935,31 @@
       * LOANPRINC - Process the Principal for the LOAN PDCL           *
       *                                                               *
       *****************************************************************
- 
+
      C     LOANPRINC     BEGSR
- 
+
       ** Prepare static data
- 
+
      C                   EXSR      SETLOANP
- 
+
       ** Assign new loan number
- 
+
      C                   EXSR      ACS_NXTAVL
- 
+
       ** Set up the link record for the Principal
- 
+
      C                   EXSR      SETLEPDUEPD1
- 
+
       ** Set up new CLOANCL/CK data
- 
+
      C                   EXSR      SETCLOANCx
- 
+
       ** Write new loan
- 
+
      C                   EXSR      SETCLIPUPD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -967,21 +967,21 @@
       * SRTRAL  -  Update Loan Amendments Trailer File                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTRAL        BEGSR
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
       ** CLE134 loan amendments trailer
- 
+
      C                   MOVE      *BLANKS       WKLNR
      C                   MOVE      *BLANKS       WKVDT
      C                   MOVE      *BLANKS       WKLSN
- 
+
      C     KLAKEY        CHAIN     LELOMKL3                           89
- 
+
       ** The record does not exist, file cleared
- 
+
      C     *IN89         IFEQ      *ON
      C                   MOVE      'H'           LA_RECI
      C                   MOVEL     *BLANKS       LA_LNRF
@@ -997,40 +997,40 @@
      C                   Z-ADD     *ZEROS        LA_TNLU
      C                   WRITE     LOMKSDHF
      C                   ENDIF
- 
+
       ** CLE134 loan amendments trailer
- 
+
      C                   MOVE      '999999'      WKLNR
      C                   MOVE      '99999'       WKVDT
      C                   MOVE      '999'         WKLSN
- 
+
      C     *LIKE         DEFINE    LA_VDAT       W#VDAT
      C     *LIKE         DEFINE    LA_LNRF       W#LNRF
      C                   Z-ADD     LA_VDAT       W#VDAT
      C                   MOVEL     LA_LNRF       W#LNRF
- 
+
      C     KLAKEY        CHAIN     LELOMKL3                           89
- 
+
       ** The record does not exist, file cleared
- 
+
      C     *IN89         IFEQ      *ON
- 
+
      C     KLAKEY        CHAIN     LOAMS                              88
- 
+
       ** Loan amendments cleared, abort
- 
+
      C     *IN88         IFEQ      *ON
- 
+
      C                   MOVEL(P)  'LOAMS   '    DBFILE
      C                   Z-ADD     11            DBASE
      C                   MOVEL     '999999'      DBKEY
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
       ** The CLE134 file is empty, set it up using the LOAMSZ1 file
       ** plus defaults
- 
+
      C                   Z-ADD     1             LA_NORE
      C                   Z-ADD     1             LA_NINS
      C                   Z-ADD     1             LA_NLRA
@@ -1048,17 +1048,17 @@
      C                   Z-ADD     0             LA_VRAL
      C                   Z-ADD     0             LA_VRRF
      C                   Z-ADD     0             LA_VRRL
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     LA_NORE       ADD       1             LA_NORE
      C     LA_NINS       ADD       1             LA_NINS
      C     LA_NLRA       ADD       1             LA_NLRA
- 
+
      C                   ENDIF
- 
+
      C**********         MOVE      LA_PRAM       ZZAMT                                        262871
      C                   MOVE      LA_TAMT       ZZAMT                                        262871
      C                   Z-ADD     LA_VRIF       ZZTOTI
@@ -1071,28 +1071,28 @@
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        LA_VRRF
      C                   Z-ADD     ZZTOTD        LA_VRRL
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      0             LA_TNLU
- 
+
      C                   IF        *IN89 = *ON
      C                   WRITE     LOMKSZ1F
      C                   ELSE
      C                   UPDATE    LOMKSZ1F
      C                   ENDIF
- 
+
       ** Restore values after updating loan amendments trailer
- 
+
      C                   MOVE      W#VDAT        LA_VDAT
      C                   MOVE      W#LNRF        LA_LNRF
- 
+
       ** Update main trailer
- 
+
      C                   MOVE      '999999'      WKLNR
      C                   MOVE      '99999'       WKVDT
      C                   MOVE      '999'         WKLSN
- 
+
      C     *LIKE         DEFINE    LA_VDAT       W#VDAT
      C     *LIKE         DEFINE    LA_LNRF       W#LNRF
      C                   Z-ADD     LA_VDAT       W#VDAT
@@ -1100,18 +1100,18 @@
      C                   MOVEL     LA_LNRF       W#LNRF                                       CLE148
       *
      C     KLAKEY        CHAIN     LOAMS                              99
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL(P)  'LOAMS'       DBFILE
      C                   Z-ADD     12            DBASE
      C                   MOVEL     '999999'      DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     LA_NORE       ADD       1             LA_NORE
      C     LA_NINS       ADD       1             LA_NINS
      C     LA_NLRA       ADD       1             LA_NLRA
- 
+
      C**********         MOVE      LA_PRAM       ZZAMT                                        262871
      C                   MOVE      LA_TAMT       ZZAMT                                        262871
      C                   Z-ADD     LA_VRIF       ZZTOTI
@@ -1124,22 +1124,22 @@
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        LA_VRRF
      C                   Z-ADD     ZZTOTD        LA_VRRL
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      0             LA_TNLU
- 
+
      C                   UPDATE    LOAMSZ1F
- 
+
       ** Restore values after updating loan amendments trailer
- 
+
      C                   MOVE      W#VDAT        LA_VDAT
      C                   MOVE      W#LNRF        LA_LNRF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1147,23 +1147,23 @@
       * GLZADD - Subroutine to add an amount to the total             *
       *                                                               *
       *****************************************************************
- 
+
      C     GLZADD        BEGSR
- 
+
      C                   Z-ADD     ZZAMT         ZZAMT                    91
      C   91              GOTO      ZZAEND
- 
+
       ** Split ZZAMT into integer and decimal fields
- 
+
      C                   Z-ADD     ZZAMT         ZZAMTI
      C                   MOVE      ZZAMT         ZZAMTD
- 
+
       ** Both ZZAMTI and ZZAMTD contain a 'sign' zone now
- 
+
      C                   EXSR      GLZSUM
- 
+
      C     ZZAEND        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1171,89 +1171,89 @@
       * GLZSUM - Subroutine to carry out the additon for subroutine   *
       *                                                               *
       *****************************************************************
- 
+
      C     GLZSUM        BEGSR
- 
+
      C                   Z-ADD     ZZTOTI        ZZTOTI
      C                   Z-ADD     ZZTOTD        ZZTOTD
      C                   SETOFF                                       919293
      C                   SETOFF                                       949599
- 
+
       ** Determine sign of ZZAMTI & D, 92 if negative
- 
+
      C     ZZAMTI        COMP      0                                    9293
      C   93ZZAMTD        COMP      0                                    9293
      C   93              GOTO      ZZSEND
- 
+
       ** Determine sign of ZZTOTI & D, 91 if negative
- 
+
      C     ZZTOTI        COMP      0                                    9193
      C   93ZZTOTD        COMP      0                                    9193
- 
+
       ** If ZZTOTAL is zero, return ZZAMOUNT
- 
+
      C   93              Z-ADD     ZZAMTI        ZZTOTI
      C   93              Z-ADD     ZZAMTD        ZZTOTD
      C   93              GOTO      ZZSEND
- 
+
       ** If signs differ bypass overflow checks
- 
+
      C   91
      CANN92
      CORN91
      CAN 92              GOTO      ZZOFPS
- 
+
      C     ZZAMTD        ADD       ZZTOTD        ZZWK2
      C     ZZWK2         COMP      999                                93
      C  N93ZZWK2         COMP      -999                                 93
- 
+
      C   93
      CANN92ZZAMTI        ADD       1             ZZWK3
      C   93
      CAN 92ZZAMTI        SUB       1             ZZWK3
      C   93ZZTOTI        ADD       ZZWK3         ZZWK3
      C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3
- 
+
       ** If the modulus of ZZWK3 is less than the one of ZZTOTI
       ** then an overflow has occurred
- 
+
      C  N92ZZWK3         COMP      ZZTOTI                               99
      C   92ZZWK3         COMP      ZZTOTI                             99
      C  N99              Z-ADD     ZZWK2         ZZTOTD
      C  N99              Z-ADD     ZZWK3         ZZTOTI
- 
+
       ** If overflow zeroise ZZAMT, set 99 on and let ZZTOT fields intact
- 
+
      C   99              Z-ADD     0             ZZAMT
      C                   GOTO      ZZSEND
- 
+
       ** The 'signs' are different
- 
+
      C     ZZOFPS        TAG
- 
+
       ** If ZZAMT was negative, make it positive to compare with ZZTOT
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI
      C   92              Z-SUB     ZZAMTD        ZZAMTD
- 
+
       ** If ZZTOT was negative, make it positive to compare with ZZAMT
- 
+
      C   91              Z-SUB     ZZTOTI        ZZTOTI
      C   91              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Both ZZAMT and ZZTOT are now positive
- 
+
      C     ZZTOTI        COMP      ZZAMTI                             93  95
      C   95ZZTOTD        COMP      ZZAMTD                             93  95
- 
+
       ** If ZZTOT equals ZZAMT return zero
- 
+
      C   95              Z-ADD     0             ZZTOTI
      C   95              Z-ADD     0             ZZTOTD
      C   95              GOTO      ZZSEND
- 
+
       ** If ZZTOT greater than ZZAMT
- 
+
      C   93ZZAMTD        COMP      ZZTOTD                             94
      C   93
      CAN 94ZZTOTI        SUB       1             ZZTOTI
@@ -1264,9 +1264,9 @@
      CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      C   93
      CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
- 
+
       ** If ZZAMT greater than ZZTOT
- 
+
      C  N93ZZTOTD        COMP      ZZAMTD                             94
      C  N93
      CAN 94ZZAMTI        SUB       1             ZZWK3
@@ -1280,9 +1280,9 @@
      CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      C  N93
      CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD
- 
+
       ** Reverse sign of ZZTOT if larger I/P fields were negative
- 
+
      C                   SETOFF                                       94
      C   93
      CAN 91
@@ -1290,23 +1290,23 @@
      CAN 92              SETON                                        94
      C   94              Z-SUB     ZZTOTI        ZZTOTI
      C   94              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Restore sign of ZZAMTI & ZZAMTD if it was reversed
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI
      C   92              Z-SUB     ZZAMTD        ZZAMTD
- 
+
      C     ZZSEND        TAG
- 
+
       ** If ZZTOTD is zero, and ZZTOTI is negative set up ZZNEGD
- 
+
      C                   SETOFF                                       96
      C     ZZTOTD        COMP      0                                      91
      C   91ZZTOTI        COMP      0                                    96
      C   96              MOVE      '.000-'       ZZNEGD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1314,14 +1314,15 @@
       * SETLOAMS - Set up the Loan Amendments                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLOAMS      BEGSR
- 
+
      C                   IF        AYPOPR = 'Y'
-     C                             AND (AYIBSR <> 0 OR AYPBSR <> 0
+     C**********                   AND (AYIBSR <> 0 OR AYPBSR <> 0                            CSD103
+     C                             AND (AYIBSR <> *BLANKS OR AYPBSR <> *BLANKS                CSD103
      C                                  OR AYPBRT <> 0 OR AYIBRT <> 0)
       ** BC Loan Amendment
- 
+
      C                   MOVE      'BC'          WAMTP
      C                   IF        NSEIN <> 'Y'
      C                   MOVE      AYPBSR        WBRTT
@@ -1330,7 +1331,7 @@
      C                   MOVE      AYIBSR        WBRTT
      C                   EVAL      WBRTE = AYIBRT
      C                   ENDIF
- 
+
      C                   Z-ADD     0             WRTSP
      C                   Z-ADD     0             WPRAM
      C                   Z-ADD     0             WINTA
@@ -1345,7 +1346,7 @@
      C                   PARM      C_CCY         PCURR
      C                   PARM      WBRTT         PBRAT
      C     SDBSRT        PARM      SDBSRT        DSSDY
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   IF        BJRDNB < BAVDNR
      C                   Z-ADD     BACBSR        WBRTE
@@ -1354,7 +1355,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      C_NACD        WNACD
      C                   MOVE      *BLANKS       WOSBR
      C                   Z-ADD     0             WRSTM
@@ -1372,12 +1373,12 @@
      C                   Z-ADD     0             WBASR
      C                   EXSR      SETLOAMSDK
      C                   ENDIF
- 
+
      C                   IF        AYPOPR = 'Y'
      C                             AND (AYIRSP <> 0 OR AYPRSP <> 0)
- 
+
       ** SC Loan Amendment
- 
+
      C                   MOVE      'SC'          WAMTP
      C**********         MOVE      *ZEROS        WBRTT                                        CSD103
      C                   MOVE      *BLANKS       WBRTT                                        CSD103
@@ -1386,7 +1387,7 @@
      C                   ELSE
      C                   Z-ADD     AYIRSP        WRTSP
      C                   ENDIF
- 
+
      C                   Z-ADD     0             WPRAM
      C                   Z-ADD     0             WINTA
      C                   Z-ADD     0             WTAMT
@@ -1410,11 +1411,11 @@
      C                   Z-ADD     0             WBASR
      C                   EXSR      SETLOAMSDK
      C                   ENDIF
- 
+
      C                   IF        NDEPI = 'Y'
- 
+
       ** MR Manual Repayment
- 
+
      C                   MOVE      'MR'          WAMTP
      C**********         MOVE      *ZEROS        WBRTT                                        CSD103
      C                   MOVE      *BLANKS       WBRTT                                        CSD103
@@ -1430,7 +1431,7 @@
      C                   ELSE
      C                   Z-ADD     C_RSTM        WSETP
      C                   ENDIF
- 
+
      C                   MOVEL     C_RIBN        WTSEN
      C                   Z-ADD     0             WBRTE
      C                   MOVE      *BLANKS       WNACD
@@ -1442,7 +1443,7 @@
      C                   ELSE
      C                   MOVE      C_OMDB        WOSBR
      C                   ENDIF
- 
+
      C                   IF        C_PTYP = 66
      C                             OR C_PTYP = 67
      C                             OR (C_PTYP = 69 OR C_PTYP = 72)
@@ -1451,31 +1452,31 @@
      C                   ELSE
      C                   Z-ADD     C_RSTM        WRSTM
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_RIBN        WRIBN
      C                   ELSE
      C                   MOVE      *BLANKS       WRIBN
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_RIBA        WRIBA
      C                   ELSE
      C                   MOVE      *BLANKS       WRIBA
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_ROBN        WROBN
      C                   ELSE
      C                   MOVE      *BLANKS       WROBN
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_ROCN        WROCN
      C                   ELSE
      C                   MOVE      *BLANKS       WROCN
      C                   ENDIF
- 
+
      C                   IF        C_PTYP = 66
      C                             OR C_PTYP = 67
      C                             OR (C_PTYP = 69 OR C_PTYP = 72)
@@ -1484,33 +1485,33 @@
      C                   ELSE
      C                   Z-ADD     0             WPSTM
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_RCRN        WRCRN
      C                   ELSE
      C                   MOVE      *BLANKS       WRCRN
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_RCRA        WRCRA
      C                   ELSE
      C                   MOVE      *BLANKS       WRCRA
      C                   ENDIF
- 
+
      C                   IF        WRSTM <> 0
      C                   MOVE      C_RONS        WRONS
      C                   ELSE
      C                   MOVE      *BLANKS       WRONS
      C                   ENDIF
- 
+
      C                   IF        WPSTM <> 0
      C                   MOVE      C_PONS        WPONS
      C                   ELSE
      C                   MOVE      *BLANKS       WPONS
      C                   ENDIF
- 
+
      C                   EXSR      SETPCRF
- 
+
      C                   IF        C_PTYP = 66
      C                             OR C_PTYP = 67
      C                             OR (C_PTYP = 69 OR C_PTYP = 72)
@@ -1519,13 +1520,13 @@
      C                   ELSE
      C                   MOVE      C_RONS        WOSAC
      C                   ENDIF
- 
+
      C                   Z-ADD     0             WBASR
      C                   EXSR      SETLOAMSDK
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1533,16 +1534,16 @@
       * SETPCRF - Set up the PC Transaction reference                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SETPCRF       BEGSR
- 
+
      C                   MOVE      C_BRCA        @BRCA
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @BRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDBRCHPD'    DBFILE
@@ -1570,9 +1571,9 @@
      C**********         Z-ADD     PCNEXT        PCLAST                                       CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1580,38 +1581,38 @@
       * SETCLIPUPD - Set LECLIPUPD                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SETCLIPUPD    BEGSR
- 
+
       ** Write record to extension file (CLIP handles it in Java)
- 
+
      C                   MOVE      L_CLLNRF      LQLNRF
      C                   MOVE      L_CLBRCA      LQBRCA
      C                   MOVE      L_CLFRNT      LQFRID
      C                   WRITE     CLONLQD0
- 
+
       ** Update the main set of files in CLIP
- 
+
      C                   CALLB     'LECLIPUPD'
- 
+
       ** Return Code
- 
+
      C                   PARM      *BLANKS       @RTCD
- 
+
       ** Externally described DS for valid loan Detail CL
- 
+
      C                   PARM                    LEVCliL
- 
+
       ** Externally described DS for valid loan Detail CK
- 
+
      C                   PARM                    LEVCliK
- 
+
       ** Loan number ranges file
- 
+
      C                   PARM                    @PRANG
- 
+
       ** PC Processing
- 
+
      C                   PARM                    PPTIN
      C                   PARM                    PGNTF
      C                   PARM                    PTDT1
@@ -1619,24 +1620,24 @@
      C                   PARM                    PTDT3
      C                   PARM                    PTREF
      C                   PARM                    W#SEQ
- 
+
       ** Reservation ID (input from VU only)
- 
+
      C                   PARM                    ReservId
- 
+
       ** Calling module
- 
+
      C                   PARM                    CallModCode
- 
+
       ** Switchable features
- 
+
      C                   PARM                    CLE028
      C                   PARM      'N'           WAUTOA
      C                   PARM      '1'           WAUTOY
      C                   PARM                    PFPTF
      C                   PARM                    @ACTRV            1                        MD030621
      C                   PARM                    @DEPI             1                        MD030621
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'LECLIPUPD'
      C                   EVAL      DBKEY = '*CALL'
@@ -1644,7 +1645,7 @@
      C                   MOVE      '*ERR030'     @@RTCD
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1653,31 +1654,31 @@
       * LOANINTER - Process the Interest for the LOAN PDCL            *
       *                                                               *
       *****************************************************************
- 
+
      C     LOANINTER     BEGSR
- 
+
       ** Prepare static data
- 
+
      C                   EXSR      SETLOANI
- 
+
       ** Assign new loan number
- 
+
      C                   EXSR      ACS_NXTAVL
- 
+
       ** Set up the link record for the Interest
- 
+
      C                   EXSR      SETLEPDUEPD2
- 
+
       ** Set up new CLOANCL/CK data
- 
+
      C                   EXSR      SETCLOANCx
- 
+
       ** Write new loan
- 
+
      C                   EXSR      SETCLIPUPD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1685,31 +1686,31 @@
       * FEEAMOUNT - Process the Amount for the FEE PDCL               *
       *                                                               *
       *****************************************************************
- 
+
      C     FEEAMOUNT     BEGSR
- 
+
       ** Set up data for/from original fee
- 
+
      C                   EXSR      SETFEE
- 
+
       ** Assign new loan number
- 
+
      C                   EXSR      ACS_NXTAVL
- 
+
       ** Set up the link record for the Interest
- 
+
      C                   EXSR      SETLEPDUFPD
- 
+
       ** Set up new CLOANCL/CK data
- 
+
      C                   EXSR      SETCLOANCx
- 
+
       ** Write new loan
- 
+
      C                   EXSR      SETCLIPUPD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1717,13 +1718,13 @@
       * SETLEPDUEPD1 - LEPDUEPD x Loan - Principal                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLEPDUEPD1  BEGSR
- 
+
      C                   CLEAR                   LEPDUED0
- 
+
       ** 'D' record
- 
+
      C                   MOVE      'D'           YRECI
      C**********         Z-ADD     F9NALN        NPLON                                        CLE148
      C                   MOVEL     F9NALA        NPLON                                        CLE148
@@ -1731,38 +1732,38 @@
      C                   Z-ADD     NSDAT         YVDAT
      C                   MOVEL     NORLN         YPORG
      C                   MOVE      C_BRCA        YBRCA
- 
+
      C                   IF        NSEIN = 'N'
      C                   EVAL      YPDCT = 'T'
      C                   ELSE
      C                   EVAL      YPDCT = 'P'
      C                   ENDIF
- 
+
      C                   Z-ADD     NPDPR         YPCPAM
      C                   IF        YPDCT = 'T'
      C                   Z-ADD     NPDIN         YPDINT
      C                   ELSE
      C                   Z-ADD     0             YPDINT
      C                   ENDIF
- 
+
      C                   MOVE      NFAMU         YPFAMU
      C                   MOVE      NSEIN         YPSIIN
      C                   MOVE      NCAPI         YPCIIN
- 
+
      C                   MOVE      NTLPR         WTLPR
      C                   MOVE      WKPABR        YTKPABR
      C                   MOVE      WKPACL        YTKPACL
      C                   MOVE      WKPACY        YTKPACY
      C                   Z-ADD     WKPAAC        YTKPAAC
      C                   Z-ADD     WKPASE        YTKPASE
- 
+
      C                   MOVE      NTLIN         WTLIN
      C                   MOVE      WKIABR        YTKIABR
      C                   MOVE      WKIACL        YTKIACL
      C                   MOVE      WKIACY        YTKIACY
      C                   Z-ADD     WKIAAC        YTKIAAC
      C                   Z-ADD     WKIASE        YTKIASE
- 
+
      C                   MOVE      NRIDT         YRIDT
      C                   MOVE      NRCAT         YRCAT
      C                   MOVE      NBIDT         YBIDT
@@ -1779,20 +1780,20 @@
      C                   MOVE      DDFRNT        YPFRNT
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
- 
+
      C                   WRITE     LEPDUED0
- 
+
       ** 'P' record
- 
+
      C                   MOVE      'P'           YRECI
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
      C                   IF        YDECRE = 'Y'
      C                   IF        YPCBIC = 'I'  AND WLASN = 0                                263412
- 
+
       ** Set up the sequence number checking what is used already on                          263412
       ** LOAMS, key by PDCL loan value date                                                   263412
- 
+
      C                   MOVEL     NORLN         WPLON                                        263412
      C     KLOAM         SETGT     LOAMS                                                      263412
      C     KLOAM         READPE    LOAMS                                9999                  263412
@@ -1809,11 +1810,11 @@
      C                   Z-ADD     WLASN         YPOSEQ
      C**********         ENDIF                                                                263412
      C                   ENDIF
- 
+
      C                   WRITE     LEPDUED0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1821,13 +1822,13 @@
       * SETLEPDUEPD2 - LEPDUEPD x Loan - Interest                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLEPDUEPD2  BEGSR
- 
+
      C                   CLEAR                   LEPDUED0
- 
+
       ** 'D' record
- 
+
      C                   MOVE      'D'           YRECI
      C**********         Z-ADD     F9NALN        NPLO2                                        CLE148
      C                   MOVEL     F9NALA        NPLO2                                        CLE148
@@ -1842,21 +1843,21 @@
      C                   MOVE      NFAMU         YPFAMU
      C                   MOVE      NSEIN         YPSIIN
      C                   MOVE      NCAPI         YPCIIN
- 
+
      C                   MOVE      NTLPR         WTLPR
      C                   MOVE      WKPABR        YTKPABR
      C                   MOVE      WKPACL        YTKPACL
      C                   MOVE      WKPACY        YTKPACY
      C                   Z-ADD     WKPAAC        YTKPAAC
      C                   Z-ADD     WKPASE        YTKPASE
- 
+
      C                   MOVE      NTLIN         WTLIN
      C                   MOVE      WKIABR        YTKIABR
      C                   MOVE      WKIACL        YTKIACL
      C                   MOVE      WKIACY        YTKIACY
      C                   Z-ADD     WKIAAC        YTKIAAC
      C                   Z-ADD     WKIASE        YTKIASE
- 
+
      C                   MOVE      NRIDT         YRIDT
      C                   MOVE      NRCAT         YRCAT
      C                   MOVE      NBIDT         YBIDT
@@ -1873,17 +1874,17 @@
      C                   MOVE      DDFRNT        YPFRNT
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
- 
+
      C                   WRITE     LEPDUED0
- 
+
       ** 'P' record
- 
+
      C                   MOVE      'P'           YRECI
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
      C                   IF        YDECRE = 'Y'
      C                   IF        YPCBIC = 'I'  AND WLASN = 0                                263412
- 
+
       ** Set up the sequence number checking what is used already                             263412
       ** on LOAMS, key by PDCL loan value date                                                263412
                                                                                               263412
@@ -1903,11 +1904,11 @@
      C                   Z-ADD     WLASN         YPOSEQ
      C**********         ENDIF                                                                263412
      C                   ENDIF
- 
+
      C                   WRITE     LEPDUED0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1915,21 +1916,21 @@
       * SETLEPDUFPD - LEPDUFPD x Fee - Principal                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLEPDUFPD   BEGSR
- 
+
       ** Update Fees with new PDCL data
- 
+
      C**********         EVAL      FEPLNR = F9NALN                                            CLE148
      C                   EVAL      FEPLNR = F9NALA                                            CLE148
      C                   UPDATE    LEFEEDF
- 
+
       ** Setup the new link records for the fees
- 
+
      C                   CLEAR                   LEPDUFD0
- 
+
       ** Primary record
- 
+
      C                   MOVE      'P'           YRECI
      **********          Z-ADD     F9NALN        NPLON                                        CLE148
      C                   MOVEL     F9NALA        NPLON                                        CLE148
@@ -1946,14 +1947,14 @@
      C                   MOVE      NFAMU         YPFAMU
      C                   MOVE      NSEIN         YPSIIN
      C                   MOVE      NCAPI         YPCIIN
- 
+
      C                   MOVE      NTLFE         WPDFA
      C                   MOVE      WKFABR        YTKPABR
      C                   MOVE      WKFACL        YTKPACL
      C                   MOVE      WKFACY        YTKPACY
      C                   MOVE      WKFAAC        YTKPAAC
      C                   MOVE      WKFASE        YTKPASE
- 
+
      C                   MOVE      NRIDT         YRIDT
      C                   MOVE      NRCAT         YRCAT
      C                   MOVE      NBIDT         YBIDT
@@ -1970,19 +1971,19 @@
      C                   MOVE      DDFRNT        YPFRNT
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
- 
+
      C                   WRITE     LEPDUFD0
- 
+
       ** Details record
- 
+
      C                   MOVE      'D'           YRECI
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
- 
+
      C                   WRITE     LEPDUFD0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1990,12 +1991,12 @@
       * SETLOAMSDK - LOAMSDK xx Amendment x Loan                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLOAMSDK    BEGSR
- 
+
       ** Set up the sequence number checking what is used already
       ** on LOAMS, key by PDCL loan + value date
- 
+
      C     KLOAM         KLIST
      C                   KFLD                    WPLON
      C                   KFLD                    NSDAT
@@ -2009,9 +2010,9 @@
      C                   EVAL      WLASN = 1
      C                   ENDIF
      C                   ENDIF                                                                263412
- 
+
      C                   CLEAR                   LOAMSDKF
- 
+
      C                   MOVE      'D'           LA_RECI
      C                   MOVEL     NORLN         LA_LNRF
      C**********         Z-ADD     BJRDNB        LA_VDAT                                      262967
@@ -2070,14 +2071,14 @@
      C                   MOVE      WOSBR         LA_OSBR
      C                   MOVE      C_FCLB        LA_FCLB
      C                   Z-ADD     0             LA_LSMD
- 
+
      C                   Z-ADD     BJRDNB        LA_ORED
      C                   Z-ADD     BJRDNB        LA_LCD
      C                   MOVE      'I'           LA_CHTP
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      0             LA_TNLU
- 
+
      C                   Z-ADD     WRSTM         LA_RSTM
      C                   MOVE      WRIBN         LA_RIBN
      C                   MOVE      WRIBA         LA_RIBA
@@ -2172,29 +2173,29 @@
      C                   MOVE      C_CLAS        LA_CLAS
      C                   MOVE      *BLANKS       LA_DFCL
      C                   MOVE      *BLANKS       LA_SLCL
- 
+
      C                   WRITE     LOAMSDKF
      C                   WRITE     LOMKSDKF
- 
+
      C                   IF        WAMTP = 'MR'
- 
+
       ** Update Facility
- 
+
      C                   Z-ADD     LA_PRAM       OPRAM
      C                   Z-ADD     LA_INTA       OINTA
      C                   Z-ADD     LA_PNAM       OPNAM
      C                   Z-ADD     LA_TAMT       OTAMT
      C                   Z-ADD     LA_WTXA       OWTXA
      C                   MOVE      *BLANK        WAMTP
- 
+
      C                   MOVE      OAMT          SAMT
- 
+
      C                   EXSR      SRFCLT
- 
+
       ** Update LTRIX
- 
+
      C                   EXSR      SRLTRX
- 
+
       ** Generate reversal Shadow Posting if Interest Payment due                          AR317473B
       ** tonight will now no longer take place.                                            AR317473B
                                                                                            AR317473B
@@ -2265,13 +2266,13 @@
      C**********         ENDIF                                                             AR317473A
      C**********         ENDIF                                                             AR317473A
      C                   ENDIF
- 
+
       ** Fix trailer
- 
+
      C                   EXSR      SRTRAL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       **/EJECT*********************************************************                    AR317473A
       *****************************************************************                    AR317473A
@@ -2536,21 +2537,21 @@
       * Calls    : FCLTSR                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFCLT        BEGSR
- 
+
      C                   MOVE      'N'           WrkPart
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
       ** Access FACILITY 'A' record
- 
+
      C                   MOVE      'A'           WRCDT1
      C                   MOVE      LA_FCUS       WFCUS
      C                   MOVE      LA_FTYP       WFTYP
      C**********         MOVE      LA_FSEQ       WFSEQ                                        263289
      C                   MOVE      LA_FSEQ       WFCSQ                                        263289
- 
+
      C     KFCLT         CHAIN(n)  FCLTY                              50
      C     *IN50         IFEQ      *ON
      C     *LOCK         IN        LDA
@@ -2563,9 +2564,9 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ** Access FACILITY 'B' record
- 
+
      C                   MOVE      'B'           WRCDT1
      C     KFCLT         CHAIN     FCLTY                              50
      C     *IN50         IFEQ      '1'
@@ -2579,14 +2580,14 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ** Access LEFCAMPD file for change in revolving credit.
- 
+
      C                   MOVE      ' '           WRVCRC
      C                   Z-ADD     0             WVLDT
      C     KFCAM         SETLL     LEFCAML3
      C     KFCAM         READE     LEFCAML3                               85
- 
+
      C     *IN85         DOWEQ     *OFF
      C     WRVCRC        ANDEQ     ' '
      C*****RECI*         IFEQ      'D'                                                      AR724682
@@ -2600,15 +2601,15 @@
      C                   ENDIF
      C     KFCAM         READE     LEFCAML3                               85
      C                   ENDDO
- 
+
       ** Access FCCY record for decimal places
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      FCCY          PCURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '*ERR006'     @@RTCD
@@ -2619,16 +2620,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Save currency details to work field
- 
+
      C                   MOVE      A6NBDP        CDPF
      C     CLE023        IFEQ      'Y'
      C                   Z-ADD     A6SPRT        WSPRTF
      C                   MOVE      A6MDIN        WMDINF
      C                   ENDIF
      C                   EXSR      FCLTSR
- 
+
      C                   Z-ADD     BJRDNB        M_LCD
      C                   MOVE      'A'           M_CHTP
      C                   CALLB     'ZTNLU1'
@@ -2637,9 +2638,9 @@
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    STMP
      C                   UPDATE    FCLTYFNF                             50
- 
+
       ** Update superfacility of the tranche, if any, for CLE005
- 
+
      C     CLE005        IFEQ      'Y'
      C     TRCA          ANDEQ     'TR'
      C                   MOVEL     L_CLLPFI      WLPFI
@@ -2654,21 +2655,21 @@
      C                   MOVEL     WPTFT         L_CLPTFT
      C                   MOVEL     WPTFN         L_CLPTFN
      C                   ENDIF
- 
+
       ** Update also the Participant facility if existing
- 
+
      C     C_LPFI        IFNE      ' '
- 
+
      C                   MOVE      'Y'           WrkPART
- 
+
      C                   MOVEL     C_PTFC        WFCUS
      C                   MOVEL     C_PTFT        WFTYP
      C**********         MOVEL     C_PTFN        WFSEQ                                        263289
      C                   MOVEL     C_PTFN        WFCSQ                                        263289
      C                   MOVE      'A'           WRCDT1
- 
+
      C     KFCLT         CHAIN(N)  FCLTY                              50
- 
+
      C     *IN50         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -2679,9 +2680,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access FACILITY 'B' record
- 
+
      C                   MOVE      'B'           WRCDT1
      C     KFCLT         CHAIN     FCLTY                              50
      C     *IN50         IFEQ      '1'
@@ -2695,15 +2696,15 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ** Access FCCY record for decimal places
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      FCCY          PCURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '*ERR008'     @@RTCD
@@ -2715,11 +2716,11 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
      C                   MOVE      A6NBDP        CDPF
- 
+
      C                   EXSR      FCLTSR
- 
+
      C                   Z-ADD     BJRDNB        M_LCD
      C                   MOVE      'A'           M_CHTP
      C                   CALLB     'ZTNLU1'
@@ -2728,12 +2729,12 @@
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    STMP
      C                   UPDATE    FCLTYFNF                             50
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ENDFCL        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2743,41 +2744,41 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLTRX        BEGSR
- 
+
      C     DDACTN        IFEQ      'X'
      C     BPMRAU        ANDEQ     'Y'
      C     CLE002        ANDEQ     'Y'
- 
+
      C     DDACTN        OREQ      'I'
      C     BPMRAU        ANDNE     'Y'
- 
+
      C     DDACTN        OREQ      'R'
      C     BPMRAU        ANDEQ     'Y'
      C     CLE002        ANDEQ     'Y'
      C     XUSR          ANDNE     *BLANK
- 
+
      C     DDACTN        OREQ      'R'
      C     BPMRAU        ANDNE     'Y'
- 
+
      C     DDACTN        OREQ      'A'
      C     BPMRAU        ANDNE     'Y'
- 
+
      C**********         MOVE      *IN17         IN17                                       AR322731
      C**********         MOVE      '1'           *IN17                                      AR322731
      C**********         MOVE      '0'           *IN79                                      AR322731
- 
+
      C******IN17         DOUEQ     '0'                                                      AR322731
      C*****RECI          ANDEQ     *BLANK                                                   AR322731
      C******IN79         OREQ      '1'                                                      AR322731
- 
+
      C**********         Z-ADD     1             LXRRN                                      AR322731
- 
+
       ** Access LTRIX header
- 
+
      C*****LXRRN         CHAIN(N)  LTRIX                              79                    AR322731
- 
+
      C******IN79         IFEQ      '0'                                                      AR322731
      C*****RECI          IFEQ      'H'                                                      AR322731
      C*****RRNA          IFGT      FLSZ                                                     AR322731
@@ -2799,9 +2800,9 @@
      C**********         OUT       LDA                                                      AR322731
      C**********         EXSR      *PSSR                                                    AR322731
      C**********         ENDIF                                                              AR322731
- 
+
      C**********         MOVE      RRNA          LXRRN                                      AR322731
- 
+
      C*****LXRRN         CHAIN     LTRIX                              7917                  AR322731
       **********                                                                            AR322731
      C******IN17         IFEQ      '1'                                                      AR322731
@@ -2811,10 +2812,10 @@
      C**********         MOVE      '1'           *IN79                                      AR322731
      C**********         ENDIF                                                              AR322731
      C**********         ENDIF                                                              AR322731
- 
+
      C**********         ENDDO                                                              AR322731
      C**********         MOVE      IN17          *IN17                                      AR322731
- 
+
      C******IN79         IFEQ      '1'                                                      AR322731
      C******LOCK         IN        LDA                                                      AR322731
      C**********         EVAL      @@RTCD = '*RECUPD'                                       AR322731
@@ -2825,26 +2826,26 @@
      C**********         OUT       LDA                                                      AR322731
      C**********         EXSR      *PSSR                                                    AR322731
      C**********         ENDIF                                                              AR322731
- 
+
      C**********         Z-ADD     0             PRI1                                       AR322731
      C                   Z-ADD     0             PRI1                                       AR322731
- 
+
       ** Check settlement type
- 
+
      C     LA_SETP       IFEQ      01
      C     LA_SETP       OREQ      02
      C     LA_SETP       OREQ      07
      C     LA_SETP       OREQ      08
      C     LA_SETP       OREQ      12
- 
+
       ** Obtain lowest telex notice days between loan & local CCY
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      C_CCY         PCURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '*ERR009'     @@RTCD
@@ -2855,51 +2856,51 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Default to local CCY for telex notice calculation
- 
+
      C                   Z-ADD     A6TXND        ZNRDYS
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   MOVE      BJLCCY        ZCCY
- 
+
       ** For settlement types 01, 07, & 08 use loan currency instead
- 
+
      C     LA_SETP       IFEQ      01
      C     LA_SETP       OREQ      07
      C     LA_SETP       OREQ      08
      C                   Z-ADD     A6TXND        ZNRDYS
      C                   MOVE      C_CCY         ZCCY
      C                   ENDIF
- 
+
      C                   CALLB     'ZFWDT'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZNRDYS
      C                   PARM                    ZDYNBR
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
- 
+
      C     LA_VDAT       IFLE      ZDYNBR
      C     LA_VDAT       IFGE      BJRDNB
      C                   Z-ADD     1             PRI1
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      0             NATN
- 
+
       ** Update LTRIX detail record
- 
+
      C                   Z-ADD     0             RRNA                                       AR322731
      C                   EXCEPT    LTRIXD
- 
+
       ** Get header record
- 
+
      C**********         Z-ADD     1             LXRRN                                      AR322731
      C*****LXRRN         CHAIN     LTRIX                              79                    AR322731
- 
+
      C******IN79         IFEQ      '1'                                                      AR322731
      C******LOCK         IN        LDA                                                      AR322731
      C**********         MOVE      '*ERR010'     @@RTCD                                     AR322731
@@ -2910,23 +2911,23 @@
      C**********         OUT       LDA                                                      AR322731
      C**********         EXSR      *PSSR                                                    AR322731
      C**********         ENDIF                                                              AR322731
- 
+
       ** Update relevant control fields
- 
+
      C*****NORE          ADD       1             NORE                                       AR322731
      C*****RRNA          ADD       1             RRNA                                       AR322731
      C*****NLAR          ADD       1             NLAR                                       AR322731
- 
+
      C**********         CALLB     'ZTNLU1'                                                 AR322731
      C**********         PARM      *BLANKS       @RTCD                                      AR322731
      C**********         PARM      0             NATN                                       AR322731
- 
+
      C**********         EXCEPT    LTRIXH                                                   AR322731
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2935,15 +2936,15 @@
       *                condsidered                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkSysValue   BEGSR
- 
+
       ** Check if Window Maintenance is activated
- 
+
      C                   EVAL      @RTCD = *BLANKS
      C                   EVAL      POP01 = 'PDCLAccSeqNo'
      C                   EVAL      PVL01 = *BLANKS
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    @RTCD
      C                   PARM                    POP01
@@ -2966,13 +2967,13 @@
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
      C                   PARM      *BLANKS       PVL10
- 
+
      C                   EVAL      SeqFlg = *BLANKS
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     PVL01         SeqFlg
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -2980,131 +2981,131 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
- 
+
      C                   PARM                    @@RTCD
- 
+
      C                   PARM                    DDACTN
- 
+
       ** Valid values
- 
+
      C                   PARM                    LEVPDCL
      C                   PARM                    NBCDY
      C                   PARM                    NBCSD
      C                   PARM                    NRCDY
      C                   PARM                    NRCSD
- 
+
       ** Record Type
- 
+
      C                   PARM                    RecordType
- 
+
       ** Front Office ID
- 
+
      C                   PARM                    DDFRNT
- 
+
       ** Transaction Details in File Format: Loan 1
- 
+
      C                   PARM                    PDCLFilFmtLoan
- 
+
       ** Transaction Details in File Format: Loan 2
- 
+
      C                   PARM                    PDCLFilFmtLoaK
- 
+
       ** Transaction Details in File Format: Fee
- 
+
      C                   PARM                    PDCLFilFmtFee
- 
+
       ** Transaction Details in File Format: Facility
- 
+
      C                   PARM                    PDCLFilFmtFcty
- 
+
       ** Other fields
- 
+
      C                   PARM                    WIUSR
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANK
      C                   EVAL      DBKEY = @OPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 901
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get first branch for zone
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C                   PARM                    @BRCD
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANK
      C                   EVAL      DBKEY = @OPTN
      C                   EVAL      DBFILE = 'SDBRCHPD'
      C                   EVAL      DBASE = 910
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if PDCL Loan Sequence will be implemented
- 
+
      C                   EXSR      ChkSysValue
- 
+
       ** Get General Ledger Details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANKS       RtnCode
      C                   PARM      '*FIRST'      @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      DBKEY = @OPTN
      C                   EVAL      DBFILE = 'SDGELRPD'
      C                   EVAL      DBASE = 911
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get Modules Details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       RtnCode
      C                   PARM      '*FIRST'      @OPTN
      C     SDMMOD        PARM      SDMMOD        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      DBKEY = @OPTN
      C                   EVAL      DBFILE = 'SDMMODPD'
      C                   EVAL      DBASE = 912
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get Lending ICD
- 
+
      C                   CALL      'AOCLNDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDCLND        PARM      SDCLND        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDCLNDPD'
      C                   EVAL      DBKEY = '*CALL'
@@ -3112,7 +3113,7 @@
      C                   MOVE      '*ERR011'     @@RTCD
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     BGPFMG        IFEQ      'Y'
      C                   CALLB     'AOPORTR0'
      C                   PARM      *BLANKS       @RTCD
@@ -3128,12 +3129,12 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** First read, store BICN
- 
+
      C     *LOVAL        SETLL     SDBRCHL5
      C                   READ      SDBRCHL5                               99
- 
+
      C     *IN99         IFEQ      *ON
      C                   EVAL      @@RTCD = '*RECUPD'
      c     *LOCK         IN        LDA
@@ -3143,121 +3144,121 @@
      C                   Z-ADD     13            DBASE
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C     *IN99         DOUEQ     *ON
      C                   ADD       1             I
      C                   MOVE      A8BICN        @BIC(I)
      C                   READ      SDBRCHL5                               99
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** CARs
- 
+
      C                   MOVE      'N'           CGL058
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL058'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CGL058
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE002
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE002
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE005
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE005
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE009
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE009'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE009
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE014
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE014
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE023
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE023'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE023
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE025
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE025'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE025
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE028
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE028'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE028
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CLE031
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE031'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE031
      C                   ENDIF
- 
+
      C                   MOVE      'N'           CEU004
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU004'      @SARD
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CEU004
      C                   ENDIF
- 
+
       ** Key Lists
- 
+
      C     KSEQ          KLIST                                                                263412
      C                   KFLD                    YBRCA                                        263412
      C                   KFLD                    YPORG                                        263412
@@ -3265,49 +3266,49 @@
                                                                                               263412
      C     KLOAN         KLIST
      C                   KFLD                    WLOAN
- 
+
      C     KLAKEY        KLIST
      C                   KFLD                    WKLNR
      C                   KFLD                    WKVDT
      C                   KFLD                    WKLSN
- 
+
      C     KFEE          KLIST
      C                   KFLD                    WFECU
      C                   KFLD                    WFFAC
      C                   KFLD                    WFLNO
      C                   KFLD                    WFSEQ
- 
+
      C     KFAC          KLIST
      C                   KFLD                    WFECU
      C                   KFLD                    WFACT
      C                   KFLD                    WFCNO
      C                   KFLD                    WRCDT
- 
+
      C     KFCOD         KLIST
      C                   KFLD                    WFECD
- 
+
      C     KFCLT         KLIST
      C                   KFLD                    WFCUS
      C                   KFLD                    WFTYP
      C**********         KFLD                    WFSEQ                                        263289
      C                   KFLD                    WFCSQ                                        263289
      C                   KFLD                    WRCDT1
- 
+
      C     KFCAM         KLIST
      C                   KFLD                    WFCUS
      C                   KFLD                    WFTYP
      C**********         KFLD                    WFSEQ                                        263289
      C                   KFLD                    WFCSQ                                        263289
- 
+
       ** Determine whether program is running interactively or in batch
       ** ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return
      C                   PARM                    @Type
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3315,15 +3316,15 @@
       * SETLOANP - SETUP Original loan and preliminary data           *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLOANP      BEGSR
- 
+
      C                   EVAL      WLOAN = NORLN
- 
+
       ** Retrieve and update the loan AUTO flag
- 
+
      C     KLOAN         CHAIN     CLOAN                              99
- 
+
      C                   IF        *IN99 = *ON OR
      C                             C1RECI <> 'D'
      C                   MOVE      '*ERR036'     @@RTCD
@@ -3331,15 +3332,15 @@
      C                   EVAL      DBFILE = 'CLOANCL'
      C                   EVAL      DBASE = 36
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
       ** Set Loan AUTO flag to 'C' for a loan
- 
+
      C                   EVAL      C1AUTO = 'C'
- 
+
       ** Reporting
- 
+
      C                   EVAL      C1RIDT = NRIDT
      C                   EVAL      C1RCAT = NRCAT
      C                   EVAL      C1RIDC = 0
@@ -3347,9 +3348,9 @@
      C                   EVAL      C1RCDY = NRCDY
      C                   EVAL      C1RCSD = NRCSD
      C                   EVAL      C1RICC = 0
- 
+
       ** Basel II
- 
+
      C                   EVAL      C1BIDT = NBIDT
      C                   EVAL      C1BCAT = NBCAT
      C                   EVAL      C1BIDC = 0
@@ -3357,19 +3358,19 @@
      C                   EVAL      C1BCDY = NBCDY
      C                   EVAL      C1BCSD = NBCSD
      C                   EVAL      C1RICC = 0
- 
+
      C                   UPDATE    CLOANCLF
- 
+
      C                   ENDIF
- 
+
       ** Retrieve base rates, penalties, ranges, etc. for all
- 
+
      C                   EVAL      WLTYP = C_LTYP
      C                   EVAL      WSUTP = C_SUTP
      C                   EVAL      WCLAS = C_CLAS
- 
+
       ** Find type/subtype info
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3377,7 +3378,7 @@
      C                   PARM      WSUTP         PLSubType
      C                   PARM      WCLAS         PLClass
      C     SDLOAN        PARM      SDLOAN        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     WLTYP         CAT       WSUTP         DBKEY
      C                   MOVE      WCLAS         DBKEY
@@ -3386,9 +3387,9 @@
      C                   EVAL      DBASE = 013
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Find range for PDCL loan
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3396,7 +3397,7 @@
      C                   PARM      AYPPLS        PLSubType
      C                   PARM      AYPPLC        PLClass
      C     SDLOAN1       PARM      SDLOAN1       DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     AYPPLT        CAT       AYPPLS        DBKEY
      C                   MOVE      AYPPLC        DBKEY
@@ -3405,9 +3406,9 @@
      C                   EVAL      DBASE = 035
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Override the AY fields of the original loan where necessary
- 
+
      C                   MOVE      @AYLNTY       AYLNTY
      C                   MOVE      @AYLNST       AYLNST
      C                   MOVE      @AYLCD        AYLCD
@@ -3442,11 +3443,11 @@
      C                   MOVE      @AYOVRD       AYOVRD
      C**********         MOVE      @AYPCKO       AYPCKO                                       CLE164
      C                   MOVE      @AYPGID       AYPGID                                       CLE164
- 
+
       ** Access Penalties files and override values
- 
+
      C     WLOAN         CHAIN     LEPRATL1                           99
- 
+
      C                   IF        *IN99 = *OFF
      C                   IF        B2CAPI <> ' '                                            AR467031
      C                   EVAL      AYCAPI = B2CAPI
@@ -3461,7 +3462,7 @@
      C**********         ENDIF                                                     AR467031 AR549587
                                                                                             AR467031
      C                   EVAL      AYPBRT = B2PBRT
- 
+
      C**********         IF        B2PRSP <> 0                                     AR467031 AR549587
      C                   EVAL      AYPRSP = B2PRSP
      C**********         ENDIF                                                     AR467031 AR549587
@@ -3474,14 +3475,15 @@
      C                   EVAL      AYPICB = B2PICB
      C                   ENDIF                                                              AR467031
                                                                                             AR467031
-     C                   IF        B2IBSR <> 0                                              AR467031
+     C**********         IF        B2IBSR <> 0                                       AR467031 CSD103
+     C                   IF        B2IBSR <> *BLANKS                                          CSD103
      C                   EVAL      AYIBSR = B2IBSR
      C                   ENDIF                                                              AR467031
                                                                                             AR467031
      C                   IF        B2IBRT <> 0
      C                   EVAL      AYIBRT = B2IBRT
      C                   ENDIF
- 
+
      C                   IF        B2IRSP <> 0                                              AR467031
      C                   EVAL      AYIRSP = B2IRSP
      C                   ENDIF                                                              AR467031
@@ -3498,9 +3500,9 @@
      C                   EVAL      AYPOPR = B2POPR
      C                   ENDIF                                                              AR467031
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3508,15 +3510,15 @@
       * SETLOANI - SETUP Original loan and preliminary data           *
       *                                                               *
       *****************************************************************
- 
+
      C     SETLOANI      BEGSR
- 
+
      C                   EVAL      WLOAN = NORLN
- 
+
       ** Retrieve and update the loan AUTO flag
- 
+
      C     KLOAN         CHAIN     CLOAN                              99
- 
+
      C                   IF        *IN99 = *ON OR
      C                             C1RECI <> 'D'
      C                   MOVE      '*ERR040'     @@RTCD
@@ -3524,15 +3526,15 @@
      C                   EVAL      DBFILE = 'CLOANCL'
      C                   EVAL      DBASE = 40
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
       ** Set Loan AUTO flag to 'C' for a loan
- 
+
      C                   EVAL      C1AUTO = 'C'
- 
+
       ** Reporting
- 
+
      C                   EVAL      C1RIDT = NRIDT
      C                   EVAL      C1RCAT = NRCAT
      C                   EVAL      C1RIDC = 0
@@ -3540,9 +3542,9 @@
      C                   EVAL      C1RCDY = NRCDY
      C                   EVAL      C1RCSD = NRCSD
      C                   EVAL      C1RICC = 0
- 
+
       ** Basel II
- 
+
      C                   EVAL      C1BIDT = NBIDT
      C                   EVAL      C1BCAT = NBCAT
      C                   EVAL      C1BIDC = 0
@@ -3550,19 +3552,19 @@
      C                   EVAL      C1BCDY = NBCDY
      C                   EVAL      C1BCSD = NBCSD
      C                   EVAL      C1RICC = 0
- 
+
      C                   UPDATE    CLOANCLF
- 
+
      C                   ENDIF
- 
+
       ** Retrieve base rates, penalties, ranges, etc. for all
- 
+
      C                   EVAL      WLTYP = C_LTYP
      C                   EVAL      WSUTP = C_SUTP
      C                   EVAL      WCLAS = C_CLAS
- 
+
       ** Find type/subtype info
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3570,7 +3572,7 @@
      C                   PARM      WSUTP         PLSubType
      C                   PARM      WCLAS         PLClass
      C     SDLOAN        PARM      SDLOAN        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     WLTYP         CAT       WSUTP         DBKEY
      C                   MOVE      WCLAS         DBKEY
@@ -3579,9 +3581,9 @@
      C                   EVAL      DBASE = 042
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Find range for PDCL loan
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3590,7 +3592,7 @@
      C                   PARM      AYIPLC        PLClass
      C     SDLOAN1       PARM      SDLOAN1       DSFDY                                        262851
      C*****SDLOAN        PARM      SDLOAN        DSSDY                                        262851
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     AYIPLT        CAT       AYIPLS        DBKEY
      C                   MOVE      AYIPLC        DBKEY
@@ -3599,9 +3601,9 @@
      C                   EVAL      DBASE = 043
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Override the AY fields of the original loan where necessary
- 
+
      C                   MOVE      @AYLNTY       AYLNTY
      C                   MOVE      @AYLNST       AYLNST
      C                   MOVE      @AYLCD        AYLCD
@@ -3636,11 +3638,11 @@
      C                   MOVE      @AYOVRD       AYOVRD
      C**********         MOVE      @AYPCKO       AYPCKO                                       CLE164
      C                   MOVE      @AYPGID       AYPGID                                       CLE164
- 
+
       ** Access Penalties files and override values
- 
+
      C     WLOAN         CHAIN     LEPRATL1                           99
- 
+
      C                   IF        *IN99 = *OFF
      C                   IF        B2CAPI <> ' '                                            AR549587
      C                   EVAL      AYCAPI = B2CAPI
@@ -3666,9 +3668,9 @@
                                                                                             AR549587
      C                   EVAL      AYPOPR = B2POPR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3676,18 +3678,18 @@
       * SETFEE - SETUP Original fee and preliminary data              *
       *                                                               *
       *****************************************************************
- 
+
      C     SETFEE        BEGSR
- 
+
       ** Retrieve and update the fee AUTO flag
- 
+
      C                   EVAL      WFECU = NFECU
      C                   EVAL      WFSEQ = NFSEQ
      C                   EVAL      WFFAC = NFFAC
      C                   EVAL      WFLNO = NFLNO
- 
+
      C     KFEE          CHAIN     LEFEEDL0
- 
+
      C                   IF        NOT %FOUND OR
      C                             FERECI <> 'D'
      C                   EVAL      DBKEY = 'KFEE'
@@ -3695,14 +3697,14 @@
      C                   EVAL      DBASE = 902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set Loan Fee AUTO flags to 'C'
- 
+
      C                   EVAL      FEAUTO = 'C'
      C                   EVAL      FEAUT2 = 'C'
- 
+
       ** Reporting
- 
+
      C                   EVAL      FERIDT = NRIDT
      C                   EVAL      FERCAT = NRCAT
      C                   EVAL      FERIDC = 0
@@ -3710,9 +3712,9 @@
      C                   EVAL      FERCSD = NRCSD
      C                   EVAL      FERCDY = NRCDY
      C                   EVAL      FERICC = 0
- 
+
       ** Basel II
- 
+
      C                   EVAL      FEBIDT = NBIDT
      C                   EVAL      FEBCAT = NBCAT
      C                   EVAL      FEBIDC = 0
@@ -3720,17 +3722,17 @@
      C                   EVAL      FEBCSD = NBCSD
      C                   EVAL      FEBCDY = NBCDY
      C                   EVAL      FERICC = 0
- 
+
       ** Retrieve Fee Code information
- 
+
      C                   MOVE      FEFCOD        WFCOD
- 
+
      C                   CALL      'AOFEER0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      WFCOD         @FECD
      C     SDFEE         PARM      SDFEE         DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDFEEPD'
      C                   EVAL      DBKEY = @FECD
@@ -3738,15 +3740,15 @@
      C                   MOVE      '*ERR014'     @@RTCD
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve base rates, penalties, ranges, etc. for all
- 
+
      C                   EVAL      WLTYP = AUCLTY
      C                   EVAL      WSUTP = AUCLST
      C                   EVAL      WCLAS = AUCLCL
- 
+
       ** Find type/subtype info
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3754,7 +3756,7 @@
      C                   PARM      WSUTP         PLSubType
      C                   PARM      WCLAS         PLClass
      C     SDLOAN        PARM      SDLOAN        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     WLTYP         CAT       WSUTP         DBKEY
      C                   MOVE      WCLAS         DBKEY
@@ -3763,11 +3765,11 @@
      C                   MOVE      '*ERR015'     @@RTCD
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     NPDFA         NPDPR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3775,19 +3777,19 @@
       * SETCLOANCx - Setup new loan                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SETCLOANCx    BEGSR
- 
+
      C                   EVAL      WLSEQ = *ZEROS
- 
+
       ** SET FIELDS ON INSERT
- 
+
      C                   EVAL      L_CLRECI = 'D'
      C**********         EVAL      L_CLLNRF = F9NALN                                          CLE148
      C                   EVAL      L_CLLNRF = F9NALA                                          CLE148
      C                   EVAL      L_CLRCDT = 'A'
      C                   EVAL      L_CLMRIN = 1
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLCNUM = C_CNUM
      C                   EVAL      WLSEQ = C_FSEQ
@@ -3799,34 +3801,34 @@
      C                   MOVE      E_FEFACL      WLSEQ
      C                   ENDIF                                                              AR827807
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLBRCA = C_BRCA
      C                   ELSE
      C                   EVAL      L_CLBRCA = E_FEBRCA
      C                   ENDIF
- 
+
      C                   SELECT
      C                   WHEN      RecordType = Loan AND NPLO2 = *BLANK
      C                   EVAL      L_CLLTYP = AYPPLT
      C                   EVAL      L_CLSUTP = AYPPLS
      C                   EVAL      L_CLCLAS = AYPPLC
- 
+
      C                   WHEN      RecordType = Loan AND NPLO2 = *BLANK
      C                   EVAL      L_CLLTYP = AYIPLT
      C                   EVAL      L_CLSUTP = AYIPLS
      C                   EVAL      L_CLCLAS = AYIPLC
- 
+
      C                   WHEN      RecordType <> Loan
      C                   EVAL      L_CLLTYP = AUCLTY
      C                   EVAL      L_CLSUTP = AUCLST
      C                   EVAL      L_CLCLAS = AUCLCL
      C                   ENDSL
- 
+
      C                   EVAL      L_CLPTYP = AYLNPT
- 
+
       ** Setup LoanType
- 
+
      C                   SELECT
      C                   WHEN      L_CLPTYP = 61
      C                             OR L_CLPTYP = 62
@@ -3835,27 +3837,27 @@
      C                             OR L_CLPTYP = 80
      C                             AND CLE028 = 'Y'
      C                   EVAL      LoanType = 'LOAN'
- 
+
      C                   WHEN      L_CLPTYP = 64
      C                             OR L_CLPTYP = 65
      C                             OR L_CLPTYP = 68
      C                             OR L_CLPTYP = 71
      C                   EVAL      LoanType = 'PTPU'
- 
+
      C                   WHEN      L_CLPTYP = 66 OR
      C                             L_CLPTYP = 67 OR
      C                             L_CLPTYP = 69 OR
      C                             L_CLPTYP = 72
      C                   EVAL      LoanType = 'PTSO'
      C                   ENDSL
- 
+
      C**********         EVAL      L_CLDDAT = BJRDNB
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLDDAT = C_DDAT
      C                   ELSE
      C                   EVAL      L_CLDDAT = E_FEORED
      C                   ENDIF
- 
+
      C                   EVAL      L_CLVDAT = NSDAT
      C                   EVAL      L_CLMDAT = 0
      C**********         EVAL      L_CLLASQ = 1                                             AR322571
@@ -3864,60 +3866,60 @@
      C                   ELSE
      C                   EVAL      L_CLLASQ = C_LASQ                                        AR322571
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   EVAL      L_CLFCUS = C_FCUS
      C                   ELSE
      C                   EVAL      L_CLFCUS = E_FECNUM
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   EVAL      L_CLFTYP = C_FTYP
      C                   ELSE
      C                   MOVEL     E_FEFACL      L_CLFTYP
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   EVAL      L_CLFSEQ = C_FSEQ
      C                   ELSE
      C                   MOVE      E_FEFACL      L_CLFSEQ
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLCCY = C_CCY
      C                   ELSE
      C                   EVAL      L_CLCCY = E_FEFCCY
      C                   ENDIF
- 
+
      C                   SELECT
      C                   WHEN      (NPDIN <> 0 AND NPDPR <> 0)
      C                             AND NSEIN = 'N' AND NCAPI = 'Y'
      C                   EVAL      L_CLCPAM = NPDIN + NPDPR                                 AR321628
- 
+
      C**********         WHEN      (NPDIN <> 0 AND NPDPR = 0                                  263360
      C**********                   OR NPDIN <> 0 AND NPDPR <> 0 AND NSEIN = 'Y')              263360
      C**********                   AND NPLO2 <> 0                                             263360
- 
+
      C                   WHEN      (NPDIN<>0 AND NPDPR=0)                                     263360
      C                             OR (NPDIN<>0 AND NPDPR<>0 AND NSEIN='Y')                   263360
      C                             AND (NPLO2<>*BLANK)                                        263360
      C                   EVAL      L_CLCPAM = NPDIN
- 
+
      C**********         WHEN      (NPDIN = 0 AND NPDPR <> 0                                  263360
      C**********                   OR NPDIN <> 0 AND NPDPR <> 0 AND NSEIN = 'Y')              263360
      C**********                   AND NPLO2 = 0                                              263360
- 
+
      C                   WHEN      (NPDIN=0 AND NPDPR<>0)                                     263360
      C                             OR (NPDIN<>0 AND NPDPR<>0 AND NSEIN='Y')                   263360
      C                             AND (NPLO2=*BLANK)                                         263360
      C                   EVAL      L_CLCPAM = NPDPR
      C                   ENDSL
- 
+
      C                   EVAL      L_CLINTC = 'N'
- 
+
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        NPLO2 = *BLANK
@@ -3927,13 +3929,13 @@
      C                   EVAL      L_CLBRTT = AYIBSR
      C                   EVAL      L_CLBRTE = AYIBRT
      C                   ENDIF
- 
+
      C                   WHEN      RecordType = FeeLoan OR
      C                             RecordType = FeeFacility
      C                   EVAL      L_CLBRTT = AUCBSR
      C                   EVAL      L_CLBRTE = AUCBRT
      C                   ENDSL
- 
+
      C**********         IF        L_CLBRTT <> 0                                              CSD103
      C                   IF        L_CLBRTT <> *BLANKS                                        CSD103
      C                   MOVE      L_CLCCY       @KEY1
@@ -3944,7 +3946,7 @@
      C                   PARM                    @KEY1
      C                   PARM                    @KEY2
      C     SDBSRT        PARM      SDBSRT        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS OR
      C**********                   BPBRCF <> 'Y' OR                                         AR826115
      C                             BPBRCF <> 'Y' OR                                         MD034840
@@ -3956,7 +3958,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         IF        L_CLBRTT = 0                                               CSD103
      C                   IF        L_CLBRTT = *BLANKS                                         CSD103
      C                   ELSE
@@ -3966,7 +3968,7 @@
      C                   EVAL      L_CLBRTE = BANBRT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   IF        NPLO2 = *BLANK
      C                   EVAL      L_CLRTSP = AYPRSP
@@ -3989,13 +3991,13 @@
       **********                                                                   AR826115 MD034840
      C**********         EVAL      L_CLSPIN    = ' '                               AR826115 MD034840
      C**********         ENDIF                                                     AR826115 MD034840
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLMARG = C_MARG
      C                   ELSE
      C                   EVAL      L_CLMARG = 0
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   IF        NPLO2 = *BLANK
      C                   EVAL      L_CLSPIN = AYPRSI
@@ -4014,32 +4016,32 @@
      C                   ENDIF                                                                263228
                                                                                               263228
       ** Interest rate
- 
+
      C                   SELECT
      C                   WHEN      L_CLSPIN = 'A'
      C     L_CLBRTE      ADD       L_CLRTSP      L_CLINTR
- 
+
      C                   WHEN      L_CLSPIN = 'S'
      C     L_CLBRTE      SUB       L_CLRTSP      L_CLINTR
- 
+
      C                   WHEN      L_CLSPIN = 'P'
      C     L_CLRTSP      DIV       100           WRK_139
      C     WRK_139       MULT(h)   L_CLBRTE      L_CLINTR
- 
+
      C**********         WHEN      L_CLSPIN = *Blank                                        AR549587
      C**********         Z-ADD     L_CLRTSP      L_CLINTR                                   AR549587
      C                   ENDSL
- 
+
      C                   SELECT
      C**********         WHEN      L_CLBRTT = 0 AND L_CLBRTE = 0                              CSD103
      C                   WHEN      L_CLBRTT = *BLANKS AND L_CLBRTE = 0                        CSD103
      C                   EVAL      L_CLCHIN = *BLANKS
- 
+
      C**********         WHEN      L_CLBRTT <> 0 AND                                          CSD103
-     C                   WHEN      L_CLBRTT <> *BLANKS                                        CSD103
+     C                   WHEN      L_CLBRTT <> *BLANKS AND                                    CSD103
      C                             RecordType = FeeLoan OR
      C**********                   L_CLBRTT <> 0 AND                                          CSD103
-     C                             L_CLBRTT <> *BLANKS                                        CSD103
+     C                             L_CLBRTT <> *BLANKS AND                                    CSD103
      C                             RecordType = FeeFacility
      C                             OR (L_CLBRTE <> 0
      C                             AND RecordType = FeeLoan)
@@ -4047,9 +4049,9 @@
      C                             AND RecordType = FeeFacility)
      C**********         EVAL      L_CLCHIN = AUCRIN                                        AR719589
      C                   EVAL      L_CLCHIN = AUBSRI                                        AR719589
- 
+
      C**********         WHEN      L_CLBRTT <> 0 AND                                          CSD103
-     C                   WHEN      L_CLBRTT <> *BLANKS                                        CSD103
+     C                   WHEN      L_CLBRTT <> *BLANKS AND                                    CSD103
      C                             RecordType = Loan
      C                             OR (L_CLBRTE <> 0
      C                             AND RecordType = Loan)
@@ -4063,14 +4065,14 @@
      C                   EVAL      L_CLNRPD = 0
      C                   EVAL      L_CLRFRQ = *BLANKS
      C                   EVAL      L_CLRDYN = 0
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   EVAL      L_CLFCCY = C_FCCY
      C                   ELSE
      C                   EVAL      L_CLFCCY = M_FCCY
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLLIND = C_LIND
      C                   ELSE
@@ -4082,40 +4084,40 @@
      C     SDCUST        PARM      SDCUST        DSSDY
      C                   MOVE      L_CLLIND      BBLICD
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLCRSK = C_CRSK
      C                   ELSE
      C                   EVAL      L_CLCRSK = M_CRSK
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLACOF = C_ACOF
      C                   ELSE
      C                   EVAL      L_CLACOF = E_FEACOF
      C                   ENDIF
- 
+
      C                   MOVE      'B'           L_CLNACD
- 
+
      C                   IF        RecordType = Loan
      C                   EVAL      L_CLRELI = C_RELI
      C                   ELSE
      C                   MOVE      *BLANKS       L_CLRELI
      C                   ENDIF
- 
+
      C                   MOVE      'C'           L_CLAUTO
      C                   Z-ADD     0             L_CLPSAM
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      L_CLCCY       @CCY
      C     SDCURR        PARM      SDCURR        DSSDY
      C                   Z-ADD     A6SPRT        L_CLBCXR
- 
+
      C                   MOVE      A6MDIN        WMDINC
      C                   Z-ADD     A6SPRT        WSPRTC
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -4123,7 +4125,7 @@
      C     SDCURR        PARM      SDCURR        DSSDY
      C                   MOVE      A6MDIN        WMDINF
      C                   Z-ADD     A6SPRT        WSPRTF
- 
+
       ** Use FCXR from origin loan to avoid discrepancy on fachisa                          AR705750
       ** OL Amount not equal to PDCL amount                                                 AR705750
                                                                                             AR705750
@@ -4135,15 +4137,15 @@
      C**********         EVAL      L_CLFCXR = WSPRTF * WSPRTC                               AR705750
      C**********         ENDIF                                                              AR705750
      C**********         ELSE                                                               AR705750
- 
+
      C                   IF        RecordType = Loan                                        AR705750
      C                   EVAL      L_CLFCXR = C_FCXR                                        AR705750
      C                   ELSE                                                               AR705750
      C                   EVAL      L_CLFCXR = WSPRTC
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_QQOSDA
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_TSTN        L_CLTSTN
      C                   ELSE
@@ -4153,9 +4155,9 @@
      C                   MOVE      E_RIBN        L_CLTSTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_QQOMDA
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_TMAN        L_CLTMAN
      C                   ELSE
@@ -4165,13 +4167,13 @@
      C                   MOVE      E_RIBN        L_CLTMAN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_BENN        L_CLFACO
      C                   ELSE
      C                   MOVE      E_BENN        L_CLFACO
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   Z-ADD     C_RLDT        L_CLRLDT
      C                   Z-ADD     C_NROD        L_CLNROD
@@ -4185,7 +4187,7 @@
      C                   Z-ADD     0             L_CLRLDY
      C                   MOVE      'N'           L_CLRDFC
      C                   ENDIF
- 
+
      C**********         Z-ADD     0             L_CLNBRA                                     CSD103
      C                   MOVE      *BLANKS       L_CLNBRA                                     CSD103
      C                   Z-ADD     0             L_CLNRTS
@@ -4197,26 +4199,26 @@
      C                   Z-ADD     0             L_CLIWOD
      C                   Z-ADD     0             L_CLPWOD
      C                   MOVE      WMDINC        L_CLBMDI
- 
+
      C                   IF        RecordType = Loan                                        AR705750
      C                   EVAL      L_CLFMDI = C_FMDI                                        AR705750
      C                   ELSE                                                               AR705750
      C                   SELECT
      C                   WHEN      L_CLFCCY <> BJCYCD AND WMDINF ='M'
      C                   EVAL      L_CLFMDI = 'D'
- 
+
      C                   WHEN      L_CLFCCY <> BJCYCD AND WMDINF ='D'
      C                   EVAL      L_CLFMDI = 'M'
- 
+
      C                   WHEN      L_CLFCCY = BJCYCD
      C                   EVAL      L_CLFMDI = WMDINC
      C                   ENDSL
      C                   ENDIF                                                              AR705750
- 
+
      C                   Z-ADD     0             L_CLPDIN
      C                   Z-ADD     0             L_CLLSWC
      C                   Z-ADD     0             L_CLLSWS
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_OSDB        L_CLOSDB
      C                   MOVE      C_OMDB        L_CLOMDB
@@ -4237,7 +4239,7 @@
      C                   EVAL      L_CLORBR = BBBRCD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        BKOBRU = 'Y'
      C                   CALL      'AOPRFMR0'
      C                   PARM      *BLANKS       PRTNC
@@ -4252,16 +4254,16 @@
      C                   PARM      *BLANKS       PPRFC
      C                   MOVE      PPRFC         L_CLPRFC
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   MOVE      C_FCLB        L_CLFCLB
      C                   ELSE
      C                   MOVE      M_BRCA        L_CLFCLB
      C                   ENDIF
- 
+
      C                   MOVE      *BLANK        L_CLMLNR
- 
+
      C                   IF        LoanType <> 'PTSO'
      C                   MOVE      BPBTIN        L_CLBTIN
      C                   Z-ADD     BPDBDY        L_CLBLDY
@@ -4269,15 +4271,15 @@
      C                   MOVE      *BLANKS       L_CLBTIN
      C                   Z-ADD     0             L_CLBLDY
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_OLNO        L_CLOLNO
      C                   ELSE
      C                   MOVE      *BLANKS       L_CLOLNO
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLRCSI
- 
+
      C                   IF        RecordType = Loan
      C                   IF        NSEIN = 'N'
      C                   Z-ADD     AYPICB        L_CLICBS
@@ -4293,14 +4295,14 @@
      C                   Z-ADD     AYPICB        L_CLICBS                                   AR467031
      C                   ENDSL                                                              AR467031
      C                   ENDIF
- 
+
      C                   ELSE
      C                   Z-ADD     0             L_CLICBS
      C                   IF        AUICBS <> 0
      C                   Z-ADD     AUICBS        L_CLICBS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLIPFR
      C                   Z-ADD     0             L_CLTOTI
      C                   Z-ADD     0             L_CLNIDT
@@ -4322,7 +4324,7 @@
      C                   Z-ADD     0             L_CLIFDY
      C                   BITOFF    '01234567'    L_CLCNFI
      C                   MOVE      'I'           L_CLCHTP
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_ADDI        L_CLADDI
      C                   ELSE
@@ -4332,10 +4334,10 @@
      C                   MOVE      'F'           L_CLADDI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   Z-ADD     0             L_CLORMD
      C                   Z-ADD     0             L_CLORTI
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_BOKC        L_CLBOKC
      C                   MOVE      C_COCU        L_CLCOCU
@@ -4349,26 +4351,26 @@
      C                   MOVE      *BLANKS       L_CLCOCU
      C                   MOVE      *BLANKS       L_CLRECE
      C                   ENDIF
- 
+
      C                   Z-ADD     0             L_CLOMDT
      C                   Z-ADD     0             L_CLNIPD
      C                   Z-ADD     0             L_CLNMDT
      C                   MOVE      'Y'           L_CLAPMI
- 
+
      C                   IF        RecordType = Loan
- 
+
      C                   IF        C_RSTM > 0 AND C_PSTM = 0
      C                   MOVE      C_RSTM        C_PSTM
      C                   MOVE      C_RONS        C_PONS
      C                   MOVE      C_OMDB        L_CLOSDB                                  AR706513A
      C                   ENDIF
- 
+
      C                   IF        C_RSTM = 0 AND C_PSTM > 0
      C                   MOVE      C_PSTM        C_RSTM
      C                   MOVE      C_PONS        C_RONS
      C                   MOVE      C_OSDB        L_CLOMDB                                  AR706513A
      C                   ENDIF
- 
+
      C                   ELSE
      C                   IF        E_RSTM > 0 AND E_PSTM = 0
      C                   MOVE      E_RSTM        E_PSTM
@@ -4389,17 +4391,17 @@
      C                   MOVE      E_PSTM        L_CLMDST                                  AR706513A
      C                   MOVE      E_OMDB        L_CLOMDB                                  AR706513A
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan
      C                   Z-ADD     C_RSTM        L_CLRSTM
      C                   ELSE
      C                   Z-ADD     E_RSTM        L_CLRSTM
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_QQRONS
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_RIBN        L_CLRIBN
      C                   MOVE      C_RIBA        L_CLRIBA
@@ -4413,7 +4415,7 @@
      C                   MOVE      E_ROCN        L_CLROCN
      C                   Z-ADD     E_PSTM        L_CLPSTM
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan                                       AR706513A
      C**********         IF        Loantype <> 'PSTO'                                      AR1001250
      C                   IF        Loantype <> 'PTSO'                                      AR1001250
@@ -4475,15 +4477,15 @@
      C                   MOVE      M_BTB6        L_CLBTB6
      C                   MOVE      M_CVMR        L_CLCVMR
      C                   ENDIF
- 
+
      C                   IF        RecordType = Loan OR
      C                             RecordType = FeeLoan
      C                   MOVE      C_PTFR        L_CLPTFR
      C                   ELSE
- 
+
      C     BGPFMG        IFEQ      'Y'
      C     BGN4ST        ANDNE     'Y'
- 
+
      C                   MOVE      *BLANKS       L_CLPTFR
      C                   MOVEL     FCPORS        I#PORS
      C                   MOVEL     FCR997        I#R997
@@ -4492,19 +4494,19 @@
      C                   MOVEL     L_CLBOKC      I#BOOK
      C                   MOVEL     L_CLPTFR      I#PTFR
      C                   MOVEL     *BLANKS       I#CPGM
- 
+
      C                   CALLB     'AOPLCSR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    I@PARM
      C                   PARM      *BLANKS       O@PARM
      C     SDPLCS        PARM      SDPLCS        DSSDY
- 
+
      C                   MOVE      'N'           WPTCS
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           WPTCS
      C                   ENDIF
- 
+
      C     WPTCS         IFEQ      'Y'
      C     C_CNUM        SETLL     PMPORTL1
      C     C_CNUM        READE     PMPORTL1
@@ -4515,12 +4517,12 @@
      C     C_CNUM        READE     PMPORTL1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLHLEX
- 
+
      C                   IF        RecordType = Loan
      C                   Z-ADD     C_FSRP        L_CLFSRP
      C                   MOVE      C_FSGN        L_CLFSGN
@@ -4530,7 +4532,7 @@
      C                   MOVE      *BLANKS       L_CLFSGN
      C                   MOVE      E_FEPRFC      L_CLFPRC
      C                   ENDIF
- 
+
      C                   Z-ADD     0             L_CLTCOF
      C                   Z-ADD     0             L_CLACPD
      C                   Z-ADD     0             L_CLACDA
@@ -4547,13 +4549,13 @@
      C                   Z-ADD     0             L_CLFWOD
      C                   MOVE      *BLANKS       L_CLDFTP
      C                   MOVE      *BLANKS       L_CLDFST
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_MCRA        L_CLMCRA
      C                   ELSE
      C                   MOVE      *BLANKS       L_CLMCRA
      C                   ENDIF
- 
+
      C                   Z-ADD     0             L_CLFCRA
      C                   MOVE      'M'           L_CLPDDI
      C                   MOVE      'M'           L_CLPTDI
@@ -4561,13 +4563,13 @@
      C                   Z-ADD     0             L_CLGDIN
      C                   MOVE      'N'           L_CLLNKS
      C                   MOVE      'M'           L_CLMNSG
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_GASS        L_CLGASS
      C                   ELSE
      C                   MOVE      *BLANKS       L_CLGASS
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLGPRT
      C                   MOVE      *BLANK        L_CLTOLN
      C                   MOVE      WIUSR         L_CLIUSR
@@ -4581,7 +4583,7 @@
      C                   MOVE      *BLANKS       L_CLPCOB
      C                   Z-ADD     0             L_CLLRLD
      C                   Z-ADD     0             L_CLLMCD
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_SCCY        L_CLSCCY
      C                   MOVE      C_ICCY        L_CLICCY
@@ -4589,9 +4591,9 @@
      C                   MOVE      E_FESCCY      L_CLSCCY
      C                   MOVE      E_FEICCY      L_CLICCY
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLREPI
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_RFDY        L_CLRFDY
      C                   MOVE      C_RFRI        L_CLRFRI
@@ -4603,7 +4605,7 @@
      C                   MOVE      *BLANKS       L_CLRFRT
      C                   MOVE      *BLANKS       L_CLRFAR
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       L_CLYLDC
      C                   MOVE      *BLANKS       L_CLFYLD
      C                   Z-ADD     0             L_CLURPL
@@ -4641,7 +4643,7 @@
      C                   MOVE      *BLANKS       L_CLAFRT
      C                   MOVE      *BLANKS       L_CLREPA
      C                   MOVEL     TimeStmpDS    L_CLTMES
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      C_OSDA        L_CLOSDA
      C                   MOVE      C_OMDA        L_CLOMDA
@@ -4653,7 +4655,7 @@
      C                   MOVE      E_RONS        L_CLRONS
      C                   MOVE      E_PONS        L_CLPONS
      C                   ENDIF
- 
+
      C                   MOVE      'Y'           L_CLAUTH
      C                   Z-ADD     0             L_TFDP
      C                   Z-ADD     0             L_TFDPA
@@ -4673,16 +4675,16 @@
      C                   Z-ADD     0             L_CLNBSR
      C                   MOVE      *BLANKS       L_CLSLTP
      C                   MOVE      *BLANKS       L_CLSLST
- 
+
      C                   MOVE      L_CLCLAS      L_CLDFCL
      C                   MOVE      *BLANKS       L_CLSLCL
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      AYFAMU        L_CLFAMU
      C                   ELSE
      C                   MOVE      AUFAMU        L_CLFAMU
      C                   ENDIF
- 
+
      C                   Z-ADD     *ZEROS        L_CLRIDT
      C                   Z-ADD     *ZEROS        L_CLRIDC
      C                   Z-ADD     *ZEROS        L_CLRCAT
@@ -4693,11 +4695,11 @@
      C                   Z-ADD     *ZEROS        L_CLBCAT
      C                   Z-ADD     *ZEROS        L_CLBCAC
      C                   Z-ADD     *ZEROS        L_CLBICC
- 
+
      C                   MOVE      *BLANKS       L_CLFPNR
- 
+
       ** Set up in LECLIPUPD
- 
+
      C**********         Z-ADD     0             L_CLOINR
      C**********         Z-ADD     0             L_CLOIDT
      C**********         Z-ADD     0             L_CLLONI
@@ -4710,9 +4712,9 @@
      C**********         Z-ADD     0             L_CLCNCF
      C**********         Z-ADD     0             L_CLPCRF
      C**********         Z-ADD     0             L_CLLSTS
- 
+
       ** CLOANCK
- 
+
      C                   MOVE      'D'           R_CLRECI
      C**********         Z-ADD     F9NALN        R_CLLNRF                                     CLE148
      C                   MOVEL     F9NALA        R_CLLNRF                                     CLE148
@@ -4722,22 +4724,22 @@
      C                   MOVE      E_FELOAN      WLOANT
      C                   MOVE      E_FEFSEQ      WFSEQT
      C                   MOVE      E_FEFACL      WFACLT
- 
+
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C     TXT01         CAT       WORLN         R_CLNAR1
- 
+
      C                   WHEN      RecordType = FeeLoan
      C     TXT02         CAT       E_FECNUM      R_CLNAR1
      C     R_CLNAR1      CAT       WLOANT        R_CLNAR1
      C     R_CLNAR1      CAT       WFSEQT        R_CLNAR1
- 
+
      C                   WHEN      RecordType = FeeFacility
      C     TXT02         CAT       E_FECNUM      R_CLNAR1
      C     R_CLNAR1      CAT       WFACLT        R_CLNAR1
      C     R_CLNAR1      CAT       WFSEQT        R_CLNAR1
      C                   ENDSL
- 
+
      C                   MOVE      *BLANKS       R_CLNAR2
      C                   MOVE      *BLANKS       R_CLNAR3
      C                   MOVE      *BLANKS       R_CLNAR4
@@ -4755,7 +4757,7 @@
      C                   Z-ADD     0             R_CLIWLN
      C                   Z-ADD     0             R_CLPWLN
      C                   Z-ADD     0             R_CLRDST
- 
+
      C                   IF        RecordType = Loan
      C                   MOVE      K_SPI1        R_CLSPI1
      C                   MOVE      K_SPI2        R_CLSPI2
@@ -4765,7 +4767,7 @@
      C                   MOVE      *BLANKS       R_CLSPI2
      C                   MOVE      *BLANKS       R_CLSPI3
      C                   ENDIF
- 
+
      C                   Z-ADD     0             R_CLYILN
      C                   MOVE      *BLANKS       R_CLF57U
      C                   MOVE      *BLANKS       R_CLTHRN
@@ -4834,16 +4836,16 @@
      C                   MOVE      *BLANKS       R_CLRRON
      C                   MOVE      *BLANKS       R_CLRPON
      C                   MOVE      *BLANKS       R_CLRPOS
- 
+
       ** Defined in LECLIPUPD
- 
+
      C**********         Z-ADD     0             R_CLORED
      C**********         Z-ADD     0             R_CLLCD
      C**********         Z-ADD     0             R_CLTNLU
      C**********         Z-ADD     0             R_CLNCPA
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ****************************************************************
@@ -4851,15 +4853,15 @@
       * ACS_NXTAVL - ACCESS NEXT AVAILABLE LOAN REFERENCE            *
       *                                                              *
       ****************************************************************
- 
+
      C     ACS_NXTAVL    BEGSR
- 
+
      C                   CALL      'AOLENOU0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      AYRANG        @PRANG
      C     SDLENO        PARM      SDLENO        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     @PRANG        DBKEY
@@ -4872,7 +4874,7 @@
      C*****F9NALN        SUB       1             F9NALN                                       CLE148
      C**********         ENDIF                                                                CLE148
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4883,9 +4885,9 @@
       * Calls    :  QFCLTY                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     FCLTSR        BEGSR
- 
+
      C                   IF          L_CLPTYP = 66 OR
      C                               L_CLPTYP = 67 OR
      C                               L_CLPTYP = 69 OR
@@ -4894,11 +4896,11 @@
      C                   ELSE
      C                   MOVE      *OFF          *IN52
      C                   ENDIF
- 
+
       ** Convert amounts into facility currency equivalent
- 
+
      C     WTRCA         IFEQ      *BLANK
- 
+
      C     CLE023        IFEQ      'Y'
      C     L_CLRLDT      ANDLT     BJRDNB
      C     L_CLRLDT      ANDNE     *ZERO
@@ -4910,7 +4912,7 @@
      C                   Z-ADD     L_CLFCXR      WFCXR
      C                   MOVE      'N'           WROFXR
      C                   ENDIF
- 
+
      C     CDPF          SUB       A6NBDP        CX
      C     CX            ADD       4             CX
      C     L_CLFMDI      IFEQ      'D'
@@ -4922,18 +4924,18 @@
      C                   ELSE
      C     WFCXR         MULT(H)   Powr(Cx)      OFCXRT
      C                   ENDIF
- 
+
      C     PRAMR         MULT(H)   OFCXRT        PRAM_Fac
- 
+
       ** Convert amount to facility currency using spot rates
- 
+
      C     CLE023        IFEQ      'Y'
      C                   MOVE      A6MDIN        ZMDI1
      C                   IF        CLE023 = 'Y'
      C                   Z-ADD     A6SPRT        ZRATE1
      C                   Z-ADD     A6NBDP        ZNBDP1
      C                   ENDIF
- 
+
      C                   MOVE      WMDINF        ZMDI2
      C                   Z-ADD(H)  WSPRTF        ZRATE2
      C                   Z-ADD     CDPF          ZNBDP2
@@ -4944,7 +4946,7 @@
      C                   PARM                    ZMDI2
      C                   PARM      0             ZRATEX
      C                   PARM      *BLANKS       ZMDIX
- 
+
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
      C                   Z-ADD     PRAMR         ZAMTCI
@@ -4961,14 +4963,14 @@
      C                   PARM                    ZCDPI
      C                   PARM                    ZCDPO
      C                   PARM      0             ZAMTCO
- 
+
      C                   Z-ADD     ZAMTCO        WrkPRAMS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Set up fields for availability updating
- 
+
      C**********         Z-ADD     C_MDAT        ENDAY                    40                  263840
      C******IN40         IFEQ      '1'                                                        263840
      C**********         Z-ADD     99999         ENDAY                                        263840
@@ -4976,12 +4978,12 @@
      C**********         ENDIF                                                                263840
      C**********         Z-ADD     C_VDAT        DAYNO                                        263840
      C                   Z-ADD     LA_VDAT       DAYNO                                        263840
- 
+
      C                   MOVEA     '00'          *IN(41)
- 
+
       ** Similar update for a non-syndicated loan and part purchased,
       ** internal parts purchased and funding participant
- 
+
      C*****M_RVCR        IFEQ      'Y'                                                        263840
      C*****WRVCRC        ANDEQ     ' '                                                        263840
      C*****M_RVCR        OREQ      'N'                                                        263840
@@ -4989,9 +4991,9 @@
      C*****WVLDT         ANDLE     BJRDNB                                                     263840
      C*****WrkPart       OREQ      'Y'                                                        263840
      C*****C_GASS        ANDEQ     'A'                                                        263840
- 
+
       ** Participation sold
- 
+
      C     *IN52         IFEQ      '0'
      C     C_LPFI        ANDEQ     ' '
      C     WrkPart       OREQ      'Y'
@@ -5000,9 +5002,9 @@
      C                   ELSE
      C                   MOVE      '1'           *IN42
      C                   ENDIF
- 
+
       ** Similar update for a non-syndicated parts sold, and prime facilities
- 
+
      C                   ELSE
      C     DDACTN        IFEQ      'I'
      C                   MOVE      '1'           *IN42
@@ -5011,53 +5013,53 @@
      C                   ENDIF
      C                   ENDIF
      C**********         ENDIF                                                                263840
- 
+
      C                   Z-ADD     PRAM_Fac      FCBAL
- 
+
       ** Do not update for parts sold with recourse and
       ** if CLE023 is not installed.  If CLE023 is installed, do not
       ** update for parts sold for non-participant facility with or
       ** without recourse.  Also do not update
       ** Prime facility of a syndicated loan
- 
+
      C     *IN52         IFEQ      '1'
      C     C_RCSI        ANDEQ     'Y'
      C     C_LPFI        ANDEQ     ' '
      C     CLE023        ANDEQ     'N'
- 
+
      C     *IN52         OREQ      '1'
      C     C_LPFI        ANDEQ     ' '
      C     CLE023        ANDEQ     'Y'
- 
+
      C     WrkPart       OREQ      'N'
      C     C_LPFI        ANDNE     ' '
      C                   MOVEA     '00'          *IN(41)
      C                   ENDIF
- 
+
       ** If customer is branch internal customer, then no update to
       ** facility availability
- 
+
      C                   EXSR      SRCIBC
- 
+
       ** If ind  43 is on, then customer is an internal customer
       ** Or, if LPFI equals 'I', then loan is an IPP
- 
+
      C     *IN43         IFEQ      '1'
      C     C_LPFI        ANDNE     'I'
      C     C_LPFI        OREQ      'I'
      C     WrkPart       ANDEQ     'N'
      C                   MOVE      '0'           *IN43
      C                   ELSE
- 
+
      C     *IN41         IFEQ      '1'
      C     *IN42         OREQ      '1'
      C                   EXSR      QFCLTY
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  UPDATE EXPOSURE
- 
+
       ** Internal parts purchased and funding participants are updated
       ** just like any normal loan.  Prime facilities are updated only
       ** when sold without recourse just like a parts sold
@@ -5066,7 +5068,7 @@
       ** Update CAMD of Prime or normal facility only if loan is not
       ** a parts sold.  If CLE023 is installed, update the exposure
       ** only if normal loan or a funded loan is sold without recourse
- 
+
      C     LA_VDAT       IFLE      BJRDNB
      C     C_LPFI        IFNE      *BLANK
      C     DDACTN        IFEQ      'I'
@@ -5075,7 +5077,7 @@
      C     WrkPart       ANDEQ     'N'
      C     L_CLRCSI      ANDNE     'Y'
      C     C_LPFI        ANDNE     'I'
- 
+
      C     WrkPart       IFEQ      'Y'
      C     CLE023        ANDEQ     'Y'
      C     CLE025        ANDEQ     'N'
@@ -5083,28 +5085,28 @@
      C     CLE025        ANDEQ     'N'
      C     CAMD          SUB       PRAM_Fac      CAMD
      C                   ENDIF
- 
+
      C     CLE023        IFEQ      'Y'
      C     CLE025        ANDEQ     'N'
      C     CEXP          SUB       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ** If CLE009 is installed, set Work Regeneration Indicator to
       ** 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'R'
      C     WrkPart       ANDEQ     'Y'
      C     DDACTN        OREQ      'I'
      C     WrkPart       ANDEQ     'N'
      C     L_CLRCSI      ANDNE     'Y'
      C     C_LPFI        ANDNE     'I'
- 
+
      C     WrkPart       IFEQ      'Y'
      C     CLE023        ANDEQ     'Y'
      C     CLE025        ANDEQ     'N'
@@ -5112,31 +5114,31 @@
      C     CLE025        ANDEQ     'N'
      C     CAMD          ADD       PRAM_Fac      CAMD
      C                   ENDIF
- 
+
      C     CLE023        IFEQ      'Y'
      C     CLE025        ANDEQ     'N'
      C     CEXP          ADD       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ** If CLE009 is installed, set Work Regeneration Indicator to
       ** 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** normal, non-syndicated loans
- 
+
      C                   ELSE
- 
+
      C     *IN52         IFEQ      '0'
      C     DDACTN        ANDEQ     'I'
      C     *IN52         OREQ      '1'
      C     DDACTN        ANDEQ     'R'
      C     L_CLRCSI      ANDNE     'Y'
- 
+
      C     *IN52         IFEQ      '0'
      C     CLE023        ANDEQ     'Y'
      C     CLE025        ANDEQ     'N'
@@ -5144,27 +5146,27 @@
      C     CLE025        ANDEQ     'N'
      C     CAMD          SUB       PRAM_Fac      CAMD
      C                   ENDIF
- 
+
      C     CLE023        IFEQ      'Y'
      C     CLE025        ANDEQ     'N'
      C     CEXP          SUB       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ** If CLE009 is installed, set Work Regeneration Indicator to
       ** 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     *IN52         IFEQ      '0'
      C     DDACTN        ANDEQ     'R'
      C     *IN52         OREQ      '1'
      C     DDACTN        ANDEQ     'I'
      C     L_CLRCSI      ANDNE     'Y'
- 
+
      C     *IN52         IFEQ      '0'
      C     CLE023        ANDEQ     'Y'
      C     CLE025        ANDEQ     'N'
@@ -5172,25 +5174,25 @@
      C     CLE025        ANDEQ     'N'
      C     CAMD          ADD       PRAM_Fac      CAMD
      C                   ENDIF
- 
+
      C     CLE023        IFEQ      'Y'
      C     CLE025        ANDEQ     'N'
      C     CEXP          ADD       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ** If CLE009 is installed, set Work Regeneration Indicator to
       ** changed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5200,12 +5202,12 @@
       * Calls    : FCLTSR                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUPCA        BEGSR
- 
+
       **  Whenever the facility utilisation is updated for a tranche,
       **  update the credit agreement/superfacility as well
- 
+
      C                   MOVE      FCCY          WTCCY
      C                   MOVE      CMDI          WCMDI
      C                   Z-ADD     CAXR          WCAXR
@@ -5214,15 +5216,15 @@
      C**********         MOVEL     CAFN          WFSEQ                                        263289
      C                   MOVEL     CAFN          WFCSQ                                        263289
      C                   MOVE      'A'           WRCDT1
- 
+
       ** Save the revolving credit indicator specified for the tranche
- 
+
      C     CLE014        IFEQ      'Y'
      C                   MOVE      M_RVCR        WRVCRF
      C                   ENDIF
- 
+
      C     KFCLT         CHAIN(N)  FCLTY                              79
- 
+
      C     *IN79         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '*ERR018'     @@RTCD
@@ -5233,21 +5235,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If the revolving credit indicator for the credit agreement is
       ** 'T', use the saved tranche revolving credit indicator as the
       ** credit agreement revolving indicator.
- 
+
      C     CLE014        IFEQ      'Y'
- 
+
      C     M_RVCR        IFEQ      'T'
      C                   MOVE      WRVCRF        M_RVCR
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   MOVE      'B'           WRCDT1
      C     KFCLT         CHAIN     FCLTY                              79
- 
+
      C     *IN79         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '*ERR019'     @@RTCD
@@ -5258,10 +5260,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If tranche and superfacility currencies are different, get
       ** superfacility currency details
- 
+
      C     WTCCY         IFNE      FCCY
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
@@ -5278,9 +5280,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Convert facility amount to credit facility currency
- 
+
      C                   Z-ADD     A6NBDP        CDPC
      C                   EVAL      CX = CDPC - CDPF + 4
      C     WCMDI         IFEQ      'D'
@@ -5289,12 +5291,12 @@
      C                   ELSE
      C     WCAXR         MULT(H)   POWR(CX)      OFCXRT
      C                   ENDIF
- 
+
      C                   MULT(H)   OFCXRT        PRAM_Fac
- 
+
       ** Convert facility amount to Credit agreement facility using
       ** spot rate for later update of Current exposure
- 
+
      C     CLE023        IFEQ      'Y'
      C                   Z-ADD     WSPRTF        ZRATE1
      C                   MOVE      WMDINF        ZMDI1
@@ -5309,7 +5311,7 @@
      C                   PARM                    ZMDI2
      C                   PARM                    ZRATEX
      C                   PARM                    ZMDIX
- 
+
      C                   Z-ADD     WrkPRAMS      ZAMTCI
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
@@ -5326,13 +5328,13 @@
      C                   PARM                    ZCDPI
      C                   PARM                    ZCDPO
      C                   PARM      0             ZAMTCO
- 
+
      C                   Z-ADD     ZAMTCO        WrkPRAMS
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Update facility exposure and availability
- 
+
      C                   MOVE      'Y'           WTRCA
      C                   EXSR      FCLTSR
      C                   Z-ADD     BJRDNB        M_LCD
@@ -5342,9 +5344,9 @@
      C                   PARM      0             M_TNLU
      C                   UPDATE    FCLTYFNF                             50
      C                   MOVE      *BLANK        WTRCA
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5355,18 +5357,18 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCIBC        BEGSR
- 
+
      C                   MOVE      '0'           *IN43
- 
+
      C                   MOVEL     L_CLCNUM      ICUSTN
- 
+
      C                   Z-ADD     1             W
      C     ICUSTN        LOOKUP    @BIC(W)                                43
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5376,25 +5378,25 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     QFCLTY        BEGSR
- 
+
      C     DAYNO         IFEQ      0
      C                   GOTO      ENDFCT
      C                   ENDIF
- 
+
      C                   Z-ADD     1             X
      C*****ENDAY         LOOKUP    RUNS(X)                            40  40                  263840
      C     ENDAY         LOOKUP    RUNS(X)                                40                  263840
      C     *IN40         IFEQ      '0'
      C                   Z-ADD     99            X
- 
+
       ** with Manual Repayment on loans during I/C
       ** the availability (i.e. undrawn amount) should be updated
       ** to reflect the repayment.
       ** RUNS,1 = The previous working day
       ** ENDAY  = Maturity date of loan
- 
+
      C                   ELSE
                                                                                               204708
       ** If Loan is not autosettled, then the O/S principal of that                           204708
@@ -5411,7 +5413,7 @@
      C**********         Z-ADD     99            X                                            263840
      C**********         ENDIF                                                                263840
      C                   ENDIF
- 
+
      C                   Z-ADD     1             W
      C*****DAYNO         LOOKUP    RUNS(W)                            40  40                  263840
      C     DAYNO         LOOKUP    RUNS(W)                                40                  263840
@@ -5422,32 +5424,32 @@
      C                   Z-ADD     1             W                                            263840
      C                   ENDIF                                                                263840
      C                   ENDIF
- 
+
      C     W             DOWLE     10
      C     W             ANDLT     X
- 
+
      C     *IN41         IFEQ      '1'
      C     CLE025        ANDEQ     'N'
      C     OAM(W)        SUB       FCBAL         OAM(W)
      C                   ENDIF
- 
+
      C     *IN42         IFEQ      '1'
      C     CLE025        ANDEQ     'N'
      C     OAM(W)        ADD       FCBAL         OAM(W)
      C                   ENDIF
- 
+
       ** If CLE009 is installed, set Work Regeneration Indicator to
       ** changed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI
      C                   ENDIF
- 
+
      C     W             ADD       1             W
      C                   ENDDO
- 
+
      C     ENDFCT        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5459,15 +5461,15 @@
       *          a ROLLBACK.                                          *
       *                                                               *
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ** Note: if non-standard processing required, use the PSSR_ILENE
       ** subroutine
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5476,9 +5478,9 @@
      O**********             RRNA                20P                                        AR322731
      O**********             NLNR                29P                                        AR322731
      O**********             NATN                40P                                        AR322731
- 
+
       ** Output LTRIX detail record
- 
+
      O**********E            LTRIXD                                                         AR322731
      OLTRIX     EADD         LTRIXD                                                         AR322731
      O                                            2 'DA'

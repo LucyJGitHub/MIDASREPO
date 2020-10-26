@@ -12,11 +12,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE142  *CREATE    Date 01Oct20               *
+      *  Last Amend No. CLE172  *CREATE    Date 01Oct20               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Lending                        *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *                                                               *
       *****************************************************************
 

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -183,11 +184,11 @@
      C                   IF        OKNEXD = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKNEXD <> 'N'
      C                   Z-ADD     WNexD         S1NEXD
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -205,13 +206,13 @@
      C                   MOVEL     DDNEXD        ZFIELD
      C     13            SUB       PVlDp         ZADIG
      C                   Z-ADD     PVlDp         ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM      *BLANKS       ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok <> 'Y'
      C                   MOVE      'N'           OKNEXD
      C                   ADD       1             IDx
@@ -220,7 +221,7 @@
      C                   ELSE
      C                   MOVE      ZFIELD        WNexD
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

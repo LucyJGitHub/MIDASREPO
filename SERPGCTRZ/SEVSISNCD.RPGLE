@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -198,11 +201,11 @@
      C                   IF        OKISIN <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKISIN <> 'N'
      C                   MOVEL     DDISIN        S1ISIN
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -228,7 +231,7 @@
      C                   Z-ADD     0             WJ
      C                   MOVEA     DDISIN        WIS1
      C                   MOVEA     *Blanks       WIS2
- 
+
      C                   DOW       WI <= 11 AND
      C                             *IN01 = *OFF
      C                   ADD       1             WI
@@ -247,23 +250,23 @@
       *
       ** If character is found.
      C                   IF        *IN02 = *ON
- 
+
      C                   IF        WWEOSF = 'N'
      C                   ADD       1             WJ
      C                   MOVEA     WIS1(WI)      WIS2(WJ)
      C                   ELSE
      C                   MOVE      *ON           *IN01
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        WJ > 0
      C                   MOVE      'Y'           WWEOSF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** If security code for isin/common is invalid.
@@ -277,7 +280,7 @@
       ** Else store screen field with leading blanks removed.
      C                   MOVEA     WIS2          DDISIN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Feature CSE011 is installed
@@ -286,12 +289,12 @@
       *
       ** Check if ISIN number already exists in securities file
      C                   IF        DDISIN <> *BLANK
- 
+
      C                   MOVE      DDISIN        WISIN
      C                   EVAL      WFound = 'N'
      C     WISIN         SETLL     SECTYL1
      C     WISIN         READE     SECTYL1                                03
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             WFound = 'N'
       *
@@ -299,7 +302,7 @@
      C                   IF        DDSESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WISIN         READE     SECTYL1                                03
      C                   ENDDO
       *
@@ -322,11 +325,11 @@
      C                   EVAL      WMsgDtXAr(WIx) = %Trim(WMsgDtXAr(WIx))                   MD000091
      C                                            + LenStr +%TRIM(MsgDtaTmp)                MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -339,7 +342,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

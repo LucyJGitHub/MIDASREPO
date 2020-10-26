@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  BUG11215 - SEFRN Wrong First Coupon Date/LCPN defaulted by   *
@@ -176,11 +179,11 @@
      C                   IF        OKLCPN = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKLCPN <> 'N'
      C                   EVAL      S1LCPN = ZDAYNO
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -202,7 +205,7 @@
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   PARM      6             ZADIG             2 0
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        ZDATEI
      C                   CALLB     'ZDATE1'

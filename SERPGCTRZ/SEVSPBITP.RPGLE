@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1092858          Date 06Mar13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1092858          Date 06Mar13               *
       *                 AR1090842          Date 25Feb13               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 06Dec10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1092858 - Private Banking Instrument Type field does not   *
       *              defaulted in Securities Details                  *
@@ -200,13 +203,13 @@
      C                   IF        OKPBIT = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKPBIT <> 'N'
      C                   EVAL      S1PBIT = DDPBIT
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -214,7 +217,7 @@
       *  SRValInsTp - Validation for PB Instrument Type               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValInsTp    BEGSR
       *
       ** Set up work variable. If blanks, default to investment type.
@@ -231,9 +234,9 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      WPBIT                                  01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKPBIT
      C                   ADD       1             Idx
@@ -241,7 +244,7 @@
      C                   MOVEL     'SEA0307'     MsgIdXAr(Idx)
      C                   GOTO      EValInsTp
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
@@ -252,7 +255,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      WPBIT         PInTp
      C     SDPLIN        PARM      SDPLIN        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
       *
      C                   IF        PRtCd = '*NOSEL '
@@ -276,9 +279,9 @@
      C                   ELSE
      C                   EVAL      DDPBIT = PDINNR
      C                   ENDIF
- 
+
      C     EValInsTp     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -288,9 +291,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -335,9 +338,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -346,7 +349,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -224,36 +227,36 @@
      C                   IF        OKSIDY = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSIDY <> 'N'
- 
+
      C                   IF        DDSIDY <> *BLANKS
      C**********         MOVEL     DDSIDY        S1SIDY                                       CER020
      C                   MOVEL     DDSIDY        S1LOIC                                       CER020
      C                   ELSE
      C**********         Z-ADD     *ZEROS        S1SIDY                                       CER020
      C                   MOVE      *BLANKS       S1LOIC                                       CER020
- 
+
      C                   IF        DDISSR <> *BLANKS AND OKISSR = 'Y'
      C                   MOVE      *BLANKS       PCust
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDISSR        PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C**********         MOVEL     BBLICD        S1SIDY                                       CER020
      C                   MOVEL     BBLICD        S1LOIC                                       CER020
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -264,7 +267,7 @@
       *                                                               *
       *****************************************************************
      C     SRValIndC     BEGSR
- 
+
      C                   IF        DDSIDY <> *BLANKS
      C                             OR        DDSIDY =  *BLANKS                  183604
      C                             AND       BGN4ST =  'Y'                      183604
@@ -272,9 +275,9 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDSIDY                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKSIDY
      C                   ADD       1             IDx
@@ -285,18 +288,18 @@
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDSIDY)                   MD000091
      C                   GOTO      ESRValIndC
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AOINDSR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDSIDY        PKeyI
      C     SDINDS        PARM      SDINDS        DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   IF        PRtcd = '*NOSEL '
      C                   EVAL      DDSIDY = *BLANKS
      C                   ELSE
@@ -309,15 +312,15 @@
      C                   MOVEL     'SEA0443'     MsgIdXAr(IDx)                  183604
      C                   ENDIF                                                  183604
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      DDSIDY = AOLICD
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRValIndC    ENDSR
       *
       *****************************************************************

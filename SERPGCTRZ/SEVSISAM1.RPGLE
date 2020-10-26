@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -142,9 +145,9 @@
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
      D ZALIGNok        S              1A
- 
+
      D WIssAmt         S             11P 0
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -182,13 +185,13 @@
      C                   IF        OKISA1 = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKISA1 <> 'N'
      C                   Z-ADD     WIssAmt       S1ISSA
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -197,20 +200,20 @@
       *                                                               *
       *****************************************************************
      C     SRValIssAmt   BEGSR
- 
+
      C                   IF        DDISA1 <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDISA1        ZFIELD
      C                   Z-ADD     11            ZADIG
      C                   Z-ADD     0             ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKISA1
      C                   ADD       1             IDx
@@ -223,9 +226,9 @@
      C                   ELSE
      C                   MOVE      ZFIELD        WIssAmt
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

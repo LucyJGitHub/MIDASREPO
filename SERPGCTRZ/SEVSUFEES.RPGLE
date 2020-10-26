@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -180,17 +183,17 @@
      C                             OKUNFR = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKUNFD <> 'N'
      C                   Z-ADD     WUnFd         S1UNFD
      C                   ENDIF
- 
+
      C                   IF        OKUNFR <> 'N'
      C                   Z-ADD     WUnFr         S1UNFR
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -199,65 +202,65 @@
       *                 Underwriting Fees Received                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValUFeeDRc  BEGSR
       *
       ** Validation for underwriting fees due.
       *
      C                   IF        DDUNFD <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDUNFD        ZFIELD
      C     11            SUB       PFNBDP        ZADIG
      C                   Z-ADD     PFNBDP        ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKUNFD
      C                   ADD       1             Idx
      C                   MOVEL     'DDUNFD'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0105'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WUnFd
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validation for underwriting fees received.
       *
      C                   IF        DDUNFR <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDUNFR        ZFIELD
      C     11            SUB       PFNBDP        ZADIG
      C                   Z-ADD     PFNBDP        ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKUNFR
      C                   ADD       1             Idx
      C                   MOVEL     'DDUNFR'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0105'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WUnFr
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -267,9 +270,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -304,9 +307,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -315,7 +318,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

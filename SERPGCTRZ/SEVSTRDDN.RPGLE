@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -184,11 +187,11 @@
      C                   IF        OKSDNM = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSDNM <> 'N'
      C                   Z-ADD     WSDNM         S1SDNM
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -199,12 +202,12 @@
       *                                                               *
       *****************************************************************
      C     SRValSDNM     BEGSR
- 
+
      C                   IF        DDSDNM = *BLANKS AND
      C                             (DDINCS = 'C' AND ODDINCS = 'I' OR
      C                             DDINCS = 'C' AND DDACTN = 'I') AND
      C                             PDTRD <> *ZEROS
- 
+
      C                   MOVE      PDTRD         DDSDNM
      C                   MOVEA     DDSDNM        WADNM
       *
@@ -215,22 +218,22 @@
      C                   EVAL      WADNM(Wx) = ' '
      C                   EVAL      Wx = Wx + 1
      C                   ENDDO
- 
+
      C                   MOVEA     WADNM         DDSDNM
      C                   ENDIF
- 
+
      C                   IF        DDSDNM <> *BLANKS
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      DDSDNM        ZField
      C                   Z-ADD     7             ZADig
      C                   Z-ADD     *ZERO         ZADec
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZalignOk
      C                   PARM                    ZField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZalignOk <> 'Y'
       *
       ** The entry is not a valid amount
@@ -249,9 +252,9 @@
      C                   MOVEL     'DDSDNM'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0251'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

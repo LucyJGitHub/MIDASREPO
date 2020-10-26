@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027A - Conversion of customer number to alpha (post       *
@@ -172,9 +175,9 @@
      C                   EXSR      SREditFld
       *
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -182,11 +185,11 @@
       *  SRValCoupDly - Validation for Coupon Delay Period            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValCoupDly  BEGSR
       *
      C                   IF        DDCPDY <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDCPDY        ZFIELD
      C                   EVAL      ZADIG = 3
@@ -205,7 +208,7 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDCPDY'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0571'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WCpdy
      C                   ENDIF
@@ -215,7 +218,7 @@
      C                   ELSE
      C                   EVAL      WCpdy = *ZERO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -224,9 +227,9 @@
       *  SREditFld - Edit the field for screen output                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SREditFld     BEGSR
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      S1CPDY        ZFIELD
      C                   EVAL      ZADEC = *ZERO
@@ -247,9 +250,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -281,9 +284,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -292,7 +295,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -183,11 +186,11 @@
      C                   IF        OKCSPN <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKCSPN <> 'N'
      C                   MOVEL     DDCSPN        S1CSPN
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -202,12 +205,12 @@
       ** Check if cusip number already exist in securities file
       *
      C                   IF        DDCSPN <> *BLANKS
- 
+
      C                   MOVE      DDCSPN        WCSPN
      C                   EVAL      WFound = 'N'
      C     WCSPN         SETLL     SECTYL0
      C     WCSPN         READE     SECTYL0                                01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -215,7 +218,7 @@
      C                   IF        DDSESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WCSPN         READE     SECTYL0                                01
      C                   ENDDO
       *
@@ -237,9 +240,9 @@
      C                   EVAL      WMsgDtXAr(WIx) = %TRIM(WMsgDtXAr(WIx))                   MD000091
      C                                            + %TRIM(MsgDtaTmp)                        MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

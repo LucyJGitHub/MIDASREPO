@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -183,11 +186,11 @@
      C                   IF        OKT2RF <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKT2RF <> 'N'
      C                   MOVEL     DDT2RF        S1T2RF
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -202,12 +205,12 @@
       ** Check if telekurs already exist in securities file
       *
      C                   IF        DDT2RF <> *BLANKS
- 
+
      C                   MOVE      DDT2RF        WT2RF
      C                   EVAL      WFound = 'N'
      C     WT2RF         SETLL     SECTYL2
      C     WT2RF         READE     SECTYL2                                01
- 
+
      C                   DOW       *IN01 = *OFF AND
      C                             WFound = 'N'
       *
@@ -215,7 +218,7 @@
      C                   IF        DDSESN <> SESN
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
- 
+
      C     WT2RF         READE     SECTYL2                                01
      C                   ENDDO
       *
@@ -236,9 +239,9 @@
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(MsgDtaTmp)                MD000091
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

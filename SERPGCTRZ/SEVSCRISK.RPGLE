@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -186,7 +189,7 @@
      D POptn           S              7A
      D PCust           S             10A
      D PKyst           S              7A
- 
+
      D PSCOR           S              2A
                                                                                             MD000091
       **                                                                                    MD000091
@@ -231,13 +234,13 @@
      C                   IF        OKSCOR = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSCOR <> 'N'
      C                   EVAL      S1SCOR = DDSCOR
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -250,9 +253,9 @@
       ** Default country of risk if set to blanks.
       *
      C                   IF        DDSCOR = *BLANKS
- 
+
      C                   IF        DDISSR <> *BLANKS AND OKISSR = 'Y'
- 
+
      C                   MOVE      *BLANKS       PCust
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
@@ -260,13 +263,13 @@
      C                   PARM      DDISSR        PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     BBCNCZ        DDSCOR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        BGN4ST = 'Y'                                 214813
      C                   MOVE      'N'           OKSCOR                         214813
      C                   ADD       1             IDx                            214813
@@ -284,9 +287,9 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDSCOR                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMODE = '*FRONT'
      C                   MOVE      'N'           OKSCOR
      C                   ADD       1             IDx
@@ -297,18 +300,18 @@
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDSCOR)                   MD000091
      C                   GOTO      ESRValCtyR
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDSCOR        PSCOR
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   IF        PRtcd = '*NOSEL '
      C                   EVAL      DDSCOR = *BLANKS
      C                   ELSE
@@ -317,13 +320,13 @@
      C                   MOVEL     'DDSCOR'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0120'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      DDSCOR = A4CNCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRValCtyR    ENDSR
       *
       *****************************************************************
@@ -336,7 +339,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

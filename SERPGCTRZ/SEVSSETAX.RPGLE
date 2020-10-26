@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027A - Conversion of customer number to alpha (post       *
@@ -133,28 +136,28 @@
       ** ¦ *INZSR is executed at program activation.                  ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Initialise work variables.
- 
+
      C                   EVAL      IDx = 0
- 
+
       ** Validate cusip number
- 
+
      C                   EXSR      SRValTaxIn
- 
+
       ** If an error has been found, set return code appropriately.
       ** Otherwise, update valid file fields.
- 
+
      C                   IF        OKSETX = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSETX <> 'N'
      C                   EVAL      S1SETX = DDSETX
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -163,18 +166,18 @@
       *                                                               *
       *****************************************************************
      C     SRValTaxIn    BEGSR
- 
+
       ** Default the value to 'N' for commodities and equities.
- 
+
      C                   IF        DDSETX = *Blanks
      C                   IF        PPROT = '4' OR
      C                             PPROT = '2'
      C                   EVAL      DDSETX = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Mandatory field must be either 'Y' or 'N'.
- 
+
      C                   IF        DDSETX <> 'Y' AND
      C                             DDSETX <> 'N'
      C                   MOVE      'N'           OKSETX
@@ -182,9 +185,9 @@
      C                   MOVEL     'DDSETX'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0901'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -198,44 +201,44 @@
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
- 
+
       ** INPUT
       ** =====
- 
+
       ** Return code
- 
+
      C                   PARM                    RetCodeIn
- 
+
       ** Securities screen 1 details from incoming transaction
       ** - screen format
- 
+
      C                   PARM                    NwSE1ScnFmt
- 
+
       ** Processing type
- 
+
      C                   PARM                    PPROT
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Securities for file update - file format
- 
+
      C                   PARM                    NwSEFilFmt
- 
+
       ** Error indicator
- 
+
      C                   PARM                    SEESEC1
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
       *
      C                   ENDSR
@@ -243,10 +246,10 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       /COPY ZACPYSRC,PSSR_ILE
       *
       *****************************************************************

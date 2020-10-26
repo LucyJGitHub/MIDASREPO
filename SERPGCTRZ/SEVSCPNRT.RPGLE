@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -201,16 +204,16 @@
       *                                                               *
       *****************************************************************
      C     SRValCpnRt    BEGSR
- 
+
      C                   IF        DDCPNR = *BLANKS
- 
+
      C                   IF        S1INCS = 'C'
      C                   MOVE      'N'           OKCPNR
      C                   ADD       1             IDx
      C                   MOVEL     'DDCPNR'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0145'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Check valid signed number
@@ -218,7 +221,7 @@
      C                   MOVEL     DDCPNR        ZFLD17
      C                   Z-ADD     4             ZSDIG
      C                   Z-ADD     7             ZSDEC
- 
+
      C                   CALLB     'ZASIGN'
      C                   PARM                    ZASignOk
      C                   PARM                    ZFLD17
@@ -227,7 +230,7 @@
      C                   PARM                    ZSDCSP
      C                   PARM                    ZOUT15
      C                   PARM                    ZFSIGN
- 
+
      C                   IF        ZASignOk = 'N'
      C                   MOVE      'N'           OKCPNR
      C                   ADD       1             IDx
@@ -239,7 +242,7 @@
       ** If the security is to be traded on an amortising book the DYBS MAY NOT
       ** be '4' as SE2220 needs a DYBS to calculate amortisation.
      C                   MOVE      ZOUT15        PCpnRt
- 
+
      C                   IF        PCpnRt = *ZEROS AND
      C                             DDDYBS2 <> '4'  AND
      C                             S1INCS = 'C'    AND
@@ -249,11 +252,11 @@
      C                   MOVEL     'DDCPNR'      WFldNmXAr(WIx)
      C                   MOVEL     'SEA0146'     WMsgIDxAr(WIx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

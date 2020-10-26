@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 261063             Date 23Sep10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -205,7 +206,7 @@
      C                   IF        OKRSKC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKRSKC <> 'N'
      C**********         IF        WCustNo <> *ZEROS                                          CSD027
      C**********         Z-ADD     WCustNo       S1RSKC                                       CSD027
@@ -222,7 +223,7 @@
      C                   IF        PPROT = '9'
      C                   EVAL      S1DRWR = DDDRWR
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -233,16 +234,16 @@
       *                                                               *
       *****************************************************************
      C     SRValRCust    BEGSR
- 
+
      C                   IF        PPROT = '9' AND
      C                             DDRSKC <> *BLANKS
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDRSKC                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKRSKC
      C                   ADD       1             IDx
@@ -250,10 +251,10 @@
      C                   MOVEL     'SEA0180'     MsgIdXAr(IDx)
      C                   GOTO      ESRValRCust
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*KEY   '     POptn
@@ -278,11 +279,11 @@
       *
      C                   IF        PRtCd <> *BLANKS OR
      C                             BBPAIN = 'P'
- 
+
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      DDRSKC = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVE      'N'           OKRSKC
      C                   ADD       1             IDx
      C                   MOVEL     'DDRSKC'      FldNamXAr(IDx)
@@ -290,9 +291,9 @@
      C                   ELSE
      C                   MOVEL     BBCUST        WCustNo
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESRValRCust   ENDSR
       *
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -169,11 +172,11 @@
      C                   IF        OKEDFT = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKEDFT <> 'N'
      C                   MOVEL     DDEDFT        S1EDFT
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -184,14 +187,14 @@
       *                                                               *
       *****************************************************************
      C     SRValEDFT     BEGSR
- 
+
      C                   IF        DDEDFT <> *BLANKS
       *
       ** First two characters must be numeric.
       *
      C                   MOVEL     DDEDFT        WA2
      C                   TESTN                   WA2                  01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKEDFT
      C                   ADD       1             IDx
@@ -211,9 +214,9 @@
      C                   MOVEL     'SEA0135'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

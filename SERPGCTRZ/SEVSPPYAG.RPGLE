@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -194,13 +197,13 @@
      C                   IF        OKPPAG = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKPPAG <> 'N'
      C                   MOVEL     DDPPAG        S1PPAG
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,7 +211,7 @@
       *  SRValPPyAg - Validation for Principal Paying Agent           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValPPyAg    BEGSR
       *
       ** Principal paying agent is mandatory.
@@ -224,9 +227,9 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDPPAG                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKPPAG
      C                   ADD       1             Idx
@@ -234,37 +237,37 @@
      C                   MOVEL     'SEA0239'     MsgIdXAr(Idx)
      C                   GOTO      EValPPyAg
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
       ** Principal paying agent must be a valid customer.
       *
      C                   EVAL      PKeyC = *BLANKS
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDPPAG        PKeyC
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   IF        PRtCd = '*NOSEL '
      C                   EVAL      DDPPAG = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVE      'N'           OKPPAG
      C                   ADD       1             IDx
      C                   MOVEL     'DDPPAG'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0239'     MsgIdXAr(IDx)
- 
+
      C                   ELSE
      C                   MOVEL     BBCUST        DDPPAG
      C                   ENDIF
- 
+
      C     EValPPyAg     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -317,9 +320,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -328,7 +331,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -188,17 +191,17 @@
      C                             OKMGRC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKMGFD <> 'N'
      C                   Z-ADD     WMgFeeD       S1MGFD
      C                   ENDIF
- 
+
      C                   IF        OKMGRC <> 'N'
      C                   Z-ADD     WMgFeeR       S1MGRC
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -207,24 +210,24 @@
       *                 Management Fees Received                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValMFeeDRc  BEGSR
       *
       ** Validation for management fees due.
       *
      C                   IF        DDMGFD <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDMGFD        ZFIELD
      C     11            SUB       PFNBDP        ZADIG
      C                   Z-ADD     PFNBDP        ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKMGFD
      C                   ADD       1             Idx
@@ -235,28 +238,28 @@
      C                   EVAL      MsgDtaTmp = 'Management Fees Due'                        MD000091
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WMgFeeD
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validation for management fees received.
       *
      C                   IF        DDMGRC <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDMGRC        ZFIELD
      C     11            SUB       PFNBDP        ZADIG
      C                   Z-ADD     PFNBDP        ZADEC
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZALIGNok = 'N'
      C                   MOVE      'N'           OKMGRC
      C                   ADD       1             Idx
@@ -267,15 +270,15 @@
      C                   EVAL      MsgDtaTmp = 'Management Fees Received'                   MD000091
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr + %TRIM(MsgDtaTmp)               MD000091
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WMgFeeR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -285,9 +288,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -323,9 +326,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -334,7 +337,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

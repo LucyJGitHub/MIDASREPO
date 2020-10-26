@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -159,11 +162,11 @@
      C                   IF        OKRCFQ = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKRCFQ <> 'N'
      C                   MOVE      DDRCFQ        S1RCFQ
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -174,7 +177,7 @@
       *                                                               *
       *****************************************************************
      C     SRValRCFreq   BEGSR
- 
+
      C                   IF        DDRCFQ <> *BLANKS
       *
       ** Entry to rate change frequency is not allowed if a coupon
@@ -192,7 +195,7 @@
      C                   MOVEL     'SEA0192'     MsgIdXAr(IDx)
      C                   GOTO      EValRCFreq
      C                   ENDIF
- 
+
      C                   IF        DDRCFQ <> 'D' AND
      C                             DDRCFQ <> 'F' AND
      C                             DDRCFQ <> 'M' AND
@@ -202,11 +205,11 @@
      C                   MOVEL     'DDRCFQ'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0193'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValRCFreq    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

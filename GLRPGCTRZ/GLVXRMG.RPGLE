@@ -24,7 +24,10 @@
       *                 CDE002  *CREATE    Date 01Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
+      *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  225231 - Allow zero rate as MidasPlus defaults it.           *
       *  208221 - Default Margin from Rate/Spread changes             *
@@ -36,7 +39,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -55,49 +58,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                               208221
@@ -128,21 +131,21 @@
                                                                                               208221
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     208221
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                   208221
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIx             S              3P 0                                                    208221
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -157,9 +160,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   EVAL      RetCodeIn = *BLANKS
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr = *BLANKS
@@ -169,37 +172,37 @@
      C                   Eval      WMsgDtXAr = *Blanks                                        208221
      C                   EVAL      Idx = 0
      C                   EVAL      WIx = 0                                                    208221
- 
+
      C                   IF        DDOVRx <> *BLANKS and
      C                             DDOVRx <> 'Y'
- 
+
      C                   MOVE      'N'           DDOVRxOK
      C                   EVAL      Idx = Idx + 1
      C                   MOVEL     DDOVRxFLD     FldNamXAr(Idx)
      C                   MOVEL     'RE71409'     MsgIDXAr(Idx)
- 
+
      C                   ENDIF
- 
+
      C**********         IF        DDxRMG <> *BLANKS                                          225231
      C                   IF        DDxRMG <> *BLANKS and                                      225231
      C                             DDxRMG <>     '0.0000000   '                               225231
- 
+
      C                   IF        DDOVRx <> 'Y'
- 
+
      C                   EVAL      DDOVRxOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   MOVEL     DDxRMGFLD     FldNamXAr(Idx)
      C                   MOVEL     'RE71410'     MsgIDXAr(Idx)
- 
+
      C                   ELSE
- 
+
      C**************     EVAL      ZFIELD = *BLANKS                                           208221
      C**************     EVAL      ZFIELD = DDxRMG                                            208221
      C                   EVAL      ZADEC = 7
      C                   EVAL      ZADIG = 4
      C                   EVAL      ZFLD17 = *BLANKS                                           208221
      C                   EVAL      ZFLD17 = DDxRMG                                            208221
- 
+
      C**************     CALLB     'ZALIGN'                                                   208221
      C**************     PARM                    ZAlignOK          1                          208221
      C**************     PARM                    ZField           16                          208221
@@ -213,7 +216,7 @@
      C                   PARM      *BLANK        ZSDCSP            1                          208221
      C                   PARM      *BLANKS       ZOUT15           15                          208221
      C                   PARM      *BLANK        ZFSIGN            1                          208221
- 
+
      C*****ZAlignOK      IFNE      'Y'                                                        208221
      C     ZASIGNOK      IFNE      'Y'                                                        208221
      C*                                                                                       208221
@@ -268,9 +271,9 @@
      C                   MOVEL     DDxRMG        FldNamXAr(Idx)
      C                   MOVEL     'RE71411'     MsgIDXAr(Idx)
      C                   ENDIF                                                                208221
- 
+
      C                   ELSE
- 
+
      C************       MOVE      ZFIELD        WKxRMG                                       208221
      C                   MOVE      ZOUT15        WKxRMG                                       208221
      C                   MOVE      *BLANKS       WKxMBR                                       208221
@@ -282,16 +285,16 @@
      C                   MOVEL     'RE71414'     WMsgIDXAr(WIx)                               208221
      C                   EVAL      DDxRMGOK = 'W'                                             208221
      C                   ENDIF                                                                208221
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WKxRMG = *ZEROS
      C                   EVAL      WKxMBR = *BLANKS                                           208221
- 
+
      C                   ENDIF
      C*                                                                                       208221
      C** When account is amended, give warning message if the margin                          208221
@@ -306,7 +309,7 @@
      C                   EVAL      DDxRMGOK = 'W'                                             208221
      C                   ENDIF                                                                208221
      C                   ENDIF                                                                208221
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   IF        DDOVRxOK = 'N' or
@@ -323,7 +326,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -378,9 +381,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

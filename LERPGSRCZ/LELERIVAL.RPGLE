@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034915A          Date 26Aug20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+	  *  Last Amend No. MD045482           Date 23Oct20               *
+      *  Prev Amend No. MD034915A          Date 26Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
@@ -119,6 +120,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+	  *  MD045482 - Additional Handling of NFRS and NFSN (Spread Rate *
+      *             and Funding Sign). When NFRS & NFSN are blank and *
+      *             When NFRS & NFSN are '*' to clear fields          *
+	  *           - Applied for MD057026.                             *
       *  MD034915A - New funding rate disappears after input. Change  *
       *              from Z-ADD to MOVE when passing value of @@AMT   *
       *              to VNFRS.                                        *
@@ -1625,14 +1630,38 @@
       *
      C     *IN62         IFEQ      *ON
       *
+     C     DDNFRSB       IFEQ      '*'                                                      MD045482
+     C                   MOVE      *BLANK        L_CLNFSN                                   MD045482
+     C                   MOVE      *BLANKS       L_CLNFRS                                   MD045482
+     C                   ELSE                                                               MD045482
+     C     DDNFRSB       IFEQ      *BLANKS                                                  MD045482
+     C                   MOVE      *BLANKS       ZFIELD                                     MD045482
+     C                   MOVE      NFRS          ZFIELD                                     MD045482
+     C                   Z-ADD     7             ZADEC                                      MD045482
+     C                   EXSR      ZEDIT                                                    MD045482
+     C                   MOVE      ZFIELD        DDNFRSB                                    MD045482
+     C                   ELSE                                                               MD045482
      C     VNFRS         IFNE      *ZEROS
      C     VNFRS         ANDNE     NFRS
      C                   Z-ADD     VNFRS         L_CLNFRS
+     C                   ELSE                                                               MD045482
+     C                   MOVE      DDNFRS        DDNFRSB                                    MD045482
      C                   ENDIF
+     C                   ENDIF                                                              MD045482
       *
+     C     DDNFSNB       IFEQ      '*'                                                      MD045482
+     C                   MOVE      *BLANK        L_CLNFSN                                   MD045482
+     C                   ELSE                                                               MD045482
+     C     DDNFSNB       IFEQ      *BLANKS                                                  MD045482
+     C                   MOVE      NFSN          DDNFSNB                                    MD045482
+     C                   ELSE                                                               MD045482
      C     VNFSN         IFNE      NFSN
      C                   MOVE      VNFSN         L_CLNFSN
      C                   ENDIF
+     C                   ENDIF                                                              MD045482
+     C                   ENDIF                                                              MD045482
+     C                   ENDIF                                                              MD045482
+     C
      C                   MOVE      DDNFPCB       L_CLNFPC
      C                   ENDIF
       *
@@ -6844,6 +6873,7 @@
       *
       *
      C     *IN62         IFEQ      *ON
+     C     DDNFSNB       ANDNE     '*'                                                      MD045482
       *
       **  Must be either '+', '-', or blank.
      C                   SELECT
@@ -6885,6 +6915,7 @@
       *
      C     *IN62         IFEQ      *ON
      C     DDNFRSB       ANDNE     *BLANKS
+	 C     DDNFRSB       ANDNE     '*'                                                      MD045482
      C**********         MOVE      *BLANKS       ZFIELD                                     MD034915
      C**********         MOVE      DDNFRSB       ZFIELD                                     MD034915
      C**********         Z-ADD     4             ZADIG                                      MD034915

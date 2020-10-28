@@ -666,6 +666,8 @@
      ISDMMOD    E DSSDMMODPD                                                                  207497
       ** Midas modules details                                                                207497
       *                                                                                       207497
+     ISDBSRT    E DSSDBSRTPD                                                                  CLE172
+      **  EXTERNAL DS FOR BASE RATE DETAILS                                                   CLE172
      ISDBANK    E DSSDBANKPD                                              125373
       ** BANK DETAILS                                                     125373
      I              BJRDNB                          RUND                  125373
@@ -2138,8 +2140,8 @@
      C                     Z-ADDRAMT      ##AMT
       *                                                                                     AR792284
      C           REPT      IFEQ 3                                                           AR792284
-     C                     MOVEL*OFF      GENPRF                                              CLE172
      C           #RAMT3    ANDGTCPAM                                                        MD021236
+     C                     MOVEL*OFF      GENPRF                                              CLE172
      C           PWCALC    SUB  WINPD     PZINTR 130                                        AR792284
      C           RAMT      SUB  PZINTR    RAMTP  130                                        AR792284
      C           RAMTP     IFGT CPAM                                                        AR792284
@@ -2787,7 +2789,6 @@
       *                                                                                       CLE172
       ** Set provisional rate flag                                                            CLE172
       *                                                                                       CLE172
-
      C           ##NARR    IFEQ NINTR                                                         CLE172
      C           GENPRF    ANDEQ*ON                                                           CLE172
      C                     MOVEL##PRFL    C#PRFL                                              CLE172
@@ -4684,7 +4685,32 @@
      C           NBRA      ORNE *BLANKS                                                       CSD103
      C                     Z-ADDNRTS      WCUSP                                             MD047554
      C**********           Z-ADDNBRA      WCUBR                                      MD047554 CSD103
-     C                     MOVE NBRA      WCUBR                                               CSD103
+      *                                                                                       CLE172
+     C                     MOVELCCY       PKEY1                                               CLE172
+     C                     MOVELNBRA      PKEY2                                               CLE172
+      *                                                                                       CLE172
+     C                     CALL 'AOBSRTR0'                                                    CLE172
+     C                     PARM *BLANKS   @RTCD                                               CLE172
+     C                     PARM '*KEY   ' @OPTN                                               CLE172
+     C                     PARM           PKEY1   3                                           CLE172
+     C                     PARM           PKEY2   2                                           CLE172
+     C           SDBSRT    PARM SDBSRT    DSSDY                                               CLE172
+      *                                                                                       CLE172
+      ** Handle Database Error.                                                               CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFNE *BLANKS                                                       CLE172
+     C                     MOVEL'SDBSRTR0'W0PGM   8                                           CLE172
+     C                     MOVEL'SDBSRTPD'W0FILE                                              CLE172
+     C                     MOVELPKEY2     W0KEY                                               CLE172
+     C                     Z-ADD917       W0ERNB                                              CLE172
+     C                     EXSR SRERR                                                         CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
+     C           RLDT      IFGE BAVDNR                                                        CLE172
+     C                     Z-ADDBANBRT    WCUBR                                               CLE172
+     C                     ELSE                                                               CLE172
+     C                     Z-ADDBACBSR    WCUBR                                               CLE172
+     C                     ENDIF                                                              CLE172
      C                     MOVELNSIN      SPIN                                              MD047554
      C                     EXSR SRNEWI                                                      MD047554
      C                     ENDIF                                                            MD047554

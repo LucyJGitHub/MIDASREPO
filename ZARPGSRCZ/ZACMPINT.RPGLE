@@ -166,8 +166,6 @@
 
                    liborfields = sdlibor;
 
-                   *Inlr = *On;
-
                    return;
 
 
@@ -184,6 +182,8 @@
        //*************************************************************
 
        begsr *inzsr;
+
+                   sdlibor = liborfields;
 
                    //Check if CIR004 is switched on
 
@@ -205,7 +205,7 @@
                       CIR004 = 'N';
                    endif;
 
-                   sdlibor = liborfields;
+
 
        endsr;
 

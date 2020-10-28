@@ -357,6 +357,8 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *
+      ** Clear Incoming Payments File format                                                MD056993
+      *                                                                                     MD056993
      C                   CLEAR                   IPAYFilFmt                                 MD056993
      C                   CLEAR                   IPY2FilFmt                                 MD056993
       *                                                                                      BUG7029

@@ -148,6 +148,8 @@
        // ** ¦                                                                ¦
        // ** +----------------------------------------------------------------+
 
+                   sdlibor = liborfields;
+
                    select;
 
                         when option = OPT_ACCRUE;
@@ -182,8 +184,6 @@
        //*************************************************************
 
        begsr *inzsr;
-
-                   sdlibor = liborfields;
 
                    //Check if CIR004 is switched on
 
@@ -379,8 +379,6 @@
 
        endsr;
 
-      /end-free
-
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -441,6 +439,8 @@
                     endsl;
 
        endsr;
+
+      /end-free
 
      C/COPY ZSRSRC,ZACCHLE
      C/COPY ZSRSRC,ZBKDT_ILE

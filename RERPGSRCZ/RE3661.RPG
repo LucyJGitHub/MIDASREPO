@@ -16,8 +16,9 @@
      F*         to it in the various Migration Data Libraries         *
      F*         must be recompiled.                                   *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031299           Date 27Feb15               *
+      *  Last Amend No. MD056764           Date 12Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031299           Date 27Feb15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD024658           Date 09May14               *
       *                 MD024320           Date 13Jan14               *
@@ -65,6 +66,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD056764 - Minimum CR balance of the affected accounts set   *
+      *             to zero even though the accounts had maintained CR*
+      *             balances during the entire period.                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031299 - Forward Valued Rate Change are ignored. Rate      *
       *             Change should always be processed.                *
@@ -150,6 +154,9 @@
      FACCNT   IF  E           K        DISK
      F            ACCNTAAF                          KIGNORE
      F            ACCNTACF                          KIGNORE
+     FREIAC   IF  E           K        DISK                                                 MD056764
+     F            REIACAF                           KIGNORE                                 MD056764
+     F            REIACZF                           KIGNORE                                 MD056764
      F*REDPOSL*IF**E           K        DISK                              CCB003
      FREDPOSL IF  E           K        DISK                                                 CRE083AX
      FREHISUPDUF  E           K        DISK         KCOMIT            UC  CCB003
@@ -537,6 +544,20 @@
      I              ODRL                            DODRL                 CRE001
      I              ODLI                            DODLI                 CRE001
      I              ODIA                            DODIA                 CRE001
+     IREIACDF                                                                               MD056764
+      *                                                                                     MD056764
+      ** Rename REIACDF Format Fields - REIACD File                                         MD056764
+      *                                                                                     MD056764
+     I              RECI                            CRECI                                   MD056764
+     I              BRCA                            CBRCA                                   MD056764
+     I              CNUM                            CCNUM                                   MD056764
+     I              CCY                             CCCY                                    MD056764
+     I              ACOD                            CACOD                                   MD056764
+     I              ACSQ                            CACSQ                                   MD056764
+     I              DICT                            CDICT                                   MD056764
+     I              CICT                            CCICT                                   MD056764
+     I              REPI                            CREPI                                   MD056764
+     I              ZZ015                           CZZ015                                  MD056764
      I*
      I***SRCIP2ZF                                                         CCB003
      I**********                                                          CCB003
@@ -1810,21 +1831,52 @@
      C*
      C                     ADD  WDRTOT    BHISB
      C                     SUB  WCRTOT    BHISB
+      *                                                                                     MD056764
+      ** Access REIAC to get account's Interest Calc. Type                                  MD056764
+      *                                                                                     MD056764
+     C           AAKEY     CHAINREIAC                52                                     MD056764
+      *                                                                                     MD056764
+     C           *IN52     IFEQ '1'                                                         MD056764
+     C           *LOCK     IN   LDA                                                         MD056764
+     C                     Z-ADD11        DBASE                                             MD056764
+     C                     MOVE 'REIAC'   DBFILE                                            MD056764
+     C                     MOVELWPAKEY    DBKEY                                             MD056764
+     C                     OUT  LDA                                                         MD056764
+     C                     MOVEA'1'       *IN,89                                            MD056764
+     C                     EXSR DBSR                                                        MD056764
+     C                     END                                                              MD056764
      C*
      C** CHECK ON INTEREST CALCULATION TYPE
      C*
       *                                                                   S01408
      C/COPY WNCPYSRC,RE3661CCP2                                           S01408
       *                                                                   S01408
-     C           BDICT     IFGT 2
+     C********** BDICT     IFGT 2                                                           MD056764
+     C           CDICT     IFGT 2                                                           MD056764
       *                                                                   S01408
      C/COPY WNCPYSRC,RE3661CCP5                                           S01408
       *                                                                   S01408
-     C           BCICT     ORGT 2
+     C********** BCICT     ORGT 2                                                           MD056764
+     C           CCICT     ORGT 2                                                           MD056764
       *                                                                   S01408
      C/COPY WNCPYSRC,RE3661CCP6                                           S01408
       *                                                                   S01408
+      ** Access ACCNT to get account's Original Entry Date                                  MD056764
+      *                                                                                     MD056764
+     C           AAKEY     CHAINACCNT                51                                     MD056764
+      *                                                                                     MD056764
+     C           *IN51     IFEQ '1'                                                         MD056764
+     C           *LOCK     IN   LDA                                                         MD056764
+     C                     Z-ADD10        DBASE                                             MD056764
+     C                     MOVE 'ACCNT'   DBFILE                                            MD056764
+     C                     MOVELWPAKEY    DBKEY                                             MD056764
+     C                     OUT  LDA                                                         MD056764
+     C                     MOVEA'1'       *IN,89                                            MD056764
+     C                     EXSR DBSR                                                        MD056764
+     C                     END                                                              MD056764
+      *                                                                                     MD056764
      C           BHISB     IFGT BMNBL
+     C           AORED     OREQ RUND                                                        MD056764
      C                     Z-ADDBHISB     BMNBL
      C                     END
      C                     END

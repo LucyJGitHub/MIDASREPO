@@ -46,7 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056993 - Added clear of valid file layout data structures *
+      *  MD056993 - Added clear of valid file layout data structures  *
       *  MD052870 - Recompiled due to changes made by MD-50928 in     *
       *             FTIPY5PD.                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -352,6 +352,8 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *
+      ** Clear Incoming Payments File format                                                MD056993
+      *                                                                                     MD056993
      C                   CLEAR                   IPAYFilFmt                                 MD056993
      C                   CLEAR                   IPY2FilFmt                                 MD056993
       *                                                                                      BUG7029

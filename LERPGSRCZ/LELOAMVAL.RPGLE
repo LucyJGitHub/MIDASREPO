@@ -4629,7 +4629,6 @@
       ** If loan has base rate or there is previous 'BC'...
      C     WBSRC         IFNE      *BLANKS
      C*****WBSRC         ANDNE     '00'                                                       CSD103
-     C     WBSRC         ANDNE     *BLANKS                                                    CSD103
      C*****CLE035        OREQ      'Y'                                               CLE035 BUG10392
      C     CLE036        OREQ      'Y'                                                      BUG10392
      C     WBRTE         ANDNE     *ZERO                                                      CLE035

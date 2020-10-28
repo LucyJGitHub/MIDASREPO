@@ -351,7 +351,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-      *
+      *                                                                                     MD056993
       ** Clear Incoming Payments File format                                                MD056993
       *                                                                                     MD056993
      C                   CLEAR                   IPAYFilFmt                                 MD056993

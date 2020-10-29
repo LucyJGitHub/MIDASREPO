@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD057051           Date 28Oct20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -167,6 +168,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057051 - DLC0400 00001 fails during COB.                   *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -1933,6 +1935,7 @@
       ** Secondary Tax  Detail                                                                CER048
       *                                                                                       CER048
      C     CER048        IFEQ      'Y'                                                        CER048
+     C     WSTAT         ANDNE     ' '                                                      MD057051
      C                   EXSR      CGSTAX                                                     CER048
       *                                                                                       CER054
       ** Third Tax Detail                                                                     CER054
@@ -4944,6 +4947,8 @@
       ** If CDL013 is installed and *IN04 is ON, calculate WHT amount                         CDL013
      C     CDL013        IFEQ      '1'                                                        CDL013
      C     TAXI          ANDNE     '0'                                                        CDL013
+      *                                                                                     MD057051
+     C                   MOVE      *BLANK        WSTAT                                      MD057051
       *                                                                                       CDL013
       ** Proceed with WHT calculation only for deal types IT, CD or TD                        CDL013
      C     DTYP          IFEQ      'IT'                                                       CDL013

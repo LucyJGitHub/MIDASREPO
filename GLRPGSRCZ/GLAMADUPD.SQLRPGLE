@@ -787,7 +787,7 @@
      D  S1BITF               127    127
      D  S1OLDR               137    139P 0
      D  S1INRT               146    151P 7
-     D**S1BRIS               152    153  0                                                    CSD103
+     D**S1BRIS**             152    153  0                                                    CSD103
      D  S1BRIS               152    153                                                       CSD103
      D  S1WRIS               154    159P 7
      D  S1AODR               160    165P 7
@@ -5411,8 +5411,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   MOVEL(P)  AMCRIB        @BSRC                                      AR871763
      C                   ENDIF                                                              AR871763
      C**********         IF        @BSRC <> '00'                                     AR883751 CSD103
-     C                   IF        @BSRC <> *BLANKS                                           CSD103
-     C                   OR        @BSRC <> '00'                                              CSD103
+     C     @BSRC         IFNE      *BLANKS                                                    CSD103
+     C     @BSRC         OREQ      '00'                                                       CSD103
      C                   CALLB     'AOBSRTR0'                                               AR871763
      C                   PARM      '*MSG    '    @RTCD                                      AR871763
      C                   PARM      '*KEY    '    @OPTN                                      AR871763

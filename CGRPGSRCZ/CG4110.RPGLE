@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD057008           Date 27Oct20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -189,6 +190,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057008 - CGC2050 00007 fails during COB                    *
+      *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *
+      *             it is only being populated when CGL031 is ON and  *
+      *             deal type is CD or TD.                            *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -2382,6 +2387,7 @@
       *                                                                                       CER048
      C     CER048        IFEQ      'Y'                                                        CER048
      C     WSTAT         ANDNE     'E'                                                      BUG24860
+     C     WSTAT         ANDNE     ' '                                                      MD057008
      C                   EXSR      CGSTAX                                                     CER054
       *                                                                                       CER054
       ** Third Tax Detail                                                                     CER054
@@ -2881,6 +2887,7 @@
       *                                                                                       CER048
      C     CER048        IFEQ      'Y'                                                        CER048
      C     WSTAT         ANDNE     'E'                                                      BUG24860
+     C     WSTAT         ANDNE     ' '                                                      MD057008
      C                   EXSR      CGSTAX                                                     CER048
       *                                                                                       CER054
       ** Third Tax Detail                                                                     CER054
@@ -5498,6 +5505,7 @@
      C     CDL013        IFEQ      '1'                                                        CDL013
      C     TAXI          ANDNE     '0'                                                        CDL013
       *                                                                                       CDL013
+     C                   MOVE      *BLANKS       WSTAT                                      MD057008
       ** Proceed with WHT calculation only for deal types IT, CD or TD                        CDL013
      C     DTYP          IFEQ      'IT'                                                       CDL013
      C     DTYP          OREQ      'CD'                                                       CDL013

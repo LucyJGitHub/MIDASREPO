@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD022486           Date 20Sep13               *
-      *  Prev Amend No. MD020456           Date 23May13               *
+      *  Last Amend No. MD057050           Date 29Oct20               *
+      *  Prev Amend No. MD022486           Date 20Sep13               *
+      *                 MD020456           Date 23May13               *
       *                 MD019911           Date 07Apr13               *
       *                 AR1085933          Date 06Feb13               *
       *                 AR989186           Date 06Feb13               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057050 - Increase the attribute for ZnStmQry to prevent    *
+      *             SQL error.                                        *
       *  MD022486 - Post User Security MASS Migration - Entitlements  *
       *             Missing                                           *
       *  MD020456 - BF Upload menu option UPLD doesn't upload         *
@@ -46,7 +49,8 @@
      D BrCount         S              3  0                                                  MD019911
      D j               S              3  0                                                  MD019911
      D RoleOK          S              3  0                                                  MD019911
-     D ZnStmQry        S            256                                                     MD019911
+     D*ZnStmQry********S            256                                            MD019911 MD057050
+     D ZnStmQry        S           1300                                                     MD057050
      D EntVal          S              3
      D GrpId           S             30
      D GName           S             30

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR374612           Date 21Mar15              */
-/*       Prev Amend No. MD021975B          Date 10Dec14              */
+/*       Last Amend No. MD056826           Date 27Oct20              */
+/*       Prev Amend No. AR374612           Date 21Mar15              */
+/*                      MD021975B          Date 10Dec14              */
 /*                      MD021975           Date 27Nov13              */
 /*                      MD054045           Date 27Aug19              */
 /*                      MD046248           Date 27Oct17              */
@@ -132,6 +133,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056826 - Schema re-open processing issues for LGBFLIB.    */
+/*                  Move calling of SCC000203 before start of global */
+/*                  background job (GOC0002). This is to let the     */
+/*                  master files be restored first before SCC000203  */
+/*                  submits the restoration of the libraries.        */
 /*       AR374612 - COB Re-Open option fails due to problem restoring*/
 /*                  file members in DBIC which cannot be found in    */
 /*                  some files in DMLIB. Fix is to use the correct   */
@@ -618,7 +624,7 @@
 /*********   CHGVAR     VAR(&GLOBID) VALUE(&SVAL1) */                     /*MD021975*/ /*MD021975B*/
 /*********   CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB   ') */     /*MD021975*/ /*MD021975B*/
                                                                                         /*MD021975*/
-/*********   ENDDO */                                                     /*MD021975*/ /*MD021975B*/                          
+/*********   ENDDO */                                                     /*MD021975*/ /*MD021975B*/
 /*                                                                                        /*CSC018*/
 /***Check*for*Switchable*feature*CSC018*(Journaling*options*for*high***         */ /*CSC018 CCB020*/
 /** availability)******************************************************         */ /*CSC018 CCB020*/
@@ -1375,11 +1381,11 @@ CHKCMPLFL:                                                                      
 /**********  CALL       PGM(SCKOBJLCB)                             */             /*240226 CCB023A*/
              CALL       PGM(SCKOBJLCB) PARM('Y')                                         /*CCB023A*/
                                                                                           /*240226*/
-/** Call SCC000203 to perform BF database restore*/                                       /*CBF002*/
-/** restore BF schemas found in Schemas/Libraries file */                                 /*CBF002*/
+/***Call*SCC000203*to*perform*BF*database*restore*/                              /*CBF002 MD056826*/
+/***restore*BF*schemas*found*in*Schemas/Libraries*file**/                        /*CBF002 MD056826*/
                                                                                           /*CBF002*/
-             CHGVAR     VAR(&PRFK) VALUE('018')                                           /*CBF002*/
-             CALL       PGM(SCC000203) PARM(&PRFK)                                        /*CBF002*/
+/**********  CHGVAR     VAR(&PRFK) VALUE('018')                               */ /*CBF002 MD056826*/
+/**********  CALL       PGM(SCC000203) PARM(&PRFK)                            */ /*CBF002 MD056826*/
                                                                                           /*CBF002*/
 /**********      RSTLIB     SAVLIB(&LIB1) DEV(*SAVF) SAVF(&LIB2/DBIC) +*/              /*AR1093685*/
 /**********                   OUTPUT(*PRINT)                           */       /*207764 AR1093685*/
@@ -1390,7 +1396,7 @@ CHKCMPLFL:                                                                      
                  RTVOBJD    OBJ(GPBSRQPD) OBJTYPE(*FILE) RTNLIB(&GMLIB) +
                               /*MD021975B*/
                  RSTOBJ     OBJ(GPBSRQPD) SAVLIB(&GMLIB) DEV(*SAVF) +
-                              SAVF(&LIB2/DBICGM) OUTPUT(*PRINT) /*MD021975B*/                              
+                              SAVF(&LIB2/DBICGM) OUTPUT(*PRINT) /*MD021975B*/
                                                                                           /*CBF002*/
 /**********  IF         COND(&CRE026 *EQ 'Y') THEN(DO)             */            /*BUG12169 CCB022*/
 /*******************************************************************/           /*BUG14179A CCB022*/
@@ -1479,6 +1485,13 @@ CHKCMPLFL:                                                                      
                       GOTO       END                                  /*E14941*/
                    ENDDO                                              /*E14941*/
              ENDDO
+                                                                                        /*MD056826*/
+/** Call SCC000203 to perform BF database restore*/                                     /*MD056826*/
+/** restore BF schemas found in Schemas/Libraries file */                               /*MD056826*/
+                                                                                        /*MD056826*/
+             CHGVAR     VAR(&PRFK) VALUE('018')                                         /*MD056826*/
+             CALL       PGM(SCC000203) PARM(&PRFK)                                      /*MD056826*/
+                                                                                        /*MD056826*/
                                                                                          /*BUG4841*/
 /* Start global background job */                                                        /*BUG4841*/
                                                                                          /*BUG4841*/

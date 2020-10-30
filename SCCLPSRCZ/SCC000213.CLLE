@@ -10,12 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR917384           Date 21Feb12              */
+/*       Last Amend No. MD056826           Date 27Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR917384           Date 21Feb12              */
 /*                      CBF002  *CREATE    Date 04Jul11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056826 - Schema re-open processing issues for LGBFLIB.    */
+/*                  Added specific error message on library to be    */
+/*                  restored for operator.                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR917384 - SCC1711 Error on Backup                          */
 /*                - Changed to *PGM to be included as adoption       */
@@ -24,7 +28,7 @@
 /*********************************************************************/
              PGM        PARM(&DEVC &DEVNAM &SCHLIB &SAVFNM &TOLIB +
                           &SQNM)
- 
+
              DCL        VAR(&DEVC) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DEVNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SCHLIB) TYPE(*CHAR) LEN(10)
@@ -39,35 +43,35 @@
              DCL        VAR(&RDAT) TYPE(*CHAR) LEN(6)
              DCL        VAR(&RDATE) TYPE(*DEC) LEN(6 0)
              DCL        VAR(&SDAT) TYPE(*DEC) LEN(5 0)
- 
+
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           2011')
- 
+
 /** Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /** Retrieve sytem prefix */
- 
+
              RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
              CHGVAR     VAR(%SST(&FSAV 1 2)) VALUE(%SST(&SDSTAT 6 2))
- 
+
 /** Retrieve run date */
- 
+
              RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&RDAT)
              CHGVAR     VAR(&RDATE) VALUE(&RDAT)
              CALL       PGM(ZDATE1) PARM(&RTCD &RDATE 'D' &SDAT)
              IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
- 
+
 /** Clear restore status */
- 
+
              CALL       PGM(AOBKLBR2) PARM(&RTCD '*FIRST ' &SDAT +
                           &SCHLIB)
              IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
- 
+
 /** Restore from TAPE */
- 
+
              IF         COND(&DEVC *EQ 'TAPE') THEN(DO)
                 IF         COND(&SQNM *NE '*SEARCH') THEN(DO)
                    CHGVAR     VAR(&SEQNUM) VALUE(&SQNM)
@@ -75,25 +79,25 @@
                                 RSTLIB(&TOLIB) OUTPUT(*PRINT)
                    MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
                 ENDDO
- 
+
                 ELSE       CMD(DO)
                    RSTLIB     SAVLIB(&SCHLIB) DEV(&DEVNAM) SEQNBR(&SQNM) +
                                 RSTLIB(&TOLIB) OUTPUT(*PRINT)
                    MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
                 ENDDO
              ENDDO
- 
+
 /** Restore from DISK */
- 
+
              IF         COND((&DEVC *EQ 'DISK') *AND (&DEVNAM *NE +
                           'SAVF')) THEN(DO)
                 RSTLIB     SAVLIB(&SCHLIB) DEV(&DEVNAM) RSTLIB(&TOLIB) +
                              OUTPUT(*PRINT)
                 MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
              ENDDO
- 
+
 /** Restore from SAVF */
- 
+
              IF         COND((&DEVC *EQ 'DISK') *AND (&DEVNAM *EQ +
                           'SAVF')) THEN(DO)
                 RSTLIB     SAVLIB(&SCHLIB) DEV(*SAVF) +
@@ -101,13 +105,13 @@
                              OUTPUT(*PRINT)
                 MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
              ENDDO
- 
+
 /** Restore successful */
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /** Abnormal termination */
- 
+
 ABNOR:
              CALL       PGM(AOBKLBR2) PARM(&RTCD '*LAST  ' &SDAT +
                           &SCHLIB)
@@ -115,8 +119,10 @@ ABNOR:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC000213 ended abnormally - see job +
                           log') TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSGID(MEM0008) MSGF(GBMIDAS) MSGDTA(&SCHLIB) +
+                                TOMSGQ(MOPERQ)                                          /*MD056826*/
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ENDPGM:
              ENDPGM
- 
+

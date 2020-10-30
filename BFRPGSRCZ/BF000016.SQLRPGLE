@@ -15,13 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044342           Date 01Mar17               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044342           Date 01Mar17               *
       *                 AR1026104A         Date 13Sep12               *
       *                 AR884111A *CREATE  Date 25Jan12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044342 - Business date in BF is not being updated.         *
       *  AR1026104A - Rundates in BFMidas is not insynch with BFTC    *
@@ -265,7 +267,9 @@
 
      C     FmtDetails    BEGSR
 
-     C                   EVAL      isURL = '/bfweb/services/SetBusDateByZone'
+     C**********         EVAL      isURL = '/bfweb/services/SetBusDateByZone'               MD050405
+     C                   EVAL      isURL = '/bfweb/services/' +                             MD050405
+     C                                     'ConfigureBusinessDate'                          MD050405
      C                   EVAL      isSpEnvAdd = 'xmlns:att="http://' +
      C                             'www.misys.com/bankfusion/attributes" ' +
      C                             'xmlns:all="http://www.' +
@@ -284,8 +288,11 @@
      C**********                   'ServiceMFRequest>' +                                    MD044342
      C                             'ServiceMF>' +                                           MD044342
      C                             '</soapenv:Body>'
-     C                   EVAL      isSpAction = 'http://SetBusDateBy' +
-     C                             'Zone/SetBusDateByZonePortType/' +
+     C**********         EVAL      isSpAction = 'http://SetBusDateBy' +                     MD050405
+     C**********                   'Zone/SetBusDateByZonePortType/' +                       MD050405
+     C                   EVAL      isSpAction = 'http://' +                                 MD050405
+     C                             'ConfigureBusinessDate/' +                               MD050405
+     C                             'ConfigureBusinessDatePortType/' +                       MD050405
      C                             'SetBusinessDateByzone' +
      C                             'ServiceMFRequest'
      C                   EVAL      isPPath = ' '

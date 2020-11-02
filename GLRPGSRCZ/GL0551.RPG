@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CLE172             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 AR743357           Date 22Apr15               *
       *                 CLE154             Date 06Aug12               *
       *                 CGL165             Date 17Feb15               *
@@ -126,6 +127,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE172   - LIBOR Deregulation - Lending                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR743357 - Include principal movements in report when PDEI=  *
@@ -353,6 +355,7 @@
      FGL0551AUO   F     132     OV     PRINTER      KINFDS SPOOLU         E22608
      FGL0551P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  E22608
      FGL0551P2O   E             79     PRINTER      KINFDS SPOOL2     UC  CLE004
+     FGL0551P3O   F     132     87     PRINTER      KINFDS SPOOL3     UC  CLE172
      F* ID F  C  H  L    FUNCTION OF INDICATORS
      F* 01            EVENT HEADER
      F* 02            EVENT DETAIL - DEAL EVENT
@@ -423,6 +426,8 @@
      F*       80      Midas/TI Interface is installed                     CLE005
      F* 82            EVNTM DETAIL - FO RECORD
      F* 83            EVNTM TRAILER- FO RECORD
+     F*       87      Overflow indicator for GL0551P3                     CLE172
+     F*       88      CSD103 is switched on                               CLE172
      F*       U7 U8   DATABASE ERROR
      F*             L1CHANGE OF CURRENCY
      F*       U4      RUN WITH ONLY ST EVENTS
@@ -904,6 +909,11 @@
      ISPOOLU      DS
      I                                       83  92 SFILEU
      I                                    B 123 1240SFNUMU
+      *                                                                   CLE172
+     ISPOOL3      DS                                                      CLE172
+     I** File information data structure - P3                             CLE172
+     I                                       83  92 SFILE3                CLE172
+     I                                    B 123 1240SFNUM3                CLE172
      I**
      I              'INT. ESTIMATE  '     C         WINEST                                    CIR007
       ** Value of Event Description if either side of the deal is an                          CIR007
@@ -1213,6 +1223,28 @@
      C                     EXSR *PSSR                                                         CAP204
      C                     ENDIF                                                              CAP204
      C                     ENDIF                                                              CAP204
+      *                                                                                       CLE172
+      ** Check if enhancement CSD103 is installed                                             CLE172
+      *                                                                                       CLE172
+     C                     MOVE *OFF      *IN88                                               CLE172
+      *                                                                                       CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM '       ' @RTCD                                               CLE172
+     C                     PARM '*VERIFY' @OPTN                                               CLE172
+     C                     PARM 'CSD103'  WSARD                                               CLE172
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFEQ *BLANK                                                        CLE172
+     C                     MOVE *ON       *IN88                                               CLE172
+     C                     ELSE                                                               CLE172
+     C           PRTCD     IFNE *BLANKS                                                       CLE172
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE172
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE172
+     C                     MOVEL'CSD103'  DBKEY                                               CLE172
+     C                     MOVEL'20'      DBASE                                               CLE172
+     C                     EXSR *PSSR                                                         CLE172
+     C                     ENDIF                                                              CLE172
+     C                     ENDIF                                                              CLE172
       *                                                                   CEU011
       ** Retrieve general ledger details                                  CEU011
       *                                                                   CEU011
@@ -1360,6 +1392,10 @@
      C*********************MOVE OSAC      OSAC2                           E193
      C******************** MOVE THRE      TSEN                            E193
      C*
+     C                     MOVE *BLANKS   PRFR                                                CLE172
+     C           *IN88     IFEQ *ON                                                           CLE172
+     C                     MOVE PRFL      PRFR    1                                           CLE172
+     C                     ENDIF                                                              CLE172
      C           *IN03     IFEQ *ON                                                           CLE148
      C                     MOVE LNNO      DLNO                                                CLE148
      C                     ENDIF                                                              CLE148
@@ -2379,6 +2415,9 @@
      C*********************CLOSEDL0550P1                        E172 E257 LN0746
      C*********************CLOSEDL0551P1                            LN0746E22608
      C                     CLOSEGL0551P1                                  E22608
+     C           *IN88     IFEQ '1'                                       CLE172
+     C                     CLOSEGL0551P3                                  CLE172
+     C                     ENDIF                                          CLE172
      C           BRNCH     IFEQ 'ALL'                                     E172
      C           BRNCH     OREQ EBRC                                      E172
      C                     SETON                     5855                 E172
@@ -2426,6 +2465,27 @@
      C                     SETOF                     58                   E172
      C                     SETON                     41                   E172
      C                     END                                            E172
+     C           *IN88     IFEQ '1'                                       CLE172
+     C           BRNCH     IFEQ 'ALL'                                     CLE172
+     C           BRNCH     OREQ EBRC                                      CLE172
+     C                     OPEN GL0551P3                                  CLE172
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          CLE172
+     C                     Z-ADDSFNUM3    ZSNUM                           CLE172
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF                         CLE172
+     C                     CALL 'ZSFILE'                                  CLE172
+     C                     PARM           SEQ                             CLE172
+     C                     PARM EBRC      @PARM                           CLE172
+     C                     PARM           SFILE3                          CLE172
+     C                     PARM           ZSNUM                           CLE172
+     C                     PARM *BLANK    ZSERR                           CLE172
+      *                                                                   CLE172
+     C           ZSERR     IFEQ 'Y'                                       CLE172
+     C                     SETON                     U7U8LR               CLE172
+     C                     RETRN                                          CLE172
+     C                     ENDIF                                          CLE172
+     C                     Z-ADD0         PAGE2                           CLE172
+     C                     ENDIF                                          CLE172
+     C                     ENDIF                                          CLE172
      C                     END                                            E172
       *                                                                   CLE004
       ** For CLE004, if a LE event is read that is an internal parts      CLE004
@@ -3395,6 +3455,232 @@
      O**DL0550AUT**203***LR**************                           E257  LN0746
      O*DL0551AUT**203***LR**************                            LN0746E22608
      O********************************** 24 'REFERENCE DL0551AU'          E22608
+     OGL0551P3D  203   43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                                   24 'REFERENCE GL0551P3'          CLE172
+     O                         BJURPT    89                               CLE172
+     O                                  104 'DATE'                        CLE172
+     O                         BJMRDT   112                               CLE172
+     O                                  122 'PAGE'                        CLE172
+     O                         PAGE2 Z  127                               CLE172
+     O        D  1     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                    66NU4          51 'F.X. '                       CLE172
+     O                    67NU4          51 'M.M. '                       CLE172
+     O                      NU4          75 'DAILY EVENTS BY CURRENCY'    CLE172
+     O                       U4          71 'SECURITIES TRADING EVENT'    CLE172
+     O                       U4          84 'S BY CURRENCY'               CLE172
+     O        D  1     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                    66NU4          51 '-----'                       CLE172
+     O                    67NU4          51 '-----'                       CLE172
+     O                      NU4          75 '------------------------'    CLE172
+     O                       U4          71 '------------------------'    CLE172
+     O                       U4          84 '-------------'               CLE172
+     O        D  2     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                                   12 'BRANCH'                      CLE172
+     O                         EBRC      16                               CLE172
+     O                         A8BRNM    48                               CLE172
+     O        D  1     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                         A6CYNM    19                               CLE172
+     O        D  1     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                                   44 ' LOAN/DEAL'                  CLE172
+     O                   N67             50 ' FED'                        CLE172
+     O                                   56 ' EVENT'                      CLE172
+     O                                   83 'INCOMING'                    CLE172
+     O                                  110 'PROV'                        CLE172
+     O                                  127 'OUTGOING'                    CLE172
+     O        D  2     43 88                                              CLE172
+     O       OR        46N41 88                                           CLE172
+     O                                   12 'CUSTOMER'                    CLE172
+     O                                   44 ' NUMBER  TYPE'               CLE172
+     O                   N67             50 ' FDS'                        CLE172
+     O                                   56 '  DATE'                      CLE172
+     O                                   67 'VAL/MAT'                     CLE172
+     O                                   93 'AMOUNT       RATE'           CLE172
+     O                                  110 'RATE'                        CLE172
+     O                                  126 'AMOUNT'                      CLE172
+     O        D  1     43                                                 CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR        46N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O                                   85 'EURO EQUIVALENT'             CLE172
+     O                                  130 'EURO EQUIVALENT'             CLE172
+     O        D  1     02N41 88                                           CLE172
+     O       OR  1     03N41 88                                           CLE172
+     O       OR  1     13N41 88                                           CLE172
+     O       OR  1     15N41 88                                           CLE172
+     O       OR  1     26N41 88                                           CLE172
+     O       OR  1     27N41 88                                           CLE172
+     O       OR  1     28N41 88                                           CLE172
+     O                         CRNM      20                               CLE172
+     O                         CTWN      31                               CLE172
+     O                N13                38 '      '                      CLE172
+     O                N13N15   PDLNO     38                               CLE172
+     O                 15      LCNO      38                               CLE172
+     O                 13                32 'LE'                          CLE172
+     O                 13N48   LNRF      38                               CLE172
+     O                 13 48   FTYP      35                               CLE172
+     O                 13 48             36 '/'                           CLE172
+     O                 13 48   FSEQ      38                               CLE172
+     O                 13 48             42 'SEQ'                         CLE172
+     O                 13 48   WOSEQ     44                               CLE172
+     O                N27N28N48DTYP      41                               CLE172
+     O                N27N28N48          42 '-'                           CLE172
+     O                N27N28N48DLST      44                               CLE172
+     O                 02      CLAS      48                               CLE172
+     O                 13      CLAS      48                               CLE172
+     O                N13      FFIN      49                               CLE172
+     O                         EDATA     57                               CLE172
+     O                      N22OTHDA     67                               CLE172
+     O                N42 60 30EAMT      85 ' ,   ,   ,   , 0 -'          CLE172
+     O                N42 60 31EAMT      85 '   ,   ,   , 0 . -'          CLE172
+     O                N42 60 32EAMT      85 '  ,   ,   , 0 .  -'          CLE172
+     O                N42 60 33EAMT      85 ' ,   ,   , 0 .   -'          CLE172
+     O*                                                                   CLE172
+     O                 42 60 30REPAMT    85 ' ,   ,   ,   , 0 -'          CLE172
+     O                 42 60 31REPAMT    85 '   ,   ,   , 0 . -'          CLE172
+     O                 42 60 32REPAMT    85 '  ,   ,   , 0 .  -'          CLE172
+     O                 42 60 33REPAMT    85 ' ,   ,   , 0 .   -'          CLE172
+     O                 02N23   EXRT      99 '   0 .        '              CLE172
+     O                 03N23   EINRX     99 '  0 .        '               CLE172
+     O                 13N23   EINRX     99 '  0 .        '               CLE172
+     O                 02 11N23         100 '-'                           CLE172
+     O*                                                                   CLE172
+     O*     OUTPUT SECURITY SHORTNAME INSTEAD OF RATE                     CLE172
+     O*                                                                   CLE172
+     O                 25      SECS      99                               CLE172
+     O                 26      SECS      99                               CLE172
+     O                 27      SECS      99                               CLE172
+     O                 28      SECS      99                               CLE172
+     O                         PRFR     108                               CLE172
+     O                N42 61 30EAMT     130 ' ,   ,   ,   , 0 -'          CLE172
+     O                N42 61 31EAMT     130 '   ,   ,   , 0 . -'          CLE172
+     O                N42 61 32EAMT     130 '  ,   ,   , 0 .  -'          CLE172
+     O                N42 61 33EAMT     130 ' ,   ,   , 0 .   -'          CLE172
+     O*                                                                   CLE172
+     O                 42 61 30REPAMT   130 ' ,   ,   ,   , 0 -'          CLE172
+     O                 42 61 31REPAMT   130 '   ,   ,   , 0 . -'          CLE172
+     O                 42 61 32REPAMT   130 '  ,   ,   , 0 .  -'          CLE172
+     O                 42 61 33REPAMT   130 ' ,   ,   , 0 .   -'          CLE172
+      *                                                                   CLE172
+     O        D  1     02N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     03N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     13N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     15N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     26N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     27N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O       OR  1     28N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O                N42 60   WEAMT     83 '  ,   ,   , 0 .  -'          CLE172
+      *                                                                   CLE172
+     O                 42 60   WPAMT     83 '  ,   ,   , 0 .  -'          CLE172
+      *                                                                   CLE172
+     O                N42 61   WEAMT    130 '  ,   ,   , 0 .  -'          CLE172
+      *                                                                   CLE172
+     O                 42 61   WPAMT    130 '  ,   ,   , 0 .  -'          CLE172
+      *                                                                   CLE172
+     O        D  1     15N41 80                                           CLE172
+     O       AND       88                                                 CLE172
+     O                                   25 'TRADE INNOVATION REFEREN'    CLE172
+     O                                   48 'CE'                          CLE172
+     O                         TIRF      68                               CLE172
+     O        D  1     37N41 88                                           CLE172
+     O                         PREF      40                               CLE172
+     O                         PYTP      43                               CLE172
+     O                                   44 '-'                           CLE172
+     O                         PYST      46                               CLE172
+     O                                   49 'N'                           CLE172
+     O                         EDATA     57                               CLE172
+     O                         OTHDA     67                               CLE172
+     O                    30 60INPYAM    85 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 60INPYAM    85 '   ,   ,   , 0 . '           CLE172
+     O                    32 60INPYAM    85 '  ,   ,   , 0 .  '           CLE172
+     O                    33 60INPYAM    85 ' ,   ,   , 0 .   '           CLE172
+     O                         RATE      99 '   0 .        '              CLE172
+     O                    30 61OTPYAM   130 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 61OTPYAM   130 '   ,   ,   , 0 . '           CLE172
+     O                    32 61OTPYAM   130 '  ,   ,   , 0 .  '           CLE172
+     O                    33 61OTPYAM   130 ' ,   ,   , 0 .   '           CLE172
+      *                                                                   CLE172
+     O        D  1     37N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O                       60WINPY     83 '  ,   ,   , 0 .  '           CLE172
+      *                                                                   CLE172
+     O                       61WOTPY    130 '  ,   ,   , 0 .  '           CLE172
+      *                                                                   CLE172
+      ** GENERATED ENTRIES DETAIL                                         CLE172
+      *                                                                   CLE172
+     O        D  1     71N41 88                                           CLE172
+     O                         TREF      40                               CLE172
+     O                         RTYP      43                               CLE172
+     O                                   49 'N'                           CLE172
+     O                         EDATA     57                               CLE172
+     O                         OTHDA     67                               CLE172
+     O                    30 60INAMT     85 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 60INAMT     85 '   ,   ,   , 0 . '           CLE172
+     O                    32 60INAMT     85 '  ,   ,   , 0 .  '           CLE172
+     O                    33 60INAMT     85 ' ,   ,   , 0 .   '           CLE172
+     O                    30 61OTAMT    130 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 61OTAMT    130 '   ,   ,   , 0 . '           CLE172
+     O                    32 61OTAMT    130 '  ,   ,   , 0 .  '           CLE172
+     O                    33 61OTAMT    130 ' ,   ,   , 0 .   '           CLE172
+      *                                                                   CLE172
+     O        D  1     71N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O                       60WINAMT    83 '  ,   ,   , 0 .  '           CLE172
+     O                       61WOTAMT   130 '  ,   ,   , 0 .  '           CLE172
+     O        D  1     82N41 88                                           CLE172
+     O                         CRNM      20                               CLE172
+     O                         CTWN      31                               CLE172
+     O                                   34 'FF'                          CLE172
+     O                         TNBR      40                               CLE172
+     O                         EDATA     57                               CLE172
+     O                    30 60EAMT      85 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 60EAMT      85 '   ,   ,   , 0 . '           CLE172
+     O                    32 60EAMT      85 '  ,   ,   , 0 .  '           CLE172
+     O                    33 60EAMT      85 ' ,   ,   , 0 .   '           CLE172
+     O                    30 61EAMT     130 ' ,   ,   ,   , 0 '           CLE172
+     O                    31 61EAMT     130 '   ,   ,   , 0 . '           CLE172
+     O                    32 61EAMT     130 '  ,   ,   , 0 .  '           CLE172
+     O                    33 61EAMT     130 ' ,   ,   , 0 .   '           CLE172
+      *                                                                   CLE172
+     O        D  1     82N41                                              CLE172
+     O       AND       29 39 88                                           CLE172
+     O                       60WEAMT     83 '  ,   ,   , 0 .  '           CLE172
+     O                       61WEAMT    130 '  ,   ,   , 0 .  '           CLE172
+      *                                                                   CLE172
+     O        D  1     27N41 88                                           CLE172
+     O       OR  1     28N41 88                                           CLE172
+     O                       75          73 '* OVERDUE *    '             CLE172
+     O                       76          73 '* APPROXIMATE *'             CLE172
+     O        D  1     02N41 88                                           CLE172
+     O       OR  1     03N41 88                                           CLE172
+     O       OR  1     13N41 88                                           CLE172
+     O       OR  1     15N41 88                                           CLE172
+     O       OR  1     26N41 88                                           CLE172
+     O       OR  1     27N41 88                                           CLE172
+     O       OR  1     28N41 88                                           CLE172
+     O                       03          34 'D/D'                         CLE172
+     O                       03DDNO      41                               CLE172
+     O        T 22     LR U7                                              CLE172
+     O       AND       58 88                                              CLE172
+     O                                   22 'REFERENCE GL0551'            CLE172
+     O                                   62 'PRINT TERMINATED, '          CLE172
+     O                                   80 'DATABASE IN ERROR'           CLE172
+     O        T 3      L2 58N52                                           CLE172
+     O       AND       88                                                 CLE172
+     O                                   66 '*** END OF REPORT FOR'       CLE172
+     O                                   77 ' BRANCH ***'                 CLE172
      OGL0551AUT  203   LR                                                 E22608
      O                                   24 'REFERENCE GL0551AU'          E22608
      O                         BJURPT    89

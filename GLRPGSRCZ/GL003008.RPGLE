@@ -1,111 +1,156 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas GL RSACMTPD Replication Program (I/C)')
+/*S*D ***RPGBASEBNC****************************************************                     BUG27914
+/*STD *  RPGBASEBNC                                                   *            BUG27914 BUG28163
+/*EXI *  TEXT('Midas GL CLEARPD Replication Program')                 *
       *****************************************************************
       *                                                               *
-      *  Midas - Dealing Module                                       *
+      *  Midas - General Ledger Module                                *
       *                                                               *
-      *  GL003008 -Midas RSACMTPD Replication Program (I/C)           *
+      *  GL003005 - Midas CLEARPD Replication Program                 *
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG28163           Date 05Oct10               *
+      *                 BUG27914           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP203  *CREATE    Date 02Mar10               *
+      *                 CAP203  *CREATE    Date 02Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
+      *  BUG28163 - Forward movements does not appear on PABE         *
+      *             (Recompile due to GPCLEARPD reinstatement)        *
+      *  BUG27914 - RAME Design Changes                               *
       *  CAP203 - Teller Related APIs - Account Movements             *
       *                                                               *
       *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+
+     FSDBRCHL1  IF   E           K DISK
+     FCLEAR1    IF   E           K DISK
+     F                                     RENAME(APOSTPDF:CLEAR1DF)
+
+      *****************************************************************
       /EJECT
       *****************************************************************
+
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
-      ** Data structure for Midas GL Account movements
-     D RSACMT        E DS                  EXTNAME(RSACMTPD)
- 
-     D PARM1           DS
-     D  PFLNAME                1     10
-     D  MBRNAME               21     30
-     D  TRGEVENT              31     31
-     D  BOFF                  49     52B 0
-     D  BLEN                  53     56B 0
-     D  AOFF                  65     68B 0
-     D  ALEN                  69     72B 0
-     D  EntryData            117  10117A
- 
-     D PARM2           DS
-     D  LENG                   1      4B 0
- 
+
+      ** Data structure for Midas GL Items in Clearing Detail file
+     D CLEAR         E DS                  EXTNAME(CLEARPD)
+
       ** +--------------------------------------+
-      ** ¦  Declared variables                  ¦
-      ** ¦  ==================                  ¦
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
-     D @RUN            S              1
-     D OFFSET          S              5  0
- 
+
+     D MODE            S              1A
+     D BRCH            S              3A
+     D WRUN            S              1A
       *****************************************************************
       /EJECT
       *****************************************************************
-      ** +--- Start of Main processing -------------------------------+
-      ** ¦                                                            ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR  ¦
-      ** ¦ is executed at program activation.                         ¦
-      ** ¦                                                            ¦
-      ** +------------------------------------------------------------+
- 
-     C     AOFF          ADD       1             OFFSET
-     C     ALEN          SUBST     PARM1:OFFSET  RSACMT
- 
-     C                   CALL      'GP003008'
-     C                   PARM                    RSACMT
- 
+
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+
+     C     *LOVAL        SETLL     SDBRCHL1
+     C                   READ      SDBRCHL1
+     C                   DOW       NOT %EOF(SDBRCHL1)
+      *
+      ** Delete all records in global file whose branch code
+      ** is equal to the current branch code
+      *
+     C                   CALL      'GP003005'
+     C                   PARM      'D'           MODE
+     C                   PARM      A8BRCD        BRCH
+     C                   PARM      *BLANKS       CLEAR
+      *
+      ** Read through zone file CLEARPD whose branch code
+      ** is equal to the current branch code
+      *
+     C     BRCH          SETLL     CLEAR1DF
+     C     BRCH          READE     CLEAR1DF
+     C                   DOW       NOT %EOF(CLEAR1)
+
+     C                   CALL      'GP003005'
+     C                   PARM      'I'           MODE
+     C                   PARM      A8BRCD        BRCH
+     C                   PARM                    CLEAR
+
+     C                   MOVEL     *BLANKS       CLEAR
+     C     BRCH          READE     CLEAR1DF
+     C                   ENDDO
+
+     C                   READ      SDBRCHL1
+     C                   ENDDO
+
      C                   EVAL      *INLR = *ON
- 
-      *****************************************************************
+
+      *********************************************************************
       /EJECT
-      *****************************************************************
-      *                                                               *
-      *  *INZSR - Program Initialisation routine                      *
-      *                                                               *
-      *****************************************************************
- 
-     C     *INZSR        BEGSR
- 
-     C     *ENTRY        PLIST
-     C                   PARM                    PARM1
-     C                   PARM                    PARM2
- 
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  *PSSR - Program Exception Subroutine.                        *
-      *                                                               *
-      *****************************************************************
+      *********************************************************************
+      *                                                                   *
+      *  *PSSR - Program Exception Error Routine                          *
+      *                                                                   *
+      *********************************************************************
+
      C     *PSSR         BEGSR
- 
-     C     @RUN          IFEQ      *BLANK
- 
-     C                   MOVE      'Y'           @RUN
+
+     C                   IF        WRUN = *BLANK
+     C                   EVAL      WRUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
-     C                   DUMP
- 
-     C                   ENDIF
- 
      C                   RETURN
- 
+
      C                   ENDSR
-      *****************************************************************
+
+      ********************************************************************

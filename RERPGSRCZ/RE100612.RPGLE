@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 08Oct07               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 03Mar10               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -56,7 +59,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FGLACBTL0  IF   E           K DISK    INFSR(*PSSR)
      FRECMLCL3  IF   E           K DISK    INFSR(*PSSR)
      F***ACPO1**   IF   F  400    18AIDISK    KEYLOC(2) USROPN                                CGL029
@@ -73,17 +76,17 @@
      F                                     PREFIX(U_)                           216421
      FRE100612P1O    E             PRINTER INFSR(*PSSR) USROPN
      F                                     INFDS(SPOOL1)
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
- 
+
      D I_CACD          S             10  0                                                    CGL029
      D I_PACD          S             10  0                                                    CGL029
- 
+
       * Key to A/c postings file
      D                 DS
      D***ACPOK**                 1     18                                                     CGL029
@@ -97,47 +100,47 @@
      D  ACD                   10     19  0                                                    CGL029
      D  ASN                   20     21  0                                                    CGL029
      D  BRC                   22     24                                                       CGL029
- 
- 
+
+
       * Input Entry
      D I_ENTRY       E DS                  EXTNAME(APOSTPD)
      D                                     PREFIX(E_)
- 
- 
+
+
      D #_INF           S             70    DIM(6)  CTDATA PERRCD(1)
- 
- 
+
+
      D                 DS
      D INFTXT                  1     34
      D INFLNK                 15     24
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Currency Details
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs
- 
- 
+
+
       ** File Information Data Structure for RE100612P1
      D SPOOL1          DS
      D  PSFile1               83     92
      D  PSFNum1              123    124B 0
- 
- 
+
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PLevel          S              1
      D PEnty           S              3
      D ZSnum           S              6  0
      D ZSerr           S              1
- 
- 
+
+
      I***ACPO1     NS                                                                         CAP204
      IGLACPML0  NS                                                                            CAP204
      I                                  1  400  INREC
- 
+
      IRSACMTPO      01
      I              PTDT                        E_PSTD
      I              VUDT                        E_VALD
@@ -158,14 +161,14 @@
      I              XRFN                        E_XRFN
      I              NRTC                        ZZNRTC
      IAPOSTPDF      03
- 
- 
+
+
       * If end requested
       *  Call zero-balancing entry generation in 'end' mode
       *  Produce end of report
       *  Close files
       *  Do last return
- 
+
      C     X_OPTN        IFEQ      '*END   '
      C     PgmEnded      IFNE      'Y'
      C                   EXSR      ZEROBAL_EG
@@ -181,20 +184,20 @@
      C                   ENDIF
      C                   RETURN
      C                   ENDIF
- 
+
       * Ignore this run code
- 
+
      C                   MOVEL     *BLANK        IgnoreThisRun    15
      C                   EVAL      IgnoreThisRun = '*IGNORE' + I_MODE
      C                                             + I_SWP_TOP
- 
+
       * Zeroize today's dr totals
- 
+
      C                   Z-ADD     *zero         O_TVDR
      C                   Z-ADD     *zero         O_TCDR
- 
+
       * If required, determine today's dr totals
- 
+
      C                   MOVE      'N'           I_Max_Dr_Excd
      C     I_MODE        IFEQ      '1  '
      C     I_MODE        OREQ      '5  '
@@ -205,31 +208,31 @@
      C                   EXSR      DET_DR_TOTS
      C                   ENDIF
      C                   ENDIF
- 
+
       * Source a/c ID ( = Child a/c ID)
- 
+
      C                   MOVEL     I_CBRC        BRC
      C                   MOVEL     I_CCUS        CUS
      C                   MOVEL     I_CCCY        CCY
      C                   MOVEL     I_CACD        ACD
      C                   MOVEL     I_CASN        ASN
- 
+
       * If new currency, access currency
- 
+
      C     CCY           IFNE      L_CCY
      C                   MOVEL     CCY           L_CCY             3
      C                   EXSR      ACS_CURR
      C                   ENDIF
- 
+
       * Zeroize count of entries processed
       * and initialize 'a/c reported' indicator
- 
+
      C                   Z-ADD     0             CE                5 0
      C                   MOVEL     'N'           AC_Reported       1
- 
+
       * If mode = new a/c associations, daily, or daily post capitalization
       *   Access opening ledger and cleared balance for child a/c
- 
+
      C     I_MODE        IFEQ      'ASC'
      C     I_MODE        OREQ      '1  '
      C     I_MODE        OREQ      '1PC'
@@ -239,25 +242,25 @@
      C                   Z-ADD     CLBL          I_CCLBL
      C                   ENDIF
      C                   ENDIF
- 
+
       * If this is the new a/c associations run of this function
       * and 'Sweep cleared balance on association date' = 'Y'
       * and the account's opening cleared balance <> 0
       *   Check if linked today
       *   If so, sweep the cleared balance value today
       *          and report the source account
- 
+
      C                   MOVEL     'N'           CLBLSwept         1
      C     I_MODE        IFEQ      'ASC'
      C     I_SCBD        ANDEQ     'Y'
- 
+
      C     I_CCLBL       IFNE      *ZERO
      C     I_SWP_TOP     ANDEQ     'B'
      C     I_CCLBL       ORLT      *ZERO
      C     I_SWP_TOP     ANDEQ     'S'
      C     I_CCLBL       ORGT      *ZERO
      C     I_SWP_TOP     ANDEQ     'T'
- 
+
      C     RECMLCK       CHAIN     RECMLCL3                           60        *
      C     *IN60         IFEQ      '0'
      C                   EXSR      SWP_CLBL
@@ -266,19 +269,19 @@
      C                   EXSR      REP_SACCNT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read first child a/c entry
- 
+
      C     I_MODE        IFEQ      'I/C'
      C     RSACMTK       SETLL     RSACMTL6
      C                   ELSE
      C*****ACPOK         SETLL     ACPO1                                                      CAP204
      C     ACPOK         SETLL     GLACPML0                                                   CAP204
      C                   ENDIF
- 
+
      C                   EXSR      READ_ENTRY
      C  N60              Z-ADD     E_VALD        VALD              5 0
       * Deferred posting must not zero balance                                  214360
@@ -288,15 +291,15 @@
      C     I_CCAT        ANDEQ     'T'                                          216421
      C                   SETON                                            60    216421
      C                   ENDIF                                                  216421
- 
- 
+
+
       * Do until more more child a/c entries are read
- 
+
      C     *IN60         DOWEQ     '0'
- 
+
       * If the entry's value date is beyond the forward value date
       *   Write to the cash management exception file
- 
+
      C     E_VALD        IFGT      I_FVDT
      C     BJDNWD        ANDGT     I_FVDT
      C                   EVAL      I_EXCP = 'ENTRY NOT ZERO BALANCED'
@@ -306,10 +309,10 @@
      C                   EXSR      WRT_CMX
      C                   ELSE                                                   216421
      C*******************ENDIF                                                  216421
- 
+
       * If the entry's value date is before the back value date
       *   Write to the cash management exception file
- 
+
      C     E_VALD        IFLT      I_BVDT
      C                   EVAL      I_EXCP = 'VALUE DATE OF ENTRY CHANGED'
      C                                      + ' FOR ZERO BALANCING'
@@ -319,43 +322,43 @@
      C                   EXSR      WRT_CMX
      C                   ENDIF
      C                   ENDIF                                                  216421
- 
+
       * If the entry's value date is prior to
       * or equal to the event control date
       * and entry not to be ignored
       * or if its value date is prior to
       * or equal to the forward value date
       * and entry not to be ignored
- 
+
      C     E_VALD        IFLE      I_EvtCtlDat
      C     E_OTRF        ANDNE     IgnoreEveryRun
      C     E_OTRF        ANDNE     IgnoreThisRun
      C     E_VALD        ORLE      I_FVDT
      C     E_OTRF        ANDNE     IgnoreEveryRun
      C     E_OTRF        ANDNE     IgnoreThisRun
- 
+
       * If a/c not reported yet
       *  Report the source account
- 
+
      C     AC_Reported   IFNE      'Y'
      C                   EXSR      REP_SACCNT
      C                   ENDIF
- 
+
       * If the entry's value date is prior to the back value date
       *  its value date is set to the back value date
- 
+
      C     E_VALD        IFLT      I_BVDT
      C                   Z-ADD     I_BVDT        E_VALD
      C                   Z-ADD     I_BVDT        VALD
      C                   ENDIF
- 
+
       * On change of value date
       *  If top a/c zero balancing in COB, adjust totals for unmatched 101s     216421
       *  Do net or gross zero balancing entry generation
       *  Report date total
- 
+
      C     E_VALD        IFNE      VALD
- 
+
      C     I_CCAT        IFEQ      'T'                                          216421
      C                   IF        I_MODE = '1  ' OR I_MODE = '1PC'             216421
      C                             OR  I_MODE = '5  ' OR I_MODE = '5PC'         216421
@@ -368,14 +371,14 @@
      C                   EXSR      GROSS_EG
      C                   ENDIF
      C                   EXSR      REP_DATTOT
- 
+
       * Next value date
- 
+
      C                   Z-ADD     E_VALD        VALD
      C                   ENDIF
- 
+
       * Accumulate value date, value date debit and value date credit totals
- 
+
      C     E_DRCR        IFEQ      0
      C                   ADD       E_PSTA        NET_TOTAL
      C     E_PSTD        IFEQ      BJRDNB                                       212899
@@ -387,28 +390,28 @@
      C                   SUB       E_PSTA        CR_TOTAL
      C                   ENDIF                                                  212899
      C                   ENDIF
- 
+
       * Report Entry
- 
+
      C                   EXSR      REP_ENTRY
- 
+
       * Increment count of entries processed
- 
+
      C                   ADD       1             CE
- 
+
      C                   ENDIF
- 
+
       * Read next child a/c entry
- 
+
      C                   EXSR      READ_ENTRY
- 
+
      C                   ENDDO
- 
+
       * If entries processed
       *  If top a/c zero balancing in COB, adjust totals for unmatched 101s     216421
       *  Do net or gross zero balancing entry generation
       *  Report date total
- 
+
      C     CE            IFNE      0
      C     I_CCAT        IFEQ      'T'                                          216421
      C                   IF        I_MODE = '1  ' OR I_MODE = '1PC'             216421
@@ -423,7 +426,7 @@
      C                   ENDIF
      C                   EXSR      REP_DATTOT
      C                   ENDIF
- 
+
       * If the daily post run of this function
       * and a target balance is defined
       *  Do target balancing entry generation
@@ -431,11 +434,11 @@
       *    Report the source account
       *  Report target balancing
       *  Increment count of entries processed
- 
+
      C     I_MODE        IFEQ      '1  '
      C     I_MODE        OREQ      '1PC'                                        214360
      C*****I_CCAT********ANDEQ     'T'                                   214360 217028
- 
+
      C     I_TGBL        IFNE      *ZERO
      C     I_SWP_TOP     ANDEQ     'B'
      C     I_TGBL        ORGT      *ZERO
@@ -450,29 +453,29 @@
      C                   EXSR      REP_TRGBAL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * If mode signifies that this is being run in input cycle
       * and a/c not reported yet
       *    Report the source account
- 
+
      C     I_MODE        IFEQ      'I/C'
      C     AC_Reported   ANDNE     'Y'
      C                   EXSR      REP_SACCNT
      C                   ENDIF
- 
- 
+
+
      C                   RETURN
- 
+
       /SPACE 5
       ********************************************************************
       * Read an entry
       ********************************************************************
      C     READ_ENTRY    BEGSR
- 
+
      C     I_MODE        IFEQ      'I/C'
- 
+
      C                   SETOFF                                       010203
      C     RSACMTK       READE     RSACMTL6                               60    *
      C  N03              Z-ADD     BJRDNB        E_PSTD                         212899
@@ -480,9 +483,9 @@
      C  N03E_PNAR        IFEQ      *BLANK
      C                   EVAL      E_PNAR = E_TRYP + ' ' + E_TNMR
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C*****ACPOK         READE     ACPO1                                  60    *             CAP204
      C     ACPOK         READE     GLACPML0                               60    *             CAP204
      C  N60              MOVEL     INREC         I_ENTRY
@@ -493,9 +496,9 @@
      C     ACPOK         READE     GLACPML0                               60    *             CAP204
      C  N60              MOVEL     INREC         I_ENTRY
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -503,9 +506,9 @@
       * Determine today's dr totals
       ********************************************************************
      C     DET_DR_TOTS   BEGSR
- 
+
      C                   CALLB     'RE100616'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
@@ -522,12 +525,12 @@
      C**********         PARM                    I_CACD            4 0                        CGL029
      C                   PARM                    I_CACD                                       CGL029
      C                   PARM                    I_CASN            2 0
- 
+
       * Maximum Debit Value in a Day
       * Maximum Debit Count in a Day
      C                   PARM                    I_MDVD           15 0
      C                   PARM                    I_MDCD            3 0
- 
+
       * OUTPUTS
       * Maximum Debit Value/Debit Count in a Day Exceeded
      C                   PARM                    I_Max_Dr_Excd     1
@@ -535,14 +538,14 @@
       * Today's total dr count
      C                   PARM                    O_TVDR           15 0
      C                   PARM                    O_TCDR            3 0
- 
+
       * End if error occurred in module
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN DETERMINE DEBIT TOTALS'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -550,10 +553,10 @@
       * Sweep the cleared balance value today
       ********************************************************************
      C     SWP_CLBL      BEGSR
- 
+
       * Posting Amount
       * Child A/c Debit/Credit ind
- 
+
      C     I_CCLBL       IFGT      0
      C                   Z-ADD     I_CCLBL       I_PSTA
      C                   MOVEL     'C'           I_CADC
@@ -561,25 +564,25 @@
      C                   Z-SUB     I_CCLBL       I_PSTA
      C                   MOVEL     'D'           I_CADC
      C                   ENDIF
- 
+
       * Value date
      C                   Z-ADD     BJRDNB        I_VALD
- 
+
       * Sweep Description
      C                   EVAL      I_SDES = 'ZERO BALANCE'
- 
+
       * Sweep Type
      C                   MOVEL     'Z'           I_STYP
- 
+
       * Target Balance
      C                   MOVEL     'N'           I_TBAL
- 
+
       * Cleared Bal Sweep on Assoc Date
      C                   MOVEL     'Y'           I_CBSA
- 
+
       * Entry generation
      C                   EXSR      ZEROBAL_EG
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -587,10 +590,10 @@
       * Net zero balancing entry generation
       ********************************************************************
      C     NET_EG        BEGSR
- 
+
       * Posting Amount
       * Child A/c Debit/Credit ind
- 
+
      C     NET_TOTAL     IFGT      0
      C                   Z-ADD     NET_TOTAL     I_PSTA
      C                   MOVEL     'C'           I_CADC
@@ -598,28 +601,28 @@
      C                   Z-SUB     NET_TOTAL     I_PSTA
      C                   MOVEL     'D'           I_CADC
      C                   ENDIF
- 
+
       * Value date
      C                   Z-ADD     VALD          I_VALD
- 
+
       * Sweep Description
      C                   EVAL      I_SDES = 'ZERO BALANCE'
- 
+
       * Sweep Type
      C                   MOVEL     'Z'           I_STYP
- 
+
       * Target Balance
      C                   MOVEL     'N'           I_TBAL
- 
+
       * Cleared Bal Sweep on Assoc Date
      C                   MOVEL     'N'           I_CBSA
- 
+
       * Entry generation
      C     NET_TOTAL     IFNE      0
      C                   EXSR      ZEROBAL_EG
      C                   MOVEL     O_EntriesGen  NET_EntriesGen
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -627,28 +630,28 @@
       * Gross zero balancing entry generation
       ********************************************************************
      C     GROSS_EG      BEGSR
- 
+
       * Posting Amount
       * Child A/c Debit/Credit ind
- 
+
      C                   Z-ADD     DR_TOTAL      I_PSTA
      C                   MOVEL     'C'           I_CADC
- 
+
       * Value date
      C                   Z-ADD     VALD          I_VALD
- 
+
       * Sweep Description
      C                   EVAL      I_SDES = 'ZERO BALANCE'
- 
+
       * Sweep Type
      C                   MOVEL     'Z'           I_STYP
- 
+
       * Target Balance
      C                   MOVEL     'N'           I_TBAL
- 
+
       * Cleared Bal Sweep on Assoc Date
      C                   MOVEL     'N'           I_CBSA
- 
+
       * Entry generation
      C                   Z-SUB     CR_TOTAL      W_PSTA           13 0
      C     DR_TOTAL      IFNE      0
@@ -656,28 +659,28 @@
      C                   EXSR      ZEROBAL_EG
      C                   MOVEL     O_EntriesGen  DR_EntriesGen
      C                   ENDIF
- 
+
       * Posting Amount
       * Child A/c Debit/Credit ind
- 
+
      C                   Z-SUB     CR_TOTAL      I_PSTA
      C                   MOVEL     'D'           I_CADC
- 
+
       * Value date
      C                   Z-ADD     VALD          I_VALD
- 
+
       * Sweep Description
      C                   EVAL      I_SDES = 'ZERO BALANCE'
- 
+
       * Sweep Type
      C                   MOVEL     'Z'           I_STYP
- 
+
       * Target Balance
      C                   MOVEL     'N'           I_TBAL
- 
+
       * Cleared Bal Sweep on Assoc Date
      C                   MOVEL     'N'           I_CBSA
- 
+
       * Entry generation
      C                   Z-SUB     DR_TOTAL      W_PSTA           13 0
      C     CR_TOTAL      IFNE      0
@@ -685,7 +688,7 @@
      C                   EXSR      ZEROBAL_EG
      C                   MOVEL     O_EntriesGen  CR_EntriesGen
      C                   ENDIF
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -693,10 +696,10 @@
       * Target balancing entry generation
       ********************************************************************
      C     TRGBAL_EG     BEGSR
- 
+
       * Posting Amount
       * Child A/c Debit/Credit ind
- 
+
      C     I_TGBL        IFGT      0
      C                   Z-ADD     I_TGBL        I_PSTA
      C                   MOVEL     'D'           I_CADC
@@ -704,25 +707,25 @@
      C                   Z-SUB     I_TGBL        I_PSTA
      C                   MOVEL     'C'           I_CADC
      C                   ENDIF
- 
+
       * Value date
      C                   Z-ADD     BJDNWD        I_VALD
- 
+
       * Sweep Description
      C                   EVAL      I_SDES = 'TARGET BALANCE'
- 
+
       * Sweep Type
      C                   MOVEL     'Z'           I_STYP
- 
+
       * Target Balance
      C                   MOVEL     'Y'           I_TBAL
- 
+
       * Cleared Bal Sweep on Assoc Date
      C                   MOVEL     'N'           I_CBSA
- 
+
       * Entry generation
      C                   EXSR      ZEROBAL_EG
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -730,16 +733,16 @@
       * Zero balancing entry generation
       ********************************************************************
      C     ZEROBAL_EG    BEGSR
- 
+
      C                   CALLB     'RE100608'
- 
+
       * Return code
       * Error Message
       * Option
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
      C                   PARM                    X_OPTN
- 
+
       * INPUTS
       * Mode
      C                   PARM                    I_MODE            3
@@ -819,7 +822,7 @@
      C                   PARM                    I_FLFS           15 0
      C                   PARM                    I_TYPT            5
      C                   PARM                    I_TYPS            5
- 
+
       * Maximum Debit Value/Debit Count in a Day Exceeded
      C                   PARM                    I_Max_Dr_Excd     1
       * Destination
@@ -894,9 +897,9 @@
      C                   PARM                    I_TopOverDft     15 0
       * Entries generated
      C                   PARM                    O_EntriesGen      1
- 
+
       * End if error occurred in module
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN ENTRY GENERATION'
      C                   EXSR      *PSSR
@@ -905,7 +908,7 @@
      C     O_EntriesGen  IFEQ      'Y'                                          214360
      C                   MOVEL     'Y'           O_Entries                      214360
      C                   ENDIF                                                  214360
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -913,14 +916,14 @@
       * Write to the cash management exception file
       ********************************************************************
      C     WRT_CMX       BEGSR
- 
+
      C                   CALLB     'REWRTCMX'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Hierarchy ID
       * Hierarchy Shortname
@@ -940,12 +943,12 @@
       * Time
      C                   PARM                    I_MODE            3
      C                   PARM                    I_TIME            6
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN WRITE TO RECMEXPD'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5                                                                  216421
@@ -1011,14 +1014,14 @@
       * Report the source account
       ********************************************************************
      C     REP_SACCNT    BEGSR
- 
+
       * Show retail a/c numbers
- 
+
      C     I_CRNO        COMP      0                                  3535      *
- 
+
       * Edit ledger balance
       * and  ledger balance dr/cr indicator
- 
+
      C     I_CLDBL       IFGT      0
      C                   Z-ADD     I_CLDBL       w_AMT            15 0
      C                   MOVEL     'DR'          R_LDRCR
@@ -1026,15 +1029,15 @@
      C                   Z-SUB     I_CLDBL       w_AMT
      C                   MOVEL     'CR'          R_LDRCR
      C                   ENDIF
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_LDBL
- 
+
       * Edit cleared balance
       * and  cleared balance dr/cr indicator
- 
+
      C     I_CCLBL       IFGT      0
      C                   Z-ADD     I_CCLBL       w_AMT
      C                   MOVEL     'DR'          R_CDRCR
@@ -1042,20 +1045,20 @@
      C                   Z-SUB     I_CCLBL       w_AMT
      C                   MOVEL     'CR'          R_CDRCR
      C                   ENDIF
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_CLBL
- 
+
      C     CLBLSwept     COMP      'Y'                                    40    *
- 
+
      C                   Z-ADD     4             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     SOURCE
- 
+
      C                   MOVEL     'Y'           AC_Reported
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1063,30 +1066,30 @@
       * Report entry
       ********************************************************************
      C     REP_ENTRY     BEGSR
- 
+
       * Edit information text
- 
+
      C     E_XRFI        IFEQ      'ZS '
      C                   MOVEL     E_OTST        INFLNK
      C                   ELSE
      C                   MOVEL     *BLANK        INFLNK
      C                   ENDIF
- 
+
       * Edit value date of entry
- 
+
      C                   Z-ADD     E_VALD        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZADATE        R_VALD
- 
+
       * Edit posting amount of entry
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      E_PSTA        ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_PSTA
- 
+
       * Edit posting dr/cr indicator
- 
+
      C     E_DRCR        IFEQ      0
      C                   MOVEL     'DR'          R_DRCR
      C                   ELSE
@@ -1097,11 +1100,11 @@
       * Source of posting                                                       216421
      C                   MOVEL     E_PNAR        R_PNAR                         216421
      C                   MOVEL     E_SPOS        R_SPOS                         216421
- 
+
      C                   Z-ADD     1             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     ENTRY
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5                                                                  216421
@@ -1152,14 +1155,14 @@
       * Report date total
       ********************************************************************
      C     REP_DATTOT    BEGSR
- 
+
       * NET
- 
+
      C     I_ZBNG        IFEQ      'N'
- 
+
       * Edit posting total
       * and  posting total dr/cr indicator
- 
+
      C     NET_TOTAL     IFGT      0
      C                   Z-ADD     NET_TOTAL     w_AMT
      C                   MOVEL     'CR'          R_TDC
@@ -1167,60 +1170,60 @@
      C                   Z-SUB     NET_TOTAL     w_AMT
      C                   MOVEL     'DR'          R_TDC
      C                   ENDIF
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_TOT
- 
+
      C                   Z-ADD     3             CHLINE            3 0
      C                   EXSR      PAG
      C     NET_EntriesGenCOMP      'Y'                                    45
      C                   WRITE     NDATTOT
- 
+
      C                   ELSE
       * GROSS
- 
+
       * Edit debit posting total
       * and  debit posting total dr/cr indicator
- 
+
      C                   Z-ADD     DR_TOTAL      w_AMT
      C                   MOVEL     'CR'          R_DRTDC
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_DRTOT
- 
+
       * Edit credit posting total
       * and  credit posting total dr/cr indicator
- 
+
      C                   Z-SUB     CR_TOTAL      w_AMT
      C                   MOVEL     'DR'          R_CRTDC
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_CRTOT
- 
+
      C                   Z-ADD     4             CHLINE            3 0
      C                   EXSR      PAG
      C     CR_EntriesGen COMP      'Y'                                    45
      C     DR_EntriesGen COMP      'Y'                                    46
      C                   WRITE     GDATTOT
- 
+
      C                   ENDIF
- 
+
       * Zeroize totals
- 
+
      C                   Z-ADD     *ZERO         NET_TOTAL        15 0
      C                   Z-ADD     *ZERO         DR_TOTAL         15 0
      C                   Z-ADD     *ZERO         CR_TOTAL         15 0
- 
+
       * Initialize entries generated indicators
- 
+
      C                   MOVEL     'N'           NET_EntriesGen    1
      C                   MOVEL     'N'           DR_EntriesGen     1
      C                   MOVEL     'N'           CR_EntriesGen     1
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1228,10 +1231,10 @@
       * Report target balance
       ********************************************************************
      C     REP_TRGBAL    BEGSR
- 
+
       * Edit target balance
       * and  target balance dr/cr indicator
- 
+
      C     I_TGBL        IFGT      0
      C                   Z-ADD     I_TGBL        w_AMT            15 0
      C                   MOVEL     'DR'          R_TDRCR
@@ -1239,16 +1242,16 @@
      C                   Z-SUB     I_TGBL        w_AMT
      C                   MOVEL     'CR'          R_TDRCR
      C                   ENDIF
- 
+
      C                   MOVE      *ZERO         ZFIELD
      C                   MOVE      w_AMT         ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        R_TGBL
- 
+
      C                   Z-ADD     2             CHLINE            3 0
      C                   EXSR      PAG
      C                   WRITE     TRGBAL
- 
+
      C                   ENDSR
       *******************************************************************
      C/SPACE 5
@@ -1256,13 +1259,13 @@
       * End of Report
       ********************************************************************
      C     END_OF_REP    BEGSR
- 
+
       * Output 'end of report'
- 
+
      C                   Z-ADD     3             CHLINE
      C                   EXSR      PAG
      C                   WRITE     ENDOFREP
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -1270,17 +1273,17 @@
       * Throw page headings (if required)
       ********************************************************************
      C     PAG           BEGSR
- 
+
       * Set time
      C                   TIME                    R_TIME
- 
+
      C                   ADD       CHLINE        LINENO
      C     LINENO        IFGT      59
      C                   ADD       1             PAGNUM
      C                   WRITE     PAGEHEAD
      C     6             ADD       CHLINE        LINENO            3 0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -1288,18 +1291,18 @@
       * Access a currency
       ********************************************************************
      C     ACS_CURR      BEGSR
- 
+
      C                   CALLB     'ZAACSCURR'
      C                   PARM                    CCY               3
      C                   PARM                    SDCURR
- 
+
       * Database error if currency not found
- 
+
      C     A6CYCD        IFEQ      *BLANK
      C                   EVAL      X_ERMS = 'BAD CCY CODE:' + CCY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1329,23 +1332,23 @@
       * Register P1 printer file with RCF
       ********************************************************************
      C     RCFP1         BEGSR
- 
+
      C                   EVAL      ZSnum = PSFNum1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM                    PEnty
      C                   PARM                    PSFile1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then end abnormally
- 
+
      C                   IF        ZSErr = 'Y'
      C                   EVAL      X_ERMS = 'Call to ZSFILE in error'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -1353,16 +1356,16 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Return code
       * Error Message
       * Option
      C                   PARM                    X_RTCD
      C                   PARM                    X_ERMS
      C                   PARM                    X_OPTN
- 
+
       * INPUTS
       * Mode
      C                   PARM                    I_MODE            3
@@ -1436,12 +1439,12 @@
      C                   PARM                    I_PNAR           30
       * Sweep/Top
      C                   PARM                    I_SWP_TOP         1
- 
+
       * Forward value date
       * Back value date
      C                   PARM                    I_FVDT            5 0
      C                   PARM                    I_BVDT            5 0
- 
+
       * Sweep capitalized interest
       * Sweep cleared balance on associaton date
       * Zero Balance - Net or Gross
@@ -1452,7 +1455,7 @@
      C                   PARM                    I_TGBL           15 0
       * Sweeping Holiday Convention                                             213196
      C                   PARM                    I_SHOC            1            213196
- 
+
       * Floor Limit for Top
       * Floor Limit for Sweep
       * Transaction Type - Top
@@ -1461,7 +1464,7 @@
      C                   PARM                    I_FLFS           15 0
      C                   PARM                    I_TYPT            5
      C                   PARM                    I_TYPS            5
- 
+
       * Maximum Debit Value in a Day
       * Maximum Debit Count in a Day
      C                   PARM                    I_MDVD           15 0
@@ -1520,10 +1523,10 @@
       * Top a/c overdraft
      C                   PARM                    I_TopBalance     15 0
      C                   PARM                    I_TopOverDft     15 0
- 
+
       * Event Control date
      C                   PARM                    I_EvtCtlDat       5 0
- 
+
       * OUTPUTS
       * Today's total dr value
       * Today's total dr count
@@ -1531,28 +1534,28 @@
      C                   PARM                    O_TCDR            3 0
       * Entries Y/N                                                             214360
      C                   PARM                    O_Entries         1            214360
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Edited Date of Next Working Day
- 
+
      C                   Z-ADD     BJDNWD        ZDAYNO
      C                   EXSR      ZDATE2
      C                   MOVEL     ZADATE        R_DNWD
- 
+
       **Day*prior*to*date*of*next*working*day****                               216421
       *******************************************                               216421
      C******JDNWD********SUB*******1*************DateNWDS1         5 0          216421
- 
+
       * Throw a page
- 
+
      C                   Z-ADD     99            LINENO
- 
+
       * Open files
      C                   OPEN      RE100612P1
      C     I_MODE        IFEQ      'I/C'
@@ -1561,12 +1564,12 @@
      C**********         OPEN      ACPO1                                                      CAP204
      C                   OPEN      GLACPML0                                                   CAP204
      C                   ENDIF
- 
+
       * Register P1 printer file with RCF
      C                   EXSR      RCFP1
- 
+
       * Set mode narrative printed on report
- 
+
      C                   SELECT
      C     I_MODE        WHENEQ    'ASC'
      C                   MOVEL     #_INF(1)      MODENARR
@@ -1581,19 +1584,19 @@
      C     I_MODE        WHENEQ    'I/C'
      C                   MOVEL     #_INF(6)      MODENARR
      C                   ENDSL
- 
+
       * Set requested time
      C                   MOVEL     I_TIME        R_RTIME
- 
+
       * Ignore every run code
- 
+
      C                   MOVEL     *BLANK        IgnoreEveryRun   15
      C                   EVAL      IgnoreEveryRun = '*IGNORE'
                                                                                 216421
      C                   MOVEL     'ZS '         ZSRFI             3            216421
- 
+
       * Key lists
- 
+
      C     GLACBLK       KLIST
      C                   KFLD                    CUS
      C                   KFLD                    CCY
@@ -1621,7 +1624,7 @@
      C     POSTK         KLIST                                                  216421
      C                   KFLD                    ZSRFI                          216421
      C                   KFLD                    I_IIXRFN                       216421
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5

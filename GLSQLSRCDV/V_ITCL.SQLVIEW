@@ -10,6 +10,7 @@
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
 /*       CSD103 - Libor Deregulation - General Section                         */
+/*                                                                             */
 /*******************************************************************************/
                                                                                 :
   CREATE VIEW                                                                   :
@@ -21,33 +22,20 @@
    TABLE1.CNUM,                                                                 :
    TABLE1.ACOD,                                                                 :
    TABLE1.ACSQ,                                                                 :
-   TABLE2.PTDT,                                                                 :
-   TABLE2.VUDT,                                                                 :
-   CASE WHEN TABLE2.CQNR = 0 THEN ''                                            :
-    ELSE CHAR(TABLE2.CQNR) END AS CQNR,                                         :
-   CASE WHEN TABLE2.NRTD = '' THEN                                              :
-    (CASE WHEN TABLE2.NRTC = '' THEN                                            :
-     (CASE WHEN TABLE3.ALDON = '' THEN                                          :
-      (CASE WHEN TABLE2.FUND = '' THEN TABLE2.TNMR                              :
-       ELSE TABLE2.FUND END)                                                    :
-      ELSE TABLE3.ALDON END)                                                    :
-     ELSE TABLE2.NRTC END)                                                      :
-    ELSE TABLE2.NRTD END AS NRTD,                                               :
-   CASE WHEN TABLE2.TNMR = '' THEN TABLE2.TRYP                                  :
-    ELSE SUBSTR(TABLE2.TNMR, 5, 2) END AS TRYP,                                 :
-   CASE WHEN SUBSTR(TABLE1.SPOS, 1, 2) = '' THEN ''                             :
-    ELSE SUBSTR(TABLE1.SPOS, 1, 3) END AS ABTCH,                                :
-   CASE WHEN TABLE2.DORC = 1 THEN (TABLE2.MVAM * -1)                            :
-    ELSE TABLE2.MVAM END AS MVAM                                                :
-  FROM APOSTPD TABLE1                                                           :
-  INNER JOIN RSACMTPD TABLE2 ON                                                 :
-   TABLE1.CCY  = TABLE2.CCYD AND                                                :
-   TABLE1.BRCA = TABLE2.BRCA AND                                                :
-   TABLE1.CNUM = TABLE2.CUSN AND                                                :
-   TABLE1.ACOD = TABLE2.ACDE AND                                                :
-   TABLE1.ACSQ = TABLE2.ASNC                                                    :
-  LEFT  JOIN SDNARRPD TABLE3 ON                                                 :
-   TABLE2.NRTC = TABLE3.ALNVCD;                                                 :
+   TABLE1.PSTD,                                                                 :
+   TABLE1.VALD,                                                                 :
+   CASE WHEN TABLE1.CHQN = 0 THEN ''                                            :
+    ELSE SUBSTR(CHAR(TABLE1.CHQN),1,8) END AS CHQN,                             :
+   TABLE1.PNAR,                                                                 :
+   TABLE1.TRAT,                                                                 :
+   CASE WHEN (SELECT COUNT(*) FROM SCSARDPD WHERE SARN = 'S01472') > 0 THEN     :
+     CASE WHEN SUBSTR(TABLE1.SPOS, 1, 2) = '' THEN ''                           :
+      ELSE SUBSTR(TABLE1.SPOS, 1, 3) END                                        :
+    ELSE '' END AS ABTCH,                                                       :
+   CONCAT(DEC(TABLE1.PSTA/100,13,2),                                            :
+    (CASE WHEN TABLE1.DRCR = 1 THEN 'CR'                                        :
+     ELSE 'DR' END)) AS PSTA                                                    :
+  FROM CLEARPD TABLE1;                                                          :
                                                                                 :
   LABEL ON TABLE V_ITCL IS 'Items in Clearing';                                 :
                                                                                 :

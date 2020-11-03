@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD057049           Date 02Nov20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +138,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1320,6 +1322,7 @@
       *  Processing for Authorises                                                           BUG4482
      C                   EVAL      IKINTR = HKINTR                                         MD037869A
      C                   EVAL      IKSPRD = HKSPRD                                         MD037869A
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   EXSR      ValidateTr                                                BUG4482
      C**********         EXSR      ValidateAc                                      BUG6164 MD037869A
      C                   EXSR      ValidateSt                                                BUG4482
@@ -3321,6 +3324,7 @@
      C                   EVAL      IKPOBN = *BLANKS                                           CSD027
      C                   EVAL      IKPOCN = *BLANKS                                           CSD027
      C                   Z-ADD     *ZERO         IKOMDT
+     C                   Z-ADD     *ZERO         IKRRAT                                     MD057049
 
       ** Have to clear the settlement data structure, or the packed numeric
       ** fields are not initialised correctly.
@@ -3533,6 +3537,7 @@
      C                   IF           DDACTN = 'D'
      C                             OR DDACTN = 'X'
      C                   MOVEL     DealFilFmt    ValidDeal
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   ENDIF
 
       * Set Valid file field(s) that are needed for all Action Codes

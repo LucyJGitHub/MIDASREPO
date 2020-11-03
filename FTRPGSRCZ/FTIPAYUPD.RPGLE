@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. HUT101             Date 12May20               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. MD020135           Date 03Jun20               *
+      *                 CSW220             Date 09Mar20               *
+      *                 HUT101             Date 12May20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -95,6 +97,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
+      *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD050405                             *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
       *           Payment Authorisation for Funds Transfer            *
@@ -857,6 +865,7 @@
      C     IPCHTP        IFEQ      'I'                                          193883
      C     PSJobName     ANDNE     'QZDASOINIT'                                               CAP084
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C                   MOVE      '*FRONT'      PModeX
      C                   ELSE
      C                   MOVE      *BLANKS       PModeX
@@ -1182,6 +1191,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
      C                   WRITE     INPAYQD0                             99                    257487
       *                                                                                       257487
@@ -1191,6 +1203,7 @@
      C                   Z-ADD     031           DBase                                        257487
      C                   EXSR      *PSSR                                                      257487
      C                   ENDIF                                                                257487
+     C                   ENDIF                                                              MD020135
       *****************************************************************               BUG4776 260326
       ****If*new*record*was*successfully*writen*to*INPAYDD,*add*new*record*to         BUG4776 260326
       ****FT*Payment*Reference*Control*file*-*FTPREFPD*****************               BUG4776 260326

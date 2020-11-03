@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD033110           Date 02Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. MD033110           Date 02Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 MD021097           Date 30Sep13               *
       *                 AR802337           Date 22Aug13               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  MD033110 - GPPOSNPD records not updated during COB for GL.   *
       *             Ensure that cob generated GL records will be      *
       *             processed and GPPOSNPD regenerated.               *
@@ -80,29 +84,29 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPTRAPL0  UF A E           K DISK    INFSR(*PSSR) USROPN  COMMIT(D_COM)
      F                                     RENAME(GOTRAPD0:GPTRAPD0)
      F                                     PREFIX(G)
      FGOTRAPPD  O    E           K DISK    INFSR(*PSSR)
      F                                     USROPN
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D***/COPY*ZACPYSRC,PSDS*************************************                   BUG2480 AR802337
                                                                                             AR802337
       ** Comment out PSDS, use QUSRJOBI instead                                             AR802337
                                                                                             AR802337
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
      D GT_TRAP       E DS                  EXTNAME(GPTRAPPD)
      D                                     PREFIX(G)
- 
- 
+
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Reservation ID dataarea                                                BUG2480
      D GPRESERVID      DS            15                                         BUG2480
      D  ReservID               1     15                                         BUG2480
@@ -112,7 +116,7 @@
      D MSGID                   9     15                                         BUG2480
      D REC             S            100                                         BUG2480
      D RECLEN          S              4B 0 INZ(100)                             BUG2480
- 
+
       *                                                                                     AR802337
       ** Parameters for QUSRJOBI                                                            AR802337
       *                                                                                     AR802337
@@ -126,9 +130,9 @@
      D WUpdate         S              1    INZ('Y')                                         BUG12798
                                                                                             BUG12798
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
- 
+
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
@@ -157,9 +161,9 @@
      C                   EVAL      ReservID = *BLANKS                           BUG2480
      C                   ENDIF                                                  BUG2480
      C                   ENDIF                                                  BUG2480
- 
+
       * Supply customer defaults (if required)
- 
+
      C     I#CUSTDEFLT   IFEQ      'Y'
      C                   EXSR      CUST_DEFAULT
      C                   ENDIF
@@ -173,9 +177,9 @@
      C                   MOVEL     T_TREF        T_TR6N                                      BUG3860
      C                   ENDIF                                                                CLE148
      C                   MOVEL     T_TREF        T_TR6A                                      BUG3860
- 
+
       * Update is either global or zonal. The latter arises in a COB.
- 
+
      C     I#LOC         IFEQ      'GLOB'
      C                   CLEAR                   GT_TRAP                                    BUG12798
      C     GPTRAPK       CHAIN     GPTRAPD0                           99
@@ -228,18 +232,18 @@
      C                   EVAL      T_GCOB = 'Y'
      C                   WRITE     GOTRAPD0
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       /SPACE 5
       ********************************************************************
       * Customer Defaults
       ********************************************************************
      C     CUST_DEFAULT  BEGSR
- 
+
       ** Get customer details
- 
+
      C                   MOVEL     T_CNUM        @KEY1
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
@@ -253,9 +257,9 @@
      C                   ENDIF
       * Customer branch
      C                   MOVEL     BBBRCD        T_CUBR
- 
+
       ** Get risk customer details
- 
+
      C     T_CNUM        IFNE      T_RCST
      C                   MOVEL     T_RCST        @KEY1
      C                   CALLB     'AOCUSTR0'
@@ -289,7 +293,7 @@
       *                                                                                     BUG11821
       * Risk Customer branch
      C                   MOVEL     BBBRCD        T_RCBR
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5                                                                              BUG11821
@@ -350,9 +354,9 @@ O     * Open for commit?
 O
 O    C                   CALL      'GPCOPN4COM'
 O    C                   PARM                    D_COM             1
- 
+
       * Open file
- 
+
      C     I#LOC         IFEQ      'GLOB'
      C                   OPEN      GPTRAPL0
      C                   ELSE
@@ -375,18 +379,19 @@ O    C                   PARM                    D_COM             1
      C**********                   OR PSJobName = 'GLC445'                           CAP207 AR802337
      C                   IF        JobName   = 'QZDASOINIT'                                 AR802337
      C                             OR JobName   = 'QSQSRVR'                                 AR802337
+     C                             OR JobName = 'QZDASSINIT'                               AR1088819
      C                             OR JobName   = 'GLC445'                                  AR802337
      C                   MOVE      'Y'           APTRANVU          1            BUG2480
      C                   ELSE                                                   BUG2480
      C                   MOVE      *BLANKS       APTRANVU                       BUG2480
      C                   ENDIF                                                  BUG2480
                                                                                 BUG2480
- 
+
       * Key list
- 
+
      C     GPTRAPK       KLIST
      C                   KFLD                    T_ID
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

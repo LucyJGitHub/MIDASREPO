@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260191A            Date 22May20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. 260191A            Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 03Apr16               *
       *                 CRE073             Date 06Dec10               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  260191A - Incorrect dividend position settlement generated.  *
       *           Correct the validation of action 'D'elete.          *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -644,6 +648,7 @@
       *                                                                                       CAP084
      C                             PSJobName <> 'QZDASOINIT'
      C                             AND PSJobName <> 'QSQSRVR'                                 247277
+     C                             AND PSJobName <> 'QZDASSINIT'                           AR1088819
      C                   MOVE      '*FRONT'      PMode
      C                   ELSE
      C                   MOVE      *BLANKS       PMode

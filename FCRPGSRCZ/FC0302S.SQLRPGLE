@@ -34,8 +34,9 @@
       * Standard RPG Creation PAR - standard functions  *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD057075           Date 30Oct20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -68,6 +69,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD057075 - User cannot select Periodic Reports on Periodic   *
+      *             Request Maintenance Screen                        *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -253,7 +256,8 @@
      D  XSARN        E                     EXTFLD(SARN)                                     MD055681
      D  XENABLD      E                     EXTFLD(ENABLD)                                   MD055681
      D*NullInds*       s              5i 0 dim(12)                                 MD055265 MD055681
-     D NullInds        s              5i 0 dim(13)                                          MD055681
+     D*NullInds*       s              5i 0 dim(13)                                 MD055681 MD057075
+     D NullInds        s              5i 0 dim(15)                                          MD057075
       /EJECT
      C********************************************************************S01314
       *                                                                   S01314

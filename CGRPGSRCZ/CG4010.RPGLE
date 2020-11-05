@@ -169,6 +169,9 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  MD057051 - DLC0400 00001 fails during COB.                   *
+      *           - Do not execute SR/CGSTAT when WSTAT is blanks as  *
+      *             it is only being populated when CGL031 is ON and  *
+      *             deal type is CD or TD.                            *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *

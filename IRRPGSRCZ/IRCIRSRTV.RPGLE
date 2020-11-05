@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD057061           Date 03Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -76,6 +77,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057061 - Serious Midas Error encountered in CIRS and SIRS  *
+      *             confirm complete.                                 *
+      *           - In SR/VALACE and SR/SRValAcX, only issue database *
+      *             error when extension is not present and ORED is   *
+      *             not equal to rundate                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -734,7 +740,8 @@
                                                                                               CLE025
      C                   IF        CLE025 = 'Y'                                               CLE025
      C     SDLNO         CHAIN     DLDLDGLM                           26                      CLE025
-     C                   IF        *IN26                                                      CLE025
+     C**********         IF        *IN26                                             CLE025 MD057061
+     C                   IF        *IN26 AND ORED <> BJRDNB                                 MD057061
      C     *LOCK         IN        LDA                                                        CLE025
      C                   EVAL      DBFILE = 'DLDLDGQD'                                        CLE025
      C                   EVAL      DBKEY = SDLNO                                              CLE025
@@ -928,7 +935,8 @@
                                                                                               CLE025
      C                   IF        CLE025 = 'Y'                                               CLE025
      C     SDLNO         CHAIN     DLDLDGLM                           26                      CLE025
-     C                   IF        *IN26                                                      CLE025
+     C**********         IF        *IN26                                             CLE025 MD057061
+     C                   IF        *IN26 AND ORED <> BJRDNB                                 MD057061
      C     *LOCK         IN        LDA                                                        CLE025
      C                   EVAL      DBFILE = 'DLDLDGQD'                                        CLE025
      C                   EVAL      DBKEY = SDLNO                                              CLE025

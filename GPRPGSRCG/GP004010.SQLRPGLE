@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD042109           Date 26Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. MD042109           Date 26Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 MD035820           Date 11May16               *
       *                 AR1097353          Date 26Mar13               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  MD042109 - Updates, amendments and deletes do not show on    *
       *             BFTC audit reports                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -567,6 +569,10 @@
      C     FUTYPE        WHENEQ    'T'                                                     AR1036626
      C**********         EVAL      RNAME=%TRIM(FNAMEPK) + ' (Teller)'            AR1036626 AR1037301
      C                   EVAL      RNAME=%TRIM(FUSRID) + ' (Teller)'                       AR1037301
+     C     FUTYPE        WHENEQ    'A'                                                      MD050405
+     C                   EVAL      RNAME=%TRIM(FUSRID) + ' (Central Admin)'                 MD050405
+     C     FUTYPE        WHENEQ    'I'                                                      MD050405
+     C                   EVAL      RNAME=%TRIM(FUSRID) + ' (Interface User)'                MD050405
      C                   ENDSL                                                             AR1036626
      C                   ENDIF                                                             AR1036626
                                                                                            AR1032564
@@ -845,7 +851,11 @@
      C**********         IF        ZDayNo1 = BJRDNB OR                                     AR1036892
      C**********                   ZDayNo2 = BJRDNB AND                                    AR1036892
      C**********                   ZDayNo1 = 0                                             AR1036892
-     C                   IF        ZDayNo2 = BJRDNB                                        AR1036892
+     C**********         IF        ZDayNo2 = BJRDNB                               AR1036892 MD050405
+                                                                                            MD050405
+      ** Print report based on today's date instead of Midas rundate                        MD050405
+                                                                                            MD050405
+     C                   IF        TmpDat02 = %DATE()                                       MD050405
 
       ** Change in User ID
 

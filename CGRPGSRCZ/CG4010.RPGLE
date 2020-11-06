@@ -10393,7 +10393,7 @@
       *                                                                                       CER069
      C                   ENDSL                                                                234381
       *                                                                                       234381
-     C                   ENDIF                                                                235126
+     C**********         ENDIF                                                       235126 MD057051
       *                                                                                       235126
       ** Evaluate Customer Tax Status                                                      BUG23799A
       *                                                                                    BUG23799A
@@ -10415,7 +10415,7 @@
      C                   ENDIF                                                             BUG23799A
       *                                                                                    BUG23799A
      C                   ADD       WNTAMT        ##TAXA                                       235126
-     C**********         ENDIF                                                     BUG23515 MD057051
+     C                   ENDIF                                                              BUG23515
      C                   ENDIF                                                                CGL031
       *
       ** If Tax value at Account level is 'A', this means the EU Tax                          CER069

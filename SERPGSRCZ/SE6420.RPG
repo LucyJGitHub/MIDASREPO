@@ -15,8 +15,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR637259           Date 16Oct20               *
+      *  Prev Amend No. 259024             Date 16Oct20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -58,6 +60,23 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR637259 - Previous Profit Period's Opening and Closing      *
+      *             balances are incorrect due to Safe Custody        *
+      *             postings with blank Account Section. Applied fix  *
+      *             133398 populate accordingly Account Section       *
+      *             field. (Child: AR637260)                          *
+      *           - Applied for MD-56851                              *
+      *  259024 - Applied fix 175766 and 164731 from DBA 3.           *
+      *         - Duplicate entries posted to Safe Custody P&L        *
+      *           account. Suppressed the generation of safe custody  *
+      *           fee accrued posting when the fee accrued is less    *
+      *           than the minimum charge commission. Removed sub-    *
+      *           routine MINCMP. Applied fix 177581.                 *
+      *         - Use correct work field to compare Safe Custody Fee  *
+      *           to be posted with minimum fee (otherwise this one is*
+      *           100 X time too small). Fix 72361 to be removed and  *
+      *           array POWER 8 to be sorted out of the tables.       *
+      *         - Applied for MD-56851                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
@@ -191,8 +210,8 @@
      E**   ARRAY FOR COPYRIGHT
      E                    CPY@    1   1 80
      E*
-     E**   ARRAY FOR POWER8                                               072361
-     E                    POWER8  1   8  8 4                              072361
+     E*****ARRAY FOR POWER8                                                            072361 259024
+     E**********          POWER8  1   8  8 4                                           072361 259024
      E*
      E** ARRAY USED FOR 'POSTING NARRATIVE' ON PF/GESCPD
      E                    PNARR   1   1 16
@@ -294,9 +313,14 @@
      ISDPORT    E DSSDPORTPD                                              091522
      I** Portfolio Management ICD                                         091522
      I*                                                                   091522
-     ISDCURR    E DSSDCURRPD                                              072361
-     I** Currency code details accessed via access program                072361
+     I*SDCURR*** E DSSDCURRPD                                                          072361 259024
+     I***Currency code details accessed via access program                             072361 259024
      I*                                                                   072361
+     ISDACOD    E DSSDACODPD                                                                AR637259
+     I              QQACCD                          QQACC2                                  AR637259
+      *                                                                                     AR637259
+      ** Account Code Details accessed via access program                                   AR637259
+      *                                                                                     AR637259
      IDSSDY     E DSDSSDY                                                 S01464
      I** Long DS for access programs                                      S01464
      I*                                                                   S01464
@@ -614,25 +638,38 @@
      C*                                                                   S01464
      C                     ELSE                                           S01464
      C                     Z-ADDFBNSGD    WWNSGD                          S01464
+      *                                                                                     AR637259
+      ** Get Account Section of Accrual Account code                                        AR637259
+      *                                                                                     AR637259
+     C                     MOVE FBAACT    WWACOD                                            AR637259
+     C                     EXSR SRACOD                                                      AR637259
+     C                     MOVE A5ACSC    WAACSC  2                                         AR637259
+      *                                                                                     AR637259
+      ** Get Account Section of Income Account code                                         AR637259
+      *                                                                                     AR637259
+     C                     MOVE FBINCA    WWACOD                                            AR637259
+     C                     EXSR SRACOD                                                      AR637259
+     C                     MOVE A5ACSC    WIACSC  2                                         AR637259
+      *                                                                                     AR637259
      C                     END                                            S01464
      C*                                                                   072361
-     C** USE BANK CHARGING CURRENCY FROM SAFE CUSTODY ICD                 072361
-     C** USE ACCESS PROGRAM SDCURRPD TO GET DECIMAL PLACES.               072361
-     C*                                                                   072361
-     C                     CALL 'AOCURRR0'                                072361
-     C                     PARM *BLANKS   @RTCD   7                       072361
-     C                     PARM '*KEY'    @OPTN   7                       072361
-     C                     PARM FBBCGC    @KEYB   3                       072361
-     C           SDCURR    PARM SDCURR    DSSDY                           072361
-     C           @RTCD     IFNE *BLANKS                                   072361
-     C           *LOCK     IN   LDA                                       072361
-     C                     MOVE *BLANKS   DBFILE           ***************072361
-     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 013 *072361
-     C                     MOVE FBBCGC    DBKEY            ***************072361
-     C                     Z-ADD13        DBASE                           072361
-     C                     OUT  LDA                                       072361
-     C                     EXSR #ZA                                       072361
-     C                     ENDIF                                          072361
+     C***USE*BANK*CHARGING*CURRENCY*FROM*SAFE*CUSTODY*ICD                              072361 259024
+     C***USE*ACCESS*PROGRAM*SDCURRPD*TO*GET*DECIMAL*PLACES.                            072361 259024
+     C**********                                                                       072361 259024
+     C**********           CALL 'AOCURRR0'                                             072361 259024
+     C**********           PARM *BLANKS   @RTCD   7                                    072361 259024
+     C**********           PARM '*KEY'    @OPTN   7                                    072361 259024
+     C**********           PARM FBBCGC    @KEYB   3                                    072361 259024
+     C********** SDCURR    PARM SDCURR    DSSDY                                        072361 259024
+     C********** @RTCD     IFNE *BLANKS                                                072361 259024
+     C********** *LOCK     IN   LDA                                                    072361 259024
+     C**********           MOVE *BLANKS   DBFILE           ***************             072361 259024
+     C**********           MOVEL'SDCURRPD'DBFILE           * DBERROR 013 *             072361 259024
+     C**********           MOVE FBBCGC    DBKEY            ***************             072361 259024
+     C**********           Z-ADD13        DBASE                                        072361 259024
+     C**********           OUT  LDA                                                    072361 259024
+     C**********           EXSR #ZA                                                    072361 259024
+     C**********           ENDIF                                                       072361 259024
      C*
      C**   CALCULATE SC FEE NEXT SETTLEMENT DATE
      C***********          MOVE SASFRE    ZFREQ                           S01464
@@ -1182,16 +1219,16 @@
      C                     END                                            47893
      C*                                                                   47893
      C           SBMICO    IFNE *ZEROS                                    B7871
-     C                     Z-ADDA6NBDP    DP      30                      072361
-     C                     ADD  5         DP                              072361
-     C           SBMICO    DIV  POWER8,DP WWMICO                          072361
+     C**********           Z-ADDA6NBDP    DP      30                                   072361 259024
+     C**********           ADD  5         DP                                           072361 259024
+     C********** SBMICO    DIV  POWER8,DP WWMICO                                       072361 259024
      C****       SEAFTS    IFLT SBMICO                              47893 B7871
      C           SECFAC    IFLT WWMICO                                    47893
      C*                                                                   47893
-     C** POST CORRECTION TO ACCRUED FEES DUE TO MINIMUM COMMISSION TO     47893
-     C** INCOME AND ACCRUAL ACCOUNTS                                      47893
-     C           WWMICO    SUB  SECFAC    WWCORR 150                      47893
-     C                     EXSR MINCMP                                    47893
+     C***POST*CORRECTION*TO*ACCRUED*FEES*DUE*TO*MINIMUM*COMMISSION*TO                  047893 259024
+     C***INCOME*AND*ACCRUAL*ACCOUNTS******************************                     047893 259024
+     C********** WWMICO    SUB  SECFAC    WWCORR 150                                   047893 259024
+     C**********           EXSR MINCMP                                                 047893 259024
      C****                 Z-ADDSBMICO    SEAFTS                    47893 B7871
      C                     Z-ADDWWMICO    SEAFTS                          47893
      C                     END                                            B7871
@@ -1298,6 +1335,10 @@
      C** ACCOUNT CODE
      C***********          Z-ADDSAAACT    ACOD                            S01464
      C                     Z-ADDFBAACT    ACOD                            S01464
+      *                                                                                     AR637259
+      ** ACCOUNT SECTION                                                                    AR637259
+      *                                                                                     AR637259
+     C                     MOVE WAACSC    ACSC                                              AR637259
      C*
      C** ACCOUNT SEQUENCE
      C                     Z-ADD1         ACSQ
@@ -1437,6 +1478,10 @@
      C** ACCOUNT CODE
      C***********          Z-ADDSAINCA    ACOD                            S01464
      C                     Z-ADDFBINCA    ACOD                            S01464
+      *                                                                                     AR637259
+      ** ACCOUNT SECTION                                                                    AR637259
+      *                                                                                     AR637259
+     C                     MOVE WIACSC    ACSC                                              AR637259
      C*
      C** DR/CR INDICATOR
      C           DRCR      IFEQ 0
@@ -1472,7 +1517,7 @@
      C**                                                              *   47893
      C*****************************************************************   47893
      C*                                                                   47893
-     C           MINCMP    BEGSR                                          47893
+     C********** MINCMP    BEGSR                                                       047893 259024
      C*                                                                   47893
      C***ACCESS*LF/SDBRCHL1*WITH*BRANCH*CODE************************47893 S01464
      C***********BBBRCD    CHAINSDBRCHL1             40             47893 S01464
@@ -1488,72 +1533,72 @@
      C***********          EXSR #ZA                                 47893 S01464
      C***********                                                   47893 S01464
      C***********          END                                      47893 S01464
-     C*                                                                   S01464
-     C** Access branch details                                            S01464
-     C*                                                                   S01464
+     C************************************************************                     S01464 259024
+     C***Access*branch*details************************************                     S01464 259024
+     C************************************************************                     S01464 259024
      C**********           CALL 'AOBRCHR0'                                S01464              CGL029
-     C                     CALL 'AOBRCHR1'                                                    CGL029
-     C                     PARM '       ' @RTCD   7                       S01464
-     C                     PARM '*KEY   ' @OPTN   7                       S01464
-     C                     PARM BBBRCD    @BRKEY  3                       S01464
+     C**********           CALL 'AOBRCHR1'                                             CGL029 259024
+     C**********           PARM '       ' @RTCD   7                                    S01464 259024
+     C**********           PARM '*KEY   ' @OPTN   7                                    S01464 259024
+     C**********           PARM BBBRCD    @BRKEY  3                                    S01464 259024
      C********** SDBRCH    PARM SDBRCH    DSFDY                           S01464              CGL029
-     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C********** SDBRCH    PARM SDBRCH    DSSDY                                        CGL029 259024
      C*                                                                   S01464
-     C           @RTCD     IFNE *BLANK                                    S01464
-     C           A8TYLC    OREQ 'D'                                       S01464
-     C           *LOCK     IN   LDA                                       S01464
-     C                     MOVE 'SDBRCHPD'DBFILE           ************   S01464
-     C                     MOVE BBBRCD    DBKEY            * DBERR 12 *   S01464
-     C                     Z-ADD12        DBASE            ************   S01464
-     C                     OUT  LDA                                       S01464
-     C                     EXSR #ZA                                       S01464
-     C                     END                                            S01464
-     C*                                                                   47893
-     C** SET UP FIELDS FOR UPDATE OF PF/GESCPD                            47893
-     C*                                                                   47893
-     C** RECORD ID                                                        47893
-     C                     MOVE 'P'       RECI                            47893
-     C*                                                                   47893
-     C** CUSTOMER NUMBER                                                  47893
-     C                     MOVE A8BICN    CNUM                            47893
-     C*                                                                   47893
-     C** CURRENCY                                                         47893
+     C********** @RTCD     IFNE *BLANK                                                 S01464 259024
+     C********** A8TYLC    OREQ 'D'                                                    S01464 259024
+     C********** *LOCK     IN   LDA                                                    S01464 259024
+     C**********           MOVE 'SDBRCHPD'DBFILE           ************                S01464 259024
+     C**********           MOVE BBBRCD    DBKEY            * DBERR 12 *                S01464 259024
+     C**********           Z-ADD12        DBASE            ************                S01464 259024
+     C**********           OUT  LDA                                                    S01464 259024
+     C**********           EXSR #ZA                                                    S01464 259024
+     C**********           END                                                         S01464 259024
+     C************************************************************                     047893 259024
+     C***SET*UP*FIELDS*FOR*UPDATE*OF*PF/GESCPD********************                     047893 259024
+     C************************************************************                     047893 259024
+     C***RECORD*ID************************************************                     047893 259024
+     C**********           MOVE 'P'       RECI                                         047893 259024
+     C************************************************************                     047893 259024
+     C***CUSTOMER*NUMBER******************************************                     047893 259024
+     C**********           MOVE A8BICN    CNUM                                         047893 259024
+     C************************************************************                     047893 259024
+     C***CURRENCY*************************************************                     047893 259024
      C***********          MOVE SABCGC    CCY                       47893 S01464
-     C                     MOVE FBBCGC    CCY                             S01464
-     C*                                                                   47893
-     C** ACCOUNT CODE                                                     47893
+     C**********           MOVE FBBCGC    CCY                                          S01464 259024
+     C************************************************************                     047893 259024
+     C***ACCOUNT*CODE*********************************************                     047893 259024
      C***********          Z-ADDSAAACT    ACOD                      47893 S01464
-     C                     Z-ADDFBAACT    ACOD                            S01464
-     C*                                                                   47893
-     C** ACCOUNT SEQUENCE                                                 47893
-     C                     Z-ADD1         ACSQ                            47893
-     C*                                                                   47893
-     C** RETAIL ACCOUNT NUMBER                                            47893
-     C                     Z-ADD*ZEROS    ACNO                            47893
-     C*                                                                   47893
-     C** POSTING DATE                                                     47893
-     C                     Z-ADDWWNSGD    PSTD                            47893
-     C*                                                                   47893
-     C** VALUE DATE                                                       47893
-     C                     Z-ADDWWNSGD    VALD                            47893
-     C*                                                                   47893
-     C** TRANSACTION TYPE                                                 47893
+     C**********           Z-ADDFBAACT    ACOD                                         S01464 259024
+     C************************************************************                     047893 259024
+     C***ACCOUNT*SEQUENCE*****************************************                     047893 259024
+     C***********          Z-ADD1         ACSQ                                         047893 259024
+     C************************************************************                     047893 259024
+     C***RETAIL*ACCOUNT*NUMBER************************************                     047893 259024
+     C***********          Z-ADD*ZEROS    ACNO                                         047893 259024
+     C************************************************************                     047893 259024
+     C***POSTING*DATE*********************************************                     047893 259024
+     C**********           Z-ADDWWNSGD    PSTD                                         047893 259024
+     C************************************************************                     047893 259024
+     C***VALUE*DATE***********************************************                     047893 259024
+     C**********           Z-ADDWWNSGD    VALD                                         047893 259024
+     C************************************************************                     047893 259024
+     C***TRANSACTION*TYPE*****************************************                     047893 259024
      C*                    Z-ADD*ZEROS    TRAT                            47893
-     C                     Z-ADD94054     TRAT                            47893
-     C*                                                                   47893
-     C** POSTING NARRATIVE                                                47893
-     C                     MOVEAPNARR     WWTEXT                          47893
-     C                     MOVE SDCNUM    WWCUSN                          47893
+     C**********           Z-ADD94054     TRAT                                         047893 259024
+     C************************************************************                     047893 259024
+     C***POSTING*NARRATIVE****************************************                     047893 259024
+     C**********           MOVEAPNARR     WWTEXT                                       047893 259024
+     C**********           MOVE SDCNUM    WWCUSN                                       047893 259024
      C***********SACFCP    IFEQ 'C'                                 47893 S01464
-     C           FBCFCP    IFEQ 'C'                                       S01464
-     C                     MOVE *BLANKS   WWLBRK                          47893
-     C                     MOVE *BLANKS   WWPORT                          47893
-     C                     MOVE *BLANKS   WWRBRK                          47893
-     C                     ELSE                                           47893
+     C********** FBCFCP    IFEQ 'C'                                                    S01464 259024
+     C**********           MOVE *BLANKS   WWLBRK                                       047893 259024
+     C**********           MOVE *BLANKS   WWPORT                                       047893 259024
+     C**********           MOVE *BLANKS   WWRBRK                                       047893 259024
+     C**********           ELSE                                                        047893 259024
      C***********SACFCP    IFEQ 'P'                                 47893 S01464
-     C           FBCFCP    IFEQ 'P'                                       S01464
-     C                     MOVE ' ('      WWLBRK                          47893
-     C                     MOVE ') '      WWRBRK                          47893
+     C********** FBCFCP    IFEQ 'P'                                                    S01464 259024
+     C**********           MOVE ' ('      WWLBRK                                       047893 259024
+     C**********           MOVE ') '      WWRBRK                                       047893 259024
      C***********SDPTFR    IFEQ '9997'                              47893 S01464
      C***********          MOVE P9R997    WWPORT                    47893 S01464
      C***********          ELSE                                     47893 S01464
@@ -1563,114 +1608,114 @@
      C***********          MOVE SDPTFR    WWPORT                    47893 S01464
      C***********          END                                      47893 S01464
      C***********          END                                      47893 S01464
-     C           SDPTFR    IFEQ '9997'                                    091522
-     C                     MOVE FCR997    WWPORT                          091522
-     C                     ELSE                                           091522
-     C           SDPTFR    IFEQ '9999'                                    091522
-     C                     MOVE FCR999    WWPORT                          091522
-     C                     ELSE                                           091522
-     C                     MOVE SDPTFR    WWPORT                          091522
-     C                     END                                            091522
-     C                     END                                            091522
-     C                     END                                            47893
-     C                     END                                            47893
-     C*                                                                   47893
-     C                     MOVE WWPNAR    PNAR                            47893
-     C*                                                                   47893
-     C** POSTING AMOUNT                                                   47893
-     C                     Z-ADDWWCORR    PSTA                            47893
-     C*                                                                   47893
-     C** DEBIT/CREDIT INDICATOR                                           47893
-     C                     Z-ADD*ZEROS    DRCR                            47893
-     C*                                                                   47893
-     C** ASSOCIATED CUSTOMER                                              47893
-     C                     MOVE BBCUST    ASOC                            47893
-     C*                                                                   47893
-     C** CHEQUE NUMBER                                                    47893
-     C                     Z-ADD*ZEROS    CHQN                            47893
-     C*                                                                   47893
-     C** SOURCE OF POSTING                                                47893
-     C                     MOVE 'GE-SC'   SPOS                            47893
-     C*                                                                   47893
-     C** BRANCH CODE                                                      47893
+     C********** SDPTFR    IFEQ '9997'                                                 091522 259024
+     C**********           MOVE FCR997    WWPORT                                       091522 259024
+     C**********           ELSE                                                        091522 259024
+     C********** SDPTFR    IFEQ '9999'                                                 091522 259024
+     C**********           MOVE FCR999    WWPORT                                       091522 259024
+     C**********           ELSE                                                        091522 259024
+     C**********           MOVE SDPTFR    WWPORT                                       091522 259024
+     C**********           END                                                         091522 259024
+     C**********           END                                                         091522 259024
+     C**********           END                                                         047893 259024
+     C**********           END                                                         047893 259024
+     C************************************************************                     047893 259024
+     C**********           MOVE WWPNAR    PNAR                                         047893 259024
+     C************************************************************                     047893 259024
+     C***POSTING*AMOUNT*******************************************                     047893 259024
+     C**********           Z-ADDWWCORR    PSTA                                         047893 259024
+     C************************************************************                     047893 259024
+     C***DEBIT/CREDIT*INDICATOR***********************************                     047893 259024
+     C**********           Z-ADD*ZEROS    DRCR                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ASSOCIATED*CUSTOMER**************************************                     047893 259024
+     C**********           MOVE BBCUST    ASOC                                         047893 259024
+     C************************************************************                     047893 259024
+     C***CHEQUE*NUMBER********************************************                     047893 259024
+     C**********           Z-ADD*ZEROS    CHQN                                         047893 259024
+     C************************************************************                     047893 259024
+     C***SOURCE*OF*POSTING****************************************                     047893 259024
+     C**********           MOVE 'GE-SC'   SPOS                                         047893 259024
+     C************************************************************                     047893 259024
+     C***BRANCH*CODE**********************************************                     047893 259024
      C***********          MOVE BBBRCD    BRCD                      47893 S01464
-     C                     MOVE BBBRCD    BRCA                            S01464
-     C*                                                                   47893
-     C** RETAIL INDICATOR                                                 47893
-     C                     Z-ADD*ZEROS    RIND                            47893
-     C*                                                                   47893
-     C** REJECT CODE                                                      47893
-     C                     Z-ADD*ZEROS    REJC                            47893
-     C*                                                                   47893
-     C** DEPARTMENT CODE                                                  47893
-     C                     MOVE *BLANKS   DPMT                            47893
-     C*                                                                   47893
-     C** RELATIVE RECORD NUMBER                                           47893
-     C                     Z-ADD*ZEROS    RRNM                            47893
-     C*                                                                   47893
-     C** ACCOUNT TYPE                                                     47893
-     C                     MOVE 'G'       ATYP                            47893
-     C*                                                                   47893
-     C** EXTRACT INDICATOR                                                47893
-     C                     MOVE '0'       EXIN                            47893
-     C*                                                                   47893
-     C** POSTING RECORD INDICATOR                                         47893
-     C                     BITOFBITNC     PRIN                            47893
-     C*                                                                   47893
-     C** GENERATED ENTRY TYPE                                             47893
-     C                     MOVE *BLANKS   GETP                            47893
-     C*                                                                   47893
-     C** ACCUMULATOR                                                      47893
-     C                     Z-ADD*ZEROS    ACUM                            47893
-     C*                                                                   47893
-     C** ORIGINAL TRANSACTION REF                                         47893
-     C                     MOVELBBCUST    WWRK11                          47893
+     C**********           MOVE BBBRCD    BRCA                                         S01464 259024
+     C************************************************************                     047893 259024
+     C***RETAIL*INDICATOR*****************************************                     047893 259024
+     C**********           Z-ADD*ZEROS    RIND                                         047893 259024
+     C************************************************************                     047893 259024
+     C***REJECT*CODE**********************************************                     047893 259024
+     C**********           Z-ADD*ZEROS    REJC                                         047893 259024
+     C************************************************************                     047893 259024
+     C***DEPARTMENT*CODE******************************************                     047893 259024
+     C**********           MOVE *BLANKS   DPMT                                         047893 259024
+     C************************************************************                     047893 259024
+     C***RELATIVE*RECORD*NUMBER***********************************                     047893 259024
+     C**********           Z-ADD*ZEROS    RRNM                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ACCOUNT*TYPE*********************************************                     047893 259024
+     C**********           MOVE 'G'       ATYP                                         047893 259024
+     C************************************************************                     047893 259024
+     C***EXTRACT*INDICATOR****************************************                     047893 259024
+     C**********           MOVE '0'       EXIN                                         047893 259024
+     C************************************************************                     047893 259024
+     C***POSTING*RECORD*INDICATOR*********************************                     047893 259024
+     C**********           BITOFBITNC     PRIN                                         047893 259024
+     C************************************************************                     047893 259024
+     C***GENERATED*ENTRY*TYPE*************************************                     047893 259024
+     C**********           MOVE *BLANKS   GETP                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ACCUMULATOR**********************************************                     047893 259024
+     C**********           Z-ADD*ZEROS    ACUM                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ORIGINAL*TRANSACTION*REF*********************************                     047893 259024
+     C**********           MOVELBBCUST    WWRK11                                       047893 259024
      C***********          MOVE SDPTFR    WWRK11                    47893 S01464
-     C                     MOVE SDPTFR    WWRK11                          091522
-     C                     MOVELWWRK11    OTRF                            47893
-     C*                                                                   47893
-     C** ORIGIANL TRANSACTION SUB-TYPE                                    47893
-     C                     MOVE *BLANKS   OTST                            47893
-     C*                                                                   47893
-     C** ORIGINAL TRANSACTION TYPE                                        47893
-     C                     MOVE 'SC'      OTTP                            47893
-     C*                                                                   CAC003
-     C** If Analytical Accounting and SAR CAC003 are installed,           CAC003
-     C** move the Safe Custody Fee Profit Centre.                         CAC003
-     C           *IN20     IFEQ '1'                                       CAC003
-     C                     MOVE FBPCSF    PRFC                            CAC003
-     C                     ENDIF                                          CAC003
-     C*                                                                   47893
-     C** WRITE RECORD TO GESCPD                                           47893
-     C           PSTA      IFNE 0                                         48360
-     C                     WRITEAPOSTPDF                                  47893
-     C*                                                                   47893
-     C** ACCUMULATE TOTAL OF POSTING AMOUNT                               47893
-     C                     ADD  PSTA      WWPAMT                          47893
-     C*                                                                   47893
-     C** INCREMENT TOTAL OF RECORDS POSTED                                47893
-     C                     ADD  1         WWGESC                          47893
-     C                     END                                            48360
-     C*                                                                   47893
-     C** ACCOUNT CODE                                                     47893
+     C**********           MOVE SDPTFR    WWRK11                                       091522 259024
+     C**********           MOVELWWRK11    OTRF                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ORIGIANL*TRANSACTION*SUB-TYPE****************************                     047893 259024
+     C**********           MOVE *BLANKS   OTST                                         047893 259024
+     C************************************************************                     047893 259024
+     C***ORIGINAL*TRANSACTION*TYPE********************************                     047893 259024
+     C**********           MOVE 'SC'      OTTP                                         047893 259024
+     C************************************************************                     CAC003 259024
+     C***If*Analytical*Accounting*and*SAR*CAC003*are*installed,***                     CAC003 259024
+     C***move*the*Safe*Custody*Fee*Profit*Centre.*****************                     CAC003 259024
+     C********** *IN20     IFEQ '1'                                                    CAC003 259024
+     C**********           MOVE FBPCSF    PRFC                                         CAC003 259024
+     C**********           ENDIF                                                       CAC003 259024
+     C************************************************************                     047893 259024
+     C***WRITE*RECORD*TO*GESCPD***********************************                     047893 259024
+     C********** PSTA      IFNE 0                                                      048360 259024
+     C**********           WRITEAPOSTPDF                                               047893 259024
+     C************************************************************                     047893 259024
+     C***ACCUMULATE*TOTAL*OF*POSTING*AMOUNT***********************                     047893 259024
+     C**********           ADD  PSTA      WWPAMT                                       047893 259024
+     C************************************************************                     047893 259024
+     C***INCREMENT*TOTAL*OF*RECORDS*POSTED************************                     047893 259024
+     C**********           ADD  1         WWGESC                                       047893 259024
+     C**********           END                                                         048360 259024
+     C************************************************************                     047893 259024
+     C***ACCOUNT*CODE*********************************************                     047893 259024
      C***********          Z-ADDSAINCA    ACOD                      47893 S01464
-     C                     Z-ADDFBINCA    ACOD                            S01464
+     C**********           Z-ADDFBINCA    ACOD                                         S01464 259024
+     C************************************************************                     047893 259024
+     C***DR/CR*INDICATOR******************************************                     047893 259024
+     C**********           Z-ADD1         DRCR                                         047893 259024
+     C************************************************************                     047893 259024
+     C***WRITE*RECORD*TO*GESCPD***********************************                     047893 259024
+     C********** PSTA      IFNE 0                                                      048360 259024
+     C**********           WRITEAPOSTPDF                                               047893 259024
+     C************************************************************                     047893 259024
+     C***ACCUMULATE*TOTAL*OF*POSTING*AMOUNT***********************                     047893 259024
+     C**********           ADD  PSTA      WWPAMT                                       047893 259024
+     C************************************************************                     047893 259024
+     C***INCREMENT*TOTAL*OF*RECORDS*POSTED************************                     047893 259024
+     C**********           ADD  1         WWGESC                                       047893 259024
+     C**********           END                                                         048360 259024
      C*                                                                   47893
-     C** DR/CR INDICATOR                                                  47893
-     C                     Z-ADD1         DRCR                            47893
-     C*                                                                   47893
-     C** WRITE RECORD TO GESCPD                                           47893
-     C           PSTA      IFNE 0                                         48360
-     C                     WRITEAPOSTPDF                                  47893
-     C*                                                                   47893
-     C** ACCUMULATE TOTAL OF POSTING AMOUNT                               47893
-     C                     ADD  PSTA      WWPAMT                          47893
-     C*                                                                   47893
-     C** INCREMENT TOTAL OF RECORDS POSTED                                47893
-     C                     ADD  1         WWGESC                          47893
-     C                     END                                            48360
-     C*                                                                   47893
-     C                     ENDSR                                          47893
+     C**********           ENDSR                                                       047893 259024
      C********************************************************************
      C/EJECT
      C********************************************************************
@@ -1688,6 +1733,32 @@
      C*
      C                     ENDSR
       ********************************************************************
+     C/EJECT                                                                                AR637259
+      ********************************************************************                  AR637259
+      *                                                                                     AR637259
+     C           SRACOD    BEGSR                                                            AR637259
+      *                                                                                     AR637259
+      **  Retrieve account details via access object                                        AR637259
+      *                                                                                     AR637259
+     C                     CALL 'AOACODR0'                                                  AR637259
+     C                     PARM *BLANKS   @RTCD   7                                         AR637259
+     C                     PARM '*KEY   ' @OPTN   7                                         AR637259
+     C                     PARM           WWACOD 10                                         AR637259
+     C           SDACOD    PARM SDACOD    DSFDY                                             AR637259
+      *                                                                                     AR637259
+      **  Check if error occurred                                                           AR637259
+      *                                                                                     AR637259
+     C           @RTCD     IFNE *BLANK                                                      AR637259
+     C           *LOCK     IN   LDA                                                         AR637259
+     C                     MOVE 'SDACODPD'DBFILE           ************                     AR637259
+     C                     MOVE WWACOD    DBKEY            * DBERR 14 *                     AR637259
+     C                     Z-ADD14        DBASE            ************                     AR637259
+     C                     OUT  LDA                                                         AR637259
+     C                     EXSR #ZA                                                         AR637259
+     C                     END                                                              AR637259
+      *                                                                                     AR637259
+     C                     ENDSR                                                            AR637259
+      ********************************************************************                  AR637259
       /EJECT
       ********************************************************************
       *                                                                  *
@@ -2290,15 +2361,6 @@
      C********************************************************************S01464
 **  CPY@
 (c) Finastra International Limited 2001
-** POWER8                                                                 072361
-00000001
-00000010
-00000100
-00001000
-00010000
-00100000
-01000000
-10000000
 **  PNARR
 CUSTODY FEE FOR
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN

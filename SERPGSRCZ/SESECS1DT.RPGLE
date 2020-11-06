@@ -36,9 +36,7 @@
       *                 CSW037             Date 15Dec04               *
       *                 CSW036             Date 15Dec04               *
       *                 CLE025             Date 20Oct03               *
-      *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CAS006             Date 21Jan03               *
+      *                 CAS006             Date 21Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CSD006             Date 12Jan01               *
@@ -187,7 +185,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -275,7 +273,7 @@
      C                   IF        DDSDNM = *BLANKS
      C                   IF        (DDINCS = 'C' AND INCS = 'I') OR
      C                             (DDINCS = 'C' AND DDACTN = 'I')
- 
+
      C                   IF        F1DTRD <> 0
      C                   MOVE      F1DTRD        DDSDNM
      C                   MOVEA     DDSDNM        WADNM
@@ -287,13 +285,13 @@
      C                   EVAL      WADNM(Idx) = ' '
      C                   EVAL      Idx = Idx + 1
      C                   ENDDO
- 
+
      C                   MOVEA     WADNM         DDSDNM
- 
+
      C                   ELSE
      C                   EVAL      DDSDNM = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -329,7 +327,7 @@
      C                             DDPGCD = *BLANKS AND DDACTN = 'I'
      C                   EVAL      DDPGCD = F1PLDPCD
      C                   ENDIF
- 
+
      C                   IF        F1PLDRCD <> *BLANKS AND
      C                             DDRGCD = *BLANKS AND DDACTN = 'I'
      C                   EVAL      DDRGCD = F1PLDRCD
@@ -346,7 +344,7 @@
      C                   IF        DDDINM = *BLANKS AND DDACTN = 'I'
      C                   EVAL      DDDINM = DDSESN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -358,7 +356,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

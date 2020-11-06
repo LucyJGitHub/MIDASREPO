@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD042109           Date 26Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. MD042109           Date 26Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CBF023             Date 04Jan17               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
@@ -25,7 +26,7 @@
       *                 AR1032571          Date 14Sep12               *
       *                 AR1030958          Date 13Sep12               *
       *                 AR1029747          Date 11Sep12               *
-      *                 AR1029185          Date 06Sep12
+      *                 AR1029185          Date 06Sep12               *
       *                 AR1028208          Date 05Sep12               *
       *                 AR1027797          Date 03Sep12               *
       *                 AR1025965          Date 31Aug12               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  MD042109 - Updates, amendments and deletes do not show on    *
       *             BFTC audit reports                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -282,7 +284,11 @@
      C**********         IF        ZDayNo3  = BJRDNB OR                                    AR1036892
      C**********                   ZDayNo3  = 0)                                           AR1036892
      C**********                   (ZDayNo4 = BJRDNB AND                                   AR1036892
-     C                   IF        ZDayNo3  = BJRDNB                                       AR1036892
+     C**********         IF        ZDayNo3  = BJRDNB                              AR1036892 MD050405
+                                                                                            MD050405
+      ** Print report based on today's date instead of Midas rundate                        MD050405
+                                                                                            MD050405
+     C                   IF        TmpDat03 = %DATE()                                       MD050405
 
       ** If Different Event Group ID
 

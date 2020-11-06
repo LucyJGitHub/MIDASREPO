@@ -155,8 +155,8 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-      ** Alpha Num Base Rate Code                                                             CSD103
-     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+      ** Alphanumeric Base Rate Code                                                          CSD103
+     D AlphaBSRC       C                   Const('AlphaBaseRateCode')                            CSD
      D Uppercase       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                       CSD103
      D Numbers         C                   '0123456789'                                       CSD103
 
@@ -1616,7 +1616,7 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
-      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+      ** Check for Alphanumeric Base Rate Code system value                                   CSD103
      C                   CALLB     'AOSVALR0'                                                 CSD103
      C                   PARM      *BLANKS       @RTCD                                        CSD103
      C                   PARM      AlphaBSRC     PSysVal01        20                          CSD103

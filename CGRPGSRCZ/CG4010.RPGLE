@@ -10250,7 +10250,7 @@
       *                                                                                       CGL031
      C**********           MOVE ' '       WTXPI   1                                    CGL031 232543
      C**********           MOVE ' '       WTXJA   1                                    CGL031 232543
-     C     WELGTX        IFNE      'G'                                                      BUG23515
+     C*****WELGTX        IFNE      'G'                                             BUG23515 MD057051
       *                                                                                     MD031144
       ** Do not compute tax for deposits with negative interest                             MD031144
       *                                                                                     MD031144
@@ -10415,7 +10415,7 @@
      C                   ENDIF                                                             BUG23799A
       *                                                                                    BUG23799A
      C                   ADD       WNTAMT        ##TAXA                                       235126
-     C                   ENDIF                                                              BUG23515
+     C**********         ENDIF                                                     BUG23515 MD057051
      C                   ENDIF                                                                CGL031
       *
       ** If Tax value at Account level is 'A', this means the EU Tax                          CER069

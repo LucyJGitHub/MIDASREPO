@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055210           Date 03Feb20               *
-      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *  Last Amend No. MD056982           Date 12Oct20               *
+      *  Prev Amend No. MD055210           Date 03Feb20               *
+      *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -148,6 +149,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
+      *             file SDCRSHL0 for update                          *
       *  MD055210 - Serious midas error encountered in CUSD           *
       *  MD054883 - CUSD Reverse API had an increased runtime         *
       *  MD053436 - Unable to perform end to end testing for          *
@@ -10405,7 +10408,7 @@ OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                               
 ** CMDCS                                                                                    MD027115
 OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027115
 ** CMDCR                                                                                    MD051230
-OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)                                           MD051230
+OVRDBF FILE(SDCRSHL0) TOFILE(SDCRSHL0) SHARE(*NO)                                  MD051230 MD056982
 **  ARRTAG                                                                                    CSD015
 <Customer Name>                                                                               CSD015
 </Customer Name>                                                                              CSD015

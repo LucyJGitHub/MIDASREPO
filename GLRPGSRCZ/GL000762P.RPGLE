@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL194             Date 01Aug20               *
-      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *  Last Amend No. MD057003           Date 19Oct20               *
+      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *                 MD056237           Date 20Jul20               *
       *                 MD054940           Date 18Feb20               *
       *                 MD054905           Date 04Dec19               *
       *                 MD040961           Date 09Sep16               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057003 - Incorrect controlling person details, finish      *
+      *             processing all records in the file                *
       *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
@@ -1643,6 +1646,7 @@
      C                   IF        DsAcEnd = R1ACNO
      C                             AND MGACNO = R1ACNO
      C                             AND WdFound = 'Y'                                        MD056237
+     C                             AND %EOF(GLCRMDLD)                                       MD057003
 
      C                   EVAL      WdFound = 'N'                                            MD056237
       **  Check that sufficient lines remain for the Format. If not,

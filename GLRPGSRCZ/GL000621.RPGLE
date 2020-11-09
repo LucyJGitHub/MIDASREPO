@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD052783           Date 09Mar19               *
-      *  Prev Amend No. CGL185             Date 13Mar17               *
+      *  Last Amend No. CGL194             Date 01Aug20               *
+      *  Prev Amend No. MD052783           Date 09Mar19               *
+      *                 CGL185             Date 13Mar17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD044377           Date 28Feb17               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD052783 - CRS - GLCSBAPD: no record was output for each     *
       *             customer’s real linked A/C Holder                 *
       *  CGL185 - FATCA XML 2.0                                       *
@@ -373,7 +375,8 @@
      C                   EVAL      WYearNum = WYearNum -1
      C                   MOVE      WYearNum      WYearEnd
      C                   ENDIF
-     C                   EVAL      WMatD = 15706
+     C**********         EVAL      WMatD = 15706                                              CGL194
+     C                   EVAL      WMatD = BJRDNB                                             CGL194
 
 
      C                   ENDSR

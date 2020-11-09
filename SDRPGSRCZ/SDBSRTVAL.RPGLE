@@ -156,7 +156,7 @@
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
       ** Alphanumeric Base Rate Code                                                          CSD103
-     D AlphaBSRC       C                   Const('AlphaBaseRateCode')                            CSD
+     D AlphaBSRC       C                   Const('AlphaBaseRateCode')                         CSD103
      D Uppercase       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                       CSD103
      D Numbers         C                   '0123456789'                                       CSD103
 

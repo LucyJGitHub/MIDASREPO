@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR647426           Date 19Aug14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR647426           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -45,34 +48,34 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
- 
+
      FGLNW94L0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas GL Network Accounts MT94x Details - Update
       *
- 
+
      FGLACBTL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL Account Balances Today
       *
- 
+
      FRSACMTL2  IF   E           K DISK    INCLUDE(APOSTPDF) INFSR(*PSSR)
       ** Midas GL Account Movements.
       *
- 
+
      FGLPOSTL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages
       *
      FGLPOSTPD  O    E             DISK    INFSR(*PSSR)
      F                                     RENAME(GLPOSTD0:GLPOSTDD)
      F                                     COMMIT
- 
+
      FGLRSACL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL MT94x Used Account Movements
       *
      FGLRSACPD  O    E             DISK    INFSR(*PSSR)
      F                                     RENAME(GLRSACD0:GLRSACDD)
      F                                     COMMIT
- 
+
       *****************************************************************
       *                                                               *
       * Use of Indicators                                             *
@@ -92,12 +95,12 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -109,41 +112,41 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
      D CurFilRcd     E DS                  EXTNAME(GLNW94PD)
       ** Current Network File Record (i.e. state of the record when entering this module)
       *
- 
+
      D PrvFilRcd     E DS                  EXTNAME(GLNW94PD) PREFIX(PRV_)
       ** Previous Network File Record (i.e. initial state of the record)
       *
- 
+
      D NewFilRcd     E DS                  EXTNAME(GLNW94PD) PREFIX(NEW_)
       ** New Network File Record (i.e. new state after amendments)
       *
- 
+
      D PrvSchRcd     E DS                  EXTNAME(GLGS94PD) PREFIX(PRV_)
      D  PrecQQACCD   E                     EXTFLD(QQACCD)                                     CGL029
       ** Previous Generation Schedule File Record (dummy use here)
       *
- 
+
      D NewSchRcd     E DS                  EXTNAME(GLGS94PD)
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
       ** New Generation Schedule File Record (only to pass reference of
@@ -161,21 +164,21 @@
       ** the schedule to process to ME002560, in case of                                    AR647426
       ** Deletion/Hold/Release)                                                             AR647426
       *                                                                                     AR647426
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
- 
+
       ** Declared variables
       ** ------------------
       *
      D MsgType         S                   LIKE(MGMTPY)
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -184,7 +187,7 @@
      C                   PARM                    ActionCode
      C                   PARM                    PrvFilRcd
      C                   PARM                    NewFilRcd
- 
+
       ** Key lists
       *
      C     KGLNW94L0     KLIST
@@ -196,21 +199,21 @@
      C                   KFLD                    NEW_N4ACSQ
      C                   KFLD                    NEW_N4NATY
      C                   KFLD                    NEW_N4DSTN
- 
+
      C     KGLACBTL0     KLIST
      C                   KFLD                    N4CNUM
      C                   KFLD                    N4CCY
      C                   KFLD                    N4ACCD
      C                   KFLD                    N4ACSQ
      C                   KFLD                    N4BRCA
- 
+
      C     KRSACMTL2     KLIST
      C                   KFLD                    N4BRCA
      C                   KFLD                    N4CNUM
      C                   KFLD                    N4CCY
      C                   KFLD                    N4ACCD
      C                   KFLD                    N4ACSQ
- 
+
      C     KGLPOSTL0     KLIST
      C                   KFLD                    N4NWRK
      C                   KFLD                    N4BRCA
@@ -221,7 +224,7 @@
      C                   KFLD                    N4NATY
      C                   KFLD                    N4DSTN
      C                   KFLD                    MsgType
- 
+
      C     KGLRSACL0     KLIST
      C                   KFLD                    N4NWRK
      C                   KFLD                    N4BRCA
@@ -232,56 +235,56 @@
      C                   KFLD                    N4NATY
      C                   KFLD                    N4DSTN
      C                   KFLD                    MsgType
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** Process updating according to the action code
       *
      C                   SELECT
- 
+
       ** -- Insert a record
       *
      C                   WHEN      ActionCode = 'I'
      C                   EXSR      $InsertRcd
- 
+
       ** -- Update a record
       *
      C                   WHEN      ActionCode = 'A'
      C                   EXSR      $UpdateRcd
- 
+
       ** -- Delete a record
       *
      C                   WHEN      ActionCode = 'D'
      C                   EXSR      $DeleteRcd
- 
+
      C                   ENDSL
- 
+
       ** End of the module
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $InsertRcd: Insert a new record                                        *
       *------------------------------------------------------------------------*
      C     $InsertRcd    BEGSR
       *    ----------    ------
       ** Record already exists ==> Error
- 
+
      C                   IF        NOT *IN27
      C                   MOVE      'ME00049'     ZAMSID
      C                   EXSR      $ZaSndMsg
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** Insert the new record
       *
      C                   MOVEL     NewFilRcd     CurFilRcd
@@ -293,7 +296,7 @@
      C                   WRITE     GLNW94D0
       *    ----------    ------
      C     @InsertRcd    ENDSR
- 
+
       *========================================================================*
       * $UpdateRcd: Update a record                                            *
       *------------------------------------------------------------------------*
@@ -307,7 +310,7 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** If record already modified by another user ==> Error
       *
      C                   IF        CurFilRcd <> PrvFilRcd
@@ -316,7 +319,7 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** Amend the record
       *
      C                   MOVEL     NewFilRcd     CurFilRcd
@@ -360,7 +363,7 @@
       *                                                                                     AR647426
       *    ----------    ------
      C     @UpdateRcd    ENDSR
- 
+
       *========================================================================*
       * $UpdBalanc: Update the different closing balances and sttlmt dates     *
       *------------------------------------------------------------------------*
@@ -414,7 +417,7 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       ** If the "Generates MT941" indicator was changed from "N" to "Y":
       *
  B1  C                   IF        N4G941 = 'Y' AND N4G941 <> PRV_N4G941
@@ -458,7 +461,7 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       ** If the "Generates MT942" indicator was changed from "N" to "Y":
       *
  B1  C                   IF        N4G942 = 'Y' AND N4G942 <> PRV_N4G942
@@ -502,7 +505,7 @@
  E1  C                   ENDIF
       *    ----------    ------
      C     @UpdBalanc    ENDSR
- 
+
       *========================================================================*
       * $DeleteRcd: Delete a record                                            *
       *------------------------------------------------------------------------*
@@ -516,7 +519,7 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** If record already modified by another user ==> Error
       *
      C                   IF        CurFilRcd <> PrvFilRcd
@@ -525,12 +528,12 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** Delete the eventual linked Generation Schedules
       *
      C                   CLEAR                   PrvSchRcd
      C                   CLEAR                   NewSchRcd
- 
+
      C                   EVAL      GSNWRK = N4NWRK
      C                   EVAL      GSBRCA = N4BRCA
      C                   EVAL      GSCNUM = N4CNUM
@@ -539,7 +542,7 @@
      C                   EVAL      GSACSQ = N4ACSQ
      C                   EVAL      GSNATY = N4NATY
      C                   EVAL      GSDSTN = N4DSTN
- 
+
      C                   CALLB     'ME002460'
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      ZAPGM         CallerOut        10
@@ -549,12 +552,12 @@
      C                   PARM                    NewSchRcd
      C                   PARM                    @2FLD            15 0                        222373
      C                   PARM                    @2FLC            15 0                        222373
- 
+
      C                   IF        RetCodeIn <> *Blanks
      C                   EVAL      RetCodeOut = RetCodeIn
      C                   EXSR      $ExitMod
      C                   ENDIF
- 
+
       ** Logically delete the record
       *
      C                   EVAL      N4RECI = '*'
@@ -564,13 +567,13 @@
      C                   UPDATE    GLNW94D0
       *    ----------    ------
      C     @DeleteRcd    ENDSR
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
      C     $ZaSndMsg     BEGSR
       *    ----------    ------
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM
      C                   PARM                    ZAPGRL
@@ -580,7 +583,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -590,7 +593,7 @@
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -599,57 +602,57 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
- 
+
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
- 
+
      C                   MOVEL     'MEMSG'       ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT
- 
+
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** Access file on the specified Key
       *
      C     KGLNW94L0     CHAIN     GLNW94D0                           27
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'                           99
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

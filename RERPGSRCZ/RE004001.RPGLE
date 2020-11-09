@@ -12,11 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE072  *CREATE    Date 30Jun11               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE072  *CREATE    Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE072 - BankFusion Midas Teller Related Changes             *
       *                                                               *
@@ -49,10 +52,10 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D/COPY ZACPYSRC,PSDS
- 
+
       *
       ** Maximum number of files
       *

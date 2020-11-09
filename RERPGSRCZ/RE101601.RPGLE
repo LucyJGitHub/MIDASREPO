@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR679670           Date 26Nov10               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 16Mar10               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR679670 - Apply fix 255837                                  *
       *  255837 - Fix overdraft validation.  Amend program so that    *
@@ -48,7 +51,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FREGARSPD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      FREGAHLJ0  IF   E           K DISK    INFSR(*PSSR)
@@ -57,16 +60,16 @@
      FREGAHLL0  IF   E           K DISK    INFSR(*PSSR)                                       255837
      F                                     RENAME(REGAHLD0:REGAHLD1)                          255837
      F                                     PREFIX(AD_)                                        255837
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
       * Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
- 
+
      D I_PACD          S             10  0                                                    CGL029
- 
+
       ** Chain Arrays
      D***O_GLAI*         S             18    DIM(99)                                          CGL029
      D O_GLAI          S             24    DIM(99)                                            CGL029
@@ -77,7 +80,7 @@
      D O_ODFT          S             15S 0 DIM(99)
      D O_BAIC          S              1    DIM(99)
      D O_ICTB          S             15S 0 DIM(99)
- 
+
       ** Chain Arrays
      D***I_GLAI*         S             18    DIM(99)                                          CGL029
      D I_GLAI          S             24    DIM(99)                                            CGL029
@@ -88,17 +91,17 @@
      D I_ODFT          S             15S 0 DIM(99)
      D I_BAIC          S              1    DIM(99)
      D I_ICTB          S             15S 0 DIM(99)
- 
- 
+
+
       * Entry To Replicate
      D I_RSACMT      E DS                  EXTNAME(RSACMTPD)
      D                                     PREFIX(R_)
- 
+
       * Entry To Replicate
      D I_FFACMV      E DS                  EXTNAME(FFACMVD)
      D                                     PREFIX(F_)
- 
- 
+
+
      D JournalEnt      DS
       * Standard fields on all journal entries
      D  Filler01                      5A
@@ -115,23 +118,23 @@
      D  Filler04                     29A
       * The journal entry
      D  Entry                       500A
- 
+
      D ControlInf      DS
      D  CTRLInfo1                     1
      D  CTRLInfo2                     1
- 
- 
+
+
       * If the first byte of Control Information is 0, no data has been
       *  passed so simply return
- 
+
      C                   IF        CTRLInfo1 = '0'
      C                   RETURN
      C                   ENDIF
- 
+
       * If 'terminate replication' requested
       *   Update the last journal sequence number processed on REGARSPD
       *   and end this program
- 
+
      C     JrnEntType    IFEQ      'TR'
      C                   EVAL      CTRLInfo1 = '9'
      C                   EXSR      UPD_REGARS
@@ -139,54 +142,54 @@
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
       * Determine if replication is required
- 
+
      C                   EXSR      DET_REPL
- 
+
       * If Replication is required
       *    Construct a CM Hierarchy Chain
       *    Replicate the entry
- 
+
      C     Repl_Reqd     IFEQ      'Y'
      C                   EXSR      CON_HCHN
      C                   EXSR      REPLICATE
      C                   ENDIF
- 
+
       * Update the last journal sequence number processed on REGARSPD
- 
+
      C                   EXSR      UPD_REGARS
- 
+
       * Commit the updates
- 
+
      C                   COMMIT
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *********************************************************************
       * Determine if replication is required
       *********************************************************************
      C     DET_REPL      BEGSR
- 
+
       * Replication required?
- 
+
      C                   MOVEL     'Y'           Repl_Reqd         1
- 
+
      C     Program       IFEQ      'FF0450'
      C     JobName       OREQ      'CM_GAC_REP'
- 
+
      C                   MOVEL     'N'           Repl_Reqd
- 
+
      C                   ELSE
- 
+
       * Entry is for file RSACMTPD or FFACMVD
- 
+
      C                   MOVEL     *BLANK        AC_RECI
      C                   MOVEL     *BLANKS       WBAIC             1                          255837
- 
+
      C     Object        IFEQ      'RSACMTPD'
- 
+
      C                   EVAL      I_RSACMT = Entry
      C     ACCNTK_R      CHAIN     REGAHLJ0                           60        *
      C     REGAHL_K      CHAIN     REGAHLL0                           61                      255837
@@ -194,9 +197,9 @@
      C                   MOVEL     AD_GLBAIC     WBAIC                                        255837
      C                   ENDIF                                                                255837
      C  N60ACCNTK_R      CHAIN     ACCNTABF                           60
- 
+
      C                   ELSE
- 
+
      C                   EVAL      I_FFACMV = Entry
      C     ACCNTK_F      CHAIN     REGAHLJ0                           60        *
      C     REGAHL_K      CHAIN     REGAHLL0                           61                      255837
@@ -204,20 +207,20 @@
      C                   MOVEL     AD_GLBAIC     WBAIC                                        255837
      C                   ENDIF                                                                255837
      C  N60ACCNTK_F      CHAIN     ACCNTABF                           60
- 
+
      C                   ENDIF
- 
+
       * If the entry account is not a sub a/c in a group a/c hierarchy
       * or if the acount is not found or is closed
       *   Don't replicate this entry
- 
+
      C     *in60         IFEQ      '1'
      C     AC_RECI       ORNE      'D'
      C                   MOVEL     'N'           Repl_Reqd
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -225,14 +228,14 @@
       * Construct a CM Hierarchy Chain
       ********************************************************************
      C     CON_HCHN      BEGSR
- 
+
      C                   CALLB     'RE100604'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Hierarchy ID
      C                   PARM      CLHIER        I_HIER            9 0
@@ -250,7 +253,7 @@
      C**********         PARM      CLPACD        I_PACD            4 0                        CGL029
      C                   PARM      CLPACD        I_PACD                                       CGL029
      C                   PARM      CLPASN        I_PASN            2 0
- 
+
       * OUTPUTS
       * CHAINS FOR:
       * GL Account ID
@@ -271,16 +274,16 @@
      C                   PARM                    O_ICTB
       * Count in chain
      C                   PARM                    O_CNTCH           2 0
- 
+
       * End if error occurred in module
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      CTRLInfo1 = '9'
      C                   EVAL      X_ERMS = 'HIERARCHY CHAIN ' +
      C                                      'CONTRUCTION FAILED'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
                                                                                               255837
       ** Move BAIC field of sub/level into that of the next account in the hierarchy          255837
       ** so that RE100720 will know whether or not to update the cleared balance of           255837
@@ -302,14 +305,14 @@
       * Replicate the entry
       *********************************************************************
      C     REPLICATE     BEGSR
- 
+
      C                   CALLB     'RE100607'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * RSAMCTPD Entry To Replicate
       * FFACMVD Entry To Replicate
@@ -344,13 +347,13 @@
      C                   PARM      O_ICTB        I_ICTB
       * Count in chain
      C                   PARM      O_CNTCH       I_CNTCH           2 0
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      CTRLInfo1 = '9'
      C                   EVAL      X_ERMS = 'REPLICATION FAILED'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -358,7 +361,7 @@
       * Update the last journal sequence number processed on REGARSPD
       *********************************************************************
      C     UPD_REGARS    BEGSR
- 
+
      C     1             CHAIN     REGARSD0                           60
      C     *in60         IFEQ      '0'
      C                   EVAL      GSLJES = JrnSeqn
@@ -368,7 +371,7 @@
      C                   EVAL      X_ERMS = 'MISSING REGARSPD RECORD'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /SPACE 5
@@ -376,27 +379,27 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    JournalEnt
      C                   PARM                    ControlInf
- 
+
       * Key lists
- 
+
      C     ACCNTK_F      KLIST
      C                   KFLD                    F_CUSN
      C                   KFLD                    F_CCYD
      C                   KFLD                    F_ACDE
      C                   KFLD                    F_ASNC
      C                   KFLD                    F_BRCA
- 
+
      C     ACCNTK_R      KLIST
      C                   KFLD                    R_CUSN
      C                   KFLD                    R_CCYD
      C                   KFLD                    R_ACDE
      C                   KFLD                    R_ASNC
      C                   KFLD                    R_BRCA
- 
+
      C     REGAHL_K      KLIST                                                                255837
      C                   KFLD                    CLHIER                                       255837
      C                   KFLD                    CLLINK                                       255837

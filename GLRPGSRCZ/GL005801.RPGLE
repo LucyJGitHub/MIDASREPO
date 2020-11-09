@@ -15,11 +15,14 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2012            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR987769 *CREATE   Date 28Jun12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Pret Amend No. MD046248           Date 27Oct17               *
+      *                 AR987769 *CREATE   Date 28Jun12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR987769 - Discrepancies on the Projected Nostro Balances    *
       *             enquiry. Updated projections for 6th & 7th day in *

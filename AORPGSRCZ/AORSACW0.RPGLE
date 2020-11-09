@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR868380           Date 10Jun13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR868380           Date 10Jun13               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 19Feb10               *
@@ -37,6 +38,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
       *             calling program if file locking occurred on       *

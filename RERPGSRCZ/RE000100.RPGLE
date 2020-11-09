@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD056297           Date 16Jul20               *
-      *  Prev Amend No. MD032170           Date 19Jul19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056297           Date 16Jul20               *
+      *                 MD032170           Date 19Jul19               *
       *                 MD022132C          Date 09Mar18               *
       *                 MD022132           Date 09Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD056297 - Ensure GLACNTQD will be updated with SO projection*
       *  MD032170 - Ensure that GLACNTQD will be updated with the     *
       *             correct balance.                                  *

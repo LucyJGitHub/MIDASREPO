@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. HUT101             Date 12May20               *
+      *  Last Amend No. HUT101CC1          Date 06Nov20               *
+      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *                 HUT101             Date 12May20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -95,6 +96,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT101CC1 - Copy CSW220 processing from FT0060 here          *
+      *           so that SWIFT works in line with HUT101 feature     *
+      *           Addition of hook HUT101_016                         *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
       *           Payment Authorisation for Funds Transfer            *
@@ -2695,6 +2699,7 @@ e1   C                   ENDIF                                                  
      C                             FTM199 <> 'Z'                                              CSW220
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
+      /COPY WNCPYSRC,HUT101_016
       *
       ** N.B. Audit Stamp details are determined in called program.
       *

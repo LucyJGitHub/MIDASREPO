@@ -521,15 +521,21 @@
      C*                                                                   S01194
      CLR                   MOVELBACYCD    WWCYCD  3                                           245028
      CLR                   MOVELBABSRC    WWBSRC  2                                           245028
+     CLR                   Z-ADDBANBRT    WWNBRT 117                                          CSD103
+     CLR                   Z-ADDBAVDNR    WWVDNR  50                                          CSD103
+      *                                                                                       CSD103
+     CLR         BAVDNR    IFLT BJRDNB                                                        CSD103
+     CLR         *IN19     ANDEQ*ON                                                           CSD103
+     CLR                   Z-ADDBACBSR    BANBRT                                              CSD103
+     CLR                   Z-ADDBAVDRC    BAVDNR                                              CSD103
+     CLR                   ENDIF                                                              CSD103
 0169 C*                                                                   S01194
 0170 C*    CHECK NEW VALUE DATE AGAINST COMPARISON DATE                   S01194
 0171 C*                                                                   S01194
      CLR         BAVDNR    COMP *ZEROS               2020                 S01194
 0172 CLR 20      BAVDNR    COMP SAVE                   2020               S01194
-     C*R*20*****           Z-ADDBANBRT    BACBSR                                       S01194 CSD103
-     C*R*20*****           Z-ADDBAVDNR    BAVDRC                                       S01194 CSD103
-     CLR 20N19             Z-ADDBANBRT    BACBSR                                              CSD103
-     CLR 20N19             Z-ADDBAVDNR    BAVDRC                                              CSD103
+     CLR 20                Z-ADDBANBRT    BACBSR                          S01194
+     CLR 20                Z-ADDBAVDNR    BAVDRC                          S01194
      CLR                   Z-ADD6991231   BAVDTO                                              245028
      CLR                   Z-ADDBACBSR    BACBRT                                              245028
       *
@@ -563,6 +569,41 @@
      CLR                   ENDIF                                          CMC001
      C/COPY WNCPYSRC,SDH00505
       *                                                                   CMC001
+      ** WRITE OR UPDATE A SINGLE RECORD                                                      CSD103
+     CLR         *IN19     IFEQ *ON                                                           CSD103
+      *                                                                                       CSD103
+     CLR                   Z-ADDWWVDNR    WVDNR                                               CSD103
+     CLR         BSHSKY    SETLLSDBSHSL1                                                      CSD103
+     CLR                   READ SDBSHSL1                 80                                   CSD103
+      *                                                                                       CSD103
+     CLR         G0HIDT    IFNE WWVDNR                                                        CSD103
+      *                                                                                       CSD103
+     CLR                   MOVELWWVDNR    G0HIDT                                              CSD103
+     CLR                   MOVELBACYCD    G0CYCD                                              CSD103
+     CLR                   MOVELBABSRC    G0BSRC                                              CSD103
+     CLR         WWNBRT    IFNE *ZERO                                                         CSD103
+     CLR                   Z-ADDWWNBRT    G0CBSR                                              CSD103
+     CLR                   ELSE                                                               CSD103
+     CLR                   Z-ADDBACBSR    G0CBSR                                              CSD103
+     CLR                   ENDIF                                                              CSD103
+     CLR                   WRITESDBSSDP                                                       CSD103
+     CLR                   ADD  1         NHRW                                                CSD103
+      *                                                                                       CSD103
+     CLR                   ELSE                                                               CSD103
+      *                                                                                       CSD103
+     CLR         G0CYCD    IFEQ WCYCD                                                         CSD103
+     CLR         G0BSRC    ANDEQWBSRC                                                         CSD103
+     CLR         G0HIDT    ANDEQWWVDNR                                                        CSD103
+     CLR                   Z-ADDWWNBRT    G0CBSR                                              CSD103
+     CLR                   EXCPTHIST                                                          CSD103
+     CLR                   ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     CLR                   ENDIF                                                              CSD103
+     CLR                   EXSR SRCBRT                                                        245028
+     CLR                   EXSR SRVDTO                                                        CTI004
+     CLR                   GOTO AUDIT                                                         CSD103
+     CLR                   ENDIF                                                              CSD103
+      *                                                                                       CSD103
      CLR         BSHSKY    SETLLSDBSHSL1                                  S01267
      CLR                   READ SDBSHSL1                 80               S01267
       *                                                                                       235907
@@ -598,11 +639,7 @@
      CLR         G0CYCD    DOWEQWCYCD                                     S01267
      CLR         G0BSRC    ANDEQWBSRC                                     S01267
      CLR         *IN80     ANDEQ'0'                                       E36180
-     CLR 19      G0HIDT    IFEQ WVDNR                                                         CSD103
-     CLR 19                Z-ADDWNBRT     G0CBSR                                              CSD103
-     CLR                   ENDIF                                                              CSD103
-     C*R********           Z-ADDWNBRT     G0CBSR                                       S01267 CSD103
-     CLRN19                Z-ADDWNBRT     G0CBSR                                              CSD103
+     CLR                   Z-ADDWNBRT     G0CBSR                          S01267
      CLR                   EXCPTHIST                                      S01267
      CLR                   READ SDBSHSL1                 80               S01267
      CLR                   END                                            S01267
@@ -619,12 +656,7 @@
      CLR                   MOVELBACYCD    G0CYCD                          S01267
      CLR                   MOVELBABSRC    G0BSRC                          S01267
      CLR         BANBRT    IFNE *ZERO                                     S01267
-     CLR 19                Z-ADDBACBSR    G0CBSR                                              CSD103
-     CLR 19      BAVDNR    IFEQ BJRDNB                                                        CSD103
-     CLR 19                Z-ADDBANBRT    G0CBSR                                              CSD103
-     CLR                   ENDIF                                                              CSD103
-     C*R********           Z-ADDBANBRT    G0CBSR                                       S01267 CSD103
-     CLRN19                Z-ADDBANBRT    G0CBSR                                              CSD103
+     CLR                   Z-ADDBANBRT    G0CBSR                          S01267
      CLR                   ELSE                                           S01267
      CLR                   Z-ADDBACBSR    G0CBSR                          S01267
      CLR                   END                                            S01267
@@ -698,6 +730,12 @@
      C           *IN86     IFEQ '1'                                                           245028
      C                     GOTO ECBRT                                                         245028
      C                     ENDIF                                                              245028
+      *                                                                                       CSD103
+     C           BAVDNR    IFLT BJRDNB                                                        CSD103
+     C           *IN19     ANDEQ*ON                                                           CSD103
+     C                     Z-ADDBACBSR    BANBRT                                              CSD103
+     C                     Z-ADDBAVDRC    BAVDNR                                              CSD103
+     C                     ENDIF                                                              CSD103
       *                                                                                       245028
       ** Initialize BAVDTO tp 6991231                                                         245028
       *                                                                                       245028
@@ -948,6 +986,8 @@
 0179 O                         BAVDRC                                     S01194
      O                         BAVDTO                                                         245028
      O                         BACBRT                                                         245028
+     O                         BAVDNR                                                         CSD103
+     O                         BANBRT                                                         CSD103
      O*                                                                   S01194
      O@BAREDG E        LR      L0BSRT                                                         245028
      O                         BAVDTO                                                         245028

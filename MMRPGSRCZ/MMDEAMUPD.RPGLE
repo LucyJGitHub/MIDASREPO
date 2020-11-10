@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 30May14               *
+      *  Last Amend No. MD053472           Date 27Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 30May14               *
       *                 MD024110           Date 13Dec13               *
       *                 MD020388           Date 23Apr13               *
       *                 MD020071           Date 23Apr13               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *  MD024110 - Wrong update of actual interest rate in DEAM      *
@@ -98,7 +101,7 @@
      FMMEIRDL0  UF   E           K DISK                                                       CAS009
      F                                     COMMIT                                             CAS009
      F/COPY WNCPYSRC,MMDEAMDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -117,26 +120,26 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Data Structure for SAR Details                                                       CAS009
      D CAS009          S              1A                                                      CAS009
      D PRetCode        S              7A                                                      CAS009
@@ -377,7 +380,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'P'                                          BUG4092
+     C*****IGPENP        ANDEQ     'P'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       ** PAYMENT SETTLEMENT INSTRUCTIONS
       *
@@ -399,7 +403,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'R'                                          BUG4092
+     C*****IGPENP        ANDEQ     'R'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       ** RECEIVE SETTLEMENT INSTRUCTIONS
       *
@@ -593,7 +598,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'P'                                          BUG4092
+     C*****IGPENP        ANDEQ     'P'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       ** PAY SETTLEMENT INSTRUCTIONS
       *
@@ -615,7 +621,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'R'                                          BUG4092
+     C*****IGPENP        ANDEQ     'R'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       ** RECEIVE SETTLEMENT INSTRUCTIONS
       *

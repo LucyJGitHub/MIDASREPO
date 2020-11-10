@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL194             Date 01Aug20               *
-      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *  Last Amend No. MD057025           Date 21Oct20               *
+      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *                 MD056237           Date 20Jul20               *
       *                 MD054940           Date 18Feb20               *
       *                 MD055078           Date 18Feb20               *
       *                 MD055071           Date 29Jan20               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057025 - Cannot enquire details of Controlling Person in   *
+      *             Approved Report.                                  *
       *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
@@ -367,6 +370,7 @@
      D ArAcctNumbr     S             83A   DIM(50)
      D ArExcCust       S            280A   DIM(50)
      D ArIncCust       S            278A   DIM(50)
+     D ArConPers       S             10A   DIM(50)                                          MD057025
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -491,6 +495,7 @@
      D WActHldrTyp     S              8A
      D WTINCnt         S              2S 0
      D Iw              S              2S 0 INZ(0)
+     D Iv              S              2S 0 INZ(0)                                          MD057025
      D Ix              S              2S 0 INZ(0)
      D Iy              S              3S 0 INZ(0)
      D Iz              S              2S 0 INZ(0)
@@ -1467,7 +1472,7 @@
      C     SRCsActRepHdr BEGSR
 
      C                   EVAL      MGSEQU = 1
-     C                   EVAL      WAcctRept = 'Y'                                          CGL194
+     C                   EVAL      WAcctRept = 'Y'                                            CGL194
 
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = 'DocSpec'
@@ -2693,6 +2698,8 @@
       *****************************************************************
      C     SRConPersn    BEGSR
 
+     C                   EVAL      Iv = 0                                                   MD057025
+     C                   EVAL      ArConPers = *BLANKS                                      MD057025
      C                   EVAL      IdxB = 0
      C                   EVAL      IxConPer = 1000
      C                   EVAL      XCust = EXCUSD
@@ -2744,6 +2751,8 @@
      C                   IF        JCCUST <> *BLANK
      C                   EVAL      MGDATA = JCCUST
      C                   EXSR      SRWrite
+     C                   EVAL      Iv = Iv + 1                                             MD057025
+     C                   EVAL      ArConPers(Iv) = JCCUST                                  MD057025
 
      C                   EVAL      PCUST  = JCCUST
      C                   EXSR      SRAccCust
@@ -2808,6 +2817,8 @@
 
      C                   EVAL      MGDATA = JCNAHO
      C                   EXSR      SRWrite
+     C                   EVAL      Iv = Iv + 1                                              MD057025
+     C                   EVAL      ArConPers(Iv) = JCNAHO                                   MD057025
 
       ** Get Non-Account Holder Details of the Joint Account Member
 
@@ -2898,6 +2909,8 @@
      C**********         MOVE      CAPCNT        WNUM3                                      MD055078
      C                   IF        WNUM3 <> *ZERO                                           MD055078
      C                             OR CACINT = 'Y'                                          MD055078
+     C                   IF        %LOOKUP(CAAUTH:ArConPers) = 0                            MD057025
+     C                             AND CAAUTH <> *BLANKS                                    MD057025
      C                   EVAL      IxConPer =IxConPer + 1
      C                   EVAL      MGSEQU =  IxConPer
      C**********         IF        WNUM3 <> *ZERO                                           MD055078
@@ -3072,6 +3085,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057025
      C**********         ENDIF                                                              MD055078
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
@@ -3559,6 +3573,10 @@
      C                             AND PRType = 'APPROVED NEW'
      C                   EVAL      WRType = 'DRAFT CORRECTED'
       *
+     C                   WHEN      PActn = 'C'                                                CGL194
+     C                             AND PRType = 'APPROVED CORRECTED'                          CGL194
+     C                   EVAL      WRType = 'DRAFT CORRECTED'                                 CGL194
+      *                                                                                       CGL194
      C                   WHEN      PActn = 'O'
      C                             AND PRType = 'APPROVED'
      C                   EVAL      WRType = 'DRAFT DELETE'
@@ -3748,9 +3766,10 @@
      C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
      C                             AND PActn = 'C'                                            CGL194
      C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
      C                   WHEN      PActn = 'N'                                                CGL194
      C                             OR PActn = 'R'                                             CGL194
-     C                             OR PActn = 'I'                                             CGL194
      C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
      C                   EVAL      WActn  = 'N'                                               CGL194
      C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
@@ -3761,7 +3780,7 @@
      C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
      C                   WHEN      PActn = 'O'                                                CGL194
      C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
-     C                   EVAL      WFIDocTyp = 'OECD3'                                        CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
      C                   ENDSL                                                                CGL194
      C                   ENDIF                                                                CGL194
                                                                                               CGL194
@@ -3770,9 +3789,10 @@
      C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
      C                             AND PActn = 'C'                                            CGL194
      C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
      C                   WHEN      PActn = 'N'                                                CGL194
      C                             OR PActn = 'R'                                             CGL194
-     C                             OR PActn = 'I'                                             CGL194
      C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
      C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
      C                             AND PActn = 'C'                                            CGL194
@@ -3782,7 +3802,7 @@
      C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
      C                   WHEN      PActn = 'O'                                                CGL194
      C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
-     C                   EVAL      WFIDocTyp = 'OECD13'                                       CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
      C                   ENDSL                                                                CGL194
      C                   ENDIF                                                                CGL194
                                                                                               CGL194

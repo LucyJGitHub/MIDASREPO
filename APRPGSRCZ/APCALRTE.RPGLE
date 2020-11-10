@@ -27,13 +27,6 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
 
-      ** Fields for Return Rate conversion to screen format
-     D ArrayRetr       S              1A   DIM(21)
-     D IntRetr         S              5A
-     D DecRetr         S             15A
-
-     D BNDCSP          S              1A
-
      D O@RETRP         S             20P15
      D I@SDTCZ         S              5S 0
      D I@EDTCZ         S              5S 0
@@ -55,13 +48,12 @@
 
       ** Buffer Fields
      D O@PRFG          DS             1
-     D O@RETR          DS            21
+     D O@RETR          DS            22
 
       ** +--- Start of main processing -----------------------------------+
 
      C                   MOVE      *BLANKS       O@PRFG
      C                   MOVE      *ZEROS        O@RETRP
-     C                   MOVE      '.'           BNDCSP
 
      C                   MOVE      I@SDTC        I@SDTCZ
      C                   MOVE      I@EDTC        I@EDTCZ
@@ -82,13 +74,7 @@
      C                   PARM                    O@PRFG
      C                   PARM                    O@RETRP
 
-     C                   MOVEL     O@RETRP       IntRetr
-     C                   MOVE      O@RETRP       DecRetr
-     C                   MOVEA     IntRetr       ArrayRetr(1)
-     C                   MOVEA     BNDCSP        ArrayRetr(6)
-     C                   MOVEA     DecRetr       ArrayRetr(7)
-
-     C                   MOVEA     ArrayRetr     O@RETR
+     C                   EVAL      O@RETR = %CHAR(O@RETRP)
 
      C                   SETON                                        LR
      C                   RETURN

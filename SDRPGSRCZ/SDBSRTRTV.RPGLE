@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 03May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 03May13               *
       *                 AR641183           Date 27Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR641183 - Allow amendment and deletion if Front Office ID   *
@@ -59,7 +61,7 @@
                                                                                               CSD012
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD012
       * RTV : Authorisation Log - by Key                                                      CSD012
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,79 +80,79 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** Switchable Features File
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D BasRFilFmt    E DS                  EXTNAME(SDBSRTPD)
       ** Base rate in File Format
- 
+
      D PBTOBS        E DS                  EXTNAME(PBTOBSPD)
       ** EXTERNAL DS FOR BASE RATE NAME
- 
+
      D***@AULG**         DS            20                                              CSD012 CGL029
      D @AULG           DS            26                                                       CGL029
      D @DDCYCD                 1      3                                                       CSD012
      D @DDBSRC                 4      5                                                       CSD012
       ** Data Structure to chain to log File SDAULGL0                                         CSD012
- 
+
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
@@ -159,15 +161,15 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Transaction Id
      D DDTRNN          DS
      D   DDTRCYCD                          LIKE(DDCYCD)
      D   DDTRBSRC                          LIKE(DDBSRC)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -195,7 +197,7 @@
       *
       * Check for any ? processing
      C                   EXSR      CHKSEL
- 
+
       *
       * VALIDATE ACTION CODE & BASE RATE CODE
       *
@@ -292,12 +294,12 @@
      C********************************************************************
      C*
      C     CHKSEL        BEGSR
- 
+
      C                   IF        BGN4ST = 'Y'
- 
+
       * Name search required?
      C                   MOVEL     DDBSRC        WKBSRC            1
- 
+
      C                   IF        WKBSRC = '?'
       *
       * Check if Base Rate Code exists
@@ -313,17 +315,17 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Name search required?
      C                   MOVEL     DDCYCD        WKCYCD            1
- 
+
      C                   IF        WKCYCD = '?'
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    DDCYCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      *BLANKS       DDCYCD
      C                   IF        @RTCD = *BLANKS
      C                   MOVE      A6CYCD        DDCYCD
@@ -360,7 +362,7 @@
      C                   MOVEL     'USR4430'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
       *
       * ACCESS BASE RATE WITH FRONT OFFICE TRANSACTION ID
       *
@@ -408,7 +410,7 @@
       *                                                                                     AR641183
      C                   ENDIF                                                              AR641183
      C                   END
- 
+
      C                   ENDIF
       *
       *
@@ -447,7 +449,7 @@
      C                   MOVEL     'DDCYCD'      FldNameArr(Ix)
      C                   MOVEL     'USR4433'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   IF        OKCYCD <> 'N'
      C                             AND SubForTRNN = 0
      C                   CALL      'AOCURRR0'
@@ -467,16 +469,16 @@
       *
       * Base Rate Number must be numeric
       *
-     C     SubForTRNN    IFEQ      0
-     C     DDBSRC        IFLT      '0'
-     C     DDBSRC        ORGT      '99'
-     C                   MOVE      'N'           OKBSRC
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDBSRC'      FldNameArr(Ix)
-     C                   MOVEL     'USR4434'     MsgIdArr(Ix)
-     C                   GOTO      EVAL
-     C                   END
-     C                   END
+     C*****SubForTRNN    IFEQ      0                                                          CSD103
+     C*****DDBSRC        IFLT      '0'                                                        CSD103
+     C*****DDBSRC        ORGT      '99'                                                       CSD103
+     C**********         MOVE      'N'           OKBSRC                                       CSD103
+     C**********         ADD       1             Ix                                           CSD103
+     C**********         MOVEL     'DDBSRC'      FldNameArr(Ix)                               CSD103
+     C**********         MOVEL     'USR4434'     MsgIdArr(Ix)                                 CSD103
+     C**********         GOTO      EVAL                                                       CSD103
+     C**********         END                                                                  CSD103
+     C**********         END                                                                  CSD103
       *
       * If Authorisation check is on,                                                         CSD012
       * check if unathorised record exists on Authorisation Log.                              CSD012
@@ -771,7 +773,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
- 
+
       * ICD - Private Banking
      C                   PARM                    BGN4ST            1
       *
@@ -815,7 +817,7 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD

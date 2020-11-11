@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD047719           Date 24Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057167           Date 10Nov20               *
+      *  Prev Amend No. MD047719           Date 24Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR814519           Date 09Mar15               *
       *                 MD000091           Date 23May13               *
       *                 CER059             Date 19Jul10               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057167 - Serious Midas Error encountered during completion *
+      *             of LDNI transaction                               *
+      *           - Compute the total interest only when CurrOk is Y  *
       *  MD047719 - Skip validation on amend. Reverse part of         *
       *             AR814519. Apply fix for MD-51582.                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -308,6 +312,9 @@
      C* If the total interest has NOT been entered...
      C*
      C     DDTOTI        IFEQ      *BLANKS
+                                                                                            MD057167
+      ** No error in currency field                                                         MD057167
+     C                   IF        CurrOk = 'Y'                                             MD057167
      C*
      C* Calculate total interest if S01468 installed and call deal
      C*
@@ -363,6 +370,7 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0451'     MsgID1
      C     SKIPV         TAG
+     C                   ENDIF                                                              MD057167
      C*
      C**  If the interest has been entered...
      C*

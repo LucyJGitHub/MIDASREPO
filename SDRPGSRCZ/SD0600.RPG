@@ -110,7 +110,7 @@
 0020 F**04************TABLEU RECORD - HEADER OTHER THAN BASE RATE         S01194
 0021 F**05************TABLEU - CATCHALL -DELETED RECORDS                  S01194
 0022 F********10******INSTALLATION CONTROL DATA RECORD1 FOUND             S01194
-     F*       19      APPLY ON SUBSEQUENT DATE SYSTEM VALUE ON                                CSD103
+     F*       19      APPLY ON SUBSEQUENT DATES (APYONC) SYSTEM VALUE ON                      CSD103
 0023 F********11******INSTALLATION CONTROL DATA RECORD2 FOUND             S01194
 0024 F*       20      NEW VALUE DATE NON-ZERO, NOT GR.THAN COMPARISON DATE
 0025 F*       21      DEALING MODULE PRESENT
@@ -479,6 +479,8 @@
      C*R*20*****           Z-ADDVDNR      VDRC                                         S01194 CSD103
      CLR 20N19             Z-ADDNBRT      BRTE                                                CSD103
      CLR 20N19             Z-ADDVDNR      VDRC                                                CSD103
+     CLR 20 19             Z-ADDBRTE      NBRT                                                CSD103
+     CLR 20 19             Z-ADDVDRC      VDNR                                                CSD103
 0173 CLR 20                EXCPTTABLE
 0174 CLR                   GOTO READ
 0131 C*                                                                   S01194
@@ -524,7 +526,7 @@
      CLR                   Z-ADDBANBRT    WWNBRT 117                                          CSD103
      CLR                   Z-ADDBAVDNR    WWVDNR  50                                          CSD103
       *                                                                                       CSD103
-     CLR         BAVDNR    IFLT BJRDNB                                                        CSD103
+     CLR         BAVDNR    IFLT BJRDNB                     REVERT NEW RATE                    CSD103
      CLR         *IN19     ANDEQ*ON                                                           CSD103
      CLR                   Z-ADDBACBSR    BANBRT                                              CSD103
      CLR                   Z-ADDBAVDRC    BAVDNR                                              CSD103
@@ -569,14 +571,15 @@
      CLR                   ENDIF                                          CMC001
      C/COPY WNCPYSRC,SDH00505
       *                                                                   CMC001
-      ** WRITE OR UPDATE A SINGLE RECORD                                                      CSD103
-     CLR         *IN19     IFEQ *ON                                                           CSD103
+      ** WRITE OR UPDATE BACKVALUED RATE IN SDBSHSPD                                          CSD103
+     CLR         BAVDNR    IFLT BJRDNB                                                        CSD103
+     CLR         *IN19     ANDEQ*ON                                                           CSD103
       *                                                                                       CSD103
      CLR                   Z-ADDWWVDNR    WVDNR                                               CSD103
      CLR         BSHSKY    SETLLSDBSHSL1                                                      CSD103
      CLR                   READ SDBSHSL1                 80                                   CSD103
       *                                                                                       CSD103
-     CLR         G0HIDT    IFNE WWVDNR                                                        CSD103
+     CLR         G0HIDT    IFNE WWVDNR                     WRITE NEW RECORD                   CSD103
       *                                                                                       CSD103
      CLR                   MOVELWWVDNR    G0HIDT                                              CSD103
      CLR                   MOVELBACYCD    G0CYCD                                              CSD103
@@ -589,7 +592,7 @@
      CLR                   WRITESDBSSDP                                                       CSD103
      CLR                   ADD  1         NHRW                                                CSD103
       *                                                                                       CSD103
-     CLR                   ELSE                                                               CSD103
+     CLR                   ELSE                            UPDATE OLD RECORD                  CSD103
       *                                                                                       CSD103
      CLR         G0CYCD    IFEQ WCYCD                                                         CSD103
      CLR         G0BSRC    ANDEQWBSRC                                                         CSD103
@@ -599,9 +602,9 @@
      CLR                   ENDIF                                                              CSD103
       *                                                                                       CSD103
      CLR                   ENDIF                                                              CSD103
-     CLR                   EXSR SRCBRT                                                        245028
-     CLR                   EXSR SRVDTO                                                        CTI004
-     CLR                   GOTO AUDIT                                                         CSD103
+      *                                                                                       CSD103
+     CLR                   GOTO RNDTTG                     WRITE, VALUED ON RNDT              CSD103
+      *                                                                                       CSD103
      CLR                   ENDIF                                                              CSD103
       *                                                                                       CSD103
      CLR         BSHSKY    SETLLSDBSHSL1                                  S01267
@@ -646,6 +649,8 @@
      C*                                                                   S01267
      C/COPY WNCPYSRC,SDH00506
      CLR                   END                                            S01267
+      ** RNDTTG STARTS BY WRITING RATE IN SDBSHSPD VALUED ON RUNDAT                           CSD103
+     CLR         RNDTTG    TAG                                                                CSD103
      C*                                                                   S01267
      C** SET HISTORIC DATE EQUAL TO MIDAS RUN DATE (PF/TABTB10)           S01267
      C*                                                                   S01267
@@ -974,6 +979,8 @@
 0136 OTABLETKFE        LR 20   TABLE                                      S01194
 0178 O                         BRTE                                       S01194
 0179 O                         VDRC                                       S01194
+     O                         NBRT                                                         CSD103
+     O                         VDNR                                                         CSD103
      O*                                                                   S01194
 0177 OSDBSRTD0E        LR 20   SDBSRT                                     S01194
 0178 O                         BACBSR                                     S01194

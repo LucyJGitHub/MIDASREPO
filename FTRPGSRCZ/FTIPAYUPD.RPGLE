@@ -2699,7 +2699,7 @@ e1   C                   ENDIF                                                  
      C                             FTM199 <> 'Z'                                              CSW220
      C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
-      /COPY WNCPYSRC,HUT101_016
+      /COPY WNCPYSRC,HUT101_016                                                               HUT101
       *
       ** N.B. Audit Stamp details are determined in called program.
       *

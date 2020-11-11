@@ -694,7 +694,7 @@
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
 
-      /COPY WNCPYSRC,HUT116_005
+      /COPY WNCPYSRC,HUT116_005                                                               HUT116
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -891,14 +891,14 @@
       ** Writes to MGOMSGPD
       *
      C                   IF        WGenFlg = 'Y'
-      /COPY WNCPYSRC,HUT116_001
+      /COPY WNCPYSRC,HUT116_001                                                               HUT116
      C                   EXSR      SrOMSG
 
       *
       ** If generation is successful, turn MT199 to 'Z'
       *
      C                   EVAL      FTM199 = 'Z'
-      /COPY WNCPYSRC,HUT116_002
+      /COPY WNCPYSRC,HUT116_002                                                               HUT116
      C                   UPDATE    @INFTL6                              98
 
      C                   IF        *IN98 = *ON
@@ -1238,7 +1238,7 @@
 
      C     SrExtract     BEGSR
 
-      /COPY WNCPYSRC,HUT116_003
+      /COPY WNCPYSRC,HUT116_003                                                               HUT116
       *
       ** Get tag 121
       *
@@ -1253,7 +1253,7 @@
      C                   MOVEL     WTag121Val    MFLD
 
      C                   ELSE
-      /COPY WNCPYSRC,HUT116_004
+      /COPY WNCPYSRC,HUT116_004                                                               HUT116
      C     *LOCK         IN        LDA
      C                   MOVE      '011'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
@@ -1389,7 +1389,7 @@
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
 
-      /COPY WNCPYSRC,HUT116_005
+      /COPY WNCPYSRC,HUT116_005                                                               HUT116
      C                   ENDSR
       *****************************************************************
       /EJECT

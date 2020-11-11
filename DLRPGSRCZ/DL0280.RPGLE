@@ -11,11 +11,6 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *                                                               *
-      *****************************************************************
-      *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
       *** Code Stripped ***                                           **
@@ -25296,7 +25291,7 @@
      C     WBRTE         ADD       WRTSP         EINR                           * * *          S0111
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      ' '                                          * * B          S0111
-     C**********         Z-ADD     WBRTE         EINR                     * * *          S0111 CSD103
+     C**********         Z-ADD     WBRTE         EINR                     * * *         S0111 CSD103
      C                   MOVE      WBRTE         EINR                                         CSD103
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      'S'                                          * * B          S0111

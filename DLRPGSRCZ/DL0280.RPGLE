@@ -25222,7 +25222,7 @@
      C     USRST         IFEQ      'P'                                          * B            S0111
      C*  OUR AVERAGE RATE PROCESSING-SETUP WORK FIELDS                    S01119
      C                   Z-ADD     UEINR         WEINR                          * *            S0111
-     C**********         Z-ADD     UBRTE         WBRTE                    * *            S0111 CSD103
+     C**********         Z-ADD     UBRTE         WBRTE                    * *           S0111 CSD103
      C                   MOVE      UBRTE         WBRTE                                        CSD103
      C                   Z-ADD     URTSP         WRTSP                          * *            S0111
      C                   Z-ADD     UINFD         WINFD                          * *            S0111
@@ -25231,7 +25231,7 @@
      C                   ELSE                                                   * X            S0111
      C*  THEIR AVERAGE RATE PROCESSING-SETUP WORK FIELDS                  S01119
      C                   Z-ADD     TEINR         WEINR                          * *            S0111
-     C**********         Z-ADD     TBRTE         WBRTE                    * *            S0111 CSD103
+     C**********         Z-ADD     TBRTE         WBRTE                    * *           S0111 CSD103
      C                   MOVE      TBRTE         WBRTE                                        CSD103
      C                   Z-ADD     TRTSP         WRTSP                          * *            S0111
      C                   Z-ADD     TINFD         WINFD                          * *            S0111
@@ -25257,7 +25257,7 @@
      C     WBRTE         ADD       WRTSP         WEINR                          * * *          S0111
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      ' '                                          * * B          S0111
-     C**********         Z-ADD     WBRTE         WEINR                    * * *          S0111 CSD103
+     C**********         Z-ADD     WBRTE         WEINR                    * * *         S0111 CSD103
      C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      'S'                                          * * B          S0111

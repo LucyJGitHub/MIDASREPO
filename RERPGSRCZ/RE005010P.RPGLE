@@ -16,13 +16,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD056940           Date 19Oct20               *
-      *  Prev Amend No. HUT107             Date 27May20               *
+      *  Last Amend No. MD056986           Date 27Oct20               *
+      *  Prev Amend No. MD056940           Date 19Oct20               *
+      *                 HUT107             Date 27May20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056986 - Daily Withholding Tax Reports Not Separated by    *
+      *             Branch                                            *
       *  MD056940 - Incorrect Details Reflected in Secondary Tax      *
       *             Amount column of DL005010P1 and RE005010P1        *
       *  HUT107 - Additional 3rd Party Trust Indicator                *
@@ -52,8 +55,12 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+     FSDBRCHL0  IF   E           K DISK                                                     MD056986
+      *                                                                                     MD056986
+      ** Branch file                                                                        MD056986
       *
-     FREDWTXPD  IF   E           K DISK
+     F***REDWTXPD  IF   E           K DISK
+     FREDWTXL0  IF   E           K DISK                                                     MD056986
       *
       ** Daily Withholding Tax File    Retrieval Index
       *
@@ -69,6 +76,7 @@
       *
      FRE005010P1O    E             PRINTER INFDS(SPOOL)
      F                                     OFLIND(*IN01)
+     F                                     USROPN                                           MD056986
       ** Tax Rate Codes List
      F/COPY WNCPYSRC,HUT107_007                                                          HUT107
       *
@@ -174,12 +182,29 @@
       *          MAIN      BEGSR                             ** MAIN **
       *
       *
+      ** Initial read Branch file                                                           MD056986
+     C                   READ      @A8REB1                                50                MD056986
+      ** Do while not end-of-file                                                           MD056986
+      *                                                                                     MD056986
+     C     *IN50         DOWEQ     '0'                                          ** DO       MD056986
+      *                                                                                     MD056986
+     C                   IF        *IN55 <> '1'                                             MD056986
+     C                   OPEN      RE005010P1                                               MD056986
+     C                   ENDIF                                                              MD056986
+     C                   MOVE      '0'           *IN55                                      MD056986
+      *
       ** Initial read daily Withholding tax file
       *
-     C                   READ      REDWTXD0                               LR
+     C**********         READ      REDWTXD0                               LR                MD056986
+     C     A8BRCD        SETLL     REDWTXD0                                                 MD056986
+     C     A8BRCD        READE     REDWTXD0                               LR                MD056986
       *
       ** Display message subfile control record
       *
+     C                   EVAL      *IN25 = *OFF                                             MD056986
+     C                   IF        *INLR = '1'                                              MD056986
+     C                   EVAL      *IN25 = *ON                                              MD056986
+     C                   ENDIF                                                              MD056986
      C                   WRITE     HEAD1
       *
       ** Move currency to temporary field for change of ccy checking
@@ -194,6 +219,7 @@
       *
      C     *IN01         IFEQ      '1'
      C     CCY           ORNE      @CCY
+     C                   ADD       1             PNUM                                       MD056986
      C                   WRITE     HEAD1
      C                   MOVE      CCY           @CCY
      C                   SETOFF                                         01
@@ -209,7 +235,8 @@
       *
       ** Read Daily Withholding tax file
       *
-     C                   READ      REDWTXD0                               LR
+     C**********         READ      REDWTXD0                               LR                MD056986
+     C     A8BRCD        READE     REDWTXD0                               LR                MD056986
       *
      C                   END                                                    ** DO END
       *
@@ -218,7 +245,37 @@
       *
      C     CNOR          COMP      0                                      24
       *
+     C                   ADD       1             PNUM                                       MD056986
      C                   WRITE     TOTPRT
+      *                                                                                     MD056986
+     C** Ensure Report Spool File Recorded by RCF                                           MD056986
+     C                   Z-ADD     SFNUM         SFNUM1            6 0                      MD056986
+     C                   CALL      'ZSFILE'                                                 MD056986
+     C                   PARM                    SEQ                                        MD056986
+     C                   PARM      *BLANKS       @PARM             3                        MD056986
+     C                   PARM                    SFILE                                      MD056986
+     C                   PARM                    SFNUM1                                     MD056986
+     C                   PARM                    ZSERR             1                        MD056986
+     C     *LOCK         IN        LDA                                                      MD056986
+     C*                                                                                     MD056986
+     C** Error During ZSFILE Processing, Return to Calling Program                          MD056986
+     C*                                                                                     MD056986
+     C     ZSERR         IFEQ      'Y'                                                      MD056986
+     C                   MOVE      '1'           *INU7                                      MD056986
+     C                   MOVE      '1'           *INU8                                      MD056986
+     C                   MOVE      '1'           *INLR                                      MD056986
+     C                   RETURN                                                             MD056986
+     C                   END                                                                MD056986
+      *                                                                                     MD056986
+     C                   CLOSE     RE005010P1                                               MD056986
+      *                                                                                     MD056986
+      ** Initialize calculated no. of records                                               MD056986
+     C                   Z-ADD     0             CNOR                                       MD056986
+     C                   Z-ADD     1             PNUM                                       MD056986
+     C                   MOVE      *BLANKS       CCY                                        MD056986
+      *                                                                                     MD056986
+     C                   READ      @A8REB1                                50                MD056986
+     C                   ENDDO                                                              MD056986
       *
       **  Final Processing
       *
@@ -255,6 +312,7 @@
       ** Initialize calculated no. of records
       *
      C                   Z-ADD     0             CNOR
+     C                   Z-ADD     1             PNUM                                       MD056986
       *
       ** Access SDBANKPD for bank details
       *

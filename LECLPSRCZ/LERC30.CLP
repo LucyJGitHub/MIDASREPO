@@ -10,7 +10,7 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD057158           Date 05Nov20              */
+/*       Last Amend No. MD057158           Date 10Nov20              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      MD033997           Date 11May15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -29,8 +29,7 @@
 /*       MD057158 - Incorrect update of facility amount and drawn    */
 /*                  amount in FACHISA during ANWD COB for a facility */
 /*                  with backvalued MR. Clear FACACT for non-working */
-/*                  day processing and CLE025 is OFF. Pattern after  */
-/*                  fix SC224775.                                    */
+/*                  day processing and CLE025 is OFF.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD033997 - Move process of facility expiry on 2nd COB.      */
 /*                Populate LEHISAPD with 'FE' events as this file is */
@@ -95,9 +94,7 @@
      CLRPFM HISACT
      ENDDO                                                                                /*CLE025*/
                                                                                           /*CLE025*/
-/****IF*COND(&CLE023 *EQ 'N') THEN(DO)                                        */ /*CLE023 MD057158*/
-     IF         COND((&CLE023 *EQ 'N') +
-                  *OR (&CLE025 *EQ 'N' *AND &CSEQ *EQ 2)) THEN(DO)                      /*MD057158*/
+     IF COND(&CLE023 *EQ 'N') THEN(DO)                                                    /*CLE023*/
              CLRPFM     FILE(FACACT)
      ENDDO                                                                                /*CLE023*/
 
@@ -146,6 +143,12 @@
              CLRPFM     LEHISAPD                                                       /*MD033997*/
              OVRDBF     FILE(HISACT) TOFILE(LEHISAPD)                                  /*MD033997*/
              ENDDO                                                                     /*MD033997*/
+                                                                                        /*MD057158*/
+             IF         COND(&CLE025 *EQ 'N' *AND &CSEQ *EQ 2 +
+                          *AND &CLE023 *EQ 'Y') THEN(DO)                                /*MD057158*/
+                CLRPFM  FILE(FACACT)                                                    /*MD057158*/
+             ENDDO                                                                      /*MD057158*/
+                                                                                        /*MD057158*/
              CALL LER030
 
   /* IF ERROR, SEND MSG & COPY BACK SECURITY FILES     */

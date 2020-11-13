@@ -394,6 +394,7 @@
      C                   EVAL      REPBRC = DFBRCA
      C                   EVAL      PBranch = DFBRCA
      C**********         EVAL      KDBRTT = DFFSEQ                                            CSD103
+     C                   MOVE      DFFSEQ        KDBRTT                                       CSD103
 
       ** Read Deals File
      C     DFDLNO        CHAIN     DEALS

@@ -11,13 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD033413           Date 19May15               *
-      *  Prev Amend No. AR989186           Date 23Aug12               *
+      *  Last Amend No. MD057068           Date 07Nov20               *
+      *  Prev Amend No. MD033413           Date 19May15               *
+      *                 AR989186           Date 23Aug12               *
       *                 AR883210           Date 21Dec11               *
       *                 CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057068 - When running BF Upload for migrating user/role    *
+      *             from multiple zones, some user-role associations  *
+      *             are not mapped. SP23 Blocker error.               *
+      *           - Move location of SQL code that checks and retrieve*
+      *             user role and group id on ‘BFTB_ORGANISATIONGRP’  *
+      *             from 'after' to 'before' location SQL code of     *
+      *             'BFTORGGRPU'.                                     *
       *  MD033413 - New Role is not assigned to the users via API     *
       *  AR989186 - Insert record only if not already existing        *
       *           - Applied for AR1085933                             *
@@ -55,6 +63,14 @@
      C/END-EXEC
       *
      C                   DOW       SQLCODE = 0
+      *                                                                                     MD057068
+      ** Check first if role is existing to get the Group ID                                MD057068
+      *                                                                                     MD057068
+     C/EXEC SQL                                                                             MD057068
+     C+ SELECT BFGROUPIDPK INTO :GrpID                                                      MD057068
+     C+ FROM BFTB_ORGANISATIONGRP                                                           MD057068
+     C+ WHERE TRIM(BFGROUPNAME) = TRIM(:UBROLE)                                             MD057068
+     C/END-EXEC                                                                             MD057068
      C*                                                                                     AR989186
      C/EXEC SQL                                                                             AR989186
      C+ select count(*) into :ORGGRPCNT                                                     AR989186
@@ -64,11 +80,12 @@
      C+ and BFUSERNAME = trim(:UBUSER)                                                      AR989186
      C/END-EXEC                                                                             AR989186
       *
-     C/EXEC SQL
-     C+ SELECT BFGROUPIDPK INTO :GrpID
-     C+ FROM BFTB_ORGANISATIONGRP
-     C+ WHERE TRIM(BFGROUPNAME) = TRIM(:UBROLE)
-     C/END-EXEC
+      ** Move below SQL code before DOW                                                     MD057068
+     C***/EXEC*SQL                                                                          MD057068
+     C***+*SELECT*BFGROUPIDPK*INTO*:GrpID                                                   MD057068
+     C***+*FROM*BFTB_ORGANISATIONGRP                                                        MD057068
+     C***+*WHERE*TRIM(BFGROUPNAME)*=*TRIM(:UBROLE)                                          MD057068
+     C***/END-EXEC                                                                          MD057068
       *
      C                   IF        SQLCODE = 0
      C                             AND ORGGRPCNT = 0                                        AR989186

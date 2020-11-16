@@ -694,7 +694,7 @@
      C                   MOVEL     'N'           CFT014                                     MD055939
      C                   ENDIF                                                              MD055939
 
-      /COPY WNCPYSRC,HUT116_005                                                               HUT116
+      /COPY WNCPYSRC,HUT116_006                                                               HUT116
      C                   ENDSR
       /EJECT
       *****************************************************************

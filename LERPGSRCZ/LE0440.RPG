@@ -11,7 +11,7 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055407           Date 05Oct20               *
+      *  Last Amend No. MD055407           Date 07Nov20               *
       *  Prev Amend No. MD054229           Date 30Aug19               *
       *                 AR700107A          Date 09Feb18               *
       *                 MD051890           Date 16Sep18               *
@@ -104,14 +104,16 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  MD055407  - Decimal data errors in field AMCNSP on extension *
-      *              file CLOAMSQD. Defined additional fields.        *
+      *  MD055407  - Decimal data error in AMCNSP field in CLOAMSQD   *
+      *              file. If new record, CRE073 fields are set to    *
+      *              zero/blanks. If rewrite from ACTN6L1 or LAUPDDK, *
+      *              retrieve details from CLOAMSQD.                  *
       *  MD054229  - Manual repayments not being processed in COB     *
       *              and is deleted in LOAMSDK                        *
       *  AR700107A - Prevent generation of RE/MR events for PDCLs     *
       *              that have settlement a/c block all debit = 'Y'   *
       *              only if value date is less than or equal to      *
-      *              rundate. SFDC 00499856 Reopen (Child: AR700108A) *
+      *              rundate. SFDC 00499856 Reopen (Child: AR700108A) *      
       *  MD051890 - Missing Principal Projection on Nostro Account    *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -323,6 +325,7 @@
      F***CLOAN** IF  F    1782  7AI     2 DISK                                         CER020 CRE073
      F***CLOAN** IF  F    1829  7AI     2 DISK                                         CRE073 CLE134
      FCLOAN   IF  F    1874  7AI     2 DISK                                                   CLE134
+     FCLOAMQL0IF  E           K        DISK                                                 MD055407
 0016 FNLAMSDH O   F     320            DISK
 0016 F***NLAMSDK*O   F     320            DISK                            S01518
      F***NLAMSDK*O   F     949            DISK                     S01518 CAC001
@@ -336,7 +339,7 @@
      F***NLAMSDK O   F    1230            DISK                                         CGL029 CLE036
      F*NLAMSDK*O***F****1278            DISK                                           CLE036 CLE042
      FNLAMSDK O   F    1291            DISK                                                   CLE042
-     F*NLAMSQD*O***F****  37            DISK                                         258399 MD055407
+     F***NLAMSQD O   F      37            DISK                                       258399 MD055407
      FNLAMSQD O   F      55            DISK                                                 MD055407
 0016 FNLAMSZ1 O   F     320            DISK
 0017 FPDUEHH  O   F      64            DISK
@@ -1060,20 +1063,13 @@
      I                                     16151632 PONS                                      CGL029
      I                                     17621765 CLAS                                      CLE042
      I                                     17801782 LOIC                                      CER020
-     I**********                           17831788 CNSP                             CRE073 MD055407
-     I**********                           17891789 CNSG                             CRE073 MD055407
-     I**********                           17901796 RDMT                             CRE073 MD055407
-     I**********                           17971800 RDFD                             CRE073 MD055407
-     I**********                           18011806 NNSP                             CRE073 MD055407
-     I**********                           18071807 NNSG                             CRE073 MD055407
-     I**********                           18081814 NDMT                             CRE073 MD055407
-     I                                     17941799 CNSP                                    MD055407
-     I                                     18001800 CNSG                                    MD055407
-     I                                     18011807 RDMT                                    MD055407
-     I                                     18081811 RDFD                                    MD055407
-     I                                     18121817 NNSP                                    MD055407
-     I                                     18181818 NNSG                                    MD055407
-     I                                     18191825 NDMT                                    MD055407
+     I                                     17831788 CNSP                                      CRE073
+     I                                     17891789 CNSG                                      CRE073
+     I                                     17901796 RDMT                                      CRE073
+     I                                     17971800 RDFD                                      CRE073
+     I                                     18011806 NNSP                                      CRE073
+     I                                     18071807 NNSG                                      CRE073
+     I                                     18081814 NDMT                                      CRE073
       *                                                                                       CLE134
      I                                     18301830 FAMU                                      CLE134
      I                                     18311831 FPNR                                      CLE134
@@ -1760,6 +1756,25 @@
 0391 C                     MOVE PCRFA     PCRF                                               BUG9021
 0398 C   41
 0399 COR 44                EXSR CHECSQ
+      *                                                                                     MD055407
+      ** Define keylist for CLOAMQL0                                                        MD055407
+      *                                                                                     MD055407
+     C           CLMKEY    KLIST                                                            MD055407
+     C                     KFLD           LNRF                                              MD055407
+     C                     KFLD           VDAT                                              MD055407
+     C                     KFLD           LASN                                              MD055407
+     C                     KFLD           BRCA                                              MD055407
+      *                                                                                     MD055407
+     C           CLMKEY    CHAINCLOAMQL0             85                                     MD055407
+     C           *IN85     IFEQ *OFF                                                        MD055407
+     C                     ELSE                                                             MD055407
+     C                     MOVEL*BLANK    AMFRID                                            MD055407
+     C                     Z-ADD*ZERO     AMCNSP                                            MD055407
+     C                     MOVEL*BLANK    AMCNSG                                            MD055407
+     C                     MOVEL*BLANK    AMRDMT                                            MD055407
+     C                     MOVEL*BLANK    AMRDFD                                            MD055407
+     C                     ENDIF                                                            MD055407
+      *                                                                                     MD055407
 0400 C**
 0401 C**   SAVE LOAN REFERENCE, VALUE DATE AND SEQUENCE
 0402 C**   OF LAST RECORD OUTPUT TO NLAMS.
@@ -2192,6 +2207,13 @@
      C                     ENDIF                                          CLE005
       * Generate a new PCRF for this record:                                                 BUG9021
      C                     MOVEL*BLANKS   PCRF                                               BUG9021
+      *                                                                                     MD055407
+     C                     MOVEL*BLANK    AMFRID                                            MD055407
+     C                     Z-ADD*ZERO     AMCNSP                                            MD055407
+     C                     MOVEL*BLANK    AMCNSG                                            MD055407
+     C                     MOVEL*BLANK    AMRDMT                                            MD055407
+     C                     MOVEL*BLANK    AMRDFD                                            MD055407
+      *                                                                                     MD055407
      C                     EXSR CHECSQ                                    CLE005
      C                     EXCPTNEWREC                                    CLE005
      C                     EXCPTNRECQD                                                        258399
@@ -2283,6 +2305,13 @@
      C                     Z-SUBFRAM      WFRAM  130                                          CLE036
      C                     Z-SUBFINT      WFINT  130                                          CLE036
      C                     Z-SUBFTXA      WFTXA  130                                          CLE036
+      *                                                                                     MD055407
+     C                     MOVEL*BLANK    AMFRID                                            MD055407
+     C                     Z-ADD*ZERO     AMCNSP                                            MD055407
+     C                     MOVEL*BLANK    AMCNSG                                            MD055407
+     C                     MOVEL*BLANK    AMRDMT                                            MD055407
+     C                     MOVEL*BLANK    AMRDFD                                            MD055407
+      *                                                                                     MD055407
      C                     EXSR CHECSQ                                    CLE007
      C                     EXCPTNEWREC                                    CLE007
      C                     EXCPTNRECQD                                                        258399
@@ -3607,23 +3636,23 @@
      O                         VDAT      11                                                   258399
      O                         LASN      14                                                   258399
      O                         BRCA      17                                                   258399
-     O                         FRNT      37                                                 MD055407
-     O                         CNSP      43                                                 MD055407
-     O                         CNSG      44                                                 MD055407
-     O                         RDMT      51                                                 MD055407
-     O                         RDFD      55                                                 MD055407
+     O                         AMFRID    37                                                 MD055407
+     O                         AMCNSP    43P                                                MD055407
+     O                         AMCNSG    44                                                 MD055407
+     O                         AMRDMT    51                                                 MD055407
+     O                         AMRDFD    55                                                 MD055407
       *                                                                                       258399
      ONLAMSQD E                NRECQD                                                         258399
      O                         LNRF       6                                                   258399
      O                         VDAT      11                                                   258399
      O                         LASN      14                                                   258399
      O                         BRCA      17                                                   258399
-     O                         FRNT      37                                                 MD055407
-     O                         CNSP      43                                                 MD055407
-     O                         CNSG      44                                                 MD055407
-     O                         RDMT      51                                                 MD055407
-     O                         RDFD      55                                                 MD055407
-      *
+     O                         AMFRID    37                                                 MD055407
+     O                         AMCNSP    43P                                                MD055407
+     O                         AMCNSG    44                                                 MD055407
+     O                         AMRDMT    51                                                 MD055407
+     O                         AMRDFD    55                                                 MD055407
+      *                                                                                       258399
      O/COPY WNCPYSRC,LE0440O003
 0992 O**
 0992 O**

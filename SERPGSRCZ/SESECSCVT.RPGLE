@@ -65,6 +65,8 @@
       *                                                               *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
+      *           - skip ZNCD if coupon date array is empty to        *
+      *             prevent SE0045 from dumping                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding                              *
       *  CER059 - German Feature Upgrade to Delhi                     *

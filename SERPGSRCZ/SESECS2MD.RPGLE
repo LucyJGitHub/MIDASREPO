@@ -52,6 +52,8 @@
       *                                                               *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
+      *           - Allow amendment of security with no Coupon/Rate   *
+      *             Days                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

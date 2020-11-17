@@ -64,6 +64,9 @@
       *                                                               *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
+      *           - skip validation for last coupon date and next     *
+      *             coupon date if the security has no coupon/rate    *
+      *             days and BCNV is not 'N'                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035962 - NCD incorrectly defaulted to maturity date. Make  *
       *             sure next coupon date is defaulted first before   *

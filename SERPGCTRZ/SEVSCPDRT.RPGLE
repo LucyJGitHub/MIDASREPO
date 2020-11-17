@@ -377,11 +377,13 @@
      C                   MOVEA     WSCD          Work48
  
      C                   IF        Work48 = *BLANKS                                         
+     C                   IF        CSE005 = 'Y'                                             MD056949
      C                   IF        DDBCNV <> 'N'                                            MD056949
      C                   MOVE      'N'           OKCD01                                     MD056949
      C                   ADD       1             IDx                                        MD056949
      C                   MOVEL     'DDCD01'      FldNamXAr(IDx)                             MD056949
      C                   MOVEL     '5049451'     MsgIdXAr(IDx)                              MD056949
+     C                   ENDIF                                                              MD056949
      C                   ENDIF                                                              MD056949
 
      C                   IF        S1INCS = 'C'

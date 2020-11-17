@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252696             Date 08Sep09               *
+      *  Last Amend No. 252696             Date 09Nov20               *
       *  Prev Amend No. MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036089           Date 23Oct15               *
@@ -107,6 +107,7 @@
       *  252696 - Ensure that field Swift Reference field is save in  *
       *           in INPAYDD file for MidasPlus as well as other      *
       *           needed fields.                                      *
+      *         - Applied for MD-57173                                *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *

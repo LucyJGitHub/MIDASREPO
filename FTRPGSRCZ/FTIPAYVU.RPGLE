@@ -33,7 +33,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 252696             Date 13Aug08               *
+      *  Last Amend No. 252696             Date 09Nov20               *
       *  Prev Amend No. 257943             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
@@ -104,6 +104,7 @@
       *                                                               *
       *  252696 - Ensure that field Swift Reference field is save in  *
       *           in INPAYDD file for MidasPlus.                      *
+      *         - Applied for MD-57173                                *
       *  257943 - Using the CANCEL button after routing MT103 to an   *
       *           incoming message, does not release the MT103 to be  *
       *           routed again. Ensure that a selected message is     *

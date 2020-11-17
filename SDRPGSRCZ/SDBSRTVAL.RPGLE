@@ -711,8 +711,14 @@
       *                                                                                       CSD103
       * Validate Weight Convention                                                            CSD103
       *                                                                                       CSD103
-     C     DDWGHT        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '1'           DDWGHT                         Default: 1    CSD103
+     C                   IF        DDWGHT = *BLANKS AND                                       CSD103
+     C                             (DDAVOP = '1' OR DDAVOP = '2')                             CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDAVOPOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049454'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
      C                   ELSE                                                                 CSD103
       *                                                                                       CSD103
      C     DDWGHT        IFNE      '1'                                                        CSD103
@@ -723,8 +729,28 @@
      C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049408'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'N'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDWGHTOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049455'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
+     C     DDAVOP        IFNE      '1'                                                        CSD103
+     C     DDAVOP        ANDNE     '2'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDWGHTOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049453'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *

@@ -23,7 +23,7 @@
       *             from multiple zones, some user-role associations  *
       *             are not mapped. SP23 Blocker error.               *
       *           - Move location of SQL code that checks and retrieve*
-      *             user role and group id on ‘BFTB_ORGANISATIONGRP’  *
+      *             user role and group id on 'BFTB_ORGANISATIONGRP'  *
       *             from 'after' to 'before' location SQL code of     *
       *             'BFTORGGRPU'.                                     *
       *  MD033413 - New Role is not assigned to the users via API     *
@@ -80,7 +80,7 @@
      C+ and BFUSERNAME = trim(:UBUSER)                                                      AR989186
      C/END-EXEC                                                                             AR989186
       *
-      ** Move below SQL code before DOW                                                     MD057068
+      ** Move below SQL code after DOW                                                      MD057068
      C***/EXEC*SQL                                                                          MD057068
      C***+*SELECT*BFGROUPIDPK*INTO*:GrpID                                                   MD057068
      C***+*FROM*BFTB_ORGANISATIONGRP                                                        MD057068

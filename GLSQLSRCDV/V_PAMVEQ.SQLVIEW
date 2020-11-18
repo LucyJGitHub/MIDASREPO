@@ -16,21 +16,44 @@
   **********/**********                                                         :
   AS                                                                            :
   SELECT RSACMTPD.CCYD, RSACMTPD.BRCA, RSACMTPD.CUSN,                           :
-  RSACMTPD.ACDE, RSACMTPD.ASNC, RSACMTPD.VUDT,                                  :
+  RSACMTPD.ACDE, RSACMTPD.ASNC, RSACMTPD.PTDT,                                  :
+  RSACMTPD.VUDT,                                                                :
   CASE                                                                          :
   WHEN RSACMTPD.PRFL='Y' THEN 'YES'                                             :
-  ELSE 'NO'                                                                     :
-  END AS PRFL,                                                                  :
-  CASE                                                                          :
-  WHEN RSACMTPD.CQNR=0 THEN ''                                                  :
-  END AS CQNR,                                                                  :
+  ELSE 'NO'                                                                     : 
+  END AS PRFL,                                                                  : 
+  CASE                                                                          : 
+  WHEN RSACMTPD.CQNR=0 THEN ''                                                  : 
+  END AS CQNR,                                                                  : 
   RSACMTPD.TRYP, RSACMTPD.NRTD,                                                 :
   RSACMTPD.DORC,                                                                :
   CASE                                                                          :
-  WHEN RSACMTPD.DORC=0 THEN RSACMTPD.MVAM * 1                                   :
-  ELSE RSACMTPD.MVAM * -1                                                       :
+  WHEN RSACMTPD.DORC=0 THEN (RSACMTPD.MVAM * 1)                                 :
+  ELSE (RSACMTPD.MVAM * -1)                                                     : 
+  END AS MVAM                                                                   : 
+  FROM YBDMLIB.RSACMTPD RSACMTPD                                                : 
+  UNION ALL                                                                     :
+  SELECT APOSTPD.CCY AS CCYD, APOSTPD.BRCA, APOSTPD.CNUM AS CUSN,               : 
+  APOSTPD.ACOD AS ACDE, APOSTPD.ACSQ AS ASNC,APOSTPD.PSTD AS PTDT               :
+  APOSTPD.VALD AS VUDT,                                                         : 
+  CASE                                                                          : 
+  WHEN APOSTPD.CNUM <> '' THEN 'NO'                                             :
+  ELSE 'NO'                                                                     :
+  END AS PRFL,                                                                  : 
+  CASE                                                                          :
+  WHEN APOSTPD.CHQN=0 THEN ''                                                   : 
+  END AS CQNR,                                                                  :
+  CASE                                                                          :
+  WHEN APOSTPD.TRAT > 0 THEN VARCHAR(LPAD(APOSTPD.TRAT,5,'0'))                  : 
+  ELSE '00000' END AS TRYP,                                                     :
+  APOSTPD.PNAR AS NRTD,                                                         :
+  APOSTPD.DRCR AS DORC,                                                         :
+  CASE                                                                          :
+  WHEN APOSTPD.DRCR=0 THEN (APOSTPD.PSTA * 1)                                   : 
+  ELSE (APOSTPD.PSTA * -1)                                                      :
   END AS MVAM                                                                   :
-  FROM RSACMTPD AS RSACMTPD                                                     :
+  FROM YBDMLIB.APOSTPD APOSTPD                                                  :
+ LABEL ON TABLE V_PACMVT IS 'Projected Account Movements';                      :
 /*******************************************************************************/
  ;                                                                              :
   label on table     **********/**********                                      :

@@ -20,7 +20,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR545781 - Missing/Multiple IH on history file. Provide a    *
       *             datapatch utility to update loan                  *

@@ -620,11 +620,19 @@
       * Validate Averaging Option                                                             CSD103
       *                                                                                       CSD103
      C     DDAVOP        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '0'           DDAVOP                         Default: 0    CSD103
+      *                                                                                       CSD103
+     C     DDBLRT        IFEQ      'Y'                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDAVOPOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049404'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
      C                   ELSE                                                                 CSD103
       *                                                                                       CSD103
-     C     DDAVOP        IFNE      '0'                                                        CSD103
-     C     DDAVOP        ANDNE     '1'                                                        CSD103
+     C     DDAVOP        IFNE      '1'                                                        CSD103
      C     DDAVOP        ANDNE     '2'                                                        CSD103
      C     DDAVOP        ANDNE     '3'                                                        CSD103
      C     DDAVOP        ANDNE     '4'                                                        CSD103
@@ -636,18 +644,7 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ELSE                                                                 CSD103
       *                                                                                       CSD103
-     C     DDBLRT        IFEQ      'Y'                                                        CSD103
-     C     DDAVOP        ANDEQ     '0'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDAVOPOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     '5049404'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
-     C     DDAVOP        ANDNE     '0'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDAVOPOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
@@ -656,7 +653,6 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103

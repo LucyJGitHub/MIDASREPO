@@ -21,7 +21,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031150 - Changes to Export of Base Rates                   *
       *                                                               *
@@ -141,7 +140,8 @@
      C     SRExtrBSHS    BEGSR
 
      C                   MOVEL     *BLANKS       W0CYCD
-     C                   Z-ADD     0             W0BSRC
+     C**********         Z-ADD     0             W0BSRC                                       CSD103
+     C                   MOVE      *BLANKS       W0BSRC                                       CSD103
      C                   Z-ADD     0             W0HIDT
      C                   Z-ADD     0             W0CBSR
      C                   Z-ADD     0             W0COUNT

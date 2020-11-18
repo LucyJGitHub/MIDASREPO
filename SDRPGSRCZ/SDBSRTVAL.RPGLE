@@ -570,7 +570,7 @@
      C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
      C                   PARM      *ZERO         @@AMT                          File field    CSD103
      C                   PARM                    BNDCSP                                       CSD103
-	  *                                                                                      CSD103
+	 *                                                                                       CSD103
      C     @@ERCD        IFNE      0                                                          CSD103
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDBADJOK                                     CSD103

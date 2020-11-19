@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055570           Date 16Nov20               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
       *                 MD027587           Date 19Jun14               *
@@ -63,6 +64,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057194 - The Batch goes to repair queue if the Batch       *
+      *             coming from SOAP/JMS has Batch Number defined and *
+      *             Hold/Accept Indicator = A.                        *
+      *           - Only validate for currency totals if Front Office *
+      *             ID is blank.                                      *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *
@@ -368,12 +374,12 @@
      C                   MOVE      'Y'           BTNBINS           1                          CAP084
      C                   ENDIF                                                                CAP084
      C                   ENDIF                                                                CAP084
- 
+
       ** If system is multi-branching, validate Branch Code.
       ** Else, default Branch Code to Bank's Single Branch Code.
- 
+
       /COPY WNCPYSRC,GLBITHV004
- 
+
      C     BJSBRC        IFEQ      *BLANKS
       * Amend mode                                                                           BUG3546
      C     JAVAUSER      IFEQ      'Y'                                                       BUG3546
@@ -391,23 +397,23 @@
      C**********         EVAL      DDBCDA = *BLANKS                                           246752
      C                   EVAL      DDBCDA = BJSBRC                                            246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV005
- 
+
       ** Validate Department Code.
- 
+
       /COPY WNCPYSRC,GLBITHV006
- 
+
      C                   EXSR      SRDPCD
- 
+
       /COPY WNCPYSRC,GLBITHV007
- 
+
       ** If system is multi-branching, validate Multiple
       ** Branch Batch Indicator.  Else, default Multiple
       ** Branch Batch Indicator to 'N'.
- 
+
       /COPY WNCPYSRC,GLBITHV008
- 
+
      C     BJSBRC        IFEQ      *BLANKS
      C                   EXSR      SRMBRB
      C                   ELSE
@@ -415,31 +421,31 @@
      C**********         EVAL      DDMBRB = *BLANKS                                           246752
      C                   EVAL      DDMBRB = 'N'                                               246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV009
- 
+
       ** Validate Batch Description.
- 
+
       /COPY WNCPYSRC,GLBITHV010
- 
+
      C                   EXSR      SRBDES
- 
+
       /COPY WNCPYSRC,GLBITHV011
- 
+
       ** Validate Batch Total.
- 
+
       /COPY WNCPYSRC,GLBITHV012
- 
+
      C                   EXSR      SRBTOT
- 
+
       /COPY WNCPYSRC,GLBITHV013
- 
+
       ** Validate No. of Items.
- 
+
       /COPY WNCPYSRC,GLBITHV014
- 
+
      C                   EXSR      SRNOIS
- 
+
       ***Validate*Month*End*Adjustment*Batch                                           CSC024 CSC054
       ** Validate Period End Adjustments Batch                                                CSC054
                                                                                               CSC024
@@ -451,11 +457,11 @@
      C                   EXSR      SRSHPI                                                   MD054696
                                                                                             MD054696
       /COPY WNCPYSRC,GLBITHV015
- 
+
       ** Validate Batch Held/Accepted Indicator.
- 
+
       /COPY WNCPYSRC,GLBITHV016
- 
+
       ** If coming from a java user then allow held/accept indicator to be 'D'                CAP084
       ** so that the batch header can be deleted.                                             CAP084
                                                                                               CAP084
@@ -627,6 +633,7 @@
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     DDBHAI        ANDEQ     'A'                                                        CAP804
      C     DDBTNB        ANDNE     *BLANKS                                                    CAP084
+     C     FOTRID        ANDEQ     *BLANKS                                                  MD057194
      C                   EXSR      SRRESET                                                    CAP084
      C                   EXSR      SRChkCcy                                                   CAP084
      C                   EXSR      SRChkdet                                                   241505
@@ -646,17 +653,17 @@
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017
- 
+
       ** If invalid Branch Code, default Branch to User Branch
       ** Code to enable the batch to be corrected through the
       ** existing maintenance.
- 
+
      C     DDBcdaOK      IFEQ      'N'
      C                   EVAL      B1BCDA = WBrch
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV018
- 
+
      C                   RETURN
       *
       *****************************************************************

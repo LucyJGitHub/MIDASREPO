@@ -325,5 +325,5 @@ Finastra International Limited 2020
 ** ARRAY REMARKS
 Fee customer is not equal from fee customer extension.
 Fee extension customer has been amended to Fee customer.
-Loan customer is not found in CLOANCL.
+Loan number is not found in CLOANCL.
 Please investigate what happened, program terminated.

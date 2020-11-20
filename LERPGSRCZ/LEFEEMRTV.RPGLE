@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD030964           Date 06Mar17               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025945           Date 19Aug14               *
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030964 - Incorrect branch code for settlement account of   *
+      *             method 05 for main syndicated loan fee.           *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -751,12 +754,22 @@
      C                   IF        CL_RSTM <> 0                                               244636
      C                   MOVEL     CL_RSTM       DDRSTM                                       244636
      C                   ENDIF                                                                244636
-     C                   IF        CL_RONS <> *BLANKS AND                                     244636
-     C                             CL_BRCA <> *BLANKS                                         244636
+      *                                                                                     MD030964
+     C                   IF        CL_PTYP = 66 or CL_PTYP = 67 or                          MD030964
+     C                             CL_PTYP = 69 or CL_PTYP = 72                             MD030964
+     C                   MOVEL     CL_OSDB       WWSETB            3                        MD030964
+     C                   ELSE                                                               MD030964
+     C                   MOVEL     CL_OMDB       WWSETB                                     MD030964
+     C                   ENDIF                                                              MD030964
+      *                                                                                     MD030964
+     C**********         IF        CL_RONS <> *BLANKS AND                            244636 MD030964
+     C**********                   CL_BRCA <> *BLANKS                                244636 MD030964
      C**********         IF        WComplete <> *BLANKS                                244636 261546
+     C                   IF        CL_RONS <> *BLANKS                                       MD030964
      C                   IF        CL_RSTM  =  05                                             261546
-     C                   MOVE      CL_RONS       DDRONX                                       244636
-     C                   MOVEL     CL_BRCA       DDRONX                                       244636
+     C**********         MOVE      CL_RONS       DDRONX                              244636 MD030964
+     C**********         MOVEL     CL_BRCA       DDRONX                              244636 MD030964
+     C                   EVAL      DDRONX = WWSETB + CL_RONS                                MD030964
      C                   ELSE                                                                 244636
      C                   EVAL      DDRONX = CL_RONS                                           244636
      C                   ENDIF                                                                244636

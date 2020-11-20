@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC054             Date 23Feb12              */
+/*       Last Amend No. AR957053           Date 14May12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC054             Date 23Feb12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -27,6 +28,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR957053 - At MP1.4.11.06 IR01, GOC0122 00001 runs in COB if*/
+/*                  CLE106 and CLE016 are switched on (Pf/SCSARCPD). */
+/*                  Call EODMONITOR if these features are switched ON*/
+/*                  (Child: AR957055)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC054 - Period End Adjustments                             */
 /*       245526 - EODMONITOR should also be run if CGL014 is on      */
@@ -51,6 +56,9 @@
                           2003')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')      /*CGP003*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*CGP003*/
+             DCL        VAR(&CLE106) TYPE(*CHAR) LEN(1) VALUE('N')                      /*AR957053*/
+             DCL        VAR(&CGL014) TYPE(*CHAR) LEN(1) VALUE('N')                      /*AR957053*/
+             DCL        VAR(&CLE016) TYPE(*CHAR) LEN(1) VALUE('N')                      /*AR957053*/
  
 /* Global monitor message */
  
@@ -115,13 +123,32 @@
                CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*245526*/
                CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' +
                             'CGL014' &FMT)                                                /*245526*/
-               IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
-                          '*NRF   ') THEN(DO)                                             /*245526*/
-                 SNDPGMMSG  MSG('GZAOSARDR0 - PROGRAM ERROR') +
-                            TOPGMQ(*EXT) TOMSGQ(GPOPERQ)                                  /*245526*/
-                 CHGJOB     JOB(XXXXXX11)                                                 /*245526*/
-                 GOTO       CMDLBL(END)                                                   /*245526*/
-               ENDDO                                                                      /*245526*/
+               IF         COND(&RTCD *EQ *BLANKS) THEN(CHGVAR +
+                            VAR(&CGL014) VALUE('Y'))                                    /*AR957053*/
+               CHGVAR     VAR(&RTCD) VALUE('       ')                                   /*AR957053*/
+               CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' +
+                            'CLE016' &FMT)                                              /*AR957053*/
+               IF         COND(&RTCD *EQ *BLANKS) THEN(CHGVAR +
+                            VAR(&CLE016) VALUE('Y'))                                    /*AR957053*/
+               CHGVAR     VAR(&RTCD) VALUE('       ')                                   /*AR957053*/
+               CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' +
+                            'CLE106' &FMT)                                              /*AR957053*/
+               IF         COND(&RTCD *EQ *BLANKS) THEN(CHGVAR +
+                            VAR(&CLE106) VALUE('Y'))                                    /*AR957053*/
+                                                                                        /*AR957053*/
+/** If any features switched on then start EODMONITOR */                                /*AR957053*/
+                                                                                        /*AR957053*/
+               IF         COND(&CGL014 *EQ 'Y' *OR &CLE016 *EQ 'Y' +
+                            *OR &CLE106 *EQ 'Y') THEN(DO)                               /*AR957053*/
+                  CALL       PGM(GLC005020)                                             /*AR957053*/
+               ENDDO                                                                    /*AR957053*/
+/**********    IF         COND(&RTCD *NE '       ' *AND &RTCD *NE + */                  /*AR957053*/
+/**********               '*NRF   ') THEN(DO) */                                 /*245526 AR957053*/
+/**********      SNDPGMMSG  MSG('GZAOSARDR0 - PROGRAM ERROR') + */                      /*AR957053*/
+/**********                 TOPGMQ(*EXT) TOMSGQ(GPOPERQ) */                      /*245526 AR957053*/
+/**********      CHGJOB     JOB(XXXXXX11) */                                     /*245526 AR957053*/
+/**********      GOTO       CMDLBL(END) */                                       /*245526 AR957053*/
+/**********    ENDDO */                                                          /*245526 AR957053*/
                                                                                           /*245526*/
                IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*245526*/
                 CALL       PGM(GLC005020)                                                 /*245526*/

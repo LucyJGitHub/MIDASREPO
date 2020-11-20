@@ -36,6 +36,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  222088 - Conditioning of CM narrative should account for     *
+      *           details on heirarchy, not ICD.                      *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  216936 - Text from CM ICD should not be present on           *
+      *           statement for top accounts.                         *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  212319 - Default text for Zero Balance account not reported  *
+      *           on statements.                                      *
+      *         - Applied for AR973615 (Child: AR973617).             *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -76,6 +86,12 @@
      F                                     RENAME(GLRSACD0:RSGLRSACD0)
      F                                     PREFIX(RS)
       ** Midas GL MT94x Used Account Movements
+                                                                                              212319
+     FREZSHLL1  IF   E           K DISK                   INFSR(*PSSR)                        212319
+      ** Midas RE Group Account Hierarchy Links                                               212319
+                                                                                              222088
+     FREGAHDL0  IF   E           K DISK                   INFSR(*PSSR)                        222088
+      ** Midas RE Group Account Hierarchy Details                                             222088
  
      FGLFFAML0  IF   E           K DISK                   INFSR(*PSSR)
      F                                     RENAME(GLFFAMD0:FFGLFFAMD0)
@@ -122,6 +138,7 @@
       * 29 - Access Used Movements  (LF/GLRSACL0)                              *
       * 30 - Access FF Used Movements  (LF/GLFFAML0)                           *
       * 31 - Access Group Accounts  (LF/REGAHLJ2)                              *              CRE008
+      * 35 - Access CM A/C /Hierarchy (LF/REGAHDL0)                            *              222088
       * 40 - General Error                                                     *
       *                                                                        *
       * Database Error Indicators                                              *
@@ -806,11 +823,32 @@
       *  instead                                                                              CRE008
      C                   IF        CRE008 = 'Y'                                               CRE008
      C     KeyAcntBl     Chain     REGAHLJ2                           31                      CRE008
+     C     KeyAcntBg     Chain     REZSHLL1                           36                      212319
+     C                   IF        *IN31 = *OFF                                               222088
+     C     CLHIER        CHAIN     REGAHDL0                           35                      222088
+     C                   IF        *IN35 = *ON                                                222088
+     C                   EXSR      *PSSR                                                      222088
+     C                   ENDIF                                                                222088
+     C                   ENDIF                                                                222088
      C                   Endif                                                                CRE008
       *                                                                                       CRE008
      C                   SELECT
+     C                   WHEN      CRE008 = 'Y' And                                           212319
+     C                             *IN36 = *OFF                                               212319
+     C                   EVAL      MGMIO1 = CMTXTZ                                            212319
+     C                   EVAL      MGMIO2 = %subst(CMTXTZ:66:65)                              212319
+     C                   EVAL      MGMIO3 = %subst(CMTXTZ:131:65)                             212319
+     C                   EVAL      MGMIO4 = %subst(CMTXTZ:196:5)                              212319
+     C                   EVAL      MGMIO5 = *blanks                                           212319
+     C                   EVAL      MGMIO6 = *blanks                                           212319
      C                   WHEN      CRE008 = 'Y' And                                           CRE008
      C                             *IN31 = *OFF                                               CRE008
+     C                             AND CLCCAT <> 'T'                                          216936
+     C                             AND GDTOPB = 'Y'                                           222088
+     C                             OR  CRE008 = 'Y'                                           222088
+     C                             AND *IN31 = *OFF                                           222088
+     C                             AND CLCCAT = 'T'                                           222088
+     C                             AND GDTOPB = 'N'                                           222088
      C                   EVAL      MGMIO1 = CMTXTG                                            CRE008
      C                   EVAL      MGMIO2 = %subst(CMTXTG:66:65)                              CRE008
      C                   EVAL      MGMIO3 = %subst(CMTXTG:131:65)                             CRE008
@@ -1047,6 +1085,12 @@
      C                   KFLD                    KeyACOD                        Account code
      C                   KFLD                    KeyACSQ                        Account sequence num
      C                   KFLD                    KeyBRCA                        Branch Code - Alpha
+     C     KeyAcntBg     KLIST                                                                212319
+     C                   KFLD                    KeyBRCA                        Branch Code   212319
+     C                   KFLD                    KeyCNUM                        Customer num  212319
+     C                   KFLD                    KeyCCY                         Currency cod  212319
+     C                   KFLD                    KeyACOD                        Account code  212319
+     C                   KFLD                    KeyACSQ                        Account sequ  212319
  
       ** Key to access Posting details.
  

@@ -14,15 +14,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 212319             Date 28May12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CRE008  *CREATE    Date 19Feb02               *
+      *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  212319 - Refelect SWIFT fromatting when printing ICD text.   *
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE008 - Cash Management                                     *
       *                                                               *
@@ -296,15 +299,23 @@
  
       ** Text for Group A/c Hierarchies Off Balance Sheet
  
-     C     67            SUBST     CMTXTG:1      RTXTG1
-     C     67            SUBST     CMTXTG:68     RTXTG2
-     C     66            SUBST     CMTXTG:135    RTXTG3
+     C*****67***         SUBST     CMTXTG:1      RTXTG1                                       212319
+     C*****67***         SUBST     CMTXTG:68     RTXTG2                                       212319
+     C*****66***         SUBST     CMTXTG:135    RTXTG3                                       212319
+     C     65            SUBST     CMTXTG:1      RTXTG1                                       212319
+     C     65            SUBST     CMTXTG:66     RTXTG2                                       212319
+     C     65            SUBST     CMTXTG:131    RTXTG3                                       212319
+     C     5             SUBST     CMTXTG:196    RTXTG4                                       212319
  
       ** Text for Zero Balance Hierarchies Off Balance Sheet
  
-     C     67            SUBST     CMTXTZ:1      RTXTZ1
-     C     67            SUBST     CMTXTZ:68     RTXTZ2
-     C     66            SUBST     CMTXTZ:135    RTXTZ3
+     C*****67***         SUBST     CMTXTZ:1      RTXTZ1                                       212319
+     C*****67***         SUBST     CMTXTZ:68     RTXTZ2                                       212319
+     C*****66***         SUBST     CMTXTZ:135    RTXTZ3                                       212319
+     C     65            SUBST     CMTXTZ:1      RTXTZ1                                       212319
+     C     65            SUBST     CMTXTZ:66     RTXTZ2                                       212319
+     C     65            SUBST     CMTXTZ:131    RTXTZ3                                       212319
+     C     5             SUBST     CMTXTZ:196    RTXTZ4                                       212319
  
       ** LOCAL Forward Value Sweeping
  

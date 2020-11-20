@@ -25,7 +25,7 @@
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      FLEFEEDLD  IF   E           K DISK    INFSR(*PSSR)
-     FLEFEEQL3  UF   E           K DISK    INFSR(*PSSR)
+     FLEFEEQL0  UF   E           K DISK    INFSR(*PSSR)
      FUTLE0855P1O    E             PRINTER OFLIND(*IN25)
 
       ** =======
@@ -87,7 +87,7 @@
      C                   EVAL      *IN25 = *ON
      C                   EXSR      PrintHeader2
       *
-     C                   EXSR      ReadCLOAN
+     C                   EXSR      ReadUTLE0855
       ** Print Total
      C                   EXSR      PrintHeader1
      C                   EXSR      PrintHeader2
@@ -103,27 +103,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  ReadCLOAN  - read CLOAN file                              *
+      *  ReadUTLE0855   - read UTLE0855 logical file                  *
       *****************************************************************
 
-     C     ReadCLOAN     BEGSR
+     C     ReadUTLE0855  BEGSR
 
-     C     *LOVAL        SETLL     CLOAN
-     C                   READ      CLOAN
+     C     *LOVAL        SETLL     LEFEEQL0
+     C                   READ      LEFEEQL0
 
-     C                   DOW       NOT %EOF(CLOAN)
+     C                   DOW       NOT %EOF(LEFEEQL0)
 
-     C                   EVAL      PLNRF = LNRF
-     C                   EVAL      PCNUM = CNUM
-     C                   EVAL      POLNO = OLNO
+     C                   IF        FQLOAN <> *BLANKS
+     C                   EVAL      PLNRF = FQLOAN
+     C                   EVAL      POLNO = FQCNUM
+     C                   EVAL      PFSEQ = FQFSEQ
+     C     LEFEEDKEY     CHAIN     LEFEEDLD
+     C                   IF        %FOUND(LEFEEDLD)
+     C                   IF        FQCNUM <> FECNUM
+     C                   EVAL      PCNUM = FECNUM
+     C     FELOAN        CHAIN     CLOAN
+     C                   IF        %FOUND(CLOAN)
      C                   EVAL      PPTYP = PTYP
-     C     LNRF          CHAIN     LEFEEDLD
-     C                   DOW       NOT %EOF(LEFEEDLD)
-     C                   EVAL      PFSEQ = FEFSEQ
-     C                   IF        CNUM = FECNUM
-     C     QKEY          CHAIN     LEFEEQL3
-     C                   IF        %FOUND(LEFEEQL3)
-     C                   IF        FQCNUM <> CNUM
      C                   EVAL      PCTR+=1
      C                   EVAL      PREM1 = ARRREM(1)
      C                   EXSR      PrintDetail1
@@ -131,8 +131,6 @@
      C  N10              EXSR      PrintDetail2
      C  N10              EVAL      FQCNUM = CNUM
      C  N10              UPDATE    LEFEEQD0
-     C                   ENDIF
-     C                   ENDIF
      C                   ELSE
      C                   EVAL      PREM1 = ARRREM(3)
      C                   EXSR      PrintDetail1
@@ -140,15 +138,16 @@
      C                   EXSR      PrintDetail2
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'UTLE0855'
-     C                   EVAL      DBFILE = 'LEFEEDQD'
+     C                   EVAL      DBFILE = 'CLOAN'
      C                   EVAL      DBASE = 003
      C                   EVAL      DBKEY = LNRF
      C                   EXSR      *PSSR
      C                   ENDIF
-     C     LNRF          READE     LEFEEDLD
-     C                   ENDDO
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
 
-     C                   READ      CLOAN
+     C                   READ      LEFEEQL0
      C                   ENDDO
 
 
@@ -248,9 +247,9 @@
 
      C     *INZSR        BEGSR
 
-     C     QKEY          KLIST
-     C                   KFLD                    FELOAN
-     C                   KFLD                    FEFSEQ
+     C     LEFEEDKEY     KLIST
+     C                   KFLD                    FQLOAN
+     C                   KFLD                    FQFSEQ
 
      C     *ENTRY        PLIST
      C                   PARM                    PMODE
@@ -326,5 +325,5 @@ Finastra International Limited 2020
 ** ARRAY REMARKS
 Fee customer is not equal from fee customer extension.
 Fee extension customer has been amended to Fee customer.
-Loan customer is not equal from Loan fee customer.
-Please investigate what happened.
+Loan customer is not found in CLOANCL.
+Please investigate what happened, program terminated.

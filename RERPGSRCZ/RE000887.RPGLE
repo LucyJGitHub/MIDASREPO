@@ -38,6 +38,7 @@
       *****************************************************************
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -83,26 +84,26 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas RE Settled Transaction Index File
      FREADVCL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas RE Account Movements for Online Printing Adv by FUND
      FRERSACL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas Retail Interest and Charges File
      FREIAC     IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas RE Debit/Credit Retail Transaction Advices
      FRE000881P1O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLP1)
- 
+
       ** Midas RE Debit/Credit Retail Transaction Advices Audit
      FRE000881AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLAU)
@@ -114,21 +115,21 @@
       ** Midas FT Out. Payments                                                               CER030
       *                                                                                       CER030
      FOTPAY     IF   E           K DISK    INFSR(*PSSR)                                       CER030
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WKeySysVal1     C                   CONST('IncomingPayments    ')
      D WKeySysVal2     C                   CONST('Out/RegularPayments ')
      D WKeySysVal3     C                   CONST('ChequesToBePaid     ')
@@ -136,57 +137,57 @@
      D WKeySysVal5     C                   CONST('InRequestForTransfer')
      D WKeySysVal6     C                   CONST('CustCreditTransfer  ')
      D WKeySysVal7     C                   CONST('NostroTransfer      ')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Local Data Area for Database Error Details
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** Data structure for access objects, first DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data structure for access objects, second DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency Details Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Customer Details Data Structure
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for GL Accounts master detail
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D  BRCA_ACCNT   E                     EXTFLD(BRCA)
- 
+
       ** External DS for  GL Account Movements
      D WDsRSAC       E DS                  EXTNAME(RSACMTPD)
      D  WModule               57     57A
      D  WDelete               58     58A
      D  WSeqnNum              70     72A
- 
+
       ** P1 File Information Data Structure
      D SPOOLP1         DS
      D  PZFileP1              83     92
      D  PZFNumP1             123    124B 0
      D  POfLine              188    189B 0                                                    CER030
      D  PrtLine              367    368B 0                                                    CER030
- 
+
       ** AU File Information Data Structure
      D SPOOLAU         DS
      D  PZFileAU              83     92
      D  PZFNumAU             123    124B 0
- 
+
       ** DS for data to be passed to the Extract Program
      D PDsRetRsac      DS           155
      D  WRetailNum             1     10
      D  WRsacDetls            11    155
- 
+
       ** Data structure for AOSVALR0 string
      D WSVal1          DS           200
      D  PSVal1                 1    200
@@ -220,16 +221,16 @@
       ** Array of Fields in error                                                             CER030
       *                                                                                       CER030
      D FldNamXAr       S             10A   DIM(40)                                            CER030
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry parameter fields
      D PRtnCode        S              7A
      D PInp_CtlPgm     S             10A
- 
+
       ** Parameter fields
      D POption         S              7A
      D PSequence       S              5A
@@ -309,7 +310,7 @@
      D PRtFln19        S             70A                                                      CER030
      D PRtFln20        S             70A                                                      CER030
      D Idx             S              3  0                                                    CER030
- 
+
       ** Standard Utility Parameters
      D PZDayNo         S              5P 0
      D PZDatFmt        S              1A
@@ -321,7 +322,7 @@
      D PZSeq           S              5A
      D PZEnty          S              3A
      D PZSErr          S              1A
- 
+
       ** Key List Fields for REIAC
      D*KCnum****       S              6S 0                                                    CSD027
      D KCnum           S              6A                                                      CSD027
@@ -329,42 +330,42 @@
      D KAcod           S             10S 0
      D KAcsq           S              2S 0
      D KBrca           S              3A
- 
+
       ** Work Variables
      D WCounter        S              5P 0
      D WFTRef          S             21A
      D WVDat           S              7A
      D WMAmt           S             16A
      D WRecCnt         S              5P 0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Execute main subroutine
- 
+
      C                   IF        PInp_CtlPgm = 'REC000079'
      C                   EXSR      SRMainCOB
      C                   ELSE
      C                   EXSR      SRMainIC
      C                   ENDIF
- 
+
       ** Print the audit report.
- 
+
      C                   EXSR      SRAudit
- 
+
       ** Termination
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -373,45 +374,45 @@
       *                                                               *
       *****************************************************************
      C     SRMainIC      BEGSR
- 
+
      C                   EVAL      WRecCnt = *ZERO
- 
+
       ** Process all the records from RE Settled Transaction Index File
       ** with Transaction Maintenance Program equal to Control Program.
- 
+
      C     PInp_CtlPgm   SETLL     READVCL0
      C     PInp_CtlPgm   READE     READVCL0                               10
- 
+
      C                   DOW       *IN10 = *OFF
- 
+
      C                   EVAL      WFTRef = RREFNO
- 
+
       ** Process only those records on Movements File which refer to
       ** the Transaction read.
- 
+
      C     WFTRef        SETGT     RERSACL1
      C     WFTRef        READPE    RERSACL1                               11
- 
+
      C                   DOW       *IN11 = *OFF
- 
+
      C                   IF        WDelete = '*'
      C                   IF        RSEQNO = WSeqnNum
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WDelete <> '*'
- 
+
      C                   IF        RSEQNO = WSeqnNUm
- 
+
       ** The account must refer to a Retail Account.
- 
+
      C                   MOVEL     CUSN          PCnum
      C                   EVAL      PCucd = CCYD
      C                   MOVEL     ACDE          PAccd
      C                   MOVEL     ASNC          PAcsq
      C                   EVAL      PBrca = BRCA
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      '*MSG'        PRtnCode
      C                   PARM      '*KEY  '      POption
@@ -422,64 +423,64 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      DBFILE = 'AOACCTR0'
      C                   EVAL      DBKEY = PCnum + PCucd + PAccd + PAcsq + PBrca
      C                   EVAL      DBASE  = 01
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        ATYP = 'R'
- 
+
       ** The account must allow printing of Transaction Advices.
- 
+
      C                   EVAL      KCnum = CUSN
      C                   EVAL      KCcy  = CCYD
      C                   EVAL      KAcod = ACDE
      C                   EVAL      KAcsq = ASNC
      C                   EVAL      KBrca = BRCA
- 
+
      C     KReiac        CHAIN     REIAC                              11
- 
+
      C                   IF        *IN11 = *OFF AND PTRA = 'Y'
- 
+
       ** Print Transaction Advice
- 
+
      C                   EVAL      WRecCnt = WRecCnt + 1
      C                   EXSR      SRPrtAdv
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Read next record until EOF or end of processing for the
       ** transaction read.
- 
+
      C     WFTRef        READPE    RERSACL1                               11
- 
+
      C                   IF        *IN11 = *OFF AND
      C                             WDelete = '*'
      C                   IF        RSEQNO = WSeqnNum
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** If no error occurred, set the Retail Settlement Advice Print Indicator
       ** to 'Y'.
- 
+
      C                   EVAL      RSAPIN = 'Y'
      C                   UPDATE    READVCD0
- 
+
      C                   COMMIT
- 
+
      C     PInp_CtlPgm   READE     READVCL0                               10
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -489,48 +490,48 @@
       *                                                               *
       *****************************************************************
      C     SRMainCOB     BEGSR
- 
+
       ** Read all records in Midas RE Account Movements for Online Printing Advice.
- 
+
      C     *LOVAL        SETLL     RERSACL1
      C                   READ      RERSACL1                               11
- 
+
      C                   DOW       *IN11 = *OFF
- 
+
      C                   IF        WModule = 'G'
- 
+
       ** Initialise the first system value key
- 
+
      C                   SELECT
- 
+
      C                   WHEN      TRYP = 'IN'
      C                   EVAL      PSValK1 = WKeySysVal1
- 
+
      C                   WHEN      TRYP = 'OP' or
      C                             TRYP = 'RP'
      C                   EVAL      PSValK1 = WKeySysVal2
- 
+
      C                   WHEN      TRYP = 'CP'
      C                   EVAL      PSValK1 = WKeySysVal3
- 
+
      C                   WHEN      TRYP = 'CC'
      C                   EVAL      PSValK1 = WKeySysVal4
- 
+
      C                   WHEN      TRYP = 'RI' or
      C                             TRYP = 'RO'
      C                   EVAL      PSValK1 = WKeySysVal5
- 
+
      C                   WHEN      TRYP = 'BI' or
      C                             TRYP = 'BO'
      C                   EVAL      PSValK1 = WKeySysVal6
- 
+
      C                   WHEN      TRYP = 'NT'
      C                   EVAL      PSValK1 = WKeySysVal7
- 
+
      C                   ENDSL
- 
+
       * Retrieve the system value
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    PRtnCode
      C                   PARM                    PSValK1
@@ -553,9 +554,9 @@
      C                   PARM                    PSVal9
      C                   PARM                    PSValK0
      C                   PARM                    PSVal0
- 
+
       ** If the system value is not found then issue a database error
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   IF        PSVal0 = '*NRF'
      C                   EVAL      DBKEY  = PSValK0
@@ -591,15 +592,15 @@
      C                   EVAL      DBASE  = 02
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        WSVal1_1 =  'Y'
- 
+
      C                   MOVEL     CUSN          PCnum
      C                   EVAL      PCucd = CCYD
      C                   MOVEL     ACDE          PAccd
      C                   MOVEL     ASNC          PAcsq
      C                   EVAL      PBrca = BRCA
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      '*MSG'        PRtnCode
      C                   PARM      '*KEY  '      POption
@@ -610,46 +611,46 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      DBFILE = 'AOACCTR0'
      C                   EVAL      DBKEY = PCnum + PCucd + PAccd + PAcsq + PBrca
      C                   EVAL      DBASE  = 03
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        ATYP = 'R'
- 
+
       ** The account must allow printing of Transaction Advices.
- 
+
      C                   EVAL      KCnum = CUSN
      C                   EVAL      KCcy  = CCYD
      C                   EVAL      KAcod = ACDE
      C                   EVAL      KAcsq = ASNC
      C                   EVAL      KBrca = BRCA
- 
+
      C     KReiac        CHAIN     REIAC                              11
- 
+
      C                   IF        *IN11 = *OFF AND PTRA = 'Y'
- 
+
       ** Print Transaction Advice.
- 
+
      C                   EVAL      WRecCnt = WRecCnt + 1
      C                   EXSR      SRPrtAdv
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Read next record until EOF.
- 
+
      C                   READ      RERSACL1                               11
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -659,101 +660,101 @@
       *                                                               *
       *****************************************************************
      C     SRPrtAdv      BEGSR
- 
+
       ** Transaction Reference
- 
+
      C                   EVAL      RPTREF = FUND
- 
+
       ** Debit/Credit
- 
+
      C                   IF        DORC = 0
      C                   EVAL      RPDRCR = 'debited '
      C                   ELSE
      C                   EVAL      RPDRCR = 'credited'
      C                   ENDIF
- 
+
       ** Retail Account Number
- 
+
      C                   MOVE      ACNO          RPACCT
- 
+
       ** Value Date
- 
+
      C                   EXSR      SRCvtVDat
      C                   EVAL      RPVDAT = WVDat
- 
+
       ** Transaction Type Description
- 
+
      C                   EVAL      RPTRTD = *BLANKS
- 
+
      C                   SELECT
- 
+
      C                   WHEN      TRYP = 'IN'
      C                   EVAL      RPTRTD = 'INCOMING PAYMENTS'
- 
+
      C                   WHEN      TRYP = 'OP'
      C                   EVAL      RPTRTD = 'OUTGOING PAYMENTS'
- 
+
      C                   WHEN      TRYP = 'RP'
      C                   EVAL      RPTRTD = 'REGULAR PAYMENTS'
- 
+
      C                   WHEN      TRYP = 'CP'
      C                   EVAL      RPTRTD = 'CHEQUES TO BE PAID'
- 
+
      C                   WHEN      TRYP = 'CC'
      C                   EVAL      RPTRTD = 'CHEQUES TO BE COLLECTED'
- 
+
      C                   WHEN      TRYP = 'BI'
      C                   EVAL      RPTRTD = 'INCOMING CUSTOMER CREDIT TRANSFER'
- 
+
      C                   WHEN      TRYP = 'BO'
      C                   EVAL      RPTRTD = 'OUTGOING CUSTOMER CREDIT TRANSFER'
- 
+
      C                   WHEN      TRYP = 'RI'
      C                   EVAL      RPTRTD = 'INCOMING REQUEST FOR TRANSFER'
- 
+
      C                   WHEN      TRYP = 'RO'
      C                   EVAL      RPTRTD = 'OUTGOING REQUEST FOR TRANSFER'
- 
+
      C                   WHEN      TRYP = 'NT'
      C                   EVAL      RPTRTD = 'NOSTRO TRANSFER'
- 
+
      C                   ENDSL
- 
+
       ** Transaction Narrative
- 
+
      C                   IF        FUND <> *BLANKS
      C                   EVAL      RPTNAR = FUND
      C                   ELSE
      C                   EVAL      RPTNAR = 'FUNDS TRANSFER TRANSACTION'
      C                   ENDIF
- 
+
       ** Currency
- 
+
      C                   EVAL      RPTCCY = CCYD
- 
+
       ** Posting Amount
- 
+
      C                   EXSR      SRCvtMAmt
      C                   EVALR     RPPAMT = WMAmt
- 
+
       ** Last Transaction Change Type
- 
+
      C                   EVAL      RPCHTP = *BLANKS
- 
+
       ** Customer Details
- 
+
      C                   EXSR      SRGetCust
      C                   EVAL      RPCNA1 = BBCNA1
      C                   EVAL      RPCNA2 = BBCNA2
      C                   EVAL      RPCNA3 = BBCNA3
      C                   EVAL      RPCNA4 = BBCNA4
- 
+
      C                   WRITE     ADVICE
       *                                                                                       CER030
      C                   IF        CER031 = 'Y'                                               CER030
      C                   EXSR      SRExtNarr                                                  CER030
      C                   ENDIF                                                                CER030
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -764,15 +765,15 @@
       *                                                               *
       *****************************************************************
      C     SRCvtVDat     BEGSR
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      VUDT          PZDayNo
      C                   PARM      BJDFIN        PZDatFmt
      C                   PARM      *ZERO         PZDate
      C                   PARM      *BLANKS       PZADate
- 
+
      C                   EVAL      WVDat = PZADate
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -783,24 +784,24 @@
       *                                                               *
       *****************************************************************
      C     SRCvtMAmt     BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM      CCYD          PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtnCode = *BLANKS
- 
+
      C                   EVAL      PZAmt = *Blanks
      C                   MOVE      MVAM          PZAmt
- 
+
      C                   CALL      'ZEDIT'
      C                   PARM                    PZAmt
      C                   PARM      A6NBDP        PZNoDP
- 
+
      C                   EVAL      WMAmt = PZAmt
- 
+
      C                   ELSE
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCURRPD'
@@ -809,7 +810,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -819,16 +820,16 @@
       *                                                               *
       *****************************************************************
      C     SRGetCust     BEGSR
- 
+
      C                   MOVEL     CUSN          PCust
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCUSTPD'
@@ -837,7 +838,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -847,16 +848,16 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   IF        WRecCnt = *ZERO
      C                   WRITE     NODTLS
      C                   ELSE
      C                   EVAL      RCOUNT = WRecCnt
      C                   WRITE     DETAILS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -866,20 +867,20 @@
       *                                                               *
       *****************************************************************
      C     SRRegP1       BEGSR
- 
+
      C                   EVAL      PZSNum = PZFNumP1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PZSeq
      C                   PARM                    PZEnty
      C                   PARM                    PZFileP1
      C                   PARM                    PZSNum
      C                   PARM      *BLANK        PZSErr
- 
+
      C                   IF        PZSErr = 'Y'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -889,20 +890,20 @@
       *                                                               *
       *****************************************************************
      C     SRRegAU       BEGSR
- 
+
      C                   EVAL      PZSNum = PZFNumAU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PZSeq
      C                   PARM                    PZEnty
      C                   PARM                    PZFileAU
      C                   PARM                    PZSNum
      C                   PARM      *BLANK        PZSErr
- 
+
      C                   IF        PZSErr = 'Y'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -912,15 +913,15 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -932,34 +933,34 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRtnCode
      C                   PARM                    PInp_CtlPgm
- 
+
       ** Key list for REIAC
- 
+
      C     KReiac        KLIST
      C                   KFLD                    KCnum
      C                   KFLD                    KCcy
      C                   KFLD                    KAcod
      C                   KFLD                    KAcsq
      C                   KFLD                    KBrca
- 
+
       ** Register the printer files.
- 
+
      C                   EXSR      SRRegP1
      C                   EXSR      SRRegAU
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtnCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      DBFILE = 'AOBANKR0'
      C                   EVAL      DBKEY = POption
@@ -1012,7 +1013,7 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
- 
+
      C                   ENDSR
       *****************************************************************                       CER030
       /EJECT                                                                                  CER030

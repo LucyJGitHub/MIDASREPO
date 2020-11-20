@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  AR1096685 - Replace message IDs with event codes             *
@@ -73,10 +74,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Cheque Book Details
      FCHQBKPD   IF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -84,32 +85,32 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -117,51 +118,51 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Account details
      D ACCNTB        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(#)
- 
+
       ** Array of Fields in error
      D FldNameArr      S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data
      D MsgDtaArr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings
      D WFldNamArr      S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDArr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data
      D WMsgDtaArr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** File information DS for parameter PACNT
      D PACNT           DS            34
      D  WBRCA                  1      3
@@ -171,19 +172,19 @@
      D  WACNO                 13     22
      D  WSEQN                 23     24
      D  WZZZZ                 25     34
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry Parameters
      D PREFN           S              3A
      D PFCHQ           S              8A
      D PTCHQ           S              8A
      D PRTCD           S              1A
      D PERMSG          S          32000A   VARYING
- 
+
       ** Access objects
      D PRetCode        S              7A
      D POption         S              7A
@@ -199,17 +200,17 @@
      D PCHQNO          S              8S 0
      D PRETAC          S             10S 0
      D PCNUM           S              6
- 
+
       ** ZALIGN Parameters
      D PZAlignOk       S              1A   INZ(*BLANKS)
      D PZField         S             16A   INZ(*BLANKS)
      D PZADec          S              1P 0 INZ(*ZEROS)
      D PZAdig          S              2P 0 INZ(*ZEROS)
- 
+
       ** KCHQ1 Key List fields
      D WRETN           S             10S 0
      D WCHQ            S              8S 0
- 
+
       ** Work variables
      D @RUN            S              1    INZ(*BLANKS)
      D WPTCHQ          S              8  0
@@ -222,7 +223,7 @@
      D MsgArrOUT       S           9999
      D WErrIdx         S              3S 0 INZ(*ZEROS)
      D APIName         S             20    INZ(*BLANKS)                                     AR895153
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -230,27 +231,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      ** +--- Start of Main processing --------------------------------+
      ** ¦                                                             ¦
      ** ¦ Initial processing is performed automatically: the *INZSR   ¦
      ** ¦ is executed at program activation.                          ¦
      ** ¦                                                             ¦
      ** +-------------------------------------------------------------+
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   EXSR      SrAcctDetails
- 
+
      C                   EXSR      SrStopCheque
- 
+
      C                   EXSR      SrChqIssPre
- 
+
      C                   EXSR      SrEditMessage
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -263,18 +264,18 @@
       *                                                               *
       *****************************************************************
      C     SrResetErrs   BEGSR
- 
+
      C                   EVAL      WErrExist = *OFF
      C                   EVAL      PRTCD = '1'
      C                   EVAL      WErrIdx = 0
- 
+
      C                   EVAL      FldNameArr = *BLANKS
      C                   EVAL      MsgIDArr   = *BLANKS
      C                   EVAL      MsgDtaArr  = *BLANKS
      C                   EVAL      WFldNamArr = *BLANKS
      C                   EVAL      WMsgIDArr  = *BLANKS
      C                   EVAL      WMsgDtaArr = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -288,7 +289,7 @@
       *                                                               *
       *****************************************************************
      C     SrAcctDetails BEGSR
- 
+
       *                                                                                     BUG23951
       ** Get account details using Retail Account Number                                    BUG23951
       *                                                                                     BUG23951
@@ -317,15 +318,15 @@
      C                   PARM                    PTYPE
      C                   PARM                    PNOSN
      C     ACCNTB        PARM      ACCNTB        DSSDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF                                                              BUG23951
                                                                                             BUG23951
      C                   EVAL      WRETN = #ACNO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -340,10 +341,10 @@
       *                                                               *
       *****************************************************************
      C     SrStopCheque  BEGSR
- 
+
      C                   IF        (PFCHQ <> *BLANKS) AND
      C                             (PTCHQ = *BLANKS)
- 
+
      C                   EVAL      PZField = *BLANKS
      C                   MOVE      PFCHQ         PZField
      C                   EXSR      SrAlignCheque
@@ -359,7 +360,7 @@
      C                   PARM                    PACCD
      C                   PARM                    PACSN
      C                   PARM                    PBRCA
- 
+
      C                   IF        PRetCode = '*STOP  '
      C                   EVAL      WErrIdx = wErrIdx + 1
      C                   EVAL      WFldNamArr(wErrIdx) = 'FRCHEQUENO'
@@ -412,7 +413,7 @@
      C                   EVAL      WCHQ = WCHQ + 1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -428,7 +429,7 @@
       *                                                               *
       *****************************************************************
      C     SrChqIssPre   BEGSR
- 
+
      C                   IF        (PFCHQ <> *BLANKS) AND
      C                             (PTCHQ = *BLANKS)
      C                   EVAL      PZField = *BLANKS
@@ -474,7 +475,7 @@
       *
      C                   DOW       WCHQ <= WPTCHQ
      C                   EXSR      SrChequeBook
- 
+
      C                   IF        *IN65 = *ON
      C                   EVAL      WErrIdx = wErrIdx + 1
      C                   EVAL      WFldNamArr(wErrIdx) = 'FRCHEQUENO'
@@ -484,7 +485,7 @@
      C                   EVAL      WErrExist = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        *IN66 = *ON
      C                   EVAL      WErrIdx = wErrIdx + 1
      C                   EVAL      WFldNamArr(wErrIdx) = 'FRCHEQUENO'
@@ -498,7 +499,7 @@
      C                   EVAL      WCHQ = WCHQ + 1
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -512,7 +513,7 @@
       *                                                               *
       *****************************************************************
      C     SrChequeBook  BEGSR
- 
+
      C                   EVAL      *IN65 = *OFF
      C                   EVAL      *IN66 = *OFF
      C     KCHQ1         SETGT     CHQBKPD
@@ -563,7 +564,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -577,7 +578,7 @@
       *                                                               *
       *****************************************************************
      C     SrEditMessage BEGSR
- 
+
      C                   IF        WErrExist = *ON
      C                   EVAL      APIName = 'STCQ'                                         AR895153
      C                   CALLB     'APEDTMSGS'
@@ -590,7 +591,7 @@
      C                   PARM                    MsgFArray
      C                   PARM                    MsgArrOUT
      C                   PARM                    APIName                                    AR895153
- 
+
      C                   EVAL      PERMSG = MsgArrOUT
      C                   EVAL      PRTCD = '0'
       *
@@ -599,7 +600,7 @@
      C                   EVAL      PERMSG = MsgArrOUT
      C                   EVAL      PRTCD = '1'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -614,16 +615,16 @@
       *                                                               *
       *****************************************************************
      C     SrAlignCheque BEGSR
- 
+
      C                   EVAL      PZADec = 0
      C                   EVAL      PZAdig = 8
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM      'Y'           PZAlignOk
      C                   PARM                    PZField
      C                   PARM                    PZADec
      C                   PARM                    PZAdig
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -637,13 +638,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **---------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PACNT
      C                   PARM                    PREFN
@@ -651,7 +652,7 @@
      C                   PARM                    PTCHQ
      C                   PARM                    PRTCD
      C                   PARM                    PERMSG
- 
+
      C     KCHQ1         KLIST
      C                   KFLD                    WRETN
      C                   KFLD                    WCHQ
@@ -662,7 +663,7 @@
      C                   PARM      *BLANKS       pRetCode
      C                   PARM      '*FIRST'      pOption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
@@ -673,7 +674,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -706,6 +707,6 @@
       *
      C                   ENDSR
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2009

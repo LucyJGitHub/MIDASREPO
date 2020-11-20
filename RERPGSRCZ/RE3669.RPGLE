@@ -38,6 +38,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -47,10 +48,10 @@
       *  CDE002 - Retail Account Margin History Update.               *
       *                                                               *
       *****************************************************************
- 
+
      FRECCY     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(RECCYDF)
- 
+
      FGLACBXL0  IF   E           K DISK
      F                                     INFSR(*PSSR)
      FGLACBXL1  IF   E           K DISK    RENAME(ACCNTBD0: ACCNTBD1)
@@ -59,37 +60,37 @@
      F                                     INFSR(*PSSR)
      FGLACBXL3  IF   E           K DISK    RENAME(ACCNTBD0: ACCNTBD3)
      F                                     INFSR(*PSSR)
- 
+
      FREHMRGPD  O    E             DISK
      F                                     PREFIX(O_)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D RECCYREC      E DS                  EXTNAME(RECCYD)
      D  ZZZ053       E                     EXTFLD(ZZ053)
      D  Currency              10     12
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                  208221
       ** EXTERNAL DS FOR CURRENCY DETAILS                                                     208221
                                                                                               208221
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     208221
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                   208221
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       *
      C                   EXSR      MAIN
       *
@@ -182,7 +183,7 @@
      C     *IN92         DOWEQ     '0'
       *
      C     ATDRMD        IFEQ      BJRDNB
- 
+
       **  Set up fields on REHMRGPD...
      C                   EVAL      O_BRCA = ATBRCA
      C                   EVAL      O_CNUM = ATCNUM
@@ -260,7 +261,7 @@
      C     *IN93         DOWEQ     '0'
       *
      C     ATCRMD        IFEQ      BJRDNB
- 
+
       **  Set up fields on REHMRGPD...
      C                   EVAL      O_BRCA = ATBRCA
      C                   EVAL      O_CNUM = ATCNUM
@@ -347,7 +348,7 @@
       *
       **  Initialise Margin History Record ID
      C                   EVAL      O_RECI = 'G'
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -52,6 +52,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR1034683 - Available Bal not updated with Cr Movements      *
       *             Allow update of GLACNTQD for accounts with        *
       *             attached facilities. Applied for CLE169.          *

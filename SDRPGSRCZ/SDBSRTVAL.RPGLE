@@ -426,11 +426,9 @@
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
       *                                                                                       CSD103
-      * Validate Backward-Looking Rate                                                        CSD103
+     C     CSD103        IFEQ      'Y'                                                        CSD103
       *                                                                                       CSD103
-     C     DDBLRT        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      'N'           DDBLRT                         Default: N    CSD103
-     C                   ELSE                                                                 CSD103
+      * Validate Backward-Looking Rate                                                        CSD103
       *                                                                                       CSD103
      C     DDBLRT        IFNE      'N'                                                        CSD103
      C     DDBLRT        ANDNE     'Y'                                                        CSD103
@@ -440,8 +438,6 @@
      C                   MOVEL     'DDBLRT'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049400'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
       * Validate Lookback Days                                                                CSD103
@@ -747,6 +743,8 @@
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -754,56 +752,7 @@
       /COPY WNCPYSRC,SDBSRTV012
 
      C                   IF        Idx = 0
-      *                                                                                       CSD103
-      * Setup valid values for Backward-Looking Rate fields                                   CSD103
-     C                   MOVE      DDBLRT        BVBLRT                                       CSD103
-     C                   MOVE      DDLBDY        BVLBDY                                       CSD103
-     C                   MOVE      DDLODY        BVLODY                                       CSD103
-     C                   MOVE      DDPDLY        BVPDLY                                       CSD103
-     C     PTBADJ        IFNE      0                                                          CSD103
-     C                   Z-SUB     WNumBadj      BVBADJ                                       CSD103
-     C                   ELSE                                                                 CSD103
-     C                   Z-ADD     WNumBadj      BVBADJ                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   MOVE      DDAVOP        BVAVOP                                       CSD103
-     C                   MOVE      DDBRAC        BVBRAC                                       CSD103
-     C                   MOVE      DDWGHT        BVWGHT                                       CSD103
-      *                                                                                       CSD103
-      * Validate Backward-Looking Rate Fields and CSD103 Availability                         CSD103
-      * (this is done if there are no errors to avoid dumps                                   CSD103
-      *  like datatype error during this specific validation)                                 CSD103
-     C                   SETOFF                                       93        Use as flag   CSD103
-     C     CSD103        IFEQ      'N'                                           OFF = no err CSD103
-      *                                                                                       CSD103
-     C                   MOVE      DDCYCD        WBACYCD                                      CSD103
-     C                   MOVE      DDBSRC        WBABSRC                                      CSD103
-     C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             93                      CSD103
-     C     *IN93         IFNE      '1'                                          BsRate found  CSD103
-      *                                                                                       CSD103
-     C     BVBLRT        IFNE      WBABLRT                                      Backward-     CSD103
-     C     BVLBDY        ORNE      WBALBDY                                       Looking Rate CSD103
-     C     BVLODY        ORNE      WBALODY                                       fields were  CSD103
-     C     BVPDLY        ORNE      WBAPDLY                                       changed      CSD103
-     C     BVBADJ        ORNE      WBABADJ                                                    CSD103
-     C     BVAVOP        ORNE      WBAAVOP                                                    CSD103
-     C     BVBRAC        ORNE      WBABRAC                                                    CSD103
-     C     BVWGHT        ORNE      WBAWGHT                                                    CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDBLRTOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBLRT'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     '5049452'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   SETON                                        93                      CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     *IN93         IFNE      '1'                                          No err above  CSD103
      C                   EXSR      SetupValid
-     C                   ENDIF                                                                CSD103
      C                   ENDIF
       *
       /COPY WNCPYSRC,SDBSRTV013
@@ -1480,6 +1429,40 @@
      C                   MOVE      DDOMD1        BVOMD1
      C                   MOVE      DDOMD2        BVOMD2
       *
+     C     CSD103        IFEQ      'Y'                                          CSD103 is ON  CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDBLRT        BVBLRT                         Move          CSD103
+     C                   MOVE      DDLBDY        BVLBDY                          Backward-    CSD103
+     C                   MOVE      DDLODY        BVLODY                          Looking Rate CSD103
+     C                   MOVE      DDPDLY        BVPDLY                          screen flds  CSD103
+      *                                                                          to valid     CSD103
+     C     PTBADJ        IFNE      0                                                          CSD103
+     C                   Z-SUB     WNumBadj      BVBADJ                                       CSD103
+     C                   ELSE                                                                 CSD103
+     C                   Z-ADD     WNumBadj      BVBADJ                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDAVOP        BVAVOP                                       CSD103
+     C                   MOVE      DDBRAC        BVBRAC                                       CSD103
+     C                   MOVE      DDWGHT        BVWGHT                                       CSD103
+      *                                                                                       CSD103
+     C                   ELSE                                                   CSD103 is OFF CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDCYCD        WBACYCD                                      CSD103
+     C                   MOVE      DDBSRC        WBABSRC                                      CSD103
+     C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             93                      CSD103
+     C     *IN93         IFNE      '1'                                                        CSD103
+     C                   MOVE      WBABLRT       BVBLRT                         Backward-     CSD103
+     C                   Z-ADD     WBALBDY       BVLBDY                          Looking Rate CSD103
+     C                   Z-ADD     WBALODY       BVLODY                          flds remain  CSD103
+     C                   Z-ADD     WBAPDLY       BVPDLY                          unchanged    CSD103
+     C                   Z-ADD     WBABADJ       BVBADJ                                       CSD103
+     C                   MOVE      WBAAVOP       BVAVOP                                       CSD103
+     C                   MOVE      WBABRAC       BVBRAC                                       CSD103
+     C                   MOVE      WBAWGHT       BVWGHT                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS
       *

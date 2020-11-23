@@ -16,7 +16,7 @@
       *                                                               *
       *  (c)Finastra International Limited 2020                       *
       *                                                               *
-      *  Last Amend No. CSD103    *CREATE  Date 16Oct20               *
+      *  Last Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -37,6 +37,7 @@
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
+     D Layer           S              6A
      D UFILE           S             10A
      D UFIELD          S             10A
      D thisSQL         S            500
@@ -62,14 +63,14 @@
       ** +--------------------------------------+
       *
      C     *LOVAL        SETLL     SMFILUPD
-     C                   READ      SMFILUP1                             3545
+     C                   READ      SMFILUD0                             3545
       *
       ** Database error
       *
      C                   IF        ErrorOnFl = True
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*FIRST'
-     C                   EVAL      DBFile = 'SMFILUP1'
+     C                   EVAL      DBFile = 'SMFILUD0'
      C                   EVAL      DBase = 1
      C                   OUT       LDA
      C                   EXSR      *PSSR
@@ -81,16 +82,24 @@
       *
       ** Process Update of files
       *
+     C     Layer         IFEQ      'Zonal '
+     C     LAYR          ANDEQ     'Zonal  '
      C                   EXSR      SRUpdate
+     C                   ENDIF
+      *
+     C     Layer         IFEQ      'Global'
+     C     LAYR          ANDEQ     'Global '
+     C                   EXSR      SRUpdate1
+     C                   ENDIF
       *
       ** Read next record
       *
-     C                   READ      SMFILUP1                             3545
+     C                   READ      SMFILUD0                             3545
       *
      C                   IF        ErrorOnFl = True
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*NEXT'
-     C                   EVAL      DBFile = 'SMFILUP1'
+     C                   EVAL      DBFile = 'SMFILUD0'
      C                   EVAL      DBase = 2
      C                   OUT       LDA
      C                   EXSR      *PSSR
@@ -98,6 +107,7 @@
       *
      C                   ENDDO
      C                   EVAL      *INLR = *ON
+     C                   RETURN
 
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -183,6 +193,105 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * SRUpdate - Update files (Global)                              *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SRUpdate1     BEGSR
+      *
+     C                   EVAL      UFILE = PFILE
+     C                   EVAL      UFIELD = PFIELD
+      *
+     C                   EVAL      thisSQL = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''  '' WHERE '+UFIELD+' = ''00'' '
+     C                             +'OR '+UFIELD+' = ''0 '' '
+     C                             +'OR '+UFIELD+' = '' 0'' '
+     C                   EVAL      thisSQL1 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''01'' WHERE '+UFIELD+' = ''1 '''
+     C                             +'OR '+UFIELD+' = '' 1'' '
+     C                   EVAL      thisSQL2 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''02'' WHERE '+UFIELD+' = ''2 '''
+     C                             +'OR '+UFIELD+' = '' 2'' '
+     C                   EVAL      thisSQL3 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''03'' WHERE '+UFIELD+' = ''3 '''
+     C                             +'OR '+UFIELD+' = '' 3'' '
+     C                   EVAL      thisSQL4 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''04'' WHERE '+UFIELD+' = ''4 '''
+     C                             +'OR '+UFIELD+' = '' 4'' '
+     C                   EVAL      thisSQL5 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''05'' WHERE '+UFIELD+' = ''5 '''
+     C                             +'OR '+UFIELD+' = '' 5'' '
+     C                   EVAL      thisSQL6 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''06'' WHERE '+UFIELD+' = ''6 '''
+     C                             +'OR '+UFIELD+' = '' 6'' '
+     C                   EVAL      thisSQL7 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''07'' WHERE '+UFIELD+' = ''7 '''
+     C                             +'OR '+UFIELD+' = '' 7'' '
+     C                   EVAL      thisSQL8 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''08'' WHERE '+UFIELD+' = ''8 '''
+     C                             +'OR '+UFIELD+' = '' 8'' '
+     C                   EVAL      thisSQL9 = 'Update '+UFILE+' SET '+UFIELD
+     C                             +' = ''09'' WHERE '+UFIELD+' = ''9 '''
+     C                             +'OR '+UFIELD+' = '' 9'' '
+      *
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL1
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL2
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL3
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL4
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL5
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL6
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL7
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL8
+     C/END-EXEC
+     C/EXEC SQL
+     C+ EXECUTE IMMEDIATE :thisSQL9
+     C/END-EXEC
+      *
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * *inzsr - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+
+     C     *inzsr        BEGSR
+      *
+     C     *entry        PLIST
+      ** Parameters received from caller)
+     C                   PARM                    Layer
+     C                   ENDSR
+
       *****************************************************************
       *                                                               *
       *  *PSSR - Subroutine to handle error conditions                *

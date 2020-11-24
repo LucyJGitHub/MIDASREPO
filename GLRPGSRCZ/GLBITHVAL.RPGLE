@@ -648,6 +648,8 @@
      C                   EXSR      SRChkCcy                                                   CAP084
      C                   EXSR      SRChkdet                                                   241505
      C                   EXSR      SRValAccd                                                  248749
+      *                                                                                     MD057194
+     C                   ENDIF                                                              MD057194
       *                                                                                      BUG6008
       ** If a TI originated batch check that every posting has Valid = 'Y'.                  BUG6008
       *                                                                                      BUG6008
@@ -660,7 +662,6 @@
      C                   EXSR      SRVALID                                                   BUG6008
      C                   ENDIF                                                               BUG6008
      C**********         EXSR      SRUPDERR                                            CAP084 248749
-     C                   ENDIF                                                              MD057194
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017

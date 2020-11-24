@@ -23,6 +23,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038258 - Bulk update does not work correctly for fees      *
@@ -51,8 +53,6 @@
      FLE000507AUO    E             PRINTER
       **------------------------------------------------------------------
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS

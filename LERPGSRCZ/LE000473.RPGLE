@@ -4641,8 +4641,8 @@
      C                   ENDIF
      C                   OTHER
      C**********         MOVEL     AUCBSR        PFldData                                   MD031851
-     C**********         IF        AUCBSR <> 0                                              MD031225
-     C                   IF        AUCBSR <> *BLANKS                                 MD031225 CSD103
+     C**********         IF        AUCBSR <> 0                                       MD031225 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   MOVEL     AUCBSR        PFldData                                   MD031851
      C                   MOVE      'Y'           BCODEFLG                                   MD031225
      C                   MOVE      'N'           RATESPFL                                   MD031851

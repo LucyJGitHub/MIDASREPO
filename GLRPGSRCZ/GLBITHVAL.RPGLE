@@ -68,8 +68,8 @@
       *  MD057194 - The Batch goes to repair queue if the Batch       *
       *             coming from SOAP/JMS has Batch Number defined and *
       *             Hold/Accept Indicator = A.                        *
-      *           - Only validate for currency totals if Front Office *
-      *             ID is blank.                                      *
+      *           - Validate for currency totals if Batch Number is   *
+      *             found in GLJENSL1 file.                           *
       *  AR850162 - Batches were not held due to wrong summary of     *
       *             totals and wrong checking of multi-branch ind.    *
       *             Applied fix 263436 and changed checking of        *
@@ -640,7 +640,10 @@
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     DDBHAI        ANDEQ     'A'                                                        CAP804
      C     DDBTNB        ANDNE     *BLANKS                                                    CAP084
-     C     FOTRID        ANDEQ     *BLANKS                                                  MD057194
+      *                                                                                     MD057194
+     C     DDBTNB        CHAIN(N)  GLJENSL1                                                 MD057194
+     C                   IF        %FOUND(GLJENSL1)                                         MD057194
+      *                                                                                     MD057194
      C                   EXSR      SRRESET                                                    CAP084
      C                   EXSR      SRChkCcy                                                   CAP084
      C                   EXSR      SRChkdet                                                   241505
@@ -657,6 +660,7 @@
      C                   EXSR      SRVALID                                                   BUG6008
      C                   ENDIF                                                               BUG6008
      C**********         EXSR      SRUPDERR                                            CAP084 248749
+     C                   ENDIF                                                              MD057194
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017

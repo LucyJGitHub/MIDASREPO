@@ -149,6 +149,7 @@
       ** CHECK IF OVERFLOW
       *
      C                   IF        *IN50 = '1'
+     C                   ADD       1             PGENUM
      C                   WRITE     SD001110H1
      C                   WRITE     SD001110H2
      C                   EVAL      *IN50 = '0'

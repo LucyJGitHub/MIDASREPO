@@ -67,8 +67,8 @@
       *  MD057194 - The Batch goes to repair queue if the Batch       *
       *             coming from SOAP/JMS has Batch Number defined and *
       *             Hold/Accept Indicator = A.                        *
-      *           - Only validate for currency totals if Front Office *
-      *             ID is blank.                                      *
+      *           - Validate for currency totals if Batch Number is   *
+      *             found in GLJENSL1 file.                           *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD046248 - Finastra Rebranding                               *

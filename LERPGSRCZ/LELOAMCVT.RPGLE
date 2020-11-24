@@ -315,8 +315,8 @@
      C**********         MOVE      ZFIELD        DDRTSP                                       CRE073
      C                   If        CLE036= 'N' or                                           MD035672
      C                             (CLE036= 'Y' and *IN01 = '0'and                          MD035672
-     C*                                  (LO_BRTT  <> 0 or LO_BASR  <> 0                    MD035672
-     C                                   (LO_BRTT  <> *BLANKS or LO_BASR  <> 0      MD035672 CSD103
+     C**********                         (LO_BRTT  <> 0 or LO_BASR  <> 0             MD035672 CSD103
+     C                                   (LO_BRTT  <> *BLANKS or LO_BASR  <> 0                CSD103
      C                                     or LO_BRTE  <> 0))                               MD035672
      C                   MOVEL     ZFIELD        DDRTSP                                       CRE073
      C                   Else                                                                 CLE106

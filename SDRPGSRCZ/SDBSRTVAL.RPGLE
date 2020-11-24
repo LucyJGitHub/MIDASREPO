@@ -1451,15 +1451,24 @@
      C                   MOVE      DDCYCD        WBACYCD                                      CSD103
      C                   MOVE      DDBSRC        WBABSRC                                      CSD103
      C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             93                      CSD103
-     C     *IN93         IFNE      '1'                                                        CSD103
-     C                   MOVE      WBABLRT       BVBLRT                         Backward-     CSD103
-     C                   Z-ADD     WBALBDY       BVLBDY                          Looking Rate CSD103
-     C                   Z-ADD     WBALODY       BVLODY                          flds remain  CSD103
-     C                   Z-ADD     WBAPDLY       BVPDLY                          unchanged    CSD103
-     C                   Z-ADD     WBABADJ       BVBADJ                                       CSD103
-     C                   MOVE      WBAAVOP       BVAVOP                                       CSD103
+     C     *IN93         IFNE      '1'                                          If record was CSD103
+     C                   MOVE      WBABLRT       BVBLRT                          found (edit) CSD103
+     C                   Z-ADD     WBALBDY       BVLBDY                         Move old      CSD103
+     C                   Z-ADD     WBALODY       BVLODY                          Backward-    CSD103
+     C                   Z-ADD     WBAPDLY       BVPDLY                          Looking Rate CSD103
+     C                   Z-ADD     WBABADJ       BVBADJ                          fld values   CSD103
+     C                   MOVE      WBAAVOP       BVAVOP                          to valid     CSD103
      C                   MOVE      WBABRAC       BVBRAC                                       CSD103
      C                   MOVE      WBAWGHT       BVWGHT                                       CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      'N'           BVBLRT                         If record not CSD103
+     C                   Z-ADD     0             BVLBDY                          found (new)  CSD103
+     C                   Z-ADD     0             BVLODY                         Move default  CSD103
+     C                   Z-ADD     0             BVPDLY                          Backward-    CSD103
+     C                   Z-ADD     0             BVBADJ                          Looking Rate CSD103
+     C                   MOVE      *BLANKS       BVAVOP                          fld values   CSD103
+     C                   MOVE      *BLANKS       BVBRAC                          to valid     CSD103
+     C                   MOVE      *BLANKS       BVWGHT                                       CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103

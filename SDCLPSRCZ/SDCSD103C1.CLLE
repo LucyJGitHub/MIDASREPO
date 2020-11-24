@@ -1,0 +1,83 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('TAKE-ON - Initialise CSD103 Fields')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas -  Customer Lending Module                            */
+/*                                                                   */
+/*       SDCSD103C1 - Initialise CSD103 Fields (Take-on only)        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CSD103    *CREATE  Date 10Aug20              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&RTCDE &PMODE)
+
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD)  TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+
+/** Initialisation */
+
+             CHGJOB     SWS(00000000)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/** Main Processing Control */
+
+             IF         COND(&PMODE *NE '1') THEN(GOTO ENDPGM)
+
+             SNDPGMMSG  MSG('CSD103 New Field Initialisation') TOMSGQ(MRUNQ)
+
+/** Initialise New Fields on SDBSRTPD */
+
+TAG0010:
+             CALL       PGM(SDCSD10301)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+
+/** Program Completed Successfully */
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Process Errors */
+
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERR_OOB:
+             SNDPGMMSG  MSG('Job terminated, file out of balance.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Termination Process */
+
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas SM Initialise Standing Data - Base Rate File')   *
+/*EXI *  TEXT('Midas SD Initialise CSD103 Fields in SDBSRTPD')        *
       *****************************************************************
       *                                                               *
       *  Midas - Implementation Module                                *
       *                                                               *
-      *  SMU01052 - Initialise Standing Data - Base Rate File         *
+      *  SDCSD10301 - Initialise CSD103 Fields in SDBSRTPD            *
       *                                                               *
       *  Function:  This program will run during Post Database        *
       *             Upgrade. It will select all existing base rates   *
@@ -66,7 +66,6 @@
      C+ declare RateCursor insensitive scroll cursor for
      C+ select BACYCD, BABSRC
      C+ from SDBSRTPD
-     C+ where BABLRT = ' '
      C/END-EXEC
       *
      C/EXEC SQL
@@ -90,8 +89,10 @@
 
      C     SDBSRTKEY     CHAIN     SDBSRTL0
      C                   IF        %FOUND(SDBSRTL0)
+     C     BABLRT        IFNE      'Y'
      C                   EVAL      BABLRT = 'N'
      C                   UPDATE    @BAREDG
+     C                   ENDIF
      C                   ELSE
      C                   EVAL      DBFILE = 'SDBSRTL0'
      C                   EVAL      DBKEY  = 'RATE NOT FOUND'

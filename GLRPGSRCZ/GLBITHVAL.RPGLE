@@ -633,7 +633,10 @@
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     DDBHAI        ANDEQ     'A'                                                        CAP804
      C     DDBTNB        ANDNE     *BLANKS                                                    CAP084
-     C     FOTRID        ANDEQ     *BLANKS                                                  MD057194
+      *                                                                                     MD057194
+     C     DDBTNB        CHAIN(N)  GLJENSL1                                                 MD057194
+     C                   IF        %FOUND(GLJENSL1)                                         MD057194
+      *                                                                                     MD057194
      C                   EXSR      SRRESET                                                    CAP084
      C                   EXSR      SRChkCcy                                                   CAP084
      C                   EXSR      SRChkdet                                                   241505
@@ -650,6 +653,7 @@
      C                   EXSR      SRVALID                                                   BUG6008
      C                   ENDIF                                                               BUG6008
      C**********         EXSR      SRUPDERR                                            CAP084 248749
+     C                   ENDIF                                                              MD057194
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017

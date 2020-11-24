@@ -1,5 +1,4 @@
      H DEBUG
-     H
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *  OVRDBF FILE(LEFCAMXX) TOFILE(LEFCAML6) SHARE(*NO)            *

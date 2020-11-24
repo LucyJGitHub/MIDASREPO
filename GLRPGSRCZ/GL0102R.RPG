@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD057157           Date 16Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 255179             Date 18Jul08               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057157 - Java Journal Entry screen not showing all batches *
+      *           - Write record in BITH extension table T_GZBITHEX   *
+      *             and GLJENHPD.                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,GLH00091                                 *
@@ -119,6 +123,17 @@
      FGLBTNOPDO   E                    DISK                               186206
      F                                              KCOMIT                                    206564
       *                                                                   186206
+     FGLJEHQL0O   E           K        DISK                                                 MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** GL journal entry header                                                            MD057157
+      *                                                                                     MD057157
+     FTGZBTEX1O   E           K        DISK                                                 MD057157
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** UDF Table for Journal Entry                                                        MD057157
+      *                                                                                     MD057157
      E                    CPY@    1   1 80               Copyright     array
       *                                                                                       CPK014
      E                    STAMP   1   1 26                                                    CPK014
@@ -413,6 +428,8 @@
       *                                                                                       CGL029
      IDSSDY     E DSDSSDY                                                                     CGL029
       *                                                                                       CGL029
+     ISDBANK    E DSSDBANKPD                                                                MD057157
+      ** Access Object DS for Bank details file                                             MD057157
       *                                                                   S01408
       /EJECT
       *****************************************************************
@@ -1493,6 +1510,29 @@
      C                     GOTO SAEXIT
      C                     END
       *
+      ** Write record to T_GZBITHEX                                                         MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOBRCHR1'                                                  MD057157
+     C                     PARM *BLANKS   UUAPRC                                            MD057157
+     C                     PARM '*KEY'    UUAPOP                                            MD057157
+     C                     PARM BRBCDA    WWBRCD  3                                         MD057157
+     C           D@BRCH    PARM D@BRCH    DSSDY                                             MD057157
+      *                                                                                     MD057157
+     C                     MOVE A8ZONE    ZONE                                              MD057157
+     C                     MOVE BRBTNB    DDBTNB                                            MD057157
+     C                     MOVE BJRDNB    DDBEDT                                            MD057157
+     C                     WRITETGZBTHD0                                                    MD057157
+      *                                                                                     MD057157
+      ** Write record to GLJENHQD if CGL125 is ON                                           MD057157
+      *                                                                                     MD057157
+     C           CGL125    IFEQ 'Y'                                                         MD057157
+     C                     MOVELBRBTNB    HQBTCH                                            MD057157
+     C                     MOVELBRBCDA    HQBRCD                                            MD057157
+     C                     MOVEL*BLANKS   HQFRID                                            MD057157
+     C                     MOVEL'R'       HQJETP                                            MD057157
+     C                     WRITEGLJEHQD0                                                    MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C                     WRITE@BRREAG                91  *
       *
      C           *IN91     IFEQ '1'
@@ -2493,6 +2533,26 @@
      C                     MOVE 'N'       CGL009                          CGL009
      C                     ENDIF                                          CGL009
       *                                                                   CGL008
+      ** Check if SAR CGL125 is installed                                                   MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOSARDR0'                                                  MD057157
+     C                     PARM *BLANKS   PRTCD                                             MD057157
+     C                     PARM '*VERIFY' POPTN                                             MD057157
+     C                     PARM 'CGL125'  PSARD                                             MD057157
+      *                                                                                     MD057157
+     C           PRTCD     IFEQ *BLANKS                                                     MD057157
+     C                     MOVE 'Y'       CGL125  1                                         MD057157
+     C                     ELSE                                                             MD057157
+     C                     MOVE 'N'       CGL125                                            MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
+      **  Access Local Currency Off Bank Details                                            MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOBANKR0'                                                  MD057157
+     C                     PARM *BLANKS   SRTCD   7                                         MD057157
+     C                     PARM '*FIRST'  SOPTN   7                                         MD057157
+     C           SDBANK    PARM SDBANK    DSSDY                                             MD057157
+      *                                                                                     MD057157
       ***Check*if*SAR*CAP032*is*installed.*****************************************   186206 BUG2798
       **********                                                                      186206 BUG2798
      C**********           CALL 'AOSARDR0'                                            186206 BUG2798

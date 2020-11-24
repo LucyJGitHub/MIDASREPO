@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Implementation Module                                *
       *                                                               *
-      *  SDCSD10301 - Initialise CSD103 Fields in SDBSRTPD            *
+      *  SD001111 - Initialise CSD103 Fields in SDBSRTPD              *
       *                                                               *
       *  Function:  This program will run during Post Database        *
       *             Upgrade. It will select all existing base rates   *

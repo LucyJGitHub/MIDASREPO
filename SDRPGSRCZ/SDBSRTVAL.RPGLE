@@ -84,6 +84,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
+     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
+     F                                     RENAME(@BAREDG:SDBSRTXX)                           CSD103
 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDBSRTV001
@@ -246,6 +248,7 @@
      D CSW200          S              1A
      D****** CDL016          S              1A                                         CDL016 BG3360
      D CDL020          S              1A                                                      BG3360
+     D CSD103          S              1A                                                      CSD103
 
       ** Time stamp field in file format, defaulted if necessary                              CSD006
      D JDFTS           S             14  0                                                    CSD006
@@ -396,6 +399,10 @@
       /COPY WNCPYSRC,SDBSRTV023                                                               CSD006
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
+     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -1008,6 +1015,34 @@
      C                   MOVE      DDOMD1        BVOMD1
      C                   MOVE      DDOMD2        BVOMD2
       *
+     C     CSD103        IFEQ      'Y'                                          CSD103 is ON  CSD103
+      *                                                                                       CSD103
+     C                   ELSE                                                   CSD103 is OFF CSD103
+      *                                                                                       CSD103
+     C                   MOVE      DDCYCD        WBACYCD                                      CSD103
+     C                   MOVE      DDBSRC        WBABSRC                                      CSD103
+     C     SDBSRTKEY     CHAIN     SDBSRTXX      SDBSRTDS             93                      CSD103
+     C     *IN93         IFNE      '1'                                          If record was CSD103
+     C                   MOVE      WBABLRT       BVBLRT                          found (edit) CSD103
+     C                   Z-ADD     WBALBDY       BVLBDY                         Move old      CSD103
+     C                   Z-ADD     WBALODY       BVLODY                          Backward-    CSD103
+     C                   Z-ADD     WBAPDLY       BVPDLY                          Looking Rate CSD103
+     C                   Z-ADD     WBABADJ       BVBADJ                          fld values   CSD103
+     C                   MOVE      WBAAVOP       BVAVOP                          to valid     CSD103
+     C                   MOVE      WBABRAC       BVBRAC                                       CSD103
+     C                   MOVE      WBAWGHT       BVWGHT                                       CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      'N'           BVBLRT                         If record not CSD103
+     C                   Z-ADD     0             BVLBDY                          found (new)  CSD103
+     C                   Z-ADD     0             BVLODY                         Move default  CSD103
+     C                   Z-ADD     0             BVPDLY                          Backward-    CSD103
+     C                   Z-ADD     0             BVBADJ                          Looking Rate CSD103
+     C                   MOVE      *BLANKS       BVAVOP                          fld values   CSD103
+     C                   MOVE      *BLANKS       BVBRAC                          to valid     CSD103
+     C                   MOVE      *BLANKS       BVWGHT                                       CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS
       *
@@ -1184,6 +1219,20 @@
      C*******            EVAL      CDL016 = 'Y'                                        CDL016 BG3360
      C                   EVAL      CDL020 = 'Y'                                               BG3360
      C                   ENDIF                                                                CDL016
+                                                                                              CSD103
+      ** Check if switchable feature CSD103 is switched on.                                   CSD103
+                                                                                              CSD103
+     C                   EVAL      CSD103 = 'N'                                               CSD103
+                                                                                              CSD103
+     C                   CALL      'AOSARDR0'                                                 CSD103
+     C                   PARM      *BLANKS       PRtCd                                        CSD103
+     C                   PARM      '*VERIFY'     POptn                                        CSD103
+     C                   PARM      'CSD103'      PSard                                        CSD103
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSD103
+                                                                                              CSD103
+     C                   IF        PRtCd = *BLANKS                                            CSD103
+     C                   EVAL      CSD103 = 'Y'                                               CSD103
+     C                   ENDIF                                                                CSD103
       *                                                                                       240065
       ** Access Dealing Details                                                               240065
       *                                                                                       240065

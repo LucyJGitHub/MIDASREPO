@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr13               *
       *                 AR1095876          Date 30Sep13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
@@ -68,13 +71,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** RE Shadow balances file
      FMEMOSL2   IF   E           K DISK    INFSR(*PSSR)
                                                                                              BUG4791
       ** GL Account Extension File                                                           BUG4791
      FGLACNTL3  IF   E           K DISK    INFSR(*PSSR)                                      BUG4791
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -82,7 +85,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -91,38 +94,38 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
      D LDA           E DS           256    EXTNAME(LDA) DTAARA
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for bank details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
- 
+
       ** External DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PTR_Amount      S             15  0
      D PTR_Curr        S              3
      D PAC_Branch      S              3
@@ -141,7 +144,7 @@
      D WAC_SPRT        S             13  8
      D WAC_MDIN        S              1
      D WAC_NBDP        S              1  0
- 
+
       ** Parameters for conversion module ZCCYCN
      D PFrAMNT         S             15  0
      D PFrCCY          S              3
@@ -155,30 +158,30 @@
      D PToAMNT         S             15  0
      D PCrossRate      S             13  8
      D PCrossMDIN      S              1
- 
+
      D WRun            S              1
      D WAmount         S             15  0
      D WrkCLBLN        S             15  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Validate amount
- 
+
      C                   EXSR      SRValidate
- 
+
       ** End program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -186,18 +189,18 @@
       *  SRValidate -  Validate amount                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValidate    BEGSR
- 
+
      C                   EVAL      PRetCode = *BLANKS
      C                   IF        PAC_Retail <> 0
      C                   MOVE      PAC_Retail    PAC_RetCHAR
      C                   ELSE
      C                   EVAL      PAC_RetCHAR = *BLANKS
      C                   ENDIF
- 
+
       ** Access account details
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *BLANKS       PRetCodeOut
      C                   PARM      '*KEY   '     POption
@@ -217,15 +220,15 @@
      C*******************OUT       LDA                                          BUG4646
      C*******************EXSR      *PSSR                                        BUG4646
      C*******************ENDIF                                                  BUG4646
- 
+
       ** If record found is retail and a/c is held for collateral, validate amt
- 
+
      C                   IF        PRetCodeOut = *BLANKS  AND  ATYP = 'R'
      C                             AND  COLF = 'Y'
      C                   EVAL      PAC_Curr = CCY
- 
+
       ** Convert transaction amount to account currency if necessary
- 
+
      C                   IF        PTR_Curr <> PAC_Curr
      C                   EXSR      SRConvert
      C                   ENDIF
@@ -239,33 +242,33 @@
      C                   ENDIF                                                               BUG4791
                                                                                              BUG4791
      C                   IF        PRetCode = *BLANKS                                        BUG4791
- 
+
       ** Access MEMOS for the shadow cleared balance
- 
+
      C     ACNO          CHAIN     MEMOSL2
- 
+
      C                   IF        %FOUND(MEMOSL2)
      C                   Z-SUB     CLBLN         WrkCLBLN
      C                   EVAL      WAmount = WrkCLBLN - PTR_Amount
- 
+
      C                   IF        WAmount < BCOA
      C                   EVAL      PRetCode = '*BLKERR'
      C                   ELSE
- 
+
      C**********         IF        WAmount < MINB                                            BUG3281
      C                   IF        WAmount < COLA                                            BUG3281
      C                   EVAL      PRetCode = '*WARN'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                              BUG4791
      C                   ENDIF                                                               BUG4791
                                                                                              BUG4791
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -273,17 +276,17 @@
       *  SRConvert - Convert transaction amount into account currency *
       *                                                               *
       *****************************************************************
- 
+
      C     SRConvert     BEGSR
- 
+
       ** Get currency details (transaction)
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRetCodeOut
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PTR_Curr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRetCodeOut <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -291,21 +294,21 @@
      C                   EVAL      DBASE  = 2
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   EVAL      WTR_NBDP = A6NBDP
      C                   EVAL      WTR_SPRT = A6SPRT
      C                   EVAL      WTR_MDIN = A6MDIN
      C                   ENDIF
- 
+
       ** Get currency details (account)
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRetCodeOut
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PAC_Curr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRetCodeOut <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -313,13 +316,13 @@
      C                   EVAL      DBASE  = 3
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   EVAL      WAC_NBDP = A6NBDP
      C                   EVAL      WAC_SPRT = A6SPRT
      C                   EVAL      WAC_MDIN = A6MDIN
      C                   ENDIF
- 
+
      C                   CALLB     'ZCCYCN'
      C                   PARM      PTR_Amount    PFrAMNT
      C                   PARM      PTR_Curr      PFrCCY
@@ -333,11 +336,11 @@
      C                   PARM      0             PToAMNT
      C                   PARM      0             PCrossRate
      C                   PARM      *BLANK        PCrossMDIN
- 
+
      C                   EVAL      PTR_Amount = PToAMNT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -345,9 +348,9 @@
       *  *INZSR - Program Initialisation routine                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PTR_Amount
      C                   PARM                    PTR_Curr
@@ -367,9 +370,9 @@
      C                   KFLD                    ACOD                                        BUG4791
      C                   KFLD                    ACSQ                                        BUG4791
      C                   KFLD                    BRCA                                        BUG4791
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -380,21 +383,21 @@
       *           This subroutine DUMPs the program just once.        *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

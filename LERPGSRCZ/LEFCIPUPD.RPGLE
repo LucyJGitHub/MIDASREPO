@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031337           Date 25Feb15               *
       *                 MD024398           Date 11May14               *
       *                 MD025467           Date 08May14               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031337 - Component LEC06 10011 failed, FCLTY out of balance*
@@ -109,7 +111,7 @@
       *           use as APIs. Facility input Transaction Details     *
       *                                                               *
       *****************************************************************
- 
+
      FFCLTYX    UF A E           K DISK    INFSR(*PSSR) IGNORE(FCLTYFNF)
      F                                     USROPN
      F                                     COMMIT
@@ -157,19 +159,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -178,33 +180,33 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID LOAN/DEPOSIT
      D LEVFCIM       E DS                  EXTNAME(LEVFCIMPD)
      D LEVFCIN       E DS                  EXTNAME(LEVFCINPD)
- 
+
       **  FCLTY FM FILE
      D FCLYM         E DS                  EXTNAME(FCLTYFM)
- 
+
       **  FCLTY FN FILE
      D FCLYN         E DS                  EXTNAME(FCLTYFN) PREFIX(F@)
- 
+
       ** Facility Details OK indicator
      D FCIP_OK       E DS                  EXTNAME(LEEFCIPPD)
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
       ** DATA AREA TO READ PREVIOUS RUN DATE
      D JNSTAT          DS           200
      D  PRUN                 103    105P 0
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                 BUG4555
@@ -214,12 +216,12 @@
       ***  First DS for access programs, short data structure                                BUG4555
      D DSSDY         E DS                  EXTNAME(DSSDY)                                    BUG4555
       ***  Second DS for access programs, long data structure                                BUG4555
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
      D WTimestamp      S             26A
      D Timestamp       S             26Z                                                      CAP084
@@ -231,7 +233,7 @@
      D POPTN           S              7A
      D PSARD           S              6A
      D WDealNo         S              6A
- 
+
      D OVRDBF          C                   'OVRDBF FILE(FCLTYX)-
      D                                       TOFILE(FCLTY) SHARE(*NO)'
      D OVRDBFB         C                   'OVRDBF FILE(FCLTYXFN)-
@@ -299,18 +301,18 @@
      D WPtyp           S              2A                                                     BUG4555
      D*W#FRNT***       S              8A                                           MD024342 MD025467
      D CAP086          S              1A   INZ('N')                                           CAP086
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       ** If the user is connected via a browser, the job user name is QUSER -                BUG8550
       ** their user name is stored in ZMUSER                                                 BUG8550
      C                   IN        ZMUSER                                                    BUG8550
- 
+
      C                   EXSR      SROVRD                                                     CLE041
                                                                                               CLE041
       ** Check whether user is a web browser user, if so overwrite              CAP084
@@ -338,7 +340,7 @@
      C                   MOVE      *BLANK        WMsgDtaArr
      C                   Z-ADD     0             Wx
      C                   ENDIF                                                               BUG4478
- 
+
       ** Save facility amount before updating it to use in updating
       ** trailer
      C                   Z-ADD     FPFAMT        W#SFAMT
@@ -346,59 +348,59 @@
       ** Get the timestamp                                                                   BUG2449
      C                   CALLB     'ZAGENTMSTM'                                              BUG2449
      C                   PARM                    TimeStamp                                   BUG2449
- 
+
      C                   SELECT
- 
+
       **  Write facility record
       **  =====================
- 
+
      C     FPCHTP        WHENEQ    'I'
      C                   EXSR      WRITER
- 
+
       **  Update facility record
       **  ======================
- 
+
      C     FPCHTP        WHENEQ    'A'
      C                   EXSR      AMENDR
- 
+
       **  Authorise facility
       **  =======================
      C     FPCHTP        WHENEQ    'X'
      C                   EXSR      AUTHOR
- 
+
       **  Reverse facility record
       **  =======================
- 
+
      C     FPCHTP        WHENEQ    'R'
      C                   EXSR      REVESR
- 
+
       **  Close facility record
       **  =======================
- 
+
      C     FPCHTP        WHENEQ    'C'
      C                   EXSR      CLOSER
       *
      C                   ENDSL
- 
+
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
       ** Setup Facility support log
- 
+
      C                   CALLB     'LEFCIPLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    FPCHTP
      C                   PARM                    FCLYM
      C                   PARM                    FCLYN
      C                   PARM                    TRANSDTL
- 
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'LEFCIP'
      C                   EVAL      APUSERID = PSUser
      C                   MOVEL     FPPCRF        APFOTRANID
@@ -408,7 +410,7 @@
      C                   EVAL      PDealNo = W@FPCNUM + W@FPFACT +
      C                                       W@FPFCNO
      C                   EVAL      PADealNo = *BLANKS
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -416,22 +418,22 @@
      C                   PARM      *BLANKS       WTimestamp
      C                   PARM                    PDealNo
      C                   PARM                    PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occured,
- 
+
      C                   IF        RetCodeOut <> *BLANKS
- 
+
      C                   EVAL      @@RTCD    = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Update the trailer if no errors
       **  Else report an error
- 
+
      C     Ix            IFEQ      0
      C                   EXSR      UPDTRL
      C                   ELSE
@@ -453,21 +455,21 @@
       * WRITER   : Write a record to facility file                    *
       *****************************************************************
      C     WRITER        BEGSR
- 
+
       * INITIALISE FCLTY
      C                   CLEAR                   FCLYM
      C                   CLEAR                   FCLYN
- 
+
       * SET UP FIELDS FROM FCLTYFM
- 
+
      C                   MOVEL     LEVFCIM       FCLYM
- 
+
      C                   MOVEL     'D'           RECI
      C                   MOVE      'A'           RCTP
- 
+
       * OTHER DETAILS
      C                   Z-ADD     0             RVCD
- 
+
      C                   Z-ADD     0             MTDH
      C                   Z-ADD     0             MTDL
      C                   Z-ADD     0             MTDA
@@ -475,7 +477,7 @@
      C                   Z-ADD     0             YTDA
      C                   MOVEL     *BLANKS       ZZ001
      C                   MOVEL     *BLANKS       ZZ002A
- 
+
      C                   MOVEL     FPPRTR        PRTR
      C**********         Z-ADD     0             PMFC                                         CLE106
      C**********         Z-ADD     0             PMFT                                         CLE106
@@ -534,12 +536,12 @@
       *
       * WRITE FCLTYFM FILE
      C                   WRITE     FCLTYFMF
- 
+
       *
       * SET UP FIELDS FROM FCLTYFN
- 
+
      C                   MOVEL     LEVFCIN       FCLYN
- 
+
       * OTHER DETAILS
      C                   Z-ADD     *ZEROS        F@OAM1
      C                   Z-ADD     *ZEROS        F@OAM2
@@ -554,7 +556,8 @@
      C                   MOVE      *BLANKS       F@CMFT
      C                   Z-ADD     0             F@CALC
      C                   MOVE      *BLANKS       F@SPRD
-     C                   Z-ADD     0             F@BCOD
+     C**********         Z-ADD     0             F@BCOD                                       CSD103
+     C                   MOVE      *BLANKS       F@BCOD                                       CSD103
      C                   Z-ADD     0             F@BRAT
      C                   Z-ADD     0             F@STDT
      C                   Z-ADD     0             F@EDDT
@@ -585,7 +588,7 @@
       *
      C                   MOVEL     'D'           F@RECI
      C                   MOVE      'B'           F@RCTP
- 
+
      C                   Z-ADD     BJRDNB        F@ORED
      C                   Z-ADD     BJRDNB        F@LCD
      C                   MOVE      FNCHTP        F@CHTP
@@ -597,7 +600,7 @@
       *
       * WRITE FCLTYFN FILE
      C                   WRITE     FCLTYFNF
- 
+
      C                   ENDSR
       ***********************************************************
       /EJECT
@@ -743,22 +746,22 @@
       * AMENDR   : Update Facility File                               *
       *****************************************************************
      C     AMENDR        BEGSR
- 
+
       ** Set up the key to the facility file
- 
+
      C                   MOVE      FPCNUM        K#CNUM
      C                   MOVE      FPFACT        K#FACT
      C                   MOVE      FPFCNO        K#FCNO
- 
+
       ** Access facility record type 'A'
- 
+
      C                   MOVE      'A'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFMF                           70
       *
      C     P#MODE        IFEQ      'B'
      C                   MOVE      TNLU          H#TNLU
      C                   ENDIF
- 
+
       ** End in error if record has been updated by another workstation
       *
      C     *IN70         IFEQ      *ON
@@ -770,11 +773,11 @@
      C                   MOVEL     '*RECUPD   '  @@RTCD
      C                   GOTO      EAMENDR
      C                   ENDIF
- 
+
       ** Update facility record type 'A'
- 
+
      C                   MOVEL     LEVFCIM       FCLYM
- 
+
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      FPCHTP        CHTP
      C                   CALLB     'ZTNLU1'
@@ -783,7 +786,7 @@
      C                   Z-ADD     NATN          TNLU
                                                                                              BUG2449
      C                   EVAL      STMP  = TimeStamp                                         BUG2449
- 
+
       *                                                                                      BUG4555
      C                   IF        CSD015 = 'Y' AND W1EWLC = 'Y'                             BUG4555
      C                             AND (CSC011 = 'N' OR CSC011 = 'Y'                         BUG4555
@@ -814,7 +817,7 @@
      C                   ENDIF                                                                CAP086
                                                                                               CAP086
      C                   UPDATE    FCLTYFMF
- 
+
       **  Check for the existence of funding participant/internal
       **  facilities, if any are found, update the expiry dates on
       **  these with the value of the prime facility
@@ -870,18 +873,18 @@
      C                   ENDIF
       *
       ** Access facility record type 'B'
- 
+
      C                   MOVE      'B'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFNF                           70
- 
+
       ** Update facility record type 'B'
- 
+
      C                   MOVEL     LEVFCIN       FCLYN
- 
+
      C                   Z-ADD     BJRDNB        F@LCD
      C                   MOVE      FPCHTP        F@CHTP
      C                   Z-ADD     NATN          F@TNLU
- 
+
      C                   EVAL      F@STMP  = TimeStamp                                       BUG5865
                                                                                              BUG5865
      C                   UPDATE    FCLTYFNF
@@ -904,7 +907,7 @@
      C     P#MODE        IFEQ      'B'
      C                   MOVE      TNLU          H#TNLU
      C                   ENDIF
- 
+
       ** End in error if record has been updated by another workstation
       *
      C     *IN70         IFEQ      *ON
@@ -916,14 +919,14 @@
      C                   MOVEL     '*RECUPD   '  @@RTCD
      C                   GOTO      EAUTHOR
      C                   ENDIF
- 
+
      C                   MOVE      'A'           FSTS
       *
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       ReturnCode
      C                   PARM                    NATN
      C                   Z-ADD     NATN          TNLU
- 
+
      C                   Z-ADD     BJRDNB        LCD
                                                                                              BUG2449
      C                   EVAL      STMP  = TimeStamp                                         BUG2449
@@ -960,7 +963,7 @@
      C     P#MODE        IFEQ      'B'
      C                   MOVE      TNLU          H#TNLU
      C                   ENDIF
- 
+
       ** End in error if record has been updated by another workstation
       *
      C     *IN70         IFEQ      *ON
@@ -982,7 +985,7 @@
      C                   PARM      *BLANKS       ReturnCode
      C                   PARM                    NATN
      C                   Z-ADD     NATN          TNLU
- 
+
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      FPCHTP        CHTP
      C                   MOVE      *BLANKS       LMTI                           CLE029
@@ -1003,7 +1006,7 @@
      C                   EVAL      F@STMP  = TimeStamp                                       BUG5865
                                                                                              BUG5865
      C                   UPDATE    FCLTYFNF
- 
+
      C     EREVESR       ENDSR
       ***********************************************************
       /EJECT
@@ -1022,7 +1025,7 @@
      C     P#MODE        IFEQ      'B'
      C                   MOVE      TNLU          H#TNLU
      C                   ENDIF
- 
+
      C     *IN70         IFEQ      *ON
      C     H#TNLU        ORNE      TNLU
      C                   MOVE      'N'           DDCSSNOK
@@ -1040,7 +1043,7 @@
      C                   PARM      *BLANKS       ReturnCode
      C                   PARM                    NATN
      C                   Z-ADD     NATN          TNLU
- 
+
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      FPCHTP        CHTP
                                                                                              BUG2449
@@ -1061,7 +1064,7 @@
      C                   EVAL      F@STMP  = TimeStamp                                       BUG5865
                                                                                              BUG5865
      C                   UPDATE    FCLTYFNF
- 
+
      C     ECLOSER       ENDSR
       *****************************************************************                      BUG4555
       /EJECT                                                                                 BUG4555
@@ -1238,10 +1241,10 @@
      C                   Z-ADD     999           K#FACT
      C                   Z-ADD     99            K#FCNO
      C                   MOVE      'Z'           K#RCTP
- 
+
      C*****MTHREAD       IFEQ      'N'                                             MD024342 MD025467
      C*****K#FCTY        CHAIN     FCLTYZZF                           70                    MD025467
- 
+
      C******IN70         IFEQ      '1'                                                      MD025467
      C******IN70         OREQ      '0'                                                      MD025467
      C*****RECI*         ANDNE     'T'                                                      MD025467
@@ -1261,7 +1264,7 @@
      C                   EXSR      Initialise                                               MD024342
      C                   MOVE      'I'           RCTP                                       MD024342
      C**********         ENDIF                                                     MD024342 MD025467
- 
+
      C                   ADD       2             NORE
      C                   ADD       2             NINS
      C                   ADD       2             NLRA
@@ -1665,7 +1668,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
@@ -1678,20 +1681,20 @@
      C     *LIKE         DEFINE    FACT          K3FACT
      C     *LIKE         DEFINE    FCNO          K3FCNO
      C     *LIKE         DEFINE    RCTP          K3RCTP
- 
+
      C     *LIKE         DEFINE    CNUM          K4CNUM
      C     *LIKE         DEFINE    FACT          K4FACT
      C     *LIKE         DEFINE    FCNO          K4FCNO
      C     *LIKE         DEFINE    BRCA          K4BRCA
- 
+
      C     *LIKE         DEFINE    FAMT          W#SFAMT
- 
+
       **  Define key to access Facilty file
      C     KFAC01        KLIST
      C                   KFLD                    FPCNUM
      C                   KFLD                    FPFACT
      C                   KFLD                    FPFCNO
- 
+
      C     K#FCTY        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -1711,7 +1714,7 @@
      C                   KFLD                    K4CNUM
      C                   KFLD                    K4FACT
      C                   KFLD                    K4FCNO
- 
+
       **  Used for LEFCLTL9
      C     K#KY10        KLIST
      C                   KFLD                    K0CANM
@@ -1734,31 +1737,31 @@
      C**********         UNLOCK    MPHAS                                           MD024342 MD025467
       *                                                                                     MD024342
      C**********         MOVEL     FPFRNT        W#FRNT                            MD024342 MD025467
- 
+
       **  DEFINE DTAARA JNSTAT
      C     *DTAARA       DEFINE                  JNSTAT
- 
+
      C     CSC011        IFEQ      'Y'
      C                   IN        SC24X7
      C                   IN        SDSTAT
      C                   END
- 
+
       ** OVRDBF FCLTYX to FCLTY then OPEN FCLTYX
- 
+
      C**********         EVAL      LENGTH = %SIZE(OVRDBF)                                     CLE041
      C**********         CALL      'QCMDEXC'                                                  CLE041
      C**********         PARM      OVRDBF        QCMD             70                          CLE041
      C**********         PARM                    LENGTH           15 5                        CLE041
      C**********         OPEN      FCLTYX                                                     CLE041
- 
+
       ** OVRDBF FCLTYXFN to FCLTY
- 
+
      C**********         EVAL      LENGTH = %SIZE(OVRDBFB)                                    CLE041
      C**********         CALL      'QCMDEXC'                                                  CLE041
      C**********         PARM      OVRDBFB       QCMD             70                          CLE041
      C**********         PARM                    LENGTH           15 5                        CLE041
      C**********         OPEN      FCLTYXFN                                                   CLE041
- 
+
       * If the user is connected via a browser, the job user name is QUSER -                 BUG2515
       * their user name is stored in ZMUSER                                                  BUG2515
      C**********         IN        ZMUSER                                            BUG2515 BUG8550

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD051931           Date 23Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,7 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -834,7 +836,8 @@
      C                   EVAL      PTYP        = p_PTYP
      C                   EVAL      AMTP        = 'MR'
      C                   EVAL      PRSQ        = 0
-     C                   EVAL      BRTT        = 0
+     C**********         EVAL      BRTT        = 0                                            CSD103
+     C                   EVAL      BRTT        = *BLANKS                                      CSD103
      C                   EVAL      RTSP        = 0
      C                   EVAL      CCY         = p_CCY
 

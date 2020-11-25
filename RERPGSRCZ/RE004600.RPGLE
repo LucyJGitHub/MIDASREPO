@@ -19,12 +19,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts                  *
@@ -34,7 +37,7 @@
       ** | F-specs                              |
       ** | =======                              |
       ** +--------------------------------------+
- 
+
       **  Accounts Master File
      FACCNTAB   UF   E           K DISK    INFSR(*PSSR)
       **
@@ -45,16 +48,16 @@
       ** | D-specs                              |
       ** | =======                              |
       ** +--------------------------------------+
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Layout for data area JNSTAT
      D JNSTAT        E DS                  EXTNAME(JNSTAT)
- 
+
       ** Whether or not *PSSR has been run previously
      D WRun            S              1A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -74,7 +77,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -82,19 +85,19 @@
       *  SRUPDATE - Update Block/Refer Debit/Credit for Retail Accts  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUPDATE      BEGSR
       *
       ** Read records of Account Master file
       *
      C                   READ      ACCNTAB
- 
+
      C                   DOW       NOT %EOF(ACCNTAB)
       *
       ** Process Retail account type only
       *
      C                   IF        ATYP = 'R'
- 
+
      C                   IF        ACEFDT <= CURDAT AND
      C                             ACEFDT > PRVDAT
       *
@@ -115,12 +118,12 @@
       ** Update Accounts Master File
       *
      C                   UPDATE    ACCNTABF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   READ      ACCNTAB
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055382           Date 02Apr20               *
-      *  Prev Amend No. AR954846           Date 09Jan20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055382           Date 02Apr20               *
+      *                 AR954846           Date 09Jan20               *
       *                 255478A            Date 03Oct19               *
       *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
@@ -26,7 +27,7 @@
       *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
-      *                 MD031057           Date 24Feb15             *
+      *                 MD031057           Date 24Feb15               *
       *                 240699             Date 19Aug14               *
       *                 MD028392           Date 14Jul14               *
       *                 CRE090             Date 14Feb14               *
@@ -187,6 +188,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055382 - System generated account statements will be       *
       *             written to STMTAH only when it's NSTD is less than*
       *             the system's NWKD.                                *
@@ -838,7 +840,8 @@
      D  MINB                 228    233P 0
      D  LACD                 234    236P 0
      D  LISP                 237    238P 0
-     D  DRIB                 242    243  0
+     D**DRIB****             242    243  0                                                    CSD103
+     D  DRIB                 242    243                                                       CSD103
      D  DRIS                 244    249P 7
      D  DRCD                 250    252P 0
      D  DRIC                 253    253  0
@@ -856,9 +859,11 @@
      D  DDIS_O               303    303
      D  DDIA                 304    306P 0
      D  OLDR                 307    309P 0
-     D  OLDB                 310    311  0
+     D**OLDB****             310    311  0                                                    CSD103
+     D  OLDB                 310    311                                                       CSD103
      D  OLDS                 312    317P 7
-     D  CRIB                 318    319  0
+     D**CRIB****             318    319  0                                                    CSD103
+     D  CRIB                 318    319                                                       CSD103
      D  CRIS                 320    325P 7
      D  CRCD                 326    328P 0
      D  CRIC                 329    329  0
@@ -876,7 +881,8 @@
      D  CDIS_O               379    379
      D  DCIA                 380    382P 0
      D  OLCR                 383    385P 0
-     D  OLCB                 386    387  0
+     D**OLCB****             386    387  0                                                    CSD103
+     D  OLCB                 386    387                                                       CSD103
      D  OLCS                 388    393P 7
      D  LCD                  394    396P 0
      D  CHTP                 397    397
@@ -991,7 +997,8 @@
 
      I/COPY WNCPYSRC,GL0600I002
 
-     I                                242  243 0DRIB
+     I**********                      242  243 0DRIB                                          CSD103
+     I                                242  243  DRIB                                          CSD103
      I                             P  244  249 7DRIS
      I                             P  250  252 0DRCD
      I                                253  253 0DRIC
@@ -1009,9 +1016,11 @@
      I                                303  303  DDIS
      I                             P  304  306 0DDIA
      I                             P  307  309 0OLDR
-     I                                310  311 0OLDB
+     I***********                     310  311 0OLDB                                          CSD103
+     I                                310  311  OLDB                                          CSD103
      I                             P  312  317 7OLDS
-     I                                318  319 0CRIB
+     I***********                     318  319 0CRIB                                          CSD103
+     I                                318  319  CRIB                                          CSD103
      I                             P  320  325 7CRIS
      I                             P  326  328 0CRCD
      I                                329  329 0CRIC
@@ -1029,7 +1038,8 @@
      I                                379  379  CDIS
      I                             P  380  382 0DCIA
      I                             P  383  385 0OLCR
-     I                                386  387 0OLCB
+     I************                    386  387 0OLCB                                          CSD103
+     I                                386  387  OLCB                                          CSD103
      I                             P  388  393 7OLCS
      I                             P  394  396 0LCD
      I                                397  397  CHTP
@@ -1145,7 +1155,8 @@
      I                             P  228  233 0MINB
      I                             P  234  236 0LACD
      I                             P  237  238 0LISP
-     I                                242  243 0DRIB
+     I**********                      242  243 0DRIB                                          CSD103
+     I                                242  243  DRIB                                          CSD103
      I                             P  244  249 7DRIS
      I                             P  250  252 0DRCD
      I                                253  253 0DRIC
@@ -1163,9 +1174,11 @@
      I                                303  303  DDIS
      I                             P  304  306 0DDIA
      I                             P  307  309 0OLDR
-     I                                310  311 0OLDB
+     I**********                      310  311 0OLDB                                          CSD103
+     I                                310  311  OLDB                                          CSD103
      I                             P  312  317 7OLDS
-     I                                318  319 0CRIB
+     I**********                      318  319 0CRIB                                          CSD103
+     I                                318  319  CRIB                                          CSD103
      I                             P  320  325 7CRIS
      I                             P  326  328 0CRCD
      I                                329  329 0CRIC
@@ -1183,7 +1196,8 @@
      I                                379  379  CDIS
      I                             P  380  382 0DCIA
      I                             P  383  385 0OLCR
-     I                                386  387 0OLCB
+     I**********                      386  387 0OLCB                                          CSD103
+     I                                386  387  OLCB                                          CSD103
      I                             P  388  393 7OLCS
      I                             P  394  396 0LCD
      I                                397  397  CHTP

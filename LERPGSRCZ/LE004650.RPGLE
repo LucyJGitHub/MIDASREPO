@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 AR1056323          Date 14Nov12               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -1952,7 +1954,8 @@
      C                   EVAL      FKSTDT = VDAT                                              233601
      C                   EVAL      FKSLID = FEPSTD                                            233601
      C                   EVAL      FKMDAT = 0                                                 233601
-     C                   EVAL      FKBRTT = 0                                                 233601
+     C**********         EVAL      FKBRTT = 0                                          233601 CSD103
+     C                   EVAL      FKBRTT = *BLANKS                                           CSD103
      C                   EVAL      FKBRTE = 0                                                 233601
      C                   EVAL      FKRTSP = 0                                                 233601
      C                   EVAL      FKINTR = 0                                                 233601

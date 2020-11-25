@@ -108,8 +108,11 @@
                                                                                               CSD103
       * SD Extra data in file (D/B) format                                                    CSD103
      D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
+                                                                                              CSD103
       **  Data Structure for Backward-Looking Rate Fields                                     CSD103
-     DBasRBckfld       DS            27                                                       CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+                                                                                              CSD103
+     D AAuth           S              1A                                                      CSD103
 
       ** +--- Start of main processing -----------------------------------+
 
@@ -164,15 +167,10 @@
 
       * Build buffer with required output
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
-     C                   ENDIF                                                                CSD103
-     C                   EVAL      Buffer = BasRScnfmt                                        CSD103
+     C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103
-     C                                      + AUTOAUTH                                        CSD103
+     C                                      + AAuth                                           CSD103
      C                                      + BasRBckfld                                      CSD103
 
      C                   SETON                                        LR
@@ -393,6 +391,8 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the

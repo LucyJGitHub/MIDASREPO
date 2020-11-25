@@ -143,8 +143,8 @@
       ** ¦ Named constants                      ¦                                             CSD103
       ** ¦ ===============                      ¦                                             CSD103
       ** +--------------------------------------+                                             CSD103
-      ** Alpha Num Base Rate Code                                                             CSD103
-     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+      ** Alphanumeric Base Rate Code                                                          CSD103
+     D AlphaBSRC       C                   Const('AlphaBaseRateCode')                         CSD103
                                                                                               CSD103
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -337,15 +337,10 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
-     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
-     C                                                    + AUTOAUTH                          CSD103
+     C                                                    + AAuth                             CSD103
      C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
@@ -577,7 +572,7 @@
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
                                                                                               CSC022
-      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+      ** Check for Alphanumeric Base Rate Code system value                                   CSD103
      C                   CALLB     'AOSVALR0'                                                 CSD103
      C                   PARM      *BLANKS       @RTCD                                        CSD103
      C                   PARM      AlphaBSRC     SVALK1           20                          CSD103
@@ -646,7 +641,7 @@
 
      C                   ENDIF
                                                                                              BUG3124
-     ** Used MOVE to validate Base Rate Code                                                 BUG3124
+      * Used MOVE to validate Base Rate Code                                                 BUG3124
                                                                                              BUG3124
      C     AlphaCode     IFNE      'Y'                                                        CSD103
      C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
@@ -797,6 +792,8 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   ENDSR
       *****************************************************************

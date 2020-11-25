@@ -27,7 +27,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC011 - 24x7 Midas Availability                             *
       *                                                               *
@@ -82,6 +81,9 @@
 
       ** SD Base Rate Maintenance Extra Data - File (D/B) format
      D BSRTExtDta    E DS                  EXTNAME(SDBSEXPD)
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -134,6 +136,8 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    BSRTFilFmt
      C                   PARM                    BSRTScnFmt
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'

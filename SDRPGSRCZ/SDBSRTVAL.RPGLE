@@ -340,8 +340,32 @@
 
       * Call Validation Modules in Sequence
 
-                                                                                             BUG3124
-      ** Validate Base Rate Code                                                             BUG3124
+     C     DDACTN        IFEQ      'D'                                          Action is     CSD103
+      *                                                                          Reverse      CSD103
+     C                   SETOFF                                       9091                    CSD103
+     C     *LOVAL        SETLL     SDBSRTXX                                                   CSD103
+     C                   DOW       *IN90 = *OFF                                               CSD103
+     C                   READ      SDBSRTXX      SDBSRTDS                 90                  CSD103
+      *  if this base rate is used as Base Rate for Accrual                                   CSD103
+     C     WBACYCD       IFEQ      DDCYCD                                                     CSD103
+     C     WBABRAC       ANDEQ     DDBSRC                                                     CSD103
+     C                   SETON                                        91                      CSD103
+     C                   LEAVE                                                                CSD103
+     C                   ENDIF                                                                CSD103
+     C                   ENDDO                                                                CSD103
+      *                                                                                       CSD103
+     C     *IN91         IFEQ      *ON                                                        CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBSRCOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBSRC'      FldNamXAr(Ix)                                CSD103
+     C                   MOVEL     '5049410'     MsgIdXAr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ELSE                                                   Action is     CSD103
+                                                                                 Insert or   BUG3124
+      ** Validate Base Rate Code                                                 Amend       BUG3124
                                                                                              BUG3124
      C                   EXSR      VBRTC                                                     BUG3124
                                                                                              BUG3124
@@ -668,6 +692,16 @@
      C                   MOVEL     '5049407'     MsgIdArr(Ix)                                 CSD103
      C                   SETOFF                                       93                      CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ELSE                                                                 CSD103
+     C     WBADGMA       IFNE      '01D'                                                      CSD103
+     C     WBADGMA       ANDNE     'O  '                                                      CSD103
+     C                   EXSR      RESETERRS                                                  CSD103
+     C                   MOVE      'N'           DDBRACOK                                     CSD103
+     C                   ADD       1             Ix                                           CSD103
+     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
+     C                   MOVEL     '5049452'     MsgIdArr(Ix)                                 CSD103
+     C                   EXSR      UPDATERRS                                                  CSD103
+     C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
@@ -742,6 +776,8 @@
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
@@ -1374,27 +1410,6 @@
      C                   MOVEL     '5049402'     MsgIdXAr(Ix)                                 CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDACTN        IFEQ      'D'                                                        CSD103
-     C                   SETOFF                                       9091                    CSD103
-     C     *LOVAL        SETLL     SDBSRTXX                                                   CSD103
-     C                   DOW       *IN90 = *OFF                                               CSD103
-     C                   READ      SDBSRTXX      SDBSRTDS                 90                  CSD103
-      *  if this base rate is used as Base Rate for Accrual                                   CSD103
-     C     WBACYCD       IFEQ      DDCYCD                                                     CSD103
-     C     WBABRAC       ANDEQ     DDBSRC                                                     CSD103
-     C                   SETON                                        91                      CSD103
-     C                   LEAVE                                                                CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDDO                                                                CSD103
-      *                                                                                       CSD103
-     C     *IN91         IFEQ      *ON                                                        CSD103
-     C                   MOVE      'N'           DDBSRCOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBSRC'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     '5049410'     MsgIdXAr(Ix)                                 CSD103
-     C                   ENDIF                                                                CSD103
      C                   ENDIF                                                                CSD103
                                                                                              BUG3124
                                                                                              BUG3124

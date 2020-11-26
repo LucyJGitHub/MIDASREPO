@@ -15,8 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261941             Date 13Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056991           Date 30Oct20               *
+      *  Prev Amend No. MD028459           Date 30Oct20               *
+      *                 MD028459B          Date 30Oct20               *
+      *                 261941             Date 13Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035349           Date 06Aug15               *
       *                 MD034498           Date 25May15               *
       *                 CSW215             Date 06Apr15               *
@@ -68,6 +71,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056991 - Allow CH, CP and SW in A/C with Bank - Acct Line  *
+      *             if A/C with Bank is SWIFT BIC.                    *
+      *  MD028459B - Wrong validation on BIC.                         *
+      *            - Applied for MD-56991                             *
+      *  MD028459 - Length 6 for Clearing Identification is not valid *
+      *             for ZA Clearing System. Remove validation for     *
+      *             ZA Clearing System.                               *
+      *            - Applied for MD-56991                             *
       *  261941 - Format //RU9!n[.20!n] for A/C with Bank line 1 is   *
       *           not accepted. Add validation for //RU9!n[.20!n]     *
       *         - Applied for MD-52032                                *
@@ -992,14 +1003,132 @@
       *
      C                     MOVEL'977'     ##PER1
      C           I#ACCL    IFEQ '//CH'
+      *                                                                                     MD056991
+      ** Check SWIFT BIC code, if one on file for this client, is valid                     MD056991
+      *                                                                                     MD056991
+     C                     SELEC                                                            MD056991
+      *                                                                                     MD056991
+      ** When customer                                                                      MD056991
+      *                                                                                     MD056991
+     C           W9CUST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELBBCSID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056991
+      ** When counterparty nostro                                                           MD056991
+      *                                                                                     MD056991
+     C           W9CNST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELAWSWID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056691
+      ** Otherwise, SWIFT BIC address                                                       MD056991
+      *                                                                                     MD056991
+     C                     OTHER                                                            MD056991
+     C                     MOVELI#PRTY    W9BICC                                            MD056991
+     C           3         SUBSTI#PRTY:9  W9BICB                                            MD056991
+     C                     ENDSL                                                            MD056991
+      *                                                                                     MD056991
+     C                     CALL 'ME1400'                                                    MD056991
+     C                     PARM *BLANKS   W9RTN                                             MD056991
+     C                     PARM           W9BICC                                            MD056991
+     C                     PARM           W9BICB                                            MD056991
+     C                     PARM           SDCUST                                            MD056991
+     C                     PARM           SDCNST                                            MD056991
+     C                     PARM           MEBICD                                            MD056991
+     C                     PARM *BLANKS   WKCUST                                            MD056991
+     C                     PARM *BLANKS   WKCNST                                            MD056991
+     C                     PARM *BLANKS   WKBICD                                            MD056991
+      *                                                                                     MD056991
+      ** If a SWIFT BIC has not been entered                                                MD056991
+      *                                                                                     MD056991
+     C           WKBICD    IFNE 'Y'                                                         MD056991
+     C           WKCUST    ANDNE'Y'                                                         MD056991
+     C           WKCNST    ANDNE'Y'                                                         MD056991
+      *                                                                                     MD056991
      C                     EXSR SRCH
+      *                                                                                     MD056991
+      ** A SWIFT BIC has been entered                                                       MD056991
+      *                                                                                     MD056991
+     C                     ELSE                                                             MD056991
+     C                     MOVEL##PER1    ERCD,E                                            MD056991
+     C                     ADD  1         E                                                 MD056991
+     C                     MOVEL'Y'       E#ERRM                                            MD056991
+      * Send error message                                                                  MD056991
+      *                                                                                     MD056991
+     C                     MOVEL'MEC0043' MEMSID                                            MD056991
+     C                     MOVEL'MEMSG'   MEMSGF                                            MD056991
+     C                     MOVEL*BLANKS   MEMSDT                                            MD056991
+     C                     EXSR SRSNMS                                                      MD056991
+     C                     GOTO EXAWBK                                                      MD056991
+     C                     ENDIF                                                            MD056991
+      *                                                                                     MD056991
      C                     ENDIF
       *
       * CHIPS Participant Validation
       *
      C                     MOVEL'977'     ##PER1
      C           I#ACCL    IFEQ '//CP'
+      *                                                                                     MD056991
+      ** Check SWIFT BIC code, if one on file for this client, is valid                     MD056991
+      *                                                                                     MD056991
+     C                     SELEC                                                            MD056991
+      *                                                                                     MD056991
+      ** When customer                                                                      MD056991
+      *                                                                                     MD056991
+     C           W9CUST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELBBCSID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056991
+      ** When counterparty nostro                                                           MD056991
+      *                                                                                     MD056991
+     C           W9CNST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELAWSWID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056691
+      ** Otherwise, SWIFT BIC address                                                       MD056991
+      *                                                                                     MD056991
+     C                     OTHER                                                            MD056991
+     C                     MOVELI#PRTY    W9BICC                                            MD056991
+     C           3         SUBSTI#PRTY:9  W9BICB                                            MD056991
+     C                     ENDSL                                                            MD056991
+      *                                                                                     MD056991
+     C                     CALL 'ME1400'                                                    MD056991
+     C                     PARM *BLANKS   W9RTN                                             MD056991
+     C                     PARM           W9BICC                                            MD056991
+     C                     PARM           W9BICB                                            MD056991
+     C                     PARM           SDCUST                                            MD056991
+     C                     PARM           SDCNST                                            MD056991
+     C                     PARM           MEBICD                                            MD056991
+     C                     PARM *BLANKS   WKCUST                                            MD056991
+     C                     PARM *BLANKS   WKCNST                                            MD056991
+     C                     PARM *BLANKS   WKBICD                                            MD056991
+      *                                                                                     MD056991
+      ** If a SWIFT BIC has not been entered                                                MD056991
+      *                                                                                     MD056991
+     C           WKBICD    IFNE 'Y'                                                         MD056991
+     C           WKCUST    ANDNE'Y'                                                         MD056991
+     C           WKCNST    ANDNE'Y'                                                         MD056991
+      *                                                                                     MD056991
      C                     EXSR SRCP
+      *                                                                                     MD056991
+      ** A SWIFT BIC has been entered                                                       MD056991
+      *                                                                                     MD056991
+     C                     ELSE                                                             MD056991
+     C                     MOVEL##PER1    ERCD,E                                            MD056991
+     C                     ADD  1         E                                                 MD056991
+     C                     MOVEL'Y'       E#ERRM                                            MD056991
+      * Send error message                                                                  MD056991
+      *                                                                                     MD056991
+     C                     MOVEL'MEC0044' MEMSID                                            MD056991
+     C                     MOVEL'MEMSG'   MEMSGF                                            MD056991
+     C                     MOVEL*BLANKS   MEMSDT                                            MD056991
+     C                     EXSR SRSNMS                                                      MD056991
+     C                     GOTO EXAWBK                                                      MD056991
+     C                     ENDIF                                                            MD056991
+      *                                                                                     MD056991
      C                     ENDIF
       *
       * Spanish Domestic Validation
@@ -1042,7 +1171,66 @@
       *
      C                     MOVEL'977'     ##PER1
      C           I#ACCL    IFEQ '//SW'
+      *                                                                                     MD056991
+      ** Check SWIFT BIC code, if one on file for this client, is valid                     MD056991
+      *                                                                                     MD056991
+     C                     SELEC                                                            MD056991
+      *                                                                                     MD056991
+      ** When customer                                                                      MD056991
+      *                                                                                     MD056991
+     C           W9CUST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELBBCSID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056991
+      ** When counterparty nostro                                                           MD056991
+      *                                                                                     MD056991
+     C           W9CNST    WHEQ 'Y'                                                         MD056991
+     C           I#PRTT    ANDNE'S'                                                         MD056991
+     C                     MOVELAWSWID    W9BICC                                            MD056991
+     C                     MOVE *BLANKS   W9BICB                                            MD056991
+      *                                                                                     MD056691
+      ** Otherwise, SWIFT BIC address                                                       MD056991
+      *                                                                                     MD056991
+     C                     OTHER                                                            MD056991
+     C                     MOVELI#PRTY    W9BICC                                            MD056991
+     C           3         SUBSTI#PRTY:9  W9BICB                                            MD056991
+     C                     ENDSL                                                            MD056991
+      *                                                                                     MD056991
+     C                     CALL 'ME1400'                                                    MD056991
+     C                     PARM *BLANKS   W9RTN                                             MD056991
+     C                     PARM           W9BICC                                            MD056991
+     C                     PARM           W9BICB                                            MD056991
+     C                     PARM           SDCUST                                            MD056991
+     C                     PARM           SDCNST                                            MD056991
+     C                     PARM           MEBICD                                            MD056991
+     C                     PARM *BLANKS   WKCUST                                            MD056991
+     C                     PARM *BLANKS   WKCNST                                            MD056991
+     C                     PARM *BLANKS   WKBICD                                            MD056991
+      *                                                                                     MD056991
+      ** If a SWIFT BIC has not been entered                                                MD056991
+      *                                                                                     MD056991
+     C           WKBICD    IFNE 'Y'                                                         MD056991
+     C           WKCUST    ANDNE'Y'                                                         MD056991
+     C           WKCNST    ANDNE'Y'                                                         MD056991
+      *                                                                                     MD056991
      C                     EXSR SRSW
+      *                                                                                     MD056991
+      ** A SWIFT BIC has been entered                                                       MD056991
+      *                                                                                     MD056991
+     C                     ELSE                                                             MD056991
+     C                     MOVEL##PER1    ERCD,E                                            MD056991
+     C                     ADD  1         E                                                 MD056991
+     C                     MOVEL'Y'       E#ERRM                                            MD056991
+      * Send error message                                                                  MD056991
+      *                                                                                     MD056991
+     C                     MOVEL'MEC0045' MEMSID                                            MD056991
+     C                     MOVEL'MEMSG'   MEMSGF                                            MD056991
+     C                     MOVEL*BLANKS   MEMSDT                                            MD056991
+     C                     EXSR SRSNMS                                                      MD056991
+     C                     GOTO EXAWBK                                                      MD056991
+     C                     ENDIF                                                            MD056991
+      *                                                                                     MD056991
      C                     ENDIF
       *
       * Austrian Bankleitzahl Validation                                  CSW097
@@ -1184,26 +1372,26 @@
       *                                                                   CSW200
       *  If a SWIFT BIC has not been entered                              CSW200
       *                                                                   CSW200
-     C           WKBICD    IFNE 'Y'                                       CSW200
-     C           WKCUST    ANDNE'Y'                                       CSW200
-     C           WKCNST    ANDNE'Y'                                       CSW200
+     C********** WKBICD    IFNE 'Y'                                                 CSW200 MD028459B
+     C********** WKCUST    ANDNE'Y'                                                 CSW200 MD028459B
+     C********** WKCNST    ANDNE'Y'                                                 CSW200 MD028459B
       *                                                                   CSW200
      C                     EXSR SRZA                                      CSW200
-      *                                                                   CSW200
-      *  A SWIFT BIC has been entered                                     CSW200
-     C                     ELSE                                           CSW200
-      *                                                                   CSW200
-     C                     MOVEL##PER1    ERCD,E                          CSW200
-     C                     ADD  1         E                               CSW200
-     C                     MOVEL'Y'       E#ERRM                          CSW200
-      * Send error message                                                CSW200
-      *                                                                   CSW200
-     C                     MOVEL'MEC0038' MEMSID                          CSW200
-     C                     MOVEL'MEMSG'   MEMSGF                          CSW200
-     C                     MOVEL*BLANKS   MEMSDT                          CSW200
-     C                     EXSR SRSNMS                                    CSW200
-     C                     GOTO EXAWBK                                    CSW200
-     C                     ENDIF                                          CSW200
+      *****************************************************************             CSW200 MD028459B
+      ***A*SWIFT*BIC*has*been*entered**********************************             CSW200 MD028459B
+     C**********           ELSE                                                     CSW200 MD028459B
+      *****************************************************************             CSW200 MD028459B
+     C**********           MOVEL##PER1    ERCD,E                                    CSW200 MD028459B
+     C**********           ADD  1         E                                         CSW200 MD028459B
+     C**********           MOVEL'Y'       E#ERRM                                    CSW200 MD028459B
+      **Send*error*message*********************************************             CSW200 MD028459B
+      *****************************************************************             CSW200 MD028459B
+     C**********           MOVEL'MEC0038' MEMSID                                    CSW200 MD028459B
+     C**********           MOVEL'MEMSG'   MEMSGF                                    CSW200 MD028459B
+     C**********           MOVEL*BLANKS   MEMSDT                                    CSW200 MD028459B
+     C**********           EXSR SRSNMS                                              CSW200 MD028459B
+     C**********           GOTO EXAWBK                                              CSW200 MD028459B
+     C**********           ENDIF                                                    CSW200 MD028459B
       *                                                                   CSW200
       * Message type is not 202                                           CSW200
       * and is not 100                                                    183752
@@ -4917,23 +5105,23 @@
       *                                                                                       CSW213
       ** If a SWIFT BIC has not been entered                                                  CSW213
       *                                                                                       CSW213
-     C           WKBICD    IFNE 'Y'                                                           CSW213
-     C           WKCUST    ANDNE'Y'                                                           CSW213
-     C           WKCNST    ANDNE'Y'                                                           CSW213
+     C********** WKBICD    IFNE 'Y'                                                  CSW213 MD028459
+     C********** WKCUST    ANDNE'Y'                                                  CSW213 MD028459
+     C********** WKCNST    ANDNE'Y'                                                  CSW213 MD028459
       *                                                                                       CSW213
      C                     EXSR SRZA                                                          CSW213
       *                                                                                       CSW213
-      ** A SWIFT BIC has been entered                                                         CSW213
-     C                     ELSE                                                               CSW213
-      *                                                                                       CSW213
-     C                     MOVEL##PER1    ERCD,E                                              CSW213
-     C                     ADD  1         E                                                   CSW213
-     C                     MOVEL'Y'       E#ERRM                                              CSW213
-     C                     MOVEL'MEC0038' MEMSID                                              CSW213
-     C                     MOVEL'MEMSG'   MEMSGF                                              CSW213
-     C                     MOVEL*BLANKS   MEMSDT                                              CSW213
-     C                     EXSR SRSNMS                                                        CSW213
-     C                     ENDIF                                                              CSW213
+      ***A*SWIFT*BIC*has*been*entered***********************************             CSW213 MD028459
+     C**********           ELSE                                                      CSW213 MD028459
+      ******************************************************************             CSW213 MD028459
+     C**********           MOVEL##PER1    ERCD,E                                     CSW213 MD028459
+     C**********           ADD  1         E                                          CSW213 MD028459
+     C**********           MOVEL'Y'       E#ERRM                                     CSW213 MD028459
+     C**********           MOVEL'MEC0038' MEMSID                                     CSW213 MD028459
+     C**********           MOVEL'MEMSG'   MEMSGF                                     CSW213 MD028459
+     C**********           MOVEL*BLANKS   MEMSDT                                     CSW213 MD028459
+     C**********           EXSR SRSNMS                                               CSW213 MD028459
+     C**********           ENDIF                                                     CSW213 MD028459
       *                                                                                       CSW213
      C           I#ACCL    WHEQ '//NZ'                                                        CSW213
      C                     MOVEL'977'     ##PER1                                              CSW213

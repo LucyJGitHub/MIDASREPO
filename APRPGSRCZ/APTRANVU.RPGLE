@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -226,6 +227,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -825,6 +827,8 @@
                                                                                               CSD103
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
      D BasRBckfld      DS            27                                                       CSD103
+      ** LE Backward-Looking Rate Fields                                                      CLE172
+     D LEBasRBckfld    DS            41                                                       CLE172
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2570,6 +2574,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
+     C     41            SUBST     BUFFER:Bfp    LEBasRBckfld                                 CLE172
+     C                   ADD       41            Bfp                                          CLE172
+                                                                                              CLE172
      C*****CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C**********         ADD       CLEXLn        Bfp                                        MD044880
 
@@ -2592,6 +2599,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
+     C                   PARM                    LEBasRBckfld                                 CLE172
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

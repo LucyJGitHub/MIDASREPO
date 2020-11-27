@@ -9,11 +9,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD057089           Date 25Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057089 - Ensure the 2nd tax code is only validated if      *
+      *             defined. Blank should not be validated.           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *                                                               *
@@ -256,6 +259,9 @@
      C                   MOVEL     TXR1          WTR1
       *
      C                   ELSE
+      *                                                                                     MD057089
+      * Only check if valid it non blank                                                    MD057089
+     C                   IF        TXR2 <> '  '                                             MD057089
      C                   CALL      'AOWTRCR0'
      C                   PARM      '       '     @RTCD             7
      C                   PARM      '*VERIFY'     @OPTN             7
@@ -267,6 +273,7 @@
      C                   MOVE      '2'           RTCD
      C                   MOVEL     TXR2          WTR2
      C                   END
+     C                   ENDIF                                                              MD057089
      C                   END
      C*
      C                   ELSE

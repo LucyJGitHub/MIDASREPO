@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD056644           Date 14Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -52,6 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056644 - Incorrect field Short Term rate (field Short Term *
+      *             rate is not amendable).                           *
+      *           - Ensure SETTLE record is generated for deals with  *
+      *             Interest Payment date falling on a holiday.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -156,6 +161,11 @@
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  204923
       ** Dummy record format for Currency Details                                             204923
       *                                                                                       204923
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                MD056644
+      ** Dummy record format for GL ICD Details                                             MD056644
+      *                                                                                     MD056644
+     D  QQACC1       E                     EXTFLD(QQACCD)                                   MD056644
+      *                                                                                     MD056644
      D*COPY ZSRSRC,ZHOLI                                                                      220859
      D ZHOLDS          DS                                                                     220859
       *                                                                                       220859
@@ -644,9 +654,14 @@
      C                   ELSE                                                                 221119
      C                   Z-ADD     BJRDNB        WDAYS                                        221119
      C                   ENDIF                                                                221119
+      *                                                                                     MD056644
+      ** Initialize Interest Payment Date falling on a holiday work field.                  MD056644
+      *                                                                                     MD056644
+     C                   MOVE      'N'           WPHDAY            1                        MD056644
       *                                                                                       221119
      C                   ADD       1             WDAYS                                        221119
      C     WDAYS         DOWLT     BJDNWD                                                     221119
+     C     WDAYS         ANDLE     WEVCD                                                    MD056644
      C                   CALLB     'ZCHKH'                                                    221119
      C                   PARM      WDAYS         @DATE             5 0                        221119
      C                   PARM                    @CCY              3                          221119
@@ -656,6 +671,20 @@
      C                   MOVE      'Y'           PHDAY                                        221119
      C                   Z-ADD     WDAYS         PDATE             5 0                        221119
      C                   EXSR      SRSTAN                                                     221119
+     C                   ELSE                                                               MD056644
+      *                                                                                     MD056644
+      ** Generate a SETTLE record for a deal with Interest Payment Date                     MD056644
+      ** falling on a holiday based on event control date.                                  MD056644
+      *                                                                                     MD056644
+     C                   IF        (WOTIN = 'OUR' AND WDAYS = UNIPD AND                     MD056644
+     C                             UNIPD <> MDAT) OR                                        MD056644
+     C                             (WOTIN = 'THEIR' AND WDAYS = TNIPD AND                   MD056644
+     C                             TNIPD <> MDAT)                                           MD056644
+     C                   EVAL      PHDAY = 'Y'                                              MD056644
+     C                   EVAL      PDATE = WDAYS                                            MD056644
+     C                   EXSR      SRSTAN                                                   MD056644
+     C                   ENDIF                                                              MD056644
+      *                                                                                     MD056644
      C                   ENDIF                                                                221119
      C                   ADD       1             WDAYS                                        221119
      C                   ENDDO                                                                221119
@@ -789,6 +818,10 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM                    PHDAY                                        221119
      C                   PARM                    PDATE                                        221119
+      *                                                                                     MD056644
+      ** Save value of PHDAY to work field WPHDAY                                           MD056644
+      *                                                                                     MD056644
+     C                   MOVE      PHDAY         WPHDAY                                     MD056644
       *
      C                   MOVE      'N'           PHDAY                                        221119
      C     PRTCD         IFNE      *BLANKS
@@ -805,15 +838,27 @@
      C                   MOVEL     'N'           WSETIN            1
       *
      C     WOTIN         IFEQ      'OUR'
-     C     BJRDNB        IFEQ      UNIPD
-     C     BJRDNB        OREQ      MDAT
+     C*****BJRDNB        IFEQ      UNIPD                                                    MD056644
+     C*****BJRDNB        OREQ      MDAT                                                     MD056644
+     C                   IF        (BJRDNB = UNIPD) OR                                      MD056644
+     C                             (WPHDAY = 'Y' AND UNIPD = PDATE) OR                      MD056644
+     C                             (WPHDAY = 'N' AND UNIPD < BJRDNB) OR                     MD056644
+     C                             (BJRDNB = MDAT) OR                                       MD056644
+     C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
+     C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644
      C                   MOVEL     'Y'           WSETIN
      C                   ENDIF
      C                   ENDIF
       *
      C     WOTIN         IFEQ      'THEIR'
-     C     BJRDNB        IFEQ      TNIPD
-     C     BJRDNB        OREQ      MDAT
+     C*****BJRDNB        IFEQ      TNIPD                                                    MD056644
+     C*****BJRDNB        OREQ      MDAT                                                     MD056644
+     C                   IF        (BJRDNB = TNIPD) OR                                      MD056644
+     C                             (WPHDAY = 'Y' AND TNIPD = PDATE) OR                      MD056644
+     C                             (WPHDAY = 'N' AND TNIPD < BJRDNB) OR                     MD056644
+     C                             (BJRDNB = MDAT) OR                                       MD056644
+     C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
+     C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644
      C                   MOVEL     'Y'           WSETIN
      C                   ENDIF
      C                   ENDIF
@@ -1000,6 +1045,28 @@
       *
      C     BNHKTR        DIV       100           TAXR              5 4
       *
+      ** Call access program for General Ledger ICD details.                                MD056644
+      *                                                                                     MD056644
+     C                   CALL      'AOGELRR1'                                               MD056644
+     C                   PARM      '*MSG   '     PRTCD                                      MD056644
+     C                   PARM      '*FIRST '     POPTN                                      MD056644
+     C     SDGELR        PARM      SDGELR        DSSDY                                      MD056644
+     C                   IF        PRTCD <> *BLANK                                          MD056644
+     C     *LOCK         IN        LDA                                                      MD056644
+     C                   EVAL      DBFILE = 'SDGELRPD'                                      MD056644
+     C                   EVAL      DBASE = 8                                                MD056644
+     C                   EVAL      DBKEY = POPTN                                            MD056644
+     C                   OUT       LDA                                                      MD056644
+     C                   EXSR      *PSSR                                                    MD056644
+     C                   ENDIF                                                              MD056644
+      *                                                                                     MD056644
+      ** Determine event control date.                                                      MD056644
+      *                                                                                     MD056644
+     C                   Z-ADD     0             WEVCD             5 0                      MD056644
+     C                   EVAL      WEVCD = BJDNWD - 1                                       MD056644
+     C     BKAPDT        COMP      WEVCD                                20                  MD056644
+     C   20              EVAL      WEVCD = BKAPDT                                           MD056644
+      *                                                                                     MD056644
      C                   ENDSR
       *
       /EJECT

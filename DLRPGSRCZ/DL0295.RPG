@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 257937             Date 28Nov08               *
-      *  Prev Amend No. MD056278           Date 12Aug20               *      
+      *  Last Amend No. ETA032             Date 31Aug12               *      
+      *  Prev Amend No. 257937             Date 28Nov08               *
+      *                 MD056278           Date 12Aug20               *
       *                 MD055673           Date 20Jul20               *
       *                 MD053762           Date 16Jun19               *
       *                 MD049950           Date 08Mar18               *
@@ -192,6 +193,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  ETA032 - Allow Dealing postings to blocked accounts.         *      
       *  257937 - Incorrect postings for withholding tax in foreign   *
       *           currency. Debit the tax from the settlement account *
       *           for tax account keys with posting reference '2' and *
@@ -199,7 +201,7 @@
       *  MD056278 - Imbalance posting on computer suspense account    *
       *             with unrelated SWCR value.                        *
       *           - Fields SWCR and ACKEY in posting file should be   *
-      *             blanks for imbalance posting.                     *      
+      *             blanks for imbalance posting.                     *
       *  MD055673 - ACNO field is populated in suspense posting.      *
       *             Fix is to initialize the field ACRAN.             *
       *  MD053762 - Tiered Withholding Tax System Values              *
@@ -2054,6 +2056,27 @@
      C                     MOVE 'Y'       CDL046                                              CDL046
      C                     ENDIF                                                              CDL046
      C/COPY WNCPYSRC,DLH00388
+      *                                                                                       ETA032
+      ** Access AOSARDR0 to check if ETA032 is installed                                      ETA032
+      *                                                                                       ETA032
+     C                     CALL 'AOSARDR0'                                                    ETA032
+     C                     PARM *BLANKS   @RTCD                                               ETA032
+     C                     PARM '*VERIFY' @OPTN                                               ETA032
+     C                     PARM 'ETA032'  @SARD                                               ETA032
+      *                                                                                       ETA032
+     C           @RTCD     IFNE *BLANK                                                        ETA032
+     C           @RTCD     ANDNE'*NRF   '                                                     ETA032
+     C                     MOVEL'SCSARDPD'DBFILE            *************                     ETA032
+     C                     MOVEL'37'      DBASE             *DBERROR 037*                     ETA032
+     C                     MOVEL'ETA032'  DBKEY             *************                     ETA032
+     C                     GOTO ERROR                                                         ETA032
+     C                     ENDIF                                                              ETA032
+      *                                                                                       ETA032
+     C           @RTCD     IFEQ *BLANK                                                        ETA032
+     C                     MOVE 'Y'       ETA032  1                                           ETA032
+     C                     ELSE                                                               ETA032
+     C                     MOVE 'N'       ETA032                                              ETA032
+     C                     ENDIF                                                              ETA032
      C*
      C** READ TRADING DETAILS VIA ACCESS PROGRAM                          S01194
      C                     CALL 'AOTRADR0'                                S01194
@@ -3263,11 +3286,13 @@
       *                                                                   S01408
      C*                                                                   E18407
      C**   IF DEBITS AND CREDITS ARE BLOCKED SEND POSTING TO SUSPENSE.    E18407
+     C           ETA032    IFNE 'Y'                                                           ETA032
      C           *IN39     IFEQ '0'                                       E18407
      C                     TESTB'2'       RETB           29    DEBITS     E18407
      C                     ELSE                                           E18407
      C                     TESTB'3'       RETB           29    CREDITS    E18407
      C                     END                                            E18407
+     C                     ENDIF                                                              ETA032
       *                                                                   S01408
      C/COPY WNCPYSRC,DL0295CP13                                           S01408
       *                                                                   S01408
@@ -5762,11 +5787,13 @@
      C*                                                                   CDL002
      C** If DEBITS and CREDITS are blocked send POSTING to SUSPENSE.      CDL002
      C/COPY WNCPYSRC,DLH00393
+     C           ETA032    IFNE 'Y'                                                           ETA032
      C           *IN39     IFEQ '0'                                       CDL002
      C                     TESTB'2'       RETB           29    DEBITS     CDL002
      C                     ELSE                                           CDL002
      C                     TESTB'3'       RETB           29    CREDITS    CDL002
      C                     END                                            CDL002
+     C                     ENDIF                                                              ETA032
      C/COPY WNCPYSRC,DLH00394
      C                     END                                            CDL002
      C*                                                                   CDL002

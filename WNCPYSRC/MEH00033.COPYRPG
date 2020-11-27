@@ -1,0 +1,88 @@
+      *****************************************************************                       ERZ212
+      *                                                               *                       ERZ212
+      *  Midas - /COPY Member (ME0021)                                *                       ERZ212
+      *                                                               *                       ERZ212
+      *  MEH00033 - Midas ME SWIFT accounts maint MB active           *                       ERZ212
+      *                                                               *                       ERZ212
+      *  Last Amend No. ERZ212   *CREATE   Date 22Feb13               *                       ERZ212
+      *                                                               *                       ERZ212
+      *---------------------------------------------------------------*                       ERZ212
+      *                                                               *                       ERZ212
+      *  ERZ212 - Multicash MT940 Interface                           *                       ERZ212
+      *                                                               *                       ERZ212
+      *****************************************************************                       ERZ212
+      *                                                                                       ERZ212
+      ** Validate MultiCash Participation Number                                              ERZ212
+     C           ERZ212    IFEQ 'Y'                                                           ERZ212
+     C                     MOVE '0'       *IN20                                               ERZ212
+      *                                                                                       ERZ212
+      ** MultiCash Participation Number is entered                                            ERZ212
+     C           SEMCPN    IFNE *BLANKS                                                       ERZ212
+      *                                                                                       ERZ212
+      ** Check that Internal Only Flag is set to 'N'                                          ERZ212
+     C           INTES     IFNE 'N'                                                           ERZ212
+     C                     MOVE ' 030'    ERCD,Y                                              ERZ212
+     C                     ADD  1         Y                                                   ERZ212
+     C                     MOVE '1'       *IN20                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Check that MT940 Destination Field is set to 'MTCASH                                 ERZ212
+     C           SMT94     IFNE 'MTCASH'                                                      ERZ212
+     C                     MOVE ' 031'    ERCD,Y                                              ERZ212
+     C                     ADD  1         Y                                                   ERZ212
+     C                     MOVE '1'       *IN20                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** Check if field contains all numeric entries                                          ERZ212
+     C                     Z-ADD0         ZADEC                                               ERZ212
+     C                     Z-ADD8         ZADIG                                               ERZ212
+     C                     MOVE *BLANKS   ZFIELD                                              ERZ212
+     C                     MOVE SEMCPN    ZFIELD                                              ERZ212
+     C                     CALL 'ZALIGN'                                                      ERZ212
+     C                     PARM           ZRTN    7                                           ERZ212
+     C                     PARM           ZFIELD 16                                           ERZ212
+     C                     PARM           ZADEC   10                                          ERZ212
+     C                     PARM           ZADIG   20                                          ERZ212
+     C                     PARM           ZAFLD  16                                           ERZ212
+      *                                                                                       ERZ212
+      ** If error found?  Set up error message                                                ERZ212
+     C           ZRTN      IFNE *BLANKS                                                       ERZ212
+     C                     MOVE ' 032'    ERCD,Y                                              ERZ212
+     C                     ADD  1         Y                                                   ERZ212
+     C                     MOVE '1'       *IN20                                               ERZ212
+     C                     ELSE                                                               ERZ212
+     C                     MOVE ZFIELD    SEMCPN                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** If amend, check for unique Multicash Particpant number                               ERZ212
+     C           SACTN     IFEQ 'A'                                                           ERZ212
+     C           SEMCPN    ANDNEEMCPNX                                                        ERZ212
+     C           SACTN     OREQ 'I'                                                           ERZ212
+      *                                                                                       ERZ212
+      ** Multicash Participant Number must be unique                                          ERZ212
+     C                     MOVE SEMCPN    KEMCPN  80                                          ERZ212
+      *                                                                                       ERZ212
+     C           KEMCPN    SETLLSWACMC                   83                                   ERZ212
+     C           *IN83     IFEQ *ON                                                           ERZ212
+     C                     MOVE ' 033'    ERCD,Y                                              ERZ212
+     C                     ADD  1         Y                                                   ERZ212
+     C                     MOVE '1'       *IN20                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      ** MultiCash Participation Number is not entered                                        ERZ212
+     C           SEMCPN    IFEQ *BLANKS                                                       ERZ212
+      *                                                                                       ERZ212
+      ** Check that MT940 Destination Field is not set to 'MTCASH'                            ERZ212
+     C           SMT94     IFEQ 'MTCASH'                                                      ERZ212
+     C                     MOVE ' 034'    ERCD,Y                                              ERZ212
+     C                     ADD  1         Y                                                   ERZ212
+     C                     MOVE '1'       *IN20                                               ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+     C                     ENDIF                                                              ERZ212
+      *                                                                                       ERZ212
+      *****************************************************************                       ERZ212
+      * End of /COPY MEH00033                                         *                       ERZ212
+      *****************************************************************                       ERZ212

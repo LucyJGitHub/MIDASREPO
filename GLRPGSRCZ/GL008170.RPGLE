@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD052216           Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 AR888911           Date 26Jan12               *
       *                 AR879983           Date 21Dec11               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *

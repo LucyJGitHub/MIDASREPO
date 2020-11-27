@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 06May13               *
       *                 AR1083047          Date 30Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -59,6 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD046248 - Finastra Rebranding                               *
@@ -830,16 +833,16 @@
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C**********         MOVE      'N'           OKRco1                                       240689
-     C     OKRco1        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKRco1                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'DDRCO1'      WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKRco1        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKRco1                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'DDRCO1'      WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Debit                                                                       240689
       *                                                                                       240689

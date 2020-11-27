@@ -1,8 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
-/*S*D****RPGBASEBNC****************************************************                       CSD103
-/*STD *  RPGBASEMOD                                                   *                       CSD103
+/*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Bulk Global Update of Accounts (deletions) tsk-spt')   *
       *****************************************************************
       *                                                               *
@@ -35,6 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR854619 - In Main list the new fields are blank and user    *
       *             input contractual spread (Recompile)              *

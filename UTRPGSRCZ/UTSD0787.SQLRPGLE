@@ -122,7 +122,9 @@
      C                   EVAL      WSTAT = 'I'
      C                   ENDIF
 
+     C                   IF        *IN11 = *ON                                              MD057176
      C                   WRITE     UTSD0787D
+     C                   ENDIF                                                              MD057176
      C                   ENDIF
 
 
@@ -149,8 +151,9 @@
      C/END-EXEC                                                                             MD057176
      C                   EVAL      WSTAT = 'A'                                              MD057176
      C                   ENDIF                                                              MD057176
-
+     C                   IF        *IN11 = *ON                                              MD057176
      C                   WRITE     UTSD0787D                                                MD057176
+     C                   ENDIF                                                              MD057176
      C                   ENDIF                                                              MD057176
 
      C                   READ      SDCUSTL5

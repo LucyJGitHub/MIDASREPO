@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CAP702             Date 12May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD022060           Date 27Aug13               *
       *                 AR971184           Date 28May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP702 - 24x7 APIs - Common processing                       *
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022060 - Reverse fix BUG12784. It limits the system to     *
@@ -102,7 +104,18 @@
      D JobDName                1     10    INZ('MIDASIC   ')
      D System                 11     12
      D XLib                   13     20    INZ('XLIB    ')
- 
+     D Jobd24x7        DS            20                                                       CAP702
+     D Name24x7                1     10    INZ('MIDAS24X7 ')                                  CAP702
+     D Sys24x7                11     12                                                       CAP702
+     D Lib24x7                13     20    INZ('X24LIB  ')                                    CAP702
+      *                                                                                       CAP702
+     D*SCND24X7******E*DS                  EXTNAME(SCND24X7)                                  CAP702
+     D SCND24X7S     E DS                  EXTNAME(SCND24X7)                                  CAP702
+      *                                                                                       CAP702
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP702
+      *                                                                                       CAP702
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CAP702
+      *                                                                                       CAP702
      D***Parm            DS          1000                                                    244122
      D Parm            DS          3200                                                      244122
      D OffSetB               361    364B 0
@@ -165,6 +178,50 @@
  
      C                   Eval      APIRetC = '1'
       *
+     C                   Z-ADD     0             A                 3 0
+     C                   Eval      A = %SCAN('MIDASCOB':APHEAD)                               CAP702
+     C     A             IFGT      0                                                          CAP702
+      * Set up job description library list                                                   CAP702
+     C                   Call      'QWDRJOBD'                           9697                  CAP702
+     C                   Parm                    Parm                                         CAP702
+     C                   Parm                    Len                                          CAP702
+     C                   Parm      'JOBD0100'    Format           10                          CAP702
+     C                   Parm                    Jobd                                         CAP702
+     C                   Parm                    QUSEC                                        CAP702
+     C                   ELSE                                                                 CAP702
+      *                                                                                       CAP702
+     C     CAP702        IFEQ      'Y'                                                        CAP702
+     C***  *DTAARA       DEFINE                  SCND24X7                                     CAP702
+     C***                IN        SCND24X7                                                   CAP702
+     C     *DtaAra       Define    SCND24X7      SCND24X7S                                    CAP702
+     C                   In        SCND24X7S                                                  CAP702
+     C                   Move      NDMODE        SNMODE            5                          CAP702
+      * Set up job description library list                                                   CAP702
+      *                                                                                       CAP702
+      *
+     C                   Move      System        Sys24x7                                      CAP702
+      *                                                                                       CAP702
+     C**** SCND24X7      IFEQ      'NIGHT'                                                    CAP702
+     C     SNMODE        IFEQ      'NIGHT'                                                    CAP702
+     C                   Call      'QWDRJOBD'                           9697                  CAP702
+     C                   Parm                    Parm                                         CAP702
+     C                   Parm                    Len                                          CAP702
+     C                   Parm      'JOBD0100'    Format           10                          CAP702
+     C                   Parm                    Jobd24x7                                     CAP702
+     C                   Parm                    QUSEC                                        CAP702
+     C                   ELSE                                                                 CAP702
+      * Set up job description library list                                                   CAP702
+     C                   Call      'QWDRJOBD'                           9697                  CAP702
+     C                   Parm                    Parm                                         CAP702
+     C                   Parm                    Len                                          CAP702
+     C                   Parm      'JOBD0100'    Format           10                          CAP702
+     C                   Parm                    Jobd                                         CAP702
+     C                   Parm                    QUSEC                                        CAP702
+     C                   ENDIF                                                                CAP702
+      *                                                                                       CAP702
+      *
+     C                   ELSE                                                                 CAP702
+      *
       * Set up job description library list
      C                   Call      'QWDRJOBD'                           9697
      C                   Parm                    Parm
@@ -172,6 +229,8 @@
      C                   Parm      'JOBD0100'    Format           10
      C                   Parm                    Jobd
      C                   Parm                    QUSEC
+     C                   ENDIF                                                                CAP702
+     C                   ENDIF                                                                CAP702
      C                   If        QUSEI = 'CPF9801' OR
      C                             QUSEI = 'CPF9810'
      C                   EVAL      APIRetC = '0'
@@ -282,6 +341,20 @@
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
  
+      ** Check for switchable feature CAP702                                                  CAP702
+     C                   Call      'AOSARDR0'                                                 CAP702
+     C                   Parm      *Blanks       @RTCD             7                          CAP702
+     C                   Parm      '*VERIFY'     @OPTN             7                          CAP702
+     C                   Parm      'CAP702'      @SARD             6                          CAP702
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CAP702
+                                                                                              CAP702
+     C                   If        @RTCD = *Blanks                                            CAP702
+     C                   Movel     'Y'           CAP702            1                          CAP702
+     C                   Else                                                                 CAP702
+     C                   Movel     'N'           CAP702                                       CAP702
+     C                   EndIf                                                                CAP702
+      *
+
      C                   ENDSR
       *****************************************************************
       /EJECT

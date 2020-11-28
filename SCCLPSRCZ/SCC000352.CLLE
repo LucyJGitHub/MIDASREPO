@@ -1,0 +1,261 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Switch from DAY to NIGHT mode')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - 24x7 Layer API                                      */
+/*                                                                   */
+/*       SCC000352 - Midas SC Switch from DAY to NIGHT mode          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000352 ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PREGG) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&ND24X7) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+
+             DCLF       FILE(SDBANKPD)
+
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SCC000352 - Switch from DAY to NIGHT Mode') +
+                          TOMSGQ(MRUNQ)
+
+/**/
+             CHGJOB     SWS(00000000)
+/**/
+
+/* Retrieve Zone prefix                                                            */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+
+/**/
+/* Check if CAP702 is ON */
+/**/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CAP702')
+             CHGVAR     VAR(&CAP702) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+/* Process only if CAP702 is ON and DTAARA/SCND24X7 is 'DAY' */
+
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)
+
+/* Get values for following system values */
+/* '24x7StopIntraDayRep' */
+/* '24x7ExitProgram' */
+
+                   CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                                '24x7StopIntraDayRep' &SVAL1 +
+                                '24x7ExitProgram' +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)
+
+             CALL       PGM(GPRTVLIB) PARM(&PREGG)
+             CHGVAR     VAR(&GMLIB) VALUE(&PREGG *TCAT 'GMLIB')
+
+/* Retrieve value for DTAARA/SCND24X7                                                */
+             RTVDTAARA  DTAARA(SCND24X7 *ALL) RTNVAR(&ND24X7)
+
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
+             CHGVAR     VAR(&XLIB) VALUE(&PRE *TCAT 'XLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+
+/**/
+/*    Call program CB0160 to get value of restart indicator.         */
+/**/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/**/
+/*    If it is NOT a restart OR a restart but DTAARA/SCND24X7 is DAY */
+/**/
+/*******     IF COND((&STAT *NE 'Y') *OR +
+                 ((&STAT *EQ 'Y') *AND (&ND24X7 *EQ 'DAY'))) THEN(DO) ****/
+             IF COND(&ND24X7 *EQ 'DAY') THEN(DO)
+
+/* Clear API Log files in 24x7 layer   */
+                CLRPFM     FILE(&DZLIB/ZATRNLOGPD)
+                MONMSG     MSGID(CPF0000)
+                CLRPFM     FILE(&DZLIB/ZATRNERRPD)
+                MONMSG     MSGID(CPF0000)
+                CLRPFM     FILE(&DZLIB/APOUTPUTPD)
+                MONMSG     MSGID(CPF0000)
+                CLRPFM     FILE(&DZLIB/T_APIMSG)
+                MONMSG     MSGID(CPF0000)
+                CLRPFM     FILE(&DZLIB/GPAUUIPD)
+                MONMSG     MSGID(CPF0000)
+
+/* Clear Queued Night Data file in 24x7 layer and zone layer */
+                CLRPFM     FILE(&DZLIB/API24X7SPD)
+                MONMSG     MSGID(CPF0000)
+
+                CLRPFM     FILE(&DMLIB/API24X7SPD)
+                MONMSG     MSGID(CPF0000)
+
+/* If the '24x7StopIntraDayRep' system value is not *NONE then call program */
+
+                   IF         COND(&SVAL1 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL1)
+
+                   ENDDO
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+/**Update 24x7 DTAARA/SCND24X7 to Night Mode ****/
+/*******        CHGDTAARA  DTAARA(SCND24X7 (1 5)) VALUE('NIGHT') ****/
+/*******        MONMSG     MSGID(CPF0000 MCH0000) ******/
+
+/* Call SD000565 to update system dates */
+/*           ADDLIBLE   LIB(SYSLIB400)  */
+             RMVLIBLE   LIB(&DZLIB)
+             ADDLIBLE   LIB(&DZLIB)
+                OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+                CALL       PGM(SD000565)
+                DLTOVR     (*ALL)
+
+                RCVF
+                CHGDTAARA  DTAARA(&DZLIB/RUNDAT (1 7)) VALUE(&BJMRDT)
+                CHGDTAARA  DTAARA(&DZLIB/MPHAS (1 1)) VALUE('C')
+
+/*           SYSLIB400/SETLIBL PREFIX(&PRE)   */
+                CALL       PGM(UPC0014) PARM(&PRE)
+
+/* If the '24x7ExitProgram' system value is not *NONE then call program */
+
+                   IF         COND(&SVAL2 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL2) PARM('NIGHT')
+
+                   ENDDO
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+/**/
+/** Call CB0150 to update restart indicator                          */
+/**/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+/* Update 24x7 DTAARA/SCND24X7 to Night Mode    */
+
+             CHGDTAARA  DTAARA(&DZLIB/SCND24X7 (1 5)) VALUE('NIGHT')
+             CHGDTAARA  DTAARA(&GMLIB/SCND24X7 (1 5)) VALUE('NIGHT')
+                MONMSG     MSGID(CPF0000 MCH0000)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SCC000352 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2020')
+             ENDPGM

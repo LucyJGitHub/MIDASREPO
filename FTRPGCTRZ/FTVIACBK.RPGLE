@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 261791             Date 19Aug14               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  261791 - Issue an error message to indicate that the entered *
@@ -937,20 +940,20 @@
       *                                                                                       240689
       ** Inactive                                                                             240689
       *                                                                                       240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C*****              MOVE      'N'           OKACBK                                       240689
      C*****              MOVE      'N'           OKACBB                                       240689
-     C     OKACBK        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKACBK                                       240689
-     C                   ENDIF                                                                240689
-     C     OKACBB        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKACBB                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIx                                          240689
-     C                   MOVEL     'DDACBK'      WFldNmXAr(WIx)                               240689
-     C                   MOVEL     'FTM0017'     WMsgIdXAr(WIx)                               240689
-     C                   ENDIF                                                                240689
+     C*****OKACBK        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKACBK                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C*****OKACBB        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKACBB                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIx                                   240689 259576
+     C**********         MOVEL     'DDACBK'      WFldNmXAr(WIx)                        240689 259576
+     C**********         MOVEL     'FTM0017'     WMsgIdXAr(WIx)                        240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Credit                                                                      240689
       *                                                                                       240689

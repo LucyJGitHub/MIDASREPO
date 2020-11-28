@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
@@ -221,6 +225,7 @@
      D PAcod           S             10A                                                      CGL029
                                                                                               CFT120
      D CFT120          S              1A                                                      CFT120
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -341,7 +346,7 @@
       ** VDRAC - Validate Settlement Account
       *****************************************************************
      C     VDRAC         BEGSR
- 
+
       * Reset variables updated by each module
      C                   Z-add     0             Ix                3 0
       *
@@ -444,6 +449,7 @@
      C                   Parm                    WMsgDtaXAr                                   246034
      C                   Parm                    FTEOPY1
      C                   Parm                    Val@Fields
+     C                   PARM      *BLANKS       PMode                                      MD021318
      C/COPY WNCPYSRC,FTH00378
       *
       **  Set error indicator flag on FTOPY7PD
@@ -638,6 +644,7 @@
      C                   Parm                    MsgDtaXAr
      C                   Parm                    FTEOPY1
      C                   Parm                    Val@Fields
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS

@@ -12,8 +12,10 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 260405             Date 04Apr20               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -81,6 +83,10 @@
 0010 F*                                                                  *
 0011 F********************************************************************
 0011 F*                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -857,6 +863,11 @@
      C                     PARM           P@VL09200                                         MD035545
      C                     PARM           P@OP10 20                                         MD035545
      C                     PARM           P@VL10200                                         MD035545
+     C           W0RTCD    IFNE '       '                                                   MD051554
+     C                     MOVE 'N'       SCALC6  1                                         MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVELP@VL01    SCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0712CCP5                                           S01408
      C*                                                                   S01408
@@ -967,6 +978,22 @@
      C*                                                                   S01354
 0261 C****  DETAILS TO REPORT, SET INDICATOR                              S01354
 0262 C                     SETON                     22                   S01354
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           DTYP      IFEQ 'FR'                                                        MD051554
+     C           DTYP      OREQ 'RS'                                                        MD051554
+     C           DTYP      OREQ 'RX'                                                        MD051554
+     C           DTYP      OREQ 'RR'                                                        MD051554
+     C           DTYP      OREQ 'RP'                                                        MD051554
+     C           DTYP      OREQ 'RF'                                                        MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
 0331 C*                                                                   S01354
 0332 C****    PROCESS INTERNAL FUNDING DEALS                              S01354
 0333 C*                                                                   S01354

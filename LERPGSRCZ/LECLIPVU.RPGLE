@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053956           Date 29Oct19               *
-      *  Prev Amend No. MD036838A          Date 29Oct19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. MD053956           Date 29Oct19               *
+      *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
       *                 MD054028           Date 05Sep19               *
@@ -143,6 +144,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
@@ -563,6 +565,9 @@
      D PCust           S             10                                                       247545
      D PStKey          S              7                                                       247545
                                                                                               247545
+      ** LE Backward-Looking Rate Fields                                                      CLE172
+     D LEBasRBckfld    DS            41                                                       CLE172
+                                                                                              CLE172
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS
@@ -1064,6 +1069,11 @@
      C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
      C                   ADD       8             eBfp                                       MD054028
      C                   ENDIF                                                              MD054028
+      ** CLE172 Fields                                                                        CLE172
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      LEBasRBckfld = %SUBST(Extdata500:eBfp:41)                  CLE172
+     C                   ADD       41            eBfp                                         CLE172
+     C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated
@@ -1579,6 +1589,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + LEBasRBckfld                           CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1607,6 +1618,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + LEBasRBckfld                           CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -1947,6 +1959,7 @@
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDPREM           15                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
+     C                   PARM                    LEBasRBckFld                                 CLE172
 
       * OUTPUTS
 
@@ -4456,6 +4469,18 @@
      C                   If        PRTCD = *Blanks                                          MD054028
      C                   Eval      CER050 = 'Y'                                             MD054028
      C                   Endif                                                              MD054028
+      *                                                                                       CLE172
+      ** Check if CLE172 is ON                                                                CLE172
+     C                   CallB     'AOSARDR0'                                                 CLE172
+     C                   Parm      *Blanks       PRTCD                                        CLE172
+     C                   Parm      '*VERIFY'     POPTN                                        CLE172
+     C                   Parm      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C                   Move      'N'           CLE172            1                          CLE172
+     C                   If        PRTCD = *Blanks                                            CLE172
+     C                   Eval      CLE172'                                                    CLE172
+     C                   Endif                                                                CLE172
       *                                                                                       CLE168
       ** Access SAR details file                                                              CLE168
       *                                                                                       CLE168

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD029863           Date 18Jan18               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -170,6 +171,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *
       *           - Applied for MD049247.                             *
@@ -647,12 +649,43 @@
      D PEAInd          C                   CONST('PEAIndicator')                              CSC054
      D RateFixDays     C                   Const('RateFixingDaysDfault')                      256579
      D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
+     D Numbers         C                   CONST('0123456789')                                CLE172
       *
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
       ** | ==========================           |
       ** +--------------------------------------+
       *
+     D #1TESTN         S              1A                                                      CLE172
+     D #1CHARPOS       S              2  0                                                    CLE172
+     D #2CHARPOS       S              2  0                                                    CLE172
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
+     D IntCart         S              5A                                                      CLE172
+     D DecCart         S              8A                                                      CLE172
+     D BNDCSP          S              1A                                                      CLE172
+      *                                                                                       CLE172
+      ** Alpha field for numeric validation                                                   CLE172
+     D @@ALPH          S             16A                                                      CLE172
+     D @@MTID          S              1A                                                      CLE172
+     D @@AMT           S             15  0                                                    CLE172
+     D @@ERCD          S              1  0                                                    CLE172
+     D @@IDP           S              3  0                                                    CLE172
+     D @@IINT          S              3  0                                                    CLE172
+      *                                                                                       CLE172
+      ** Alpha to numeric conversion                                                          CLE172
+     D PZASignOk       S              1A                                                      CLE172
+     D PZFld17         S             17A                                                      CLE172
+     D PZDig           S              2P 0                                                    CLE172
+     D PZDec           S              1P 0                                                    CLE172
+     D PZSDCSP         S              1A                                                      CLE172
+     D PZOut15         S             15A                                                      CLE172
+     D PZFSign         S              1A                                                      CLE172
+      *                                                                                       CLE172
+     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+      *** Incoming Benchmark Adjustment in screen format                                      CLE172
+     D ArrayCart       S              1A   DIM(17)                                            CLE172
+      *** Incoming Compounded/Average Rate in screen format                                   CLE172
      D WFREQ           S              1    DIM(20) CTDATA PERRCD(20)                          CLE064
       ***  Frequency codes for rollovers                                                      CLE064
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)
@@ -800,6 +833,12 @@
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                  CLE134
       ** External DS for base rate details                                                    CLE134
       *                                                                                       CLE134
+     D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CLE172
+     D                                     PREFIX(W)                                          CLE172
+      *                                                                                       CLE172
+     D SDBRACDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CLE172
+     D                                     PREFIX(Z)                                          CLE172
+      *                                                                                       CLE172
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -1082,6 +1121,19 @@
      D  O#NIDT                 1      7
      D  O#NRPD                 8     14
       *
+      ** LE BaseRate Backward-Looking Rate Fields                                             CLE172
+     D BasRBckfld      DS            41                                                       CLE172
+     D  DDBLRT                 1      1                                                       CLE172
+     D  DDCART                 2     15                                                       CLE172
+     D  DDLBDY                16     17                                                       CLE172
+     D  DDLODY                18     19                                                       CLE172
+     D  DDPDLY                20     21                                                       CLE172
+     D  DDBADJ                22     35                                                       CLE172
+     D  DDAVOP                36     36                                                       CLE172
+     D  DDBRAC                37     38                                                       CLE172
+     D  DDWGHT                39     39                                                       CLE172
+     D  DDLBAC                40     41                                                       CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** | Declared variables                   |
       ** | ==================                   |
@@ -1878,7 +1930,8 @@
      C                   MOVE      DDPREM        PRMPREM                                    MD054028
      C                   MOVE      DDAPRR        PRMAPRR                                    MD054028
      C                   ENDIF                                                                CER050
-
+      ** Validate LE Backward-Looking Rate fields                                             CLE172
+     C                   EXSR      SRVBLRT                                                    CLE172
       *
       ***  Update error information with that received back
       ***  from each validation module.
@@ -8546,7 +8599,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714
@@ -8981,6 +9034,385 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   ENDIF                                                                CER020
       *                                                                                       CER020
      C                   ENDSR                                                                CER020
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      * SRVBLRT - Validate LE Backward-Looking Rate fields            *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRVBLRT       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      CCLCCY        WFCYCD                                       CLE172
+     C                   MOVE      AYPBSR        WFBSRC                                       CLE172
+     C     WKSDBSRT      CHAIN     SDBSRTL0      SDBSRTDS             33                      CLE172
+     C     *IN33         IFEQ      *OFF                                         Found rte STR CLE172
+     C     DDACTN        ANDEQ     'I'                                           & ACTION=I   CLE172
+      *                                                                                       CLE172
+      * Default non-amendable fields                                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WBABLRT       DDBLRT                                       CLE172
+     C                   MOVE      WBABRAC       DDBRAC                                       CLE172
+     C                   MOVE      '00'          DDLBAC                                       CLE172
+     C                   MOVE      CCLCCY        WFCYCD                                       CLE172
+     C                   MOVE      WBABRAC       WFBSRC                                       CLE172
+     C     WKSDBSRT      CHAIN     SDBSRTL0      SDBRACDS             33                      CLE172
+     C     *IN33         IFEQ      *OFF                                         If found BRAC CLE172
+     C                   MOVE      ZBALBDY       DDLBAC                          then load    CLE172
+     C                   ENDIF                                                   LBDY to LBAC CLE172
+      *                                                                                       CLE172
+     C     CLE172        IFEQ      *ON                                          CLE172=ON STR CLE172
+      *                                                                                       CLE172
+      * Start Defaulting and Validation                                                       CLE172
+      ** Validate Backward-Looking Rate field                                                 CLE172
+      *                                                                                       CLE172
+     C     DDBLRT        IFEQ      'Y'                                                        CLE172
+     C     BKALDI        ANDEQ     'Y'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDCARTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049426'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Compounded/Average Rate                                                     CLE172
+      *                                                                                       CLE172
+     C     DDCART        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      '0'           DDCART                         Default: 0    CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVE      DDCART        @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C     @@ERCD        IFNE      0                                                          CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDCARTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDCART'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049426'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDCART                                       CLE172
+     C                   MOVEL     DDCART        IntCart                                      CLE172
+     C                   MOVE      DDCART        DecCart                                      CLE172
+     C                   MOVEA     IntCart       ArrayCart(1)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayCart(6)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(7)                                 CLE172
+      *                                                                                       CLE172
+     C     '-'           SCAN      @@ALPH        PTCART            2 0                        CLE172
+     C     PTCART        IFNE      0                                                          CLE172
+     C                   MOVE      '-'           PZFSign                                      CLE172
+     C                   MOVEA     '- '          ArrayCart(8)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayCart     PZFld17                                      CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZASIGN'                                                   CLE172
+     C                   PARM      'Y'           PZASignOk                                    CLE172
+     C                   PARM                    PZFld17                                      CLE172
+     C                   PARM      5             PZDig                                        CLE172
+     C                   PARM      8             PZDec                                        CLE172
+     C                   PARM      BNDCSP        PZSDCSP                                      CLE172
+     C                   PARM                    PZOut15                                      CLE172
+     C                   PARM                    PZFSign                                      CLE172
+     C                   MOVE      PZOut15       WNumCart         13 8                        CLE172
+      *                                                                                       CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C     WNumCart      ANDNE     *ZEROS                                                     CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDCARTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDCART'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049401'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Lookback Days                                                               CLE172
+      *                                                                                       CLE172
+     C                   Z-ADD     *ZEROS        WDAY              2 0                        CLE172
+     C                   MOVE      Numbers       NUMBLANK         11                          CLE172
+     C                   MOVEL     ' '           NUMBLANK                                     CLE172
+      *                                                                                       CLE172
+     C     DDLBDY        IFEQ      *BLANKS                                      Default from  CLE172
+     C                   MOVE      WBALBDY       DDLBDY                          SDBSRTPD     CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDLBDY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CLE172
+     C                   MOVEL     DDLBDY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CLE172
+      *                                                                                       CLE172
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CLE172
+     C     #2CHARPOS     OREQ      *ZERO                                                      CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDLBDYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049423'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDLBDY        WDAY                                         CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C     WDAY          ANDNE     *ZEROS                                                     CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDLBDYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049420'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Lockout Days                                                                CLE172
+      *                                                                                       CLE172
+     C     DDLODY        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      WBALODY       DDLODY                         Default from  CLE172
+     C                   ELSE                                                    SDBSRTPD     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDLODY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CLE172
+     C                   MOVEL     DDLODY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CLE172
+      *                                                                                       CLE172
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CLE172
+     C     #2CHARPOS     OREQ      *ZERO                                                      CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDLODYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDLODY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049424'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDLODY        WDAY                                         CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C     WDAY          ANDNE     *ZEROS                                                     CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDLODYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDLODY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049421'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Payment Delay Days                                                          CLE172
+      *                                                                                       CLE172
+     C     DDPDLY        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      WBAPDLY       DDPDLY                         Default from  CLE172
+     C                   ELSE                                                    SDBSRTPD     CLE172
+     C                   MOVE      WBALBDY       CLLBDY                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDPDLY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CLE172
+     C                   MOVEL     DDPDLY        #1TESTN                                      CLE172
+     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CLE172
+      *                                                                                       CLE172
+     C     #1CHARPOS     IFEQ      *ZERO                                                      CLE172
+     C     #2CHARPOS     OREQ      *ZERO                                                      CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDPDLYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049425'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      DDPDLY        WDAY                                         CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C     WDAY          ANDNE     *ZEROS                                                     CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDPDLYOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049422'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Benchmark Adjustment                                                        CLE172
+      *                                                                                       CLE172
+     C     DDBADJ        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      WBABADJ       DDBADJ                         Default from  CLE172
+     C                   ENDIF                                                   SDBSRTPD     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVE      DDBADJ        @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    BNDCSP                                       CLE172
+	  *                                                                                       CLE172
+     C     @@ERCD        IFNE      0                                                          CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDBADJOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049426'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
+     C                   MOVEL     DDBADJ        IntBadj                                      CLE172
+     C                   MOVE      DDBADJ        DecBadj                                      CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+      *                                                                                       CLE172
+     C     '-'           SCAN      @@ALPH        PTBADJ            2 0                        CLE172
+     C     PTBADJ        IFNE      0                                                          CLE172
+     C                   MOVE      '-'           PZFSign                                      CLE172
+     C                   MOVEA     '- '          ArrayBadj(8)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayBadj     PZFld17                                      CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZASIGN'                                                   CLE172
+     C                   PARM      'Y'           PZASignOk                                    CLE172
+     C                   PARM                    PZFld17                                      CLE172
+     C                   PARM      5             PZDig                                        CLE172
+     C                   PARM      8             PZDec                                        CLE172
+     C                   PARM      BNDCSP        PZSDCSP                                      CLE172
+     C                   PARM                    PZOut15                                      CLE172
+     C                   PARM                    PZFSign                                      CLE172
+     C                   MOVE      PZOut15       WNumBadj         13 8                        CLE172
+      *                                                                                       CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C     WNumBadj      ANDNE     *ZEROS                                                     CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDBADJOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049401'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Averaging Option                                                            CLE172
+      *                                                                                       CLE172
+     C     DDAVOP        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      WBAAVOP       DDAVOP                         Default from  CLE172
+     C                   ELSE                                                    SDBSRTPD     CLE172
+      *                                                                                       CLE172
+     C     DDAVOP        IFNE      '1'                                                        CLE172
+     C     DDAVOP        ANDNE     '2'                                                        CLE172
+     C     DDAVOP        ANDNE     '3'                                                        CLE172
+     C     DDAVOP        ANDNE     '4'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDAVOPOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049403'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDAVOPOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049405'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Validate Weight Convention                                                           CLE172
+      *                                                                                       CLE172
+     C     DDWGHT        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      WBAWGHT       DDWGHT                         Default from  CLE172
+     C                   ELSE                                                    SDBSRTPD     CLE172
+      *                                                                                       CLE172
+     C     DDWGHT        IFNE      '1'                                                        CLE172
+     C     DDWGHT        ANDNE     '2'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDWGHTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049408'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+     C     WBABLRT       IFEQ      'N'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDWGHTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049455'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C     DDAVOP        IFNE      '1'                                                        CLE172
+     C     DDAVOP        ANDNE     '2'                                                        CLE172
+     C                   EXSR      RESETERRS                                                  CLE172
+     C                   MOVE      'N'           DDWGHTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049453'     MsgIdXAr(Idx)                                CLE172
+     C                   EXSR      UPDATERRS                                                  CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      * End Validation                                                                        CLE172
+     C                   ELSE                                                   CLE172=OFF    CLE172
+      ** Default Backward-Looking Rate flds from SDBSRTPD                                     CLE172
+     C                   MOVE      WBALBDY       DDLBDY                                       CLE172
+     C                   MOVE      WBALODY       DDLODY                                       CLE172
+     C                   MOVE      WBAPDLY       DDPDLY                                       CLE172
+     C                   MOVE      WBABADJ       DDBADJ                                       CLE172
+     C                   MOVE      WBACART       DDCART                                       CLE172
+     C                   MOVE      WBAAVOP       DDAVOP                                       CLE172
+     C                   MOVE      WBAWGHT       DDWGHT                                       CLE172
+     C                   ENDIF                                                  CLE172=ON END CLE172
+      *                                                                                       CLE172
+      * If no errors, move Backward-Looking Rate screen flds to valid                         CLE172
+     C     Idx           IFEQ      0                                                          CLE172
+     C                   MOVE      DDBLRT        CLBLRT                                       CLE172
+     C                   MOVE      DDBRAC        CLBRAC                                       CLE172
+     C                   MOVE      DDLBAC        CLLBAC                                       CLE172
+     C                   MOVE      DDLBDY        CLLBDY                                       CLE172
+     C                   MOVE      DDLODY        CLLODY                                       CLE172
+     C                   MOVE      DDLODY        CLPDLY                                       CLE172
+     C                   MOVE      DDAVOP        CLAVOP                                       CLE172
+     C                   MOVE      DDWHGT        CLWGHT                                       CLE172
+     C     PTBADJ        IFNE      0                                                          CLE172
+     C                   Z-SUB     WNumBadj      CLBADJ                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   Z-ADD     WNumBadj      CLBADJ                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C     PTCART        IFNE      0                                                          CLE172
+     C                   Z-SUB     WNumCart      CLCART                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   Z-ADD     WNumCart      CLCART                                       CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                  Found rte END CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
       /EJECT                                                                                  CER050
       *****************************************************************                       CER050
       * SRVAPRF - Validate the APR flag                               *                       CER050
@@ -9437,6 +9869,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   PARM                    PRMAPRC           1                        MD054028
      C                   PARM                    PRMPREM          15                        MD054028
      C                   PARM                    PRMAPRR           8                        MD054028
+     C                   PARM                    LEBasRBckFld                                 CLE172
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -10263,6 +10696,12 @@ E004 C                   ENDIF
      C                   KFLD                    S#FCUS
      C                   KFLD                    S#FTYP
      C                   KFLD                    S#FSEQ
+      *                                                                                       CLE172
+      ***  Key list for base rate                                                             CLE172
+      *                                                                                       CLE172
+     C     WKSDBSRT      KLIST                                                                CLE172
+     C                   KFLD                    WFCYCD            3                          CLE172
+     C                   KFLD                    WFBSRC            2                          CLE172
       **********                                                                  MD022807 MD022807C
      C*****K_Fees        KLIST                                                    MD022807 MD022807C
      C**********         KFLD                    @@BRCA                           MD022807 MD022807C

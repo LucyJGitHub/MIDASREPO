@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052014           Date 05Oct18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. UUC106             Date 07Oct20               *
+      *  Prev Amend No. MD052014           Date 05Oct18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD039203           Date 14Jun16               *
       *                 CDL094             Date 01Sep14               *
@@ -90,6 +91,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC106 - Upgrade of UUL001 to FBM 2.1                        *
+      *           Deal subtype allocation FX/MM                       *
+      *           Hooks Used: FXFXDLV004, FXFXDLV005, FXFXDLV012,     *
+      *                       FXFXDLV013, FXH00019, FXH00022          *
       *  MD052014 - Sale Value Date not defaulting correctly for Swap *
       *             Deals. Should be defaulted with the Core Value    *
       *             Date entered (CDL099).                            *

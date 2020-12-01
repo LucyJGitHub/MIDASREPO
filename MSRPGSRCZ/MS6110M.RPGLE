@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR989496           Date 13Jun12               *
-      *  Prev Amend No. MD041126           Date 11May20               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. AR989496           Date 13Jun12               *
+      *                 MD041126           Date 11May20               *
       *                 AR989496           Date 13Jun12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook MS6110MC05		                       	  *
+      *	         Add copy hook UUC104_018                             *
       *  AR989496 - Remove redundant code related to dtaara/MEDTA     *
       *           - Causes DBase Error in MS_MED2MID job              *
       *           - (Child:AR989497)                                  *
@@ -1164,6 +1168,7 @@
      C**********         MOVEL     CINONE        MDCID                               BUG14494 257554
      C**********         MOVEL     MCSYTM        MDCID                               257554 AR214111
      C*****              MOVEL     CINONE        MDCID                                        CSW039
+     C/COPY WNCPYSRC,UUC104_018                                                               UUC104
 
       ** Clear message buffer
      C                   clear                   q@msgbuf

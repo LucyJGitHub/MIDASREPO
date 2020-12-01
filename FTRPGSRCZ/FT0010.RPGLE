@@ -43,8 +43,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053553           Date 21Jan20               *
-      *  Prev Amend No. MD050134           Date 21Mar18               *
+      *  Last Amend No. UUC107             Date 18Nov20               *
+      *  Prev Amend No. 251687             Date 17May12               *
+      *                 MD053553           Date 21Jan20               *
+      *                 MD050134           Date 21Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
@@ -83,6 +85,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC107 - Upgrade CEUFT1 to FBM 2.1                           *
+      *           FT Quotation of Rates                               *
+      *           Hooks used: UUC107_001, UUC107_002, UUC107_003,     *
+      *                       UUC107_004                              *
+      *         - Upgrade 251687 to FBM 2.1                           *
+      *           Hooks used: UUC107_002                              *
+      *  251687 - Checks for P#OVRT even when CEUFT1 is off.          *
       *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
       *  MD050134 - A serious midas error encountered when exchange   *
       *             rate exceeds tolerance level                      *
@@ -133,6 +142,7 @@
       *                                                               *
       * 01-05         Error Indicators                                *
       *****************************************************************
+     F/COPY WNCPYSRC,UUC107_001                                                               UUC107
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
@@ -1001,6 +1011,7 @@
      C*****P#OVRT        IFNE      'Y'                                                      AR737259
      C*****ZRATEX        ANDNE     P#RATE                                                   AR737259
      C                   Z-ADD     0             NEWRAT           13 8
+     F/COPY WNCPYSRC,UUC107_002                                                               UUC107
       *
      C     P#RATE        SUB       ZRATEX        DIFF1            13 8                       BUG4227
      C     DIFF1         IFLT      0                                                         BUG4227
@@ -1084,6 +1095,7 @@
      C**********         ENDSL                                                               BUG4227
       *
      C**********         ENDIF                                                              AR737259
+     F/COPY WNCPYSRC,UUC107_003                                                               UUC107
      C                   ENDIF
       *
      C                   ENDSR
@@ -1648,6 +1660,7 @@
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
+     F/COPY WNCPYSRC,UUC107_004                                                               UUC107
       *                                                                                     MD045094
       ** If rate is inverse, use the original rate for calculation,                         MD045094
       ** then inverse M/D indicator for precision                                           MD045094

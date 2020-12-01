@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR928996A          Date 03May12               *
-      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
@@ -102,6 +103,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *

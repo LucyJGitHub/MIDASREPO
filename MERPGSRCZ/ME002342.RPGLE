@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL197             Date 07Oct20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR870148           Date 24Nov11               *
       *                 MD023237           Date 05Nov13               *
       *                 CGL146             Date 10Jul13               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL197 - Statement Page number                               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR870148 - Statement freq blank not accepted (Child:AR870149)*
@@ -50,7 +52,7 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
- 
+
      F/COPY OFCPYSRCZ,CGL146_033                                                              CGL146
       *****************************************************************
       *                                                               *
@@ -84,11 +86,11 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
- 
+
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -100,32 +102,35 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Valid frequency codes
       *
      D*FreqArr**       C                   'DWFSMRTQXYLBAZ '                                BUG26381
      D*FreqArr**       C                   'DWFSMRTQXYLBAZE'                       BUG26381 AR870148
      D FreqArr         C                   'DWFSMRTQXYLBAZE '                               AR870148
- 
+
       ** X SWIFT character set, minus Cr & Lf
       *
      D SwiftXSet       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ-
      D                                     abcdefghijklmnopqrstuvwxyz-
      D                                     0123456789 /-?:().,''+'
- 
+
+     D Numerics        C                   '0123456789'                                       CGL197
+     D                                                                                        CGL197
+                                                                                              CGL197
       ** Arrays and Data Structures
       ** --------------------------
       *
@@ -140,19 +145,19 @@
                                                                                             BUG26381
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   BUG26381
       ** DS for access objects - short data structure                                       BUG26381
- 
+
      D NewFilRcd     E DS                  EXTNAME(GLNW94PD)
       ** New Network Account MT94x Details File Record (i.e. new state after amendments)
       *
- 
+
      D ScrLayout     E DS                  EXTNAME(ME002322DF:ME002322F2)
       ** Detail 2 Screen Layout
       *
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
- 
+
       ** Declared variables
       ** ------------------
       *
@@ -166,36 +171,41 @@
       *                                                                                     BUG26381
      D WMuCshE         S              1A                                                    BUG26381
      D KNwrk           S              6A                                                    BUG26381
- 
+     D CGL197          S              1A                                                      CGL197
+     D W20LSNT         S              5A                                                      CGL197
+     D WTXT005         S              5A                                                      CGL197
+
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeOut
      C                   PARM                    CallerIn         10
      C                   PARM                    ScrLayout
+     C     F20LSNT       PARM                    W20LSNT                                      CGL197
+     C                   PARM                    ActionCode                                   CGL197
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       *------------------------------------------------------------------------*
       *                      Details 1 Fields Validation                       *
       *------------------------------------------------------------------------*
- 
+
      C/COPY OFCPYSRCZ,CGL146_053                                                              CGL146
       ** Statement Frequency
       *
@@ -224,7 +234,7 @@
      C                   ENDIF
       *
       ** End Statement Frequency
- 
+
       ** Statement Day in Month
       *
       ** -- If the frequency is 'M', 'Q', 'X' or 'T'
@@ -257,7 +267,7 @@
      C                   MOVE      'ME00046'     ZAMSID
      C                   MOVE      *On           *IN42
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
       *
       ** -- If an error was found
@@ -269,7 +279,7 @@
      C                   ENDIF
       *
       ** End Statement Day in Month
- 
+
       ** Next Statement Date
       *
       ** -- If the frequency is 'Z' and the next statement date is blank,
@@ -339,7 +349,7 @@
      C                   ENDIF
       *
       ** End Next Statement Date
- 
+
       ** Demand Statement Indicator
       *
       ** -- The field is mandatory
@@ -347,18 +357,18 @@
  B1  C                   IF        F20DSI = *Blank
      C                   MOVE      'ME00034'     ZAMSID
      C                   MOVE      *On           *IN44
- 
+
       ** -- The valid values are 'Y' and 'N'
       *
  X1  C                   ELSE
- 
+
  B2  C                   IF        F20DSI <> 'Y' AND F20DSI <> 'N'
      C                   MOVE      'ME00042'     ZAMSID
      C                   MOVE      *On           *IN44
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN44
@@ -368,7 +378,7 @@
      C                   ENDIF
       *
       ** End Demand Statement Indicator
- 
+
       ** Default MT940 Information to Account Owner (1)
       *
       ** -- The field can't be blank if one the following is filled
@@ -380,7 +390,7 @@
      C                   MOVE      'ME00058'     ZAMSID
      C                   MOVE      *On           *IN45
      C                   ENDIF
- 
+
       ** -- The field can only contain characters allowed by the X SWIFT
       **    character set
       *
@@ -389,7 +399,7 @@
      C   99              MOVE      'ME00059'     ZAMSID
      C   99              MOVE      *On           *IN45
      C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN45
@@ -399,7 +409,7 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (1)
- 
+
       ** Default MT940 Information to Account Owner (2)
       *
       ** -- The field can't be blank if one the following is filled
@@ -410,7 +420,7 @@
      C                   MOVE      'ME00058'     ZAMSID
      C                   MOVE      *On           *IN46
      C                   ENDIF
- 
+
       ** -- The field can only contain characters allowed by the X SWIFT
       **    character set
       *
@@ -419,7 +429,7 @@
      C   99              MOVE      'ME00059'     ZAMSID
      C   99              MOVE      *On           *IN46
      C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN46
@@ -429,7 +439,7 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (2)
- 
+
       ** Default MT940 Information to Account Owner (3)
       *
       ** -- The field can't be blank if one the following is filled
@@ -440,7 +450,7 @@
      C                   MOVE      'ME00058'     ZAMSID
      C                   MOVE      *On           *IN47
      C                   ENDIF
- 
+
       ** -- The field can only contain characters allowed by the X SWIFT
       **    character set
       *
@@ -449,7 +459,7 @@
      C   99              MOVE      'ME00059'     ZAMSID
      C   99              MOVE      *On           *IN47
      C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN47
@@ -459,7 +469,7 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (3)
- 
+
       ** Default MT940 Information to Account Owner (4)
       *
       ** -- The field can't be blank if one the following is filled
@@ -469,7 +479,7 @@
      C                   MOVE      'ME00058'     ZAMSID
      C                   MOVE      *On           *IN48
      C                   ENDIF
- 
+
       ** -- The field can only contain characters allowed by the X SWIFT
       **    character set
       *
@@ -478,7 +488,7 @@
      C   99              MOVE      'ME00059'     ZAMSID
      C   99              MOVE      *On           *IN48
      C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN48
@@ -488,7 +498,7 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (4)
- 
+
       ** Default MT940 Information to Account Owner (5)
       *
       ** -- The field can't be blank if the following is filled
@@ -497,7 +507,7 @@
      C                   MOVE      'ME00058'     ZAMSID
      C                   MOVE      *On           *IN49
      C                   ENDIF
- 
+
       ** -- The field can only contain characters allowed by the X SWIFT
       **    character set
       *
@@ -506,7 +516,7 @@
      C   99              MOVE      'ME00059'     ZAMSID
      C   99              MOVE      *On           *IN49
      C                   ENDIF
- 
+
       ** -- If an error was found
       *
      C                   IF        *IN49
@@ -516,7 +526,7 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (5)
- 
+
       ** Default MT940 Information to Account Owner (6)
       *
       ** -- The field can only contain characters allowed by the X SWIFT
@@ -532,12 +542,33 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (6)
+      *
+      ** Last Page Statement check                                                            CGL197
+                                                                                              CGL197
+     C                   IF        CGL197 = 'Y'                                               CGL197
+     C                   EVALR     WTXT005 = '00000' + %Trim(F20LSNT)                         CGL197
+     C     Numerics      CHECK     WTXT005:1                              99                  CGL197
+     C     *IN99         IFEQ      *ON                                                        CGL197
+     C                   MOVE      'ME00097'     ZAMSID                                       CGL197
+     C                   EXSR      $ZaSndMsg                                                  CGL197
+     C                   MOVE      *On           *IN51                                        CGL197
+     C                   MOVE      *On           *IN40                                        CGL197
+     C                   MOVEL(P)  '*MSG'        RetCodeOut                                   CGL197
+     C                   ELSE                                                                 CGL197
+     C                   IF        WTXT005 = '00000'                                          CGL197
+     C                   MOVE(P)   '0'           F20LSNT                                      CGL197
+     C                   ELSE                                                                 CGL197
+     C                   MOVE      WTXT005       F20LSNT                                      CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ENDIF                                                                CGL197
+      *                                                                                       CGL197
      C/COPY OFCPYSRCZ,CGL146_052                                                              CGL146
- 
+
       ** End of the module
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
@@ -559,13 +590,13 @@
      C                   ENDIF                                                              BUG26381
       *                                                                                     BUG26381
      C                   ENDSR                                                              BUG26381
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
      C     $ZaSndMsg     BEGSR
       *    ----------    ------
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM
      C                   PARM                    ZAPGRL
@@ -575,7 +606,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -584,12 +615,12 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
- 
+
      C                   MOVE      *On           *INLR
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -598,39 +629,39 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
- 
+
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
- 
+
      C                   MOVEL     'MEMSG'       ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT
      C     AGDFF         COMP      'M'                                    98
- 
+
       ** Initialize error indicators with the values passed by the caller
       *
      C                   MOVEA     IN40_TO_70    *IN(40)
- 
+
       ** Reset general error indicator
       *
      C                   MOVE      *OFF          *IN40
- 
+
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
@@ -660,27 +691,42 @@
      C                   EVAL      CER030 = 'N'                                             BUG26381
      C                   ENDIF                                                              BUG26381
      C                   ENDIF                                                              BUG26381
+      *                                                                                       CGL197
+      ** Check if CGL197 is installed                                                         CGL197
+      *                                                                                       CGL197
+     C                   CALLB     'AOSARDR0'                                                 CGL197
+     C                   PARM      *BLANKS       PRtcd                                        CGL197
+     C                   PARM      '*VERIFY'     POptn                                        CGL197
+     C                   PARM      'CGL197'      PSard                                        CGL197
+                                                                                              CGL197
+      ** If CGL197 is switched ON and insert mode                                             CGL197
+      *                                                                                       CGL197
+     C                   IF        PRtcd = *BLANKS AND ActionCode = 'I'                       CGL197
+     C                   EVAL      CGL197 = 'Y'                                               CGL197
+     C                   ELSE                                                                 CGL197
+     C                   EVAL      CGL197 = 'N'                                               CGL197
+     C                   ENDIF                                                                CGL197
      C/COPY OFCPYSRCZ,CGL146_040                                                              CGL146
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'                           99
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

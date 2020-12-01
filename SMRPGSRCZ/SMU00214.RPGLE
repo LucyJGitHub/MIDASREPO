@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No.  MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG26488 *CREATE   Date 19Oct09               *
+      *                 BUG26488 *CREATE   Date 19Oct09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
       *             incompatible                                      *
@@ -32,9 +35,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMMPTRMPD  UF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -42,12 +45,12 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       *
       ** Program Status Data Structure
       *
@@ -55,24 +58,24 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -83,23 +86,23 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *LOVAL        SETLL     MMPTRMPD
      C                   READ      MMPTRMPD
- 
+
      C                   DOW       NOT %EOF(MMPTRMPD)
      C                   MOVEL     PTCNUM        PTCNMA
      C                   Z-ADD     0             PTCNUM
      C                   UPDATE    MMPTRMD0
      C                   READ      MMPTRMPD
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -25,8 +25,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD057243           Date 10Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -52,6 +54,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057243 - Source not compilable. Adjusted the length of AKEY*
+      *             from 10 to 14.                                    *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -186,7 +192,8 @@
      D  PTYP                  12     13
       *
      D                 DS
-     D  AKEY                   1     10
+     D**AKEY****               1     10                                                     MD057243
+     D  AKEY                   1     14                                                     MD057243
      D  AKEY3                  3      3
      D  AKEY9                  9     10
      D  AKEY10                10     10
@@ -229,7 +236,7 @@
      D WTransRef       S             20A
      D WAccount        S             35A
      D WORC1           S             10A                                                      CFT032
- 
+
      D Ix              S              3P 0
      D PayMargin       S             15P 0
      D TfrMargin       S             15P 0
@@ -239,7 +246,7 @@
      D PLAmount        S             15P 0
      D WOldBaseEq      S             15P 0
      D WCurBaseEq      S             15P 0
- 
+
      D WFPTrID         S                   LIKE(FPTRID)
      D D2NBDP          S                   LIKE(A6NBDP)
      D D2MDIN          S                   LIKE(A6MDIN)
@@ -480,7 +487,7 @@
      C                   EVAL      DBase = 023
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           CFT004
      C                   ELSE
@@ -539,7 +546,7 @@
       ** Process Request for transfer
       *
      C                   IF        %SUBST(PREF:1:1)='A' OR %SUBST(PREF:1:1)='B'
- 
+
      C     PREF          CHAIN     FT101HL3                           16
       *
       ** Error if header record not found.  Otherwise, process detail records.
@@ -554,7 +561,7 @@
       ** reference.  Save transaction IDs of all detail records.
       *
      C                   IF        WPref <> PREF
- 
+
      C                   EVAL      Ix    = 1
      C                   EVAL      WPref = PREF
      C                   EVAL      WTransProcess = *BLANK
@@ -565,7 +572,7 @@
      C                   EVAL      Ix    = Ix + 1
      C     PREF          READE     FT101DL0                               17
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** If transaction ID is not blank, retrieve detail record.
@@ -621,17 +628,17 @@
      C                   EVAL      D3MDIN = A6MDIN
      C                   EVAL      D3SPRT = A6SPRT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Outgoing customer credit transfer
       *
      C                   IF        %SUBST(PREF:1:1)='C'
- 
+
      C     PREF          CHAIN     FT102HL3                           16
       *
       ** Error if header record not found.  Otherwise, process detail records.
@@ -646,17 +653,17 @@
       ** reference.  Save account number.
      C                   IF        WPref <> PREF
      C                   EVAL      WPref = PREF
- 
+
      C     PREF          SETLL     FT102DL0
      C     PREF          READE     FT102DL0                               17
- 
+
      C                   DOW       EndOfFile = False
- 
+
      C                   EXSR      P96
- 
+
      C                   EVAL      Ix    = 1
      C     W#ACID        LOOKUP    AccntArr(Ix)                           19
- 
+
      C                   IF        AccntFnd = False
      C                   EVAL      AccntArr(Ix) = W#ACID
      C                   EVAL      TotalCr(Ix)  = CCTAMT
@@ -666,10 +673,10 @@
      C                   EVAL      TotalCr(Ix)  = TotalCr(Ix) + CCTAMT
      C                   EVAL      TotalDr(Ix)  = TotalDr(Ix) + PAYAMT
      C                   ENDIF
- 
+
      C     PREF          READE     FT102DL0                               17
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** If transaction ID is not blank, retrieve detail record.
@@ -721,15 +728,15 @@
      C                   EVAL      D3MDIN = A6MDIN
      C                   EVAL      D3SPRT = A6SPRT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Incoming customer credit transfer
       *
      C                   IF        %SUBST(PREF:1:1)='D'
- 
+
      C     PREF          CHAIN     FT102HL3                           16
       *
       ** Error if header record not found.  Otherwise, process detail records.
@@ -744,18 +751,18 @@
       ** reference.  Save transaction IDs of all detail records.
       *
      C                   IF        WPref <> PREF
- 
+
      C                   EVAL      Ix    = 1
      C                   EVAL      WPref = PREF
      C     PREF          SETLL     FT102DL0
      C     PREF          READE     FT102DL0                               17
- 
+
      C                   DOW       EndOfFile = False
      C                   EVAL      TrnIDAr(Ix) = TRNSID
      C                   EVAL      Ix    = Ix + 1
      C     PREF          READE     FT102DL0                               17
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** If transaction ID is not blank, retrieve detail record.
@@ -807,9 +814,9 @@
      C                   EVAL      D3MDIN = A6MDIN
      C                   EVAL      D3SPRT = A6SPRT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       **  Outgoing payment
@@ -1754,9 +1761,9 @@
      C                               AKey10 ='3' OR AKey10 ='F' OR
      C                               AKey10 ='4' OR AKey10 ='J' OR
      C                               AKey10 ='5'
- 
+
      C                   EXSR      P12
- 
+
      C                   END
      C                   END
       *3&4
@@ -1799,9 +1806,9 @@
      C                               AKey10 ='F' OR AKey10 ='4' OR
      C                               AKey10 ='J' OR AKey10 ='5' OR
      C                               AKey9 ='FM'
- 
+
      C                   EXSR      P22
- 
+
      C                   END
      C                   END
       *3&4
@@ -1905,7 +1912,7 @@
      C                   EXSR      P50
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Incoming request for transfer
@@ -1932,9 +1939,9 @@
      C                              AKey9 = 'N1' OR AKey9 = 'N2' OR
      C                              AKey9 = 'N3' OR AKey9 = 'N4' OR
      C                              AKey9 = 'N5'
- 
+
      C                   EXSR      P62
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -1942,7 +1949,7 @@
      C                   IF        Akey3 = 'C' AND AKey10 = 'P'
      C                   EXSR      P63
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Outgoing customer credit transfer
@@ -1953,7 +1960,7 @@
      C                   IF        AKey3 = 'I' AND AKey10 = 'O'
      C                   EXSR      P70
      C                   ENDIF
- 
+
      C                   IF        AKey3 = 'D'
       *
       ** Debit value date
@@ -1972,13 +1979,13 @@
      C                              AKey9  ='N1' OR AKey9  ='N2' OR
      C                              AKey9  ='N3' OR AKey9  ='N4' OR
      C                              AKey9  ='N5'
- 
+
      C                   EXSR      P72
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Incoming customer credit transfer
@@ -1994,7 +2001,7 @@
      C                   IF        AKey3 = 'C' AND AKey10 = 'L'
      C                   EXSR      P81
      C                   ENDIF
- 
+
      C                   IF        AKey3 = 'D'
       *
       ** Transfer date fees
@@ -2006,15 +2013,15 @@
      C                              AKey9  ='N1' OR AKey9  ='N2' OR
      C                              AKey9  ='N3' OR AKey9  ='N4' OR
      C                              AKey9  ='N5'
- 
+
      C                   EXSR      P82
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -2257,7 +2264,7 @@
      C                   MOVEL     '019'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     CNUM          SETCUS            6
      C                   ENDIF
       *
@@ -2561,9 +2568,9 @@
       ** Setup fee code.
       *
      C                   EXSR      P95
- 
+
      C*************      EVAL      E#FEEC = FeeCode                                           208221
- 
+
       *
       **  Clear projected events data structure
      C                   CLEAR                   E#EVNT
@@ -2840,7 +2847,7 @@
      C                   MOVEL     '020'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     CNUM          PAYCUS            6
      C                   ENDIF
       *
@@ -3141,7 +3148,7 @@
       ** Setup fee code.
       *
      C                   EXSR      P95
- 
+
      C************       EVAL      E#FEEC = FeeCode                                           208221
       *
       **  Clear projected event data structure
@@ -3419,7 +3426,7 @@
      C                   MOVEL     '021'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     CNUM          DBCUS             6
      C                   ENDIF
       *
@@ -3741,7 +3748,7 @@
       ** Setup fee code.
       *
      C                   EXSR      P95
- 
+
      C************       EVAL      E#FEEC = FeeCode                                           208221
       *
       **  Clear projected event data structure
@@ -4018,7 +4025,7 @@
      C                   MOVEL     '022'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     CNUM          CRCUS             6
      C                   ENDIF
       *
@@ -4341,7 +4348,7 @@
       ** Setup fee code.
       *
      C                   EXSR      P95
- 
+
      C************       EVAL      E#FEEC = FeeCode                                           208221
       *
       **  Clear projected event data structure
@@ -4571,7 +4578,7 @@
       *                                                               *
       *****************************************************************
      C     P50           BEGSR
- 
+
      C                   IF        WTransProcess = *BLANK
       *
       ** Set ordering customer type
@@ -4614,7 +4621,7 @@
       ** Import the details of payment
      C                   EVAL      W#MODE = '*IMPTRAN'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4641,7 +4648,7 @@
       ** Import the details of the opening position
      C                   EVAL      W#MODE = '*IMPOPBL'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4664,7 +4671,7 @@
       ** Import the details of the deal date event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4672,9 +4679,9 @@
      C                   EVAL      BUFFER = W#RTCD + W#ERMS + T#TRAN
      C                   WRITE     DEELOGP0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WTransProcess = 'Y'
       *
       ** Clear projected event data structure
@@ -4706,7 +4713,7 @@
       ** Import the details of the fees event
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4717,7 +4724,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4766,7 +4773,7 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
@@ -4803,20 +4810,20 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
      C                   ELSE
      C                   EVAL      PYPLAM = PLAM
      C                   ENDIF
- 
+
      C                   EVAL      PLAmount = STPLAM + PYPLAM
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PLAmount = *ZEROS
- 
+
      C                   ENDIF
       *
       ** Set ordering customer type
@@ -4841,14 +4848,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -4878,7 +4885,7 @@
       ** Import the details of payment
      C                   EVAL      W#MODE = '*IMPTRAN'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4905,7 +4912,7 @@
       ** Import the details of the opening position
      C                   EVAL      W#MODE = '*IMPOPBL'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4928,7 +4935,7 @@
       ** Import the details of the deal date event
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4939,7 +4946,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4955,14 +4962,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -4981,7 +4988,7 @@
       ** Import the details of the debit date event
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -4992,7 +4999,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5007,14 +5014,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -5048,7 +5055,7 @@
       ** Import the details of the fee event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5059,7 +5066,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5076,14 +5083,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -5102,7 +5109,7 @@
       ** Import the details of the maturity date event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5147,9 +5154,9 @@
      C                   Z-ADD     TRNAMT        ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      TfrMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      TfrMargin = *ZEROS
      C                   ENDIF
@@ -5185,9 +5192,9 @@
      C                   Z-ADD     PAYAMT        ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      PayMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      PayMargin = *ZEROS
      C                   ENDIF
@@ -5232,7 +5239,7 @@
       ** Import the details of the excluding event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5240,12 +5247,12 @@
      C                   EVAL      BUFFER = W#RTCD + W#ERMS + T#TRAN
      C                   WRITE     DEELOGP0
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5305,7 +5312,7 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
@@ -5342,16 +5349,16 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
      C                   ELSE
      C                   EVAL      STPLAM = PLAM
      C                   ENDIF
- 
+
      C                   EVAL      PLAmount = STPLAM + PYPLAM
- 
+
      C                   ELSE
      C                   EVAL      PLAmount = *ZEROS
      C                   ENDIF
@@ -5404,7 +5411,7 @@
       ** Import the details of input date transaction
      C                   EVAL      W#MODE = '*IMPTRAN'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5431,7 +5438,7 @@
       ** Import the details of the opening position
      C                   MOVEL     '*IMPOPBL'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5454,7 +5461,7 @@
       ** Import the details of the deal date event
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5465,7 +5472,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5504,7 +5511,7 @@
       ** Import the details of the maturity date event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5549,9 +5556,9 @@
      C                   Z-ADD     TotAmtCr      ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      TfrMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      TfrMargin = *ZEROS
      C                   ENDIF
@@ -5587,9 +5594,9 @@
      C                   Z-ADD     TotAmtDr      ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      PayMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      PayMargin = *ZEROS
      C                   ENDIF
@@ -5634,7 +5641,7 @@
       ** Import the details of the excluding event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5642,12 +5649,12 @@
      C                   EVAL      BUFFER = W#RTCD + W#ERMS + T#TRAN
      C                   WRITE     DEELOGP0
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5697,7 +5704,7 @@
       ** Import the details of the fee event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5708,7 +5715,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5757,7 +5764,7 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
@@ -5794,16 +5801,16 @@
      C                   PARM      *ZERO         REVA
      C                   PARM      *ZERO         RATE
      C                   PARM      *ZERO         PLAM
- 
+
      C                   IF        W#RTCD = '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO DEFWDREVN'
      C                   EXSR      *PSSR
      C                   ELSE
      C                   EVAL      PYPLAM = PLAM
      C                   ENDIF
- 
+
      C                   EVAL      PLAmount = STPLAM + PYPLAM
- 
+
      C                   ELSE
      C                   EVAL      PLAmount = *ZEROS
      C                   ENDIF
@@ -5832,14 +5839,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -5869,7 +5876,7 @@
       ** Import the details of input date transaction
      C                   EVAL      W#MODE = '*IMPTRAN'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5896,7 +5903,7 @@
       ** Import the details of the opening position
      C                   EVAL      W#MODE = '*IMPOPBL'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5919,7 +5926,7 @@
       ** Import the details of the deal date event
      C                   EVAL      W#MODE = '*IMPEVNT'
      C                   EVAL      W#PH   = 'P'
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -5930,7 +5937,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5947,14 +5954,14 @@
       ** Setup transaction reference
       *
      C                   IF        FPTRID <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C     FPTRID        LOOKUP    TrnIDAr(Ix)                            18
      C                   IF        TrnsIdFnd = True
      C                   MOVE      Ix            IAx
      C                   EVAL      WTransRef = %TRIMR(PREF) + '-' + IAx
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WTransRef = PREF
      C                   ENDIF
@@ -5973,7 +5980,7 @@
       ** Import the details of the maturity date event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -6018,9 +6025,9 @@
      C                   Z-ADD     CCTAMT        ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      TfrMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      TfrMargin = *ZEROS
      C                   ENDIF
@@ -6056,9 +6063,9 @@
      C                   Z-ADD     PAYAMT        ZAMTCI
      C                   EXSR      ZCONVN
      C                   Z-ADD     ZAMTCO        WCurBaseEq
- 
+
      C                   EVAL      PayMargin = WCurBaseEq - WOldBaseEq
- 
+
      C                   ELSE
      C                   EVAL      PayMargin = *ZEROS
      C                   ENDIF
@@ -6102,7 +6109,7 @@
       ** Import the details of the excluding event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -6110,12 +6117,12 @@
      C                   EVAL      BUFFER = W#RTCD + W#ERMS + T#TRAN
      C                   WRITE     DEELOGP0
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -6156,7 +6163,7 @@
       ** Import the details of the fees event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   MOVEL     'P'           W#PH
- 
+
      C                   EXSR      WrkEDTA
       *
       ** If data error encountered, log error
@@ -6167,7 +6174,7 @@
       *
       ** Set generate events to 'Y'
      C                   EVAL      GENEVT = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -6178,7 +6185,7 @@
       *                                                               *
       *****************************************************************
      C     P95           BEGSR
- 
+
      C                   SELECT
       *
       ** Telex charge, non-taxable
@@ -6338,9 +6345,9 @@
       ** Receiver's charges
      C                   WHEN      AKey10 ='R'
      C                   EVAL         FeeCode = 'RC'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -6452,7 +6459,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PIBAN
      C     PAccntDS      PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKEY  = PIBAN
      C                   EVAL      DBFILE = 'ACCNTAB'
@@ -6466,7 +6473,7 @@
      C                   MOVEL     BRCA          W#BRCA
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -6477,13 +6484,13 @@
       *                                                               *
       *****************************************************************
      C     P97           BEGSR
- 
+
      C                   EVAL      WRevCust = *BLANKS
       *
       ** Process account if customer type is not blank.
       *
      C                   IF        OrdCustTp <> *BLANK
- 
+
      C                   EVAL      WCustType = OrdCustTp
      C                   IF        %SUBST(OrdCust:1:1) = '/'
      C                   EVAL      WAccount  = %SUBST(OrdCust:2:34)
@@ -6494,7 +6501,7 @@
       ** Retail account
       *
      C                   IF        WCustType = 'R'
- 
+
      C                   MOVEL     WAccount      WRK10
      C     WRK10         CHAIN     ACNUM                              16
      C                   IF        RecNotFnd = True
@@ -6505,7 +6512,7 @@
      C                   ELSE
      C                   MOVEL     CNUM          WRevCust
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Customer number or Partial customer
@@ -6523,7 +6530,7 @@
       ** IBAN account
       *
      C                   IF        WCustType = 'I' AND CFT004 = 'Y'
- 
+
      C************       EVAL      PIBAN = %SUBST(WAccount:2:34)                              208221
      C                   EVAL      PIBAN = WAccount                                           208221
      C                   CALLB     'AOIBANR4'
@@ -6531,7 +6538,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PIBAN
      C     PAccntDS      PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKEY  = PIBAN
      C                   EVAL      DBFILE = 'ACCNTAB'
@@ -6540,14 +6547,14 @@
      C                   ELSE
      C                   MOVEL     CNUM          WRevCust
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C**********         IF        WRevCust = *ZEROS AND OrdCustTp <> *BLANK                  CSD027
      C                   IF        WRevCust = *BLANKS AND OrdCustTp <> *BLANK                 CSD027
- 
+
      C                   EVAL      WCustType = BnfCustTp
      C                   IF        %SUBST(BnfCust:1:1) = '/'
      C                   EVAL      WAccount  = %SUBST(BnfCust:2:34)
@@ -6558,7 +6565,7 @@
       ** Retail account
       *
      C                   IF        WCustType = 'R'
- 
+
      C                   MOVEL     WAccount      WRK10
      C     WRK10         CHAIN     ACNUM                              16
      C                   IF        RecNotFnd = True
@@ -6569,7 +6576,7 @@
      C                   ELSE
      C                   MOVEL     CNUM          WRevCust
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Customer number or Partial customer
@@ -6587,7 +6594,7 @@
       ** IBAN account
       *
      C                   IF        WCustType = 'I' AND CFT004 = 'Y'
- 
+
      C************       EVAL      PIBAN = %SUBST(WAccount:2:34)                              208221
      C                   EVAL      PIBAN = WAccount                                           208221
      C                   CALLB     'AOIBANR4'
@@ -6595,7 +6602,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PIBAN
      C     PAccntDS      PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKEY  = PIBAN
      C                   EVAL      DBFILE = 'ACCNTAB'
@@ -6604,9 +6611,9 @@
      C                   ELSE
      C                   MOVEL     CNUM          WRevCust
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If revenue customer has not been setup from the previous
@@ -6614,7 +6621,7 @@
       ** it as revenue customer.
      C**********         IF        WRevCust = *ZEROS                                          CSD027
      C                   IF        WRevCust = *BLANKS                                         CSD027
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRtCd
@@ -6622,7 +6629,7 @@
      C                   PARM      BRCA          PBrch
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKEY  = BRCA
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -6631,9 +6638,9 @@
      C                   ELSE
      C                   EVAL      WRevCust = A8BICN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

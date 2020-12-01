@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -55,19 +58,19 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **  Facilities Details file
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(FCLTYFMF : FCLTYFNF)
- 
+
      FLEREF     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RF_)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -79,111 +82,111 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Facility Details in file format
      D FCLTYFMFmt    E DS                  EXTNAME(FCLTYFM)
- 
- 
+
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Facility Type
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** RUNDAT DATA AREA
      D RUNDAT          DS
      D  MBIN                  13     13
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * CLEAR OUTPUTS
- 
+
      C                   CLEAR                   FCLTYFMFmt
      C                   MOVE      'Y'           S#ACTNok
      C                   MOVE      'Y'           S#CSSNok
      C                   MOVE      'Y'           S#FACTok
      C                   MOVE      'Y'           S#FCNOok
      C                   MOVE      *BLANK        S#CNUM
- 
+
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIdArr
      C                   MOVE      *BLANK        MsgDtaArr
@@ -211,9 +214,9 @@
      C     S#FCNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** If not insert, check facility exists
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      CHKFCLTY
      C                   ENDIF
@@ -226,9 +229,9 @@
      C     S#FCNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** If not insert, valididate the action
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      VLDACT
      C                   ENDIF
@@ -248,18 +251,18 @@
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      VLDAUT
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ***********************************************************
       /SPACE 5
       ***********************************************************
       ** Valididate the action code
       ***********************************************************
      C     VALACTN       BEGSR
- 
+
      C     P#MODE        IFEQ      'B'
- 
+
      C     S#ACTN        IFNE      'I'
      C     S#ACTN        ANDNE     'A'
      C     S#ACTN        ANDNE     'R'
@@ -268,9 +271,9 @@
      C                   MOVEL     'S#ACTN '     FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     S#ACTN        IFNE      'E'
      C     S#ACTN        ANDNE     'I'
      C     S#ACTN        ANDNE     'A'
@@ -280,9 +283,9 @@
      C                   MOVEL     'S#ACTN '     FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -290,9 +293,9 @@
       **  Validate key fields (Customer, facility type, facility number
       ***********************************************************
      C     VLDKEY        BEGSR
- 
+
       ** Validate Customer
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -301,7 +304,7 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C                   MOVE      'N'           S#CSSNok
      C                   ADD       1             Ix
      C                   MOVEL     'S#CSSN '     FldNameArr(Ix)
@@ -314,9 +317,9 @@
      C                   MOVEL     BBCUST        S#CNUM
       *
      C                   ENDIF
- 
+
       ** Validate Facility type
- 
+
      C                   CALL      'AOFACTR0'
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -331,9 +334,9 @@
      C                   ELSE
      C                   MOVEL     AMFCTY        S#FACT
      C                   ENDIF
- 
+
       **  Validate Facility Seq No.
- 
+
      C     S#ACTN        IFNE      'I'
      C                   TESTN                   S#FCNO               98
      C     *IN98         IFEQ      '0'
@@ -342,17 +345,17 @@
      C                   MOVEL     'S#FCNO '     FldNameArr(Ix)
      C                   MOVEL     'LEF0005'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       *  For insert this field should not be entered
      C                   ELSE
- 
+
      C     S#FCNO        IFNE      *BLANKS
      C                   MOVE      'N'           S#FCNOok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FCNO '     FldNameArr(Ix)
      C                   MOVEL     'LEF0054'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -435,13 +438,13 @@
      C                   MOVEL     'S#CSSN '     FldNameArr(Ix)
      C                   MOVEL     'LEF0085'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       **  Check if a loan is attached to the prime facility
- 
+
      C                   EXSR      CHKPRIM
- 
+
       **  Check if a loan is attached to the funding facility
- 
+
      C                   EXSR      CHKFUND
       *
       *
@@ -549,7 +552,7 @@
      C                   MOVEL     'LEP0203'     MsgIdArr(Ix)
      C                   LEAVE
      C                   ENDIF
- 
+
      C     LEREFK        READE     LEREF                                  70
      C                   ENDDO
       *
@@ -579,41 +582,41 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM                    RESPMODE          1
- 
+
       * Action, customer, facility type and facility number
      C                   PARM                    S#ACTN            1
      C                   PARM                    S#CSSN           10
      C                   PARM                    S#FACT            3
      C                   PARM                    S#FCNO            2
- 
+
       * Primary facility customer, type & number
      C                   PARM                    S#PMFC            6
      C                   PARM                    S#PMFT            3
      C                   PARM                    S#PMFN            2
       *
       * OUTPUTS
- 
+
       * Facility Details in file format
      C                   PARM                    FCLTYFMFmt
- 
+
       * Action, customer, facility type and facility number OK indicators
      C                   PARM                    S#ACTNok          1
      C                   PARM                    S#CSSNok          1
      C                   PARM                    S#FACTok          1
      C                   PARM                    S#FCNOok          1
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
       *
@@ -624,7 +627,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Ix                3 0
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -656,18 +659,18 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *  GET MBIN FROM DTAARA/RUNDAT
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
      C     *LIKE         DEFINE    RCTP          K#RCTP
- 
+
       ** Key lists
- 
+
      C     FCLTYK        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -683,9 +686,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

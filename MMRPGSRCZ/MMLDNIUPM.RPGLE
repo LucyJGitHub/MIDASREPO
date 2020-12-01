@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
@@ -111,6 +112,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -242,7 +245,7 @@
      FMMDEAULL  UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(MMDELDP0)
- 
+
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK    INFSR(SRERR)                                       CSD015
      F/COPY WNCPYSRC,MMH00129
@@ -277,19 +280,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -300,14 +303,14 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
+
       ** Timestamp for the transaction                                          CAP006
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
@@ -351,7 +354,7 @@
                                                                                               CDL018
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL018
       ** File - Receive Further Settlement Instructions                                       CDL018
- 
+
       **  DEALS FILE - LOANS/DEPOSITS/NAS ISSUED
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
@@ -386,7 +389,7 @@
       ** Tax Code Fields                                                                      CGL165
      D  @HKTXC              2182   2185                                                       CGL165
      D  @HKAPR              2186   2186                                                       CER050
- 
+
      D ChkDealFmt    E DS                  EXTNAME(MMDELDPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -422,18 +425,18 @@
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
      D DLDLQD        E DS                  EXTNAME(DLSTMPPD)                                  CER049
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS                           CAP051
                                                                                 CAP051
@@ -455,9 +458,9 @@
                                                                                 208884
      D InvRp         E DS                  EXTNAME(MMILDNIPD)                   208884
      D                                     PREFIX(R:2)                          208884
- 
+
       * RUN DATE & MULTI-BRANCHING INDICATOR
- 
+
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
@@ -573,8 +576,8 @@
      D ##MOPI          S             18                                                       CGL029
      D ##MORI          S             18                                                       CGL029
      D T#TREF          S             26                                                       CGL029
- 
- 
+
+
       ** Define fields used in CAS005                                                         CAS005
                                                                                               CAS005
      D CAS005          S              1A                                                      CAS005
@@ -666,7 +669,7 @@
      C                   EVAL      WFIDTUPF = 'Y'                                             209905
      C                   EVAL      @@RTCD = *BLANKS                                           209905
      C                   ENDIF                                                                209905
- 
+
       *
       ** INITIALIZE WORK FIELDS
       *

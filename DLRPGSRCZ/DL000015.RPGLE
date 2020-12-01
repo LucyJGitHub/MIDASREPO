@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -128,138 +131,138 @@
      F                                     IGNORE(DEALSDFF)
      F                                     COMMIT
       ** Back Office Deals (FX, L/D, NA Purchased, FRA/IRS)
- 
+
      FFXDEALLL  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Front Office Foreign Exchange Deals
- 
+
      FMMDEALLL  UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(MMDENSP0)
      F                                     COMMIT
       ** Front Office Loans and Deposits, Negotiable Assets Purchased
- 
+
      FFDDTSTL1  IF   E           K DISK    INFSR(*PSSR)
       ** Deal Types/Subtypes Retrieval Index
- 
+
      FDL000015AUO    E             PRINTER
       ** Audit file
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D/COPY WNCPYSRC,DLH00316
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Program Status Data Structure
      D PSDS           SDS
- 
+
      D  ##PGM            *PROC
      D  JOB                  244    253
      D  WSID                 244    246
      D  USER                 254    263
- 
+
       ** Process Back Office deals (DEALSDB, DEALSDC, DEALSDD, DEALSDG)
- 
+
      C     *LOVAL        SETLL     DEALS
      C                   DOU       *IN60 = *ON
      C                   READ      DEALS                                  60
- 
+
      C                   IF        *IN60 = *OFF and RECI = 'D'
- 
+
      C/COPY WNCPYSRC,DLH00317
       ** If a live FX/MM/NAP/IRS deal is found
- 
+
      C                   ADD       1             COUNTF
- 
+
       ** Call subroutine that defaults values for yield curve fields
- 
+
      C                   EXSR      SRDfltBOF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,DLH00318
       ** Process Foreign Exchange records
- 
+
      C     *LOVAL        SETLL     FXDEALLL
      C                   DOU       *IN60 = *ON
      C                   READ      FXDEALLL                               60
- 
+
      C                   IF        *IN60 = *OFF and FHDDLT = *blanks
      C                             and FHDSTS <> 'E' and FHDSTS <> 'M'
- 
+
       ** If a live Foreign Exchange deal record is found
- 
+
      C                   ADD       1             COUNTF
- 
+
       ** Call subroutine that defaults values for yield curve fields
- 
+
      C                   EXSR      SRDfltFOFX
       *
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,DLH00319
       ** Process Loan and Deposit records
- 
+
      C     *LOVAL        SETLL     MMDELDP0
      C                   DOU       *IN60 = *ON
      C                   READ      MMDELDP0                               60
- 
+
      C                   IF        *IN60 = *OFF and HKDDLT = *blanks
      C                             and HKDSTS <> 'M'
- 
+
       ** If a live record is found
- 
+
      C                   ADD       1             COUNTF
- 
+
       ** Call subroutine that defaults values for yield curve fields
- 
+
      C                   EXSR      SRDfltFOLD
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Process Negotiable Asset Purchased records
- 
+
      C     *LOVAL        SETLL     MMDENBP0
      C                   DOU       *IN60 = *ON
      C                   READ      MMDENBP0                               60
- 
+
      C                   IF        *IN60 = *OFF and HLDDLT = *blanks
      C                             and HLDSTS <> 'M'
- 
+
       ** If a live record is found
- 
+
      C                   ADD       1             COUNTF
- 
+
       ** Call subroutine that defaults values for yield curve fields
- 
+
      C                   EXSR      SRDfltFONP
       *
      C                   ENDIF
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,DLH00320
      C                   COMMIT
       *
      C                   EVAL      *INLR = *ON
- 
+
       ** Write File Controls Report.
- 
+
      C                   EXSR      SRAudit
- 
+
       ** Subroutines
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -273,28 +276,28 @@
       *                                                               *
       *****************************************************************
      C     SRDfltBOF     BEGSR
- 
+
       ** Call subroutine to access file for default values of yield curve fields
- 
+
      C                   EXSR      SRChFile
- 
+
      C                   IF        %EOF = *OFF
- 
+
       ** If found, default our yield curve field (common in the 4 deal files)
- 
+
      C                   EVAL      FSOYLC = FSOURY
- 
+
       ** If record type is 'B', default their yield curve field as well (only in DEALSDB)
- 
+
      C                   IF        RCDT = 'B'
      C                   EVAL      FSTYLC = FSTHRY
      C                   ENDIF
- 
+
       ** If record type is 'G' and deal type is 'RX' or 'RS',
       ** default Their Yield Curve field as well (only in DEALSDG)
- 
+
      C                   IF        RCDT = 'G'
- 
+
      C                   IF        DTYP = 'RX' OR
      C                             DTYP = 'RS'
      C                   EVAL      FSTYLC = FSTHRY
@@ -304,47 +307,47 @@
      C                   EVAL      FSOYLC = *blanks
      C                   EVAL      FSTYLC = *blanks
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      FSOYLC = *blanks
      C                   EVAL      FSTYLC = *blanks
      C                   ENDIF
- 
+
      C                   IF        RCDT = 'B'
      C                   UPDATE    DEALSDBF
- 
+
      C                   IF        FSOYLC <> *blanks OR
      C                             FSTYLC <> *blanks
      C                   ADD       1             COUNTDB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        RCDT = 'C'
      C                   UPDATE    DEALSDCF
      C                   IF        FSOYLC <> *blanks
      C                   ADD       1             COUNTDC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        RCDT = 'D'
      C                   UPDATE    DEALSDDF
      C                   IF        FSOYLC <> *blanks
      C                   ADD       1             COUNTDD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        RCDT = 'G'
      C                   UPDATE    DEALSDGF
      C                   IF        FSOYLC <> *blanks OR
      C                             FSTYLC <> *blanks
      C                   ADD       1             COUNTDG
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -358,35 +361,35 @@
       *                                                               *
       *****************************************************************
      C     SRDfltFOFX    BEGSR
- 
+
       ** Access the Deal Type/Subtype file for default values for the
       ** Buy/Our Yield Curve and Sell/Their Yield Curve
- 
+
      C                   EVAL      WkDTYP = FHTYPE
      C                   EVAL      WkDLST = FHSTYP
      C                   EVAL      WkCLAS = FHCLAS                                            CDL038
- 
+
      C     KyDeal        CHAIN     FDDTSTL1                           01
- 
+
      C                   IF        *IN01 = *OFF
- 
+
       ** If found, default our/their yield curve fields
- 
+
      C                   EVAL      FHOYLC = FSOURY
      C                   EVAL      FHTYLC = FSTHRY
- 
+
      C                   ELSE
      C                   EVAL      FHOYLC = *blanks
      C                   EVAL      FHTYLC = *blanks
      C                   ENDIF
- 
+
      C                   UPDATE    FXDEALP0
- 
+
      C                   IF        FHOYLC <> *blanks OR
      C                             FHTYLC <> *blanks
      C                   ADD       1             COUNTFX
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -400,32 +403,32 @@
       *                                                               *
       *****************************************************************
      C     SRDfltFOLD    BEGSR
- 
+
       ** Access the Deal Type/Subtype file for default values for the
       ** Buy/Our Yield Curve and Sell/Their Yield Curve
- 
+
      C**********         EVAL      WkDTYP = HKTYPE                                            228018
      C                   EVAL      WkDTYP = HKMTYP                                            228018
      C                   EVAL      WkDLST = HKSTYP
      C                   EVAL      WkCLAS = HKCLAS                                            CDL038
- 
+
      C     KyDeal        CHAIN     FDDTSTL1                           01
- 
+
      C                   IF        *IN01 = *OFF
- 
+
       ** If found, default our yield curve field
- 
+
      C                   EVAL      HKOYLC = FSOURY
- 
+
      C                   ELSE
      C                   EVAL      HKOYLC = *blanks
      C                   ENDIF
- 
+
      C                   UPDATE    MMDELDP0
      C                   IF        HKOYLC <> *blanks
      C                   ADD       1             COUNTLD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -439,31 +442,31 @@
       *                                                               *
       *****************************************************************
      C     SRDfltFONP    BEGSR
- 
+
       ** Access the Deal Type/Subtype file for default values for the
       ** Buy/Our Yield Curve
- 
+
      C                   EVAL      WkDTYP = HLTYPE
      C                   EVAL      WkDLST = HLSTYP
      C                   EVAL      WkCLAS = HLCLAS                                            CDL038
- 
+
      C     KyDeal        CHAIN     FDDTSTL1                           01
- 
+
      C                   IF        *IN01 = *OFF
- 
+
       ** If found, default our yield curve field
- 
+
      C                   EVAL      HLOYLC = FSOURY
- 
+
      C                   ELSE
      C                   EVAL      HLOYLC = *blanks
      C                   ENDIF
- 
+
      C                   UPDATE    MMDENBP0
      C                   IF        HLOYLC <> *blanks
      C                   ADD       1             COUNTNP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -477,16 +480,16 @@
       *                                                               *
       *****************************************************************
      C     SRChFile      BEGSR
- 
+
       ** Access the Deal Type/Subtype file for default values for the
       ** Buy/Our Yield Curve and Sell/Their Yield Curve
- 
+
      C                   EVAL      WkDTYP = DTYP
      C                   EVAL      WkDLST = DLST
      C                   EVAL      WkCLAS = CLAS                                              CDL038
- 
+
      C     KyDeal        CHAIN     FDDTSTL1                           01
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -500,18 +503,18 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Write File Control Report Heading
- 
+
      C                   WRITE     HEADAU
- 
+
  B1  C                   IF        COUNTF <> 0
      C                   WRITE     CONTROL
- 
+
      C                   ELSE
      C                   WRITE     NODTLS
  E1  C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -525,11 +528,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY@          BIS@             80
- 
+
       **  Set up Local Data Area (LDA)
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -538,9 +541,9 @@
      C                   MOVEL     'DL000015'    DBPGM
      C                   Z-ADD     0             DBASE
      C                   OUT       LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
@@ -553,10 +556,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,DLH00321
       ** Initialise counters
- 
+
      C                   Z-ADD     *ZERO         COUNTF            9 0
      C                   Z-ADD     *ZERO         COUNTDB           9 0
      C                   Z-ADD     *ZERO         COUNTDC           9 0
@@ -565,22 +568,22 @@
      C                   Z-ADD     *ZERO         COUNTFX           9 0
      C                   Z-ADD     *ZERO         COUNTLD           9 0
      C                   Z-ADD     *ZERO         COUNTNP           9 0
- 
- 
+
+
       ** Initialize constant fields
- 
+
      C                   Z-ADD     *ZEROS        FSURPL
      C                   Z-ADD     *ZEROS        FSTUPL
      C                   Z-ADD     *ZEROS        FSPUPL
      C                   Z-ADD     *ZEROS        FSYUPL
- 
+
       ** Key List for Deal types/subtypes file
- 
+
      C     KyDeal        KLIST
      C                   KFLD                    WkDTYP            2
      C                   KFLD                    WkDLST            2
      C                   KFLD                    WkCLAS            4                          CDL038
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -594,25 +597,25 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WDUMP = *BLANKS
      C                   MOVE      'Y'           WDUMP             1
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   DUMP
- 
+
       ** Write File Control Report Heading
- 
+
      C                   WRITE     HEADAU
- 
+
       ** Write Database error
- 
+
      C                   WRITE     DBERROR
- 
+
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
      C****************************************************************
 ** CPY@

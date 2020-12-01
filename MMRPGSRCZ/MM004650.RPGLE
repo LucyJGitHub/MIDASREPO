@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1493,7 +1495,8 @@
      C                   EVAL      DKVDAT = *ZERO
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = *ZERO
-     C                   EVAL      DKBRTT = *ZERO
+     C**********         EVAL      DKBRTT = *ZERO                                             CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = *ZERO
      C                   EVAL      DKRTSP = *ZERO
      C                   EVAL      DKINTR = *ZERO
@@ -1572,7 +1575,8 @@
      C                   EVAL      DKVDAT = 0
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = 0
-     C                   EVAL      DKBRTT = 0
+     C**********         EVAL      DKBRTT = 0                                                 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0
      C                   EVAL      DKRTSP = 0
      C                   EVAL      DKINTR = 0
@@ -1759,7 +1763,8 @@
      C                   EVAL      DKVDAT = 0
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = 0
-     C                   EVAL      DKBRTT = 0
+     C**********         EVAL      DKBRTT = 0                                                 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0
      C                   EVAL      DKRTSP = 0
      C                   EVAL      DKINTR = 0
@@ -1841,7 +1846,8 @@
      C                   EVAL      DKVDAT = 0                                                 233601
      C**********         EVAL      DKSLID = DFPSTD                                   233601 BUG13006
      C                   EVAL      DKMDAT = 0                                                 233601
-     C                   EVAL      DKBRTT = 0                                                 233601
+     C**********         EVAL      DKBRTT = 0                                          233601 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0                                                 233601
      C                   EVAL      DKRTSP = 0                                                 233601
      C                   EVAL      DKINTR = 0                                                 233601

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR804792           Date 05Sep11               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR787620           Date 10Jun11               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR804792 - Late Payment Penalty Spread was displayed as      *
@@ -90,7 +93,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -109,68 +112,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the GL standard declares
      D/COPY GLCPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Facility FM in File Format
      D FcvmFilFmt    E DS                  EXTNAME(LEVFCIMPD)
       * Facility FN in File Format
      D FcvnFilFmt    E DS                  EXTNAME(LEVFCINPD)
- 
+
       * Facility in Screen Format
      D FacScnPrim    E DS                  EXTNAME(LEFCPPPD)
      D FacScnSeco    E DS                  EXTNAME(LEFCSPPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **   CURRENCY TYPE
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
       *                                                                                       CER020
       ** External DS for SAR Details                                                          CER020
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER020
- 
+
       *  DS for Drawing types
      D                 DS
      D  FPDTPS1                1      5
@@ -181,7 +184,7 @@
      D  FPDTS4                 4      4
      D  FPDTS5                 5      5
      D  FPDTS6                 6      6                                                      BUG3723
- 
+
       *  DS for rollover types
      D                 DS
      D  FPRTPS1                1      6
@@ -207,7 +210,7 @@
      D  FPRTSPI               19     19                                                       CLE064
      D  FPRTSPJ               20     20                                                       CLE064
      D  FPRTSPK               21     21                                                       CLE064
- 
+
       ** Allowable currency
      D                 DS
      D  FPALCY1                1     36
@@ -223,12 +226,12 @@
      D  FPCY10                28     30
      D  FPCY11                31     33
      D  FPCY12                34     36
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *                                                                                       CER020
       ** Parameters for the Access Object                                                     CER020
      D PRtcd           S              7A                                                      CER020
@@ -236,7 +239,7 @@
      D PSard           S              6A                                                      CER020
       *                                                                                       CER020
      D CER020          S              1A                                                      CER020
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -254,9 +257,9 @@
       *
       ** Set output screen fields for second screen
      C                   EXSR      SETFLD2
- 
+
       * Return
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -265,14 +268,14 @@
       ** SETFLD1 - Set output for screen one
       *****************************************************************
      C     SETFLD1       BEGSR
- 
+
       * Customer Number
      C*****              MOVEL(P)  FPCNUM        DDCSSN                                       CSD027
      C                   MOVEL     FPCNUM        DDCSSN                                       CSD027
- 
+
       * Facility Type
      C                   MOVEL(P)  FPFACT        DDFACT
- 
+
       * Facility Number
      C                   MOVEL(P)  FPFCNO        DDFCNO
       *
@@ -299,7 +302,7 @@
      C                   MOVE      *BLANKS       DDFSTS
      C                   MOVE      *BLANKS       DDFST2
      C                   ENDSL
- 
+
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDFSTS
      C                   MOVEL     ZAMSTP        DDFST2
@@ -307,10 +310,10 @@
       *
       * Branch code
      C                   MOVEL(P)  FPBRCA        DDBRCA
- 
+
       * Currency
      C                   EVAL      DDFCCY=FPFCCY
- 
+
       * Facility amount
       *
      C                   IF        FPFAMT=*ZEROS
@@ -323,7 +326,7 @@
      C                   EXSR      FMTAMT
      C                   MOVE      ZOUT21        DDFAMT
      C                   END
- 
+
       * Overline %
      C                   IF        FPOVPC=*ZEROS
      C                   EVAL      DDOVPC=*BLANKS
@@ -334,7 +337,7 @@
      C**********         MOVE      ZOUT21        DDOVPC                                      BUG3815
      C                   EVAL      DDOVPC = %SubSt(ZOUT21:15:6)                              BUG2815
      C                   END
- 
+
       * Over-line Amount                                                                    BUG12717
      C                   IF        FPOVAM = *ZEROS                                          BUG12717
      C                   EVAL      DDOVAM = *BLANKS                                         BUG12717
@@ -344,10 +347,10 @@
      C                   EXSR      FMTAMT                                                   BUG12717
      C                   MOVE      ZOUT21        DDOVAM                                     BUG12717
      C                   ENDIF                                                              BUG12717
- 
+
       * Fclty / Cmmt Ind
      C                   MOVEL(P)  FPFCTI        DDFCTI
- 
+
       * Start date
      C                   IF        FPDTAP=*ZERO
      C                   EVAL      DDDTAP=*BLANKS
@@ -356,16 +359,16 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDDTAP
      C                   END
- 
+
       * Revolving Credit
      C                   MOVEL(P)  FPRVCR        DDRVCR
- 
+
       * Multi currency
      C                   MOVEL(P)  FPMCCY        DDMCCY
- 
+
       * Secured
      C                   MOVEL(P)  FPSECI        DDSECI
- 
+
       * Expiry date
      C                   IF        FPDTEX=*ZERO
      C                   EVAL      DDDTEX=*BLANKS
@@ -374,19 +377,19 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDDTEX
      C                   END
- 
+
       * Country of Risk
      C                   MOVEL(P)  FPCRSK        DDCRSK
- 
+
       * Multi customer
      C                   MOVEL(P)  FPMCSI        DDMCSI
- 
+
       * Alt N/A
      C                   MOVEL(P)  FPNACD        DDNACD
- 
+
       * Multi Branch
      C                   MOVEL(P)  FNMBFC        DDMBFC
- 
+
       * Rev. CR Date changed
      C                   IF        FPRVCD=*ZERO
      C                   EVAL      DDRVCD=*BLANKS
@@ -395,7 +398,7 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDRVCD
      C                   END
- 
+
       * Date of last Fin. Stmt
      C                   IF        FPDLFS=*ZERO
      C                   EVAL      DDDLFS=*BLANKS
@@ -404,7 +407,7 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDDLFS
      C                   END
- 
+
       * Nominal Rate
      C                   IF        FPNOMR=*ZEROS
      C                   EVAL      DDNOMR=*BLANKS
@@ -414,7 +417,7 @@
      C                   EXSR      FMTAMT
      C                   EVAL      DDNOMR= %SUBST(ZOUT21:9:12)
      C                   END
- 
+
       * Review Date
      C                   IF        FPRVDT=*ZERO
      C                   EVAL      DDRVDT=*BLANKS
@@ -423,29 +426,29 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDRVDT
      C                   END
- 
+
       * Frequency
      C                   MOVEL(P)  FPRVFR        DDRVFR
- 
+
       * Day no
      C                   IF        FPRVDY=*ZEROS
      C                   EVAL      DDRVDY=*BLANKS
      C                   ELSE
      C                   MOVEL(P)  FPRVDY        DDRVDY
      C                   END
- 
+
       * Account officer
      C                   MOVEL(P)  FPACOF        DDACOF
- 
+
       * Profit Center
      C                   MOVEL(P)  FNPRFC        DDPRFC
- 
+
       * Originating Branch
      C                   MOVEL(P)  FPORBR        DDORBR
- 
+
       * Tranche/Credit agreement Ind
      C                   MOVEL(P)  FPTRCA        DDTRCA
- 
+
       * Credit agreement Customer
      C**********         IF        FPCANM=*ZEROS                                              CSD027
      C                   IF        FPCANM=*BLANKS                                             CSD027
@@ -454,43 +457,43 @@
      C*****              MOVEL(P)  FPCANM        DDCANM                                       CSD027
      C                   MOVEL     FPCANM        DDCANM                                       CSD027
      C                   END
- 
+
       * Credit agreement type
      C                   IF        FPCAFT=*ZEROS
      C                   EVAL      DDCAFT=*BLANKS
      C                   ELSE
      C                   MOVEL(P)  FPCAFT        DDCAFT
      C                   END
- 
+
       * Credit agreement No
      C                   IF        FPCAFN=*ZEROS
      C                   EVAL      DDCAFN=*BLANKS
      C                   ELSE
      C                   MOVEL(P)  FPCAFN        DDCAFN
      C                   END
- 
+
       * Narrative 1
      C                   MOVEL(P)  FPNAR1        DDNAR1
- 
+
       * Narrative 2
      C                   MOVEL(P)  FPNAR2        DDNAR2
- 
+
       * Narrative 3
      C                   MOVEL(P)  FPNAR3        DDNAR3
- 
+
       * Narrative 4
      C                   MOVEL(P)  FPNAR4        DDNAR4
- 
+
       * Bill/Tlex ind
      C                   MOVEL(P)  FNBTIN        DDBTIN
- 
+
       * Billing days
      C                   IF        FNBLDY=*ZEROS
      C                   EVAL      DDBLDY=*BLANKS
      C                   ELSE
      C                   MOVEL(P)  FNBLDY        DDBLDY
      C                   END
- 
+
       * Account sequence Number
      C                   IF        FPACSQ=*ZEROS
      C                   EVAL      DDACSQ=*BLANKS
@@ -538,13 +541,13 @@
       ** SETFLD2 - Output for screen 2
       *****************************************************************
      C     SETFLD2       BEGSR
- 
+
       * Syndication ind.
      C                   MOVEL(P)  FPSYIN        DDSYIN
- 
+
       * Syndication complete
      C                   MOVEL(P)  FPSYCP        DDSYCP
- 
+
       * Agent Customer number
      C**********         IF        FPANUM=*ZEROS                                              CSD027
      C                   IF        FPANUM=*BLANKS                                             CSD027
@@ -553,59 +556,59 @@
      C*****              MOVEL(P)  FPANUM        DDANUM                                       CSD027
      C                   MOVEL     FPANUM        DDANUM                                       CSD027
      C                   END
- 
+
       * Drawing table
      C     CLE028        IFEQ      'Y'                                                       BUG3723
      C                   MOVEL(P)  DPDTPX        DPDTPX1                                     BUG3723
      C                   ELSE                                                                BUG3723
      C                   MOVEL(P)  FPDTPS        FPDTPS1
      C                   ENDIF                                                               BUG3723
- 
+
       * Drawing type 1
      C                   MOVEL(P)  FPDTS1        DDDTS1
- 
+
       * Drawing type 2
      C                   MOVEL(P)  FPDTS2        DDDTS2
- 
+
       * Drawing type 3
      C                   MOVEL(P)  FPDTS3        DDDTS3
- 
+
       * Drawing type 4
      C                   MOVEL(P)  FPDTS4        DDDTS4
- 
+
       * Drawing type 5
      C                   MOVEL(P)  FPDTS5        DDDTS5
- 
+
       * Drawing type 5
      C                   MOVEL(P)  FPDTS5        DDDTS5
- 
+
       * Drawing type 6                                                                       BUG3723
      C     CLE028        IFEQ      'Y'                                                       BUG3723
      C                   MOVEL(P)  FPDTS6        DDDTS6                                      BUG3723
      C                   ENDIF                                                               BUG3723
- 
+
       * Default Interest basis
      C                   MOVEL(P)  FPDICB        DDDICB
- 
+
       * Rollover table
      C                   MOVEL(P)  FPRTPS        FPRTPS1
      C                   MOVEL(P)  FPRTS15       FPRTPS2                                      CLE064
- 
+
       * Rollover type 1
      C                   MOVEL(P)  FPRTS1        DDRTS1
- 
+
       * Rollover type 2
      C                   MOVEL(P)  FPRTS2        DDRTS2
- 
+
       * Rollover type 3
      C                   MOVEL(P)  FPRTS3        DDRTS3
- 
+
       * Rollover type 4
      C                   MOVEL(P)  FPRTS4        DDRTS4
- 
+
       * Rollover type 5
      C                   MOVEL(P)  FPRTS5        DDRTS5
- 
+
       * Rollover type 6
      C                   MOVEL(P)  FPRTS6        DDRTS6
                                                                                               CLE064
@@ -653,55 +656,55 @@
                                                                                               CLE064
       * Rollover type 21                                                                      CLE064
      C                   MOVEL(P)  FPRTSPK       DDRTSK                                       CLE064
- 
+
       * Irregular Rollover period
      C                   MOVEL(P)  FPRLPD        DDRLPD
- 
+
       * Loan administrator id
      C                   MOVEL(P)  FPLAID        DDLAID
- 
+
       * Currency selection
      C                   MOVEL(P)  FPCSEL        DDCSEL
- 
+
       * Currency table
      C                   MOVEL(P)  FPALCY        FPALCY1
- 
+
       * Allowable currency 1
      C                   MOVEL(P)  FPCY01        DDCY01
- 
+
       * Allowable currency 2
      C                   MOVEL(P)  FPCY02        DDCY02
- 
+
       * Allowable currency 3
      C                   MOVEL(P)  FPCY03        DDCY03
- 
+
       * Allowable currency 4
      C                   MOVEL(P)  FPCY04        DDCY04
- 
+
       * Allowable currency 5
      C                   MOVEL(P)  FPCY05        DDCY05
- 
+
       * Allowable currency 6
      C                   MOVEL(P)  FPCY06        DDCY06
- 
+
       * Allowable currency 7
      C                   MOVEL(P)  FPCY07        DDCY07
- 
+
       * Allowable currency 8
      C                   MOVEL(P)  FPCY08        DDCY08
- 
+
       * Allowable currency 9
      C                   MOVEL(P)  FPCY09        DDCY09
- 
+
       * Allowable currency 10
      C                   MOVEL(P)  FPCY10        DDCY10
- 
+
       * Allowable currency 11
      C                   MOVEL(P)  FPCY11        DDCY11
- 
+
       * Allowable currency 12
      C                   MOVEL(P)  FPCY12        DDCY12
- 
+
       * Approval date
      C                   IF        FPCOMD=*ZERO
      C                   EVAL      DDCOMD=*BLANKS
@@ -710,7 +713,7 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDCOMD
      C                   END
- 
+
       * Closing date
      C                   IF        FPCDTE=*ZERO
      C                   EVAL      DDCDTE=*BLANKS
@@ -719,7 +722,7 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDCDTE
      C                   END
- 
+
       * Last Availability date
      C                   IF        FPAVLD=*ZERO
      C                   EVAL      DDAVLD=*BLANKS
@@ -728,17 +731,17 @@
      C                   EXSR      CVTDAT
      C                   MOVEL(P)  ZDATE         DDAVLD
      C                   END
- 
+
       * Late payment Penalty type
      C                   MOVEL(P)  FPLPTP        DDLPTP
- 
+
       * Base rate
      C                   IF        FPLPBR=*ZERO
      C                   EVAL      DDLPBR=*BLANKS
      C                   ELSE
      C                   MOVEL(P)  FPLPBR        DDLPBR
      C                   END
- 
+
       *  Late Payment Penalty Amount
       *
      C                   IF        FPLPAM=*ZEROS
@@ -758,19 +761,19 @@
      C                   EXSR      FMTAMT
      C                   MOVE      ZOUT21        DDLPAM
      C                   END
- 
+
       * Late payment Penalty type sign
      C                   MOVEL(P)  FPLPPS        DDLPPS
- 
+
       * Default Part.Loan type
      C                   MOVEL(P)  FPDFTP        DDDFTP
- 
+
       * Default Part.Loan Sub type
      C                   MOVEL(P)  FPDFST        DDDFST
                                                                                               CLE042
       * Default Part.Loan Class                                                               CLE042
      C                   MOVEL(P)  FPDFCL        DDDFCL                                       CLE042
- 
+
       * C/A Exchange rate
      C                   IF        FPCAXR=*ZEROS
      C                   EVAL      DDCAXR=*BLANKS
@@ -781,13 +784,13 @@
      C**********         EVAL      DDCAXR= %SUBST(ZOUT21:9:12)                                CGP001
      C                   EVAL      DDCAXR= %SUBST(ZOUT21:8:13)                                CGP001
      C                   END
- 
+
       * Exchange rate ind
      C                   MOVEL(P)  FPCMDI        DDCMDI
- 
+
       * Severity code
      C                   MOVEL(P)  FPSVCD        DDSVCD
- 
+
       * Limit ID
      C                   MOVEL(P)  FPLMTI        DDLMTI
       *

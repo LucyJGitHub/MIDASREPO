@@ -104,7 +104,7 @@
      D CGL013          S              1A                                                    MD056972
      D P@RTCD          S              7A                                        Return code MD056972
      D P@OPTN          S              7A                                        Option      MD056972
-     D P@SARD          S              6                                         Sar         MD056972    D CGL013          S              1A                                                    MD056972
+     D P@SARD          S              6                                         Sar         MD056972
       ** Bit constants for testing bits of RETB
 
      D Bit2            C                   X'20'
@@ -344,6 +344,7 @@ D     /EJECT
      C                   ENDIF                                                            AR1097467B
                                                                                             MD056972
      C                   IF        InsACDET > 0                                             MD056972
+     C                             AND CGL013 = 'N'                                         MD056972
      C/EXEC SQL                                                                             MD056972
      C+ insert into ACDETAB                                                                 MD056972
      C+ :InsACDET rows                                                                      MD056972
@@ -463,6 +464,7 @@ D     /EJECT
       ** Check if feature CGL013 (Cash Management feature) is installed                     MD056972
                                                                                             MD056972
      C                   EVAL      CGL013 = 'N'                                             MD056972
+     C                   EVAL      *IN13 = *OFF                                             MD056972
                                                                                             MD056972
      C                   CALL      'AOSARDR0'                                               MD056972
      C                   PARM      *BLANKS       P@RTCD                         Return Code MD056972
@@ -472,6 +474,7 @@ D     /EJECT
                                                                                             MD056972
      C                   IF        P@RTCD = *BLANKS                                         MD056972
      C                   EVAL      CGL013 = 'Y'                                             MD056972
+     C                   EVAL      *IN13 = *ON                                              MD056972
      C                   ENDIF                                                              MD056972
       ** Set DBPGM to be equal to program name
 

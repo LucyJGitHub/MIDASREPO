@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL194             Date 01Aug20               *
-      *  Prev Amend No. MD052783           Date 09Mar19               *
+      *  Last Amend No. MD057255           Date 27Nov20               *
+      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *                 MD052783           Date 09Mar19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057255 - Controlling Person not removed in report          *
       *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD052783 - CRS - GLCSBAPD: no record was output for each     *
       *             customer’s real linked A/C Holder                 *
@@ -1119,6 +1121,8 @@
      C     CACUST        READE     SDCUAHL1                                                 MD052783
                                                                                             MD052783
      C                   DOW       NOT %EOF(SDCUAHL1)                                       MD052783
+     C                   IF        CATYLC <> 'D'                                            MD057255
+     C                             AND CACINT = 'Y'                                         MD057255
      C                   EVAL      CBJANO = CACUST                                          MD052783
      C                   EVAL      CBCUST = CAAUTH                                          MD052783
      C                   EXSR      SrCust                                                   MD052783
@@ -1146,6 +1150,7 @@
      C                   EVAL      CBJATP = 'M'                                             MD052783
      C                   WRITE     GLCSBAD0                                                 MD052783
                                                                                             MD052783
+     C                   ENDIF                                                              MD057255
      C     CACUST        READE     SDCUAHL1                                                 MD052783
      C                   ENDDO                                                              MD052783
 

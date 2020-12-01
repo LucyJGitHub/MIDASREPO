@@ -132,7 +132,7 @@
       *           - Fix is to condition CSD089 overridable error      *
       *             changes when input is from HATS screen            *
       *  AR884141 - Remove MMA1411 and MMA1410 validation.            *
-      *             (Child: AR884142)                                 *      
+      *             (Child: AR884142)                                 *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD051978 - ':' should not be present in first character of   *
@@ -1062,7 +1062,7 @@ E4   C**********         End                                                    
      C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                              MD055570
      C                   ENDIF                                                              MD055570
       *                                                                                     MD055570
-     C                   ENDIF                                                              MD021318      
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689

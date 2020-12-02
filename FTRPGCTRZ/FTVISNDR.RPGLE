@@ -22,7 +22,7 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. 259576             Date 02Apr14               *
-      *  Last Amend No. MD027697           Date 24Jun14               *
+      *  Prev Amend No. MD027697           Date 24Jun14               *
       *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -68,7 +68,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  259576 - Remove warning message for Inactive accounts.       *
-      *           Applied for MD-26109  
+      *           Applied for MD-26109
       *  MD027697 - Program should not report a DB error if RE101901  *
       *             returns *NOREC as it is just an observation.      *
       *             Patterned after fix AR855545.                     *

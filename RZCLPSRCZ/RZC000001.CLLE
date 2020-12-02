@@ -1,0 +1,102 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RZ Extract A/C Codes by Transaction Type')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - RZ Developments                                     */
+/*                                                                   */
+/*       RZC000001 - Extract A/C Codes by Transaction Type           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. ERZ054   *CREATE   Date 29Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       ERZ054 - RZB Data Warehouse Extraction Requirements         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYST) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message                                            */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*  Check if feature on                                              */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('ERZ054')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check if LDA Dataarea exists and create it if not                 */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                        DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                        VALUE(' ') TEXT('Midas SD LOCAL +
+                          DATA AREA EQUIVALENT') AUT(*USE))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('RZC000001 - Extract A/C Codes by +
+                          Transaction Type') TOMSGQ(MRUNQ)
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+ 
+/* Clear the extract file                                            */
+ 
+             CLRPFM     FILE(RZACTRPP)
+ 
+/* Call the Account Key Extract program                              */
+ 
+             OVRDBF     FILE(RZACTRPP) SEQONLY(*YES 100)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(RZ000001)
+ 
+             DLTOVR     FILE(RZACTRPP)
+ 
+/* Database Error Handling                                           */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                     RZC000001 ended abnormally - see job log') +
+                     TOMSGQ(MOPERQ MRUNQ)
+             RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                     SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                     TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ ENDPGM:     ENDPGM

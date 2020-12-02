@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 07May13               *
       *                 261152             Date 24Apr13               *
       *                 MD019877           Date 10Apr13               *
@@ -60,6 +61,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_038, ERZ248_039                    *
+      *           Amended hooks FTH00338, FTOPAYIF01, FTOPAYIC03      *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *  MD000091 - Event Codes Substitution                          *
@@ -473,6 +477,7 @@
      C                   ExSr      *PSSR                                        CFT014
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
+     C/COPY WNCPYSRC,ERZ248_038                                                 ERZ248
      C                   EndIf                                                  CFT014
       *
      C                   END
@@ -540,6 +545,7 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
       *
+     C/COPY WNCPYSRC,ERZ248_039                                                 ERZ248
       * Must be enquiry if record not live
       *
      C     RECI          IFNE      'D'

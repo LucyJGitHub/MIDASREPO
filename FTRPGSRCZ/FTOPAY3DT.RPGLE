@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1080200          Date 24Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CFT157 - Stop FT Transaction after Authorisation             *

@@ -56,8 +56,9 @@
       *  Called From: LEC0820, LEC0821, LEC0822, DLC0820, FTC0820     *
       *               SEC0820                                         *
       *                                                               *
-      *  Last Amend No. MD052216           Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037439           Date 21Mar16               *
       *                 AR1084524          Date 13Feb13               *
       *                 AR1056323          Date 14Nov12               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT EUTR via OPAY API (Recompile)                 *
       *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *

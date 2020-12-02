@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055503           Date 03Apr20               *
-      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD055503           Date 03Apr20               *
+      *                 MD042042           Date 22Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT050             Date 03Jun13               *
@@ -90,6 +91,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
       *  MD055503 - Not able to do webfacing authorisation for invalid*
       *             outgoing payment that had been repaired.          *
       *           - Added the missing parameter (InputUser) introduced*

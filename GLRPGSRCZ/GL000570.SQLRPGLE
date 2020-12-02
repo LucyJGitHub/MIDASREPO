@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1097467B         Date 23Apr13               *
+      *  Last Amend No. MD056972           Date 25Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1097467B         Date 23Apr13               *
       *                 AR1097467A         Date 12Apr13               *
       *                 CGL127AP *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056972 - SWIFT accounts not closed when accounts close     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1097467B - Expected 15% COB run optimization not met       *
       *  AR1097467A - Expected 15% COB run optimization not met       *
@@ -34,6 +36,7 @@
       *    42 - Print IBPA record output count                        *
       *    43 - Print AXFI record output count                        *
       *    44 - Print RETAC record output count                       *
+      *    45 - Print ACDET record output count                       *                     MD056972
       *                                                               *
       *****************************************************************
       *
@@ -60,6 +63,14 @@
      F                                     PREFIX('RETAC')
      F                                     INFSR(*PSSR)
       ** RTZZ trailer file member RETAC
+                                                                                            MD056972
+     FACCNTAC   IF   E             DISK    INFSR(*PSSR) PREFIX(AC_)                         MD056972
+     FACDETAA   O    E             DISK    RENAME(ACCNTAAF:ACDETAAF)                        MD056972
+     F                                     PREFIX(AA_)                                      MD056972
+     F                                     INFSR(*PSSR)                                     MD056972
+     FACDETAC   O    E             DISK    RENAME(ACCNTACF:ACDETACF)                        MD056972
+     F                                     PREFIX(AC_)                                      MD056972
+     F                                     INFSR(*PSSR)                                     MD056972
 
      FGL000570AUO    E             PRINTER USROPN
       ** GL Accounts Detail Extract - Audit
@@ -80,14 +91,20 @@
      D RecordCount     S                   INZ LIKE(RRECCOUNT)
      D RETACCount      S                   INZ LIKE(RRETACCTR)
      D IBPACount       S                   INZ LIKE(RIBPACTR)
-     D ArrSz           C                   CONST( 32000 )                                 AR1097467B
+     D ACDETCount      S                   INZ LIKE(RIBPACTR)                               MD056972
+     D*ArrSz****       C                   CONST( 32000 )                        AR1097467B MD056972
+     D ArrSz           C                   CONST( 24000 )                                   MD056972
      D ULimit          S              5P 0 INZ( ArrSz )                                   AR1097467B
      D RowCtr          S              5P 0 INZ                                            AR1097467B
      D InsIBPA         S              5P 0 INZ                                            AR1097467B
      D InsRETAC        S              5P 0 INZ                                            AR1097467B
+     D InsACDET        S              5P 0 INZ                                              MD056972
      D POption         S              7A   INZ                                            AR1097467B
      D PRetCode        S              7A   INZ                                            AR1097467B
-
+     D CGL013          S              1A                                                    MD056972
+     D P@RTCD          S              7A                                        Return code MD056972
+     D P@OPTN          S              7A                                        Option      MD056972
+     D P@SARD          S              6                                         Sar         MD056972
       ** Bit constants for testing bits of RETB
 
      D Bit2            C                   X'20'
@@ -136,6 +153,10 @@
      D  STFQ                               LIKE( ACC_STFQ )                               AR1097467B
      D  DACO                               LIKE( ACC_DACO )                               AR1097467B
      D  ACOD                               LIKE( ACC_ACOD )                               AR1097467B
+     D  ACST                               LIKE( ACC_ACST )                                 MD056972
+     D  ORED                               LIKE( ACC_ORED )                                 MD056972
+     D  LCD                                LIKE( ACC_LCD  )                                 MD056972
+     D  CHTP                               LIKE( ACC_CHTP )                                 MD056972
      D  BBCUST                             LIKE( CUS_BBCUST )                             AR1097467B
      D  BBCASC                             LIKE( CUS_BBCASC )                             AR1097467B
      D  BBCRNM                             LIKE( CUS_BBCRNM )                             AR1097467B
@@ -171,6 +192,12 @@
      D  BBACOC       E                     EXTFLD(ACOC)
      D  EPLB         E                     EXTFLD(EPGB)
      D  EPCB         E                     EXTFLD(EPNB)
+                                                                                            MD056972
+      ** File Data structures for ACDET                                                     MD056972
+     D ACDETABDS     E DS                  EXTNAME(ACDETAB) INZ                             MD056972
+     D                                     QUALIFIED DIM( ArrSz )                           MD056972
+     D ACDET_AA      E DS                  EXTNAME(ACDETAA) Prefix(AA_)                     MD056972
+     D ACDET_AC      E DS                  EXTNAME(ACDETAC) Prefix(AC_)                     MD056972
 
      D AccountStatus   DS
       ** Data structure for Retail Account Status
@@ -207,6 +234,8 @@
      D**POption*                      7A                                                  AR1097467B
      D**PKey****                     10A                                                  AR1097467B
      D**PKeyStatus                    7A                                                  AR1097467B
+     D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                     MD056972
+      **  Data Structure for Switchable features descriptions.                              MD056972
 
       ** Name *IN indicators
 
@@ -216,6 +245,7 @@
      D  PrtIBPACount          42     42
      D  PrtAXFICount          43     43
      D  PrtRETACCount         44     44
+     D  PrtACDETCount         45     45                                                     MD056972
 
      I***ACCNTABF                                                                         AR1097467B
      I**********    RECI                        RECIAC                                    AR1097467B
@@ -249,6 +279,7 @@ D     /EJECT
                                                                                           AR1097467B
      C                   EVAL      InsIBPA = 0                                            AR1097467B
      C                   EVAL      InsRETAC = 0                                           AR1097467B
+     C                   EVAL      InsACDET = 0                                             MD056972
                                                                                           AR1097467B
      C                   FOR       RowCtr = 1 to SQLERRD(3) by 1                          AR1097467B
 
@@ -256,10 +287,21 @@ D     /EJECT
 
      C**********         IF        RECIAC = 'D'                                           AR1097467B
      C                   IF        ACCT( RowCtr ).ACCRECI = 'D'                           AR1097467B
+     C                             AND ACCT( RowCtr ).ATYP = 'R'                            MD056972
      C                   EXSR      CHKACTSTAT
      C                   EXSR      GETCUSTDTL
      C                   EXSR      OUTTOFILE
      C                   ENDIF
+                                                                                            MD056972
+      * Process accounts changed today                                                      MD056972
+                                                                                            MD056972
+     C                   IF        ACCT( RowCtr ).LCD = BJRDNB                              MD056972
+     C                   EVAL      InsACDET = InsACDET + 1                                  MD056972
+     C                   EVAL-CORR ACDETABDS( InsACDET ) = ACCT( RowCtr )                   MD056972
+     C                   EVAL      ACDETABDS( InsACDET ).RECI =                             MD056972
+     C                             ACCT( RowCtr ).ACCRECI                                   MD056972
+     C                   EVAL      ACDETCount = ACDETCount + 1                              MD056972
+     C                   ENDIF                                                              MD056972
 
      C                   EVAL      RecordCount = RecordCount + 1
      C**********         READ      LBACCNL1                                               AR1097467B
@@ -300,6 +342,24 @@ D     /EJECT
      C                   EXSR      *PSSR                                                  AR1097467B
      C                   ENDIF                                                            AR1097467B
      C                   ENDIF                                                            AR1097467B
+                                                                                            MD056972
+     C                   IF        InsACDET > 0                                             MD056972
+     C                             AND CGL013 = 'N'                                         MD056972
+     C/EXEC SQL                                                                             MD056972
+     C+ insert into ACDETAB                                                                 MD056972
+     C+ :InsACDET rows                                                                      MD056972
+     C+ values(:ACDETABDS)                                                                  MD056972
+     C+ with nc                                                                             MD056972
+     C/END-EXEC                                                                             MD056972
+                                                                                            MD056972
+     C                   IF        SQLCODE <> 0                                             MD056972
+     C                   EVAL      PSSRDS.DBFile = 'ACDETAB'                                MD056972
+     C                   EVAL      PSSRDS.DBKey = '*MULTI'                                  MD056972
+     C                   EVAL      PSSRDS.DBProc = 'SQLINS'                                 MD056972
+     C                   EVAL      PSSRDS.DBase = 6                                         MD056972
+     C                   EXSR      *PSSR                                                    MD056972
+     C                   ENDIF                                                              MD056972
+     C                   ENDIF                                                              MD056972
                                                                                           AR1097467B
      C/EXEC SQL                                                                           AR1097467B
      C+ fetch next from ACCTCursor                                                        AR1097467B
@@ -325,6 +385,16 @@ D     /EJECT
      C                   EVAL      RETACCount = RETACCount + 2
      C                   MOVE      RETACCount    RETACNORE
      C                   WRITE     RETACTRL
+                                                                                            MD056972
+      * Write ACDET header and trailer                                                      MD056972
+                                                                                            MD056972
+     C                   CLEAR                   ACDET_AA                                   MD056972
+     C                   EVAL      AA_RECI = 'H'                                            MD056972
+     C                   WRITE     ACDETAAF                                                 MD056972
+                                                                                            MD056972
+     C                   READ      ACCNTAC                                                  MD056972
+     C                   EVAL      AC_NORE = ACDETCount+ 2                                  MD056972
+     C                   WRITE     ACDETACF                                                 MD056972
 
       ** Print audit report GL000570AU
 
@@ -336,6 +406,7 @@ D     /EJECT
      C                   EVAL      RRECCOUNT = RecordCount
      C                   EVAL      RIBPACTR = IBPACount
      C                   EVAL      RRETACCTR = RETACCount
+     C                   EVAL      RACDETLS = ACDETCount                                    MD056972
 
      C                   WRITE     CONTROL
 
@@ -389,6 +460,22 @@ D     /EJECT
      C                   EXSR      *PSSR
      C                   ENDIF
 
+                                                                                            MD056972
+      ** Check if feature CGL013 (Cash Management feature) is installed                     MD056972
+                                                                                            MD056972
+     C                   EVAL      CGL013 = 'N'                                             MD056972
+     C                   EVAL      *IN13 = *OFF                                             MD056972
+                                                                                            MD056972
+     C                   CALL      'AOSARDR0'                                               MD056972
+     C                   PARM      *BLANKS       P@RTCD                         Return Code MD056972
+     C                   PARM      '*VERIFY'     P@OPTN                         Option      MD056972
+     C                   PARM      'CGL013 '     P@SARD                         Feature Ref.MD056972
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056972
+                                                                                            MD056972
+     C                   IF        P@RTCD = *BLANKS                                         MD056972
+     C                   EVAL      CGL013 = 'Y'                                             MD056972
+     C                   EVAL      *IN13 = *ON                                              MD056972
+     C                   ENDIF                                                              MD056972
       ** Set DBPGM to be equal to program name
 
      C                   EVAL      PSSRDS.DBPGM = PgmName
@@ -411,6 +498,7 @@ D     /EJECT
      C                   EVAL      PrtIBPACount = True
      C                   EVAL      PrtRETACCount = True
      C                   EVAL      PrtAXFICount = False
+     C                   EVAL      PrtACDETCount = True                                     MD056972
 
      C     *LOVAL        SETLL     STOPB                                                  AR1097467B
      C                   READ      STOPB                                                  AR1097467B
@@ -450,6 +538,10 @@ D     /EJECT
      C+        ,ACCT.STFQ                                                                 AR1097467B
      C+        ,ACCT.DACO                                                                 AR1097467B
      C+        ,ACCT.ACOD                                                                 AR1097467B
+     C+        ,ACCT.ACST                                                                   MD056972
+     C+        ,ACCT.ORED                                                                   MD056972
+     C+        ,ACCT.LCD                                                                    MD056972
+     C+        ,ACCT.CHTP                                                                   MD056972
      C+        ,CUST.BBCUST                                                               AR1097467B
      C+        ,CUST.BBCASC                                                               AR1097467B
      C+        ,CUST.BBCRNM                                                               AR1097467B
@@ -460,8 +552,11 @@ D     /EJECT
      C+    left join SDCUSTPD as CUST                                                     AR1097467B
      C+    on ACCT.CNUM = CUST.BBCUST                                                     AR1097467B
      C+  where ATYP = 'R'                                                                 AR1097467B
+     C+  or LCD =:BJRDNB                                                                    MD056972
+     C+  order by ACCT.CNUM, ACCT.CCY, ACCT.ACOD, ACCT.ACSQ                                 MD056972
      C+  for read only                                                                    AR1097467B
-     C+  optimize for 32000 rows                                                          AR1097467B
+     C***optimize for 32000 rows                                                 AR1097467B MD056972
+     C+  optimize for 24000 rows                                                            MD056972
      C/END-EXEC                                                                           AR1097467B
                                                                                           AR1097467B
      C                   ENDSR

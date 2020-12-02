@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD053116  *CREATE  Date 08Oct19               *
+      *  Last Amend No. MD057176           Date 24Nov20               *
+      *  Prev Amend No. MD053116  *CREATE  Date 08Oct19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057176 - Update DDSTAT to 'A' if the Customer De-activated *
+      *             flag is 'N'.                                      *
       *  MD053116 - Customer Deactivated but not displayed as         *
       *             inactive.                                         *
       *                                                               *
@@ -119,8 +122,40 @@
      C                   EVAL      WSTAT = 'I'
      C                   ENDIF
 
+     C                   IF        *IN11 = *ON                                              MD057176
      C                   WRITE     UTSD0787D
+     C                   ENDIF                                                              MD057176
      C                   ENDIF
+
+
+     C                   IF        BBDEAC = 'N'                                             MD057176
+                                                                                            MD057176
+     C/EXEC SQL                                                                             MD057176
+     C+ SELECT DDSTAT INTO :WSTAT FROM T_GZCUSTEX                                           MD057176
+     C+ WHERE DDCUSN = :WCUST                                                               MD057176
+     C+ AND ZONE = :WZONE                                                                   MD057176
+     C/END-EXEC                                                                             MD057176
+
+     C                   IF        WSTAT = 'I'                                              MD057176
+     C                   EVAL      *IN11 = *ON                                              MD057176
+     C                   EVAL      WCTR +=1                                                 MD057176
+     C                   ENDIF                                                              MD057176
+
+     C                   IF        *IN10 = *OFF                                             MD057176
+     C                             AND *IN11 = *ON                                          MD057176
+     C/EXEC SQL                                                                             MD057176
+     C+  UPDATE T_GZCUSTEX                                                                  MD057176
+     C+  SET DDSTAT = 'A'                                                                   MD057176
+     C+  WHERE DDCUSN = :WCUST                                                              MD057176
+     C+  AND ZONE = :WZONE                                                                  MD057176
+     C/END-EXEC                                                                             MD057176
+     C                   EVAL      WSTAT = 'A'                                              MD057176
+     C                   ENDIF                                                              MD057176
+     C                   IF        *IN11 = *ON                                              MD057176
+     C                   WRITE     UTSD0787D                                                MD057176
+     C                   ENDIF                                                              MD057176
+     C                   ENDIF                                                              MD057176
+
      C                   READ      SDCUSTL5
      C                   ENDDO
 

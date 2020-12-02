@@ -1,1667 +1,1667 @@
-
-***********************************************************
-BASEBND                                                   *
-T('Midas CG Lending past due notices')                    *
-***********************************************************
-                                                          *
-as - User Defined Correspondence                          *
-                                                          *
-055 - Lending Past Due Notices                            *
-                                                          *
-ction:  This program extracts data for Past Due Notices   *
-OB )                                                      *
-                                                          *
-led By: CG6050 - Lending Past Due Notices Driver          *
-                                                          *
- Finastra International Limited 2001                      *
-                                                          *
-t Amend No. CLE172             Date 23Oct20               *
-v Amend No. MD046248           Date 27Oct17               *
-            CLE134             Date 01Aug12               *
-            CLE148             Date 23Jul12               *
- Fusion Midas 1.4 Base -----------------------------------*
-s Plus 1.4 Base 04 ---------------------------------------*
-s Plus 1.4 Base ------------------------------------------*
-s Plus 1.3 ----------- Base ------------------------------*
-            CSD031             Date 10Apr06               *
-            CSD027             Date 09Dec05               *
-            CLE042             Date 06Sep05               *
-            BUG9646            Date 20Dec05               *
-            CSW037A            Date 02May05               *
-            CSD025             Date 11Jan05               *
-            CSW037             Date 15Dec04               *
-            CSW036             Date 15Dec04               *
-            CLE025             Date 20Oct03               *
-            CSC022             Date 24Feb04               *
-            CGL029             Date 01Sep03               *
-s Release 4.01 -------------------------------------------*
-            CCG015             Date 09Aug01               *
-s Release 4 --------------- Base -------------------------*
-s DBA 3.05 -----------------------------------------------*
-            CSD006             Date 15May01               *
-            CLE011             Date 07Nov00               *
-s DBA 3.03 -----------------------------------------------*
-s DBA 3.00 ---------------- Base -------------------------*
-            CEU014             Date 26Jun98               *
-            CCG008  *CREATE    Date 30Oct95               *
-                                                          *
-----------------------------------------------------------*
-                                                          *
-172 - Libor Deregulation - Lending                        *
-46248 - Finastra Rebranding                               *
-134 - Past Due Call Loan Processing (Recompile)           *
-148 - Alpha Loan Reference (Recompile)                    *
-031 - Enhanced Centralised Static Data (Recompile)        *
-027 - Conversion Of Customer Number to Alpha              *
-042 - Extended Loan Sub Type (Recompile)                  *
-9646- Changes in CGPACKE causes programs not to compile   *
-037A- Additional Field extended to 40 chars (recompile)   *
-025 - Customer De-Activation                              *
-037 - Additional Field Data on MT300/MT320                *
-036 - Dual SWIFT BIC held on Client Details               *
-025 - Credit Lines (Recompile)                            *
-022 - Commitment Control Changes for MidasPlus            *
-      (Recompile)                                         *
-029 - Increase Account Code to 10 digits                  *
-015 - Correspondence Manager Phase 1                      *
-006 - Recompiled over changed SDCURRPD.                   *
-011 - Rate Fixing Days for Lending Rollover Processing    *
-      Recompile                                           *
-014 - EMU User Defined Correspondence Enhancement.        *
-008 - User Defined Correspondence - Lending               *
-                                                          *
-***********************************************************
-    IF   E           K DISK    INFSR(SRFILE)
- FUNCTION OF INDICATORS
-***********************************************************
-                                                          *
- N C T I O N    O F    I N D I C A T O R S                *
-                                                          *
-  -    Past Due Bit Setting is ON                         *
-  -    Failed CHAIN on LF/CLOAN                           *
-  -    General error indicator                            *
-                                                          *
-***********************************************************
- SUBROUTINE INDEX
-***********************************************************
-                                                          *
- B R O U T I N E    I N D E X                             *
-                                                          *
-n routine                                                 *
-NIT  -  Initial Processing - On First Call                *
-NZ   -  Initialise Fields on Each Invocation              *
-AIN  -  Main Processing                                   *
-ETL  -  Obtain Detail Information                         *
-PD   -  Process Lending Past Due Notices                  *
-NPD  -  Process Loan Payment Past Due Details             *
-NA   -  Process Loan Associated Details                   *
-DTA  -  Accumulate RDEs and Associated Data for output    *
-DTA  -  Output Accumulated Data to PF/CGUDTAPD            *
-IND  -  Generate Binding Numbers                          *
-ATH  -  Generate Path String                              *
-FMN  -  Reformat RDE Data                                 *
-CDT  -  Determine Currency Details                        *
-ENR  -  Generate Reference Number                         *
-                                                          *
-***********************************************************
-
-***********************************************************
-CGCPYSRC,CGPACKDLE
-CGCPYSRC,SRERRDLE
-
-ray of Currencies accessed by program
-           S              3    DIM(100)
-
-pyright array.
-ok-up string for RDE definition Array
-
-           DS
-****                              15120 ##S                                      BUG9646
-
-           DS
-                5120   5120
-cked data string.
-
-           DS
-                   1     20
-                               DIM(20)
-UM                 1     20  0
-mber Field
-
-           DS
-MA                 1      8
-EM                 1      8  0
-d to convert item reference from character to numeric
-
-           DS
-IT                 1      6
-                   1      3
-                   4      6
-           DS
-CC                 1      5
-Y                  1      3
-D                  4      5
-r error reporting
-
-
-C Details for call to CG6001
-
-M          DS           256
-ut Sequence
-EQ                 1      9  0
-item number
-EM                10     17  0
- bind level
-IN                18     25  0
-ious bind level
-IN                26     33  0
-
-an details Parameters for call to CG6001
-
-M          DS           256
-an Reference
-RF                 1      6
-ncel/Amend Field
-AM                 7      7
-
-M          DS           256
-cility Customer Number
-****                              1   60P4CNUM                                    CSD027
-UM                 1      6
-cility Type
-AM                 7      9  0
-cility Number
-NO                10     11  0
-
------------------------------------------------------------
- constants
-
-P          C                   CONST('LOAN PSTDU')
-Y          C                   CONST('BASIC     ')
------------------------------------------------------------
-
-M        E DS                  EXTNAME(PDUEDU)
-ernal DS for parameter passed from CG6055
-
-R        E DS                  EXTNAME(CGUDCRPD)
-ernal DS for incomplete reference
-
-K        E DS                  EXTNAME(SDBANKPD)
-ternal DS for Bank details
-
-R        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
-ternal DS for currency details
-
-T        E DS                  EXTNAME(SDCUSTPD)                    CEU014
-or Customer Details                                           CEU014
-WNCPYSRC,CG6055I001
-                                                              CEU014
-R        E DS                  EXTNAME(SDGELRPD)                    CEU014
-or GL ICD Details                                             CEU014
-                                                              CEU014
-D        E DS                  EXTNAME(SCSARDPD)                    CEU014
-tchable Feature details                                       CEU014
-                                                              CEU014
-         E DS                  EXTNAME(DSFDY)                       CEU014
-rst DS for access programs, short data structure              CEU014
-                                                              CEU014
-         E DS                  EXTNAME(DSSDY)
-cond DS for access programs, long data structure
-
-         E DS                  EXTNAME(CGUDTAPD)
-cord format of PF/CGUDTAPD for use as a parameter
-
-
-           DS
-ta Structure for Compilation - Copyright Insertion
-Y                  1     80
-                               DIM(1) CTDATA PERRCD(1)
- to store subroutine specific data.
-Saved Path
-H          DS                  OCCURS(20)
-PS                 1      6
-
-D          DS                  OCCURS(20)
-IN                 1      6  0 INZ(1)
-IN                 7     12  0 INZ(1)
-
-           DS
-ND                 1      6  0 INZ(1)
-
-           DS
-                   1      3  0 INZ(0)
-                   4      6  0
-                   7      9  0
-                  10     12  0
-                  13     15  0
-                                                              CEU014
-KF                                                                  CEU014
-ame fields of CLOANCK                                         CEU014
-        NLRA                        CKNLRA                          CEU014
-
-LF
-ame fields of CLOANCL
-        CNUM                        ##CNUM
-        BRCA                        ##BRCA
-        VDAT                        ##VDAT
-        CCY                         ##CCY1
-        BRTE                        ##BRTE
-        RTSP                        ##RTSP
-        SPIN                        ##SPIN
-        NACD                        ##NACD
-        NRTS                        ##NRTS
-        NSIN                        ##NSIN
-        NBRA                        ##NBRA
-        BTIN                        ##BTIN
- 5
-***********************************************************
-ess     :  MAINLINE                                       *
-tion    :  Mainline processing                            *
-                                                          *
-ed by   :  None                                           *
-s       :  SRINIT - Initial Processing - On First Call    *
-           SRINZ  - Initialise Fields on Each Invocation  *
-           SRMAIN - Main Processing                       *
-***********************************************************
-
-rameter list for current program invocation.
-
-ENTRY        PLIST
-             PARM                    W0RTN
-             PARM                    W0CMT             3
-             PARM                    ##COPD            1
-             PARM                    DSPARM
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'MAIN'        @STK(Q)
-
-itial processing - Once Only
-
-#INIT        IFEQ      *BLANK
-             EXSR      SRINIT
-             MOVE      'Y'           ##INIT            1
-             ENDIF
-
-tialisation processing
-
-             EXSR      SRINZ
-
-n processing
-
-             EXSR      SRMAIN
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-rminate program
-
-             RETURN
-***********************************************************
- 5
-***********************************************************
-outine  :  SRMAIN                                         *
-tion    :  Main processing                                *
-                                                          *
-ed by   :  Mainline                                       *
-s       :  SRDETL - Obtain Detail Information             *
-           SRGENR - Generate reference number by writing  *
-                    to PF/CGUDCRPD                        *
-           L09PD  - Process Lending Past Due Notices      *
-***********************************************************
-RMAIN        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q                 5 0
-             MOVEL     'SRMAIN'      @STK(Q)
-
-             EXSR      SRDETL
-
-nerate reference number by writing to PF/CGUDCRPD
- no confirmation to be produced, then bypass
-
-             MOVE      'N'           ##COPD
-WNCPYSRC,CG6055C007
-             EXSR      SRGENR
-#COPD        CABEQ     'N'           EXMAIN
-
-ract
-
-             EXSR      L09PD
-
-XMAIN        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-routine  :  SRDETL                                        *
-ction    :  Process: Obtain detail information            *
-                                                          *
-led by   :  SRMAIN - Main Processing                      *
-ls       :  SRERR  - Database Error                       *
-***********************************************************
-RDETL        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRDETL'      @STK(Q)
-
-LOANK        KLIST
-             KFLD                    LNRF
-             KFLD                    RCDT
-
-             MOVEL     'A'           RCDT
-
-LOANK        CHAIN     CLOAN                              90
-
-IN90         IFEQ      '1'
-             MOVEL     'CLOAN   '    W0FILE                         ***************
-             MOVEL     LNRF          W0KEY                          * DB ERROR 14 *
-             Z-ADD     14            W0ERNB                         ***************
-             MOVEL     'MEM5004'     W0MSGD
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             END
-
-XDETL        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  L09PD                                          *
-tion    :  Process: Lending Past Due Notices              *
-                                                          *
-ed by   :  SRMAIN - Main Processing                       *
-s       :  SRPATH - Generate Path String                  *
-           LOANPD - Process Loan Payment Past Due Details *
-           LOANA  - Process Loan Associated Details       *
-***********************************************************
-09PD         BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'L09PD '      @STK(Q)
-
-             ADD       1             P1
-1            OCCUR     ##PATH
-             MOVEL(P)  'l09PD '      ##GRPS
-
-             EXSR      SRPATH
-                                                                                  CCG015
-             EXSR      PSHGRS
-
-             EXSR      LOANPD
-
-             EXSR      LOANA
-
-crement Path DS index
-
-1            OCCUR     ##PATH
-             CLEAR                   ##GRPS
-             SUB       1             P1
-                                                                                  CCG015
-             EXSR      POPGRS
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  LOANPD                                         *
-tion    :  Process: Loan Payment Past Due details         *
-                                                          *
-ed by   :  L09PD - Process Lending Past Due Notices       *
-s       :  SRPATH - Generate Path String                  *
-           SRDCDT - Determine Currency Details            *
-           SRADTA - Accumulate RDEs and Associated Data   *
-           SRODTA - Output Accumulated Data to            *
-                     PF/CGUDTAPD                          *
-***********************************************************
-OANPD        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'LOANPD'      @STK(Q)
-
-             ADD       1             P1
-1            OCCUR     ##PATH
-             MOVEL(P)  'LOANPD'      ##GRPS
-
-             EXSR      SRPATH
-                                                                                  CCG015
-h Order (PF/CGUXMGPD)                                                             CCG015
-                                                                                  CCG015
-             EXSR      PSHGRS
-
-             Z-ADD     0             R1                3 0
-
-t New Fields LIBOR
-
-             MOVEL     *BLANKS       BLRT              1
-             MOVEL     *BLANKS       LBDY              2 0
-             MOVEL     *BLANKS       LODY              2 0
-             MOVEL     *BLANKS       PDLY              2 0
-             MOVEL     *BLANKS       BADJ             13 8
-             MOVEL     *BLANKS       WGHT              1
-             MOVEL     *BLANKS       BRAC              1 0
-             MOVEL     *BLANKS       LBAC              2 0
-             MOVEL     *BLANKS       PRPL             22 0
-             MOVEL     *BLANKS       AVOP              1
-             MOVEL     *BLANKS       CART             2015
-
-rency Description
-
-             MOVEL     CCY           ##CCY
-             EXSR      SRDCDT
-             MOVEL     SDCURR        ##WRK             3
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVEL     'CCY_DESC'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     ##WRK         R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-rency
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVEL     'CURRENCY'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     CCY           R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-n Reference
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVEL     'LOAN REF'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     LNRF          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-t Due Interest
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'NT'          #@RDE
-             MOVEL     'PSTDUE I'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     INPD          ##DATA
-             MOVEL     'Amount'      ##RDEC
-             MOVEL     'L'           ##RDET
-             MOVEL     CCY           ##CCY
-             EXSR      SRDCDT
-WNCPYSRC,CG6055C004
-             MOVEL     A6NBDP        ##DCPA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-t Due Number
-
-             Z-ADD     0             WPDNO             3 0
-
-             TESTB     '0'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '1'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '2'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '3'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '4'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '5'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '6'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             TESTB     '7'           PDBI                     30
-IN30         IFEQ      '1'
-             ADD       1             WPDNO
-             END
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'UM'          #@RDE
-             MOVEL     'PSTDUE N'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-               MOVELWPDNO     R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-t Due Principal
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'RN'          #@RDE
-             MOVEL     'PSTDUE P'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     PPDU          ##DATA
-             MOVEL     'Amount'      ##RDEC
-             MOVEL     'L'           ##RDET
-             MOVEL     CCY           ##CCY
-             EXSR      SRDCDT
-WNCPYSRC,CG6055C005
-             MOVEL     A6NBDP        ##DCPA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-t Due Total
-
-PDU          ADD       INPD          TPD              13 0
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'OT'          #@RDE
-             MOVEL     'PSTDUE T'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     TPD           ##DATA
-             MOVEL     'Amount'      ##RDEC
-             MOVEL     'L'           ##RDET
-             MOVEL     CCY           ##CCY
-             EXSR      SRDCDT
-WNCPYSRC,CG6055C006
-             MOVEL     A6NBDP        ##DCPA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-ayment Type
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'PE'          #@RDE
-             MOVEL     'REPAY TY'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     REPT          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
- date; production time
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVEL     'RUNDAT  '    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     BJRDNB        ##DATA
-             MOVEL     'Date  '      ##RDEC
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-ue Date
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'TE'          #@RDE
-             MOVEL     'VALUE DA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     VDAT          ##DATA
-             MOVEL     'Date  '      ##RDEC
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-EU014        IFEQ      'Y'                                                         CEU01
-                                                              CEU014
-ermine the Equivalent Currency                                CEU014
-                                                              CEU014
-             MOVE      *BLANKS       EQCY              3                           CEU01
-             MOVE      CCY           ##CCY                                         CEU01
-             EXSR      SRDCDT                                                      CEU01
-6INCY        IFEQ      'Y'                                                         CEU01
-             MOVE      BKEURO        EQCY                                          CEU01
-             ENDIF                                                                 CEU01
-CY           IFEQ      BKEURO                                                      CEU01
-             MOVEL     CNUM          ##KEY                                         CEU01
-             CALL      'AOCUSTR0'                                                  CEU01
-             PARM      *BLANKS       ##RTCD                                        CEU01
-             PARM      '*KEY   '     ##OPTN                                        CEU01
-             PARM                    ##KEY            10                           CEU01
-             PARM      *BLANKS       ##KYST            7                           CEU01
-DCUST        PARM      SDCUST        DSSDY                                         CEU01
-                                                              CEU014
-#RTCD        IFNE      *BLANK                                                      CEU01
-             MOVEL     'SDCUSTPD'    W0FILE                                        CEU01
-             MOVEL     CNUM          W0KEY                          ************   CEU01
-             Z-ADD     4             W0ERNB                         * DBERR 4  *   CEU01
-             MOVEL     'MEM5004'     W0MSGD                         ************   CEU01
-             MOVEL     'MIDAS  '     W0MSGF                                        CEU01
-             EXSR      SRERR                                                       CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-             MOVE      BBDINC        EQCY                                          CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-             ENDIF                                                                 CEU01
-                                                              CEU014
-t Due Total in Equivalent Currency                            CEU014
-                                                              CEU014
-             ADD       1             R1                                            CEU01
-             CLEAR                   R#DATA                                        CEU01
-             CLEAR                   R#DEFN                                        CEU01
-             CLEAR                   #@RDE                                         CEU01
-             MOVEL     'P_DUE_EQ'    #@RDE                                         CEU01
-             MOVE      'CY'          #@RDE                                         CEU01
-#RDE         CAT       #@RDE:1       ##RDE                                         CEU01
-             MOVEL     'Amount'      ##RDEC                                        CEU01
-             MOVEL     'L'           ##RDET                                        CEU01
-             MOVEL     R#DEFN        ##R(R1)                                       CEU01
-                                                              CEU014
-EU014        IFEQ      'Y'                                                         CEU01
-QCY          ANDNE     *BLANKS                                                     CEU01
-             MOVEL     EQCY          ##CCY                                         CEU01
-             EXSR      SRDCDT                                                      CEU01
-             Z-ADD     TPD           P@FRAM                                        CEU01
-             MOVE      CCY           P@FRCY                                        CEU01
-             MOVE      EQCY          P@TOCY                                        CEU01
-             EXSR      D@EURO                                                      CEU01
-             MOVEL     ##OUTA        ##DATA                                        CEU01
-             MOVEL     A6NBDP        ##DCPA                                        CEU01
-             MOVEL     R#DATA        ##D(R1)                                       CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-ivalent Currency                                              CEU014
-                                                              CEU014
-             ADD       1             R1                                            CEU01
-             CLEAR                   R#DATA                                        CEU01
-             CLEAR                   R#DEFN                                        CEU01
-             CLEAR                   #@RDE                                         CEU01
-             MOVEL     'EQUIV_CC'    #@RDE                                         CEU01
-             MOVE      'Y '          #@RDE                                         CEU01
-#RDE         CAT       #@RDE:1       ##RDE                                         CEU01
-             MOVEL     R#DEFN        ##R(R1)                                       CEU01
-                                                              CEU014
-EU014        IFEQ      'Y'                                                         CEU01
-QCY          ANDNE     *BLANKS                                                     CEU01
-             MOVEL     EQCY          ##DATA                                        CEU01
-             MOVEL     R#DATA        ##D(R1)                                       CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-ivalent Currency Description                                  CEU014
-                                                              CEU014
-             ADD       1             R1                                            CEU01
-             CLEAR                   R#DATA                                        CEU01
-             CLEAR                   R#DEFN                                        CEU01
-             CLEAR                   #@RDE                                         CEU01
-             MOVEL     'EQUIV_CC'    #@RDE                                         CEU01
-             MOVE      'YD'          #@RDE                                         CEU01
-#RDE         CAT       #@RDE:1       ##RDE                                         CEU01
-             MOVEL     R#DEFN        ##R(R1)                                       CEU01
-                                                              CEU014
-
-OR Deregulation BACKWARD-LOOKING RATE
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'TE'          #@RDE
-             MOVEL     'BCKLOKRA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     BLRT          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-raging Option
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'N'           #@RDE
-             MOVEL     'AVGOPTIO'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     AVOP          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-pounded/Average Rate
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'AR'          #@RDE
-             MOVEL     'COMPOUND'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     CART          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-kback Days
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'AY'          #@RDE
-             MOVEL     'LOOKBCKD'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     LBDY          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-kout Days
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'AY'          #@RDE
-             MOVEL     'LOCKOUTD'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     LODY          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-ayed Payment Days
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'YS'          #@RDE
-             MOVEL     'DLYPAYDA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     PDLY          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-chmark Adjustment Days
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'OD'          #@RDE
-             MOVEL     'BMRKADJC'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     BADJ          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-ght Convention
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'OD'          #@RDE
-             MOVEL     'BMRKADJC'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     WGHT          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-e Rate Code for Accrual
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'TE'          #@RDE
-             MOVEL     'BRACCRRA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     BRAC          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-kback Days for Accrual
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'TE'          #@RDE
-             MOVEL     'BRACCRRA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     LBAC          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-ncipal
-
-             ADD       1             R1
-             CLEAR                   R#DATA
-             CLEAR                   R#DEFN
-             CLEAR                   #@RDE
-             MOVE      'L'           #@RDE
-             MOVEL     'PRINCIPA'    #@RDE
-#RDE         CAT       #@RDE:1       ##RDE
-             MOVEL     PRPL          R#DATA
-             MOVEL     R#DATA        ##D(R1)
-             MOVEL     R#DEFN        ##R(R1)
-
-EU014        IFEQ      'Y'                                                         CEU01
-QCY          ANDNE     *BLANKS                                                     CEU01
-             MOVEL     A6CYNM        ##DATA                                        CEU01
-             MOVEL     R#DATA        ##D(R1)                                       CEU01
-             ENDIF                                                                 CEU01
-WNCPYSRC,CG6055C003
-                                                              CEU014
-             EXSR      SRADTA
-             EXSR      SRODTA
-
-crement Path DS index
-
-1            OCCUR     ##PATH
-             CLEAR                   ##GRPS
-             SUB       1             P1
-                                                                                  CCG015
- Order (PF/CGUXMGPD)                                                              CCG015
-                                                                                  CCG015
-             EXSR      POPGRS
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-routine  :  LOANA                                         *
-ction    :  Process: Loan Associated Details              *
-                                                          *
-led by   :  L09PD  - Process Lending Past Due Notices     *
-ls       :  SRPATH - Generate Path String                 *
-            CG6001 - General Loan Details                 *
-***********************************************************
-OANA         BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'LOANA '      @STK(Q)
-
-             EXSR      SRPATH
-
-             MOVEL     S#PATH        P2PARM
-             Z-ADD     ##OSEQ        P1OSEQ
-             Z-ADD     ##ITEM        P1ITEM
-             Z-ADD     ##TBIN        P1TBIN
-             Z-ADD     ##PBIN        P1PBIN
-
-t up data.
-
-             CLEAR                   P4PARM
-             MOVE      LNRF          P3LNRF
-             MOVE      *BLANKS       P3CNAM
-             CALL      'CG6001'
-             PARM      *BLANKS       W0RTN             7
-             PARM                    W0CMT             3
-             PARM                    P1PARM                         UDC Details
-             PARM                    P2PARM          140            Path Details
-             PARM                    P3PARM                         Loan Details
-             PARM                    P4PARM                         Facility Details
-             PARM                    ##AUTO            1
-             PARM                    ##REFR
-             PARM                    P@ICR
-             PARM      'N'           ##MAST
-
-set Sequence number.
-
-             Z-ADD     P1OSEQ        ##OSEQ
-
-XXPAY        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-WNCPYSRC,CG6055C008
-***********************************************************
- 5
-***********************************************************
-outine  :  SRINZ                                          *
-tion    :  Initialise Fields on Program Invocation        *
-                                                          *
-ed by   :  Mainline                                       *
-s       :  None                                           *
-***********************************************************
-RINZ         BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRINZ '      @STK(Q)
-
-itialise work fields
-
-             Z-ADD     *ZEROS        ##W050            5 0
-             Z-ADD     *ZEROS        ##W150           15 0
-             Z-ADD     *ZEROS        ##W157           15 7
-             Z-ADD     *ZEROS        #1                6 0
-             Z-ADD     *ZEROS        #2                6 0
-             Z-ADD     *ZEROS        #3                6 0
-             MOVE      *BLANKS       S#PATH          256
-LIKE         DEFINE    DEOSEQ        ##OSEQ
-
-itialise output sequence (to CGUDTAPD)
-
-             Z-ADD     *ZEROS        ##OSEQ
-
- Additions for CG4999 1st version **
-
-             MOVE      *BLANKS       #@RDE            10
-LIKE         DEFINE    ##TBIN        #@TBIN
-
-             OCCUR     ##BIND
-             RESET                   ##BIND
-             RESET                   #@BIND
-             RESET                   #PDS
-                                                                                  CCG015
-tialise XML increment                                                             CCG015
-                                                                                  CCG015
-             EXSR      INIXML
-
-XINZ         TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRINIT                                         *
-tion    :  Initial processing - First Call Only           *
-                                                          *
-ed by   :  Mainline                                       *
-s       :  SRERR  - Report Error and Close Down Program   *
-           SRDCDT - Determine Currency Details            *
-***********************************************************
-RINIT        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRINIT'      @STK(Q)
-WNCPYSRC,CG6055C001
-
-l access program for Bank details
-
-             CALL      'AOBANKR0'
-             PARM      *BLANKS       ##RTCD            7
-             PARM      '*FIRST  '    ##OPTN            7
-DBANK        PARM      SDBANK        DSSDY
-
-#RTCD        IFNE      *BLANK
-
-abase error
-
-             MOVEL     'AOBANKR0'    W0FILE
-             MOVEL     '*CALL'       W0KEY                          ***************
-             Z-ADD     01            W0ERNB                         * DB ERROR 01 *
-             MOVEL     'MEM5003'     W0MSGD                         ***************
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             END
-
-JDFIN        COMP      'M'                                    98    MMDDYY, 98 ON
-
-etermine Number of decimal places - Base currency
-
-             MOVEL     BJCYCD        ##CCY
-             EXSR      SRDCDT
-             Z-ADD     A6NBDP        BASCDP            1 0
-
-ess GL ICD for Euro currency code                             CEU014
-                                                              CEU014
-****           CALL 'AOGELRR0'                                CEU014              CGL029
-             CALL      'AOGELRR1'
-             PARM      *BLANKS       ##RTCD                                        CEU01
-             PARM      '*FIRST '     ##OPTN                                        CEU01
-**** SDGELR    PARM SDGELR    DSFDY                           CEU014              CGL029
-DGELR        PARM      SDGELR        DSSDY
-                                                              CEU014
-abase Error                                                   CEU014
-                                                              CEU014
-#RTCD        IFNE      *BLANKS                                                     CEU01
-             MOVEL     'SDGELRPD'    W0FILE                                        CEU01
-             MOVEL     ##OPTN        W0KEY                          ***************CEU01
-             Z-ADD     2             W0ERNB                         * DB ERROR 2  *CEU01
-             MOVEL     'MEM5003'     W0MSGD                         ***************CEU01
-             MOVEL     'MIDAS  '     W0MSGF                                        CEU01
-             EXSR      SRERR                                                       CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-ck if CEU014 - EMU UDC Enhancement - is switched on           CEU014
-                                                              CEU014
-             CALL      'AOSARDR0'                                                  CEU01
-             PARM      *BLANKS       ##RTCD            7                           CEU01
-             PARM      '*KEY    '    ##OPTN            7                           CEU01
-             PARM      'CEU014'      PSARD             6                           CEU01
-CSARD        PARM      SCSARD        DSFDY                                         CEU01
-                                                              CEU014
-#RTCD        IFEQ      *BLANK                                                      CEU01
-             MOVE      'Y'           CEU014            1                           CEU01
-             ELSE                                                                  CEU01
-             MOVE      'N'           CEU014                                        CEU01
-#RTCD        IFNE      '*NRF    '                                                  CEU01
-             MOVEL     'SCSARDPD'    W0FILE                                        CEU01
-             MOVEL     'CEU014'      W0KEY                          ************   CEU01
-             Z-ADD     3             W0ERNB                         * DBERR 3  *   CEU01
-             MOVEL     'MEM5003'     W0MSGD                         ************   CEU01
-             MOVEL     'MIDAS  '     W0MSGF                                        CEU01
-             EXSR      SRERR                                                       CEU01
-             ENDIF                                                                 CEU01
-             ENDIF                                                                 CEU01
-                                                                                  CCG015
-ermine if Correspondence Manager Phase 1 Development                              CCG015
-iSeries is installed                                                              CCG015
-                                                                                  CCG015
-             CALL      'AOSARDR0'
-             PARM      *BLANKS       PRTCD             7
-             PARM      '*VERIFY'     POPTN             7
-             PARM      'CCG015'      PSARD             6
-CSARD        PARM      SCSARD        DSFDY
-                                                                                  CCG015
-RTCD         IFEQ      *BLANKS
-             MOVE      'Y'           CCG015            1
-             ELSE
-             MOVE      'N'           CCG015
-                                                                                  CCG015
-RTCD         IFNE      '*NRF    '
-             MOVEL     'SCSARDPD'    W0FILE
-             MOVEL(P)  '*CALL'       W0KEY
-             Z-ADD     15            W0ERNB
-             MOVEL     'MEM5003'     W0MSGD
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             ENDIF
-                                                                                  CCG015
-             ENDIF
-                                                              CEU014
-XINIT        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRADTA                                         *
-tion    :  Accumulate RDEs and associated data for output *
-                                                          *
-ed by   :  LOANPD - Process Loan Past Due Details         *
-s       :  CG3999 - Format and Pack Data                  *
-           SRRFMN - Reformat RDE Data                     *
-           SRERR  - Database Error                        *
-***********************************************************
-RADTA        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRADTA'      @STK(Q)
-
-format RDE data
-
-             EXSR      SRRFMN
-                                                                                  CCG015
-CCG015 is installed move '*NEWARR' to W0ACT                                       CCG015
-e move '*PACK'.                                                                   CCG015
-                                                                                  CCG015
-CG015        IFEQ      'Y'
-             MOVEL     '*NEWARR '    W0ACT
-             MOVEL     S#PATH        W0SPAT
-             ELSE
-             MOVEL     '*PACK   '    W0ACT
-             MOVEL     *BLANK        W0SPAT
-             ENDIF
-
-ck RDEs and associated data into data string
-
-             CLEAR                   ##SDS
-             CALL      'CG3999'
-             PARM      *BLANK        ##RTCD
-****           PARM '*PACK   'W0ACT                                               CCG015
-             PARM                    W0ACT
-             PARM                    ##R
-             PARM                    ##D
-             PARM                    ##S
-             PARM                    W0SPAT           70
-             PARM                    ##RN
-             PARM                    ##DN
-             PARM                    ##FM
-
-tabase error
-
-#RTCD        IFNE      *BLANK
-
-             MOVEL     'CG3999  '    W0FILE                         ***************
-             MOVEL     ##RTCD        W0KEY                          * DB ERROR 10 *
-             Z-ADD     10            W0ERNB                         ***************
-             MOVEL     'MEM5003'     W0MSGD
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             ENDIF
-                                                                                  CCG015
-             EXSR      WRTRDE
-
-pend Data from pack routine.
-
-@SDS         CAT       ##SDS:0       #@SDS
-
-             MOVEL     *BLANK        ##R
-             MOVEL     *BLANK        ##D
-             MOVEL     *BLANK        ##S
-
-XADTA        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRODTA                                         *
-tion    :  Output Accumulated data to PF/CGUDTAPD         *
-                                                          *
-ed by   :  LOANPD - Process Loan Past Due Details         *
-s       :  CG9020 - Output Data to CGUDTAPD               *
-           SRERR  - Database Error                        *
-***********************************************************
-RODTA        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRODTA'      @STK(Q)
-
-itialise Write Format Parameter.
-
-             CLEAR                   W0FMT
-
-t up Control Information.
-
-             Z-ADD     ##ITEM        DEITEM
-             ADD       1             ##OSEQ
-             Z-ADD     ##OSEQ        DEOSEQ
-             Z-ADD     ##PBIN        DEPBIN
-             Z-ADD     ##TBIN        DETBIN
-             MOVE      'FR'          DEFSLI
-             MOVE      *BLANKS       W0PATH
-             MOVEL     S#PATH        W0PATH
-
-pend Data from pack routine.
-
-0FMT         CAT       #@SDS:0       W0FMT
-                                                                                  CCG015
-CG015        IFEQ      'N'
-
-tput PF/CGUDTAPD Record.
-
-             CALL      'CG9020'
-             PARM      *BLANK        ##RTCD
-             PARM      '*WRITE  '    W0ACT
-             PARM                    W0PATH          256
-             PARM                    W0FMT
-             PARM      *BLANK        W0TITL            7
-             PARM      *BLANK        W0ULIN            7
-             PARM                    W0CMT
-
-tabase error
-
-#RTCD        IFNE      *BLANK
-
-             MOVEL     'CG9020  '    W0FILE                         ***************
-             MOVEL     ##RTCD        W0KEY                          * DB ERROR 11 *
-             Z-ADD     11            W0ERNB                         ***************
-             MOVEL     'MEM5003'     W0MSGD
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             ENDIF
-                                                                                  CCG015
-             ENDIF
-
-             CLEAR                   #@SDS
-
-XODTA        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRBIND                                         *
-tion    :  Generate Binding numbers                       *
-                                                          *
-ed by   :  All Repeating Group Set Subroutines            *
-s       :  None                                           *
-***********************************************************
-RBIND        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRBIND'      @STK(Q)
-
-1            SUB       1             P2
-2            OCCUR     ##BIND
-
-             Z-ADD     ##TBIN        #@TBIN
-1            OCCUR     ##BIND
-             Z-ADD     #@TBIN        ##PBIN
-
-             ADD       1             #@BIND
-             Z-ADD     #@BIND        ##TBIN
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRPATH                                         *
-tion    :  Generate Path String /GS1/GS2...               *
-                                                          *
-ed by   :  L09PD  - Process Lending Past Due Notices      *
-           LOANPD - Process Loan Payment Past Due Details *
-           LOANA  - Process Loan Associated Details       *
-s       :  None                                           *
-***********************************************************
-RPATH        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRPATH'      @STK(Q)
-
-             CLEAR                   S#PATH
-
-             DO        P1            P2
-2            OCCUR     ##PATH
-#PATH        CAT       '\':0         S#PATH
-#PATH        CAT       ##GRPS:0      S#PATH
-             END
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRRFMN                                         *
-tion    :  Reformat RDE data                              *
-                                                          *
-ed by   :  SRADTA - Accumulate RDEs and associated        *
-                    data for output                       *
-s       :  None                                           *
-***********************************************************
-RRFMN        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRRFMN'      @STK(Q)
-
-p through RDE's and data
-
-             Z-ADD     0             #1
-1            DOUEQ     20
-             ADD       1             #1
-             MOVEL     ##R(#1)       R#DEFN
-             MOVEL     ##D(#1)       R#DATA
-
-data present and RDE is edited
-
-#DATA        IFNE      *BLANK
-#RDEC        ANDNE     *BLANK
-
-ormat Amount
-
-             Z-ADD     1             #2
-BLANK        LOOKUP    ##NUMA(#2)                             99    *
-             Z-ADD     20            #3
-             Z-ADD     0             ##WNUM
-2            DOWGT     1
-2            ANDLE     20
-3            ANDGT     1
-             SUB       1             #2
-             MOVEL     ##NUMA(#2)    ##W(#3)
-             SUB       1             #3
-             ENDDO
-
-n the amount
-
-#SIGN        IFEQ      '-'
-             Z-SUB     ##WNUM        ##NUMB
-             ELSE
-             Z-ADD     ##WNUM        ##NUMB
-             END
-
-ault Edit Type
-
-#EDTT        IFEQ      *BLANK
-             MOVEL     ##RDET        ##EDTT
-             END
-
-ault Decimal Places
-
-#DCPA        IFEQ      *BLANK
-             MOVEL     ##RDED        ##DCPA
-             END
-
- RDE data
-
-             MOVEL     R#DATA        ##D(#1)
-             ENDIF
-             ENDDO
-
-XRFMN        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRDCDT                                         *
-tion    :  Determine Currency Details                     *
-                                                          *
-ed by   :  LOANPD - Process Loan Payment Past Due Details *
-           SRINIT - Initial Processing - On First Call    *
-s       :  SRERR  - Database Error                        *
-***********************************************************
-RDCDT        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRDCDT'      @STK(Q)
-
-cess array of Currency Details already loaded
-
-             Z-ADD     1             C                 3 0
-#CCY         LOOKUP    ##CY(C)                                99
-
- no match is found determine the next free space in the
-aded currency array.
-
-IN99         IFEQ      *OFF
-             Z-ADD     1             C
-BLANK        LOOKUP    ##CY(C)                                99
-
- no space is left, set the Currency Data data structure to
-e 101st occurrence so that when the new details are
-trieved no existing details are overwritten.
-
-IN99         IFEQ      *OFF
-01           OCCUR     SDCURR
-
- a space is found, set up the new currency into the array
-d position the Currency Data data structure on the
-currence matching the array index.
-
-             ELSE
-             MOVE      ##CCY         ##CY(C)
-             OCCUR     SDCURR
-             ENDIF
-
-trieve the currency details.
-
-             CALL      'AOCURRR0'
-             PARM      *BLANKS       ##RTCD                         B:Return Cd
-             PARM      '*KEY'        ##OPTN                         I:Option
-             PARM      ##CCY         ##CCYP            3            I:Currency Code
-DCURR        PARM      *BLANK        DSSDY                          O:Format
-
-tabase Error
-
-#RTCD        IFNE      *BLANK
-             MOVEL     'SDCURRPD'    W0FILE
-             MOVEL     ##CCY         W0KEY                          ***************
-             Z-ADD     12            W0ERNB                         * DB ERROR 12 *
-             MOVEL     'MEM5004'     W0MSGD                         ***************
-             MOVEL     'MIDAS  '     W0MSGF
-             EXSR      SRERR
-             ENDIF
-
- the currency has been retrieved earlier, position the
-rrency Data data structure on the relevant occurrence.
-
-             ELSE
-             OCCUR     SDCURR
-             ENDIF
-WNCPYSRC,CG6055C002
-
-XDCDT        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5
-***********************************************************
-outine  :  SRGENR                                         *
-tion    :  Generate reference number                      *
-           by writing to PF/CGUDCRPD                      *
-                                                          *
-ed by   :  SRMAIN - Main Processing                       *
-s       :  CG9010 - Create reference record               *
-***********************************************************
-RGENR        BEGSR
-
-t up subroutine stack name
-
-             ADD       1             Q
-             MOVEL     'SRGENR'      @STK(Q)
-
-nerate reference number and check if further processing
-quired. Set up all available information in the record
-rmat before calling.
-
-             CLEAR                   ##UDCR
-
-king/Main Branch (Mandatory)
-
-             MOVEL     BRCA          DRBRCA
-
-ginating Branch (Optional)
-
-             MOVEL     ORBR          DRORBR
-
-ule identifier (Mandatory)
-
-             MOVEL     'LE'          DRMODI
-
-as Transaction Number (Mandatory)
-
-             MOVEL     LNRF          DRMTRN
-
-             MOVEL     W#PTYP        DRPTYP                         * print type
-             MOVEL     W#PSTY        DRPSTP                         * print s/type
-
-o Transmission indicator
-
-             MOVEL     'N'           DRATRM
-
-tomer Number (Mandatory)
-
-             MOVEL     CNUM          ##CUST
-
-             CALL      'CG9010'
-             PARM                    ##RTCD            7
-             PARM      '*GEN'        ##MODE           10
-             PARM      W0CMT         ##CMT             3
-             PARM                    ##CUST            6
-             PARM                    ##UDCR
-             PARM                    ##ITMA            8
-
-ank return code implies generate correspondence.
-D1270 => no error, but suppress output for this transaction.
-
-#RTCD        IFEQ      *BLANK
-
-             MOVE      'Y'           ##COPD
-                                                                                  CCG015
-return code is blank, generate the 'begin' and 'end'                              CCG015
- Extraction Records                                                               CCG015
-                                                                                  CCG015
-RPTYP        CAT(P)    ':':0         COLON            11
-OLON         CAT(P)    DRPSTP:0      ##REFR
-             EXSR      WRAPRF
-
-             ELSE
-
-#RTCD        IFNE      'CGD1270'
-             MOVEL     'CG9010  '    W0FILE
-             MOVEL     ##RTCD        W0KEY                          ***************
-             Z-ADD     09            W0ERNB                         * DB ERROR 09 *
-             MOVEL     'CGD1286'     W0MSGD                         ***************
-             MOVEL     'CGUSRMSG'    W0MSGF
-             EXSR      SRERR
-             ENDIF
-             ENDIF
-
-XGENR        TAG
-
-wind subroutine stack name
-
-             MOVEA     *BLANKS       @STK(Q)
-             SUB       1             Q
-
-             ENDSR
-***********************************************************
- 5                                                            CEU014
-***********************************************************   CEU014
-outine  :  D@EURO                                         *   CEU014
-tion    :  EURO Currency Conversion:                      *   CEU014
-erts amount P@FRAM in P@FRCY to ##OUTA in P@TOCY.         *   CEU014
-ed by   :  LOANPD                                         *   CEU014
-                                                          *   CEU014
-s       :  EU0200                                         *   CEU014
-           SRERR                                          *   CEU014
-***********************************************************   CEU014
-@EURO        BEGSR                                                                 CEU01
-                                                              CEU014
-             Z-ADD     0             ##OUTA           13 0                         CEU01
-             CALL      'EU0200'                                                    CEU01
-             PARM      *BLANKS       P@RTCD            7            Return Code    CEU01
-             PARM                    P@FRAM           18 3          FROM Ccy AmountCEU01
-             PARM                    P@FRCY            3            FROM Currency  CEU01
-             PARM                    P@TOCY            3            TO Currency    CEU01
-             PARM      0             P@OUTA           15 0          Outright AmountCEU01
-             PARM      0             P@INTA           18 3          Interim Amount CEU01
-             PARM      0             P@EXRT           15 9          Exchange Rate  CEU01
-             PARM      *BLANK        P@MDIN            1            Mult/Div Ind.  CEU01
-                                                              CEU014
-abase error handling:                                         CEU014
-                                                              CEU014
-@RTCD        IFEQ      '*ERROR*'                                                   CEU01
-             MOVEL     'EU0200  '    W0FILE                                        CEU01
-             MOVEL     '*CALL   '    W0KEY                          ***************CEU01
-             Z-ADD     5             W0ERNB                         * DB ERROR 5  *CEU01
-             MOVEL     'MEM5003'     W0MSGD                         ***************CEU01
-             MOVEL     'MIDAS  '     W0MSGF                                        CEU01
-             EXSR      SRERR                                                       CEU01
-                                                              CEU014
-erwise, store amount in settlement currency as ##OUTA         CEU014
-                                                              CEU014
-             ELSE                                                                  CEU01
-             MOVE      P@OUTA        ##OUTA                                        CEU01
-             ENDIF                                                                 CEU01
-                                                              CEU014
-             ENDSR                                                                 CEU01
-***********************************************************   CEU014
- 5
-CGCPYSRC,SRERRPSSRL
- 5
-CGCPYSRC,SRERRCLE
- 5
-CGCPYSRC,CGNWEXILE
- 5                                                                                CCG015
-PY
- International Limited 2001
+     H DEBUG
+     F*****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  TEXT('Midas CG Lending past due notices')                    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6055 - Lending Past Due Notices                            *
+     F*                                                               *
+     F*  Function:  This program extracts data for Past Due Notices   *
+     F*  ( COB )                                                      *
+     F*                                                               *
+     F*  Called By: CG6050 - Lending Past Due Notices Driver          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. CLE172             Date 23Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU014             Date 26Jun98               *
+      *                 CCG008  *CREATE    Date 30Oct95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE172 - Libor Deregulation - Lending                        *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+      *  CSD006 - Recompiled over changed SDCURRPD.                   *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  CEU014 - EMU User Defined Correspondence Enhancement.        *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOAN     IF   E           K DISK    INFSR(SRFILE)
+     F/TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  30   -    Past Due Bit Setting is ON                         *
+     F*  90   -    Failed CHAIN on LF/CLOAN                           *
+     F*  99   -    General error indicator                            *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing - On First Call                *
+     F*  SRINZ   -  Initialise Fields on Each Invocation              *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRDETL  -  Obtain Detail Information                         *
+     F*  L09PD   -  Process Lending Past Due Notices                  *
+     F*  LOANPD  -  Process Loan Payment Past Due Details             *
+     F*  LOANA   -  Process Loan Associated Details                   *
+     F*  SRADTA  -  Accumulate RDEs and Associated Data for output    *
+     F*  SRODTA  -  Output Accumulated Data to PF/CGUDTAPD            *
+     F*  SRBIND  -  Generate Binding Numbers                          *
+     F*  SRPATH  -  Generate Path String                              *
+     F*  SRRFMN  -  Reformat RDE Data                                 *
+     F*  SRDCDT  -  Determine Currency Details                        *
+     F*  SRGENR  -  Generate Reference Number                         *
+     F*                                                               *
+     F*****************************************************************
+     D/EJECT
+     D*****************************************************************
+     D/COPY CGCPYSRC,CGPACKDLE
+     D/COPY CGCPYSRC,SRERRDLE
+     D*
+     D**  Array of Currencies accessed by program
+     D ##CY            S              3    DIM(100)
+     D*
+     D**  Copyright array.
+     D**  Look-up string for RDE definition Array
+     D*
+     D ##SDS           DS
+     D**********                              15120 ##S                                      BUG9646
+     D*
+     D #@SDS           DS
+     D  #@S                 5120   5120
+     D**  Packed data string.
+     D*
+     D                 DS
+     D  ##W                    1     20
+     D                                     DIM(20)
+     D  ##WNUM                 1     20  0
+     D**  Number Field
+     D*
+     D                 DS
+     D  ##ITMA                 1      8
+     D  ##ITEM                 1      8  0
+     D** Used to convert item reference from character to numeric
+     D*
+     D                 DS
+     D  ##NCIT                 1      6
+     D  NMCY                   1      3
+     D  SITP                   4      6
+     D                 DS
+     D  ##CCCC                 1      5
+     D  ##CCY                  1      3
+     D  ##CCD                  4      5
+     D**  For error reporting
+     D*
+     D*
+     D**  UDC Details for call to CG6001
+     D*
+     D P1PARM          DS           256
+     D* Output Sequence
+     D  P1OSEQ                 1      9  0
+     D* UDC item number
+     D  P1ITEM                10     17  0
+     D* This bind level
+     D  P1TBIN                18     25  0
+     D* Previous bind level
+     D  P1PBIN                26     33  0
+     D*
+     D**  Loan details Parameters for call to CG6001
+     D*
+     D P3PARM          DS           256
+     D**  Loan Reference
+     D  P3LNRF                 1      6
+     D**  Cancel/Amend Field
+     D  P3CNAM                 7      7
+     D*
+     D P4PARM          DS           256
+     D**  Facility Customer Number
+     D**********                              1   60P4CNUM                                    CSD027
+     D  P4CNUM                 1      6
+     D**  Facility Type
+     D  P4CNAM                 7      9  0
+     D**  Facility Number
+     D  P4FCNO                10     11  0
+     D*
+     D*----------------------------------------------------------------
+     D*Named constants
+     D*
+     D W#PTYP          C                   CONST('LOAN PSTDU')
+     D W#PSTY          C                   CONST('BASIC     ')
+     D*----------------------------------------------------------------
+     D*
+     D DSPARM        E DS                  EXTNAME(PDUEDU)
+     D** External DS for parameter passed from CG6055
+     D*
+     D ##UDCR        E DS                  EXTNAME(CGUDCRPD)
+     D** External DS for incomplete reference
+     D*
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+     D**  External DS for Bank details
+     D*
+     D SDCURR        E DS                  OCCURS(101) EXTNAME(SDCURRPD)
+     D**  External DS for currency details
+     D*
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    CEU014
+     D* DS for Customer Details                                           CEU014
+     D/COPY WNCPYSRC,CG6055I001
+     D*                                                                   CEU014
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                    CEU014
+     D* DS for GL ICD Details                                             CEU014
+     D*                                                                   CEU014
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CEU014
+     D** Switchable Feature details                                       CEU014
+     D*                                                                   CEU014
+     D DSFDY         E DS                  EXTNAME(DSFDY)                       CEU014
+     D**  First DS for access programs, short data structure              CEU014
+     D*                                                                   CEU014
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+     D**  Second DS for access programs, long data structure
+     D*
+     D W0FMT         E DS                  EXTNAME(CGUDTAPD)
+     D**  Record format of PF/CGUDTAPD for use as a parameter
+     D*
+     D*
+     D CPYR            DS
+     D**  Data Structure for Compilation - Copyright Insertion
+     D  ##CPY                  1     80
+     D                                     DIM(1) CTDATA PERRCD(1)
+     D**  DS to store subroutine specific data.
+     D**  - Saved Path
+     D ##PATH          DS                  OCCURS(20)
+     D  ##GRPS                 1      6
+     D*
+     D ##BIND          DS                  OCCURS(20)
+     D  ##PBIN                 1      6  0 INZ(1)
+     D  ##TBIN                 7     12  0 INZ(1)
+     D*
+     D                 DS
+     D  #@BIND                 1      6  0 INZ(1)
+     D*
+     D #PDS            DS
+     D  P1                     1      3  0 INZ(0)
+     D  P2                     4      6  0
+     D  P3                     7      9  0
+     D  P4                    10     12  0
+     D  P5                    13     15  0
+     I*                                                                   CEU014
+     ICLOANCKF                                                                  CEU014
+     I** Rename fields of CLOANCK                                         CEU014
+     I              NLRA                        CKNLRA                          CEU014
+     I*
+     ICLOANCLF
+     I** Rename fields of CLOANCL
+     I              CNUM                        ##CNUM
+     I              BRCA                        ##BRCA
+     I              VDAT                        ##VDAT
+     I              CCY                         ##CCY1
+     I              BRTE                        ##BRTE
+     I              RTSP                        ##RTSP
+     I              SPIN                        ##SPIN
+     I              NACD                        ##NACD
+     I              NRTS                        ##NRTS
+     I              NSIN                        ##NSIN
+     I              NBRA                        ##NBRA
+     I              BTIN                        ##BTIN
+     C/SPACE 5
+     C*****************************************************************
+     C* Process     :  MAINLINE                                       *
+     C* Function    :  Mainline processing                            *
+     C*                                                               *
+     C* Called by   :  None                                           *
+     C* Calls       :  SRINIT - Initial Processing - On First Call    *
+     C*                SRINZ  - Initialise Fields on Each Invocation  *
+     C*                SRMAIN - Main Processing                       *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C*
+     C     *ENTRY        PLIST
+     C                   PARM                    W0RTN
+     C                   PARM                    W0CMT             3
+     C                   PARM                    ##COPD            1
+     C                   PARM                    DSPARM
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'MAIN'        @STK(Q)
+     C*
+     C**  Initial processing - Once Only
+     C*
+     C     ##INIT        IFEQ      *BLANK
+     C                   EXSR      SRINIT
+     C                   MOVE      'Y'           ##INIT            1
+     C                   ENDIF
+     C*
+     C** Initialisation processing
+     C*
+     C                   EXSR      SRINZ
+     C*
+     C** Main processing
+     C*
+     C                   EXSR      SRMAIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C**  Terminate program
+     C*
+     C                   RETURN
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRMAIN                                         *
+     C* Function    :  Main processing                                *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  SRDETL - Obtain Detail Information             *
+     C*                SRGENR - Generate reference number by writing  *
+     C*                         to PF/CGUDCRPD                        *
+     C*                L09PD  - Process Lending Past Due Notices      *
+     C*****************************************************************
+     C     SRMAIN        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q                 5 0
+     C                   MOVEL     'SRMAIN'      @STK(Q)
+     C*
+     C                   EXSR      SRDETL
+     C*
+     C**  Generate reference number by writing to PF/CGUDCRPD
+     C**  If no confirmation to be produced, then bypass
+     C*
+     C                   MOVE      'N'           ##COPD
+     C/COPY WNCPYSRC,CG6055C007
+     C                   EXSR      SRGENR
+     C     ##COPD        CABEQ     'N'           EXMAIN
+     C*
+     C** Extract
+     C*
+     C                   EXSR      L09PD
+     C*
+     C     EXMAIN        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C*  Subroutine  :  SRDETL                                        *
+     C*  Function    :  Process: Obtain detail information            *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main Processing                      *
+     C*  Calls       :  SRERR  - Database Error                       *
+     C*****************************************************************
+     C     SRDETL        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRDETL'      @STK(Q)
+     C*
+     C     CLOANK        KLIST
+     C                   KFLD                    LNRF
+     C                   KFLD                    RCDT
+     C*
+     C                   MOVEL     'A'           RCDT
+     C*
+     C     CLOANK        CHAIN     CLOAN                              90
+     C*
+     C     *IN90         IFEQ      '1'
+     C                   MOVEL     'CLOAN   '    W0FILE                         ***************
+     C                   MOVEL     LNRF          W0KEY                          * DB ERROR 14 *
+     C                   Z-ADD     14            W0ERNB                         ***************
+     C                   MOVEL     'MEM5004'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+     C*
+     C     EXDETL        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  L09PD                                          *
+     C* Function    :  Process: Lending Past Due Notices              *
+     C*                                                               *
+     C* Called by   :  SRMAIN - Main Processing                       *
+     C* Calls       :  SRPATH - Generate Path String                  *
+     C*                LOANPD - Process Loan Payment Past Due Details *
+     C*                LOANA  - Process Loan Associated Details       *
+     C*****************************************************************
+     C     L09PD         BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'L09PD '      @STK(Q)
+     C*
+     C                   ADD       1             P1
+     C     P1            OCCUR     ##PATH
+     C                   MOVEL(P)  'l09PD '      ##GRPS
+     C*
+     C                   EXSR      SRPATH
+      *                                                                                       CCG015
+     C                   EXSR      PSHGRS
+     C*
+     C                   EXSR      LOANPD
+     C*
+     C                   EXSR      LOANA
+     C*
+     C**  Decrement Path DS index
+     C*
+     C     P1            OCCUR     ##PATH
+     C                   CLEAR                   ##GRPS
+     C                   SUB       1             P1
+      *                                                                                       CCG015
+     C                   EXSR      POPGRS
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  LOANPD                                         *
+     C* Function    :  Process: Loan Payment Past Due details         *
+     C*                                                               *
+     C* Called by   :  L09PD - Process Lending Past Due Notices       *
+     C* Calls       :  SRPATH - Generate Path String                  *
+     C*                SRDCDT - Determine Currency Details            *
+     C*                SRADTA - Accumulate RDEs and Associated Data   *
+     C*                SRODTA - Output Accumulated Data to            *
+     C*                          PF/CGUDTAPD                          *
+     C*****************************************************************
+     C     LOANPD        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'LOANPD'      @STK(Q)
+     C*
+     C                   ADD       1             P1
+     C     P1            OCCUR     ##PATH
+     C                   MOVEL(P)  'LOANPD'      ##GRPS
+     C*
+     C                   EXSR      SRPATH
+      *                                                                                       CCG015
+      ** Push Order (PF/CGUXMGPD)                                                             CCG015
+      *                                                                                       CCG015
+     C                   EXSR      PSHGRS
+     C*
+     C                   Z-ADD     0             R1                3 0
+      *                                                                                       CLE172
+      ** Init New Fields LIBOR                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     *BLANKS       BLRT              1                          CLE172
+     C                   MOVEL     *BLANKS       LBDY              2 0                        CLE172
+     C                   MOVEL     *BLANKS       LODY              2 0                        CLE172
+     C                   MOVEL     *BLANKS       PDLY              2 0                        CLE172
+     C                   MOVEL     *BLANKS       BADJ             13 8                        CLE172
+     C                   MOVEL     *BLANKS       WGHT              1                          CLE172
+     C                   MOVEL     *BLANKS       BRAC              1 0                        CLE172
+     C                   MOVEL     *BLANKS       LBAC              2 0                        CLE172
+     C                   MOVEL     *BLANKS       PRPL             22 0                        CLE172
+     C                   MOVEL     *BLANKS       AVOP              1                          CLE172
+     C                   MOVEL     *BLANKS       CART             2015                        CLE172
+     C*
+     C** Currency Description
+     C*
+     C                   MOVEL     CCY           ##CCY
+     C                   EXSR      SRDCDT
+     C                   MOVEL     SDCURR        ##WRK             3
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVEL     'CCY_DESC'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     ##WRK         R#DATA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Currency
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVEL     'CURRENCY'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     CCY           R#DATA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Loan Reference
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVEL     'LOAN REF'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     LNRF          R#DATA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Past Due Interest
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'NT'          #@RDE
+     C                   MOVEL     'PSTDUE I'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     INPD          ##DATA
+     C                   MOVEL     'Amount'      ##RDEC
+     C                   MOVEL     'L'           ##RDET
+     C                   MOVEL     CCY           ##CCY
+     C                   EXSR      SRDCDT
+     C/COPY WNCPYSRC,CG6055C004
+     C                   MOVEL     A6NBDP        ##DCPA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Past Due Number
+     C*
+     C                   Z-ADD     0             WPDNO             3 0
+     C*
+     C                   TESTB     '0'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '1'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '2'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '3'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '4'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '5'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '6'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   TESTB     '7'           PDBI                     30
+     C     *IN30         IFEQ      '1'
+     C                   ADD       1             WPDNO
+     C                   END
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'UM'          #@RDE
+     C                   MOVEL     'PSTDUE N'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C*                    MOVELWPDNO     R#DATA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Past Due Principal
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'RN'          #@RDE
+     C                   MOVEL     'PSTDUE P'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     PPDU          ##DATA
+     C                   MOVEL     'Amount'      ##RDEC
+     C                   MOVEL     'L'           ##RDET
+     C                   MOVEL     CCY           ##CCY
+     C                   EXSR      SRDCDT
+     C/COPY WNCPYSRC,CG6055C005
+     C                   MOVEL     A6NBDP        ##DCPA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Past Due Total
+     C*
+     C     PPDU          ADD       INPD          TPD              13 0
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'OT'          #@RDE
+     C                   MOVEL     'PSTDUE T'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     TPD           ##DATA
+     C                   MOVEL     'Amount'      ##RDEC
+     C                   MOVEL     'L'           ##RDET
+     C                   MOVEL     CCY           ##CCY
+     C                   EXSR      SRDCDT
+     C/COPY WNCPYSRC,CG6055C006
+     C                   MOVEL     A6NBDP        ##DCPA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Repayment Type
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'PE'          #@RDE
+     C                   MOVEL     'REPAY TY'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     REPT          R#DATA
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Run date; production time
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVEL     'RUNDAT  '    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     BJRDNB        ##DATA
+     C                   MOVEL     'Date  '      ##RDEC
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C** Value Date
+     C*
+     C                   ADD       1             R1
+     C                   CLEAR                   R#DATA
+     C                   CLEAR                   R#DEFN
+     C                   CLEAR                   #@RDE
+     C                   MOVE      'TE'          #@RDE
+     C                   MOVEL     'VALUE DA'    #@RDE
+     C     ##RDE         CAT       #@RDE:1       ##RDE
+     C                   MOVEL     VDAT          ##DATA
+     C                   MOVEL     'Date  '      ##RDEC
+     C                   MOVEL     R#DATA        ##D(R1)
+     C                   MOVEL     R#DEFN        ##R(R1)
+     C*
+     C     CEU014        IFEQ      'Y'                                                         CEU01
+     C*                                                                   CEU014
+     C** determine the Equivalent Currency                                CEU014
+     C*                                                                   CEU014
+     C                   MOVE      *BLANKS       EQCY              3                           CEU01
+     C                   MOVE      CCY           ##CCY                                         CEU01
+     C                   EXSR      SRDCDT                                                      CEU01
+     C     A6INCY        IFEQ      'Y'                                                         CEU01
+     C                   MOVE      BKEURO        EQCY                                          CEU01
+     C                   ENDIF                                                                 CEU01
+     C     CCY           IFEQ      BKEURO                                                      CEU01
+     C                   MOVEL     CNUM          ##KEY                                         CEU01
+     C                   CALL      'AOCUSTR0'                                                  CEU01
+     C                   PARM      *BLANKS       ##RTCD                                        CEU01
+     C                   PARM      '*KEY   '     ##OPTN                                        CEU01
+     C                   PARM                    ##KEY            10                           CEU01
+     C                   PARM      *BLANKS       ##KYST            7                           CEU01
+     C     SDCUST        PARM      SDCUST        DSSDY                                         CEU01
+     C*                                                                   CEU014
+     C     ##RTCD        IFNE      *BLANK                                                      CEU01
+     C                   MOVEL     'SDCUSTPD'    W0FILE                                        CEU01
+     C                   MOVEL     CNUM          W0KEY                          ************   CEU01
+     C                   Z-ADD     4             W0ERNB                         * DBERR 4  *   CEU01
+     C                   MOVEL     'MEM5004'     W0MSGD                         ************   CEU01
+     C                   MOVEL     'MIDAS  '     W0MSGF                                        CEU01
+     C                   EXSR      SRERR                                                       CEU01
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   CEU014
+     C                   MOVE      BBDINC        EQCY                                          CEU01
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   CEU014
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   CEU014
+     C** Past Due Total in Equivalent Currency                            CEU014
+     C*                                                                   CEU014
+     C                   ADD       1             R1                                            CEU01
+     C                   CLEAR                   R#DATA                                        CEU01
+     C                   CLEAR                   R#DEFN                                        CEU01
+     C                   CLEAR                   #@RDE                                         CEU01
+     C                   MOVEL     'P_DUE_EQ'    #@RDE                                         CEU01
+     C                   MOVE      'CY'          #@RDE                                         CEU01
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                         CEU01
+     C                   MOVEL     'Amount'      ##RDEC                                        CEU01
+     C                   MOVEL     'L'           ##RDET                                        CEU01
+     C                   MOVEL     R#DEFN        ##R(R1)                                       CEU01
+     C*                                                                   CEU014
+     C     CEU014        IFEQ      'Y'                                                         CEU01
+     C     EQCY          ANDNE     *BLANKS                                                     CEU01
+     C                   MOVEL     EQCY          ##CCY                                         CEU01
+     C                   EXSR      SRDCDT                                                      CEU01
+     C                   Z-ADD     TPD           P@FRAM                                        CEU01
+     C                   MOVE      CCY           P@FRCY                                        CEU01
+     C                   MOVE      EQCY          P@TOCY                                        CEU01
+     C                   EXSR      D@EURO                                                      CEU01
+     C                   MOVEL     ##OUTA        ##DATA                                        CEU01
+     C                   MOVEL     A6NBDP        ##DCPA                                        CEU01
+     C                   MOVEL     R#DATA        ##D(R1)                                       CEU01
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   CEU014
+     C** Equivalent Currency                                              CEU014
+     C*                                                                   CEU014
+     C                   ADD       1             R1                                            CEU01
+     C                   CLEAR                   R#DATA                                        CEU01
+     C                   CLEAR                   R#DEFN                                        CEU01
+     C                   CLEAR                   #@RDE                                         CEU01
+     C                   MOVEL     'EQUIV_CC'    #@RDE                                         CEU01
+     C                   MOVE      'Y '          #@RDE                                         CEU01
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                         CEU01
+     C                   MOVEL     R#DEFN        ##R(R1)                                       CEU01
+     C*                                                                   CEU014
+     C     CEU014        IFEQ      'Y'                                                         CEU01
+     C     EQCY          ANDNE     *BLANKS                                                     CEU01
+     C                   MOVEL     EQCY          ##DATA                                        CEU01
+     C                   MOVEL     R#DATA        ##D(R1)                                       CEU01
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   CEU014
+     C** Equivalent Currency Description                                  CEU014
+     C*                                                                   CEU014
+     C                   ADD       1             R1                                            CEU01
+     C                   CLEAR                   R#DATA                                        CEU01
+     C                   CLEAR                   R#DEFN                                        CEU01
+     C                   CLEAR                   #@RDE                                         CEU01
+     C                   MOVEL     'EQUIV_CC'    #@RDE                                         CEU01
+     C                   MOVE      'YD'          #@RDE                                         CEU01
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                         CEU01
+     C                   MOVEL     R#DEFN        ##R(R1)                                       CEU01
+     C*                                                                   CEU014
+      *                                                                                       CLE172
+      ** LIBOR Deregulation BACKWARD-LOOKING RATE                                             CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'TE'          #@RDE                                        CLE172
+     C                   MOVEL     'BCKLOKRA'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     BLRT          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Averaging Option                                                                     CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'N'           #@RDE                                        CLE172
+     C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     AVOP          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Compounded/Average Rate                                                              CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'AR'          #@RDE                                        CLE172
+     C                   MOVEL     'COMPOUND'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     CART          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Lookback Days                                                                        CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'AY'          #@RDE                                        CLE172
+     C                   MOVEL     'LOOKBCKD'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     LBDY          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Lockout Days                                                                         CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'AY'          #@RDE                                        CLE172
+     C                   MOVEL     'LOCKOUTD'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     LODY          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Delayed Payment Days                                                                 CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'YS'          #@RDE                                        CLE172
+     C                   MOVEL     'DLYPAYDA'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     PDLY          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment Days                                                            CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'OD'          #@RDE                                        CLE172
+     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     BADJ          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Weight Convention                                                                    CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'OD'          #@RDE                                        CLE172
+     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     WGHT          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Base Rate Code for Accrual                                                           CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'TE'          #@RDE                                        CLE172
+     C                   MOVEL     'BRACCRRA'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     BRAC          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Lookback Days for Accrual                                                            CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'TE'          #@RDE                                        CLE172
+     C                   MOVEL     'BRACCRRA'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     LBAC          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+      ** Principal                                                                            CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             R1                                           CLE172
+     C                   CLEAR                   R#DATA                                       CLE172
+     C                   CLEAR                   R#DEFN                                       CLE172
+     C                   CLEAR                   #@RDE                                        CLE172
+     C                   MOVE      'L'           #@RDE                                        CLE172
+     C                   MOVEL     'PRINCIPA'    #@RDE                                        CLE172
+     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+     C                   MOVEL     PRPL          R#DATA                                       CLE172
+     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+      *                                                                                       CLE172
+     C     CEU014        IFEQ      'Y'                                                         CEU01
+     C     EQCY          ANDNE     *BLANKS                                                     CEU01
+     C                   MOVEL     A6CYNM        ##DATA                                        CEU01
+     C                   MOVEL     R#DATA        ##D(R1)                                       CEU01
+     C                   ENDIF                                                                 CEU01
+     C/COPY WNCPYSRC,CG6055C003
+     C*                                                                   CEU014
+     C                   EXSR      SRADTA
+     C                   EXSR      SRODTA
+     C*
+     C**  Decrement Path DS index
+     C*
+     C     P1            OCCUR     ##PATH
+     C                   CLEAR                   ##GRPS
+     C                   SUB       1             P1
+      *                                                                                       CCG015
+      ** Pop Order (PF/CGUXMGPD)                                                              CCG015
+      *                                                                                       CCG015
+     C                   EXSR      POPGRS
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C*  Subroutine  :  LOANA                                         *
+     C*  Function    :  Process: Loan Associated Details              *
+     C*                                                               *
+     C*  Called by   :  L09PD  - Process Lending Past Due Notices     *
+     C*  Calls       :  SRPATH - Generate Path String                 *
+     C*                 CG6001 - General Loan Details                 *
+     C*****************************************************************
+     C     LOANA         BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'LOANA '      @STK(Q)
+     C*
+     C                   EXSR      SRPATH
+     C*
+     C                   MOVEL     S#PATH        P2PARM
+     C                   Z-ADD     ##OSEQ        P1OSEQ
+     C                   Z-ADD     ##ITEM        P1ITEM
+     C                   Z-ADD     ##TBIN        P1TBIN
+     C                   Z-ADD     ##PBIN        P1PBIN
+     C*
+     C**  Set up data.
+     C*
+     C                   CLEAR                   P4PARM
+     C                   MOVE      LNRF          P3LNRF
+     C                   MOVE      *BLANKS       P3CNAM
+     C                   CALL      'CG6001'
+     C                   PARM      *BLANKS       W0RTN             7
+     C                   PARM                    W0CMT             3
+     C                   PARM                    P1PARM                         UDC Details
+     C                   PARM                    P2PARM          140            Path Details
+     C                   PARM                    P3PARM                         Loan Details
+     C                   PARM                    P4PARM                         Facility Details
+     C                   PARM                    ##AUTO            1
+     C                   PARM                    ##REFR
+     C                   PARM                    P@ICR
+     C                   PARM      'N'           ##MAST
+     C*
+     C**  Reset Sequence number.
+     C*
+     C                   Z-ADD     P1OSEQ        ##OSEQ
+     C*
+     C     EXXPAY        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C/COPY WNCPYSRC,CG6055C008
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRINZ                                          *
+     C* Function    :  Initialise Fields on Program Invocation        *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C     SRINZ         BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRINZ '      @STK(Q)
+     C*
+     C**  Initialise work fields
+     C*
+     C                   Z-ADD     *ZEROS        ##W050            5 0
+     C                   Z-ADD     *ZEROS        ##W150           15 0
+     C                   Z-ADD     *ZEROS        ##W157           15 7
+     C                   Z-ADD     *ZEROS        #1                6 0
+     C                   Z-ADD     *ZEROS        #2                6 0
+     C                   Z-ADD     *ZEROS        #3                6 0
+     C                   MOVE      *BLANKS       S#PATH          256
+     C     *LIKE         DEFINE    DEOSEQ        ##OSEQ
+     C*
+     C**  Initialise output sequence (to CGUDTAPD)
+     C*
+     C                   Z-ADD     *ZEROS        ##OSEQ
+     C*
+     C** DJU Additions for CG4999 1st version **
+     C*
+     C                   MOVE      *BLANKS       #@RDE            10
+     C     *LIKE         DEFINE    ##TBIN        #@TBIN
+     C*
+     C     1             OCCUR     ##BIND
+     C                   RESET                   ##BIND
+     C                   RESET                   #@BIND
+     C                   RESET                   #PDS
+      *                                                                                       CCG015
+      ** Initialise XML increment                                                             CCG015
+      *                                                                                       CCG015
+     C                   EXSR      INIXML
+     C*
+     C     EXINZ         TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRINIT                                         *
+     C* Function    :  Initial processing - First Call Only           *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  SRERR  - Report Error and Close Down Program   *
+     C*                SRDCDT - Determine Currency Details            *
+     C*****************************************************************
+     C     SRINIT        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRINIT'      @STK(Q)
+     C/COPY WNCPYSRC,CG6055C001
+     C*
+     C** Call access program for Bank details
+     C*
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       ##RTCD            7
+     C                   PARM      '*FIRST  '    ##OPTN            7
+     C     SDBANK        PARM      SDBANK        DSSDY
+     C*
+     C     ##RTCD        IFNE      *BLANK
+     C*
+     C** Database error
+     C*
+     C                   MOVEL     'AOBANKR0'    W0FILE
+     C                   MOVEL     '*CALL'       W0KEY                          ***************
+     C                   Z-ADD     01            W0ERNB                         * DB ERROR 01 *
+     C                   MOVEL     'MEM5003'     W0MSGD                         ***************
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   END
+     C*
+     C     BJDFIN        COMP      'M'                                    98    MMDDYY, 98 ON
+     C*
+     C**   Determine Number of decimal places - Base currency
+     C*
+     C                   MOVEL     BJCYCD        ##CCY
+     C                   EXSR      SRDCDT
+     C                   Z-ADD     A6NBDP        BASCDP            1 0
+     C*
+      ** Access GL ICD for Euro currency code                             CEU014
+      *                                                                   CEU014
+     C**********           CALL 'AOGELRR0'                                CEU014              CGL029
+     C                   CALL      'AOGELRR1'
+     C                   PARM      *BLANKS       ##RTCD                                        CEU01
+     C                   PARM      '*FIRST '     ##OPTN                                        CEU01
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU014              CGL029
+     C     SDGELR        PARM      SDGELR        DSSDY
+      *                                                                   CEU014
+      ** Database Error                                                   CEU014
+      *                                                                   CEU014
+     C     ##RTCD        IFNE      *BLANKS                                                     CEU01
+     C                   MOVEL     'SDGELRPD'    W0FILE                                        CEU01
+     C                   MOVEL     ##OPTN        W0KEY                          ***************CEU01
+     C                   Z-ADD     2             W0ERNB                         * DB ERROR 2  *CEU01
+     C                   MOVEL     'MEM5003'     W0MSGD                         ***************CEU01
+     C                   MOVEL     'MIDAS  '     W0MSGF                                        CEU01
+     C                   EXSR      SRERR                                                       CEU01
+     C                   ENDIF                                                                 CEU01
+      *                                                                   CEU014
+      ** Check if CEU014 - EMU UDC Enhancement - is switched on           CEU014
+      *                                                                   CEU014
+     C                   CALL      'AOSARDR0'                                                  CEU01
+     C                   PARM      *BLANKS       ##RTCD            7                           CEU01
+     C                   PARM      '*KEY    '    ##OPTN            7                           CEU01
+     C                   PARM      'CEU014'      PSARD             6                           CEU01
+     C     SCSARD        PARM      SCSARD        DSFDY                                         CEU01
+     C*                                                                   CEU014
+     C     ##RTCD        IFEQ      *BLANK                                                      CEU01
+     C                   MOVE      'Y'           CEU014            1                           CEU01
+     C                   ELSE                                                                  CEU01
+     C                   MOVE      'N'           CEU014                                        CEU01
+     C     ##RTCD        IFNE      '*NRF    '                                                  CEU01
+     C                   MOVEL     'SCSARDPD'    W0FILE                                        CEU01
+     C                   MOVEL     'CEU014'      W0KEY                          ************   CEU01
+     C                   Z-ADD     3             W0ERNB                         * DBERR 3  *   CEU01
+     C                   MOVEL     'MEM5003'     W0MSGD                         ************   CEU01
+     C                   MOVEL     'MIDAS  '     W0MSGF                                        CEU01
+     C                   EXSR      SRERR                                                       CEU01
+     C                   ENDIF                                                                 CEU01
+     C                   ENDIF                                                                 CEU01
+      *                                                                                       CCG015
+      ** Determine if Correspondence Manager Phase 1 Development                              CCG015
+      ** on iSeries is installed                                                              CCG015
+      *                                                                                       CCG015
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*VERIFY'     POPTN             7
+     C                   PARM      'CCG015'      PSARD             6
+     C     SCSARD        PARM      SCSARD        DSFDY
+      *                                                                                       CCG015
+     C     PRTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CCG015            1
+     C                   ELSE
+     C                   MOVE      'N'           CCG015
+      *                                                                                       CCG015
+     C     PRTCD         IFNE      '*NRF    '
+     C                   MOVEL     'SCSARDPD'    W0FILE
+     C                   MOVEL(P)  '*CALL'       W0KEY
+     C                   Z-ADD     15            W0ERNB
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *                                                                                       CCG015
+     C                   ENDIF
+     C*                                                                   CEU014
+     C     EXINIT        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRADTA                                         *
+     C* Function    :  Accumulate RDEs and associated data for output *
+     C*                                                               *
+     C* Called by   :  LOANPD - Process Loan Past Due Details         *
+     C* Calls       :  CG3999 - Format and Pack Data                  *
+     C*                SRRFMN - Reformat RDE Data                     *
+     C*                SRERR  - Database Error                        *
+     C*****************************************************************
+     C     SRADTA        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRADTA'      @STK(Q)
+     C*
+     C**  Reformat RDE data
+     C*
+     C                   EXSR      SRRFMN
+      *                                                                                       CCG015
+      ** If CCG015 is installed move '*NEWARR' to W0ACT                                       CCG015
+      ** else move '*PACK'.                                                                   CCG015
+      *                                                                                       CCG015
+     C     CCG015        IFEQ      'Y'
+     C                   MOVEL     '*NEWARR '    W0ACT
+     C                   MOVEL     S#PATH        W0SPAT
+     C                   ELSE
+     C                   MOVEL     '*PACK   '    W0ACT
+     C                   MOVEL     *BLANK        W0SPAT
+     C                   ENDIF
+     C*
+     C**  Pack RDEs and associated data into data string
+     C*
+     C                   CLEAR                   ##SDS
+     C                   CALL      'CG3999'
+     C                   PARM      *BLANK        ##RTCD
+     C**********           PARM '*PACK   'W0ACT                                               CCG015
+     C                   PARM                    W0ACT
+     C                   PARM                    ##R
+     C                   PARM                    ##D
+     C                   PARM                    ##S
+     C                   PARM                    W0SPAT           70
+     C                   PARM                    ##RN
+     C                   PARM                    ##DN
+     C                   PARM                    ##FM
+     C*
+     C**  Database error
+     C*
+     C     ##RTCD        IFNE      *BLANK
+     C*
+     C                   MOVEL     'CG3999  '    W0FILE                         ***************
+     C                   MOVEL     ##RTCD        W0KEY                          * DB ERROR 10 *
+     C                   Z-ADD     10            W0ERNB                         ***************
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *                                                                                       CCG015
+     C                   EXSR      WRTRDE
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C     #@SDS         CAT       ##SDS:0       #@SDS
+     C*
+     C                   MOVEL     *BLANK        ##R
+     C                   MOVEL     *BLANK        ##D
+     C                   MOVEL     *BLANK        ##S
+     C*
+     C     EXADTA        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRODTA                                         *
+     C* Function    :  Output Accumulated data to PF/CGUDTAPD         *
+     C*                                                               *
+     C* Called by   :  LOANPD - Process Loan Past Due Details         *
+     C* Calls       :  CG9020 - Output Data to CGUDTAPD               *
+     C*                SRERR  - Database Error                        *
+     C*****************************************************************
+     C     SRODTA        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRODTA'      @STK(Q)
+     C*
+     C**  Initialise Write Format Parameter.
+     C*
+     C                   CLEAR                   W0FMT
+     C*
+     C**  Set up Control Information.
+     C*
+     C                   Z-ADD     ##ITEM        DEITEM
+     C                   ADD       1             ##OSEQ
+     C                   Z-ADD     ##OSEQ        DEOSEQ
+     C                   Z-ADD     ##PBIN        DEPBIN
+     C                   Z-ADD     ##TBIN        DETBIN
+     C                   MOVE      'FR'          DEFSLI
+     C                   MOVE      *BLANKS       W0PATH
+     C                   MOVEL     S#PATH        W0PATH
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C     W0FMT         CAT       #@SDS:0       W0FMT
+      *                                                                                       CCG015
+     C     CCG015        IFEQ      'N'
+     C*
+     C**  Output PF/CGUDTAPD Record.
+     C*
+     C                   CALL      'CG9020'
+     C                   PARM      *BLANK        ##RTCD
+     C                   PARM      '*WRITE  '    W0ACT
+     C                   PARM                    W0PATH          256
+     C                   PARM                    W0FMT
+     C                   PARM      *BLANK        W0TITL            7
+     C                   PARM      *BLANK        W0ULIN            7
+     C                   PARM                    W0CMT
+     C*
+     C**  Database error
+     C*
+     C     ##RTCD        IFNE      *BLANK
+     C*
+     C                   MOVEL     'CG9020  '    W0FILE                         ***************
+     C                   MOVEL     ##RTCD        W0KEY                          * DB ERROR 11 *
+     C                   Z-ADD     11            W0ERNB                         ***************
+     C                   MOVEL     'MEM5003'     W0MSGD
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+      *                                                                                       CCG015
+     C                   ENDIF
+     C*
+     C                   CLEAR                   #@SDS
+     C*
+     C     EXODTA        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRBIND                                         *
+     C* Function    :  Generate Binding numbers                       *
+     C*                                                               *
+     C* Called by   :  All Repeating Group Set Subroutines            *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C     SRBIND        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRBIND'      @STK(Q)
+     C*
+     C     P1            SUB       1             P2
+     C     P2            OCCUR     ##BIND
+     C*
+     C                   Z-ADD     ##TBIN        #@TBIN
+     C     P1            OCCUR     ##BIND
+     C                   Z-ADD     #@TBIN        ##PBIN
+     C*
+     C                   ADD       1             #@BIND
+     C                   Z-ADD     #@BIND        ##TBIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRPATH                                         *
+     C* Function    :  Generate Path String /GS1/GS2...               *
+     C*                                                               *
+     C* Called by   :  L09PD  - Process Lending Past Due Notices      *
+     C*                LOANPD - Process Loan Payment Past Due Details *
+     C*                LOANA  - Process Loan Associated Details       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C     SRPATH        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRPATH'      @STK(Q)
+     C*
+     C                   CLEAR                   S#PATH
+     C*
+     C                   DO        P1            P2
+     C     P2            OCCUR     ##PATH
+     C     S#PATH        CAT       '\':0         S#PATH
+     C     S#PATH        CAT       ##GRPS:0      S#PATH
+     C                   END
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRRFMN                                         *
+     C* Function    :  Reformat RDE data                              *
+     C*                                                               *
+     C* Called by   :  SRADTA - Accumulate RDEs and associated        *
+     C*                         data for output                       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C     SRRFMN        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRRFMN'      @STK(Q)
+     C*
+     C** Loop through RDE's and data
+     C*
+     C                   Z-ADD     0             #1
+     C     #1            DOUEQ     20
+     C                   ADD       1             #1
+     C                   MOVEL     ##R(#1)       R#DEFN
+     C                   MOVEL     ##D(#1)       R#DATA
+     C*
+     C** If data present and RDE is edited
+     C*
+     C     R#DATA        IFNE      *BLANK
+     C     ##RDEC        ANDNE     *BLANK
+     C*
+     C** Reformat Amount
+     C*
+     C                   Z-ADD     1             #2
+     C     *BLANK        LOOKUP    ##NUMA(#2)                             99    *
+     C                   Z-ADD     20            #3
+     C                   Z-ADD     0             ##WNUM
+     C     #2            DOWGT     1
+     C     #2            ANDLE     20
+     C     #3            ANDGT     1
+     C                   SUB       1             #2
+     C                   MOVEL     ##NUMA(#2)    ##W(#3)
+     C                   SUB       1             #3
+     C                   ENDDO
+     C*
+     C** Sign the amount
+     C*
+     C     ##SIGN        IFEQ      '-'
+     C                   Z-SUB     ##WNUM        ##NUMB
+     C                   ELSE
+     C                   Z-ADD     ##WNUM        ##NUMB
+     C                   END
+     C*
+     C** Default Edit Type
+     C*
+     C     ##EDTT        IFEQ      *BLANK
+     C                   MOVEL     ##RDET        ##EDTT
+     C                   END
+     C*
+     C** Default Decimal Places
+     C*
+     C     ##DCPA        IFEQ      *BLANK
+     C                   MOVEL     ##RDED        ##DCPA
+     C                   END
+     C*
+     C** New RDE data
+     C*
+     C                   MOVEL     R#DATA        ##D(#1)
+     C                   ENDIF
+     C                   ENDDO
+     C*
+     C     EXRFMN        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRDCDT                                         *
+     C* Function    :  Determine Currency Details                     *
+     C*                                                               *
+     C* Called by   :  LOANPD - Process Loan Payment Past Due Details *
+     C*                SRINIT - Initial Processing - On First Call    *
+     C* Calls       :  SRERR  - Database Error                        *
+     C*****************************************************************
+     C     SRDCDT        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRDCDT'      @STK(Q)
+     C*
+     C**  Access array of Currency Details already loaded
+     C*
+     C                   Z-ADD     1             C                 3 0
+     C     ##CCY         LOOKUP    ##CY(C)                                99
+     C*
+     C**  If no match is found determine the next free space in the
+     C**  loaded currency array.
+     C*
+     C     *IN99         IFEQ      *OFF
+     C                   Z-ADD     1             C
+     C     *BLANK        LOOKUP    ##CY(C)                                99
+     C*
+     C**  If no space is left, set the Currency Data data structure to
+     C**  the 101st occurrence so that when the new details are
+     C**  retrieved no existing details are overwritten.
+     C*
+     C     *IN99         IFEQ      *OFF
+     C     101           OCCUR     SDCURR
+     C*
+     C**  If a space is found, set up the new currency into the array
+     C**  and position the Currency Data data structure on the
+     C**  occurrence matching the array index.
+     C*
+     C                   ELSE
+     C                   MOVE      ##CCY         ##CY(C)
+     C     C             OCCUR     SDCURR
+     C                   ENDIF
+     C*
+     C**  Retrieve the currency details.
+     C*
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       ##RTCD                         B:Return Cd
+     C                   PARM      '*KEY'        ##OPTN                         I:Option
+     C                   PARM      ##CCY         ##CCYP            3            I:Currency Code
+     C     SDCURR        PARM      *BLANK        DSSDY                          O:Format
+     C*
+     C**  Database Error
+     C*
+     C     ##RTCD        IFNE      *BLANK
+     C                   MOVEL     'SDCURRPD'    W0FILE
+     C                   MOVEL     ##CCY         W0KEY                          ***************
+     C                   Z-ADD     12            W0ERNB                         * DB ERROR 12 *
+     C                   MOVEL     'MEM5004'     W0MSGD                         ***************
+     C                   MOVEL     'MIDAS  '     W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C*
+     C**  If the currency has been retrieved earlier, position the
+     C**  Currency Data data structure on the relevant occurrence.
+     C*
+     C                   ELSE
+     C     C             OCCUR     SDCURR
+     C                   ENDIF
+     C/COPY WNCPYSRC,CG6055C002
+     C*
+     C     EXDCDT        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRGENR                                         *
+     C* Function    :  Generate reference number                      *
+     C*                by writing to PF/CGUDCRPD                      *
+     C*                                                               *
+     C* Called by   :  SRMAIN - Main Processing                       *
+     C* Calls       :  CG9010 - Create reference record               *
+     C*****************************************************************
+     C     SRGENR        BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                   ADD       1             Q
+     C                   MOVEL     'SRGENR'      @STK(Q)
+     C*
+     C**  Generate reference number and check if further processing
+     C**  required. Set up all available information in the record
+     C**  format before calling.
+     C*
+     C                   CLEAR                   ##UDCR
+     C*
+     C** Booking/Main Branch (Mandatory)
+     C*
+     C                   MOVEL     BRCA          DRBRCA
+     C*
+     C** Originating Branch (Optional)
+     C*
+     C                   MOVEL     ORBR          DRORBR
+     C*
+     C** Module identifier (Mandatory)
+     C*
+     C                   MOVEL     'LE'          DRMODI
+     C*
+     C** Midas Transaction Number (Mandatory)
+     C*
+     C                   MOVEL     LNRF          DRMTRN
+     C*
+     C                   MOVEL     W#PTYP        DRPTYP                         * print type
+     C                   MOVEL     W#PSTY        DRPSTP                         * print s/type
+     C*
+     C** Auto Transmission indicator
+     C*
+     C                   MOVEL     'N'           DRATRM
+     C*
+     C** Customer Number (Mandatory)
+     C*
+     C                   MOVEL     CNUM          ##CUST
+     C*
+     C                   CALL      'CG9010'
+     C                   PARM                    ##RTCD            7
+     C                   PARM      '*GEN'        ##MODE           10
+     C                   PARM      W0CMT         ##CMT             3
+     C                   PARM                    ##CUST            6
+     C                   PARM                    ##UDCR
+     C                   PARM                    ##ITMA            8
+     C*
+     C**  Blank return code implies generate correspondence.
+     C**  CGD1270 => no error, but suppress output for this transaction.
+     C*
+     C     ##RTCD        IFEQ      *BLANK
+     C*
+     C                   MOVE      'Y'           ##COPD
+      *                                                                                       CCG015
+      ** If return code is blank, generate the 'begin' and 'end'                              CCG015
+      ** New Extraction Records                                                               CCG015
+      *                                                                                       CCG015
+     C     DRPTYP        CAT(P)    ':':0         COLON            11
+     C     COLON         CAT(P)    DRPSTP:0      ##REFR
+     C                   EXSR      WRAPRF
+     C*
+     C                   ELSE
+     C*
+     C     ##RTCD        IFNE      'CGD1270'
+     C                   MOVEL     'CG9010  '    W0FILE
+     C                   MOVEL     ##RTCD        W0KEY                          ***************
+     C                   Z-ADD     09            W0ERNB                         * DB ERROR 09 *
+     C                   MOVEL     'CGD1286'     W0MSGD                         ***************
+     C                   MOVEL     'CGUSRMSG'    W0MSGF
+     C                   EXSR      SRERR
+     C                   ENDIF
+     C                   ENDIF
+     C*
+     C     EXGENR        TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                   MOVEA     *BLANKS       @STK(Q)
+     C                   SUB       1             Q
+     C*
+     C                   ENDSR
+     C*****************************************************************
+     C/SPACE 5                                                            CEU014
+      *****************************************************************   CEU014
+      * Subroutine  :  D@EURO                                         *   CEU014
+      * Function    :  EURO Currency Conversion:                      *   CEU014
+      * Converts amount P@FRAM in P@FRCY to ##OUTA in P@TOCY.         *   CEU014
+      * Called by   :  LOANPD                                         *   CEU014
+      *                                                               *   CEU014
+      * Calls       :  EU0200                                         *   CEU014
+      *                SRERR                                          *   CEU014
+      *****************************************************************   CEU014
+     C     D@EURO        BEGSR                                                                 CEU01
+      *                                                                   CEU014
+     C                   Z-ADD     0             ##OUTA           13 0                         CEU01
+     C                   CALL      'EU0200'                                                    CEU01
+     C                   PARM      *BLANKS       P@RTCD            7            Return Code    CEU01
+     C                   PARM                    P@FRAM           18 3          FROM Ccy AmountCEU01
+     C                   PARM                    P@FRCY            3            FROM Currency  CEU01
+     C                   PARM                    P@TOCY            3            TO Currency    CEU01
+     C                   PARM      0             P@OUTA           15 0          Outright AmountCEU01
+     C                   PARM      0             P@INTA           18 3          Interim Amount CEU01
+     C                   PARM      0             P@EXRT           15 9          Exchange Rate  CEU01
+     C                   PARM      *BLANK        P@MDIN            1            Mult/Div Ind.  CEU01
+      *                                                                   CEU014
+      ** Database error handling:                                         CEU014
+      *                                                                   CEU014
+     C     P@RTCD        IFEQ      '*ERROR*'                                                   CEU01
+     C                   MOVEL     'EU0200  '    W0FILE                                        CEU01
+     C                   MOVEL     '*CALL   '    W0KEY                          ***************CEU01
+     C                   Z-ADD     5             W0ERNB                         * DB ERROR 5  *CEU01
+     C                   MOVEL     'MEM5003'     W0MSGD                         ***************CEU01
+     C                   MOVEL     'MIDAS  '     W0MSGF                                        CEU01
+     C                   EXSR      SRERR                                                       CEU01
+      *                                                                   CEU014
+      ** Otherwise, store amount in settlement currency as ##OUTA         CEU014
+      *                                                                   CEU014
+     C                   ELSE                                                                  CEU01
+     C                   MOVE      P@OUTA        ##OUTA                                        CEU01
+     C                   ENDIF                                                                 CEU01
+      *                                                                   CEU014
+     C                   ENDSR                                                                 CEU01
+      *****************************************************************   CEU014
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSRL
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRCLE
+     C/SPACE 5
+     C/COPY CGCPYSRC,CGNWEXILE
+     C/SPACE 5                                                                                CCG015
+**CTDATA ##CPY
+(c) Finastra International Limited 2001

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054059           Date 28Nov19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD054059           Date 28Nov19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
@@ -108,6 +109,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD054059 - Missing outgoing payment reference in the         *
       *             extension files                                   *
       *  CSD102 - Password Length Extension (Recompile)               *

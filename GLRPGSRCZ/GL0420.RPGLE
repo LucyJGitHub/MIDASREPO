@@ -14,8 +14,11 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR1088283          Date 20Mar13               *
-      *  Prev Amend No. 220877             Date 22Mar19               *
+      *  Last Amend No. UUC105             Date 19Oct20               *
+      *  Prev Amend No. UUC102             Date 16Oct20               *
+      *                 CGL195             Date 07Oct20               *
+      *                 AR1088283          Date 20Mar13               *
+      *                 220877             Date 22Mar19               *
       *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -160,6 +163,26 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  UUC105 - upgrade of UUC070 to FBM 2.1                        *
+      *           NRA in Retail Account Information                   *
+      *           Added hooks UUC105_009, UUC105_010, UUC105_011,     *
+      *                       UUC105_012, UUC105_013, UUC105_014.     *
+      *           Used hooks GL0420CCP8, GL0420FFPG and GL0420C111.   *
+      *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
+      *           UUC063 - Balance Statement Enhancement              *
+      *           Use Hooks GLH00438, GLH00439, GL0420CP12, GL0420CP15*
+      *           GL0420CP20, GL0420CP21, GL0420CP25,  GL0420CP26,    *
+      *           GL0420CP29, GL0420CP50, GL0420CP51,  GL0420CP52,    *
+      *           GL0420CP53, GL0420CP54, GL0420CP55,  GL0420CP56,    *
+      *           GL0420CP57, GL0420CY34, GL0420C002,  GL0420C003,    *
+      *           GL0420C057, GL0420C074, GL0420C079,  GL0420C089,    *
+      *           GL0420F004, GL0420IIP1, GL0420IIP2,  GL0420IP11,    *
+      *           GL0420OOP7, GL0420OOP9,  GL0420OO10,                *
+      *           GL0420OO11, GL0420OP13, GL0420OP14, GL0420F001,     *
+      *           GL0420F003                                          *
+      *           Add Hooks UUC102_007                                *
+      *  CGL195 - Print Clear Balance just after the CF Balance for   *
+      *           all retail accounts                                 *
       *  AR1088283 - Group Account narrative appears unconditionally. *
       *              Must take consideration hierarchy level setting  *
       *              for Top ob Balance Sheet (Child: AR1088286)      *
@@ -1590,6 +1613,19 @@
      C*                                                                   S01408
      C***/COPY*WNCPYSRC,GL0420CP35***                                                  S01408 CFC006
      C/COPY WNCPYSRC,GL0420CP35                                                             MD020563
+      *                                                                                       CGL195
+      **  Check to see if SAR is installed.                                                   CGL195
+      *                                                                                       CGL195
+     C                   MOVE      'N'           CGL195            1                          CGL195
+     C                   CALL      'AOSARDR0'                                                 CGL195
+     C                   PARM      '       '     @RTCD                                        CGL195
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL195
+     C                   PARM      'CGL195'      @SARD             6                          CGL195
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL195
+      *                                                                                       CGL195
+     C     @RTCD         IFEQ      *BLANKS                                                    CGL195
+     C                   MOVE      'Y'           CGL195                                       CGL195
+     C                   END                                                                  CGL195
      C*                                                                   S01408
       ***Check*if*CFC006*is*installed**********************************           AR1097176 MD020563
       *****************************************************************           AR1097176 MD020563
@@ -4039,6 +4075,17 @@
      C                   EXCEPT    TOT                                                        S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP17                                           S01408
+      *
+     C     CGL195        IFEQ      'Y'                                                        CGL195
+     C     ATYP          ANDEQ     'R'                                                        CGL195
+      *                                                                                       CGL195
+      ** *IN41='1' PRINT FORMAT '1'  (PRINTER FILE P2 USED)                                   CGL195
+      *                                                                                       CGL195
+     C     *IN41         ANDEQ     '1'                                                        CGL195
+      *                                                                                       CGL195
+     C                   Z-ADD     CLBL          CLEBAL           15 005                      CGL195
+     C                   EXCEPT    TOT028                                                     CGL195
+     C                   ENDIF                                                                CGL195
      C*                                                                   S01408
      C******************   SETOF                     52            S01091 E10603
      C     ENDPS         TAG                                                                  E12038
@@ -5712,11 +5759,17 @@
 1643 O**********      N27      ACNO      80                                                   CGL029
      O                       ACOD                72                                           CGL029
      O                       ACSQ                75                                           CGL029
+     O/COPY WNCPYSRC,UUC105_009                                                               UUC105
      O              N27      ACNO                86                                           CGL029
+     O/COPY WNCPYSRC,UUC105_010                                                               UUC105
 1644 O**********                         97 'BRANCH -'                    S01194
+     O/COPY WNCPYSRC,UUC105_011                                                               UUC105
 1644 O                  58                       97 'BRANCH -'                  S01194
+     O/COPY WNCPYSRC,UUC105_012                                                               UUC105
 1645 O***********              BRNM     128                               S01194
+     O/COPY WNCPYSRC,UUC105_013                                                               UUC105
      O                  58   A8BRNM             128                             S01194
+     O/COPY WNCPYSRC,UUC105_014                                                               UUC105
 1646 O*       H   08   60                                                 S01091
 1646 O********E** 08   60                                       S01091    S01117
 1646 O          E    60 84                    08                                S01117
@@ -5988,6 +6041,18 @@
      O                       WCMTX4              97                             216006
      O**                                                                  216006
      O/COPY WNCPYSRC,GL0420O036
+      *                                                                                       CGL195
+     O          E 1  41 52   TOT028                                                           CGL195
+     O         AND  N34 84                                                                    CGL195
+     O         AND  N33                                                                       CGL195
+     O                                           47 'AVAILABLE BALANCE'                       CGL195
+     O                       RUNA                +1                                           CGL195
+     O                  70   CLEBAL             127 '   ,   ,   ,   , 0 CR'                   CGL195
+     O                  71   CLEBAL             127 '  ,   ,   ,   , 0 . CR'                  CGL195
+     O                  72   CLEBAL             127 ' ,   ,   ,   , 0 .  CR'                  CGL195
+     O                  73   CLEBAL             127 '   ,   ,   , 0 .   CR'                   CGL195
+     O                  05                      127 'DR'                                      CGL195
+      *                                                                                       CGL195
 1721 O**   END OF PAGE ONLY
 1722 O**
 1723 O*       T 1         41 45                                           S01091
@@ -6667,6 +6732,7 @@
 1839 O                                           93 'PAGE'
      O/COPY WNCPYSRC,GL0420O064
 1840 O                       STPA          3     98
+     O/COPY WNCPYSRC,UUC102_007
      O          E    64 84 05                 11                                              220877
      O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408

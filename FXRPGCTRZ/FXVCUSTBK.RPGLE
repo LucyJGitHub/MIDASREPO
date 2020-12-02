@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD050870           Date 31May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. UUC106             Date 07Oct20               *
+      *  Prev Amend No. MD050870           Date 31May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -55,6 +56,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC106 - Upgrade of UUL001 to FBM 2.1                        *
+      *           Deal subtype allocation FX/MM                       *
+      *           Unibank version of FXVCUSTBK to default deal        *
+      *           sub-type if customer is valid                       *
+      *           Fixes to this module might be needed by the local   *
+      *           XXVCUSTBK module too                                *
       *  MD050870 - Blank Profit Center doesn't default when amending *
       *             an FXDL transaction when CLE051 is switched Off   *
       *  MD046248 - Finastra Rebranding                               *

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR898442           Date 24Feb12               *
-      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *  Last Amend No. UUC103             Date 20Oct20               *
+      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
@@ -82,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Add Hooks UUC103_001, UUC103_002, UUC103_003        *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
       *             (Child: AR898443)                                 *
       *  MD055842 - Second tag 86 not translated to To Characters.    *
@@ -458,6 +462,7 @@
      D Subfld8         S             18
      D Subfld9         S             34
      D SavTrno         S             16
+     D/COPY WNCPYSRC,UUC103_001                                                               UUC103
 
      D POptn           S              7A                                                      CER030
      D PSard           S              6A                                                      CER030
@@ -1348,7 +1353,9 @@
      C                   Movel     X_MGSFD6      Subfld6
 
       *    Subfld 7 = Reference for the Account Owner
+     C/COPY WNCPYSRC,UUC103_002                                                               UUC103
      C                   Movel     X_MGSFD7      Subfld7
+     C/COPY WNCPYSRC,UUC103_003                                                               UUC103
 
       *    Subfld 8 = Account Servicing Institution's Reference
      C                   Movel     X_MGSFD8      Subfld8

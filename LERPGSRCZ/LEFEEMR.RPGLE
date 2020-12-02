@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR994776           Date 04Apr19               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. MD050688           Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 AR994776           Date 04Apr19               *
+      *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -49,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
       *  AR994776 - Fees remains unauthorised after rejection of      *
       *             amendment. Details are not reverted correctly.    *
       *             Add a flag if action is reject to revert back the *
@@ -250,7 +256,10 @@
      D WIdx            S              3P 0
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
-     D PRcvParm        S             92                                                       244636
+     D*PRcvParm*       S             92                                              244636 MD050688
+     D PRcvParm        S            545                                                     MD050688
+                                                                                            AR375892
+     D PPayParm        S           1045                                                     AR375892
       *
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
@@ -566,6 +575,7 @@
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   AR375892
  
      C     DDACTNOK      IFEQ      'Y'
      C     DDCSSNOK      ANDEQ     'Y'

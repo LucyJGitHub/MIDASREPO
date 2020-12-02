@@ -10,12 +10,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD055501           Date 29Apr20               *
+      *  Last Amend No. MD053472           Date 27Oct20               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD055501           Date 29Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD047607           Date 29Nov17               *
-      *                 MD046248           Date 27Oct17               *      
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -121,10 +122,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
-      *           - Recompile over changes in SDCBRTPD.               *      
+      *           - Recompile over changes in SDCBRTPD.               *
       *  MD055501 -  In Projected account movement Enquiry,           *
       *              Withholding Tax amount round down for a TD Deal  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -2781,7 +2784,8 @@
      C           ##LOD     OREQ 'D'                        * deposit
      C           ##TRYP    ANDEQ'SI'                       * + settle int.
      C********** *IN31     ANDEQ'0'                        * + Non-neg               101523 MD031115
-     C           HNPENP    OREQ 'P'                        * pay penalty  BUG3045
+     C********** HNPENP    OREQ 'P'                        * pay penalty            BUG3045 MD053472
+     C           ##LOD     OREQ 'D'                                                         MD053472
      C           ##TRYP    ANDEQ'EM'                       * + Early mat. BUG3045
      C                     MOVEL##PAYD    ##SETD           * Pay details
      C                     ELSE
@@ -2956,6 +2960,21 @@
      C                     MOVEL##TRN     C#TRN
       *
       * Movement amount
+      *                                                                                     MD053472
+     C           ##TRYP    IFEQ 'EM'                                                        MD053472
+     C           HNPENP    IFEQ 'R'                                                         MD053472
+     C           ##REVI    ANDNE'YES'                                                       MD053472
+     C           HNPENP    OREQ 'P'                                                         MD053472
+     C           ##REVI    ANDEQ'YES'                                                       MD053472
+     C                     Z-ADD##AMT     C#AMT                                             MD053472
+     C                     ENDIF                                                            MD053472
+     C           HNPENP    IFEQ 'R'                                                         MD053472
+     C           ##REVI    ANDEQ'YES'                                                       MD053472
+     C           HNPENP    OREQ 'P'                                                         MD053472
+     C           ##REVI    ANDNE'YES'                                                       MD053472
+     C                     Z-SUB##AMT     C#AMT                                             MD053472
+     C                     ENDIF                                                            MD053472
+     C                     ELSE                                                             MD053472
      C           ##PYRC    IFEQ 'P'
      C           ##REVI    ANDNE'YES'
      C           ##PYRC    OREQ 'R'
@@ -2964,6 +2983,7 @@
      C                     ELSE
      C                     Z-ADD##AMT     C#AMT            * rec ie debit
      C                     END
+     C                     ENDIF                                                            MD053472
       *
       * Module
      C                     MOVEL'DL'      C#MOD
@@ -4258,7 +4278,7 @@
       *                                                                                    MD031062A
      C                     ENDIF                                                           MD031062A
      C                     ENDIF                                                           MD031062A
-      *                                                                                    MD031062A    
+      *                                                                                    MD031062A
       ** Determine if CER049 enhancement is installed                                         CER049
       *                                                                                       CER049
      C                     CALL 'AOSARDR0'                                                    CER049
@@ -5495,7 +5515,7 @@
      C                     ENDIF                                                           MD031062A
       *                                                                                    MD031062A
      C                     ENDSR                                                           MD031062A
-      *****************************************************************                    MD031062A      
+      *****************************************************************                    MD031062A
       *****************************************************************                       CDL033
       /EJECT                                                                                  CDL033
       *****************************************************************                       CDL033

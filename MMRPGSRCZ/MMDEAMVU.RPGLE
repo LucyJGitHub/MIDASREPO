@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055318           Date 17Feb20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD053472           Date 27Oct20               *
+      *  Prev Amend No. MD055318           Date 17Feb20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 CDL051             Date 02May18               *
       *                 MD046248           Date 27Oct17               *
@@ -90,6 +91,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  MD055318 - Customer may not be amended error                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -1357,9 +1360,9 @@
                                                                                              BUG6534
      C     DDMTYP        IFEQ      'PD'                                                      BUG6534
      C     LONDEP        ANDEQ     'D'                                                       BUG6534
-     C     DDMTYP        OREQ      'EM'                                                      BUG6534
+     C*****DDMTYP        OREQ      'EM'                                             BUG6534 MD053472
      C*****LONDEP        ANDEQ     'D'                                               BUG6534  249910
-     C     DDPENP        ANDEQ     'P'                                                        249910
+     C*****DDPENP        ANDEQ     'P'                                               249910 MD053472
      C     DDMTYP        OREQ      'PI'                                                      BUG6534
      C     LONDEP        ANDEQ     'L'                                                       BUG6534
      C     DDMTYP        OREQ      'BC'                                                      BUG6534
@@ -1380,9 +1383,9 @@
       *                                                                                      BUG6534
      C     DDMTYP        IFEQ      'PD'                                                      BUG6534
      C     LONDEP        ANDEQ     'L'                                                       BUG6534
-     C     DDMTYP        OREQ      'EM'                                                      BUG6534
+     C*****DDMTYP        OREQ      'EM'                                             BUG6534 MD053472
      C*****LONDEP        ANDEQ     'L'                                               BUG6534  249910
-     C     DDPENP        ANDEQ     'R'                                                        249910
+     C*****DDPENP        ANDEQ     'R'                                               249910 MD053472
      C     DDMTYP        OREQ      'PI'                                                      BUG6534
      C     LONDEP        ANDEQ     'D'                                                       BUG6534
      C     DDMTYP        OREQ      'BC'                                                      BUG6534

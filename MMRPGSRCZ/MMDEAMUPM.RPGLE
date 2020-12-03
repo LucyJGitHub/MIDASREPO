@@ -14,7 +14,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -89,6 +90,8 @@
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -1110,7 +1113,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                                      BUG3045
-     C     IGPENP        ANDEQ     'P'                                                       BUG3045
+     C*****IGPENP        ANDEQ     'P'                                              BUG3045 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       * DETERMINE ALTERNATIVE PAY INSTRUCTIONS
       *
@@ -1128,7 +1132,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                                      BUG3045
-     C     IGPENP        ANDEQ     'R'                                                       BUG3045
+     C*****IGPENP        ANDEQ     'R'                                              BUG3045 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       * DETERMINE ALTERNATIVE REC INSTRUCTIONS
       *
@@ -1216,7 +1221,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                                      BUG3045
-     C     IGPENP        ANDEQ     'P'                                                       BUG3045
+     C**** IGPENP        ANDEQ     'P'                                              BUG3045 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       * DETERMINE ALTERNATIVE PAY INSTRUCTIONS
       *
@@ -1239,7 +1245,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                                      BUG3045
-     C     IGPENP        ANDEQ     'R'                                                       BUG3045
+     C*****IGPENP        ANDEQ     'R'                                              BUG3045 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       * DETERMINE ALTERNATIVE REC INSTRUCTIONS
       *

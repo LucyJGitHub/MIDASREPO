@@ -568,7 +568,7 @@
      D PStKey          S              7                                                       247545
                                                                                               247545
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LEBasRBckfld    DS            41                                                       CLE172
+     D LEBasRBckfld    DS            46                                                       CLE172
                                                                                               CLE172
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -1074,8 +1074,8 @@
      C                   ENDIF                                                              MD054028
       ** CLE172 Fields                                                                        CLE172
      C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      LEBasRBckfld = %SUBST(Extdata500:eBfp:41)                  CLE172
-     C                   ADD       41            eBfp                                         CLE172
+     C                   EVAL      LEBasRBckfld = %SUBST(Extdata500:eBfp:46)                  CLE172
+     C                   ADD       46            eBfp                                         CLE172
      C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
@@ -1962,7 +1962,6 @@
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDPREM           15                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
-     C                   PARM                    LEBasRBckFld                                 CLE172
 
       * OUTPUTS
 
@@ -2062,6 +2061,8 @@
      C                   PARM                    OKClPrim
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LEBasRBckFld                                 CLE172
 
       * OUTPUTS
 

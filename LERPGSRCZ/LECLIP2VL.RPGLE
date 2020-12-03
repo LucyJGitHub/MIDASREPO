@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
@@ -803,6 +805,9 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
+      ** LE Backward-Looking Rate Fields                                                      CLE172
+     D LEBasRBckfld    DS            46                                                       CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -998,6 +1003,10 @@
       ***  Validate base rate type
       *
      C                   EXSR      SRBRTT
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
      C                   ENDIF                                                                CLE035
       *
       /COPY WNCPYSRC,LECLIP2V05
@@ -1370,6 +1379,36 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALL      'ZAVBLRTE'                                                 CLE172
+     C                   PARM                    CCLCCY                                       CLE172
+     C                   PARM                    CCLBRTT                                      CLE172
+     C                   PARM                    LEBasRBckfld                                 CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNamXAr                                    CLE172
+     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM                    CCLBLRT                                      CLE172
+     C                   PARM                    CCLLBDY                                      CLE172
+     C                   PARM                    CCLLODY                                      CLE172
+     C                   PARM                    CCLPDLY                                      CLE172
+     C                   PARM                    CCLBADJ                                      CLE172
+     C                   PARM                    CCLAVOP                                      CLE172
+     C                   PARM                    CCLCART                                      CLE172
+     C                   PARM                    CCLWGHT                                      CLE172
+     C                   PARM                    CCLBRAC                                      CLE172
+     C                   PARM                    CCLLBAC                                      CLE172
+     C                   PARM                    CCLPIAD                                      CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1648,6 +1687,7 @@
      C                   MOVEL     'LEL0712'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
      C                   EXSR      SRBRTT                                                     CLE035
+     C                   EXSR      SRBLRTE                                                    CLE172
       *                                                                                     MD055219
      C     BASER         IFEQ      *ZEROS                                                   MD055219
      C     #DDRTSP       ANDEQ     *ZEROS                                                   MD055219

@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
@@ -206,6 +210,8 @@
      C                             PSJobName = 'QZDASOINIT'                                   CAP084
      C                             OR DDSWTN = '?' AND                                        247277
      C                             PSJobName = 'QSQSRVR'                                      247277
+     C                             OR DDSWTN = '?' AND                                     AR1088819
+     C                             PSJobName = 'QZDASSINIT'                                AR1088819
      C                   MOVE      'N'           OKSWTN                                       CAP084
      C                   ADD       1             Idx                                          CAP084
      C                   MOVEL     'DDSWTN'      FldNamXAr(Idx)                               CAP084

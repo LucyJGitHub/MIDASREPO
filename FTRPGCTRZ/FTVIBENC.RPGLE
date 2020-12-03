@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055570           Date 15May20               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. MD055570           Date 15May20               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD047369           Date 30Aug17               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
+      *           - Check on QZDASSINIT job for system with SSL is ON *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD034521A - Error handling of Blocked account is not the     *
@@ -660,6 +663,7 @@
      C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                     BUG4581 MD034521A
       *                                                                                     MD055570
      C                   IF         PSJobName = 'QZDASOINIT' OR                             MD055570
+     C                              PSJobName = 'QZDASSINIT' OR                             MD050405
      C                              PSJobName = 'QSQSRVR' OR                                MD055570
      C                              PSJobName = 'APISERVER'                                 MD055570
       *                                                                                     MD055570

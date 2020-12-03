@@ -388,6 +388,7 @@ D     /EJECT
                                                                                             MD056972
       * Write ACDET header and trailer                                                      MD056972
                                                                                             MD056972
+     C                   IF        CGL013 = 'N'                                             MD056972
      C                   CLEAR                   ACDET_AA                                   MD056972
      C                   EVAL      AA_RECI = 'H'                                            MD056972
      C                   WRITE     ACDETAAF                                                 MD056972
@@ -395,6 +396,7 @@ D     /EJECT
      C                   READ      ACCNTAC                                                  MD056972
      C                   EVAL      AC_NORE = ACDETCount+ 2                                  MD056972
      C                   WRITE     ACDETACF                                                 MD056972
+     C                   ENDIF                                                              MD056972
 
       ** Print audit report GL000570AU
 

@@ -182,7 +182,7 @@
       ***  Second DS for access programs, long data structure
       *                                                                                       CLE172
      D LoanScnBlrt     DS            46                                                       CLE172
-      ** LE Backward-Looking Rate Fields                                                      CLE172
+      ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -759,7 +759,7 @@
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
-     C                   PARM                    LoanScnBlrt                                CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028            1                         BUG3721

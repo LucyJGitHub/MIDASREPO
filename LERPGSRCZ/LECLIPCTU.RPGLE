@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -67,12 +68,13 @@
       *                 225959             Date 23Mar04               *
       *                 CGL029             Date 01Sep03               *
       *                 222373             Date 29Oct03               *
-      *                 CDE005             Date 23Sep02
+      *                 CDE005             Date 23Sep02               *
       *                 CLE030             Date 29Aug02               *
       *                 CAP074  *CREATE    Date 26Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -281,6 +283,9 @@
 
       * FRA/IRS Settlement Instructions - Current
      D C_FRI         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
+
+      ** CLIP Backward-Looking Rate Fields                                                    CLE172
+     D LoanScnBlrt     DS            46                                                       CLE172
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -1267,6 +1272,10 @@
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
      C                   PARM                    OKClPrim                                    BUG3721
+      ** Business Day Convention Screen Detail                                                CLE172
+     C                   PARM                    TranInSeven                                  CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
 
       * OUTPUTS
 
@@ -1762,6 +1771,8 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721

@@ -366,15 +366,15 @@
       *                                                                                       CSD103
      C                   MOVE      BABLRT        DDBLRT                                       CSD103
       *                                                                                       CSD103
-      * Default Lookback Days for Settlement Base Rate                                        CSD103
+      * Lookback Days                                                                         CSD103
       *                                                                                       CSD103
      C                   MOVE      BALBDY        DDLBDY                                       CSD103
       *                                                                                       CSD103
-      * Default Lockout Days                                                                  CSD103
+      * Lockout Days                                                                          CSD103
       *                                                                                       CSD103
      C                   MOVE      BALODY        DDLODY                                       CSD103
       *                                                                                       CSD103
-      * Default Payment Delay Days                                                            CSD103
+      * Payment Delay Days                                                                    CSD103
       *                                                                                       CSD103
      C                   MOVE      BAPDLY        DDPDLY                                       CSD103
       *                                                                                       CSD103
@@ -419,7 +419,7 @@
       *                                                                                       CSD103
      C                   MOVE      BAWGHT        DDWGHT                                       CSD103
       *                                                                                       CSD103
-      * Default Lookback Days for Accrual                                                     CSD103
+      * Lookback Days for Accrual                                                             CSD103
       *                                                                                       CSD103
      C     SDBRAC        CHAIN     SDBSRTXX      SDBSRTDS             99                      CSD103
      C     *IN99         IFNE      '1'                                                        CSD103

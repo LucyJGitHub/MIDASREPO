@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE172             Date 04Dec20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -70,9 +73,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FLELOAMDDF CF   E             WORKSTN
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -115,96 +118,96 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array to set off error indicators
      D @Z0             S             19    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Array for messages
      D @NAR            S             40    DIM(3) CTDATA PERRCD(1)
- 
+
      D @EI             S             19
      D @EI2            S              5
- 
+
       ** External DS for customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for base rate code details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** External DS for loan type/subtype details
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** DS for access programs, long DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Loan amendment layout file - screen format
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
- 
+
       ** Loan amendment layout file - file format
      D LOAMFilFmt    E DS                  EXTNAME(LEVLOAMPD)
- 
+
       ** Error inds for loan amendment
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
- 
+
      D                 DS
      D  DDFOTX                 1     40
      D  D#SEQN                28     30
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -320,7 +323,7 @@
      C                   IF        DDACTN = 'I'
      C                   Eval      DDSTAT = *Blank
      C                   EndIf
- 
+
       * Display allocated sequence number
      C     WLSNA         IFNE      *BLANKS
      C                   MOVEL     @NAR(3)       DDFOTX
@@ -531,9 +534,9 @@
      C                   Clear                   LOAMScnFmt
      C                   MOVE      'I'           DDACTN
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -628,7 +631,7 @@
      C                   MOVEL     '*'           DDPGMQ
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     'LERMSGF   '  ZMSGF            10
- 
+
      C                   EVAL      *IN97 = *ON
       *
      C                   ENDSR

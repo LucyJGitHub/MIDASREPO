@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024811           Date 24Jan20               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *  Last Amend No. CLE172             Date 04Dec20               *
+      *  Prev Amend No. MD024811           Date 24Jan20               *
+      *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -603,6 +605,11 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
+                                                                                              CLE172
+      ** Benchmark Adjustment Days                                                            CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
+
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -829,7 +836,9 @@
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
-
+                                                                                              CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+     C                   PARM                    BmrkAdjfld                                   CLE172
       * Outputs
       * Current Loan Amendment in file format, plus Loan/facility details
      C                   PARM                    CurFilLoam
@@ -1864,6 +1873,7 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
+     C                   PARM                    BmrkAdjfld                                   CLE172
 
       * Set up the names of the message files from which the message handler
       * will get the messages

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE172             Date 04Dec20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -70,18 +73,18 @@
      FLELOAMBDF CF   E             WORKSTN
      F                                     SFILE(LELOAMS1:@@RRN)
      F                                     SFILE(LELOAMS3:@@RRN)
- 
+
       * Loan amendments file - by loan/value date/seqn
      FLELOAML8  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSDKF:LELNRFL0)
- 
+
       * Loan amendments file - by front office id
      FLELOAMLA  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSDKF:LEFOIDL0)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -100,71 +103,71 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **-----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
      D PChkDigit       S              1A                                                      CLE148
      D PData           S              2A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D BackF11         C                   'F11=Toggle Front Office Id.'
      D FrontF11        C                   'F11=Toggle Loan reference'
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array for amendment type narratives
      D LATP            S             21    DIM(6) CTDATA PERRCD(1)
- 
+
       ** External DS for customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** DS for access programs, long DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -172,7 +175,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -201,7 +204,7 @@
      C     @BDSFL        ANDEQ     'Y'
      C                   EXSR      BLDSFL2
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Read sub-file record - unless there are no transactions present
@@ -279,13 +282,13 @@
       ** If no records exist - set up an error message.
      C     @@EOF         COMP      'Y'                                    80
      C     @@EOF         IFEQ      'Y'
- 
+
       ** Write/read the no records screen, including footer
      C                   MOVE      '0'           *IN81
      C                   WRITE     LELOAMS4
      C                   WRITE     LELOAMF1
      C                   READ      LELOAMS4
- 
+
       ** If any command keys pressed, need to process them.
      C                   IF        *INKC = '1' or
      C                             *INKE = '1' or
@@ -298,10 +301,10 @@
      C                   GOTO      ReadCmdKey
      C                   ENDIF
      C                   ENDIF
- 
+
       ** End of error on 'Review from'
      C                   ENDIF
- 
+
       ** End of 'no errors detected, initialise subfile'
      C                   ENDIF
       *
@@ -493,7 +496,7 @@
       *
       ** Get Front Office Id
      C     @LNKEY        CHAIN     LELNRFL0                           89
- 
+
      C     *IN89         IFEQ      '0'
      C                   MOVEL     FRNT          @@FOID           20
      C                   ENDIF
@@ -523,7 +526,7 @@
      C                   WRITE     LELOAMS5
      C                   WRITE     LELOAMF1
      C                   READ      LELOAMS5
- 
+
       ** If any command keys pressed, need to process them.
      C                   IF        *INKC = '1' or
      C                             *INKE = '1' or
@@ -712,7 +715,7 @@
      C     C#RECN        CHAIN     LELOAMS1
      C                   Z-ADD     S#RECN        P#RECN
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Front office mode
@@ -742,7 +745,7 @@
      C                   Z-ADD     S#RECN        P#RECN
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       **  Return the selected option
@@ -867,7 +870,7 @@
      C                   EVAL      @LOAN = *BLANKS                                            CLE148
      C                   EVAL      @VDAT = 0
      C                   EVAL      @SEQN = 0
- 
+
       ***Test*whether*the*loan*number*is*numeric.**********************                       CLE148
      C**********         TESTN                   SLLOAN               98                      CLE148
      C******IN98         IFEQ      '1'                                                        CLE148
@@ -875,7 +878,7 @@
      C**********         ENDIF                                                                CLE148
      C     @LNKEY        SETLL     LELNRFL0                           96
      C                   ENDIF
- 
+
      C                   READ      LELNRFL0                               96
      C                   ELSE
       *
@@ -940,7 +943,7 @@
       *          to requested amendment on file
       *****************************************************************
      C     VALKEY        BEGSR
- 
+
       ** Test whether the 'position to' loan number is numeric.
      C                   MOVE      '0'           *IN31
      C     ' ':'0'       XLATE     SLLOAN        W#RLON            6
@@ -1070,7 +1073,7 @@
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDVDAT = *BLANKS
      C                   Z-ADD     *LOVAL        @VDAT
      C                   ELSE
@@ -1116,29 +1119,29 @@
       * SRSTAT  -  Determine loan amendment status narrative          *
       *****************************************************************
      C     SRSTAT        BEGSR
- 
+
      C                   MOVE      *BLANKS       ZAMSID
- 
+
      C                   SELECT
      C     ASTS          WHENEQ    'C'
      C                   MOVEL     'LEA0060'     ZAMSID
- 
+
      C     ASTS          WHENEQ    'R'
      C                   MOVEL     'LEA0061'     ZAMSID
- 
+
      C     ASTS          WHENEQ    'A'
      C                   MOVEL     'LEA0062'     ZAMSID
- 
+
      C     ASTS          WHENEQ    'D'
      C                   MOVEL     'LEA0063'     ZAMSID
                                                                                               CLE030
      C     ASTS          WHENEQ    'Q'                                                        CLE030
      C                   MOVEL     'LEA0064'     ZAMSID                                       CLE030
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       S#STAT
      C                   ENDSL
- 
+
       * Set up text from message file.
      C     ZAMSID        IFNE      *BLANKS
      C                   CALL      'Y2RVMGC'
@@ -1149,7 +1152,7 @@
      C                   PARM                    ZAMSTX          132
      C                   MOVEL(P)  ZAMSTX        S#STAT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1211,14 +1214,14 @@
       *       INZSR is only called the first time this module is called.
       *****************************************************************
      C     RESET         BEGSR
- 
+
      C                   EVAL      P#RECN = 0
       *  Reset error indicator
      C                   Eval      *IN40 = '0'
- 
+
       * If build sub-file is 'Y', set up error messages and screen defaults
      C     @BDSFL        IFEQ      'Y'
- 
+
       * Reset record in error indicator/FO Id work field
      C                   EVAL      *IN40  = '0'
      C                   EVAL      @@FOID = *BLANKS
@@ -1279,7 +1282,7 @@
      C     DDRAUT        IFEQ      *BLANKS
      C                   EVAL      DDRAUT = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1341,13 +1344,13 @@
       * Output parameters :
       * Option selected
      C                   PARM                    @OPSEL            1
- 
+
       * Loan number / value date / sequence / type selected
      C                   PARM                    @LNSel            6
      C                   PARM                    @VDSel            6
      C                   PARM                    @SQSel            3
      C                   PARM                    @ATSel            2
- 
+
       * Command keys
      C                   PARM                    @INKC             1
      C                   PARM                    @INKL             1

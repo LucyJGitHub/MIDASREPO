@@ -568,7 +568,7 @@
      D PStKey          S              7                                                       247545
                                                                                               247545
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LEBasRBckfld    DS            46                                                       CLE172
+     D LoanScnBlrt     DS            46                                                       CLE172
                                                                                               CLE172
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -1074,7 +1074,7 @@
      C                   ENDIF                                                              MD054028
       ** CLE172 Fields                                                                        CLE172
      C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      LEBasRBckfld = %SUBST(Extdata500:eBfp:46)                  CLE172
+     C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:46)                 CLE172
      C                   ADD       46            eBfp                                         CLE172
      C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
@@ -1592,7 +1592,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
-     C                                               + LEBasRBckfld                           CLE172
+     C                                               + LoanScnBlrt                          CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1621,7 +1621,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
-     C                                               + LEBasRBckfld                           CLE172
+     C                                               + LoanScnBlrt                          CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -2062,7 +2062,7 @@
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LEBasRBckFld                                 CLE172
+     C                   PARM                    LoanScnBlrt                                CLE172
 
       * OUTPUTS
 
@@ -2998,6 +2998,9 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
@@ -4475,16 +4478,16 @@
      C                   Endif                                                              MD054028
       *                                                                                       CLE172
       ** Check if CLE172 is ON                                                                CLE172
-     C                   CallB     'AOSARDR0'                                                 CLE172
-     C                   Parm      *Blanks       PRTCD                                        CLE172
-     C                   Parm      '*VERIFY'     POPTN                                        CLE172
-     C                   Parm      'CLE172'      PSARD                                        CLE172
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *Blanks       PRTCD                                        CLE172
+     C                   PARM      '*VERIFY'     POPTN                                        CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
       *                                                                                       CLE172
-     C                   Move      'N'           CLE172            1                          CLE172
-     C                   If        PRTCD = *Blanks                                            CLE172
-     C                   Eval      CLE172'                                                    CLE172
-     C                   Endif                                                                CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   IF        PRTCD = *Blanks                                            CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE168
       ** Access SAR details file                                                              CLE168
       *                                                                                       CLE168

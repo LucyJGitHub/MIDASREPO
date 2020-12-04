@@ -805,8 +805,22 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
-      ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LEBasRBckfld    DS            46                                                       CLE172
+      ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
+     D LoanScnBlrt     DS            46                                                       CLE172
+                                                                                              CLE172
+      ** CLIP Backward-Looking Rate Valid Fields
+     D LoanValBlrt     DS
+     D  CCLBLRT                1      1A
+     D  CCLLBDY                9     10S 0
+     D  CCLLODY               11     12S 0
+     D  CCLPDLY               13     14S 0
+     D  CCLBADJ               15     21P 8
+     D  CCLAVOP               22     22A
+     D  CCLCART               23     29P 8
+     D  CCLWGHT               30     30A
+     D  CCLBRAC               31     32A
+     D  CCLLBAC               33     34A
+     D  CCLPIAD               36     40S 0
       *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1388,24 +1402,19 @@
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
      C                   CALL      'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'CLIP'        ApiName           4                          CLE172
      C                   PARM                    CCLCCY                                       CLE172
      C                   PARM                    CCLBRTT                                      CLE172
-     C                   PARM                    LEBasRBckfld                                 CLE172
+     C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNamXAr                                    CLE172
      C                   PARM                    MsgIDXAr                                     CLE172
-     C                   PARM                    CCLBLRT                                      CLE172
-     C                   PARM                    CCLLBDY                                      CLE172
-     C                   PARM                    CCLLODY                                      CLE172
-     C                   PARM                    CCLPDLY                                      CLE172
-     C                   PARM                    CCLBADJ                                      CLE172
-     C                   PARM                    CCLAVOP                                      CLE172
-     C                   PARM                    CCLCART                                      CLE172
-     C                   PARM                    CCLWGHT                                      CLE172
-     C                   PARM                    CCLBRAC                                      CLE172
-     C                   PARM                    CCLLBAC                                      CLE172
-     C                   PARM                    CCLPIAD                                      CLE172
+     C                   PARM      LoanValBlrt   TempOutDS       200                          CLE172
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVE      TempOutDS     LoanValBlrt                                  CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172
       *
@@ -6358,6 +6367,9 @@ E004 C                   ENDIF
                                                                                             MD053143
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInScr7                                 MD053143
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                CLE172
       ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller

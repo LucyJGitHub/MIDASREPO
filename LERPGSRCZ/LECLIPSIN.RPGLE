@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -265,7 +267,7 @@
      D NwLnScnFmt3   E DS                  EXTNAME(LECLI3PD)
       ***  New Loan in Screen Format - Screen 3
      D NwLnScnFmt4   E DS                  EXTNAME(LECLI4PD)
-      ***  New Loan in Screen Format - Screen 7
+      ***  New Loan in Screen Format - Screen 7                                               CLE172
      D NwLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE172
 
 

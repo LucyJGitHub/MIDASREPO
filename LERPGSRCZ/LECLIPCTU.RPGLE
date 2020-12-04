@@ -217,6 +217,7 @@
      D TranInSeco    E DS                  EXTNAME(LECLI2PD)
      D TranInThir    E DS                  EXTNAME(LECLI3PD)
      D TranInFour    E DS                  EXTNAME(LECLI4PD)
+     D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE172
 
       * Error indicators
      D OKClPrim      E DS                  EXTNAME(LEECLI1PD)

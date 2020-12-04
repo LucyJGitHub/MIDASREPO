@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR970389B          Date 16Sep20               *
-      *  Prev Amend No. AR970389A          Date 16Sep20               *
+      *  Last Amend No. MD050526           Date 27Oct20               *
+      *  Prev Amend No. AR970389B          Date 16Sep20               *
+      *                 AR970389A          Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD055446           Date 04Apr20               *
       *                 MD052432           Date 18Dec18               *
@@ -156,6 +157,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050526 - Maintain Customers tab Authority Holders Link and *
+      *             Details by Country of Tax code not shown in red   *
+      *             in case of errors                                 *
       *  AR970389B - Reopen AR970389A due to the field also being     *
       *              defaulted to 'N' when some features are switched *
       *              ON. (Child: AR970392B)                           *
@@ -1012,6 +1016,9 @@
       ** Index for arrays of error message ids etc
      D*****Idx             S              3P 0                                               BUG5082
      D Idx             S              3P 0 INZ(0)                                            BUG5082
+
+      ** Counter used for checking errors returned by validators                            MD050526
+     D Idz             S              3P 0 INZ(0)                                           MD050526
 
       ** Index for arrays of warning message ids etc
      D***** WIdx            S              3P 0                                              BUG5082
@@ -2040,6 +2047,7 @@
      C                   EVAL      V_CTETXS =  TXDDETXS                                     MD023188
      C                   EVAL      V_CCTXArr(Idy)  = ValidCCTX                              AR740196
      C                   EVAL      CCTXArr(Idy) = TranInCCTX1                               MD023188
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                            AR740196
      C                   EVAL      hasDetails = *ON                                         AR743761
      C                   ENDDO                                                              AR740196
@@ -2375,6 +2383,7 @@
      C                   EVAL      TranInCUAH1 = CUAHArr(Idy)                                 CER059
      C                   EXSR      ValdCUAH                                                   CER059
      C                   EVAL      V_CUAHArr(Idy)  = ValidCUAH                                CER059
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                              CER059
      C                   ENDDO                                                                CER059
      C**********         ENDIF                                                     AR728530 MD026253
@@ -6238,6 +6247,85 @@
       *****************************************************************                       CER059
       /EJECT                                                                                  CER059
       *****************************************************************                       CER059
+      *                                                               *                     MD050526
+      * SrChkErr                                                      *                     MD050526
+      *                                                               *                     MD050526
+      *****************************************************************                     MD050526
+                                                                                            MD050526
+     C     SrChkErr      BEGSR                                                              MD050526
+     C                   EVAL      Idz = 1                                                  MD050526
+     C                   DOW       Idz <= Idx                                               MD050526
+      *                                                                                     MD050526
+     C                   IF        FldNameArr(Idz) = 'DDAUT0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAAUTH' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDLTP0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CALTYP' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG10'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG1' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG20'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG2' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG30'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG3' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG40'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG4' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDTPA0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CATYPA' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCINT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CACINT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPCNT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPCNT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDETXS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXETXS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCTTX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCTTX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCERF'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCERF' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCEEX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCEEX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCSTS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCSTS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCADT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCADT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCVDT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCVDT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+     C                   ENDIF                                                              MD050526
+     C                   EVAL      Idz = Idz + 1                                            MD050526
+     C                   ENDDO                                                              MD050526
+     C                   ENDSR                                                              MD050526
+      *****************************************************************                     MD050526
+      /EJECT                                                                                MD050526
+      *****************************************************************                     MD050526
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
       *                                                               *

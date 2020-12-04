@@ -12,7 +12,6 @@
       *           UUC061 - SWIFT Statement Enhancement                *
       *                                                               *
       *****************************************************************
-     C                   IF        UUC103 = 'Y'                                          UUC103
-     C                   WHEN      GLCHQN <> 0                                           UUC103
+     C                   WHEN      GLCHQN <> 0 And                                       UUC103
+     C                             UUC103 = 'Y'                                          UUC103
      C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHK'                   Cheques  UUC103
-     C                   ENDIF                                                           UUC103

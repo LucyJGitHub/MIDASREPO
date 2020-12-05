@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056694             Date 09Sep20             *
-      *  Prev Amend No. MD055682             Date 31Jul20             *
+      *  Last Amend No. MD056889             Date 11OCt20             *
+      *  Prev Amend No. MD056694             Date 09Sep20             *
+      *                 MD055682             Date 31Jul20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD055242             Date 10Feb20             *
       *                 MD055265             Date 10Feb20             *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056889 - Deliverable Data Split for SDJARFPD               *
       *  MD056694 - New deliverable data file UPDDSFPD.               *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -952,6 +954,8 @@
      C                             or ChkFile = 'GPSRTXTD'                                  MD055682
      C                             or ChkFile = 'SCTRGXTD'                                  MD055682
      C                             or ChkFile = 'SCSRTXTD'                                  MD055682
+     C                             or ChkFile = 'SDJARXTD'                                  MD056889
+     C                             or ChkFile = 'GPJARXTD'                                  MD056889
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1065,6 +1069,7 @@
      C                             or Member = 'GPTRGCTD'                                   MD055682
      C                             or Member = 'GPSRTCTD'                                   MD055682
      C                             or Member = 'UPDDSFPD'                                   MD056694
+     C                             or Member = 'GPJARCTD'                                   MD056889
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1072,6 +1077,7 @@
      C                             or Member = 'SCSRSCTD'                                   MD055681
      C                             or Member = 'SCTRGCTD'                                   MD055682
      C                             or Member = 'SCSRTCTD'                                   MD055682
+     C                             or Member = 'SDJARCTD'                                   MD056889
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'

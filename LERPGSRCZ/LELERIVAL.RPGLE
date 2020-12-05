@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034915A          Date 26Aug20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD034915A          Date 26Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
@@ -119,6 +120,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate.                                    *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034449.                                      *
       *  MD034915A - New funding rate disappears after input. Change  *
       *              from Z-ADD to MOVE when passing value of @@AMT   *
       *              to VNFRS.                                        *
@@ -413,10 +418,10 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
 
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
-     D                                     PREFIX(DL_)                                      MD034449
-      ** External DS for Dealing Details                                                    MD034449
-                                                                                            MD034449
+     D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034449 MD057191
+     D**********                           PREFIX(DL_)                             MD034449 MD057191
+      ***External*DS*for*Dealing*Details                                           MD034449 MD057191
+      **********                                                                   MD034449 MD057191
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       ** EXTERNAL DS FOR CUSTOMER LENDING ICD
 
@@ -696,6 +701,7 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+     D DL_BNDCSP       S              1A                                                    MD057191
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -9643,19 +9649,19 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE141
      C                   MOVE      'Y'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
-      *                                                                                     MD034449
-      ** Access Dealing Details                                                             MD034449
-      *                                                                                     MD034449
-     C                   CALL      'AODEALR1'                                               MD034449
-     C                   PARM      *BLANKS       @RTCD                                      MD034449
-     C                   PARM      '*FIRST '     @OPTN                                      MD034449
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
-      *                                                                                     MD034449
-      * Database Error                                                                      MD034449
-      *                                                                                     MD034449
-     C     @RTCD         IFNE      *BLANK                                                   MD034449
+      **********                                                                   MD034449 MD057191
+      ***Access*Dealing*Details                                                    MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034449 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
+      ***********                                                                  MD034449 MD057191
+      **Database*Error                                                             MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
-     C                   ENDIF                                                              MD034449
+     C**********         ENDIF                                                     MD034449 MD057191
       *
       **  Key list for LELOAML0
       *

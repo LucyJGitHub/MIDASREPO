@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056694             Date 09Sep20             *
-      *  Prev Amend No. MD055682             Date 31Jul20             *
+      *  Last Amend No. MD056608             Date 08Sep20             *
+      *  Prev Amend No. MD056558             Date 31Aug20             *
+      *                 MD056694             Date 09Sep20             *
+      *                 MD055682             Date 31Jul20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD055242             Date 10Feb20             *
       *                 MD055265             Date 10Feb20             *
@@ -40,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056608 - Deliverable Data Split for APFUNCPD               *
+      *  MD056558 - Deliverable Data Split for GODTACPD               *
       *  MD056694 - New deliverable data file UPDDSFPD.               *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -952,6 +956,8 @@
      C                             or ChkFile = 'GPSRTXTD'                                  MD055682
      C                             or ChkFile = 'SCTRGXTD'                                  MD055682
      C                             or ChkFile = 'SCSRTXTD'                                  MD055682
+     C                             or ChkFile = 'GODTCXTD'                                  MD056558
+     C                             or ChkFile = 'APFUNXTD'                                  MD056608
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1072,6 +1078,8 @@
      C                             or Member = 'SCSRSCTD'                                   MD055681
      C                             or Member = 'SCTRGCTD'                                   MD055682
      C                             or Member = 'SCSRTCTD'                                   MD055682
+     C                             or Member = 'GODTCCTD'                                   MD056558
+     C                             or Member = 'APFUNCTD'                                   MD056608
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'

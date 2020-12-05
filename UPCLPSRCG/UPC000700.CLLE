@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD056765           Date 16Sep20              */
-/*       Prev Amend No. MD056695           Date 09Sep20              */
+/*       Last Amend No. MD056887           Date 29Sep20              */
+/*       Prev Amend No. MD056765           Date 16Sep20              */
+/*                      MD056695           Date 09Sep20              */
 /*                      MD055682           Date 31Jul20              */
 /*                      MD055681           Date 31Jul20              */
 /*                      MD055265           Date 10Feb20              */
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056887 - Deliverable Data Split for SCNJRNPD              */
 /*       MD056765 - Copy SCSAREPD into QTEMP before update.          */
 /*       MD056695 - Program fails when copying empty file            */
 /*       MD055682 - Deliverable Data Split for TRIG                  */
@@ -415,6 +417,20 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055682*/
              ENDDO                                                                      /*MD055682*/
                                                                                         /*MD055682*/
+/* SCNJRCTD */                                                                          /*MD056887*/
+             IF         COND(&FILE *EQ 'SCNJRCTD') THEN(DO)                             /*MD056887*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056887*/
+             CHKOBJ     OBJ(&LIBMOV/SCNJRNPD) OBJTYPE(*FILE)                            /*MD056887*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056887*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056887*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056887*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056887*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SCNJRNPD')                                           /*MD056887*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056887*/
+             ENDDO                                                                      /*MD056887*/
+                                                                                        /*MD056887*/
              ENDDO                                                                      /*MD054955*/
                                                                                         /*MD054955*/
              GOTO       CMDLBL(END)

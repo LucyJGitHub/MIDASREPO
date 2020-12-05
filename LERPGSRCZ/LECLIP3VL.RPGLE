@@ -590,7 +590,7 @@
       ** Number of integers                                                                 MD034915
      D @@IINT          S              3  0                                                  MD034915
                                                                                             MD034915
-     D DL_BNDCSP       S              1A                                                    MD057191                                                                                       
+     D DL_BNDCSP       S              1A                                                    MD057191
       ***  Index for arrays of of warning message ids etc
       *
       ** +--------------------------------------+
@@ -3149,7 +3149,7 @@ E004 C                   ENDIF
       ***Database*Error                                                            MD034915 MD057191
       **********                                                                   MD034915 MD057191
      C*****@RTCD         IFNE      *BLANK                                          MD034915 MD057191
-     C**********         EVAL      DL_BNDCSP =  '.'                                         MD034915
+     C                   EVAL      DL_BNDCSP =  '.'                                         MD034915
      C**********         ENDIF                                                     MD034915 MD057191
       *                                                                                       CLE051
       ** Determine if CLE051 is installed                                                     CLE051

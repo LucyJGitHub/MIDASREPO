@@ -16,14 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *  Last Amend No. MD056781           Date 20Sep20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
       *                 CSW219 *CREATE     Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056781 - Deliverable Data Split for MESWACPD               *
       *  MD055681 - Deliverable Data Split for SAR                    *
-      *  MD055694 - SWIFT Changes 2021                                *
       *  CSW219 - SWIFT Changes 2019                                  *
       *                                                               *
       *****************************************************************
@@ -49,7 +49,7 @@
      F*SCSARDL0* UF A E           K DISK                                                    MD055681
      FSCPASSPD  UF A E           K DISK
      F*SCSARSL1* IF   E           K DISK                                                    MD055681
-     FMESWACL0  IF   E           K DISK
+     F*MESWACL0* IF   E           K DISK                                                    MD056781
       *
       /EJECT
       *****************************************************************
@@ -83,15 +83,11 @@
       ** Data Structure for Feature
      D FeatDS          DS
      D                                6    INZ('CSW219')
-     D                                6    INZ('CSW220')                                    MD055694
-     D                                6    INZ('CSW221')                                    MD055694
      D Feat                           6    DIM(N) OVERLAY(FeatDS)
       *
       ** Data Structure for Feature Password
      D PWordDS         DS
      D                               16    INZ('GALERA')
-     D                               16    INZ('CARMONA')                                   MD055694
-     D                               16    INZ('ABBEY ROAD')                                MD055694
      D PWord                         16    DIM(N) OVERLAY(PWordDS)
       *
      D CacheDT       E DS                  EXTNAME(CACHEDT) DTAARA(CACHEDT)
@@ -103,14 +99,14 @@
       *
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
      D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
+     D MESWAC        E DS                  EXTNAME(MESWAJW0)                                MD055681
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
       ** Increment N, everytime a new Feature is added in DS
-     D*N********       C                   1                                               MD055694
-     D N               C                   3                                               MD055694
+     D N               C                   1
       *
      D I               S              4S 0
      D WriteFlag       S              1A
@@ -155,8 +151,15 @@
      C                   ITER
       *
      C                   ELSE
-     C     Feat(I)       CHAIN     MESWACL0
-     C                   IF        %FOUND(MESWACL0) AND
+     C*****Feat(I)       CHAIN     MESWACL0                                                 MD056781
+     C/EXEC SQL                                                                             MD056781
+     C+ SELECT *                                                                            MD056781
+     C+ into :MESWAC                                                                        MD056781
+     C+ from MESWAJW0                                                                       MD056781
+     C+ where SWFEAT = :XXFeat                                                              MD056781
+     C/END-EXEC                                                                             MD056781
+     C**********         IF        %FOUND(MESWACL0) AND                                     MD056781
+     C                   IF        SQLCODE = 0 AND                                          MD056781
      C                             BJDNWD >= SWACDT
      C                   EXSR      SrWrite
      C                   ENDIF

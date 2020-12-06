@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD056811           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056811 - Deliverable Data Split for SDRPCKTD and SDRPDFTD  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
@@ -80,8 +82,10 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D RepMatrix     E DS                  EXTNAME(SDMTRXTD)
-     D RepCategory   E DS                  EXTNAME(SDRPCKTD)
-     D RepDefault    E DS                  EXTNAME(SDRPDFTD)
+     D*RepCategory   E DS                  EXTNAME(SDRPCKTD)                                MD056811
+     D*RepDefault    E DS                  EXTNAME(SDRPDFTD)                                MD056811
+     D RepCategory   E DS                  EXTNAME(SDRPCJW0)                                MD056811
+     D RepDefault    E DS                  EXTNAME(SDRPDJW0)                                MD056811
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -154,7 +158,8 @@
        BegSr ProcessRepayment;
 
                    wFound = FALSE;
-                   SQLStr = 'select * from SDRPCKTD ' +
+       //          SQLStr = 'select * from SDRPCKTD ' +                                     MD056811
+                   SQLStr = 'select * from SDRPCJW0 ' +
                             'where ' +
                             'RXCATE = ' + ''''+ %TRIM(pCategoryCode) +'''';
 
@@ -172,7 +177,8 @@
                       Exsr *Pssr;
                    Endif;
 
-                   SQLStr = 'select * from SDRPDFTD ' +
+       //          SQLStr = 'select * from SDRPDFTD ' +                                     MD056811
+                   SQLStr = 'select * from SDRPDJW0 ' +
                             'where ' +
                             'DXCLAS = ' + %EditC(RXCLAS:'X') +
                             ' order by DXLEVL';

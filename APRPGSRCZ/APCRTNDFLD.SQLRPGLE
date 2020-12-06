@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/**** *  RPGBASEBND                                                   *                     MD056564
+/*STD *  RPGSQLBND                                                    *                     MD056564
 /*EXI *  TEXT('Midas AP Generate list of non-display fields')
       *****************************************************************
       *                                                               *
@@ -14,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046657           Date 12Feb18               *
+      *  Last Amend No. MD056564           Date 24Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046657           Date 12Feb18               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056564 - Deliverable Data Split for No Display field cond  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046657 - Possibility to change non-amendable fields to be  *
       *             amendable and able to complete transaction        *
@@ -36,7 +39,7 @@
       /EJECT
 
       ** File containing conditions under which fields are non-displayed
-     FAPNDCONL0 IF   E           K DISK
+     F*APNDCONL0 IF   E           K DISK                                                    MD056564
 
       ** Output file containing list of non-displayed fields
      FAPDFFLDPD UF A E             DISK
@@ -91,7 +94,8 @@
      D                                     FROMFILE(SDMMIDL3)
 
       * DS to save/retrieve records from APNDCONL0 to/from array
-     D LogicDS       E DS                  EXTNAME(APNDCONPD)
+     D*LogicDS**     E DS                  EXTNAME(APNDCONPD)                               MD056564
+     D LogicDS       E DS                  EXTNAME(APNDCJW0)                                MD056564
      D SFName                 35     40
 
       * File information data structure
@@ -101,6 +105,8 @@
      D Iy              S              3  0
      D NDCount         S              3  0
      D NonDisplay      S              1
+     D NCDFLDS         S             10                                                     MD056564
+     D NCAPDTS         S             20                                                     MD056564
 
       **********************************************************************
       /SPACE 5
@@ -123,11 +129,25 @@
       **--------------------------------------------------------------
 
       * Get first record
-     C                   Read      APNDCONL0                              80
+     C**********         Read      APNDCONL0                              80                MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ declare ACursor insensitive scroll cursor for                                       MD056564
+     C+ select * from APNDCJW0                                                              MD056564
+     C+ order by NCAPDT, NCDFLD, NCSEQN                                                     MD056564
+     C/END-EXEC                                                                             MD056564
+                                                                                            MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ open ACursor                                                                        MD056564
+     C/END-EXEC                                                                             MD056564
+                                                                                            MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ fetch next from ACursor into :LogicDS                                               MD056564
+     C/END-EXEC                                                                             MD056564
      C                   Z-ADD     1             Iy
 
       * Read all available records
-     C                   DoW       *IN80 = *Off
+     C**********         DoW       *IN80 = *Off                                             MD056564
+     C                   DOW       SQLCODE = 0                                              MD056564
 
       * Save current condition to array
      C                   Eval      LogicArr(Iy) = LogicDS
@@ -158,15 +178,34 @@
       * In case the first half of an '*OR' statement has proved correct,
       * we don't want to process any other statements for this field.
       * Position to the end of the current set of records.
-     C                   Eval      NCSEQN = '999'
-     C     CondKey       SetGT     APNDCONL0
+     C**********         Eval      NCSEQN = '999'                                           MD056564
+     C*****CondKey       SetGT     APNDCONL0                                                MD056564
      C                   Eval      NonDisplay = ' '
+     C                   Eval      NCDFLDS = NCDFLD                                         MD056564
+     C                   Eval      NCAPDTS = NCAPDT                                         MD056564
+     C     AGAIN         Tag                                                                MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ fetch next from ACursor into :LogicDS                                               MD056564
+     C/END-EXEC                                                                             MD056564
+     C                   If        SQLCODE = 0 and NCDFLD = NCDFLDS                         MD056564
+     C                             and NCAPDT = NCAPDTS                                     MD056564
+     C                   Goto      AGAIN                                                    MD056564
+     C                   EndIf                                                              MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ fetch prior from ACursor into :LogicDS                                              MD056564
+     C/END-EXEC                                                                             MD056564
      C                   EndIf
 
-     C                   Read      APNDCONL0                              80
+     C**********         Read      APNDCONL0                              80                MD056564
+     C/EXEC SQL                                                                             MD056564
+     C+ fetch next from ACursor into :LogicDS                                               MD056564
+     C/END-EXEC                                                                             MD056564
      C                   Add       1             Iy
      C                   EndDo
 
+     C/EXEC SQL                                                                             MD056564
+     C+ close ACursor                                                                       MD056564
+     C/END-EXEC                                                                             MD056564
      C                   SETON                                        LR
      C                   RETURN
       ****************************************************************

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056772           Date 01Oct20               *
-      *  Prev Amend No. 248891             Date 04Mar09               *
+      *  Last Amend No. MD057237           Date 02Dec20               *
+      *  Prev Amend No. MD056772           Date 01Oct20               *
+      *                 248891             Date 04Mar09               *
       *                 254657             Date 01Jun20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
@@ -87,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057237 - Journal Entry via Interface File: Batch Stuck     *
+      *             in Upload Status                                  *
       *  MD056772 - Records from GLJENPL1 would be OPENED first before*
       *             accessing the file and CLOSING it after access.   *
       *  248891 - Journal Batch Entry has a Valid Status of 'No'.     *
@@ -839,6 +842,7 @@
      C**********         MOVE      B1BTSF        BRBTSF                                CAP084 239155
      C     CGL016        IFEQ      'Y'                                                     AR792734A
      C     CRE023        OREQ      'Y'                                                     AR792734A
+     C     CGL182        OREQ      'Y'                                                      MD057237
      C                   MOVE      B1BTSF        BRBTSF                                    AR792734A
      C                   ENDIF                                                             AR792734A
      C                   MOVE      B1BIUF        BRBIUF                                      BUG1898

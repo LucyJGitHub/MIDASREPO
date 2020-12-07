@@ -1390,12 +1390,14 @@
      C                   PARM                    P#RTSP           11 7
      C                   PARM                    P#SPIN            1
 
-     C                   PARM                    E#BRTT            2 0
+     C**********         PARM                    E#BRTT            2 0                        CSD103
+     C                   PARM                    E#BRTT            2                          CSD103
      C                   PARM                    E#BRTE           11 7
      C                   PARM                    E#IRAT           11 7
      C                   PARM                    E#IRTP            1
       * OUTPUTS
-     C                   PARM                    P#BRTT            2 0
+     C**********         PARM                    P#BRTT            2 0                        CSD103
+     C                   PARM                    P#BRTT            2                          CSD103
      C                   PARM                    P#BRTE           11 7
      C                   PARM                    P#IRAT           11 7
 

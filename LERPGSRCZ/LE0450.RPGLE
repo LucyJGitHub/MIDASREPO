@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034915           Date 26Aug20               *
-      *  Prev Amend No. MD055322           Date 15May20               *
+      *  Last Amend No. AR923246           Date 15Mar12               *      
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD056223           Date 15Jul20               *
       *                 MD051347           Date 12Mar20               *
@@ -427,6 +428,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
+      *             Prevent data corruption for MLNR field on MCLONCL *
+      *             when written. (Child: AR923248)                   *      
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
@@ -2817,6 +2821,7 @@ L118 I                             P   72   77 7RTSPL
      I                                271  273  ORBR                            S01117
      I                                274  277  PRFC                            S01117
      I                                278  280  FCLB                            S01117
+     I                                281  286  MLNR                                        AR923246
 0162 I                                287  287  BTIN
      I/COPY WNCPYSRC,LE0450I003
 0163 I                                288  289 0BLDY
@@ -21793,6 +21798,7 @@ C    C                   ENDIF                                                  
 3427 O                       ORBR               273                             S10227
 3427 O                       PRFC               277                             S10227
 3427 O                       FCLB               280                             S10227
+     O                       MLNR               286                                         AR923246
 3427 O                       BTIN               287                             S10227
      O/COPY WNCPYSRC,LE0450O004
 3427 O                       BLDY               289                             S10227

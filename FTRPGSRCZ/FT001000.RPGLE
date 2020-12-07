@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD055694           Date 09Mar20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. AR927047           Date 21Mar12               *      
+      *  Prev Amend No. MD055694           Date 09Mar20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD050730           Date 25Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD037229           Date 03Sep18               *
@@ -124,6 +125,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *      
       *  MD055694 - SWIFT Changes 2021                                *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
@@ -1623,10 +1625,10 @@
      C                   Parm                    DSLDY
 
      C                   If        PMReturnCode <> *Blanks
-     C                   Eval      PMReturnCode = '*ERROR'
-     C                   Eval      DbFile = 'SDCSSWPD'
-     C                   Eval      Dbase  = 06
-     C                   Exsr      *PSSR
+     C**********         Eval      PMReturnCode = '*ERROR'                                  AR927047
+     C**********         Eval      DbFile = 'SDCSSWPD'                                      AR927047
+     C**********         Eval      Dbase  = 06                                              AR927047
+     C**********         Exsr      *PSSR                                                    AR927047
      C                   Else
 
      C                   Eval      WStr = %Len(SDCUST) + 1

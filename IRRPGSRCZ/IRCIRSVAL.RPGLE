@@ -5232,9 +5232,11 @@
      C                   PARM                    ZDATE                                      MD053400
      C                   PARM                    ZDATFM                                     MD053400
      C                   PARM                    ZDAYNO                                     MD053400
-     C                   Z-ADD     ZDAYNO        RXTE2B                                     MD053400
+     C**********         Z-ADD     ZDAYNO        RXTE2B                              MD053400 CSD103
+     C                   Z-ADD     ZDAYNO        RXTE2D                                       CSD103
      C                   ElSE                                                               MD053400
-     C                   Z-ADD     0             RXTE2B                                     MD053400
+     C**********         Z-ADD     0             RXTE2B                              MD053400 CSD103
+     C                   Z-ADD     0             RXTE2D                                       CSD103
      C                   ENDIF                                                              MD053400
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400

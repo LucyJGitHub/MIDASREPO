@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD056765           Date 16Sep20              */
-/*       Prev Amend No. MD056695           Date 09Sep20              */
+/*       Last Amend No. MD056606           Date 07Sep20              */
+/*       Prev Amend No. MD056765           Date 16Sep20              */
+/*                      MD056695           Date 09Sep20              */
 /*                      MD055682           Date 31Jul20              */
 /*                      MD055681           Date 31Jul20              */
 /*                      MD055265           Date 10Feb20              */
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056606 - Deliverable Data Split for APDBINFPD             */
 /*       MD056765 - Copy SCSAREPD into QTEMP before update.          */
 /*       MD056695 - Program fails when copying empty file            */
 /*       MD055682 - Deliverable Data Split for TRIG                  */
@@ -84,6 +86,8 @@
              CPYF       FROMFILE(&NEWLIB/&FILE) +
                           TOFILE(&OLDLIB/&FILE) MBROPT(*REPLACE) +
                           FMTOPT(*NOCHK)
+/* Monitor empty file like GPSRNCTD */                                                  /*MD056695*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD056695*/
 
 /* Run synchronization program. */
              CALL       PGM(UP000701) PARM(&ERROR &FILE &OLDLIB)
@@ -415,6 +419,20 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055682*/
              ENDDO                                                                      /*MD055682*/
                                                                                         /*MD055682*/
+/* APDBINFPD */                                                                         /*MD056606*/
+             IF         COND(&FILE *EQ 'APDBICTD') THEN(DO)                             /*MD056606*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056606*/
+             CHKOBJ     OBJ(&LIBMOV/APDBINFPD) OBJTYPE(*FILE)                           /*MD056606*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056606*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056606*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056606*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056606*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'APDBINFPD')                                          /*MD056606*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056606*/
+             ENDDO                                                                      /*MD056606*/
+                                                                                        /*MD056606*/
              ENDDO                                                                      /*MD054955*/
                                                                                         /*MD054955*/
              GOTO       CMDLBL(END)

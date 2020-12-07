@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026333           Date 29Apr14               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD026333           Date 29Apr14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
       *                 AR924684           Date 10Nov14               *
@@ -66,6 +67,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD026333 - Beneficiary field on Settlement screen allows     *
       *             closed customer. Call AOCUSTR1 instead to return  *
       *             and validate BBCLST and or BBDTDL fields.         *
@@ -375,6 +379,7 @@
      D WNetwork        S             10A                                                      CFT032
      D WNostro         S              2A                                                      CFT032
      D WSBrca          S              3A                                                    BUG14771
+     D PMode           S              6A                                                    MD021318
                                                                                               CFT032
      D FeatureCSW024   S               N                                                      CFT032
      D FeatureCFT004   S               N                                                      CFT032
@@ -683,17 +688,31 @@
       * Send error to screen
      C                   If        ADSLSH <> '/'
      C**********         Move      'N'           OKBnc1                                       CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc1                                     MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc1                                       CSD089
+     C                   ENDIF                                                              MD021318
      C                   Else
      C**********         Move      'N'           OKBnc2                                       CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc2                                     MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc2                                       CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'DDBnc'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1055'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'DDBnc'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1055'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'DDBnc'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1055'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
  
      C                   Else
      C                   Eval      @BNCT = 'S'
@@ -792,10 +811,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SBNC1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#2 = 'Y'
@@ -803,10 +829,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SBNC2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#3 = 'Y'
@@ -814,10 +847,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SBNC3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#4 = 'Y'
@@ -825,10 +865,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC4'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc4                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SBNC4'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc4                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#5 = 'Y'
@@ -836,10 +883,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SBNC5'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKBnc5                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SBNC5'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKBnc5                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SBNC5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
       *  If no errors then customer is an address
@@ -1500,6 +1554,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ** =================================================================
       ** Program, module and procedure names for database error processing.

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254841B            Date 14May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 254841B            Date 14May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
       *                 CFT142             Date 20Feb15               *
@@ -105,6 +107,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Amended hooks FTOPA1VC01, FTOPA1VC05, FTOPA1VC13,   *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  254841B - Reexecute the validation of Settle Amount when     *
       *            field is left blank and gets defaulted from Pay    *
       *            Amount.                                            *
@@ -515,9 +522,9 @@
       *                                                                                       242240
                                                                                               CFT032
      D WODMT18         S             18A                                                      CFT032
-                                                                                              CFT032
      D WsmamInd        S              1  0                                                   254841B
      D Wsmamnum        S             13  0                                                   254841B
+     D PMode           S              6A                                                    MD021318
       ** Work fields for ZALIGN                                                             BUG15032
      D ZAlignOk        S              1A                                                    BUG15032
      D ZFIELD          S             16A                                                    BUG15032
@@ -1303,6 +1310,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
      C/COPY WNCPYSRC,FTOPA1VC16
  
       * Update error info with that returned from the validation module
@@ -1358,6 +1367,8 @@
                                                                                               257361
      C                   Parm                    CFT142            1                          CFT142
                                                                                               CFT142
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
      C/COPY WNCPYSRC,FTOPA1VC18
  
       * Update error info with that returned from the validation module
@@ -1399,6 +1410,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
      C/COPY WNCPYSRC,FTOPA1VC20
  
       * Update error info with that returned from the validation module
@@ -1440,6 +1453,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
      C/COPY WNCPYSRC,FTOPA1VC22
  
       * Update error info with that returned from the validation module
@@ -1919,6 +1934,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -3004,6 +3021,8 @@
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1VC05
  

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD056765           Date 16Sep20              */
-/*       Prev Amend No. MD056695           Date 09Sep20              */
+/*       Last Amend No. MD056890           Date 11Oct20              */
+/*       PRev Amend No. MD056765           Date 16Sep20              */
+/*                      MD056695           Date 09Sep20              */
 /*                      MD055682           Date 31Jul20              */
 /*                      MD055681           Date 31Jul20              */
 /*                      MD055265           Date 10Feb20              */
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056890 - Deliverable Data Split for SDMREFPD              */
 /*       MD056765 - Copy SCSAREPD into QTEMP before update.          */
 /*       MD056695 - Program fails when copying empty file            */
 /*       MD055682 - Deliverable Data Split for TRIG                  */
@@ -415,6 +417,20 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055682*/
              ENDDO                                                                      /*MD055682*/
                                                                                         /*MD055682*/
+/* SDMRFCTD */                                                                          /*MD056890*/
+             IF         COND(&FILE *EQ 'SDMRFCTD') THEN(DO)                             /*MD056890*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056890*/
+             CHKOBJ     OBJ(&LIBMOV/SDMREFPD) OBJTYPE(*FILE)                            /*MD056890*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056890*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056890*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056890*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056890*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDMREFPD')                                           /*MD056890*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056890*/
+             ENDDO                                                                      /*MD056890*/
+                                                                                        /*MD056890*/
              ENDDO                                                                      /*MD054955*/
                                                                                         /*MD054955*/
              GOTO       CMDLBL(END)

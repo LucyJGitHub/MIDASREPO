@@ -4975,16 +4975,16 @@
       *                                                                                     MD053400
       ** 1st Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C                   MOVE      *BLANK        ZFIELD                                     MD053400
-     C                   Z-ADD     0             ZADEC                                      MD053400
-     C                   Z-ADD     02            ZADIG                                      MD053400
-     C                   MOVE      SOS1B         ZFIELD                                     MD053400
-     C                   CALLB     'ZALIGN'                                                 MD053400
-     C                   PARM                    ZALIGNok                                   MD053400
-     C                   PARM                    ZFIELD                                     MD053400
-     C                   PARM                    ZADEC                                      MD053400
-     C                   PARM                    ZADIG                                      MD053400
-     C                   MOVE      ZFIELD        RXOS1B                                     MD053400
+     C**********         MOVE      *BLANK        ZFIELD                              MD053400 CSD103
+     C**********         Z-ADD     0             ZADEC                               MD053400 CSD103
+     C**********         Z-ADD     02            ZADIG                               MD053400 CSD103
+     C**********         MOVE      SOS1B         ZFIELD                              MD053400 CSD103
+     C**********         CALLB     'ZALIGN'                                          MD053400 CSD103
+     C**********         PARM                    ZALIGNok                            MD053400 CSD103
+     C**********         PARM                    ZFIELD                              MD053400 CSD103
+     C**********         PARM                    ZADEC                               MD053400 CSD103
+     C**********         PARM                    ZADIG                               MD053400 CSD103
+     C**********         MOVE      ZFIELD        RXOS1B                              MD053400 CSD103
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5003,16 +5003,16 @@
       *                                                                                     MD053400
       ** 2nd Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C                   MOVE      *BLANK        ZFIELD                                     MD053400
-     C                   Z-ADD     0             ZADEC                                      MD053400
-     C                   Z-ADD     02            ZADIG                                      MD053400
-     C                   MOVE      SOS2B         ZFIELD                                     MD053400
-     C                   CALLB     'ZALIGN'                                                 MD053400
-     C                   PARM                    ZALIGNok                                   MD053400
-     C                   PARM                    ZFIELD                                     MD053400
-     C                   PARM                    ZADEC                                      MD053400
-     C                   PARM                    ZADIG                                      MD053400
-     C                   MOVE      ZFIELD        RXOS2B                                     MD053400
+     C**********         MOVE      *BLANK        ZFIELD                              MD053400 CSD103
+     C**********         Z-ADD     0             ZADEC                               MD053400 CSD103
+     C**********         Z-ADD     02            ZADIG                               MD053400 CSD103
+     C**********         MOVE      SOS2B         ZFIELD                              MD053400 CSD103
+     C**********         CALLB     'ZALIGN'                                          MD053400 CSD103
+     C**********         PARM                    ZALIGNok                            MD053400 CSD103
+     C**********         PARM                    ZFIELD                              MD053400 CSD103
+     C**********         PARM                    ZADEC                               MD053400 CSD103
+     C**********         PARM                    ZADIG                               MD053400 CSD103
+     C**********         MOVE      ZFIELD        RXOS2B                              MD053400 CSD103
       *                                                                                     MD053400
       ** 2nd Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5045,17 +5045,17 @@
      C                   ENDIF                                                              MD053400
       *                                                                                     MD053400
       ** 1st Term Base Rate Code                                                            MD053400
-      *                                                                                     MD053400
-     C                   MOVE      *BLANK        ZFIELD                                     MD053400
-     C                   Z-ADD     0             ZADEC                                      MD053400
-     C                   Z-ADD     02            ZADIG                                      MD053400
-     C                   MOVE      SOE1B         ZFIELD                                     MD053400
-     C                   CALLB     'ZALIGN'                                                 MD053400
-     C                   PARM                    ZALIGNok                                   MD053400
-     C                   PARM                    ZFIELD                                     MD053400
-     C                   PARM                    ZADEC                                      MD053400
-     C                   PARM                    ZADIG                                      MD053400
-     C                   MOVE      ZFIELD        RXOE1B                                     MD053400
+      *                                                                              MD053400 CSD103
+     C**********         MOVE      *BLANK        ZFIELD                              MD053400 CSD103
+     C**********         Z-ADD     0             ZADEC                               MD053400 CSD103
+     C**********         Z-ADD     02            ZADIG                               MD053400 CSD103
+     C**********         MOVE      SOE1B         ZFIELD                              MD053400 CSD103
+     C**********         CALLB     'ZALIGN'                                          MD053400 CSD103
+     C**********         PARM                    ZALIGNok                            MD053400 CSD103
+     C**********         PARM                    ZFIELD                              MD053400 CSD103
+     C**********         PARM                    ZADEC                               MD053400 CSD103
+     C**********         PARM                    ZADIG                               MD053400 CSD103
+     C**********         MOVE      ZFIELD        RXOE1B                              MD053400 CSD103
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5074,16 +5074,16 @@
       *                                                                                     MD053400
       ** 2nd Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C                   MOVE      *BLANK        ZFIELD                                     MD053400
-     C                   Z-ADD     0             ZADEC                                      MD053400
-     C                   Z-ADD     02            ZADIG                                      MD053400
-     C                   MOVE      SOE2B         ZFIELD                                     MD053400
-     C                   CALLB     'ZALIGN'                                                 MD053400
-     C                   PARM                    ZALIGNok                                   MD053400
-     C                   PARM                    ZFIELD                                     MD053400
-     C                   PARM                    ZADEC                                      MD053400
-     C                   PARM                    ZADIG                                      MD053400
-     C                   MOVE      ZFIELD        RXOE2B                                     MD053400
+     C**********         MOVE      *BLANK        ZFIELD                              MD053400 CSD103
+     C**********         Z-ADD     0             ZADEC                               MD053400 CSD103
+     C**********         Z-ADD     02            ZADIG                               MD053400 CSD103
+     C**********         MOVE      SOE2B         ZFIELD                              MD053400 CSD103
+     C**********         CALLB     'ZALIGN'                                          MD053400 CSD103
+     C**********         PARM                    ZALIGNok                            MD053400 CSD103
+     C**********         PARM                    ZFIELD                              MD053400 CSD103
+     C**********         PARM                    ZADEC                               MD053400 CSD103
+     C**********         PARM                    ZADIG                               MD053400 CSD103
+     C**********         MOVE      ZFIELD        RXOE2B                              MD053400 CSD103
       *                                                                                     MD053400
       ** 2nd Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5117,16 +5117,16 @@
       *                                                                                     MD053400
       ** 1st Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C                   MOVE      *BLANK        ZFIELD                                     MD053400
-     C                   Z-ADD     0             ZADEC                                      MD053400
-     C                   Z-ADD     02            ZADIG                                      MD053400
-     C                   MOVE      STS1B         ZFIELD                                     MD053400
-     C                   CALLB     'ZALIGN'                                                 MD053400
-     C                   PARM                    ZALIGNok                                   MD053400
-     C                   PARM                    ZFIELD                                     MD053400
-     C                   PARM                    ZADEC                                      MD053400
-     C                   PARM                    ZADIG                                      MD053400
-     C                   MOVE      ZFIELD        RXTS1B                                     MD053400
+     C**********         MOVE      *BLANK        ZFIELD                              MD053400 CSD103
+     C**********         Z-ADD     0             ZADEC                               MD053400 CSD103
+     C**********         Z-ADD     02            ZADIG                               MD053400 CSD103
+     C**********         MOVE      STS1B         ZFIELD                              MD053400 CSD103
+     C**********         CALLB     'ZALIGN'                                          MD053400 CSD103
+     C**********         PARM                    ZALIGNok                            MD053400 CSD103
+     C**********         PARM                    ZFIELD                              MD053400 CSD103
+     C**********         PARM                    ZADEC                               MD053400 CSD103
+     C**********         PARM                    ZADIG                               MD053400 CSD103
+     C**********         MOVE      ZFIELD        RXTS1B                              MD053400 CSD103
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5145,20 +5145,18 @@
       *                                                                                     MD053400
       ** 2nd Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C     STS2B         IFNE      *BLANKS                                                  MD053400
-     C                   MOVE      STS2B         ZDATE                                      MD053400
-     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
-     C                   CALL      'ZDATE1'                                                 MD053400
-     C                   PARM      *BLANKS       ZERR                                       MD053400
-     C                   PARM                    ZDATE                                      MD053400
-     C                   PARM                    ZDATFM                                     MD053400
-     C                   PARM                    ZDAYNO                                     MD053400
+     C*****STS2B         IFNE      *BLANKS                                           MD053400 CSD103
+     C**********         MOVE      STS2B         ZDATE                               MD053400 CSD103
+     C**********         MOVE      BJDFIN        ZDATFM                              MD053400 CSD103
+     C**********         CALL      'ZDATE1'                                          MD053400 CSD103
+     C**********         PARM      *BLANKS       ZERR                                MD053400 CSD103
+     C**********         PARM                    ZDATE                               MD053400 CSD103
+     C**********         PARM                    ZDATFM                              MD053400 CSD103
+     C**********         PARM                    ZDAYNO                              MD053400 CSD103
      C**********         Z-ADD     ZDAYNO        RXTS2B                              MD053400 CSD103
-     C                   Z-ADD     ZDAYNO        RXTS2D                                       CSD103
-     C                   ElSE                                                               MD053400
+     C**********         ElSE                                                        MD053400 CSD103
      C**********         Z-ADD     0             RXTS2B                              MD053400 CSD103
-     C                   Z-ADD     0             RXTS2D                                     MD053400
-     C                   ENDIF                                                              MD053400
+     C**********         ENDIF                                                       MD053400 CSD103
       *                                                                                     MD053400
       ** 2nd Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5192,20 +5190,18 @@
       *                                                                                     MD053400
       ** 1st Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C     STE1B         IFNE      *BLANKS                                                  MD053400
-     C                   MOVE      STE1B         ZDATE                                      MD053400
-     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
-     C                   CALL      'ZDATE1'                                                 MD053400
-     C                   PARM      *BLANKS       ZERR                                       MD053400
-     C                   PARM                    ZDATE                                      MD053400
-     C                   PARM                    ZDATFM                                     MD053400
-     C                   PARM                    ZDAYNO                                     MD053400
+     C*****STE1B         IFNE      *BLANKS                                           MD053400 CSD103
+     C**********         MOVE      STE1B         ZDATE                               MD053400 CSD103
+     C**********         MOVE      BJDFIN        ZDATFM                              MD053400 CSD103
+     C**********         CALL      'ZDATE1'                                          MD053400 CSD103
+     C**********         PARM      *BLANKS       ZERR                                MD053400 CSD103
+     C**********         PARM                    ZDATE                               MD053400 CSD103
+     C**********         PARM                    ZDATFM                              MD053400 CSD103
+     C**********         PARM                    ZDAYNO                              MD053400 CSD103
      C**********         Z-ADD     ZDAYNO        RXTE1B                              MD053400 CSD103
-     C                   Z-ADD     ZDAYNO        RXTE1D                                       CSD103
-     C                   ElSE                                                               MD053400
+     C**********         ElSE                                                        MD053400 CSD103
      C**********         Z-ADD     0             RXTE1B                              MD053400 CSD103
-     C                   Z-ADD     0             RXTE1D                                       CSD103
-     C                   ENDIF                                                              MD053400
+     C**********         ENDIF                                                       MD053400 CSD103
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
       *                                                                                     MD053400
@@ -5224,20 +5220,18 @@
       *                                                                                     MD053400
       ** 2nd Term Base Rate Code                                                            MD053400
       *                                                                                     MD053400
-     C     STE2B         IFNE      *BLANKS                                                  MD053400
-     C                   MOVE      STE2B         ZDATE                                      MD053400
-     C                   MOVE      BJDFIN        ZDATFM                                     MD053400
-     C                   CALL      'ZDATE1'                                                 MD053400
-     C                   PARM      *BLANKS       ZERR                                       MD053400
-     C                   PARM                    ZDATE                                      MD053400
-     C                   PARM                    ZDATFM                                     MD053400
-     C                   PARM                    ZDAYNO                                     MD053400
+     C*****STE2B         IFNE      *BLANKS                                           MD053400 CSD103
+     C**********         MOVE      STE2B         ZDATE                               MD053400 CSD103
+     C**********         MOVE      BJDFIN        ZDATFM                              MD053400 CSD103
+     C**********         CALL      'ZDATE1'                                          MD053400 CSD103
+     C**********         PARM      *BLANKS       ZERR                                MD053400 CSD103
+     C**********         PARM                    ZDATE                               MD053400 CSD103
+     C**********         PARM                    ZDATFM                              MD053400 CSD103
+     C**********         PARM                    ZDAYNO                              MD053400 CSD103
      C**********         Z-ADD     ZDAYNO        RXTE2B                              MD053400 CSD103
-     C                   Z-ADD     ZDAYNO        RXTE2D                                       CSD103
-     C                   ElSE                                                               MD053400
+     C**********         ElSE                                                        MD053400 CSD103
      C**********         Z-ADD     0             RXTE2B                              MD053400 CSD103
-     C                   Z-ADD     0             RXTE2D                                       CSD103
-     C                   ENDIF                                                              MD053400
+     C**********         ENDIF                                                       MD053400 CSD103
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
       *                                                                                     MD053400

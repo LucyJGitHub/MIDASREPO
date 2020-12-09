@@ -1664,7 +1664,7 @@
      C                   ENDIF                                                              MD045482
      C                   ENDIF                                                              MD045482
      C                   ENDIF                                                              MD045482
-      *									   MD045482
+      *                                                                                     MD045482
      C                   MOVE      DDNFPCB       L_CLNFPC
      C                   ENDIF
       *

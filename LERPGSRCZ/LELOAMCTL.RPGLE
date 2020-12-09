@@ -335,7 +335,7 @@
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CLE172
-     D LoamScnBlrt     DS            46                                                       CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
       ** LE Backward-Looking Rate Fields                                                      CLE172
 
       * 24X7 Data area structure

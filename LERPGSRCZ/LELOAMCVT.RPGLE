@@ -170,7 +170,7 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE106
      D SC_LCD        E                     EXTFLD(LCD)                                        CLE106
       *                                                                                       CLE172
-     D LoamScnBlrt     DS            46                                                       CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
       ** LE Backward-Looking Rate Fields                                                      CLE172
       *
       ** +--------------------------------------+

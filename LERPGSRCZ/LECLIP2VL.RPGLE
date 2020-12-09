@@ -1401,8 +1401,6 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
-     C                   EVAL      LoanValBlrt = %SUBST(ValidLnCl:2026:43)                    CLE172
-      *                                                                                       CLE172
      C                   CALL      'ZAVBLRTE'                                                 CLE172
      C                   PARM      'CLIP'        ApiName           4                          CLE172
      C                   PARM                    CCLCCY                                       CLE172
@@ -1411,7 +1409,7 @@
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNamXAr                                    CLE172
      C                   PARM                    MsgIDXAr                                     CLE172
-     C                   PARM      LoanValBlrt   TempOutDS       200                          CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172

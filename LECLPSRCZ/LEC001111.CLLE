@@ -1,0 +1,79 @@
+000100201209/*********************************************************************/
+000101201209/*STD    CLPBASEBND                                                  */
+000102201209/*EXI    TEXT('TAKE-ON - Initialise CLE172 Fields')                  */
+000103201209/*********************************************************************/
+000104201209/*                                                                   */
+000105201209/*       Midas -  Customer Lending Module                            */
+000106201209/*                                                                   */
+000107201209/*       LEC001111 - Initialise CLE172 Fields (Take-on only)         */
+000108201209/*                                                                   */
+000109201209/*       (c) Finastra International Limited 2020                     */
+000110201209/*                                                                   */
+000111201209/*       Last Amend No. CLE172    *CREATE  Date 01Oct20              */
+000112201209/*                                                                   */
+000113201209/*-------------------------------------------------------------------*/
+000114201209/*                                                                   */
+000115201209/*       CLE172 - LIBOR Deregulation - Lending                       */
+000116201209/*                                                                   */
+000117201209/*********************************************************************/
+000118201209
+000119201209             PGM        PARM(&RTCDE &PMODE)
+000120201209
+000121201209             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+000122201209             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+000123201209             DCL        VAR(&CPYFLD)  TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+000124201209                          Limited 2020')
+000125201209
+000126201209/** Initialisation */
+000127201209
+000128201209             CHGJOB     SWS(00000000)
+000129201209
+000130201209             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+000131201209             MONMSG     MSGID(CPF1023)
+000132201209
+000133201209/** Main Processing Control */
+000134201209
+000135201209             IF         COND(&PMODE *NE '1') THEN(GOTO ENDPGM)
+000136201209
+000137201209             SNDPGMMSG  MSG('CLE172 New Field Initialisation') TOMSGQ(MRUNQ)
+000138201209
+000139201209/** Initialise New Fields on CLOANCL */
+000140201209
+000141201209 TAG0010:
+000142201209             CALL       PGM(LE001111)
+000143201209             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+000144201209
+000145201209             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+000146201209
+000147201209/** Program Completed Successfully */
+000148201209
+000149201209             GOTO       CMDLBL(ENDPGM)
+000150201209
+000151201209/** Process Errors */
+000152201209
+000153201209 ERR_DIE:
+000154201209             SNDPGMMSG  MSG('Job terminated, database in error.') TOMSGQ(MOPERQ MRUNQ)
+000155201209             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+000156201209
+000157201209             GOTO       CMDLBL(ENDPGM)
+000158201209
+000159201209 ERR_OOB:
+000160201209             SNDPGMMSG  MSG('Job terminated, file out of balance.') TOMSGQ(MOPERQ MRUNQ)
+000161201209             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+000162201209
+000163201209             GOTO       CMDLBL(ENDPGM)
+000164201209
+000165201209 ERR_PGM:
+000166201209             SNDPGMMSG  MSG('Job terminated due to program error.') TOMSGQ(MOPERQ MRUNQ)
+000167201209             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+000168201209
+000169201209             GOTO       CMDLBL(ENDPGM)
+000170201209
+000171201209/** Termination Process */
+000172201209
+000173201209 ENDPGM:
+000174201209             DLTOVR     FILE(*ALL)
+000175201209             MONMSG     MSGID(CPF0000)
+000176201209
+000177201209             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+000178201209             ENDPGM

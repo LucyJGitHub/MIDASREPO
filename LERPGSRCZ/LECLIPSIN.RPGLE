@@ -347,11 +347,12 @@
      D InfData       E DS                  EXTNAME(LELEIFPD)                                 BUG9221
       * LE Extra Data - Classe 1 Data - File (D/B) format                                    BUG9221
      D                                     PREFIX(IF_)                                       BUG9221
-     D  TransData      DS           500
-      ***  Shared data
       *                                                                                       CLE172
      D LoanScnBlrt     DS            46                                                       CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D  TransData      DS           500
+      ***  Shared data
       *
      D  WLNPT                  1      2  0
      D  W72TP                  3      4

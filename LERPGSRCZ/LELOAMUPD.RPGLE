@@ -105,6 +105,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *

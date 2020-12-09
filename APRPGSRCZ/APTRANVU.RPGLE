@@ -2758,9 +2758,9 @@ RGC  D RPIF4LN         S              4  0                                      
 
                                                                                               CLE172
       **  Benchmark Adjustment Field (CLE172)                                                 CLE172
-     C     BmrkAdjFld    SUBST     BUFFER:Bfp    BLRDta           22                          CLE172
+     C     LOBADJLn      SUBST     BUFFER:Bfp    BLRDta           13                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLCR50Ln) + BLRDta              CLE172
-     C                   ADD       BmrkAdjFld    Bfp                                          CLE172
+     C                   ADD       LOBADJLn      Bfp                                          CLE172
                                                                                               CLE172
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
@@ -6157,7 +6157,7 @@ RGC  D RPIF4LN         S              4  0                                      
 
                                                                                               CLE172
       ** Benchmark Adjustment Field                                                           CLE172
-     C                   Z-ADD     14            BmrkAdjFld        4 0                        CLE172
+     C                   Z-ADD     14            LOBADJLn          4 0                        CLE172
                                                                                               CLE172
 
      C                   ENDSR

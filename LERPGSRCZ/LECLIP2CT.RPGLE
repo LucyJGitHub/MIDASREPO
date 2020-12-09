@@ -182,6 +182,16 @@
       ***  Second DS for access programs, long data structure
       *                                                                                       CLE172
      D LoanScnBlrt     DS            46                                                       CLE172
+     D  DDBLRT                 1      1
+     D  DDLBDY                 2      3
+     D  DDLODY                 4      5
+     D  DDPDLY                 6      7
+     D  DDBADJ                 8     21
+     D  DDAVOP                22     22
+     D  DDCART                23     36
+     D  DDWGHT                37     37
+     D  DDBRAC                38     39
+     D  DDLBAC                40     41
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *
       ** +--------------------------------------+
@@ -203,7 +213,6 @@
      D IntCart         S              5A                                                      CLE172
      D DecCart         S              8A                                                      CLE172
                                                                                               CLE172
-     D RetCodeOut      S             10A                                                      CLE172
      D @@ALPH          S             16A                                                      CLE172
      D @@MTID          S              1A                                                      CLE172
      D @@AMT           S             15  0                                                    CLE172

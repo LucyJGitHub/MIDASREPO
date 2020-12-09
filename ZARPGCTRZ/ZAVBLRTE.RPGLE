@@ -247,7 +247,7 @@
      C                   EXSR      SRBRAC
      C                   EXSR      SRLBAC
      C                   EXSR      SRPIAD
-     C                   MOVE      OutScrfld     CLBsrValfld
+     C                   MOVE      OutValfld     CLBsrValfld
      C                   ENDIF
      C                   ENDIF
       *
@@ -280,7 +280,7 @@
      C                   PARM                    Idx                            In/Out param
      C                   PARM                    FldNamXAr                      In/Out param
      C                   PARM                    MsgIdXAr                       In/Out param
-     C                   PARM                    OutScrfld                      Out param
+     C                   PARM                    OutValfld                      Out param
      C                   PARM                    RetCodeOut                     Out param
 
       **  Key list for base rate

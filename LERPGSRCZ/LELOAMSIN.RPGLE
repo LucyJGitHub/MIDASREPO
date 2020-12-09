@@ -285,6 +285,10 @@
 
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
+                                                                                              CLE172
+      ** Benchmark Adjustment Days                                                            CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
 
       * Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
@@ -1423,6 +1427,10 @@
       ** Output parameters
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       ** Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

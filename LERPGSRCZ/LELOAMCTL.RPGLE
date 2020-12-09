@@ -344,6 +344,10 @@
                                                                                               CSC022
      D JobCmtCtlDS     S             10A   DIM(10)                                            CSC022
       * MIDAS SC Jobs Handling Commitment Control Data Structure                              CSC022
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -743,6 +747,10 @@
       ***  Output only screen field : Loan status (Not used in CTL)
      C                   PARM                    DDSTAT           16
      C                   PARM                    ValidLOAM                                    CRE073
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       **  Add the action code
      C                   MOVE      DDACTN        @DDACTN
@@ -956,7 +964,10 @@
      C                   PARM                    WMsgIdArr                                    222373
      C                   PARM                    WMsgDtaArr                                   222373
      C                   PARM                    WIdx                                         222373
-
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       ** Receipt / payment / FRA settlement instructions in file
       ** format
      C                   PARM                    F_PAY

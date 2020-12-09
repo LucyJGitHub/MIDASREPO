@@ -283,6 +283,10 @@
      D C#KYST          S              7                                                       CSF011
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
 
       ** Reservation ID - Blank field here to ensure similarity with VU module
      D*ReservID********S             10    INZ(*BLANKS)                         BUG2480
@@ -378,6 +382,7 @@
      C                                  Loa2ScnFmt +                                         CSF011A
      C                                  S_REC + S_PAY +                                       CSF011
      C                                  InfData + ExtData                                     247171
+     C                                  + BmrkAdjFld                                          CLE172
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -510,6 +515,10 @@
      C**********         PARM                    DDSTAT           16                          CLE106
      C                   PARM                    DDASTS                                       CLE106
      C                   PARM                    LoamFilXFmt                                  CRE073
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       ** Add the action code
      C                   MOVE      @DDACTN       DDACTN

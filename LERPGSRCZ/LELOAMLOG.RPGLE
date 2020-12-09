@@ -132,7 +132,10 @@
 
       ** Midas LE API LOAM format definition file
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
-
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦

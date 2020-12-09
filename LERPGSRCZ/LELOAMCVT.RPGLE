@@ -177,6 +177,10 @@
      D CRE073          S              1A                                                      CRE073
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         240408
                                                                                               CLE106
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -534,6 +538,10 @@
       ***  OUTPUT parameters
       ***  Loan Amendment in screen format
      C                   PARM                    LoamScnFmt
+                                                                                              CLE172
+      **                                                                                      CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

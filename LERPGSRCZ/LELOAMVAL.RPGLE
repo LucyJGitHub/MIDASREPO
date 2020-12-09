@@ -292,6 +292,13 @@
                                                                                               CLE025
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
+                                                                                              CLE172
+      ** Benchmark Adjustment Screen Field                                                    CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
+      ** Benchmark Adjustment Valid Field                                                     CLE172
+     D BmrkAdjFldVal   S             13P 8                                                    CLE172
+                                                                                              CLE172
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
      D                                     PREFIX(DL_)                                      MD034449
       ** External DS for Dealing Details                                                    MD034449
@@ -5133,6 +5140,10 @@
      C                   ELSE                                                                 CLE035
      C                   Z-ADD     WBASR         WBSRT                                        CLE035
      C                   ENDIF                                                                CLE035
+      *                                                                                       CLE172
+      ***  Validate Benchmark Adjustment Field for SC Loan Event                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBMADJ                                                    CLE172
       *
       ** New Effective Interest Rate = Interest New Rate/Spread
       ** combined with Base Rate depending on Spread Indicator
@@ -5281,6 +5292,29 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBMADJ - Validate Benchmark Adjustment Field                *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBMADJ       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALL      'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LOAM'        ApiName                                      CLE172
+     C                   PARM      BmrkAdjFld    TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNamXAr                                    CLE172
+     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM      BmrkAdjFldVal TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVE      TempOutDS     BmrkAdjFldVal                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6009,6 +6043,10 @@
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
 
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr

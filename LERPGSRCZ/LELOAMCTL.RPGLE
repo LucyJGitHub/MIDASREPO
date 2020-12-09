@@ -839,6 +839,10 @@
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
 
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -964,10 +968,6 @@
      C                   PARM                    WMsgIdArr                                    222373
      C                   PARM                    WMsgDtaArr                                   222373
      C                   PARM                    WIdx                                         222373
-                                                                                              CLE172
-      ** Benchmark Adjustment Field                                                           CLE172
-     C                   PARM                    BmrkAdjFld                                   CLE172
-                                                                                              CLE172
       ** Receipt / payment / FRA settlement instructions in file
       ** format
      C                   PARM                    F_PAY

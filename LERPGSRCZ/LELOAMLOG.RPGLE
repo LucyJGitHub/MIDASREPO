@@ -192,6 +192,10 @@
       * Loan Amendment details in screen format
      C                   PARM                    LOAMScnFmt
 
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

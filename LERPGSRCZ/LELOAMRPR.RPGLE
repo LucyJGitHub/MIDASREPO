@@ -241,6 +241,10 @@
       ** Second DS for access programs, Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     D BmrkAdjFld      S             13P 8                                                    CLE172
+                                                                                              CLE172
       * LE Amendment extra data in file (D/B) format
      D ExtData       E DS                  EXTNAME(LELOEXPD)
       *
@@ -963,6 +967,10 @@
       * Outputs:
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -1451,6 +1459,10 @@
       * Outputs
       * Amendment in screen format
      C                   PARM                    N_LOAM_S
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

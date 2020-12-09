@@ -923,6 +923,10 @@
       ** Loan amendment OK inds
      C                   PARM                    OKAmndScn
 
+                                                                                              CLE172
+      ** Benchmark Adjustment Field                                                           CLE172
+     C                   PARM                    BmrkAdjFld                                   CLE172
+                                                                                              CLE172
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr

@@ -5,6 +5,7 @@
 /*EXI *  TEXT('Midas LE Validate Facility Amount from VDAT')          *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  Midas - Customer Lending Module                              *
       *                                                               *
       *  LE000630 - Validate Facility Amount on Input                 *
@@ -26,8 +27,9 @@
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055657           Date 14May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055657           Date 14May20               *
       *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *

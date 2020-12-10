@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -134,6 +136,10 @@
       ** Midas LE API LOAM format definition file
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
 
+      ** LE Backward-Looking Rate Fields                                                      CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
+                                                                                              CLE172
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -190,6 +196,9 @@
       * Loan Amendment details in screen format
      C                   PARM                    LOAMScnFmt
 
+      *                                                                                     CLE172
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

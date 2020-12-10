@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD031292           Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD031292           Date 06Nov19               *
       *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
@@ -164,6 +165,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
@@ -685,6 +687,8 @@
      D CER020          S              1A                                                      CER020
      D CRE073          S              1A                                                      CRE073
      D CLE141          S              1A                                                      CLE141
+      ** Switchable feature CLE172                                                            CLE172
+     D CLE172          S              1A                                                      CLE172
 
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
@@ -3936,6 +3940,19 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF                                                                CLE141
+      *                                                                                       CLE172
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
+     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
+     C                   EVAL      LODY = L_CLLODY                                            CLE172
+     C                   EVAL      PDLY = L_CLPDLY                                            CLE172
+     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
+     C                   EVAL      AVOP = L_CLAVOP                                            CLE172
+     C                   EVAL      CART = L_CLCART                                            CLE172
+     C                   EVAL      WGHT = L_CLWGHT                                            CLE172
+     C                   EVAL      BRAC = L_CLBRAC                                            CLE172
+     C                   EVAL      LBAC = L_CLLBAC                                            CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CER050
      C                   IF        CER050 = 'Y'                                               CER050
      C                   EVAL      APRC = L_CLAPRC                                            CER050
@@ -4630,6 +4647,19 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF
+      *                                                                                       CLE172
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
+     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
+     C                   EVAL      LODY = L_CLLODY                                            CLE172
+     C                   EVAL      PDLY = L_CLPDLY                                            CLE172
+     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
+     C                   EVAL      AVOP = L_CLAVOP                                            CLE172
+     C                   EVAL      CART = L_CLCART                                            CLE172
+     C                   EVAL      WGHT = L_CLWGHT                                            CLE172
+     C                   EVAL      BRAC = L_CLBRAC                                            CLE172
+     C                   EVAL      LBAC = L_CLLBAC                                            CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CER050
      C                   IF        CER050 = 'Y'                                               CER050
      C                   EVAL      APRC = L_CLAPRC                                            CER050
@@ -9565,6 +9595,19 @@
      C                   EXSR      *PSSR                                                      CLE141
      C                   ENDIF                                                                CLE141
      C                   ENDIF                                                                CLE141
+                                                                                              CLE172
+      ** Access SAR details to see if CLE172 is switched on.                                  CLE172
+                                                                                              CLE172
+     C                   EVAL      CLE172 = 'N'                                               CLE172
+     C                   CALL      'AOSARDR0'                                                 CLE172
+     C                   PARM      *Blanks       PRetCode                                     CLE172
+     C                   PARM      '*VERIFY'     POption                                      CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      *Blanks       DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRetCode = *BLANKS                                         CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CRE073
      C                   EVAL      SVALK1 = 'AutoEndCalcLoanFee'                            MD046370
      C                   EVAL      SVALK2 = 'PDCLPAMVPayAC'                                 MD050007

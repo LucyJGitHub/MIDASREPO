@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
@@ -803,6 +805,23 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
+      ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
+     D LoanScnBlrt     DS            46                                                       CLE172
+                                                                                              CLE172
+      ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
+     D LoanValBlrt     DS                                                                     CLE172
+     D  WCLBLRT                1      1A                                                      CLE172
+     D  WCLLBDY                9     10S 0                                                    CLE172
+     D  WCLLODY               11     12S 0                                                    CLE172
+     D  WCLPDLY               13     14S 0                                                    CLE172
+     D  WCLBADJ               15     21P 8                                                    CLE172
+     D  WCLAVOP               22     22A                                                      CLE172
+     D  WCLCART               23     29P 8                                                    CLE172
+     D  WCLWGHT               30     30A                                                      CLE172
+     D  WCLBRAC               31     32A                                                      CLE172
+     D  WCLLBAC               33     34S 0                                                    CLE172
+     D  WCLPIAD               36     40S 0                                                    CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -998,6 +1017,10 @@
       ***  Validate base rate type
       *
      C                   EXSR      SRBRTT
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
      C                   ENDIF                                                                CLE035
       *
       /COPY WNCPYSRC,LECLIP2V05
@@ -1370,6 +1393,42 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALL      'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'CLIP'        ApiName           4                          CLE172
+     C                   PARM                    CCLCCY                                       CLE172
+     C                   PARM                    CCLBRTT                                      CLE172
+     C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNamXAr                                    CLE172
+     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LoanValBlrt                                  CLE172
+     C                   MOVE      WCLBLRT       CCLBLRT                                      CLE172
+     C                   Z-ADD     WCLLBDY       CCLLBDY                                      CLE172
+     C                   Z-ADD     WCLLODY       CCLLODY                                      CLE172
+     C                   Z-ADD     WCLPDLY       CCLPDLY                                      CLE172
+     C                   Z-ADD     WCLBADJ       CCLBADJ                                      CLE172
+     C                   MOVE      WCLAVOP       CCLAVOP                                      CLE172
+     C                   Z-ADD     WCLCART       CCLCART                                      CLE172
+     C                   MOVE      WCLWGHT       CCLWGHT                                      CLE172
+     C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
+     C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
+     C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1648,6 +1707,7 @@
      C                   MOVEL     'LEL0712'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
      C                   EXSR      SRBRTT                                                     CLE035
+     C                   EXSR      SRBLRTE                                                    CLE172
       *                                                                                     MD055219
      C     BASER         IFEQ      *ZEROS                                                   MD055219
      C     #DDRTSP       ANDEQ     *ZEROS                                                   MD055219
@@ -6318,6 +6378,9 @@ E004 C                   ENDIF
                                                                                             MD053143
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInScr7                                 MD053143
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                CLE172
       ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller

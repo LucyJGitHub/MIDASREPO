@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. BUG24602           Date 30Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 BUG27895           Date 14Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26243           Date 30Sep09               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG24602 - A serious Midas error has occurred                *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27895 - Serious midas error when confirm authorize an     *
@@ -449,6 +452,8 @@
      C**********         IF        PPAYAMT <> *Blanks  and  OKPYAM = 'Y'                     CSW207A
      C                   IF        NumPAYAMT <> 0    AND                                     CSW207A
      C                             OKPYAM    =  'Y'                                          CSW207A
+     C                             AND NumORAMT  <> 0 AND                                   BUG24602
+     C                             CSW207 = 'Y'                                             BUG24602
      C                   MOVE      'N'           OKXRTE
      C                   ADD       1             Idx
      C                   MOVEL     DDSName       FldNamXAr(Idx)
@@ -473,7 +478,8 @@
       ** b) If Payment Amount has not been entered, use the calculated value
      C                   IF        CalcXRATE <> *Zeros
      C                             AND (NumTRNAMT <> 0                                       CSW207A
-     C                             OR  NumORAMT   =  0)                                      CSW207A
+     C**********                   OR  NumORAMT   =  0)                             CSW207A BUG24602
+     C                             AND NumORAMT  <>  0)                                     BUG24602
      C                   MOVE (P)  CalcXRATE     ZFIELD
       *
      C                   CALLB     'ZAEDITM'

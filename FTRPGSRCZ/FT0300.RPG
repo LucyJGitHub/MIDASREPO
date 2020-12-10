@@ -12,8 +12,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056683           Date 14Sep20               *
-      *  Prev Amend No. AR918985           Date 20Feb12               *
+      *  Last Amend No. AR1068690          Date 14Dec12               *
+      *  Prev Amend No. 217679             Date 13Nov12               *
+      *                 223053             Date 16Oct12               *
+      *                 MD056683           Date 14Sep20               *
+      *                 AR918985           Date 20Feb12               *
       *                 AR921987           Date 22Feb12               *
       *                 AR962605           Date 01May12               *
       *                 261691             Date 19Sep13               *
@@ -150,6 +153,11 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1068690 - APPLY 223053 217679 (CHILD:AR1069087)            *
+      *  217679 - Do not print report if only CRE008 is on and        *
+      *           if it is not a Cash Management message              *
+      *  223053 - Conditioning of call to ME1501 should also depend   *
+      *           on CRE008 if CRT002 is off (not upgraded from DBA3).*
       *  MD056683 - MT199 Confirm is being generated for an IPAY where*
       *             the credit goes to the Account with Bank          *
       *  AR918985 - Correct Retail account validation on From/To      *
@@ -2088,13 +2096,40 @@
      C* Report Cash Management routing check if CRE008 is on              CRE008
      C* and 101 or 103                                                    CRE008
      C           CRE008    IFEQ 'Y'                                       CRE008
+     C           CFT002    ANDNE'Y'                                                           217679
      C           PMTPY     IFEQ '101'                                     CRE008
      C           PMTPY     OREQ '103'                                     CRE008
-     C           W0ACT     IFEQ *BLANK                                    CRE008
+     C********** W0ACT     IFEQ *BLANK                                                 CRE008 217679
+     C                     SELEC                                                              217679
+     C* If no report required                                                                 217679
+     C           GNEXCP    WHEQ 'N'                                                           217679
+     C           GNEXCP    OREQ ' '                                                           217679
+     C                     MOVEL*BLANKS   W0ACT                                               217679
+     C* If action taken                                                                       217679
+     C           W0ACT     WHNE *BLANKS                                                       217679
+     C* Default is report required                                                            217679
+     C                     OTHER                                                              217679
      C                     MOVEL'*REPT'   W0ACT                           CRE008
+     C                     ENDSL                                                              217679
+     C**********           ENDIF                                                       CRE008 217679
      C                     ENDIF                                          CRE008
      C                     ENDIF                                          CRE008
-     C                     ENDIF                                          CRE008
+     C*                                                                                       217679
+     C* FT STP enables                                                                        217679
+     C*                                                                                       217679
+     C           CFT002    IFEQ 'Y'                                                           217679
+     C                     SELEC                                                              217679
+     C* If no report required                                                                 217679
+     C           GNEXCP    WHEQ 'N'                                                           217679
+     C           GNEXCP    OREQ ' '                                                           217679
+     C                     MOVEL*BLANKS   W0ACT                                               217679
+     C* If action taken                                                                       217679
+     C           W0ACT     WHNE *BLANKS                                                       217679
+     C* Default is report required                                                            217679
+     C                     OTHER                                                              217679
+     C                     MOVEL'*REPT'   W0ACT                                               217679
+     C                     ENDSL                                                              217679
+     C                     ENDIF                                                              217679
       *
       *  Report on actions taken
       *
@@ -3363,6 +3398,7 @@
       * Call ME1501 to analysis the data of the messages for FT fields    CFT002
       *                                                                   CFT002
      C           CFT002    IFEQ 'Y'                                       163446
+     C           CRE008    OREQ 'Y'                                       223053
       *                                                                   163446
      C                     CALL 'ME1501'                                  CFT002
      C                     PARM *BLANKS   W0ACT            Action Code    CFT002
@@ -12782,6 +12818,9 @@ a     *                                                                         
      C           ##NONB    ANDNE*BLANKS                                   CFT014
      C                     MOVEL*BLANKS   S1TRIB                          CFT014
      C                     MOVEL##NONB    S1TRIB                          CFT014
+     C                     MOVEL##NCCY    ##005A  5 P                                         217679
+     C                     MOVE ##NONB    ##005A                                              217679
+     C                     MOVEL##005A    S1TRIB    P                                         217679
       *                                                                   CFT014
       * If currency the same use GL Account                               CFT014
      C           TRCYCD    WHEQ S1SMCY                                    CFT014

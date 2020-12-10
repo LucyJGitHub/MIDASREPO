@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 250229             Date 20May08               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 30May14               *
       *                 CSW212             Date 03May12               *
@@ -77,6 +78,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250229 - When inputting transactions ensure an error message *
+      *           set when trying to insert the same deal number      *
+      *           simultaneously.                                     *
+      *         - Applied for MD030370.                               *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
@@ -751,7 +756,9 @@
      C*  WRITE (OR UPDATE IF PRESENT) NEW DEAL
      C*
      C     *IN99         IFEQ      '0'
-     C                   UPDATE    FXDEALP0
+     C**********         UPDATE    FXDEALP0                                                   250229
+     C                   MOVEL     '*RECINS'     @@RTCD                                       250229
+     C                   GOTO      EXIT                                                       250229
      C                   ELSE
      C                   WRITE     FXDEALP0
      C/COPY WNCPYSRC,FXFXDLFC01

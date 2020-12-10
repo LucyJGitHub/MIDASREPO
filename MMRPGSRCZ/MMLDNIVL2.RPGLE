@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD055010           Date 04Mar20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 245692             Date 04Feb13               *
+      *  Prev Amend No. MD029160           Date 05Sep14               *
+      *                 MD055010           Date 04Mar20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,6 +59,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
+      *  MD029160 - APISERVER job fall over when trying to send in a  *
+      *             LDNI Cancellation. Recompiled due to changes in   *
+      *             MMVLDNIPD.                                        *
       *  MD055010 - Error message displayed with special character    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -1622,6 +1631,29 @@
      C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                 CDL033
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0023'                                CDL033
      C                   EVAL      ReturnCode      = 'Error'                                  CDL033
+     C                   Z-ADD     0             @@AMT                                        245692
+     C                   Z-ADD     0             @@ERCD                                       245692
+     C                   MOVEL     *BLANKS       @@ALPH                                       245692
+     C                   MOVEL     DDSTRT        @@ALPH                                       245692
+     C                   Z-ADD     4             @@IINT                                       245692
+     C                   Z-ADD     7             @@IDP                                        245692
+     C                   CALLB     'ZA0840'                                                   245692
+     C                   PARM                    @Rtcde                                       245692
+     C                   PARM                    @@ALPH                                       245692
+     C                   PARM                    @@IDP                                        245692
+     C                   PARM                    @@IINT                                       245692
+     C                   PARM                    @@MTID                                       245692
+     C                   PARM                    @@ERCD                                       245692
+     C                   PARM                    @@AMT                                        245692
+     C                   PARM                    BNDCSP                                       245692
+b2   C     @@ERCD        IFNE      0                                                          245692
+     C                   EVAL      Idx = Idx + 1                                              245692
+     C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                                 245692
+     C                   EVAL      MsgIDArr(Idx) = 'FLR0014'                                  245692
+     C                   EVAL      ReturnCode = 'Error'                                       245692
+x2   C                   ELSE                                                                 245692
+     C                   MOVE      @@AMT         WSTRT                                        245692
+     C                   ENDIF                                                                245692
      C**********         ELSE                                                        CDL033 BUG24317
      C**********         MOVEL     *BLANKS       ZFIELD                              CDL033 BUG24317
      C**********         CALLB     'ZALIGN'                                          CDL033 BUG24317

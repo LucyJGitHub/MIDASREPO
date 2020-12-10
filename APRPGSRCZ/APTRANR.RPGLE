@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054906           Date 15Jan20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. AR1071753          Date 31Jan13               *
+      *  Prev Amend No. MD054906           Date 15Jan20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
       *               . MD046248           Date 27Oct17               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1071753 - Interest rates data not visible for all account  *
+      *              types. (Child: AR1071755)                        *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
@@ -1503,8 +1506,10 @@
      C     TransTYPE     WHENEQ    'RISL'                                                    BUG6417
                                                                                              BUG6417
      C                   MOVEL     TransID       I_RACCID                                    BUG6417
-     C                   EVAL      I_R_DR_CR = %subst(Buffer: 1 : 1 )                        BUG6417
-     C                   EVAL      I_SPnt    = %subst(Buffer: 2 : 5 )                        BUG6417
+     C**********         EVAL      I_R_DR_CR = %subst(Buffer: 1 : 1 )              BUG6417 AR1071753
+     C**********         EVAL      I_SPnt    = %subst(Buffer: 2 : 5 )              BUG6417 AR1071753
+     C                   EVAL      I_R_DR_CR = %subst(TransID : 25 : 1 )                   AR1071753
+     C                   EVAL      I_SPnt    = %subst(TransID : 26 : 5 )                   AR1071753
                                                                                              BUG6417
      C                   CALL      'RE104001'                                                BUG6417
      C                   PARM                    I_RACCID         24                         BUG6417

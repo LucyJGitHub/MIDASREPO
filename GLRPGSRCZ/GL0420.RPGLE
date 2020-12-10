@@ -14,8 +14,11 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR1088283          Date 20Mar13               *
-      *  Prev Amend No. 220877             Date 22Mar19               *
+      *  Last Amend No. AR1068690          Date 14Dec12               *
+      *  Prev Amend No. 260897             Date 19Oct12               *
+      *                 244144             Date 19Oct12               *
+      *                 AR1088283          Date 20Mar13               *
+      *                 220877             Date 22Mar19               *
       *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -160,6 +163,13 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1068690 - Apply 260897 244144 (Child:AR1069087)            *
+      *  232285 - Amended program to print only the group account     *
+      *           narrative in the statement if the involved account  *
+      *           is not a top account.                               *
+      *  260897 - Negative rate shown on account statement.           *
+      *  244144 - initialised arrays VDAR & VCAR after adding the     *
+      *           amount to VDDR & VDCR respectively.                 *
       *  AR1088283 - Group Account narrative appears unconditionally. *
       *              Must take consideration hierarchy level setting  *
       *              for Top ob Balance Sheet (Child: AR1088286)      *
@@ -3143,6 +3153,11 @@
      C                   END                                                                  E16612
      C                   END                                                                  E16612
      C                   END                                                                  E16612
+     C*  Negative rate shown on account statement                                             260897
+     C     INTR          IFLT      0                                                          260897
+     C                   Z-ADD     0             INTR                                         260897
+     C                   END                                                                  260897
+     C*                                                                                       260897
 0747 C*    CHECK FOR FULL PAGE                                            S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP19                                           S01408
@@ -3738,6 +3753,8 @@
 0812 C     CLBF          SUB       VCAR(I)       CLBF
 0813 C     VDDR          ADD       VDAR(I)       VDDR
 0814 C     VDCR          ADD       VCAR(I)       VDCR
+     C                   Z-ADD     0             VDAR(I)                                      244144
+     C                   Z-ADD     0             VCAR(I)                                      244144
      C/COPY WNCPYSRC,GL0420C048
 0815 C**   INCREMENT INDEX & DATE.
 0816 C     I             ADD       1             I

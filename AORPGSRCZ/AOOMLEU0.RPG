@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
       *                 MD047554           Date 11Oct17               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
@@ -577,6 +579,8 @@
       *
      I/SPACE 5
      I*
+     ISDBSRT    E DSSDBSRTPD                                                                  CLE172
+      **  EXTERNAL DS FOR BASE RATE DETAILS                                                   CLE172
      ISDBANK    E DSSDBANKPD
       ** BANK DETAILS
      I              BJRDNB                          RUND
@@ -3546,7 +3550,34 @@
      C********** NBRA      ORGT 0                                                    MD047554 CSD103
      C           NBRA      ORNE *BLANKS                                                       CSD103
      C                     Z-ADDNRTS      WCUSP                                             MD047554
-     C                     Z-ADDNBRA      WCUBR                                             MD047554
+     C**********           Z-ADDNBRA      WCUBR                                      MD047554 CLE172
+      *                                                                                       CLE172
+     C                     MOVELCCYX      PKEY1                                               CLE172
+     C                     MOVELNBRA      PKEY2                                               CLE172
+      *                                                                                       CLE172
+     C                     CALL 'AOBSRTR0'                                                    CLE172
+     C                     PARM *BLANKS   @RTCD                                               CLE172
+     C                     PARM '*KEY   ' @OPTN                                               CLE172
+     C                     PARM           PKEY1   3                                           CLE172
+     C                     PARM           PKEY2   2                                           CLE172
+     C           SDBSRT    PARM SDBSRT    DSSDY                                               CLE172
+      *                                                                                       CLE172
+      ** Handle Database Error.                                                               CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFNE *BLANKS                                                       CLE172
+     C                     MOVEL'SDBSRTR0'W0PGM   8                                           CLE172
+     C                     MOVEL'SDBSRTPD'W0FILE                                              CLE172
+     C                     MOVELPKEY2     W0KEY                                               CLE172
+     C                     Z-ADD917       W0ERNB                                              CLE172
+     C                     EXSR SRERR                                                         CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
+     C           RLDT      IFGE BAVDNR                                                        CLE172
+     C                     Z-ADDBANBRT    WCUBR                                               CLE172
+     C                     ELSE                                                               CLE172
+     C                     Z-ADDBACBSR    WCUBR                                               CLE172
+     C                     ENDIF                                                              CLE172
+      *
      C                     MOVELNSIN      SPIN                                              MD047554
      C                     EXSR SRNEWI                                                      MD047554
      C                     ENDIF                                                            MD047554

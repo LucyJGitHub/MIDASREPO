@@ -318,6 +318,7 @@
 
       * Processing for deletes
      C                   WHEN         DDACTN = 'D'
+     C                   EXSR      ValidateBr                                                CSD103
      C                   CLEAR                   ValdBasRat
      C                   MOVEL     BasRFilFmt    ValdBasRat
      C                   EVAL      V_BVTYLC = DDACTN

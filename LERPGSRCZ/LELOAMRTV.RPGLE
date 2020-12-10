@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 04Dec20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD021423E          Date 12Sep13               *
       *                 MD000091           Date 09May13               *
       *                 CLE134             Date 01Aug12               *
@@ -48,7 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021423E - Deal date should be the deal date of the OL      *
@@ -233,7 +231,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Ix              S              3P 0
                                                                                              BUG8241
@@ -272,7 +270,7 @@
      D WPEAInd         S              1A                                                      CSC054
                                                                                              BUG8241
      D CLE106          S              1A                                                    BUG10671
-
+ 
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
@@ -301,19 +299,19 @@
      D SVALK0          S             20A                                                      CLE148
      D SVAL10          S            200A                                                      CLE148
      D CobMode         S              1A                                                   MD021423E
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       *****************************************************************
       /EJECT
-
+ 
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *inzsr  ¦
@@ -389,7 +387,7 @@
      C                   CLEAR                   FacilityA
      C                   MOVE      *ALL'Y'       LOAM_OK
      C                   CLEAR                   LoamFilXFmt                                  CRE073
-
+ 
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -561,7 +559,7 @@
       *
       ** Amendment type must be valid, if entered - must be entered if insert
      C     DDATYP        IFNE      *BLANKS
-
+ 
      C     DDATYP        IFNE      'PI'
      C     DDATYP        ANDNE     'SC'
      C     DDATYP        ANDNE     'BC'
@@ -835,33 +833,33 @@
       *    ======
       * Return code
      C                   PARM                    RetCodeOut
-
+ 
       * Mode = '*FRONT' (Front office transaction interface)
       * Mode = '      ' (Not front office transaction interface)
      C                   PARM                    ModeofOp          6
-
+ 
       * Response mode
      C                   PARM                    RespMode          1
-
+ 
       * Action Code
      C                   PARM                    DDACTN            1
-
+ 
       * Front Office Transaction ID
      C                   PARM                    FOTRID           20
-
+ 
       * Loan Number / Value Date / Sequence
      C                   PARM                    DDLOAN            6
      C                   PARM                    DDVDAT            6
      C                   PARM                    DDSEQN            3
      C                   PARM                    DDATYP            2
-
+ 
       * Where called from
      C                   PARM                    CallModCod        3
-
+ 
       * Features
      C                   PARM                    CEU020            1
      C                   PARM                    CLE030            1                          CLE030
-
+ 
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN            1
      C                   PARM                    BJDFIN            1
@@ -874,15 +872,15 @@
      C                   PARM                    LoanDetsB
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
-
+ 
       * Error Indicators
      C                   PARM                    LOAM_OK
-
+ 
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
-
+ 
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
      C                   PARM                    LoamFilXFmt                                  CRE073

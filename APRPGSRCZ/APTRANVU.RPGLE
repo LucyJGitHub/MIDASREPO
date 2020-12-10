@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 03Dec20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD030856           Date 06Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -227,7 +226,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -2756,12 +2754,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
 
-                                                                                              CLE172
-      **  Benchmark Adjustment Field (CLE172)                                                 CLE172
-     C     LOBADJLn      SUBST     BUFFER:Bfp    BLRDta           13                          CLE172
-     C                   EVAL      ExtData = %SUBST(ExtData:1:CLCR50Ln) + BLRDta              CLE172
-     C                   ADD       LOBADJLn      Bfp                                          CLE172
-                                                                                              CLE172
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
      C                   CALL      'LELOAMVU'
@@ -6155,10 +6147,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0
 
-                                                                                              CLE172
-      ** Benchmark Adjustment Field                                                           CLE172
-     C                   Z-ADD     14            LOBADJLn          4 0                        CLE172
-                                                                                              CLE172
 
      C                   ENDSR
       *****************************************************************

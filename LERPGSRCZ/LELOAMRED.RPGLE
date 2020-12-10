@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 04Dec20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,7 +32,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -51,12 +49,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FLOAMS     IF   E           K DISK    INFSR(*PSSR)
       ***  Midas LE Loan Amendments File
      F                                     INCLUDE(LOAMSDKF)
@@ -65,7 +63,7 @@
       ***  Midas LE Loans Detail Files
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANZ1F)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -77,48 +75,48 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **----------------------------------------------------------------
-
+ 
       **----------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **----------------------------------------------------------------
-
+ 
       **----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **----------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
@@ -146,7 +144,7 @@
      D SVAL9           S            200A                                                      CLE148
      D SVALK0          S             20A                                                      CLE148
      D SVAL10          S            200A                                                      CLE148
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -210,11 +208,11 @@
       *
       * Initialise key lists
      C                   MOVEL     DDLOAN        WKLNR
-
+ 
       *  The value date key is initialised after the convert to a dayno.
      C                   MOVEL     DDSEQN        WKLSN
      C                   EVAL      WRCDT  = 'A'
-
+ 
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -222,7 +220,7 @@
       * RDFWD - Read forwards
       *****************************************************************
      C     RDFWD         BEGSR
-
+ 
      C                   MOVE      'N'           @Valid            1
       *
       * Position to current record on file
@@ -255,7 +253,7 @@
      C                   ELSE
      C                   MOVEL     LNRF          @LOAN
      C                   MOVEL     LASN          @LASN
-
+ 
       *** Convert the dayno to date format first
      C     VDAT          IFNE      *ZERO
      C                   CALLB     'ZDATE2'
@@ -265,7 +263,7 @@
      C                   PARM                    ZADATE            7
      C                   MOVEL     ZDATE         @VDAT
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
      C                   ENDSR
@@ -277,7 +275,7 @@
      C     RDBCK         BEGSR
       *
      C                   MOVE      'N'           @Valid
-
+ 
       * Position to current record on file
      C     KLAKEY        SETLL     LOAMS
       *
@@ -309,7 +307,7 @@
       *
      C                   MOVEL     LNRF          @LOAN
      C                   MOVEL     LASN          @LASN
-
+ 
       *** Convert the dayno to date format first
      C     VDAT          IFNE      *ZERO
      C                   CALLB     'ZDATE2'
@@ -319,7 +317,7 @@
      C                   PARM                    ZADATE            7
      C                   MOVEL     ZDATE         @VDAT             6
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
      C                   ENDSR
@@ -409,7 +407,7 @@
      C                   MOVE      ZDAYNO        WKVDT
  E1  C                   ENDIF
      C                   ENDIF
-
+ 
       ** Check if sequence no. is valid
      C     WKLSN         IFLT      0
      C                   MOVEL     'LEA0031'     RetCodeIn
@@ -439,13 +437,13 @@
      C                   PARM                    DDLOAN            6
      C                   PARM                    DDVDAT            6
      C                   PARM                    DDSEQN            3
-
+ 
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN            1
      C                   PARM                    BJDFIN            1
-
+ 
       * Output Parameters :
-
+ 
       * Loan number / value date / sequence / amendment type read
      C                   PARM                    @LOAN             6
      C                   PARM                    @VDAT             6

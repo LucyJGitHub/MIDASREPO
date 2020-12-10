@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 04Dec20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD035672           Date 07Sep15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035672           Date 07Sep15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,7 +42,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035672 - Spread rate should be shown in spread rate field  *
       *             not in fixed rate field.                          *
@@ -147,16 +145,16 @@
       *
       ***  Loan Amendment in file Format
      D LoamFilFmt    E DS                  EXTNAME(LOAMSDK)
-
+ 
       ** Loan Amendment Extension in file format                                              CRE073
      D LoamFilXFmt   E DS                  EXTNAME(LEVLOAMPD)                                 CRE073
                                                                                               CRE073
       ** Loan Amendment Layout file - Input Fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
-
+ 
       ***  External DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       ***  DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  DS for Access programs - short data structure                                      CLE106
@@ -177,10 +175,6 @@
      D CRE073          S              1A                                                      CRE073
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         240408
                                                                                               CLE106
-                                                                                              CLE172
-      ** Benchmark Adjustment Field                                                           CLE172
-     D BmrkAdjFld      S             13P 8                                                    CLE172
-                                                                                              CLE172
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -203,9 +197,9 @@
       **  Blank outputs
      C                   CLEAR                   LoamScnFmt
      C                   CLEAR                   DDSTAT
-
+ 
       *  Set screen fields
-
+ 
       ** Loan number.
      C                   MOVE      LNRF          DDLOAN
       *
@@ -424,34 +418,34 @@
       * SRSTAT  -  Determine loan amendment status narrative          *
       *****************************************************************
      C     SRSTAT        BEGSR
-
+ 
      C                   MOVE      *BLANKS       ZAMSID            7
-
+ 
      C                   SELECT
      C     WRSTS         WHENEQ    'C'
      C                   MOVEL     'LEA0060'     ZAMSID
-
+ 
      C     WRSTS         WHENEQ    'R'
      C                   MOVEL     'LEA0061'     ZAMSID
-
+ 
      C     WRSTS         WHENEQ    'A'
      C                   MOVEL     'LEA0062'     ZAMSID
-
+ 
      C     WRSTS         WHENEQ    'D'
      C                   MOVEL     'LEA0063'     ZAMSID
-
+ 
      C     WRSTS         WHENEQ    'Q'
      C                   MOVEL     'LEA0064'     ZAMSID                                       CLE030
                                                                                               CLE030
      C                   OTHER
      C                   MOVE      *BLANKS       WSTAT
      C                   ENDSL
-
+ 
      C     ZAMSID        IFNE      *BLANKS
      C                   EXSR      SRTEXT
      C                   MOVEL(P)  ZAMSTX        WSTAT            16
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -459,20 +453,20 @@
       * SRCurrDet - Access currency details                           *
       *****************************************************************
      C     SrCurrDet     BEGSR
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    @CURR             3
      C     SDCURR        PARM                    DSSDY
-
+ 
       * Database error
      C     @RTCD         IFNE      *BLANK
      C                   MOVEL     @CURR         DBKEY
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -480,13 +474,13 @@
       * ZDATE2 - Format a date for output                             *
       *****************************************************************
      C     ZDATE2        BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM      BJDFIN        DateFmt           1
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -494,14 +488,14 @@
       * SRTEXT  -  Set up text from message file.                     *
       *****************************************************************
      C     SRTEXT        BEGSR
-
+ 
      C                   CALL      'Y2RVMGC'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    ZAMSID            7
      C                   PARM      'LERMSGF '    ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM                    ZAMSTX          132
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -538,10 +532,6 @@
       ***  OUTPUT parameters
       ***  Loan Amendment in screen format
      C                   PARM                    LoamScnFmt
-                                                                                              CLE172
-      **                                                                                      CLE172
-     C                   PARM                    BmrkAdjFld                                   CLE172
-                                                                                              CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

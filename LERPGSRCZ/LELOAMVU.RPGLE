@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 04Dec20               *
-      *  Prev Amend No. MD024811           Date 24Jan20               *
-      *                 MD029046           Date 27Nov19               *
+      *  Last Amend No. MD024811           Date 24Jan20               *
+      *  Prev Amend No. MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
@@ -101,7 +100,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -605,11 +603,6 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
-                                                                                              CLE172
-      ** Benchmark Adjustment Days                                                            CLE172
-     D BmrkAdjFld      S             13P 8                                                    CLE172
-                                                                                              CLE172
-
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -641,11 +634,6 @@
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   MOVEL     Extdata500    Extdata
 
-      ** CLE172 Fields                                                                        CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      BmrkAdjFld = %SUBST(Extdata500:eBfp:13)                    CLE172
-     C                   ADD       13            eBfp                                         CLE172
-     C                   ENDIF                                                                CLE172
 
       * Reset variables gradually updated
 
@@ -783,7 +771,6 @@
      C                                           + S_Rec + S_Pay                              CLE106
      C                                           + InfData                                   BUG9493
      C                                           + ExtData                                    247172
-     C                                           + BmrkAdjFld                                 CLE172
 
      C                   RETURN
 
@@ -842,9 +829,7 @@
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
-                                                                                              CLE172
-      ** Benchmark Adjustment                                                                 CLE172
-     C                   PARM                    BmrkAdjFld                                   CLE172
+
       * Outputs
       * Current Loan Amendment in file format, plus Loan/facility details
      C                   PARM                    CurFilLoam
@@ -993,7 +978,7 @@
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
      C                   ENDIF                                                              MD029046
-     C                   ENDIF                                                              MD029046
+     C                   ENDIF                                                              MD029046      
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066
@@ -1879,7 +1864,6 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
-     C                   PARM                    BmrkAdjFld                                   CLE172
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -2208,18 +2192,6 @@
      C                   ELSE                                                                 CLE034
      C                   MOVE      'N'           CLE034                                       CLE034
      C                   ENDIF                                                                CLE034
-      *                                                                                       CLE172
-      ** Check if CLE172 is ON                                                                CLE172
-     C                   CallB     'AOSARDR0'                                                 CLE172
-     C                   Parm      *Blanks       PRTCD                                        CLE172
-     C                   Parm      '*VERIFY'     POPTN                                        CLE172
-     C                   Parm      'CLE172'      PSARD                                        CLE172
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CLE172
-      *                                                                                       CLE172
-     C                   Move      'N'           CLE172            1                          CLE172
-     C                   If        PRTCD = *Blanks                                            CLE172
-     C                   Eval      CLE172 = 'Y'                                               CLE172
-     C                   Endif                                                                CLE172
 
      C**********         MOVE      *BLANKS       @RTCD                                CLE106 BUG9492
       *  Hook to enable non-core initial processing to be included

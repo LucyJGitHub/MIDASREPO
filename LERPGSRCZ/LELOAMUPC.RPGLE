@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 04Dec20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR1054921          Date 10Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1054921          Date 10Jun13               *
       *                 AR868380           Date 10Jun13               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -33,8 +32,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1054921 - Corrected the error handling introduced by       *
       *             AR868380. (Child: AR1054924)                      *
@@ -56,20 +53,20 @@
       *  CAP075 - Lending API enhancements - Loan Amendments          *
       *                                                               *
       *****************************************************************
-
+ 
       * Valid loan amendments in file format
      FLEVLOAMPD UF   E             DISK
      F                                     COMMIT
      FLEVLOAML1 UF   E           K DISK
      F                                     RENAME(LEVLOAMD0:LEVLOAMD1)
-
+ 
       * Valid loan amendments in error from update routine
      FLEVELOAMPDO    E             DISK
      F                                     RENAME(LEVLOAMD0:LEVLOAMERR)
-
+ 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LELOAMC001
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,60 +85,60 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **-----------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **-----------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in LOAM API update')
-
+ 
       *****************************************************************
-
+ 
       **  DS for valid loan amendment
      D V_LOAM        E DS                  EXTNAME(LEVLOAMPD)
-
+ 
       ** Customer lending ICD
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *
       ***  Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
-
+ 
      D LELOAMUPC       DS             1    DTAARA(LELOAMUPC)
-
+ 
       ** DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
-
+ 
       * 24X7 Data Area Structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       *
       * SDSTAT Data Area Structure
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
-
+ 
      D Object          S             10A   INZ('LELOAMUPC')
      D LockObj         S             10A   INZ('LELOAMLCK')
      D Lib             S             10A   INZ('*LIBL')
@@ -155,12 +152,12 @@
      D Return2         S              7A
      D Endjob          S              1A   INZ('Y')
      D @Timestamp      S             26Z
-
+ 
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
       ** Data queue details
       ** ------------------
      D DtqLen          S              5P 0 INZ(10)
@@ -168,19 +165,19 @@
      D DtqNam          S             10A   INZ('APLOAMDTQ')
      D DtqLib          S             10A   INZ('*LIBL')
      D DtqDta          S             10A
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,LELOAMC002
-
+ 
       *******************************************************************
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -189,39 +186,39 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *******************************************************************
-
+ 
       /COPY WNCPYSRC,LELOAMC003
-
+ 
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APLOAMDTQ'
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
-
+ 
       ** Wait for data queue prompt
       ** Server program will send data queue entry when record is
       ** written to the valid transactions file
      C                   DOW       DtqDta <> 'END'
-
+ 
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam
      C                   PARM                    DtqLib
      C                   PARM                    DtqLen
      C                   PARM                    DtqDta
      C                   PARM                    DtqWait
-
+ 
       ** If data queue entry is 'END', leave the DOW loop at this point
      C                   IF        DtqDta = 'END'
      C                   LEAVE
      C                   ENDIF
-
+ 
       ** If data queue entry says run, first lock allocation data area
      C                   IF        DtqDta = 'GO'
-
+ 
       ** Allocate with exclusive lock state
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
@@ -232,25 +229,25 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       ** Ensure the U7 and U8 indicators are off, to prevent problems
       ** caused by earlier errors.
      C                   CLEAR                   *inu7
      C                   CLEAR                   *inu8
-
-
+ 
+ 
       /COPY WNCPYSRC,LELOAMC004
-
+ 
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     LEVLOAMPD
-
+ 
       ** Read valid loan amendment
      C                   READ      LEVLOAMD0                              99    *
      C                   DOW       *IN99 = *OFF
-
+ 
       /COPY WNCPYSRC,LELOAMC005
-
+ 
       ** Load the API Dump data area with as many fields from the message
       ** header as are available, so that dumps in any lower level modules
       ** will include the key information
@@ -258,26 +255,26 @@
      C                   EVAL      ARFOAsocID = LAAFRT
      C                   EVAL      ARRprLocn  = LAREPA
      C                   EVAL      @Timestamp = LATMST
-
+ 
       /COPY WNCPYSRC,LELOAMC006
-
+ 
       ** LE Database update
      C                   CALLB     'LELOAMUPD'
-
+ 
       ** Return Code
      C                   PARM      *BLANK        @@RTCD            7
       ** Action requested                                                                     222373
      C                   PARM      LACHTP        DDACTN            1                          222373
-
+ 
       ** Externally described DS for valid loan Amendment
      C                   PARM                    V_LOAM
       * Calling module code                                                                   222373
      C                   PARM      'UPC'         CallModCod        3                          222373
-
+ 
       ** Parameter to allow LELOAMVU to pass reservation Id direct
       ** to updater
      C                   PARM                    ReservID         10
-
+ 
       * Features
      C                   PARM                    CDE001
      C                   PARM                    CDE005
@@ -289,12 +286,12 @@
      C                   PARM                    CLE014
      C                   PARM                    CLE023
      C                   PARM                    CLE030                                       CLE030
-
+ 
       * Authorise amends / authorise principal tfr / consolidated conf.
      C                   PARM                    BPLMAU
      C                   PARM                    BPTPAU
      C                   PARM                    BPCONR
-
+ 
       ** Date Format Indicator, Local Currency & Run day number
      C                   PARM                    BJDFIN
      C                   PARM                    BJLCCY
@@ -304,7 +301,7 @@
                                                                                          222373
       * Which system is active (24x7)                                                    222373
      C                   PARM                    System            1                     222373
-
+ 
       * Commit updates if no error (if error, roll back issued in DBERRCTL)
      C**********         IF        @@RTCD <> '*ERROR ' OR                                  AR1054921
      C                   IF        @@RTCD <> '*ERROR ' AND                                 AR1054921
@@ -314,9 +311,9 @@
      C                   DELETE    LEVLOAMD0
      C                   COMMIT
      C                   ENDIF
-
+ 
       /COPY WNCPYSRC,LELOAMC007
-
+ 
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C                   IF        @@RTCD = '*ERROR ' OR
@@ -325,11 +322,11 @@
      C                   EVAL      @LoanRef = LALNRF
      C                   EVAL      @Timestamp = LATMST
      C     @KeyLOAML1    CHAIN     LEVLOAML1                          89
-
+ 
      ** Write details of record to error file (same format as LEVLOAMPD)
      C                   WRITE     LEVLOAMERR
      C                   DELETE    LEVLOAMD1
-
+ 
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
      C                   CALLB     'ZAMSGTOOPR'
@@ -337,13 +334,13 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
-
+ 
      C                   ENDIF
-
+ 
       ** Read valid loan amendment
      C                   READ      LEVLOAMD0                              99    *
      C                   ENDDO
-
+ 
      ** Unlock allocation data area
      C                   CALLB     'APCDLCOBJ'
      C                   PARM                    Object
@@ -353,18 +350,18 @@
      C                   PARM                    Member
      C                   PARM                    Return
      C                   ENDIF
-
+ 
       ** End loop for data queue prompt
      C                   ENDDO
-
+ 
       /COPY WNCPYSRC,LELOAMC008
-
+ 
       * Exit from Program
      C                   RETURN
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LELOAMC009
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -377,7 +374,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Determine if CDE001 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -389,7 +386,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CDE001
      C                   ENDIF
-
+ 
       ** Determine if CDE002 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -401,7 +398,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CDE002
      C                   ENDIF
-
+ 
       ** Determine if CDE005 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -413,7 +410,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CDE005
      C                   ENDIF
-
+ 
       ** Determine if CEU004 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -425,7 +422,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU004
      C                   END
-
+ 
       ** Determine if CEU020 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -437,7 +434,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU020
      C                   END
-
+ 
       ** Determine if CLE002 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -449,7 +446,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE002
      C                   END
-
+ 
       ** Determine if CLE003 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -461,7 +458,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE003
      C                   END
-
+ 
       ** Determine if CLE005 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -473,7 +470,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE005
      C                   ENDIF
-
+ 
       ** Determine if CLE009 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -485,7 +482,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE009
      C                   ENDIF
-
+ 
       ** Determine if CLE014 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -497,7 +494,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE014
      C                   END
-
+ 
       ** Determine if CLE023 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -521,7 +518,7 @@
      C                   ELSE                                                                 CLE030
      C                   MOVEL     'N'           CLE030                                       CLE030
      C                   END                                                                  CLE030
-
+ 
       ** Determine if CSC011 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -533,13 +530,13 @@
      C                   ELSE
      C                   MOVEL     'N'           CSC011
      C                   END
-
+ 
       ** Access bank details
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM                    DSFDY
-
+ 
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE                         *************
      C                   Z-ADD     1             DBASE                          * DBERR 001 *
@@ -565,7 +562,7 @@
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM                    DSFDY
-
+ 
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE                         *************
      C                   Z-ADD     3             DBASE                          * DBERR 003 *
@@ -585,10 +582,10 @@
      C                   MOVE      BJRDNB        WRNDAY
      C                   MOVE      'S'           System            1                          222373
      C                   ENDIF
-
+ 
       ** Initialise program name
      C                   MOVEL     'LELOAMUPC'   DBPGM
-
+ 
       *  Define key list for LEVLOAML1
      C     @KeyLOAML1    KLIST
      C**********         KFLD                    @LoanRef          6 0                        CLE148
@@ -608,26 +605,26 @@
      C                   PARM                    Endjob                                       201589
      C                   PARM                    Return2                                      201589
                                                                                               201589
-
+ 
       *  Lock allocation data area
-
+ 
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
-
+ 
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
-
+ 
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
-
+ 
       *   Processing   *EXCL       No        None        No         None
-
+ 
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -637,14 +634,14 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
-
+ 
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LELOAMC010
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT

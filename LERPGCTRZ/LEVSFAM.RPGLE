@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR318270           Date 01Aug12               *
       *                 262513             Date 01Aug12               *
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -36,45 +39,45 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
      D P@NBDP          S              1S 0                                                    262513
       *
      D P@AlignOk       S              1A
      D P@ADig          S              2P 0
      D P@ADec          S              1P 0
      D P@Field         S             16A
- 
+
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -82,12 +85,12 @@
       *
       ** Additional Field Definitions
      D @CYCD           S              3
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -117,12 +120,12 @@
       *
       ** Long data structure for access objects.
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D DSSFAM          S             15A   INZ
      D DSNBDP          S              1S 0 INZ
      D W#SFAM          S             13S 0
@@ -132,7 +135,7 @@
      D  DSSFAM1                      15S 1     OVERLAY(DSSFAM0)
      D  DSSFAM2                      15S 2     OVERLAY(DSSFAM0)
      D  DSSFAM3                      15S 3     OVERLAY(DSSFAM0)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -217,7 +220,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @CYCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBKEY = @CYCD

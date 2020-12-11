@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR647426           Date 19Aug14               *
+      *  Last Amend No. 223783             Date 28May12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR647426           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
       *  CER059 - German Feature Upgrade to Delhi                     *

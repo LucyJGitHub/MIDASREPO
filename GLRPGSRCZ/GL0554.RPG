@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055652           Date 13Jul20               *
-      *  Prev Amend No. MD053950           Date 16Jul19               *
+      *  Last Amend No. MD055401           Date 25Oct20               *
+      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *                 MD053950           Date 16Jul19               *
       *                 MD052216           Date 04Apr19               *
       *                 MD051925           Date 18Sep18               *
       *                 MD047513A          Date 23Feb18               *
@@ -136,6 +137,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055401 - FX Netting / incorrect projected movement on      *
+      *             nostro for Nets inserted at D-1. Fix is to        *
+      *             suppress projection for netted FX deal.           *
       *  MD055652 - Movement with EAMT zero shown on RSACMTPD. Apply  *
       *             MD040629 codes only for dealing events & suppress *
       *             event amount = zero for non-dealing events.       *
@@ -2041,74 +2045,76 @@
      C                     MOVE '0'       *IN65                           138004
      C                     ENDIF                                          138004
       *                                                                                    MD036589A
-      ** If netting event, update so it will settle on netting ICD.                        MD036589A
+      ***If*netting*event,*update*so*it*will*settle*on*netting*ICD.****           MD036589A MD055401
+      ** If netting event, suppress projection                                              MD055401
       *                                                                                    MD036589A
      C           *IN24     IFEQ '1'                                                        MD036589A
-      *                                                                                    MD036589A
-      ** Get the netting ICD account.                                                      MD036589A
-      *                                                                                    MD036589A
-     C                     EXSR SRNET                                                      MD036589A
-      *                                                                                    MD036589A
-      ** Update PF/NOSEXED fields.                                                         MD036589A
-      *                                                                                    MD036589A
-     C           NETNOS    IFNE *BLANKS                                                    MD036589A
-     C                     MOVE A8BICN    CNUM                                             MD036589A
+     C                     MOVE '0'       *IN65                                             MD055401
+      **********                                                                  MD036589A MD055401
+      ***Get*the*netting*ICD*account.**********************************           MD036589A MD055401
+      **********                                                                  MD036589A MD055401
+     C**********           EXSR SRNET                                             MD036589A MD055401
+      **********                                                                  MD036589A MD055401
+      ***Update*PF/NOSEXED*fields.*************************************           MD036589A MD055401
+      **********                                                                  MD036589A MD055401
+     C********** NETNOS    IFNE *BLANKS                                           MD036589A MD055401
+     C**********           MOVE A8BICN    CNUM                                    MD036589A MD055401
      C**********           MOVE AMBRCA    OSBR                                    MD036589A MD048346
-     C                     MOVE BRCD      OSBR                                              MD048346
-     C                     MOVE '08'      SETP                                             MD036589A
-     C                     MOVE NETNOS    OSAC1                                            MD036589A
-     C                     MOVE *BLANKS   OSACQQ                                           MD036589A
-     C                     MOVE BBPCNB    CPAR                                             MD036589A
-     C           BBPAIN    IFEQ 'P'                                                        MD036589A
-     C                     Z-ADD1         PARI                                             MD036589A
-     C                     ELSE                                                            MD036589A
-     C                     Z-ADD0         PARI                                             MD036589A
-     C                     ENDIF                                                           MD036589A
-     C                     MOVE BBCRNM    CRNM                                             MD036589A
-     C                     MOVE BBCRTN    CTWN                                             MD036589A
-     C                     MOVE BBCASC    CASK                                             MD036589A
-     C                     MOVE BBCNCZ    CCTZ                                             MD036589A
-     C                     MOVE BBCOLC    CLOC                                             MD036589A
-     C                     CALL 'AOCTRYR0'                                                 MD036589A
-     C                     PARM '*MSG   ' @RTCD                                            MD036589A
-     C                     PARM '*KEY   ' @OPTN                                            MD036589A
-     C                     PARM BBCNCZ    @CCTZ   2                                        MD036589A
-     C           SDCTRY    PARM SDCTRY    DSFDY                                            MD036589A
-     C           @RTCD     IFNE *BLANK                                                     MD036589A
-     C                     MOVEL'19'      DBASE                                            MD036589A
-     C                     MOVEL'SDCTRYPD'DBFILE                                           MD036589A
-     C                     MOVELBBCNCZ    DBKEY                                            MD036589A
-     C                     EXSR *PSSR                                                      MD036589A
-     C                     ELSE                                                            MD036589A
-     C                     MOVE A4RGCD    REGC                                             MD036589A
-     C                     ENDIF                                                           MD036589A
-      *                                                                                    MD036589A
-     C                     MOVE *BLANKS   PRNM                                             MD036589A
-     C                     MOVE *BLANKS   PTWN                                             MD036589A
-     C                     MOVE *BLANKS   PASK                                             MD036589A
-     C           BBPCNB    IFNE *BLANKS                                                    MD036589A
-     C                     MOVE BBPCNB    PCNUM                                            MD036589A
-     C                     CALL 'AOCUSTR0'                                                 MD036589A
-     C                     PARM *BLANKS   PRTCD                                            MD036589A
-     C                     PARM '*KEY   ' POPTN                                            MD036589A
-     C                     PARM           PCNUM                                            MD036589A
-     C                     PARM           PSTAT                                            MD036589A
-     C           SDCUST    PARM SDCUST    DSSDY                                            MD036589A
-     C           PRTCD     IFNE *BLANKS                                                    MD036589A
-     C                     MOVEL'06'      DBASE                                            MD036589A
-     C                     MOVEL'SDCUSTPD'DBFILE                                           MD036589A
-     C                     MOVELPCNUM     DBKEY                                            MD036589A
-     C                     EXSR *PSSR                                                      MD036589A
-     C                     ELSE                                                            MD036589A
-     C                     MOVE BBCRNM    PRNM                                             MD036589A
-     C                     MOVE BBCRTN    PTWN                                             MD036589A
-     C                     MOVE BBCASC    PASK                                             MD036589A
-     C                     ENDIF                                                           MD036589A
-     C                     ENDIF                                                           MD036589A
-     C                     MOVELWNETR     ZZ0296                                            MD044815
-      ** Switch on *IN65 to ensure writing to file.                                        MD036589A
-     C                     MOVE '1'       *IN65                                            MD036589A
-     C                     ENDIF                                                           MD036589A
+     C**********           MOVE BRCD      OSBR                                     MD048346 MD055401
+     C**********           MOVE '08'      SETP                                    MD036589A MD055401
+     C**********           MOVE NETNOS    OSAC1                                   MD036589A MD055401
+     C**********           MOVE *BLANKS   OSACQQ                                  MD036589A MD055401
+     C**********           MOVE BBPCNB    CPAR                                    MD036589A MD055401
+     C********** BBPAIN    IFEQ 'P'                                               MD036589A MD055401
+     C**********           Z-ADD1         PARI                                    MD036589A MD055401
+     C**********           ELSE                                                   MD036589A MD055401
+     C**********           Z-ADD0         PARI                                    MD036589A MD055401
+     C**********           ENDIF                                                  MD036589A MD055401
+     C**********           MOVE BBCRNM    CRNM                                    MD036589A MD055401
+     C**********           MOVE BBCRTN    CTWN                                    MD036589A MD055401
+     C**********           MOVE BBCASC    CASK                                    MD036589A MD055401
+     C**********           MOVE BBCNCZ    CCTZ                                    MD036589A MD055401
+     C**********           MOVE BBCOLC    CLOC                                    MD036589A MD055401
+     C**********           CALL 'AOCTRYR0'                                        MD036589A MD055401
+     C**********           PARM '*MSG   ' @RTCD                                   MD036589A MD055401
+     C**********           PARM '*KEY   ' @OPTN                                   MD036589A MD055401
+     C**********           PARM BBCNCZ    @CCTZ   2                               MD036589A MD055401
+     C********** SDCTRY    PARM SDCTRY    DSFDY                                   MD036589A MD055401
+     C********** @RTCD     IFNE *BLANK                                            MD036589A MD055401
+     C**********           MOVEL'19'      DBASE                                   MD036589A MD055401
+     C**********           MOVEL'SDCTRYPD'DBFILE                                  MD036589A MD055401
+     C**********           MOVELBBCNCZ    DBKEY                                   MD036589A MD055401
+     C**********           EXSR *PSSR                                             MD036589A MD055401
+     C**********           ELSE                                                   MD036589A MD055401
+     C**********           MOVE A4RGCD    REGC                                    MD036589A MD055401
+     C**********           ENDIF                                                  MD036589A MD055401
+      **********                                                                  MD036589A MD055401
+     C**********           MOVE *BLANKS   PRNM                                    MD036589A MD055401
+     C**********           MOVE *BLANKS   PTWN                                    MD036589A MD055401
+     C**********           MOVE *BLANKS   PASK                                    MD036589A MD055401
+     C********** BBPCNB    IFNE *BLANKS                                           MD036589A MD055401
+     C**********           MOVE BBPCNB    PCNUM                                   MD036589A MD055401
+     C**********           CALL 'AOCUSTR0'                                        MD036589A MD055401
+     C**********           PARM *BLANKS   PRTCD                                   MD036589A MD055401
+     C**********           PARM '*KEY   ' POPTN                                   MD036589A MD055401
+     C**********           PARM           PCNUM                                   MD036589A MD055401
+     C**********           PARM           PSTAT                                   MD036589A MD055401
+     C********** SDCUST    PARM SDCUST    DSSDY                                   MD036589A MD055401
+     C********** PRTCD     IFNE *BLANKS                                           MD036589A MD055401
+     C**********           MOVEL'06'      DBASE                                   MD036589A MD055401
+     C**********           MOVEL'SDCUSTPD'DBFILE                                  MD036589A MD055401
+     C**********           MOVELPCNUM     DBKEY                                   MD036589A MD055401
+     C**********           EXSR *PSSR                                             MD036589A MD055401
+     C**********           ELSE                                                   MD036589A MD055401
+     C**********           MOVE BBCRNM    PRNM                                    MD036589A MD055401
+     C**********           MOVE BBCRTN    PTWN                                    MD036589A MD055401
+     C**********           MOVE BBCASC    PASK                                    MD036589A MD055401
+     C**********           ENDIF                                                  MD036589A MD055401
+     C**********           ENDIF                                                  MD036589A MD055401
+     C**********           MOVELWNETR     ZZ0296                                   MD044815 MD055401
+      ***Switch*on**IN65*to*ensure*writing*to*file.********************           MD036589A MD055401
+     C**********           MOVE '1'       *IN65                                   MD036589A MD055401
+     C**********           ENDIF                                                  MD036589A MD055401
      C                     ENDIF                                                           MD036589A
      C*
      C  N65                GOTO END

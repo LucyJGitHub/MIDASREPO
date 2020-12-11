@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD056614           Date 21Sep20               *
-      *  Prev Amend No. MD050393           Date 13Apr18               *
+      *  Last Amend No. MD056920           Date 06Oct20               *
+      *  Prev Amend No. MD056614           Date 21Sep20               *
+      *                 MD050393           Date 13Apr18               *
       *                 MD032152           Date 22Jan15               *
       *                 MD022609           Date 27Sep13               *
       *                 MD022372           Date 12Sep13               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056920 - UXP Incorrect user migration for non-default zone.*
+      *             If user is exist in T_USERMENU get zone.          *
       *  MD056614 - FM2.1 SP21 UXP1_ BFUpload does not add user/branch*
       *             entitlements.                                     *
       *             Duplicate record key in member BFTB_00064 and     *
@@ -230,11 +233,13 @@
       *
      C     WriteRec      BEGSR
       *
+     C                   IF        ZoneName = ''                                            MD056920
      C/EXEC SQL
      C*+********SELECT*TZONE*INTO*:DefZone*from*T_USERMENU*                                 MD022609
      C+ SELECT TZONE INTO :ZoneName from T_USERMENU                                         MD022609
      C+ WHERE MUSERNAME = :UserName
      C/END-EXEC
+     C                   ENDIF                                                              MD056920
       *
      C**********         IF        DefZone = ''                                             MD022609
      C                   IF        ZoneName = ''                                            MD022609

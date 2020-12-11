@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD031292           Date 06Nov19               *
-      *  Prev Amend No. MD025836           Date 06Nov19               *
+      *  Last Amend No. 207964             Date 23Aug02               *
+      *  Prev Amend No. MD031292           Date 06Nov19               *
+      *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
@@ -163,6 +164,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  207964 - Incorrect exposure if loan is in base currency. Do  *
+      *           not change ZMD to 'M'. Amendment to CLE023.         *
+      *         - Applied for MD-10504(artf1087794)                   *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
       *  MD025836 - Loan principal increase causing excess. Remove    *
@@ -6063,8 +6067,14 @@
      C                   EXSR      ZXRATE
      C                   Z-ADD     ZRATEX        ZEXCH                                        CLE023
      C                   MOVE      ZMDIX         ZMD                                          CLE023
+      * If loan is in base currency, use spot rate.                                           207964
      C     ZCCYI         IFEQ      BJCYCD                                                     CLE023
+     C                   Z-ADD     ZRATE2        ZEXCH                                        207964
+     C     ZMDI2         IFEQ      'D'                                                        207964
      C                   MOVE      'M'           ZMD                                          CLE023
+     C                   ELSE                                                                 207964
+     C                   MOVE      'D'           ZMD                                          207964
+     C                   ENDIF                                                                207964
      C                   ENDIF                                                                CLE023
      C                   ENDIF                                                                CLE023
 

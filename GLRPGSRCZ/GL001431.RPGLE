@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD049134           Date 27Jul20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. 223783             Date 28May12               *      
+      *  Prev Amend No. MD049134           Date 27Jul20               *
+      *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *      
       *  MD049134 - Retrieve History Balance from Retail History      *
       *             instead of CLBL from ACCNTAB for the correct      *
       *             Available Balance in Field 64.                    *

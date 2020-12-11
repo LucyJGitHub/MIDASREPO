@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. 212319             Date 28May12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 245963             Date 08Mar07               *
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  212319 - Change the format of ICD text so that it matches    *
+      *           what will appear onto SWIFT statement               *
+      *           (3 * 65 char + 5 char).                             *
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  245963 - Account code from AOACODR0 not saved due to use of  *
@@ -173,15 +178,23 @@
  
       ** Data Structure for Text for Group Acc Off
      D WDSTXTG         DS
-     D  WTXTG1                 1     54
-     D  WTXTG2                55    127
-     D  WTXTG3               128    200
+     D**WTXTG1**               1     54                                                       212319
+     D**WTXTG2**              55    127                                                       212319
+     D**WTXTG3**             128    200                                                       212319
+     D  WTXTG1                 1     65                                                       212319
+     D  WTXTG2                66    130                                                       212319
+     D  WTXTG3               131    195                                                       212319
+     D  WTXTG4               196    200                                                       212319
  
       ** Data Structure for Text for Zero Bal Off
      D WDSTXTZ         DS
-     D  WTXTZ1                 1     54
-     D  WTXTZ2                55    127
-     D  WTXTZ3               128    200
+     D**WTXTZ1**               1     54                                                       212319
+     D**WTXTZ2**              55    127                                                       212319
+     D**WTXTZ3**             128    200                                                       212319
+     D  WTXTZ1                 1     65                                                       212319
+     D  WTXTZ2                66    130                                                       212319
+     D  WTXTZ3               131    195                                                       212319
+     D  WTXTZ4               196    200                                                       212319
  
       ** Data Structure for No. of Forward Value Days
      D WDSFVD          DS
@@ -382,10 +395,12 @@
      C                   EVAL      #1TXTG1 = WTXTG1
      C                   EVAL      #1TXTG2 = WTXTG2
      C                   EVAL      #1TXTG3 = WTXTG3
+     C                   EVAL      #1TXTG4 = WTXTG4                                           212319
      C                   MOVE      CMTXTZ        WDSTXTZ
      C                   EVAL      #1TXTZ1 = WTXTZ1
      C                   EVAL      #1TXTZ2 = WTXTZ2
      C                   EVAL      #1TXTZ3 = WTXTZ3
+     C                   EVAL      #1TXTZ4 = WTXTZ4                                           212319
      C                   EVAL      #1LFVS = CMLFVS
      C                   EVAL      #1LFVD = CMLFVD
      C                   EVAL      #1LBVD = CMLBVD
@@ -677,7 +692,9 @@
      C                   IF        #1GACH = 'N'
      C                   IF        #1TXTG1 <> *BLANKS OR
      C                             #1TXTG2 <> *BLANKS OR
-     C                             #1TXTG3 <> *BLANKS
+     C**********                   #1TXTG3 <> *BLANKS                                         212319
+     C                             #1TXTG3 <> *BLANKS OR                                      212319
+     C                             #1TXTG4 <> *BLANKS                                         212319
      C                   EVAL      PMsgID = 'RE74018'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN27 = *ON
@@ -700,7 +717,9 @@
      C                   IF        #1ZBSH = 'N'
      C                   IF        #1TXTZ1 <> *BLANKS OR
      C                             #1TXTZ2 <> *BLANKS OR
-     C                             #1TXTZ3 <> *BLANKS
+     C**********                   #1TXTZ3 <> *BLANKS                                         212319
+     C                             #1TXTZ3 <> *BLANKS OR                                      212319
+     C                             #1TXTZ4 <> *BLANKS                                         212319
      C                   EVAL      PMsgID = 'RE74020'
      C                   EVAL      WError = 'Y'
      C                   EVAL      *IN28 = *ON
@@ -1689,7 +1708,9 @@
      C                   MOVE      #1ACCE        CMACCE
      C                   EVAL      CMLVCE = #1LVCE
      C                   EVAL      CMTXTG = #1TXTG1 + #1TXTG2 + #1TXTG3
+     C                                      + #1TXTG4                                         212319
      C                   EVAL      CMTXTZ = #1TXTZ1 + #1TXTZ2 + #1TXTZ3
+     C                                      + #1TXTZ4                                         212319
      C                   EVAL      CMLFVS = #1LFVS
      C                   EVAL      CMLFVD = #1LFVD
      C                   EVAL      CMLBVD = #1LBVD
@@ -1746,7 +1767,9 @@
      C                   MOVE      #1ACCE        CMACCE
      C                   EVAL      CMLVCE = #1LVCE
      C                   EVAL      CMTXTG = #1TXTG1 + #1TXTG2 + #1TXTG3
+     C                                      + #1TXTG4                                         212319
      C                   EVAL      CMTXTZ = #1TXTZ1 + #1TXTZ2 + #1TXTZ3
+     C                                      + #1TXTG4                                         212319
      C                   EVAL      CMLFVS = #1LFVS
      C                   EVAL      CMLFVD = #1LFVD
      C                   EVAL      CMLBVD = #1LBVD
@@ -1978,9 +2001,11 @@
      C                   MOVE      *BLANKS       #1TXTG1
      C                   MOVE      *BLANKS       #1TXTG2
      C                   MOVE      *BLANKS       #1TXTG3
+     C                   MOVE      *BLANKS       #1TXTG4                                      212319
      C                   MOVE      *BLANKS       #1TXTZ1
      C                   MOVE      *BLANKS       #1TXTZ2
      C                   MOVE      *BLANKS       #1TXTZ3
+     C                   MOVE      *BLANKS       #1TXTZ4                                      212319
      C                   MOVE      *BLANKS       #1LFVS
      C                   MOVE      *BLANKS       #1LFVD
      C                   MOVE      *BLANKS       #1LBVD

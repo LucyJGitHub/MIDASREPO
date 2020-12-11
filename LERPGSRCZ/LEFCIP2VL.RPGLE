@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053093           Date 03Sep19               *
-      *  Prev Amend No. MD048074           Date 03Sep19               *
+      *  Last Amend No. AR918343           Date 25Apr12               *
+      *  Prev Amend No. MD027517           Date 08Jul14               *      
+      *               . MD053093           Date 03Sep19               *
+      *                 MD048074           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
       *                 MD039655           Date 03Sep19               *
       *                 AR896408           Date 31Jan19               *
@@ -74,6 +76,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918343 - Tried to remove drawing types from facility but   *
+      *             BFM did not allow.                                *
+      *             Defaulting of drawing types should only occured   *
+      *             during insert and at the start (Child: AR918344)  *
+      *  MD027517 - Also validate Last Availability of CA against TR. *
+      *             Extend validation of 244684.                      *      
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM.                                   *
       *           - Applied for MD052591.                             *
@@ -503,6 +511,9 @@
 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
+     D XXCSSN          S                   LIKE(DDCSSN)                                     AR918343
+     D XXFACT          S                   LIKE(DDFACT)                                     AR918343
+     D XXFCNO          S                   LIKE(DDFCNO)                                     AR918343
 
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
@@ -531,6 +542,12 @@
      C                   IN        ZMUSER                                                    BUG8550
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
+     C     DDCSSN        IFNE      XXCSSN                                                   AR918343
+     C     DDFACT        ORNE      XXFACT                                                   AR918343
+     C     DDFCNO        ORNE      XXFCNO                                                   AR918343
+     C                   MOVE      'Y'           DRWTPDFLT         1                        AR918343
+     C                   ENDIF                                                              AR918343
+      *                                                                                     AR918343
      C                   EXSR      RESETERRS
                                                                                             MD039655
       ** Skip validation process if action is reject                                        MD039655
@@ -625,6 +642,10 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
+      *                                                                                     AR918343
+     C                   MOVE      DDCSSN        XXCSSN                                     AR918343
+     C                   MOVE      DDFACT        XXFACT                                     AR918343
+     C                   MOVE      DDFCNO        XXFCNO                                     AR918343
       *
       * RETURN
      C                   RETURN
@@ -1068,6 +1089,9 @@
      C                   ENDIF                                                              AR785547
      C                   ELSE                                                               AR785547
       *   Default to all if no entry made.
+      *                                                                                     AR918343
+     C     DDACTN        IFEQ      'I'                                                      AR918343
+     C     DRWTPDFLT     ANDEQ     'Y'                                                      AR918343
      C                   MOVE      'C'           DDDTS1
      C                   MOVE      'T'           DDDTS2
      C                   MOVE      'D'           DDDTS3
@@ -1081,6 +1105,7 @@
      C     DDSYIN        ANDNE     'Y'                                                       BUG3723
      C                   MOVE      'F'           DDDTS6                                      BUG3723
      C                   ENDIF                                                               BUG3723
+     C                   ENDIF                                                              AR918343
      C                   ENDIF                                                              AR785547
       *
      C                   ELSE
@@ -1217,6 +1242,8 @@
      C                   MOVE      DDDTS6        DDDTS6A                                     BUG3723
      C                   ENDIF                                                               BUG3723
       *
+     C                   MOVE      'N'           DRWTPDFLT                                  AR918343
+      *                                                                                     AR918343
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2848,6 +2875,30 @@
      C                   Movel     'DDCAXR'      FldNamXAr(Idx)
      C                   Movel     'LEF0275'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     MD027517
+      ** Validate Last Availability Date of CA against attached TR.                         MD027517
+      *                                                                                     MD027517
+     C                   IF        DDTRCA = 'CA'                                            MD027517
+     C                   MOVEL     DDCSSN        K0CANM                                     MD027517
+     C                   MOVE      DDFACT        K0CAFT                                     MD027517
+     C                   MOVE      DDFCNO        K0CAFN                                     MD027517
+     C     K#KY10        SETLL     FCLTYFL9                                                 MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+      *                                                                                     MD027517
+     C     *IN05         DOWEQ     '0'                                                      MD027517
+      *                                                                                     MD027517
+     C     LERECI        IFEQ      'D'                                                      MD027517
+     C     LEAVLD        ANDGT     W#AVLD                                                   MD027517
+     C                   Move      'N'           DDAVLDOK                                   MD027517
+     C                   Add       1             Idx                                        MD027517
+     C                   Movel     'DDAVLD'      FldNamXAr(Idx)                             MD027517
+     C                   Movel     '5049411'     MsgIDXAr(Idx)                              MD027517
+     C                   LEAVE                                                              MD027517
+     C                   ENDIF                                                              MD027517
+      *                                                                                     MD027517
+     C     K#KY10        READE     FCLTYFL9                               05                MD027517
+     C                   ENDDO                                                              MD027517
+     C                   ENDIF                                                              MD027517
       *
      C                   ENDIF
       *

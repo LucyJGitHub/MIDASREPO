@@ -181,7 +181,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  Second DS for access programs, long data structure
       *                                                                                       CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
      D  DDBLRT                 1      1
      D  DDLBDY                 2      3
      D  DDLODY                 4      5

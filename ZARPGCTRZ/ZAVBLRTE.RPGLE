@@ -32,7 +32,6 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    U7, U8     Database error                                  *
-      *    33         Found Base Rate                                 *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -50,7 +49,13 @@
       *  SRWGHT - Validate Weight Convention                          *
       *  SRBRAC - Validate Base Rate for Accrual                      *
       *  SRLBAC - Validate Lookback Days for Accrual                  *
-      *  SRPIAD - Validate Principal Interest Control Date            *
+      *  SDPIAD - Default Principal Interest Control Date             *
+      *  SDNBDY - Default Lookback Days for Settlement                *
+      *  SDNODY - Default Lockout Days                                *
+      *  SDNDLY - Default Payment Delay Days                          *
+      *  SDNADJ - Default Benchmark Adjustment                        *
+      *  SDNVOP - Default Averaging Option                            *
+      *  SDNGHT - Default Weight Convention                           *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -147,21 +152,26 @@
      D  DDWGHT                37     37
      D  DDBRAC                38     39
      D  DDLBAC                40     41
-     D  DDPIAD                42     46
 
       ** CLIP Backward-Looking Rate Valid fields (Output)
      D CLBsrValfld     DS
      D  VBLRT                  1      1A
-     D  VLBDY                  9     10S 0
-     D  VLODY                 11     12S 0
-     D  VPDLY                 13     14S 0
-     D  VBADJ                 15     21P 8
-     D  VAVOP                 22     22A
-     D  VCART                 23     29P 8
-     D  VWGHT                 30     30A
-     D  VBRAC                 31     32A
-     D  VLBAC                 33     34A
-     D  VPIAD                 36     40S 0
+     D  VLBDY                  2      3S 0
+     D  VNBDY                  4      5S 0
+     D  VLODY                  6      7S 0
+     D  VNODY                  8      9S 0
+     D  VPDLY                 10     11S 0
+     D  VNDLY                 12     13S 0
+     D  VBADJ                 14     20P 8
+     D  VNADJ                 21     27P 8
+     D  VAVOP                 28     28A
+     D  VNVOP                 29     29A
+     D  VCART                 30     36P 8
+     D  VWGHT                 37     37A
+     D  VNGHT                 38     38A
+     D  VBRAC                 39     40A
+     D  VLBAC                 41     42S 0
+     D  VPIAD                 43     47S 0
 
       ** Parameters for access object AOSARDR0
      D PRTCD           S              7A
@@ -231,9 +241,9 @@
       *********************************************************************
       *
      C                   Z-ADD     Idx           Ix                             Store index
+     C                   Z-ADD     *ZEROS        WDAY
       *
      C     WFBSRC        IFNE      *BLANKS
-     C                   Z-ADD     *ZEROS        WDAY
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      InpScrfld     CLBsrScrfld
      C                   EXSR      SRBLRT
@@ -246,7 +256,13 @@
      C                   EXSR      SRWGHT
      C                   EXSR      SRBRAC
      C                   EXSR      SRLBAC
-     C                   EXSR      SRPIAD
+     C                   EXSR      SDPIAD
+     C                   EXSR      SDNBDY
+     C                   EXSR      SDNODY
+     C                   EXSR      SDNDLY
+     C                   EXSR      SDNADJ
+     C                   EXSR      SDNGHT
+     C                   EXSR      SDNVOP
      C                   MOVE      OutValfld     CLBsrValfld
      C                   ENDIF
      C                   ENDIF
@@ -371,8 +387,14 @@
      C     SRBLRT        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
+      *
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABLRT       DDBLRT                         Default from
-      *                                                                          SDBSRTPD
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBABLRT       DDBLRT                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
      C     DDBLRT        IFEQ      'Y'
      C     BKALDI        ANDEQ     'Y'
       * Accrue on Last Day is Y and Rate is Backward-Looking Rate
@@ -399,9 +421,15 @@
      C     SRLBDY        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
-     C     DDLBDY        IFEQ      *BLANKS
+      *
+     C     DDLBDY        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBALBDY       DDLBDY                         Default from
-      *                                                                          SDBSRTPD
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBALBDY       DDLBDY                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
      C                   ELSE
      C                   MOVE      DDLBDY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
@@ -447,9 +475,15 @@
      C     SRLODY        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
-     C     DDLODY        IFEQ      *BLANKS
+      *
+     C     DDLODY        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBALODY       DDLODY                         Default from
-      *                                                                          SDBSRTPD
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBALODY       DDLODY                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
      C                   ELSE
      C                   MOVE      DDLODY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
@@ -495,9 +529,15 @@
      C     SRPDLY        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
-     C     DDPDLY        IFEQ      *BLANKS
+      *
+     C     DDPDLY        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBAPDLY       DDPDLY                         Default from
-      *                                                                          SDBSRTPD
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBAPDLY       DDPDLY                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
      C                   ELSE
      C                   MOVE      DDPDLY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                       numeric
@@ -543,9 +583,15 @@
      C     SRBADJ        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
+      *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBABADJ       DDBADJ                         Default from
+     C                   ENDIF                                                   CLOANCL
+     C                   ENDIF
       *
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
@@ -619,10 +665,16 @@
      C     SRAVOP        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
-     C     DDAVOP        IFEQ      *BLANKS
-     C                   MOVE      BBAAVOP       DDAVOP                         Default from
-     C                   ELSE                                                    SDBSRTPD
       *
+     C     DDAVOP        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      BBAAVOP       DDAVOP                         Default from
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBAAVOP       DDAVOP                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C                   ELSE
      C     DDAVOP        IFNE      '1'
      C     DDAVOP        ANDNE     '2'
      C     DDAVOP        ANDNE     '3'
@@ -662,8 +714,14 @@
      C     SRCART        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
+      *
      C     DDCART        IFEQ      *BLANKS                                      If blank
-     C                   MOVE      '0'           DDCART                          Default: 0
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      '0'           DDCART                         Default: 0
+     C                   ENDIF
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      '0'           DDCART                         Default: 0
+     C                   ENDIF
      C                   ENDIF
       *
      C                   MOVE      *BLANKS       @@ALPH
@@ -738,10 +796,16 @@
      C     SRWGHT        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
-     C     DDWGHT        IFEQ      *BLANKS
-     C                   MOVE      BBAWGHT       DDWGHT                         Default from
-     C                   ELSE                                                    SDBSRTPD
       *
+     C     DDWGHT        IFEQ      *BLANKS                                      If blank
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      BBAWGHT       DDWGHT                         Default from
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBAWGHT       DDWGHT                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C                   ELSE
      C     DDWGHT        IFNE      '1'
      C     DDWGHT        ANDNE     '2'
       * Weight Convention value is invalid
@@ -788,8 +852,14 @@
      C     SRBRAC        BEGSR
       *
      C     CLE172        IFEQ      *ON                                          CLE172=ON
+      *
+     C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABRAC       DDBRAC                         Default from
-      *                                                                          SDBSRTPD
+     C                   ENDIF                                                   SDBSRTPD
+     C     ApiName       IFEQ      'PDCL'
+     C                   MOVE      BBABRAC       DDBRAC                         Default from
+     C                   ENDIF                                                   CLOANCL
+      *
      C                   ELSE                                                   CLE172=OFF
      C                   MOVE      *BLANKS       DDBRAC                          Default:blank
      C                   ENDIF
@@ -828,11 +898,107 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SRPIAD - Validate principal interest control date            *
+      *  SDPIAD - Default principal interest control date            *
       *****************************************************************
-     C     SRPIAD        BEGSR
+     C     SDPIAD        BEGSR
       *
-     C                   MOVE      0             VPIAD                          Deafult: 0
+     C                   MOVE      0             VPIAD                          Default: 0
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNBDY - Default next lookback days for settlement          *
+      *****************************************************************
+     C     SDNBDY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      0             VNBDY                          Default: 0
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      0             VNBDY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNODY - Default next lockout days                          *
+      *****************************************************************
+     C     SDNODY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      0             VNODY                          Default: 0
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      0             VNODY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNDLY - Default next payment delay days                    *
+      *****************************************************************
+     C     SDNDLY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      0             VNDLY                          Default: 0
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      0             VNDLY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNADJ - Default next benchmark adjustment                   *
+      *****************************************************************
+     C     SDNADJ        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      0             VNADJ                          Default: 0
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      0             VNADJ                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNGHT - Default next weight convention                      *
+      *****************************************************************
+     C     SDNGHT        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      *BLANKS       VNGHT                          Default:blank
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      *BLANKS       VNGHT                          Default:blank
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNVOP - Default next averaging option                       *
+      *****************************************************************
+     C     SDNVOP        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C                   MOVE      *BLANKS       VNVOP                          Default:blank
+     C                   ENDIF
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      *BLANKS       VNVOP                          Default:blank
+     C                   ENDIF
       *
      C                   ENDSR
       *

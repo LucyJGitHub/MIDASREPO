@@ -286,7 +286,7 @@
      D C_FRI         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
 
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid

@@ -806,21 +806,27 @@
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
       ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
                                                                                               CLE172
       ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
      D LoanValBlrt     DS                                                                     CLE172
      D  WCLBLRT                1      1A                                                      CLE172
-     D  WCLLBDY                9     10S 0                                                    CLE172
-     D  WCLLODY               11     12S 0                                                    CLE172
-     D  WCLPDLY               13     14S 0                                                    CLE172
-     D  WCLBADJ               15     21P 8                                                    CLE172
-     D  WCLAVOP               22     22A                                                      CLE172
-     D  WCLCART               23     29P 8                                                    CLE172
-     D  WCLWGHT               30     30A                                                      CLE172
-     D  WCLBRAC               31     32A                                                      CLE172
-     D  WCLLBAC               33     34S 0                                                    CLE172
-     D  WCLPIAD               36     40S 0                                                    CLE172
+     D  WCLLBDY                2      3S 0                                                    CLE172
+     D  WCLNBDY                4      5S 0                                                    CLE172
+     D  WCLLODY                6      7S 0                                                    CLE172
+     D  WCLNODY                8      9S 0                                                    CLE172
+     D  WCLPDLY               10     11S 0                                                    CLE172
+     D  WCLNDLY               12     13S 0                                                    CLE172
+     D  WCLBADJ               14     20P 8                                                    CLE172
+     D  WCLNADJ               21     27P 8                                                    CLE172
+     D  WCLAVOP               28     28A                                                      CLE172
+     D  WCLNVOP               29     29A                                                      CLE172
+     D  WCLCART               30     36P 8                                                    CLE172
+     D  WCLWGHT               37     37A                                                      CLE172
+     D  WCLNGHT               38     38A                                                      CLE172
+     D  WCLBRAC               39     40A                                                      CLE172
+     D  WCLLBAC               41     42S 0                                                    CLE172
+     D  WCLPIAD               43     47S 0                                                    CLE172
       *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1401,7 +1407,7 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
-     C                   CALL      'ZAVBLRTE'                                                 CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'CLIP'        ApiName           4                          CLE172
      C                   PARM                    CCLCCY                                       CLE172
      C                   PARM                    CCLBRTT                                      CLE172
@@ -1416,12 +1422,18 @@
      C                   MOVEL     TempOutDS     LoanValBlrt                                  CLE172
      C                   MOVE      WCLBLRT       CCLBLRT                                      CLE172
      C                   Z-ADD     WCLLBDY       CCLLBDY                                      CLE172
+     C                   Z-ADD     WCLNBDY       CCLNBDY                                      CLE172
      C                   Z-ADD     WCLLODY       CCLLODY                                      CLE172
+     C                   Z-ADD     WCLNODY       CCLNODY                                      CLE172
      C                   Z-ADD     WCLPDLY       CCLPDLY                                      CLE172
+     C                   Z-ADD     WCLNDLY       CCLNDLY                                      CLE172
      C                   Z-ADD     WCLBADJ       CCLBADJ                                      CLE172
+     C                   Z-ADD     WCLNADJ       CCLNADJ                                      CLE172
      C                   MOVE      WCLAVOP       CCLAVOP                                      CLE172
+     C                   MOVE      WCLNVOP       CCLNVOP                                      CLE172
      C                   Z-ADD     WCLCART       CCLCART                                      CLE172
      C                   MOVE      WCLWGHT       CCLWGHT                                      CLE172
+     C                   MOVE      WCNWGHT       CCNWGHT                                      CLE172
      C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
      C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
      C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172

@@ -348,7 +348,7 @@
       * LE Extra Data - Classe 1 Data - File (D/B) format                                    BUG9221
      D                                     PREFIX(IF_)                                       BUG9221
       *                                                                                       CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *                                                                                       CLE172
      D  TransData      DS           500

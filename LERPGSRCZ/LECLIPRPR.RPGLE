@@ -374,6 +374,8 @@
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
       ***  FRA/IRS Settlement Instructions - Current
 
+     D LoanScnBlrt     DS            41                                                       CLE172
+      ** CLIP Backward-Looking Rate Fields                                                    CLE172
 
      D @SETIN          DS
       ***  Receive / Pay Settlement Currency, Method & Nostro

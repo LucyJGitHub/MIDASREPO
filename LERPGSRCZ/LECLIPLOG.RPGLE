@@ -189,7 +189,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for Access Programs, Short Data Structure
       *                                                                                       CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *
       ** +--------------------------------------+

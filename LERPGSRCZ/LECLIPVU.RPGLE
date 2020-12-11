@@ -568,7 +568,7 @@
      D PStKey          S              7                                                       247545
                                                                                               247545
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
-     D LoanScnBlrt     DS            46                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
                                                                                               CLE172
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -1074,8 +1074,8 @@
      C                   ENDIF                                                              MD054028
       ** CLE172 Fields                                                                        CLE172
      C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:46)                   CLE172
-     C                   ADD       46            eBfp                                         CLE172
+     C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:41)                   CLE172
+     C                   ADD       41            eBfp                                         CLE172
      C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 

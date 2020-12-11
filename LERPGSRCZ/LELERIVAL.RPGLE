@@ -121,7 +121,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
-      *             interest rate.                                    *
+      *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*
       *             of MD034449.                                      *
       *  MD034915A - New funding rate disappears after input. Change  *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD026969A          Date 23Oct19               *
       *                 MD026969           Date 23Oct19               *
       *                 CER050             Date 16Jun19               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -135,19 +138,19 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FC_)
- 
+
      FLEFEEAL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFEEADF:LEFEEAD0)
      F                                     PREFIX(FA_)
- 
+
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FE_)
                                                                                              BUG3760
@@ -156,7 +159,7 @@
                                                                                               258669
       ** Midas SD Extended Settlement                                                         258669
      FSDEXSTL1  IF   E           K DISK                                                       258669
- 
+
      FCLOAN     IF   E           K DISK    INCLUDE(CLOANCLF)                                  CLE073
      FLEFZASL2  IF   E           K DISK    INFSR(*PSSR)                                     MD026969
       *****************************************************************
@@ -170,44 +173,44 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D CLAuthORED      C                   Const('CLAuthORED')                                240968
      D CLAuthSMDT      C                   Const('CLAuthSameORED')                            244314
      D PDFeeSttmt      C                   Const('ZeroPDFeeSettlements')                    MD054354
@@ -215,7 +218,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Fee Settlement Details in file format
      D LEFEEADFmt    E DS                  EXTNAME(LEFEEAD)
      D                                     PREFIX(FA_)
@@ -230,7 +233,7 @@
                                                                                               258669
       * Receive settlement instructions in screen format                                      258669
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)                                  258669
- 
+
       * Fee amounts data structure
      D  @FEAMA         DS
      D  FE_FEAMT1              1     11  0
@@ -240,7 +243,7 @@
      D  FE_FEAMT5             45     55  0
      D  FEAM                   1     55  0
      D                                     DIM(5) ASCEND
- 
+
       * Fee rates data structure
      D  @FRTA          DS
      D  FE_FEFRT1              1      7  5
@@ -250,42 +253,42 @@
      D  FE_FEFRT5             29     35  5
      D  FRT                    1     35  5
      D                                     DIM(5) ASCEND
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Customer lending Details
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Branch Code Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  SDBRCHDFAC   E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Fee codes Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** RUNDAT DATA AREA
      D RUNDAT          DS
      D  MBIN                  13     13
- 
+
       ** User information                                                                     CAP084
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                     CAP084
                                                                                               CAP084
@@ -303,7 +306,7 @@
                                                                                               CAP084
       ** SD data area                                                                         CAP084
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CAP084
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -314,7 +317,7 @@
      D PRTCD           S              7A                                                      CAP084
      D POPTN           S              7A                                                      CAP084
      D PSARD           S              6A                                                      CAP084
- 
+
       ** Switchable features - Watch List Checking                                           BUG3760
      D CSD015          S              1A                                                     BUG3760
      D WFuncType       S              8                                                      BUG3760
@@ -354,13 +357,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
@@ -370,13 +373,13 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * If the user is connected via a browser, the job user name is QUSER -                 BUG7029
       * the actual user name is stored in ZMUSER                                             BUG7029
      C                   IN        ZMUSER                                                    BUG7029
                                                                                              BUG7029
       * CLEAR OUTPUTS
- 
+
      C                   CLEAR                   LEFEEADFmt
      C                   MOVE      'Y'           S#ACTNok
      C                   MOVE      'Y'           S#CSSNok
@@ -396,7 +399,7 @@
      C                   Z-ADD     *ZERO         W#SADD
      C                   MOVE      *BLANK        W#PTFI
      C                   Z-ADD     *ZERO         W#CPAM
- 
+
      C                   Z-ADD     *ZERO         W#FAMT
      C                   MOVEL     *BLANK        FcbrORBR          3                          CLE073
      C                   MOVEL     *BLANK        FcbrBranch
@@ -406,7 +409,7 @@
      C                   EVAL      FcbrSYCU = *BLANKS                                         CSD027
      C                   MOVEL     *BLANK        FccyFCCY
      C                   Z-ADD     *ZERO         FccyNBDP
- 
+
      C                   MOVE      *BLANK        FldNameArr
      C                   MOVE      *BLANK        MsgIdArr
      C                   MOVE      *BLANK        MsgDtaArr
@@ -423,9 +426,9 @@
      C                             P#MODE = *BLANKS                                           CAP086
      C                   EVAL      FA_AUTH = *BLANKS                                          CAP086
      C                   ENDIF                                                                CAP086
- 
+
       **  Valid action code
- 
+
      C                   EXSR      VALACTN
       *
       **  Carry out no further validation if errors occurred.
@@ -433,9 +436,9 @@
      C     S#ACTNok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Validate customer, facility type and facility number
- 
+
      C                   IF        CLE073 = 'N' Or                                            CLE073
      C                             CLE073 = 'Y' And                                           CLE073
      C                             S#LOAN = *Blanks                                           CLE073
@@ -448,9 +451,9 @@
      C     S#FCNOok      OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Check facility exists
- 
+
      C                   EXSR      CHKFCLTY
       *
       **  Carry out no further validation if errors occurred.
@@ -474,9 +477,9 @@
      C                   END                                                                  CLE073
                                                                                               CLE073
      C                   EndIf                                                                CLE073
- 
+
       * Validate Fee Sequence Number
- 
+
      C                   EXSR      VLDFSEQ
       *
       **  Carry out no further validation if errors occurred.
@@ -484,9 +487,9 @@
      C     S#FSEQok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       * Validate value date
- 
+
      C                   EXSR      VLDVDAT
       *
       **  Carry out no further validation if errors occurred.
@@ -494,13 +497,13 @@
      C     S#VDATok      IFEQ      'N'
      C                   RETURN
      C                   END
- 
+
       ** Check fee details exist
- 
+
      C                   EXSR      CHKFEEDT
- 
+
       ** Check fee settlement
- 
+
      C                   EXSR      CHKFEES
       *
       **  Carry out no further validation if errors occurred.
@@ -513,9 +516,9 @@
      C     S#LOANok      OREQ      'N'                                                        CLE073
      C                   RETURN
      C                   END
- 
+
       ** If not insert, valididate the action
- 
+
      C     S#ACTN        IFNE      'I'
      C                   EXSR      VLDACT
      C                   ENDIF
@@ -532,18 +535,18 @@
      C     RESPMODE      ANDEQ     'S'
      C                   EXSR      VLDAUT
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ***********************************************************
       /SPACE 5
       ***********************************************************
       ** Valididate the action code
       ***********************************************************
      C     VALACTN       BEGSR
- 
+
      C     P#MODE        IFEQ      'B'
- 
+
      C     S#ACTN        IFNE      'A'
      C     S#ACTN        ANDNE     'X'
      C     S#ACTN        ANDNE     'D'
@@ -553,9 +556,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     S#ACTN        IFNE      'E'
      C     S#ACTN        ANDNE     'A'
      C     S#ACTN        ANDNE     'X'
@@ -566,9 +569,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0001'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -576,19 +579,19 @@
       ** Validate customer, facility type and facility number
       ***********************************************************
      C     VLCFTFN       BEGSR
- 
+
       ** Customer number must be defined
- 
+
      C     S#CSSN        IFEQ      *BLANKS
      C                   MOVE      'N'           S#CSSNok
      C                   ADD       1             Ix
      C                   MOVEL     'S#CSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
       ** Customer number must refer to a valid customer
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
@@ -602,16 +605,16 @@
      C                   MOVEL     'S#CSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
      C                   ELSE
- 
+
      C                   MOVEL     *BLANK        S#CSSN
      C                   MOVEL     BBCUST        S#CSSN
      C                   MOVEL     BBCUST        S#CNUM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Facility type and facility number must be defined
- 
+
      C     S#FACT        IFEQ      *BLANKS
      C     S#FCNO        OREQ      *BLANKS
      C                   MOVE      'N'           S#FACTok
@@ -619,15 +622,15 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#FACT    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0215'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#FACT        ZFIELD
      C                   Z-ADD     0             ZADEC
      C                   Z-ADD     3             ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#FACTok
      C                   ADD       1             Ix
@@ -636,13 +639,13 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#FACT
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#FCNO        ZFIELD
      C                   Z-ADD     0             ZADEC
      C                   Z-ADD     2             ZADIG
      C                   EXSR      ZALIGN
- 
+
      C     ZALIGNok      IFNE      'Y'
      C                   MOVE      'N'           S#FCNOok
      C                   ADD       1             Ix
@@ -651,9 +654,9 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#FCNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /SPACE 5
@@ -762,16 +765,16 @@
       **  Check facility exists                                 *
       ***********************************************************
      C     CHKFCLTY      BEGSR
- 
+
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACT
      C                   MOVEL     S#FCNO        K#FCNO
      C                   MOVEL     'A'           K#RCDT
- 
+
      C     FCLTYK        CHAIN     FCLTYFMF                           80
       *
      C     *IN80         IFEQ      *OFF
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -784,7 +787,7 @@
      C                   MOVEL     FC_BRCA       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -797,7 +800,7 @@
      C                   MOVEL     FC_FCCY       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     FC_FAMT       W#FAMT
      C                   MOVEL     FC_ORBR       FcbrOrbr                                     CLE073
      C                   MOVEL     FC_BRCA       FcbrBranch
@@ -807,7 +810,7 @@
      C                   EVAL      FcbrSYCU = A8SYCU                                          CSD027
      C                   MOVEL     FC_FCCY       FccyFCCY
      C                   MOVEL     A6NBDP        FccyNBDP
- 
+
      C                   ELSE
      C                   MOVE      'N'           S#CSSNok
      C                   MOVE      'N'           S#FACTok
@@ -824,15 +827,15 @@
       * Validate Fee Sequence Number                                  *
       *****************************************************************
      C     VLDFSEQ       BEGSR
- 
+
      C     S#FSEQ        IFEQ      *BLANKS
      C                   MOVE      'N'           S#FSEQok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FSEQ    '  FldNameArr(Ix)
      C                   MOVEL     'LER0014'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#FSEQ        ZFIELD
      C                   Z-ADD     0             ZADEC
@@ -847,9 +850,9 @@
      C                   ELSE
      C                   MOVE      ZFIELD        S#FSEQ
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -857,17 +860,17 @@
       * Validate Value Date                                           *
       *****************************************************************
      C     VLDVDAT       BEGSR
- 
+
       ** If the value date is not defined, default it to the run date
      C     S#VDAT        IFEQ      *BLANKS
- 
+
      C*******            MOVE      BJRDNB        ZDAYNO                                       CAP084
      C                   MOVE      WProcDate     ZDAYNO                                       CAP084
      C                   EXSR      ZDATE2
      C                   MOVE      ZDATE         S#VDAT
       *
      C                   ENDIF
- 
+
       ** The date must be valid
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     S#VDAT        ZFIELD
@@ -878,7 +881,7 @@
      C                   MOVE      ZFIELD        ZDATEI
      C                   EXSR      ZDATE1
      C                   END
- 
+
      C     ZALIGNok      IFEQ      'N'
      C     ErrorFlag     OREQ      'Y'
       *
@@ -886,12 +889,12 @@
      C                   ADD       1             Ix
      C                   MOVEL     'S#VDAT      'FldNameArr(Ix)
      C                   MOVEL     'LER0159'     MsgIdArr(Ix)
- 
+
      C                   ELSE
      C                   Z-ADD     ZDAYNO        W#VDAT
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -899,7 +902,7 @@
       * Check fee details exist                                       *
       *****************************************************************
      C     CHKFEEDT      BEGSR
- 
+
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACL
      C                   MOVE      S#FCNO        K#FACL
@@ -912,19 +915,19 @@
      C                   MOVEL     S#LOAN        K#LOAN                                       CLE073
      C                   ENDIF                                                                CLE073
      C                   MOVE      S#FSEQ        K#FSEQ
- 
+
      C     FEEAK         CHAIN     LEFEEDL1                           80
- 
+
      C     *IN80         IFEQ      *ON
      C     FE_FERECI     ORNE      'D'
- 
+
      C                   MOVE      'N'           S#FSEQok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FSEQ    '  FldNameArr(Ix)
      C                   MOVEL     'LER0073'     MsgIdArr(Ix)
- 
+
      C                   ELSE
- 
+
       ** If calculated loan fees, and fee for a loan not of reserved fee calc type, error     CLE073
       ** Note that loan fees of reserved fee calc type may be amended or settled even if      CLE073
       ** fee is fixed amount (type 99)                                                        CLE073
@@ -943,7 +946,7 @@
      C                   ELSE                                                                 CLE073
       * Settlements cannot be done for fixed fees
       * or for non-calculated types
- 
+
      C     FE_FEFAMT     IFNE      *ZEROS
      C     CLE073        ANDEQ     'N'                                                        CLE073
      C     FE_FEFAMT     ORNE      *ZEROS                                                     CLE073
@@ -962,10 +965,10 @@
      C                   MOVEL     'S#FSEQ    '  FldNameArr(Ix)
      C                   MOVEL     'LER0069'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       * Fee currency
      C                   MOVEL     FE_FEFCCY     S#FCCY
- 
+
       * Fee currency decimal places
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
@@ -979,9 +982,9 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   Z-ADD     A6NBDP        FecyNBDP
- 
+
       * Settlement adjustment due date
- 
+
      C     FE_FEDIND     IFNE      *BLANK
      C                   Z-ADD     FE_FEDDAT     W#SADD
      C                   ELSE
@@ -999,9 +1002,9 @@
      C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
      C                   Z-ADD     FE_FELPDT     W#SADD                                     MD026969
      C                   ENDIF                                                              MD026969
- 
+
       * Participant Fee Indicator and fee type
- 
+
      C                   MOVEL     FE_PTFI       W#PTFI
      C                   SELECT
      C     W#PTFI        WHENEQ    *BLANK
@@ -1015,9 +1018,9 @@
      C                   ENDSL
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTX        S#FTYP
- 
+
       * Fee narrative
- 
+
      C                   MOVEL     FE_FEFCOD     @FCOD
      C                   CALL      'AOFEER0'
      C                   PARM      *BLANKS       @RTCD
@@ -1026,10 +1029,10 @@
      C     SDFEE         PARM      SDFEE         DSFDY
      C                   MOVE      AUFECD        S#FCOD
      C                   MOVE      AUFENV        S#FENV
- 
+
       * Value date of fee settlement must be earlier than or equal
       * to rundate and later than fee period start date
- 
+
      C     S#ACTN        IFEQ      'I'
      C*****W#VDAT        IFGT      BJRDNB                                                     CAP084
      C     W#VDAT        IFGT      WProcDate                                                  CAP084
@@ -1040,9 +1043,9 @@
      C                   MOVEL     'LER0160'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
       * Calculate fee amount due/past due
- 
+
      C     S#FSEQok      IFEQ      'Y'
      C*******************Z-ADD     FE_FEAMTP     ZFLD15                                      BUG7528
      C*******************Z-ADD     FecyNBDP      ZDECS                                       BUG7528
@@ -1116,7 +1119,7 @@
      C                   MOVE      ZOUT21        S#DUPD                                      BUG7528
       *                                                                                      BUG7528
      C                   ENDIF
- 
+
      C                   ENDIF                                                                CLE073
                                                                                               CLE073
       ** If ANY of the Settlements fields have been entered, bypass                           258669
@@ -1137,7 +1140,7 @@
      C                   ENDIF                                                                258669
       *                                                                                       258669
      C                   ENDIF
- 
+
      C                   ENDSR
      C*****************************************************************                       258669
       /EJECT                                                                                  258669
@@ -1263,10 +1266,10 @@
       * Check fee settlement                                          *
       *****************************************************************
      C     CHKFEES       BEGSR
- 
+
       **Read*all*authorised*settlements*for*the*fee**************                             223947
       * Read all settlements for the fee                                                      223947
- 
+
      C                   Z-ADD     FE_FEAMTP     W#CPAM
      C     PDFeeSet      IFEQ      'Y'                                                      MD054354
       *                                                                                     MD026969
@@ -1293,7 +1296,7 @@
      C                   MOVEL     'LER0179'     MsgIdArr(Ix)                               MD022368
      C                   LEAVESR                                                            MD022368
      C                   ENDIF                                                              MD022368
- 
+
      C     FEEAK         SETLL     LEFEEAL2
      C     *IN80         DOUEQ     *ON
      C     FEEAK         READE     LEFEEAL2                               80
@@ -1302,11 +1305,11 @@
      C*****FA_SSTS       ORNE      'A'                                                        223947
      C                   ITER
      C                   ENDIF
- 
+
       **If*an*authorised*full*payment*has*been*made*to*the*fee,******                         223947
       * If a full payment has been made against the fee,                                      223947
       * no more fee settlement can be input
- 
+
      C     FA_FATYPE     IFEQ      'F'
      C     S#ACTN        IFEQ      'I'
      C*****S#ACTN******* OREQ      'X'                                                        223947
@@ -1324,18 +1327,18 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
       * Accumulate the current total amount past due
- 
+
      C                   SUB       FA_FASADJ     W#CPAM
- 
+
      C                   ENDDO
- 
+
       * If insert, the record mustn't exist
       * If not insert, the record must exist
- 
+
      C                   Z-ADD     W#VDAT        K#VDAT
- 
+
      C     FEESK         CHAIN     LEFEEAL2                           80
       *
      C     S#ACTN        IFEQ      'I'
@@ -1378,9 +1381,9 @@
      C**************     SUB       FA_FASADJ     W#CPAM                                       223947
      C**************     ENDIF                                                                223947
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** For full settlement, issue a warning message if                        BUG1644
       ** not the full fee amount past due is being settled                      BUG1644
                                                                                 BUG1644
@@ -1401,7 +1404,7 @@
      C                   OTHER                                                  BUG1644
       * If the record is being inserted, amended or authorised when the
       * total amount past due has reached zero, settlement is not allowed
- 
+
      C     S#ACTN        IFEQ      'I'
      C     S#ACTN        OREQ      'A'
      C     S#ACTN        OREQ      'X'
@@ -1425,7 +1428,7 @@
      C                   MOVEL     'LER0179'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL                                                  BUG1644
                                                                                 BUG1644
       *                                                                                     MD026969
@@ -1445,29 +1448,29 @@
       * Validate the action                                           *
       *****************************************************************
      C     VLDACT        BEGSR
- 
+
      C                   SELECT
- 
+
       * Amendments are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'A'
- 
+
       * . on live records
- 
+
      C     FA_FARECI     IFNE      'S'
      C                   MOVE      'N'           S#ACTNok
      C                   ADD       1             Ix
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LER0230'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       * Authorisations are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'X'
- 
+
       * . if lending authorisations is installed
       *   and if fee settlements are to be authorised
- 
+
      C     CLE002        IFEQ      'N'
      C     BPFSAU        ORNE      'Y'
      C                   MOVE      'N'           S#ACTNok
@@ -1475,11 +1478,11 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LER0161'     MsgIdArr(Ix)
      C                   ELSE
- 
+
       * . on live records
       * . records whose status is 'complete' or 'awaiting reauthorisation'
       * . if the user is different from the last insert or amend user
- 
+
      C     FA_FARECI     IFNE      'S'
      C                   MOVE      'N'           S#ACTNok
      C                   ADD       1             Ix
@@ -1568,13 +1571,13 @@
                                                                                              BUG3760
      C                   ENDIF                                                               BUG3760
      C                   ENDIF                                                               BUG3760
- 
+
      C                   ENDIF
- 
+
       * Deletions are only allowed:
- 
+
      C     S#ACTN        WHENEQ    'D'
- 
+
       * . on live records
      C     FA_FARECI     IFNE      'S'
      C                   MOVE      'N'           S#ACTNok
@@ -1582,9 +1585,9 @@
      C                   MOVEL     'S#ACTN    '  FldNameArr(Ix)
      C                   MOVEL     'LER0230'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     EVLDA         ENDSR                                                               BUG3760
      C**********         ENDSR                                                               BUG3760
       *****************************************************************
@@ -1711,14 +1714,14 @@
       /SPACE 5
       *****************************************************************
      C     SRTEXT        BEGSR
- 
+
      C                   CALL      'Y2RVMGC'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    ZAMSID            7
      C                   PARM      'LERMSGF '    ZAMSGF           10
      C                   PARM                    ZAMSDA          132
      C                   PARM      *BLANKS       ZAMSTX          132
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1726,19 +1729,19 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response Code
      C                   PARM                    RESPMODE          1
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date
      C                   PARM                    S#ACTN            1
@@ -1748,17 +1751,17 @@
      C                   PARM                    S#FSEQ            2
      C                   PARM                    S#VDAT            6
      C                   PARM                    S#LOAN            6                          CLE073
- 
+
       *
       * OUTPUTS
- 
+
       * Fee Settlement Details in file format
      C                   PARM                    LEFEEADFmt
      C                   PARM                    InRecSttmt                                   258669
      C                   PARM                    InPaySttmt                                   258669
      C                   PARM                    ##RECF                                       258669
      C                   PARM                    ##PAYF                                       258669
- 
+
       * Action, customer, facility type, facility number,
       * fee sequence number and value date OK indicators
      C                   PARM                    S#ACTNok          1
@@ -1768,32 +1771,32 @@
      C                   PARM                    S#FSEQok          1
      C                   PARM                    S#VDATok          1
      C                   PARM                    S#LOANok          1                          CLE073
- 
+
       * Customer number
      C                   PARM                    S#CNUM            6
- 
+
       * Fee currency and decimal places
      C                   PARM                    S#FCCY            3
      C                   PARM                    FecyNBDP          1 0
- 
+
       * Fee type, fee code, fee narrative, fee amount due/past due
      C                   PARM                    S#FTYP           10
      C                   PARM                    S#FCOD            2
      C                   PARM                    S#FENV           20
      C                   PARM                    S#DUPD           18
- 
+
       * Value date
      C                   PARM                    W#VDAT            5 0
- 
+
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
- 
+
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
- 
+
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1822,7 +1825,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -1891,23 +1894,23 @@
      C                   MOVEL     PCurSet01     ATHRATH           1                          240968
      C                   MOVEL     PCurSet02     ATHSMDT           1                          244314
      C                   MOVEL     PCurSet03     PDFeeSet          1                        MD054354
- 
+
       ** Check if CLE002 - Lending Authorisations - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE002'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE002
      C                   ELSE
      C                   MOVEL     'N'           CLE002            1
      C                   ENDIF
- 
+
       ** Retrieve customer lending data, if CLE002 is Installed
- 
+
      C     CLE002        IFEQ      'Y'
       *
      C                   CALL      'AOCLNDR0'
@@ -1924,7 +1927,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       *  GET MBIN FROM DTAARA/RUNDAT
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
@@ -2087,7 +2090,7 @@
      C                   IF        @RTCD = *BLANKS                                            CSD083
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
- 
+
      C     *LIKE         DEFINE    FC_CNUM       K#CNUM
      C     *LIKE         DEFINE    FC_FACT       K#FACT
      C     *LIKE         DEFINE    FC_FCNO       K#FCNO
@@ -2096,9 +2099,9 @@
      C     *LIKE         DEFINE    FA_FALOAN     K#LOAN
      C     *LIKE         DEFINE    FA_FAFSEQ     K#FSEQ
      C     *LIKE         DEFINE    FA_FAVDAT     K#VDAT
- 
+
       ** Key lists
- 
+
      C     FCLTYK        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -2146,9 +2149,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

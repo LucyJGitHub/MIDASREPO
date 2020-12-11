@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. CSD102             Date 08Jan19              */
+/*       Last Amend No. AR954640           Date 23Apr12              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      CSD102             Date 08Jan19              */
 /*                      MD050018           Date 05Nov18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CAP212             Date 15Sep14              */
@@ -81,6 +82,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR954640 - REC24 fails during close of business. If the     */
+/*                  current job name is REC24 end the program.       */
+/*                  (Child: AR954641)                                */
 /*       CSD101 - Password Encryption                                */
 /*       CSD102 - Password Length Extension                          */
 /*       MD050018 - PDP Enhancement: Generate Projected Accnt Movmnt */
@@ -256,6 +260,12 @@
              CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(00000000)
              CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1021983*/
 
+/**/                                                                                    /*AR954640*/
+/* Don't run this processing if running COB                          */                 /*AR954640*/
+/**/                                                                                    /*AR954640*/
+             RTVJOBA    JOB(&JOBNAME)                                                   /*AR954640*/
+             IF         COND(&JOBNAME *NE 'REC24     ') THEN(DO)                        /*AR954640*/
+                                                                                        /*AR954640*/
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
 /**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                 */               /*AR1021983*/
 /**********  IF         COND((&MPHAS *NE 'A') *AND (&COBFL *NE +
@@ -266,6 +276,8 @@
                              cycle.  Entry prohibited:')
                 GOTO       CMDLBL(END)
              ENDDO
+                                                                                        /*AR954640*/
+             ENDDO                                                                      /*AR954640*/
 
 /* Reclaim resource                                                   */                  /*BG3913*/
              RCLRSC                                                                       /*BG3913*/

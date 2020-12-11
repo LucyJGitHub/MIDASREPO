@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056694             Date 09Sep20             *
-      *  Prev Amend No. MD055682             Date 31Jul20             *
+      *  Last Amend No. MD057035             Date 21Oct20             *
+      *  Prev Amend No. MD056694             Date 09Sep20             *
+      *                 MD055682             Date 31Jul20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD055242             Date 10Feb20             *
       *                 MD055265             Date 10Feb20             *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057035 - Allow delivery of XTD                             *
       *  MD056694 - New deliverable data file UPDDSFPD.               *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -907,16 +909,17 @@
       *********************************************************************
      C     ProcOther     BEGSR
       *
-      ** Check if file is not '*XTD'                                                        MD055242
-     C                   If        %SUBST(Member:6:3) = 'XTD'                               MD055242
-     C                   EVAL      Char100 = '*XTD file cannot be +                         MD055242
-     C                             delivered, *CTD file must be delivered  : ' +            MD055242
-     C                             Member                                                   MD055242
-     C                   EXSR      InsertErrMsg                                             MD055242
-     C                   EVAL      NoWrite = 'N'                                            MD055242
-     C                   LEAVESR                                                            MD055242
-     C                   Endif                                                              MD055242
-                                                                                            MD055242
+      ** Check if file is not '*XTD'                                               MD055242 MD057035
+     C**********         If        %SUBST(Member:6:3) = 'XTD'                      MD055242 MD057035
+     C**********         EVAL      Char100 = '*XTD file cannot be +                MD055242 MD057035
+     C**********                   delivered, *CTD file must be delivered  : ' +   MD055242 MD057035
+     C**********                   Member                                          MD055242 MD057035
+     C**********         EXSR      InsertErrMsg                                    MD055242 MD057035
+     C**********         EVAL      NoWrite = 'N'                                   MD055242 MD057035
+     C**********         LEAVESR                                                   MD055242 MD057035
+     C**********         Endif                                                     MD055242 MD057035
+                                                                                   MD055242 MD057035
+     C                   If        %SUBST(Member:6:3) =  'CTD'                              MD057035
       ** Check if the file has an '*XTD' equivalent; this means it is using
       **  the new Deliverable Data Split.
      C                   EVAL      ChkFile = %SUBST(Member:1:5) + 'XTD'
@@ -958,6 +961,7 @@
      C                   EVAL      AUMBTP = 'DDSDATA'                                       MD054605
      C                   LEAVESR
      C                   ENDIF
+     C                   Endif                                                              MD057035
       *
       ** Check if the file has '_X' which means it is a delete version of an
       **  Extract File.

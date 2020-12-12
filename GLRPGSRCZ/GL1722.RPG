@@ -10,8 +10,9 @@
      F*                                                               *
      F*  (c) Finastra International Limited 2006                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL160             Date 11Nov14               *
+      *  Last Amend No. MD050700           Date 12Dec20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL160             Date 11Nov14               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CGL047 *Create     Date 30Jun06               *
@@ -19,6 +20,11 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD050700 - GL account opened by system with Profit center,   *
+      *             and Generic posting interface incorrect defaulting*
+      *             for Non retail account.                           *
+      *             For non-retail account PRFC if blank is defaulted *
+      *             by unallocated profit center.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL160 - Cheque Details Upload via Generic Posting Interface *
       *             (Recompile)                                       *
@@ -62,6 +68,11 @@
      ISDBRCH    E DSSDBRCHPD
       **  Data structure for branch file
      I              QQDFAC                          QXDFAC
+      **  Profit Centre Details                                                          MD050700
+     ISDPCAC    E DSSDPCACPD                                                             MD050700
+     I              QQFNIC                          XXFNIC                               MD050700
+     I              QQFNAA                          XXFNAA                               MD050700
+      ** PCA ICD                                                                         MD050700
       *
      ISDMMOD    E DSSDMMODPD
       **  Data structure for module ICD file
@@ -334,7 +345,15 @@
      C           BTPRCN    IFNE *BLANKS
      C                     MOVELBTPRCN    PRFC
      C                     ELSE
+     C           BTACTY    IFEQ 'R'                                                        MD050700
      C                     MOVELACPRFC    PRFC
+     C                     ELSE                                                            MD050700
+     C           BGN0ST    IFEQ 'Y'                                                        MD050700
+     C                     MOVELFTUAPC    PRFC                                             MD050700
+     C                     ELSE                                                            MD050700
+     C                     MOVELACPRFC    PRFC                                             MD050700
+     C                     ENDIF                                                           MD050700
+     C                     ENDIF                                                           MD050700
      C                     ENDIF
      C                     MOVELBTBKCD    BOKC
      C                     MOVEL'BT'      MODC
@@ -429,6 +448,25 @@
      C                     EXSR *PSSR
      C                     END
       *
+      *
+      **  GET PCA ICD                                                                      MD050700
+     C           BGN0ST    IFEQ 'Y'                                                        MD050700
+     C                     CALL 'AOPCACR0'                                                 MD050700
+     C                     PARM '*MSG   ' @RTCD                                            MD050700
+     C                     PARM '*FIRST ' @OPTN                                            MD050700
+     C           SDPCAC    PARM SDPCAC    DSFDY                                            MD050700
+      *                                                                                    MD050700
+      ** If no record is found on sdmmodpd.                                                MD050700
+     C           @RTCD     IFNE *BLANKS                                                    MD050700
+     C           *LOCK     IN   LDA                                                        MD050700
+     C                     MOVE '003'     DBASE              * * * * * * *                 MD050700
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 003 *                 MD050700
+     C                     MOVEL'SDPCACPD'DBFILE             * * * * * * *                 MD050700
+     C                     OUT  LDA                                                        MD050700
+     C                     EXSR *PSSR                                                      MD050700
+     C                     END                                                             MD050700
+     C                     END                                                             MD050700
+      *                                                                                    MD050700
       * Set initialisation complete
      C                     MOVEL'Y'       #FIRST  1
       *

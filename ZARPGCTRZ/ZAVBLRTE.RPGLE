@@ -597,6 +597,7 @@
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAPDLY       DDPDLY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -651,6 +652,7 @@
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -733,6 +735,7 @@
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAAVOP       DDAVOP                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -864,6 +867,7 @@
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAWGHT       DDWGHT                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'

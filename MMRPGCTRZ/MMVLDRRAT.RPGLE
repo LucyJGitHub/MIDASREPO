@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057049           Date 03Nov20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 MD023981           Date 13Jan14               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057049 - Amended ZA0840 result checking                    *
+      *           - Moved @@AMT to ZFIELD for formatting              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -215,7 +218,8 @@
       **  Set error code if invalid
  
      C**********         If        ZalignOK = 'N'                                           MD023981
-     C     @@ERCD        IFEQ      0                                                        MD023981
+     C*****@@ERCD**      IFEQ      0                                               MD023981 MD057049
+     C     @Rtcde        IFNE      *blanks                                                  MD057049
      C                   Movel     'MMA1337'     MsgId1
      C                   Else
       *
@@ -224,6 +228,7 @@
      C**********         MOVE      ZFIELD        MM#REF           13 8                      MD023981
      C                   MOVE      @@AMT         MM#REF           13 8                      MD023981
      C                   Z-ADD     MM#REF        RefRate          13 8
+     C                   MOVE      @@AMT         ZFIELD                                     MD057049
       *
       * Convert numeric field - insert decimal point
      C                   CALLB     'ZEDIT'

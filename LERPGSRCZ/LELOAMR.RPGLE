@@ -191,6 +191,9 @@
 
       * Error indicators
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
+                                                                                              CLE172
+      ** LOAM Backward-Looking Rate Fields                                                    CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
       *
       ***  Loan Details 'A' Format
      D LoanDetsA     E DS                  EXTNAME(CLOAN:CLOANCLF)
@@ -366,11 +369,6 @@
       ** Populate Customer Name Inputs                                                        CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
-      ** CLE172 Fields                                                                        CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:22)                   CLE172
-     C                   ADD       22            eBfp                                         CLE172
-     C                   ENDIF
 
       * Build buffer with required output
      C*******************EVAL           Buffer = LoamScnFmt + S_REC + S_PAY                   CGP001

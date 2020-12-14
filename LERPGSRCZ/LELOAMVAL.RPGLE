@@ -5320,19 +5320,19 @@
      C                   PARM                    LABRTT                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
-     C                   PARM                    FldNamXAr                                    CLE172
-     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
      C                   PARM                    TempOutDS       200                          CLE172
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
      C                   MOVE      TempOutDS     LoamValBlrt                                  CLE172
-     C                   Z-ADD     WLAAVOP       LAAVOP                                       CLE172
+     C                   MOVE      WLAAVOP       LAAVOP                                       CLE172
      C                   Z-ADD     WLALBDY       LALBDY                                       CLE172
      C                   Z-ADD     WLALODY       LALODY                                       CLE172
-     C                   Z-ADD     WLAWGHT       LAWGHT                                       CLE172
-     C                   MOVE      WLABADJ       LABADJ                                       CLE172
-     C                   MOVE      WLAPDLY       LAPDLY                                       CLE172
+     C                   MOVE      WLAWGHT       LAWGHT                                       CLE172
+     C                   Z-ADD     WLABADJ       LABADJ                                       CLE172
+     C                   Z-ADD     WLAPDLY       LAPDLY                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       *                                                                                       CLE172

@@ -171,6 +171,12 @@
      D SC_LCD        E                     EXTFLD(LCD)                                        CLE106
       *                                                                                       CLE172
      D LoamScnBlrt     DS            22                                                       CLE172
+     D  DDAVOP                 1      1
+     D  DDLBDY                 2      3
+     D  DDLODY                 4      5
+     D  DDWGHT                 6      6
+     D  DDBADJ                 7     20
+     D  DDPDLY                21     22
       ** LE Backward-Looking Rate Fields                                                      CLE172
       *
       ** +--------------------------------------+
@@ -188,7 +194,6 @@
      D IntBadj         S              5A                                                      CLE172
      D DecBadj         S              8A                                                      CLE172
                                                                                               CLE172
-     D RetCodeOut      S             10A                                                      CLE172
      D @@ALPH          S             16A                                                      CLE172
      D @@MTID          S              1A                                                      CLE172
      D @@AMT           S             15  0                                                    CLE172
@@ -287,56 +292,6 @@
      C                   ELSE
      C                   IF        DDATYP = 'BC'
      C                   MOVE      BRTT          DDBRAT
-      * Lookback Days for Settlement                                                          CLE172
-      *                                                                                       CLE172
-     C                   MOVE      LBDY          DDLBDY                                       CLE172
-      *                                                                                       CLE172
-      * Lockout Days                                                                          CLE172
-      *                                                                                       CLE172
-     C                   MOVE      LODY          DDLODY                                       CLE172
-      *                                                                                       CLE172
-      * Payment Delay Days                                                                    CLE172
-      *                                                                                       CLE172
-     C                   MOVE      PDLY          DDPDLY                                       CLE172
-      *                                                                                       CLE172
-      * Benchmark Adjustment                                                                  CLE172
-      *                                                                                       CLE172
-     C                   MOVE      '.'           BNDCSP                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     BADJ          IntBadj                                      CLE172
-     C                   MOVE      BADJ          DecBadj                                      CLE172
-     C     BADJ          IFLT      0                                                          CLE172
-     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
-     C                   ELSE                                                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
-     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
-     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
-     C                   CALLB     'ZA0841'                                                   CLE172
-     C                   PARM      *BLANK        RetCodeOut                                   CLE172
-     C                   PARM                    @@ALPH                         Display field CLE172
-     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
-     C                   PARM      5             @@IINT                         no.of integersCLE172
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
-     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
-     C                   PARM      *ZERO         @@AMT                          File field    CLE172
-     C                   PARM                    BNDCSP                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
-      *                                                                                       CLE172
-      * Averaging Option                                                                      CLE172
-      *                                                                                       CLE172
-     C                   MOVE      AVOP          DDAVOP                                       CLE172
-      *                                                                                       CLE172
-      * Weight Convention                                                                     CLE172
-      *                                                                                       CLE172
-     C                   MOVE      WGHT          DDWGHT                                       CLE172
      C                   ENDIF
      C                   ENDIF
                                                                                               CLE106
@@ -435,37 +390,6 @@
      C                   MOVE      ZFIELD        DDAMNT
      C                   ENDIF
      C                   ENDIF
-      *                                                                                       CLE172
-      * Benchmark Adjustment                                                                  CLE172
-      *                                                                                       CLE172
-     C                   MOVE      '.'           BNDCSP                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     BADJ          IntBadj                                      CLE172
-     C                   MOVE      BADJ          DecBadj                                      CLE172
-     C     BADJ          IFLT      0                                                          CLE172
-     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
-     C                   ELSE                                                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
-     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
-     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
-     C                   CALLB     'ZA0841'                                                   CLE172
-     C                   PARM      *BLANK        RetCodeOut                                   CLE172
-     C                   PARM                    @@ALPH                         Display field CLE172
-     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
-     C                   PARM      5             @@IINT                         no.of integersCLE172
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
-     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
-     C                   PARM      *ZERO         @@AMT                          File field    CLE172
-     C                   PARM                    BNDCSP                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
       *
       ** Default participation loan type / subtype
      C                   MOVE      DFTP          DDDFTP
@@ -514,6 +438,56 @@
      C                   MOVEL     LARDFD        DDRDFD                                       CRE073
                                                                                               CRE073
      C                   ENDIF                                                                CRE073
+      * Lookback Days for Settlement                                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVE      LBDY          DDLBDY                                       CLE172
+      *                                                                                       CLE172
+      * Lockout Days                                                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVE      LODY          DDLODY                                       CLE172
+      *                                                                                       CLE172
+      * Payment Delay Days                                                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVE      PDLY          DDPDLY                                       CLE172
+      *                                                                                       CLE172
+      * Benchmark Adjustment                                                                  CLE172
+      *                                                                                       CLE172
+     C                   MOVE      '.'           BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     BADJ          IntBadj                                      CLE172
+     C                   MOVE      BADJ          DecBadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
+      *                                                                                       CLE172
+      * Averaging Option                                                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      AVOP          DDAVOP                                       CLE172
+      *                                                                                       CLE172
+      * Weight Convention                                                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WGHT          DDWGHT                                       CLE172
 
       *
       ***  Return

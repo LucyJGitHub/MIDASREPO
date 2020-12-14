@@ -18,8 +18,9 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *                                                               *
-      *  Last Amend No. 252591             Date 08Jun20               *
-      *  Prev Amend No. MD055860           Date 05Jun20               *                                                  
+      *  Last Amend No. MD054980           Date 05Oct20               *
+      *  Prev Amend No. 252591             Date 08Jun20               *
+      *                 MD055860           Date 05Jun20               *
       *                 MD055557           Date 13Apr20               *
       *                 MD054623           Date 14Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -106,6 +107,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054980 - Retail Teller narratives not multilanguage        *
+      *           - Use message IDs from CGPNARMSG when REPNAR is ON  *
+      *           - for all RTS transactions.                         *
       *  252591 - INCORRECT MARGIN CALCULATION                        *
       *         - Removed the unncessary adjustment of decimal places *
       *           of subroutines SRMACC and SRMALC to calculate the   *
@@ -9228,6 +9232,8 @@
      C           FNCD      OREQ '0JO'
      C           FNCD      OREQ '0JL'
      C           FNCD      OREQ '0JW'                                     CRT002
+     C           FNCD      OREQ '00P'                                                       MD054980
+     C           FNCD      OREQ '00H'                                                       MD054980
       *
       ** Get no.of decimal places of currency
      C                     CALL 'AOCURRR0'
@@ -9269,6 +9275,8 @@
      C                     END
      C           FNCD      IFEQ '0JH'
      C           FNCD      OREQ '0JP'
+     C           FNCD      OREQ '00H'                                                       MD054980
+     C           FNCD      OREQ '00P'                                                       MD054980
      C                     MOVEL'CASH_DEP'@NAR19
      C/COPY WNCPYSRC,RE4201C020
      C                     MOVE 'GB00910' ##MGID                          109175
@@ -9312,6 +9320,8 @@
      C                     CLEARCGPNAR                                    109175
      C                     MOVE TRCCY     MNCYCD                          109175
      C                     MOVEL@NAMT2    MNOAMT                          109175
+     C                     Z-ADDTBTN      @TTRNO                                            MD054980
+     C                     MOVEL@NA715    MNTRNO                                            MD054980
      C                     EXSR SRPNAR                                    109175
      C                     END                                            109175
       *                                                                                      BUG9062
@@ -9328,6 +9338,11 @@
      C                     ELSE
       *
      C           FNCD      IFEQ '00A'
+     C           REPNAR    IFEQ 'Y'                                                         MD054980
+     C                     CLEARCGPNAR                                                      MD054980
+     C                     MOVE 'GB00990' ##MGID                                            MD054980
+     C                     EXSR SRPNAR                                                      MD054980
+     C                     ELSE                                                             MD054980
       *
       ** If trans.narration is non-blanks, move it to the narrative fld
      C           TTNR      IFNE *BLANKS
@@ -9351,6 +9366,7 @@
      C                     ENDIF                                                            MD054623
      C                     END
      C                     END                                            093749
+     C                     ENDIF                                                            MD054980
      C                     END                                            093749
       *
      C                     ELSE
@@ -9395,6 +9411,33 @@
      C           FNCD      OREQ '00N'                                                        BUG4311
      C           FNCD      OREQ '00Q'                                                        BUG4311
      C           FNCD      OREQ '00K'                                                        BUG9062
+      *                                                                                     MD054980
+      ** TRANSLATE NARRATIVE IF REQUIRED                                                    MD054980
+      *                                                                                     MD054980
+     C           REPNAR    IFEQ 'Y'                                                         MD054980
+     C                     CLEARCGPNAR                                                      MD054980
+     C                     Z-ADDTBTN      @TTRNO                                            MD054980
+     C                     MOVEL@NA715    MNTRNO                                            MD054980
+      *                                                                                     MD054980
+     C                     SELEC                                                            MD054980
+     C           FNCD      WHEQ '00O'                                                       MD054980
+     C                     MOVE 'GB00890' ##MGID                                            MD054980
+     C           FNCD      WHEQ '00L'                                                       MD054980
+     C                     MOVE 'GB00900' ##MGID                                            MD054980
+     C                     MOVE CQNF      MNCHNB                                            MD054980
+     C           FNCD      WHEQ '00N'                                                       MD054980
+     C                     MOVE 'GB00910' ##MGID                                            MD054980
+     C           FNCD      WHEQ '00Q'                                                       MD054980
+     C                     MOVE 'GB00920' ##MGID                                            MD054980
+     C                     MOVE CQNF      MNCHNB                                            MD054980
+     C           FNCD      WHEQ '00K'                                                       MD054980
+     C                     MOVE 'GB00920' ##MGID                                            MD054980
+     C                     MOVE CQNF      MNCHNB                                            MD054980
+     C                     ENDSL                                                            MD054980
+      *                                                                                     MD054980
+     C                     EXSR SRPNAR                                                      MD054980
+      *                                                                                     MD054980
+     C                     ELSE                                                             MD054980
      C                     MOVEL@TTNM1    PNAR                                               BUG4311
      C           RTSNAR    IFEQ 'Y'                                                         MD054623
      C                     EXSR GETNAR                                                      MD054623
@@ -9418,8 +9461,22 @@
      C                     MOVE CQNF      PNAR                                               BUG4311
      C                     ENDIF                                                            MD055860
      C                     ENDIF                                                             BUG9062
+     C                     ENDIF                                                            MD054980
       *                                                                                      BUG4311
      C                     ELSE                                                              BUG4311
+     C           FNCD      IFEQ '00E'                                                       MD054980
+     C           FNCD      OREQ '00F'                                                       MD054980
+     C           REPNAR    IFEQ 'Y'                                                         MD054980
+     C                     CLEARCGPNAR                                                      MD054980
+     C                     SELEC                                                            MD054980
+     C           FNCD      WHEQ '00E'                                                       MD054980
+     C                     MOVE 'GB00970' ##MGID                                            MD054980
+     C           FNCD      WHEQ '00F'                                                       MD054980
+     C                     MOVE 'GB00980' ##MGID                                            MD054980
+     C                     ENDSL                                                            MD054980
+     C                     EXSR SRPNAR                                                      MD054980
+     C                     ENDIF                                                            MD054980
+     C                     ELSE                                                             MD054980
       *
       ** Get trans.narration from TTNARPD?
      C           FNCD      IFEQ '0JA'
@@ -9475,6 +9532,7 @@
       *
      C                     END
       *
+     C                     ENDIF                                                            MD054980
      C                     ENDIF                                                             BUG4311
       *                                                                                      BUG4311
      C*                                                                   S01408
@@ -9921,6 +9979,11 @@
       *
       ** If function code is 00a
      C           FNCD      IFEQ '00A'
+     C           REPNAR    IFEQ 'Y'                                                         MD054980
+     C                     CLEARCGPNAR                                                      MD054980
+     C                     MOVE 'GB00990' ##MGID                                            MD054980
+     C                     EXSR SRPNAR                                                      MD054980
+     C                     ELSE                                                             MD054980
       *
       ** If trans.narration is non-blanks, move it to the narrative fld
      C           TTNR      IFNE *BLANKS
@@ -9952,6 +10015,7 @@
       *
      C                     END
      C                     END                                            093749
+     C                     ENDIF                                                            MD054980
      C                     END                                            093749
       *
      C                     ELSE
@@ -10249,6 +10313,8 @@
      C                     CLEARCGPNAR                                    109175
      C                     MOVE TRCCY     MNCYCD                          109175
      C                     MOVEL@NAMT2    MNOAMT                          109175
+     C                     Z-ADDTBTN      @TTRNO                                            MD054980
+     C                     MOVEL@NA715    MNTRNO                                            MD054980
      C                     MOVE 'GB00920' ##MGID                          109175
      C                     EXSR SRPNAR                                    109175
      C                     END                                            109175
@@ -10263,6 +10329,16 @@
      C                     MOVE *BLANKS   WRK10                                             MD055860
      C                     MOVE WRK10     PNAR                                              MD055860
      C                     MOVE CQNF      PNAR                                               BUG9062
+     C           REPNAR    IFEQ 'Y'                                                         MD054980
+     C                     CLEARCGPNAR                                                      MD054980
+     C                     MOVE TRCCY     MNCYCD                                            MD054980
+     C                     MOVEL@NAMT2    MNOAMT                                            MD054980
+     C                     Z-ADDTBTN      @TTRNO                                            MD054980
+     C                     MOVEL@NA715    MNTRNO                                            MD054980
+     C                     MOVE 'GB00920' ##MGID                                            MD054980
+     C                     MOVE CQNF      MNCHNB                                            MD054980
+     C                     EXSR SRPNAR                                                      MD054980
+     C                     END                                                              MD054980
      C                     ENDIF                                                             BUG9062
      C           RTSNAR    IFEQ 'Y'                                                         MD054623
      C                     MOVELTTNARR    PNAR                                              MD054623

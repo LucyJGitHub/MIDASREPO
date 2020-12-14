@@ -295,16 +295,16 @@
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
       ** LOAM Backward-Looking Rate Screen Fields                                             CLE172
-     D LoamScnBlrt     DS            46                                                       CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
                                                                                               CLE172
       ** LOAM Backward-Looking Rate Valid Fields                                              CLE172
      D LoamValBlrt     DS                                                                     CLE172
-     D  LALBDY                 9     10S 0                                                    CLE172
-     D  LALODY                11     12S 0                                                    CLE172
-     D  LAPDLY                13     14S 0                                                    CLE172
-     D  LABADJ                15     21P 8                                                    CLE172
-     D  LAAVOP                22     22A                                                      CLE172
-     D  LAWGHT                30     30A                                                      CLE172
+     D  WLAAVOP                1      1A                                                      CLE172
+     D  WLALBDY                2      3S 0                                                    CLE172
+     D  WLALODY                4      5S 0                                                    CLE172
+     D  WLAWGHT                6      6A                                                      CLE172
+     D  WLABADJ                7     13P 8                                                    CLE172
+     D  WLAPDLY               14     15S 0                                                    CLE172
                                                                                               CLE172
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
      D                                     PREFIX(DL_)                                      MD034449
@@ -788,6 +788,10 @@
       /COPY WNCPYSRC,LELOAMV010
       *
      C                   EXSR      SRVBRAT
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields for BC loan event                            CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
       *
       /COPY WNCPYSRC,LELOAMV011
       *
@@ -5154,10 +5158,6 @@
      C                   ELSE                                                                 CLE035
      C                   Z-ADD     WBASR         WBSRT                                        CLE035
      C                   ENDIF                                                                CLE035
-      *                                                                                       CLE172
-      ***  Validate backward-looking rate fields for BC loan event                            CLE172
-      *                                                                                       CLE172
-     C                   EXSR      SRBLRTE                                                    CLE172
       *
       ** New Effective Interest Rate = Interest New Rate/Spread
       ** combined with Base Rate depending on Spread Indicator
@@ -5314,17 +5314,25 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
-     C                   CALL      'ZAVBLRTE'                                                 CLE172
-     C                   PARM      'LOAM'        ApiName                                      CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LOAM'        ApiName           4                          CLE172
+     C                   PARM                    LACCY                                        CLE172
+     C                   PARM                    LABRTT                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNamXAr                                    CLE172
      C                   PARM                    MsgIDXAr                                     CLE172
-     C                   PARM      LoamValBlrt   TempOutDS       200                          CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
-     C                   MOVE      TempOutDS     LoanValBlrt                                  CLE172
+     C                   MOVE      TempOutDS     LoamValBlrt                                  CLE172
+     C                   Z-ADD     WLAAVOP       LAAVOP                                       CLE172
+     C                   Z-ADD     WLALBDY       LALBDY                                       CLE172
+     C                   Z-ADD     WLALODY       LALODY                                       CLE172
+     C                   Z-ADD     WLAWGHT       LAWGHT                                       CLE172
+     C                   MOVE      WLABADJ       LABADJ                                       CLE172
+     C                   MOVE      WLAPDLY       LAPDLY                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       *                                                                                       CLE172

@@ -1326,7 +1326,6 @@
      C                   CLEAR                   LoamScnFmt
      C                   MOVE      *ALL'Y'       LOAM_OK
      C                   CLEAR                   ValidLOAM
-     C                   Z-ADD     *ZERO         LABADJ                                       CLE172
 
      C                   ENDSR
       *****************************************************************

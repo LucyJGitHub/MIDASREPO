@@ -142,16 +142,16 @@
 
       ** CLIP Backward-Looking Rate Screen fields (Input)
      D CLBsrScrfld     DS
-     D  DDBLRT                 1      1
-     D  DDLBDY                 2      3
-     D  DDLODY                 4      5
-     D  DDPDLY                 6      7
-     D  DDBADJ                 8     21
-     D  DDAVOP                22     22
-     D  DDCART                23     36
-     D  DDWGHT                37     37
-     D  DDBRAC                38     39
-     D  DDLBAC                40     41
+     D  CLBLRT                 1      1
+     D  CLLBDY                 2      3
+     D  CLLODY                 4      5
+     D  CLPDLY                 6      7
+     D  CLBADJ                 8     21
+     D  CLAVOP                22     22
+     D  CLCART                23     36
+     D  CLWGHT                37     37
+     D  CLBRAC                38     39
+     D  CLLBAC                40     41
 
       ** CLIP Backward-Looking Rate Valid fields (Output)
      D CLBsrValfld     DS
@@ -215,6 +215,18 @@
      D WFCYCD          S              3A
      D WFBSRC          S              2A
 
+      ** Generic screen fields
+     D  DDBLRT         S              1A
+     D  DDLBDY         S              2A
+     D  DDLODY         S              2A
+     D  DDPDLY         S              2A
+     D  DDBADJ         S             14A
+     D  DDAVOP         S              1A
+     D  DDCART         S             14A
+     D  DDWGHT         S              1A
+     D  DDBRAC         S              2A
+     D  DDLBAC         S              2A
+
       ** OK fields
      D DDBLRTOK        S              1A
      D DDLBDYOK        S              1A
@@ -246,6 +258,16 @@
      C     WFBSRC        IFNE      *BLANKS
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      InpScrfld     CLBsrScrfld
+     C                   MOVE      CLBLRT        DDBLRT
+     C                   MOVE      CLLBDY        DDLBDY
+     C                   MOVE      CLLODY        DDLODY
+     C                   MOVE      CLPDLY        DDPDLY
+     C                   MOVE      CLBADJ        DDBADJ
+     C                   MOVE      CLAVOP        DDAVOP
+     C                   MOVE      CLCART        DDCART
+     C                   MOVE      CLWGHT        DDWGHT
+     C                   MOVE      CLBRAC        DDBRAC
+     C                   MOVE      CLLBAC        DDLBAC
      C                   EXSR      SRBLRT
      C                   EXSR      SRLBDY
      C                   EXSR      SRLODY

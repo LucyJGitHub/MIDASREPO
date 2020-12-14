@@ -543,7 +543,6 @@
      C     DDLODY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
->>>>>>> branch 'feature/MDSC-33615' of http://blrvslalm0006:7990/scm/md/midasrpg.git
      C                   MOVE      BBALODY       DDLODY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -598,6 +597,7 @@
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAPDLY       DDPDLY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -652,6 +652,7 @@
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -734,6 +735,7 @@
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAAVOP       DDAVOP                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -865,6 +867,7 @@
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAWGHT       DDWGHT                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'

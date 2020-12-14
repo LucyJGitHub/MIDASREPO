@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD057025           Date 21Oct20               *
-      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *  Last Amend No. MD057255           Date 27Nov20               *
+      *  Prev Amend No. MD057025           Date 21Oct20               *
+      *                 CGL194             Date 01Aug20               *
       *                 MD056237           Date 20Jul20               *
       *                 MD054940           Date 18Feb20               *
       *                 MD055078           Date 18Feb20               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057255 - Controlling Person not removed in report          *
       *  MD057025 - Cannot enquire details of Controlling Person in   *
       *             Approved Report.                                  *
       *  CGL194 - CRS XML 2.0 Schema                                  *
@@ -2900,6 +2902,8 @@
      C     XCust         READE     SDCUAHL0
 
      C                   DOW       NOT %EOF(SDCUAHL0)
+     C                   IF        CATYLC <> 'D'                                            MD057255
+     C                             AND CACINT = 'Y'                                         MD057255
 
      C                   IF        CAPCNT <> *Blanks
      C                   MOVE      CAPCNT        WNUM3                                      MD055078
@@ -3087,6 +3091,7 @@
      C                   ENDIF
      C                   ENDIF                                                              MD057025
      C**********         ENDIF                                                              MD055078
+     C                   ENDIF                                                              MD057255
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 
@@ -4598,6 +4603,8 @@
      C     XCust         READE     SDCUAHL0
 
      C                   DOW       NOT %EOF(SDCUAHL0)
+     C                   IF        CATYLC <> 'D'                                            MD057255
+     C                             AND CACINT = 'Y'                                         MD057255
      C                   IF        CAPCNT <> *Blanks
      C                   MOVE      CAPCNT        WNUM3                                      MD055078
      C                   ELSE                                                               MD055078
@@ -4639,6 +4646,7 @@
 
      C**********         ENDIF                                                              MD055071
      C                   ENDIF
+     C                   ENDIF                                                              MD057255
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 

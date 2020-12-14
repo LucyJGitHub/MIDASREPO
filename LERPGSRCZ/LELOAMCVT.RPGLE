@@ -171,6 +171,12 @@
      D SC_LCD        E                     EXTFLD(LCD)                                        CLE106
       *                                                                                       CLE172
      D LoamScnBlrt     DS            22                                                       CLE172
+     D  DDAVOP                 1      1
+     D  DDLBDY                 2      3
+     D  DDLODY                 4      5
+     D  DDWGHT                 6      6
+     D  DDBADJ                 7     20
+     D  DDPDLY                21     22
       ** LE Backward-Looking Rate Fields                                                      CLE172
       *
       ** +--------------------------------------+
@@ -188,7 +194,6 @@
      D IntBadj         S              5A                                                      CLE172
      D DecBadj         S              8A                                                      CLE172
                                                                                               CLE172
-     D RetCodeOut      S             10A                                                      CLE172
      D @@ALPH          S             16A                                                      CLE172
      D @@MTID          S              1A                                                      CLE172
      D @@AMT           S             15  0                                                    CLE172

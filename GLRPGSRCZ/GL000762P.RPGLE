@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056237           Date 20Jul20               *
-      *  Prev Amend No. MD056131           Date 05Jul20               *
+      *  Last Amend No. MD057003           Date 19Oct20               *
+      *  Prev Amend No. CGL194             Date 01Aug20               *
+      *                 MD056237           Date 20Jul20               *
+      *                 MD056131           Date 05Jul20               *
       *                 MD054940           Date 18Feb20               *
       *                 MD054905           Date 04Dec19               *
       *                 MD040961           Date 09Sep16               *
@@ -23,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057003 - Incorrect controlling person details, finish      *
+      *             processing all records in the file                *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
       *             correctly get data from file.                     *
@@ -897,8 +902,10 @@
      C                   WHEN      MGELMT = 'MessageRefId'
      C                   EVAL      R7MRID = MGDATA
 
-     C                   WHEN      MGELMT = 'CorrMessageRefID'
-     C                   EVAL      R7CMID = MGDATA
+     C**********         WHEN      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         EVAL      R7CMID = MGDATA                                            CGL194
+     C                   WHEN      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   EVAL      R7MIND = MGDATA                                            CGL194
 
      C                   WHEN      MGELMT = 'ReportingPeriod'
      C                   EVAL      R7RPTP = MGDATA
@@ -1644,6 +1651,7 @@
      C                   IF        DsAcEnd = R1ACNO
      C                             AND MGACNO = R1ACNO
      C                             AND WdFound = 'Y'                                        MD056237
+     C                             AND %EOF(GLCRMDLD)                                       MD057003
 
      C                   EVAL      WdFound = 'N'                                            MD056237
       **  Check that sufficient lines remain for the Format. If not,

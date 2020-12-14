@@ -3356,6 +3356,7 @@
       *                                                                                     MD035545
       ** If system value is not found then default value to 'N'                             MD035545
       *                                                                                     MD035545
+     C                   MOVE      ' '           WCALC6            1
      C     W0RTCD        IFNE      '       '                                                MD035545
      C                   MOVE      'N'           WCALC6                                     MD035545
      C                   ELSE                                                               MD035545
@@ -16554,21 +16555,21 @@
       *                                                                                       229628
       ** Check rate fix indicator                                                             229628
       *                                                                                       229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     UINFD         IFGE      EVCD                                                       229628
-     C     UINFD         ANDLE     UNICD                                                      229628
-     C     URFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C     TINFD         IFGE      EVCD                                                       229628
-     C     TINFD         ANDLE     TNICD                                                      229628
-     C     TRFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+     C*****CSW005*****   IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011*****   OREQ      'Y'                                               229628 MD056911
+     C*****UINFD******   IFGE      EVCD                                              229628 MD056911
+     C*****UINFD******   ANDLE     UNICD                                             229628 MD056911
+     C*****URFIN******   ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C*****TINFD******   IFGE      EVCD                                              229628 MD056911
+     C*****TINFD******   ANDLE     TNICD                                             229628 MD056911
+     C*****TRFIN******   ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   CIR001
      C** If a buy-out is due, set the maturity date to the buy-out        CIR001
      C** value date.                                                      CIR001
@@ -20284,6 +20285,19 @@
      C                   MOVE      *BLANKS       TRFIN                                         CSW00
      C                   ENDIF                                                                 CSW00
      C*                                                                   CSW005
+     C     CSW005        IFEQ      'Y'                                                      MD056911
+     C     CSW011        OREQ      'Y'                                                      MD056911
+     C     UINFD         IFGE      EVCD                                                     MD056911
+     C     UINFD         ANDLE     UNICD                                                    MD056911
+     C     URFIN         ANDNE     *BLANK                                                   MD056911
+     C                   MOVE      *BLANK        URFIN                                      MD056911
+     C                   ENDIF                                                              MD056911
+     C     TINFD         IFGE      EVCD                                                     MD056911
+     C     TINFD         ANDLE     TNICD                                                    MD056911
+     C     TRFIN         ANDNE     *BLANK                                                   MD056911
+     C                   MOVE      *BLANK        TRFIN                                      MD056911
+     C                   ENDIF                                                              MD056911
+     C                   ENDIF                                                              MD056911
      C                   ENDSR                                                                 CSW00
 2877 C********************************************************************S01119
      C/EJECT                                                              S01119
@@ -20352,22 +20366,22 @@
      C                   ENDIF                                                                 CSW00
       *                                                                                       229628
       ** Check rate fix indicator                                                             229628
-      *                                                                                       229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     UINFD         IFGE      EVCD                                                       229628
-     C     UINFD         ANDLE     UNICD                                                      229628
-     C     URFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C     TINFD         IFGE      EVCD                                                       229628
-     C     TINFD         ANDLE     TNICD                                                      229628
-     C     TRFIN         ANDNE     *BLANK                                                     229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   MOVE      '1'           *IN15                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+      *                                                                              229628 MD056911
+     C*****CSW005******  IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011        OREQ      'Y'                                               229628 MD056911
+     C*****UINFD         IFGE      EVCD                                              229628 MD056911
+     C*****UINFD         ANDLE     UNICD                                             229628 MD056911
+     C*****URFIN         ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C*****TINFD*******  IFGE      EVCD                                              229628 MD056911
+     C*****TINFD*******  ANDLE     TNICD                                             229628 MD056911
+     C*****TRFIN*******  ANDNE     *BLANK                                            229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         MOVE      '1'           *IN15                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   CIR001
      C** If a buy-out is due, set the maturity date to the buy-out        CIR001
      C** value date.                                                      CIR001
@@ -24478,6 +24492,21 @@
      C                   MOVE      *BLANKS       TRFIN                                         CSW00
      C                   ENDIF                                                                 CSW00
      C*                                                                   CSW005
+     C     CSW005        IFEQ      'Y'                                                      MD056911
+     C     CSW011        OREQ      'Y'                                                      MD056911
+     C     UINFD         IFGE      EVCD                                                     MD056911
+     C     UINFD         ANDLE     UNICD                                                    MD056911
+     C     URFIN         ANDNE     *BLANK                                                   MD056911
+     C                   MOVE      *BLANK        URFIN                                      MD056911
+     C                   MOVE      '1'           *IN15                                      MD056911
+     C                   ENDIF                                                              MD056911
+     C     TINFD         IFGE      EVCD                                                     MD056911
+     C     TINFD         ANDLE     TNICD                                                    MD056911
+     C     TRFIN         ANDNE     *BLANK                                                   MD056911
+     C                   MOVE      *BLANK        TRFIN                                      MD056911
+     C                   MOVE      '1'           *IN15                                      MD056911
+     C                   ENDIF                                                              MD056911
+     C                   ENDIF                                                              MD056911
      C/COPY DLCPYSRC,DL0280C723                                                               CIR014
      C                   ENDSR                                                                 CSW00
      C/COPY WNCPYSRC,DL0280C367
@@ -25857,18 +25886,18 @@
      C                   Z-ADD     TFRFD         WFRFD                                        229628
      C                   ENDIF                                                                229628
       *                                                                                       229628
-     C     WINFD         IFGE      EVCD                                                       229628
-     C     WINFD         ANDLE     WINCD                                                      229628
-     C     WRFIN         ANDNE     *BLANK                                                     229628
-     C     CSW005        IFEQ      'Y'                                                        229628
-     C     CSW011        OREQ      'Y'                                                        229628
-     C     USRST         IFEQ      'P'                                                        229628
-     C                   MOVE      *BLANK        URFIN                                        229628
-     C                   ELSE                                                                 229628
-     C                   MOVE      *BLANK        TRFIN                                        229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
-     C                   ENDIF                                                                229628
+     C*****WINFD*****    IFGE      EVCD                                              229628 MD056911
+     C*****WINFD*****    ANDLE     WINCD                                             229628 MD056911
+     C*****WRFIN*****    ANDNE     *BLANK                                            229628 MD056911
+     C*****CSW005****    IFEQ      'Y'                                               229628 MD056911
+     C*****CSW011****    OREQ      'Y'                                               229628 MD056911
+     C*****USRST*****    IFEQ      'P'                                               229628 MD056911
+     C**********         MOVE      *BLANK        URFIN                               229628 MD056911
+     C**********         ELSE                                                        229628 MD056911
+     C**********         MOVE      *BLANK        TRFIN                               229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
+     C**********         ENDIF                                                       229628 MD056911
      C*                                                                   S01119
      C** RESET WORK FIELDS                                                S01119
      C*                                                                   S01119
@@ -28164,6 +28193,17 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
+     C     WRFIN         IFNE      *BLANK                                                   MD056911
+     C     CSW005        IFEQ      'Y'                                                      MD056911
+     C     CSW011        OREQ      'Y'                                                      MD056911
+     C     USRST         IFEQ      'P'                                                      MD056911
+     C                   MOVE      *BLANK        URFIN                                      MD056911
+     C                   ELSE                                                               MD056911
+     C                   MOVE      *BLANK        TRFIN                                      MD056911
+     C                   ENDIF                                                              MD056911
+     C                   ENDIF                                                              MD056911
+     C                   ENDIF                                                              MD056911
+
      C*                                                                   CIR001
      C     RLSEND        ENDSR                                                                 S0111
 2877 C********************************************************************S01119

@@ -9,11 +9,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*       Last Amend No. MD056731           Date 28Sep20              */
+/*       Prev Amend No. MD056767           Date 17Sep20              */
+/*                      MD056585           Date 24Aug20              */
+/*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CAP702 - 24x7 APIs - Common Processing.                     */
+/*       MD056731 - 24x7 APIs - AMAD entry fails when account cust.  */
+/*                    also input from 24x7 API                       */
+/*       MD056767 - 24x7 APIs - Trigger on zzDZLIB/T_APIMSG not to   */
+/*                    be defined thru SCTRIGGER                      */
+/*       MD056585 - 24x7 APIs - SCC000352 issue with DTAARA/SCND24X7 */
+/*       CAP702 - 24x7 APIs - Common Processing                      */
 /*                                                                   */
 /*********************************************************************/
              PGM
@@ -236,13 +244,20 @@
 /**/
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
-             ENDDO
-
 /* Update 24x7 DTAARA/SCND24X7 to Night Mode    */
 
              CHGDTAARA  DTAARA(&DZLIB/SCND24X7 (1 5)) VALUE('NIGHT')
+                MONMSG     MSGID(CPF0000 MCH0000)  /*MD056585*/
              CHGDTAARA  DTAARA(&GMLIB/SCND24X7 (1 5)) VALUE('NIGHT')
                 MONMSG     MSGID(CPF0000 MCH0000)
+             ADDPFTRG   FILE(&DZLIB/T_APIMSG) TRGTIME(*AFTER) +
+                          TRGEVENT(*UPDATE) PGM(SD000845) RPLTRG(*YES)   /*MD056767*/
+                          MONMSG     MSGID(CPC3204)  /*MD056767*/
+             ADDPFTRG   FILE(&DZLIB/SDCUSTPD) TRGTIME(*AFTER) +
+                          TRGEVENT(*INSERT) PGM(SD000846) RPLTRG(*YES)   /*MD056731*/
+                          MONMSG     MSGID(CPC3204)  /*MD056731*/
+             ENDDO
+
 
              GOTO       CMDLBL(ENDPGM)
 

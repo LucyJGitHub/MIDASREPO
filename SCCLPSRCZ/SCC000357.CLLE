@@ -9,12 +9,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP735             Date 12May20              */
-/*       Prev Amend No. CAP734             Date 12May20              */
+/*       Last Amend No. MD056682           Date 03Sep20              */
+/*       Prev Amend No. MD056572           Date 24Aug20              */
+/*                      CAP735             Date 12May20              */
+/*                      CAP734             Date 12May20              */
 /*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056682 - Files in DZLIB are only journaled with           */
+/*                   IMAGES(*AFTER), should be *BOTH                 */
+/*       MD056572 - 24x7 APIs - Installation Issues                  */
 /*       CAP735 - 24x7 APIs - GL Accounts API                        */
 /*       CAP734 - 24x7 APIs - SD Customer Details API                */
 /*       CAP702 - 24x7 APIs - Common Processing                      */
@@ -25,6 +30,8 @@
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&PREGG) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)   /*MD056572*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)     /*MD056572*/
 
 /* Variables for zone libs  */
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
@@ -43,7 +50,7 @@
              DCL        VAR(&BANKLIB) TYPE(*CHAR) LEN(9)
              DCL        VAR(&RZLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&IRLIB) TYPE(*CHAR) LEN(8)
-             DCL        VAR(&DDBFLIB) TYPE(*CHAR) LEN(9)
+/*****       DCL        VAR(&DDBFLIB) TYPE(*CHAR) LEN(9)   ****/ /*MD056572*/
              DCL        VAR(&DILIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&HFLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&INT2) TYPE(*CHAR) LEN(6)
@@ -75,6 +82,13 @@
              DCL        VAR(&CBALIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&GZLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LIBx) TYPE(*CHAR) LEN(6)               /*MD056572*/
+             DCL        VAR(&BFLIB1) TYPE(*CHAR) LEN(7)             /*MD056572*/
+             DCL        VAR(&DDBFLIB) TYPE(*CHAR) LEN(9)            /*MD056572*/
+             DCL        VAR(&FC) TYPE(*CHAR) LEN(3) VALUE('FC_')    /*MD056572*/
+             DCL        VAR(&NC) TYPE(*CHAR) LEN(3) VALUE('NC_')    /*MD056572*/
+             DCL        VAR(&FCLIB) TYPE(*CHAR) LEN(9)              /*MD056572*/
+             DCL        VAR(&NCLIB) TYPE(*CHAR) LEN(9)              /*MD056572*/
 
              DCL        VAR(&LNGTEN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DVALLS) TYPE(*CHAR) LEN(10)
@@ -95,6 +109,8 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2020')
+
+/*/COPY GPCPYSRCG,GPSVALDCL  */    /*MD056572*/
 
 /* Declare files for Loop1 to Loop4 */
              DCLF       FILE(SCSRACTD) OPNID(SCC)
@@ -166,6 +182,35 @@
              CHGVAR     VAR(&CBALIB) VALUE(&PREGG *TCAT 'CBALIB')
              CHGVAR     VAR(&BFLIB) VALUE(&PREGG *TCAT 'BFLIB')
              CHGVAR     VAR(&GZLIB) VALUE(&PREGG *TCAT 'GZLIB')
+             CHGVAR     VAR(&BFLIB1) VALUE(&PREGG *TCAT 'BFLIB')    /*MD056572*/
+             CHGVAR     VAR(&DDBFLIB) VALUE(&PRE *TCAT &BFLIB1)     /*MD056572*/
+             CHGVAR     VAR(&LIBx) VALUE(&PREGG *TCAT '_LIB')       /*MD056572*/
+             CHGVAR     VAR(&FCLIB) VALUE(&FC *TCAT &LIBx)          /*MD056572*/
+             CHGVAR     VAR(&NCLIB) VALUE(&NC *TCAT &LIBx)          /*MD056572*/
+
+/*                                                                  /*MD056672*/
+/** Get the global IASP system values */                            /*MD056572*/
+/*                                                                  /*MD056572*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 +
+                          'IASPgroup' &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)   /*MD056572*/
+/*                                                                  /*MD056572*/
+/** Check whether system is in IASP environment. */                 /*MD056572*/
+/*                                                                  /*MD056572*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))      /*MD056572*/
+/*                                                                  /*MD056572*/
+/** If IASP environment */                                          /*MD056572*/
+/*                                                                  /*MD056572*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)             /*MD056572*/
+/*                                                                  /*MD056572*/
+/** Get name of IASP. */                                            /*MD056572*/
+/*                                                                  /*MD056572*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))        /*MD056572*/
+                                                                    /*MD056572*/
+             ENDDO       /*MD056572*/
 
 /**   CHECK FOR SWITCHABLE FEATURE CAP702     */
 
@@ -200,30 +245,69 @@
 
              IF         COND(&CAP702 *EQ 'Y') THEN(DO)
 
+/*                                                                     /*MD056572*/
+/** If IASP environment */                                             /*MD056572*/
+/*                                                                     /*MD056572*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                /*MD056572*/
+/*                                                                     /*MD056572*/
 /* 1a. Create 24x7 zone Library (i.e. zzDZLIB)   */
-             CRTLIB     LIB(&DZLIB) TYPE(*TEST) TEXT('BF MIDAS 24x7 Zone +
-                          Library') ASP(1)
+/*****       CRTLIB     LIB(&DZLIB) TYPE(*TEST) TEXT('BF MIDAS 24x7 Zone +
+                          Library') ASP(1)   *****/ /*MD056572*/
+             CRTLIB     LIB(&DZLIB) TYPE(*PROD) TEXT('BF MIDAS 24x7 Zone +
+                          Library') ASP(*ASPDEV) ASPDEV(&IASP)       /*MD056572*/
              MONMSG     MSGID(CPF2111)
 
 /*           CLRLIB     LIB(&DZLIB)    */
 
 /* 1b. Create 24x7 global Library (i.e. ggGZLIB)   */
-             CRTLIB     LIB(&GZLIB) TYPE(*TEST) TEXT('BF MIDAS 24x7 Global +
-                          Library') ASP(1)
+/*******     CRTLIB     LIB(&GZLIB) TYPE(*TEST) TEXT('BF MIDAS 24x7 Global +
+                          Library') ASP(1)  *****/  /*MD056572*/
+             CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BF MIDAS 24x7 Global +
+                          Library') ASP(*ASPDEV) ASPDEV(&IASP)  /*MD056572*/
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&GZLIB)
 
 /* 1c. Create 24x7 Library for journal and jobd (i.e. zzX24LIB)   */
-             CRTLIB     LIB(&NDBLB) TYPE(*TEST) TEXT('BF MIDAS 24x7 X +
-                          Library') ASP(1)
+/*******     CRTLIB     LIB(&NDBLB) TYPE(*TEST) TEXT('BF MIDAS 24x7 X +
+                          Library') ASP(1) *****/ /*MD056572*/
+             CRTLIB     LIB(&NDBLB) TYPE(*PROD) TEXT('BF MIDAS 24x7 X +
+                          Library') ASP(*ASPDEV) ASPDEV(&IASP)  /*MD056572*/
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&NDBLB)
 
 /* 1d. Create 24x7 Library for backup libs (i.e. zzBFMNGTEN) */
-             CRTLIB     LIB(&LNGTEN) TYPE(*TEST) TEXT('BF MIDAS 24x7 +
-                          Backup library') ASP(1)
+/*******     CRTLIB     LIB(&LNGTEN) TYPE(*TEST) TEXT('BF MIDAS 24x7 +
+                          Backup library') ASP(1)  ****/ /*MD056572*/
+             CRTLIB     LIB(&LNGTEN) TYPE(*PROD) TEXT('BF MIDAS 24x7 +
+                          Backup library') ASP(*ASPDEV) ASPDEV(&IASP)  /*MD056572*/
              MONMSG     MSGID(CPF2111)
 /*           CLRLIB     LIB(&LNGTEN)   */
+             ENDDO       /*MD056572*/
+             ELSE       CMD(DO)        /*MD056572*/
+/*                                                                     /*MD056572*/
+/* 1a. Create 24x7 zone Library (i.e. zzDZLIB)   */                    /*MD056572*/
+             CRTLIB     LIB(&DZLIB) TYPE(*PROD) TEXT('BF MIDAS 24x7 Zone +
+                          Library')                     /*MD056572*/
+             MONMSG     MSGID(CPF2111)                  /*MD056572*/
+
+/* 1b. Create 24x7 global Library (i.e. ggGZLIB)   */   /*MD056572*/
+             CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BF MIDAS 24x7 Global +
+                          Library')                /*MD056572*/
+             MONMSG     MSGID(CPF2111)             /*MD056572*/
+             CLRLIB     LIB(&GZLIB)                /*MD056572*/
+
+/* 1c. Create 24x7 Library for journal and jobd (i.e. zzX24LIB)   */   /*MD056572*/
+             CRTLIB     LIB(&NDBLB) TYPE(*PROD) TEXT('BF MIDAS 24x7 X +
+                          Library')                /*MD056572*/
+             MONMSG     MSGID(CPF2111)             /*MD056572*/
+             CLRLIB     LIB(&NDBLB)                /*MD056572*/
+
+/* 1d. Create 24x7 Library for backup libs (i.e. zzBFMNGTEN) */        /*MD056572*/
+             CRTLIB     LIB(&LNGTEN) TYPE(*PROD) TEXT('BF MIDAS 24x7 +
+                          Backup library')                /*MD056572*/
+             MONMSG     MSGID(CPF2111)                    /*MD056572*/
+
+             ENDDO       /*MD056572*/
 
 /* 2a. Create Backup of LF from LF library (i.e. zzDVLIB)   */
              CRTSAVF    FILE(&LNGTEN/&DVALLS)
@@ -466,8 +550,11 @@ EXIT4:
              STRJRNOBJ  OBJ(&DZLIB/SDSTAT)   OBJTYPE(*DTAARA) JRN(&NDBLB/ICJRN24X7)
 
 /* 24. Start zzDZLIB Library Journaling                   */
+/*           STRJRNLIB  LIB(&DZLIB) JRN(&NDBLB/ICJRN24X7) INHRULES((*ALL *ALLOPR +
+                          *INCLUDE *AFTER *OPNCLO))*/ /*MD056682*/
+
              STRJRNLIB  LIB(&DZLIB) JRN(&NDBLB/ICJRN24X7) INHRULES((*ALL *ALLOPR +
-                          *INCLUDE *AFTER *OPNCLO))
+                          *INCLUDE *BOTH *OPNCLO))   /*MD056682*/
 
 /* 25. Create JNSTAT DTAARA in zzDZLIB Library            */
              CRTDUPOBJ  OBJ(JNSTAT) FROMLIB(&JLIB) OBJTYPE(*DTAARA) TOLIB(&DZLIB) +
@@ -481,7 +568,7 @@ EXIT4:
              MONMSG     MSGID(CPD2104)
 
 /* 27. Change zzX24LIB/MIDAS24X7-Add First Lib zzX24LIB, zzDZLIB to LIBL*/
-             CHGJOBD    JOBD(&NDBLB/MIDAS24X7) INLLIBL(&NDBLB &DZLIB +
+/********    CHGJOBD    JOBD(&NDBLB/MIDAS24X7) INLLIBL(&NDBLB &DZLIB +
                           &INVLIB &XLIB &XPLIB &CILLIB &ALLIB &DDLIB +
                           &DVLIB &DPLIB &DBLIB +
                           &BANKLIB &RZLIB RZ_BF_LIB NC_DD_LIB +
@@ -493,7 +580,22 @@ EXIT4:
                           &GBANKLIB &GNCLIB &GFCLIB &GIRLIB B21_RG +
                           B20_R1203G B14_R1106G B14CBASG &GJLIB +
                           &CBSLIB &CBALIB &BFLIB LIBHTTP123 QGPL +
-                          QTEMP QMQM)
+                          QTEMP QMQM) *****/   /*MD056572*/
+
+             CHGJOBD    JOBD(&NDBLB/MIDAS24X7) INLLIBL(&NDBLB &DZLIB +
+                          &INVLIB &XLIB &XPLIB &CILLIB &ALLIB &DDLIB +
+                          &DVLIB &DPLIB &DBLIB +
+                          &BANKLIB &RZLIB RZ_BF_LIB &NCLIB +
+                          &FCLIB &IRLIB B21_RZ B20_R1203Z +
+                          B14_R1106Z B14CBASZ &JLIB &DDBFLIB &DILIB +
+                          &HFLIB &INT2 &RBALIB &EXTLIB &GINVLIB +
+                          &GXLIB &GXPLIB &GCILLIB &GALLIB &GDLIB +
+                          &GVLIB &GPLIB &GMLIB &GTALIB &GBLIB +
+                          &GBANKLIB &GNCLIB &GFCLIB &GIRLIB B21_RG +
+                          B20_R1203G B14_R1106G B14CBASG &GJLIB +
+                          &CBSLIB &CBALIB &BFLIB LIBHTTP123 QGPL +
+                          QTEMP QMQM)                      /*MD056572*/
+
              ENDDO
              GOTO       CMDLBL(END)
 

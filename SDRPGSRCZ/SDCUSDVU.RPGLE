@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052432           Date 18Dec18               *
-      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *  Last Amend No. MD057294           Date 03Dec20               *
+      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -152,6 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057294 - Missing Customer's Authority Holders Link after   *
+      *             amend                                             *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -4501,6 +4504,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD053634
      C                             AND (DDACTN <> 'D'                                       MD053634
      C                             AND DDACTN <> 'C')                                       MD053634
+     C                   IF        V_CUAHArr(1) = *Blanks                                   MD057294
+     C                   EVAL      V_CUAHArr(1) = DDCUSN                                    MD057294
+     C                   ENDIF                                                              MD057294
      C                   EXSR      SrUpdCUAH                                                MD053634
      C                   ENDIF                                                              MD053634
                                                                                             MD053634

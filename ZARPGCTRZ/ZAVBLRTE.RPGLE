@@ -163,15 +163,6 @@
      D  CVLBAC                41     42S 0
      D  CVPIAD                43     47S 0
 
-      ** LOAM Backward-Looking Rate Screen fields (Input)
-     D LoamScrFld      DS
-     D  LAAVOP                 1      1
-     D  LALBDY                 2      3
-     D  LALODY                 4      5
-     D  LAWGHT                 6      6
-     D  LABADJ                 7     20
-     D  LAPDLY                21     22
-
       ** LOAM Backward-Looking Rate Valid fields (Output)
      D LoamValFld      DS
      D  LVAVOP                 1      1A
@@ -340,13 +331,13 @@
      C                   ENDIF
       *LOAM BC
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVEL     InpScrfld     LoamScrFld
-     C                   MOVE      LAAVOP        DDAVOP
-     C                   MOVE      LALBDY        DDLBDY
-     C                   MOVE      LALODY        DDLODY
-     C                   MOVE      LAWGHT        DDWGHT
-     C                   MOVE      LABADJ        DDBADJ
-     C                   MOVE      LAPDLY        DDPDLY
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(1)   DDAVOP
+     C                   MOVEA     ArrayInp(2)   DDLBDY
+     C                   MOVEA     ArrayInp(4)   DDLODY
+     C                   MOVEA     ArrayInp(6)   DDWGHT
+     C                   MOVEA     ArrayInp(7)   DDBADJ
+     C                   MOVEA     ArrayInp(21)  DDPDLY
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
      C                   EXSR      SRLBDY
@@ -362,9 +353,9 @@
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *LOAM SC
-     C     ApiName       IFEQ      'LOAMSC'
-     C                   MOVEL     InpScrfld     LoamScrFld
-     C                   MOVE      LABADJ        DDBADJ
+     C     ApiName       IFEQ      'LOSC'
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   EXSR      SRBADJ
      C                   MOVE      VBADJ         LVBADJ
      C                   MOVEL     LoamValFld    OutValfld
@@ -694,7 +685,7 @@
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOAMSC'
+     C     ApiName       OREQ      'LOSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'

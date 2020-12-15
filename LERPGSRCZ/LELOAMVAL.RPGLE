@@ -5355,7 +5355,7 @@
      C     SRBLRTE1      BEGSR                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
-     C                   PARM      'LOAMSC'      ApiName           4                          CLE172
+     C                   PARM      'LOSC'        ApiName           4                          CLE172
      C                   PARM                    LACCY                                        CLE172
      C                   PARM                    LABRTT                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172

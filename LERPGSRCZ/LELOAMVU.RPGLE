@@ -644,7 +644,7 @@
      C                   MOVEL     Extdata500    Extdata
       ** ExtData Buffer Pointer                                                               CLE172
      C                   Z-ADD     1             eBfp              4 0                        CLE172
-     C                   MOVEL     'LECLEXPD'    Filename                                     CLE172
+     C                   MOVEL     'LELOEXPD'    Filename                                     CLE172
      C                   EXSR      GETRCDLN                                                   CLE172
      C                   ADD       RecordLen     eBfp                                         CLE172
 
@@ -2347,7 +2347,7 @@
      C                   EXSR      *pssr                                                    CLE172
      C                   EndIf                                                              CLE172
                                                                                             CLE172
-     C                   ENDSR                                                              CLE172
+     C                   ENDSR                                                              CLE172C
       ******************************************************************                   AR1095624
       *                                                                *                   AR1095624
       * PDPOverride - Override pay instructions from receipt           *                   AR1095624

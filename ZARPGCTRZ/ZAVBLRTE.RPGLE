@@ -338,7 +338,7 @@
      C                   Z-ADD     VPIAD         CVPIAD
      C                   MOVE      CLBsrValfld   OutValfld
      C                   ENDIF
-      *LOAM
+      *LOAM BC
      C     ApiName       IFEQ      'LOAM'
      C                   MOVE      InpScrfld     LoamScrFld
      C                   MOVE      LAAVOP        DDAVOP
@@ -359,6 +359,14 @@
      C                   MOVE      VBADJ         LVBADJ
      C                   EXSR      SRPDLY
      C                   MOVE      VPDLY         LVPDLY
+     C                   MOVE      LoamValFld    OutValfld
+     C                   ENDIF
+      *LOAM SC
+     C     ApiName       IFEQ      'LOAMSC'
+     C                   MOVE      InpScrfld     LoamScrFld
+     C                   MOVE      LABADJ        DDBADJ
+     C                   EXSR      SRBADJ
+     C                   MOVE      VBADJ         LVBADJ
      C                   MOVE      LoamValFld    OutValfld
      C                   ENDIF
      C                   ENDIF
@@ -686,6 +694,7 @@
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOAMSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'

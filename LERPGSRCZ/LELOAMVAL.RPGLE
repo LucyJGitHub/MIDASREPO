@@ -5335,7 +5335,7 @@
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
-     C                   MOVE      TempOutDS     LoamValBlrt                                  CLE172
+     C                   MOVEL     TempOutDS     LoamValBlrt                                  CLE172
      C                   MOVE      WLAAVOP       LAAVOP                                       CLE172
      C                   Z-ADD     WLALBDY       LALBDY                                       CLE172
      C                   Z-ADD     WLALODY       LALODY                                       CLE172
@@ -5352,7 +5352,7 @@
       *****************************************************************                       CLE172
       *  SRBLRTE1 - Validate backward-looking rate fields (SC)        *                       CLE172
       *****************************************************************                       CLE172
-     C     SRBLRTE       BEGSR                                                                CLE172
+     C     SRBLRTE1      BEGSR                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'LOAMSC'      ApiName           4                          CLE172
@@ -5366,7 +5366,7 @@
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
-     C                   MOVE      TempOutDS     LoamValBlrt                                  CLE172
+     C                   MOVEL     TempOutDS     LoamValBlrt                                  CLE172
      C                   Z-ADD     WLABADJ       LABADJ                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172

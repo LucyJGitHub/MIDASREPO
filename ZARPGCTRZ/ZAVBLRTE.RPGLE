@@ -92,15 +92,18 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
-      ** Array of fields in error
      D FldNamXAr       S             10A   DIM(XArrayMax)
-      ** Array of error message IDs
+      * Array of fields in error
      D MsgIdXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
+      * Array of error message IDs
 	
      D ArrayBadj       S              1A   DIM(17)
       * Incoming Benchmark Adjustment in screen format
      D ArrayCart       S              1A   DIM(17)
       * Incoming Compounded/Average Rate in screen format
+
+     D ArrayInp        S              1A   DIM(200)
+      * Array for Input
 
       ** DS for Access Programs: Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -140,38 +143,25 @@
       ** Output Valid fields
      D OutValfld       DS           200
 
-      ** CLIP Backward-Looking Rate Screen fields (Input)
-     D CLBsrScrfld     DS
-     D  CLBLRT                 1      1
-     D  CLLBDY                 2      3
-     D  CLLODY                 4      5
-     D  CLPDLY                 6      7
-     D  CLBADJ                 8     21
-     D  CLAVOP                22     22
-     D  CLCART                23     36
-     D  CLWGHT                37     37
-     D  CLBRAC                38     39
-     D  CLLBAC                40     41
-
       ** CLIP Backward-Looking Rate Valid fields (Output)
      D CLBsrValfld     DS
-     D  VBLRT                  1      1A
-     D  VLBDY                  2      3S 0
-     D  VNBDY                  4      5S 0
-     D  VLODY                  6      7S 0
-     D  VNODY                  8      9S 0
-     D  VPDLY                 10     11S 0
-     D  VNDLY                 12     13S 0
-     D  VBADJ                 14     20P 8
-     D  VNADJ                 21     27P 8
-     D  VAVOP                 28     28A
-     D  VNVOP                 29     29A
-     D  VCART                 30     36P 8
-     D  VWGHT                 37     37A
-     D  VNGHT                 38     38A
-     D  VBRAC                 39     40A
-     D  VLBAC                 41     42S 0
-     D  VPIAD                 43     47S 0
+     D  CVBLRT                 1      1A
+     D  CVLBDY                 2      3S 0
+     D  CVNBDY                 4      5S 0
+     D  CVLODY                 6      7S 0
+     D  CVNODY                 8      9S 0
+     D  CVPDLY                10     11S 0
+     D  CVNDLY                12     13S 0
+     D  CVBADJ                14     20P 8
+     D  CVNADJ                21     27P 8
+     D  CVAVOP                28     28A
+     D  CVNVOP                29     29A
+     D  CVCART                30     36P 8
+     D  CVWGHT                37     37A
+     D  CVNGHT                38     38A
+     D  CVBRAC                39     40A
+     D  CVLBAC                41     42S 0
+     D  CVPIAD                43     47S 0
 
       ** LOAM Backward-Looking Rate Screen fields (Input)
      D LoamScrFld      DS
@@ -236,14 +226,39 @@
       ** Generic screen fields
      D  DDBLRT         S              1A
      D  DDLBDY         S              2A
+     D  DDNBDY         S              2A
      D  DDLODY         S              2A
+     D  DDNODY         S              2A
      D  DDPDLY         S              2A
+     D  DDNDLY         S              2A
      D  DDBADJ         S             14A
+     D  DDNADJ         S             14A
      D  DDAVOP         S              1A
+     D  DDNVOP         S              1A
      D  DDCART         S             14A
      D  DDWGHT         S              1A
+     D  DDNGHT         S              1A
      D  DDBRAC         S              2A
      D  DDLBAC         S              2A
+
+      ** Generic valid fields
+     D  VBLRT          S              1A
+     D  VLBDY          S              2S 0
+     D  VNBDY          S              2S 0
+     D  VLODY          S              2S 0
+     D  VNODY          S              2S 0
+     D  VPDLY          S              2S 0
+     D  VNDLY          S              2S 0
+     D  VBADJ          S             13P 8
+     D  VNADJ          S             13P 8
+     D  VAVOP          S              1A
+     D  VNVOP          S              1A
+     D  VCART          S             13P 8
+     D  VWGHT          S              1A
+     D  VNGHT          S              1A
+     D  VBRAC          S              2A
+     D  VLBAC          S              2S 0
+     D  VPIAD          S              5S 0
 
       ** OK fields
      D DDBLRTOK        S              1A
@@ -270,22 +285,23 @@
       * MAIN PROCEDURE                                                    *
       *********************************************************************
       *
+     C                   MOVE      *BLANKS       ArrayInp
      C                   Z-ADD     Idx           Ix                             Store index
      C                   Z-ADD     *ZEROS        WDAY
       *
      C     WFBSRC        IFNE      *BLANKS
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      InpScrfld     CLBsrScrfld
-     C                   MOVE      CLBLRT        DDBLRT
-     C                   MOVE      CLLBDY        DDLBDY
-     C                   MOVE      CLLODY        DDLODY
-     C                   MOVE      CLPDLY        DDPDLY
-     C                   MOVE      CLBADJ        DDBADJ
-     C                   MOVE      CLAVOP        DDAVOP
-     C                   MOVE      CLCART        DDCART
-     C                   MOVE      CLWGHT        DDWGHT
-     C                   MOVE      CLBRAC        DDBRAC
-     C                   MOVE      CLLBAC        DDLBAC
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(1)   DDBLRT
+     C                   MOVEA     ArrayInp(2)   DDLBDY
+     C                   MOVEA     ArrayInp(4)   DDLODY
+     C                   MOVEA     ArrayInp(6)   DDPDLY
+     C                   MOVEA     ArrayInp(8)   DDBADJ
+     C                   MOVEA     ArrayInp(22)  DDAVOP
+     C                   MOVEA     ArrayInp(23)  DDCART
+     C                   MOVEA     ArrayInp(37)  DDWGHT
+     C                   MOVEA     ArrayInp(38)  DDBRAC
+     C                   MOVEA     ArrayInp(40)  DDLBAC
      C                   EXSR      SRBLRT
      C                   EXSR      SRLBDY
      C                   EXSR      SRLODY
@@ -303,9 +319,26 @@
      C                   EXSR      SDNADJ
      C                   EXSR      SDNGHT
      C                   EXSR      SDNVOP
-     C                   MOVE      OutValfld     CLBsrValfld
+     C                   MOVE      VBLRT         CVBLRT
+     C                   Z-ADD     VLBDY         CVLBDY
+     C                   Z-ADD     VNBDY         CVNBDY
+     C                   Z-ADD     VLODY         CVLODY
+     C                   Z-ADD     VNODY         CVNODY
+     C                   Z-ADD     VPDLY         CVPDLY
+     C                   Z-ADD     VNDLY         CVNDLY
+     C                   Z-ADD     VBADJ         CVBADJ
+     C                   Z-ADD     VNADJ         CVNADJ
+     C                   MOVE      VAVOP         CVAVOP
+     C                   MOVE      VNVOP         CVNVOP
+     C                   Z-ADD     VCART         CVCART
+     C                   MOVE      VWGHT         CVWGHT
+     C                   MOVE      VNGHT         CVNGHT
+     C                   MOVE      VBRAC         CVBRAC
+     C                   Z-ADD     VLBAC         CVLBAC
+     C                   Z-ADD     VPIAD         CVPIAD
+     C                   MOVE      CLBsrValfld   OutValfld
      C                   ENDIF
-      *LOAM
+      *LOAM BC
      C     ApiName       IFEQ      'LOAM'
      C                   MOVE      InpScrfld     LoamScrFld
      C                   MOVE      LAAVOP        DDAVOP
@@ -326,6 +359,14 @@
      C                   MOVE      VBADJ         LVBADJ
      C                   EXSR      SRPDLY
      C                   MOVE      VPDLY         LVPDLY
+     C                   MOVE      LoamValFld    OutValfld
+     C                   ENDIF
+      *LOAM SC
+     C     ApiName       IFEQ      'LOAMSC'
+     C                   MOVE      InpScrfld     LoamScrFld
+     C                   MOVE      LABADJ        DDBADJ
+     C                   EXSR      SRBADJ
+     C                   MOVE      VBADJ         LVBADJ
      C                   MOVE      LoamValFld    OutValfld
      C                   ENDIF
      C                   ENDIF
@@ -653,6 +694,7 @@
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOAMSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'

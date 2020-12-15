@@ -8,12 +8,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD054980           Date 05Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                      184382             Date 29Sep90              */
@@ -29,6 +30,8 @@
 /*         any changes required in CLP/CGADDCTL as well.             */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054980 - Retail Teller narratives not multilanguage       */
+/*                - Add 00970/980/990                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       184382 - Missing info on message utility                    */
@@ -41,11 +44,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MNCUST &MNBRCA)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&MNTRNO) TYPE(*CHAR) LEN(16) +
                           VALUE('330123')
              DCL        VAR(&MNSDTE) TYPE(*CHAR) LEN(7) +
@@ -103,7 +106,7 @@
                           VALUE('FRF')
 /**********  DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(244)                                 /*CGL029*/
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(250)                                 /*CGL029*/
- 
+
    /*    */
              CHGVAR     VAR(%SST(&MSGDTA 01 16)) VALUE(&MNTRNO)
              CHGVAR     VAR(%SST(&MSGDTA 17 07)) VALUE(&MNSDTE)
@@ -285,6 +288,9 @@
              CALL       PGM(CGTSTMSG) PARM('GB00940' &MSGDTA )        /*109175*/
              CALL       PGM(CGTSTMSG) PARM('GB00950' &MSGDTA )        /*109175*/
              CALL       PGM(CGTSTMSG) PARM('GB00960' &MSGDTA )        /*109175*/
+             CALL       PGM(CGTSTMSG) PARM('GB00970' &MSGDTA )        /*MD054980*/
+             CALL       PGM(CGTSTMSG) PARM('GB00980' &MSGDTA )        /*MD054980*/
+             CALL       PGM(CGTSTMSG) PARM('GB00990' &MSGDTA )        /*MD054980*/
              CALL       PGM(CGTSTMSG) PARM('GB01000' &MSGDTA )
              CALL       PGM(CGTSTMSG) PARM('GB01001' &MSGDTA )        /*089745*/
              CALL       PGM(CGTSTMSG) PARM('GB02000' &MSGDTA )
@@ -340,11 +346,11 @@
              CALL       PGM(CGTSTMSG) PARM('GBF7001' &MSGDTA )
              CALL       PGM(CGTSTMSG) PARM('GBF8001' &MSGDTA )
              CALL       PGM(CGTSTMSG) PARM('GBF9001' &MSGDTA )
- 
+
 ENDCLPGM:    CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DSPMSG     MSGQ(QTEMP/CGMSG)                             /*101582*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*101582*/
- 
+
              ENDPGM

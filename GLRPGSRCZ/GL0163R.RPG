@@ -12,8 +12,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. CGL148             Date 13Jul18               *
-      *  Prev Amend No. MD050992           Date 26Jun18               *
+      *  Last Amend No. MD057157           Date 16Nov20               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *                 MD050992           Date 26Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027587           Date 19Jun14               *
       *                 MD026748           Date 09May13               *
@@ -63,6 +64,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD057157 - Java Journal Entry screen not showing all batches *
+      *           - Write record in BITH extension tables T_GZBITHEX  *
+      *             and GLJENHQD.                                     *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD028234                               *
       *  MD050992 - SP17: General Ledger Errors CLE051 Switched OFF   *
@@ -161,6 +165,17 @@
      FGLJENPL1IF  E           K        DISK                                                   CRE020
       ** Midas GL Journal Entry Posting by Batch No/Item No                                   CRE020
       *                                                                                       CRE020
+     FGLJEHQL0O   E           K        DISK                                                 MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** GL journal entry header                                                            MD057157
+      *                                                                                     MD057157
+     FTGZBTEX1O   E           K        DISK                                                 MD057157
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD057157
+     F                                              KCOMIT                                  MD057157
+      *                                                                                     MD057157
+      ** UDF Table for Journal Entry                                                        MD057157
+      *                                                                                     MD057157
      F/COPY WNCPYSRC,GL0163RF01
       *
      E                    CPY@    1   1 80               Copyright     array
@@ -1867,6 +1882,29 @@
      C                     GOTO SBEXIT
      C                     END
       *
+      ** Write record to T_GZBITHEX                                                         MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOBRCHR1'                                                  MD057157
+     C                     PARM *BLANKS   UUAPRC                                            MD057157
+     C                     PARM '*KEY'    UUAPOP                                            MD057157
+     C                     PARM BRBCDA    WWBRCD  3                                         MD057157
+     C           D@BRCH    PARM D@BRCH    UUSDY                                             MD057157
+      *                                                                                     MD057157
+     C                     MOVE A8ZONE    ZONE                                              MD057157
+     C                     MOVE BRBTNB    DDBTNB                                            MD057157
+     C                     MOVE BJRDNB    DDBEDT                                            MD057157
+     C                     WRITETGZBTHD0                                                    MD057157
+      *                                                                                     MD057157
+      ** Write record to GLJENHQD if CGL125 is ON                                           MD057157
+      *                                                                                     MD057157
+     C           CGL125    IFEQ 'Y'                                                         MD057157
+     C                     MOVELBRBTNB    HQBTCH                                            MD057157
+     C                     MOVELBRBCDA    HQBRCD                                            MD057157
+     C                     MOVEL*BLANKS   HQFRID                                            MD057157
+     C                     MOVEL'R'       HQJETP                                            MD057157
+     C                     WRITEGLJEHQD0                                                    MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C                     WRITE@BRREAG                91  *
       *
      C           *IN91     IFEQ '1'
@@ -5350,6 +5388,20 @@
      C                     MOVE 'N'       CGL148                                              CGL148
      C                     ENDIF                                                              CGL148
       *                                                                                       CGL148
+      *                                                                                     MD057157
+      **  Access SAR details file to see if CGL125 SAR is installed.                        MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOSARDR0'                                                  MD057157
+     C                     PARM *BLANKS   @RTCD                                             MD057157
+     C                     PARM '*VERIFY' @OPTN                                             MD057157
+     C                     PARM 'CGL125'  @SARD                                             MD057157
+      *                                                                                     MD057157
+     C           @RTCD     IFEQ *BLANK                                                      MD057157
+     C                     MOVE 'Y'       CGL125  1                                         MD057157
+     C                     ELSE                                                             MD057157
+     C                     MOVE 'N'       CGL125                                            MD057157
+     C                     END                                                              MD057157
+      *                                                                                     MD057157
       ****Access*SAR*details*file*to*see*if*CAP032*SAR*is*installed.***************   186206 BUG2798
       **********                                                                      186206 BUG2798
      C**********           CALL 'AOSARDR0'                                            186206 BUG2798

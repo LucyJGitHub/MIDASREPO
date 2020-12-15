@@ -12,12 +12,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1097467          Date 16Apr13               *
+      *  Last Amend No. MD056972           Date 25Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1097467          Date 16Apr13               *
       *                 CGL127AP *CREATE   Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056972 - SWIFT accounts not closed when accounts close     *
+      *             Recompile due to changed GL000570AU               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1097467B - Expected 15% COB run optimization not met       *
       *  CGL127AP - COB Restructure - GL COB Optimisation Phase 1     *

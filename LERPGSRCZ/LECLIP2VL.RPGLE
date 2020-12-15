@@ -1433,7 +1433,7 @@
      C                   MOVE      WCLNVOP       CCLNVOP                                      CLE172
      C                   Z-ADD     WCLCART       CCLCART                                      CLE172
      C                   MOVE      WCLWGHT       CCLWGHT                                      CLE172
-     C                   MOVE      WCNWGHT       CCNWGHT                                      CLE172
+     C                   MOVE      WCLNGHT       CCLNGHT                                      CLE172
      C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
      C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
      C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172

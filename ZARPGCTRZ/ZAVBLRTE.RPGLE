@@ -336,7 +336,7 @@
      C                   MOVE      VBRAC         CVBRAC
      C                   Z-ADD     VLBAC         CVLBAC
      C                   Z-ADD     VPIAD         CVPIAD
-     C                   MOVE      CLBsrValfld   OutValfld
+     C                   MOVEL     CLBsrValfld   OutValfld
      C                   ENDIF
       *LOAM BC
      C     ApiName       IFEQ      'LOAM'
@@ -359,7 +359,7 @@
      C                   MOVE      VBADJ         LVBADJ
      C                   EXSR      SRPDLY
      C                   MOVE      VPDLY         LVPDLY
-     C                   MOVE      LoamValFld    OutValfld
+     C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *LOAM SC
      C     ApiName       IFEQ      'LOAMSC'
@@ -367,7 +367,7 @@
      C                   MOVE      LABADJ        DDBADJ
      C                   EXSR      SRBADJ
      C                   MOVE      VBADJ         LVBADJ
-     C                   MOVE      LoamValFld    OutValfld
+     C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
      C                   ENDIF
       *

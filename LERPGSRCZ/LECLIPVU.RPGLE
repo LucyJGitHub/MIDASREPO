@@ -1071,17 +1071,10 @@
      C                   ADD       15            eBfp                                       MD054028
      C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
      C                   ADD       8             eBfp                                       MD054028
-     C                   IF        CER050 <> 'Y'                                blank if OFF  CLE172
-     C                   EVAL      DDAPRC = *BLANKS                                           CLE172
-     C                   EVAL      DDPREM = *BLANKS                                           CLE172
-     C                   EVAL      DDAPRR = *BLANKS                                           CLE172
-     C                   ENDIF                                                              MD054028
+     C**********         ENDIF                                                       MD054028 CLE172
       ** CLE172 Fields                                                                        CLE172
      C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:41)                   CLE172
      C                   ADD       41            eBfp                                         CLE172
-     C                   IF        CLE172 <> 'Y'                                blank if OFF  CLE172
-     C                   EVAL      LoanScnBlrt = *BLANKS                                      CLE172
-     C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated

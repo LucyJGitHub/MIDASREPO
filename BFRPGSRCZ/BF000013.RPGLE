@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050405           Date 03Jun20               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044342           Date 01Mar17               *
       *                 MD033895           Date 16Apr15               *
       *                 MD023747           Date 23Nov13               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044342 - Business date in BF is not being updated          *
@@ -65,6 +67,8 @@
      D wSoapXML        S           5000A
      D wIpAddress      S             64A   VARYING
      D wIpAddrSVal     S            200A
+     D wIpAddress_SSL  S             64A   VARYING                                          MD050405
+     D wIpAddrSSLVal   S            200A                                                    MD050405
      D wUserName       S             30A   VARYING
      D wUserNmSVal     S            200A
      D*wUserNmVlDl     S            256A                                                    MD033895
@@ -231,21 +235,21 @@
       /EJECT
       *
       /free
- 
+
                in BFWBCONF;
- 
+
        // *********************************************************
        //  Turn debugging info *ON
        // *********************************************************
- 
+
                if bfdebug = 'Y';
                     http_debug(*ON);
                endif;
- 
+
        // *********************************************************
        //  Get the user, password, zone prefix
        // *********************************************************
- 
+
                     GPAOSVALR0(SysValRet
                          :'BankFusionIPAddress'
                          :wIpAddrSVal
@@ -253,8 +257,10 @@
                          :wUserNmSVal
                          :'BrgMidasGlobalPrefix'
                          :wGPrefSVal
-                         :' '
-                         :' '
+          //**********   :' '                                                             //MD050405
+          //**********   :' '                                                             //MD050405
+                         :'BankFusionIPAdd_SSL'                                           //MD050405
+                         :wIpAddrSSLVal                                                   //MD050405
                          :' '
                          :' '
                          :' '
@@ -268,7 +274,7 @@
                          :' '
                          :' '
                          );
- 
+
                     AOSVALR0(SysValRet
                          :'BrgMidasSystemPrefix'
                          :wZPrefSVal
@@ -291,21 +297,22 @@
                          :' '
                          :' '
                          );
- 
+
                  wZonePrefix = wZPrefSVal;
- 
+
        //Assumes that Ip Address is no  longer than 64 char
        // and Username is no longer than 30 char
- 
+
                  wIpAddress = %subst(wIpAddrSVal:1:64);
+                 wIpAddress_SSL = %subst(wIpAddrSSLVal:1:64);                             //MD050405
                  wUserName =  %subst(wUserNmSVal:1:30);
           //     wValLstLoc = %subst(wGPrefSVal:1:2) + 'GMLIB';                             //CSD101
                  wValLstLoc = %subst(wZPrefSVal:1:2) + 'DMLIB';                             //CSD101
           //     wUserNmVlDl = wUserName;                                                   //CSD101
                  wUserNmVlDl = 'BANKFUSION_' + wUserName;                                   //CSD101
- 
+
        //Retrieve password from validation list
- 
+
           //         UT000033(wReturnCode                                                   //CSD101
           //                : 'F'                                                           //CSD101
           //                : 'GPLDAPVL'                                                    //CSD101
@@ -315,7 +322,7 @@
           //                : ' '                                                           //CSD101
           //                : wDescr                                                        //CSD101
           //                );                                                              //CSD101
- 
+
                      SD000404(wReturnCode                                                   //CSD101
                             : 'F'                                                           //CSD101
                             : 'SDINTFVL'                                                    //CSD101
@@ -326,30 +333,36 @@
                             );                                                              //CSD101
                                                                                             //CSD101
                   wPassword = wPass1;
- 
+
           wSoapAction = %trim(setSpAction);
- 
+
        // *********************************************************
        //  Build the URL
        // *********************************************************
- 
+
                wUrl = 'http://' + %trim(wIpAddress) +
                       %trim(setURL);
- 
+
+          // If BankFusionIPAdd_SSL contains a value, use the https url                   //MD050405
+               if wIpAddress_SSL <> *BLANKS;                                              //MD050405
+                 wUrl = 'https://' + %trim(wIpAddress_SSL) +                              //MD050405
+                      %trim(setURL);                                                      //MD050405
+               endif;                                                                     //MD050405
+                                                                                          //MD050405
        // *********************************************************
        //  Set the Request parameters for the call to
        //  BankFusion Batch Service (BatchService)
        // *********************************************************
- 
+
                requestDS1.userName = wUserName;
                requestDS1.password = wPassword;
                requestDS1.soapAction = wSoapAction;
                requestDS1.zonePrefix = wZonePrefix;
- 
+
        // *********************************************************
        //  Build the SOAP Message
        // *********************************************************
- 
+
           // Start Tag - SOAP Envelope
                wSoapXML =
                '<soapenv:Envelope ' +
@@ -358,7 +371,7 @@
                  'xmlns:web="http://webservices' +
                           '.bankfusion.trapedza.com" ' +
                  %trim(setSpEnvAdd) + '>';
- 
+
           // SOAP Header
                wSoapXML = %trim(wSoapXML) + '<soapenv:Header>'
                    + '<web:bfgenericsoapheader>'
@@ -383,27 +396,29 @@
                    + '</BFHeader>'
                    + '</web:bfgenericsoapheader>'
                    + '</soapenv:Header>';
- 
+
           // SOAP Body - Concatenate given soap body from caller program
- 
+
                wSoapXML = %trim(wSoapXML) + %trim(setSpXMLBody);
- 
+
           // End Tag - SOAP Envelope
                wSoapXML = %trim(wSoapXML) + '</soapenv:Envelope>';
- 
+
                wSoap = wSoapXML;
- 
+
        // *********************************************************
        //  Call the Web Service
        // *********************************************************
- 
+
+               http_setauth ( HTTP_AUTH_BASIC : wUserName : wPassword );                  //MD050405
+                                                                                          //MD050405
                wRc = WebServiceXML(wUrl
                                  : wSoap
                                  : %trim(RequestDS1.soapAction)
                                  : %paddr(srStrOfElement)
                                  : %paddr(srEndOfElement)
                                  );
- 
+
           // If HTTP Error returned, retrieve the last error that occured
                if wRc <> 1;
                     responseDS1.errorMessage = http_error;
@@ -411,17 +426,17 @@
                     responseDS1.RespXML = wSoap;
                     responseDS1.RetCode = '1';
                endif;
- 
+
        // *********************************************************
        //  End Program
        // *********************************************************
- 
+
                *INLR = '1';
                return wRc;
- 
+
       /end-free
      P                 E
- 
+
       *****************************************************************
       /EJECT
       ************************************************************************

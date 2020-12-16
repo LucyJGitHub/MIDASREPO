@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Transfer JMS/MQ UserPwd to ValidationList')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00506 - Transfer JMS/MQ UserPassword to Validation List */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056235  *CREATE  Date 03Jun20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD056235 - Name Space Bindings for JMS has passwords is in  */
+/*                  clear text format                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+
+/*/COPY GPCPYSRCG,GPSVALDCL */
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Retrieve required system values */
+             CHGVAR     VAR(&SVALK1) VALUE('BrgDeliveredDtaLib')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SVALK3) VALUE('BrgMidasSystemPrefix')
+
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK10 &SVAL10)
+
+             IF         COND(&RSVALRTNC *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Setup program variables */
+             CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL1 1 10))
+             CHGVAR     VAR(&GLOBPRFX) VALUE(%SST(&SVAL2 1 2))
+             CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL3 1 2))
+             CHGVAR     VAR(&GPLIB) VALUE(&GLOBPRFX *TCAT 'GPLIB')
+
+/** Copy the delivered SMUSPWTD */
+             CPYF       FROMFILE(&BRGDTALIB/SMUSPWTD) +
+                          TOFILE(&GPLIB/SMUSPWTD) MBROPT(*REPLACE)
+
+/** Call program to transfer Name Space Bindings for JMS/MQ passwords */
+/** to SDINTFVL validation list */
+             CALL       PGM(SMU00506) PARM(&ZONEPRFX &RETURN)
+             IF         COND(&RETURN = 'B') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Update +
+                             of validation list failed due to blanks +
+                             username or password.') MSGTYPE(*INFO)
+                MONMSG     MSGID(CPF0000)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             IF         COND(&RETURN = 'E') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Program call successful, clear work file */
+             CLRPFM     FILE(SMUSPWTD)
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Abnormal processing */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00506 ended abnormally - see joblog.') +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+ENDPGM:
+             ENDPGM

@@ -4474,18 +4474,6 @@
      C                   If        PRTCD = *Blanks                                          MD054028
      C                   Eval      CER050 = 'Y'                                             MD054028
      C                   Endif                                                              MD054028
-      *                                                                                       CLE172
-      ** Check if CLE172 is ON                                                                CLE172
-     C                   CALLB     'AOSARDR0'                                                 CLE172
-     C                   PARM      *BLANKS       PRTCD                                        CLE172
-     C                   PARM      '*VERIFY'     POPTN                                        CLE172
-     C                   PARM      'CLE172'      PSARD                                        CLE172
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
-      *                                                                                       CLE172
-     C                   MOVE      'N'           CLE172            1                          CLE172
-     C                   IF        PRTCD = *Blanks                                            CLE172
-     C                   EVAL      CLE172 = 'Y'                                               CLE172
-     C                   ENDIF                                                                CLE172
       *                                                                                       CLE168
       ** Access SAR details file                                                              CLE168
       *                                                                                       CLE168

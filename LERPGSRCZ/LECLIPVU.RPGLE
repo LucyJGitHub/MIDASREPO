@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. FCM101B            Date 18Oct19               *
-      *  Prev Amend No. FCM101A            Date 28Mar19               *
+      *  Last Amend No. MD056313           Date 21Sep20               *
+      *  Prev Amend No. FCM101B            Date 18Oct19               *
+      *                 FCM101A            Date 28Mar19               *
       *                 FCM101             Date 04Mar19               *
       *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
@@ -146,6 +147,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056313 - Partial fix applied. Amend condition for ##PAY &  *
+      *             ##PREC to skip validation if action code is 'I'.  *
+      *           - Applied for MD057017.                             *
       *  FCM101B - All-in Interest Rate Floor lost after EDIT of loan *
       *            from WIP.  Re-merge loan details and send back to  *
       *            JAVA when FCM101 feature is ON.                    *
@@ -2621,6 +2625,7 @@
       ** Move validation here.                                                              MD036838
       *                                                                                     MD036838
      C                   IF        ##PAYS <> C_Pay AND DDACTN <> 'X'                        MD053956
+     C                             AND DDACTN <> 'I'                                        MD056313
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                              MD036838
@@ -2628,6 +2633,7 @@
      C                   ENDIF                                                              MD036838
                                                                                             MD036838
      C                   IF        ##RECS <> C_Rec  AND DDACTN <> 'X'                       MD053956
+     C                             AND DDACTN <> 'I'                                        MD056313
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                              MD036838

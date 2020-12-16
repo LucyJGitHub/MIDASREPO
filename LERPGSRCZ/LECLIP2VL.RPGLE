@@ -6392,7 +6392,7 @@ E004 C                   ENDIF
      C                   PARM                    TranInScr7                                 MD053143
                                                                                               CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller

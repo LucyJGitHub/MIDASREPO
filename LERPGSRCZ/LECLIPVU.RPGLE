@@ -1064,18 +1064,23 @@
      C                   EXSR      GETRCDLN                                                 MD054028
      C                   ADD       RecordLen     eBfp                                       MD054028
       ** CER050 Fields                                                                      MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
+     C**********         IF        CER050 = 'Y'                                      MD054028 CLE172
      C                   EVAL      DDAPRC = %SUBST(Extdata500:eBfp:1)                       MD054028
      C                   ADD       1             eBfp                                       MD054028
      C                   EVAL      DDPREM = %SUBST(Extdata500:eBfp:15)                      MD054028
      C                   ADD       15            eBfp                                       MD054028
      C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
      C                   ADD       8             eBfp                                       MD054028
+     C                   IF        CER050 <> 'Y'                                blank if OFF  CLE172
+     C                   EVAL      DDAPRC = *BLANKS                                           CLE172
+     C                   EVAL      DDPREM = *BLANKS                                           CLE172
+     C                   EVAL      DDAPRR = *BLANKS                                           CLE172
      C                   ENDIF                                                              MD054028
       ** CLE172 Fields                                                                        CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
      C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:41)                   CLE172
      C                   ADD       41            eBfp                                         CLE172
+     C                   IF        CLE172 <> 'Y'                                blank if OFF  CLE172
+     C                   EVAL      LoanScnBlrt = *BLANKS                                      CLE172
      C                   ENDIF                                                                CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
@@ -4479,7 +4484,7 @@
       *                                                                                       CLE172
       ** Check if CLE172 is ON                                                                CLE172
      C                   CALLB     'AOSARDR0'                                                 CLE172
-     C                   PARM      *Blanks       PRTCD                                        CLE172
+     C                   PARM      *BLANKS       PRTCD                                        CLE172
      C                   PARM      '*VERIFY'     POPTN                                        CLE172
      C                   PARM      'CLE172'      PSARD                                        CLE172
      C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172

@@ -1155,9 +1155,9 @@
 
      C                   ENDIF
 
-     C                   EVAL      *INU7 = 'Y'
-     C                   EVAL      *INU8 = 'Y'
-     C                   EVAL      *INLR = 'Y'
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
      C                   RETURN
 
      C                   ENDSR

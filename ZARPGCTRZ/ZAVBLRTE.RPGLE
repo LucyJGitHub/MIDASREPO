@@ -527,6 +527,8 @@
       *****************************************************************
      C     SRLBDY        BEGSR
       *
+     C                   Z-ADD     0             WDAY                           Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
       *
@@ -571,12 +573,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDLBDY                          Default: 00
      C                   ENDIF
       *
      C     DDLBDYOK      IFNE      'N'
-     C                   MOVE      DDLBDY        VLBDY
+     C                   Z-ADD     WDAY          VLBDY
      C                   ENDIF
       *
      C                   ENDSR
@@ -587,6 +587,8 @@
       *  SRLODY - Validate lockout days                               *
       *****************************************************************
      C     SRLODY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
@@ -632,12 +634,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDLODY                          Default: 00
      C                   ENDIF
       *
      C     DDLODYOK      IFNE      'N'
-     C                   MOVE      DDLODY        VLODY
+     C                   Z-ADD     WDAY          VLODY
      C                   ENDIF
       *
      C                   ENDSR
@@ -648,6 +648,8 @@
       *  SRPDLY - Validate payment delay days                         *
       *****************************************************************
      C     SRPDLY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
@@ -693,12 +695,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDPDLY                          Default: 00
      C                   ENDIF
       *
      C     DDPDLYOK      IFNE      'N'
-     C                   MOVE      DDPDLY        VPDLY
+     C                   Z-ADD     WDAY          VPDLY
      C                   ENDIF
       *
      C                   ENDSR
@@ -779,11 +779,11 @@
      C                   ENDIF                                                  END numeric
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '0'           DDBADJ                          Default: 0
+     C                   Z-ADD     0             WNumBadj                        Default: 0
      C                   ENDIF
       *
      C     DDBADJOK      IFNE      'N'
-     C                   MOVE      DDBADJ        VBADJ
+     C                   Z-ADD     WNumBadj      VBADJ
      C                   ENDIF
       *
      C                   ENDSR
@@ -913,11 +913,11 @@
      C                   ENDIF                                                  END numeric
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '0'           DDCART                          Default: 0
+     C                   Z-ADD     0             WNumCart                        Default: 0
      C                   ENDIF
       *
      C     DDCARTOK      IFNE      'N'
-     C                   MOVE      DDCART        VCART
+     C                   Z-ADD     WNumCart      VCART
      C                   ENDIF
       *
      C                   ENDSR
@@ -1022,16 +1022,13 @@
      C                   PARM      WFCYCD        PKEY1
      C                   PARM      BBABRAC       PKEY2
      C     SDBRACDS      PARM      SDBRACDS      DSSDY
-      *
      C     PRTCD         IFEQ      *BLANKS                                      If found BRAC
-     C                   MOVE      ZBALBDY       DDLBAC                          Default from
+     C                   Z-ADD     ZBALBDY       VLBAC                          Default from
      C                   ENDIF                                                   ref. LBDY
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDLBAC                          Default: 00
+     C                   Z-ADD     0             VLBAC                           Default: 00
      C                   ENDIF
-      *
-     C                   MOVE      DDLBAC        VLBAC
       *
      C                   ENDSR
       *
@@ -1054,10 +1051,10 @@
      C     SDNBDY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNBDY                          Default: 0
+     C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      0             VNBDY                          Default: 0
+     C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1070,10 +1067,10 @@
      C     SDNODY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNODY                          Default: 0
+     C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      0             VNODY                          Default: 0
+     C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1086,10 +1083,10 @@
      C     SDNDLY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNDLY                          Default: 0
+     C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      0             VNDLY                          Default: 0
+     C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1102,10 +1099,10 @@
      C     SDNADJ        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNADJ                          Default: 0
+     C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      0             VNADJ                          Default: 0
+     C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR

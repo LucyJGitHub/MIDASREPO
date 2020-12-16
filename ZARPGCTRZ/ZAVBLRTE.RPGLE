@@ -336,9 +336,9 @@
      C                   MOVE      VBRAC         CVBRAC
      C                   Z-ADD     VLBAC         CVLBAC
      C                   Z-ADD     VPIAD         CVPIAD
-     C                   MOVE      CLBsrValfld   OutValfld
+     C                   MOVEL     CLBsrValfld   OutValfld
      C                   ENDIF
-      *LOAM
+      *LOAM BC
      C     ApiName       IFEQ      'LOAM'
      C                   MOVE      InpScrfld     LoamScrFld
      C                   MOVE      LAAVOP        DDAVOP
@@ -359,7 +359,15 @@
      C                   MOVE      VBADJ         LVBADJ
      C                   EXSR      SRPDLY
      C                   MOVE      VPDLY         LVPDLY
-     C                   MOVE      LoamValFld    OutValfld
+     C                   MOVEL     LoamValFld    OutValfld
+     C                   ENDIF
+      *LOAM SC
+     C     ApiName       IFEQ      'LOAMSC'
+     C                   MOVE      InpScrfld     LoamScrFld
+     C                   MOVE      LABADJ        DDBADJ
+     C                   EXSR      SRBADJ
+     C                   MOVE      VBADJ         LVBADJ
+     C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
      C                   ENDIF
       *
@@ -482,7 +490,7 @@
       *****************************************************************
      C     SRBLRT        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABLRT       DDBLRT                         Default from
@@ -516,7 +524,7 @@
       *****************************************************************
      C     SRLBDY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -571,7 +579,7 @@
       *****************************************************************
      C     SRLODY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -626,7 +634,7 @@
       *****************************************************************
      C     SRPDLY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -681,11 +689,12 @@
       *****************************************************************
      C     SRBADJ        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOAMSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -764,7 +773,7 @@
       *****************************************************************
      C     SRAVOP        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -814,7 +823,7 @@
       *****************************************************************
      C     SRCART        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDCART        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -896,7 +905,7 @@
       *****************************************************************
      C     SRWGHT        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -953,7 +962,7 @@
       *****************************************************************
      C     SRBRAC        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABRAC       DDBRAC                         Default from
@@ -988,7 +997,7 @@
      C     SDBRACDS      PARM      SDBRACDS      DSSDY
       *
      C     PRTCD         IFEQ      *BLANKS                                      If found BRAC
-     C     CLE172        ANDEQ     *ON                                           & CLE172=ON
+     C     CLE172        ANDEQ     'Y'                                           & CLE172=ON
      C                   MOVE      ZBALBDY       DDLBAC
      C                   ENDIF
      C                   ENDIF

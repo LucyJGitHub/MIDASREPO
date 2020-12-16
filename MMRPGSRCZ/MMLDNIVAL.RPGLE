@@ -18,6 +18,7 @@
       *                                                               *
       *  Last Amend No. BUG26014           Date 04Feb13               *
       *  Prev Amend No. MD029160           Date 05Sep14               *
+      *                 UUC106             Date 07Oct20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
@@ -162,6 +163,10 @@
       *  MD029160 - APISERVER job fall over when trying to send in a  *
       *             LDNI Cancellation. Recompiled due to changes in   *
       *             MMVLDNIPD.                                        *
+      *  UUC106 - Upgrade of UUL001 to FBM 2.1                        *
+      *           Deal subtype allocation FX/MM                       *
+      *           Used Hooks: MMH00024, MMH00143, MMLDNIV002,         *
+      *                       MMLDNIV020, MMLDNIV021, MMLDNIV090      *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -3559,7 +3564,7 @@
 
       /COPY WNCPYSRC,MMLDNIV069
 
-     ****---------------------------------------**********************              CDL016 BUG26014
+      ****---------------------------------------**********************              CDL016 BUG26014
       *****Validate*Rollover*Indicator*********************************              CDL016 BUG26014
       ****---------------------------------------**********************              CDL016 BUG26014
      C*****CDL016        IFEQ      'Y'                                               CDL016 BUG26014

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. UUC103             Date 20Oct20               *
+      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *                 223783             Date 28May12               *
       *                 CMG009             Date 24Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039029           Date 13Jul16               *
@@ -47,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Use Hooks GLH00394, GLH00395, GLH00396, GLH00397,   *
+      *           GLH00398, GLH00399, GLH00400, GLH00401, GLH00402    *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
       *  223783 - Use IBAN when formatting field 86.                  *

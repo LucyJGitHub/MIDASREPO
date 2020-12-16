@@ -19,14 +19,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034542           Date 29May15               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034542           Date 29May15               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034542 - Additional 59F validation for Beneficiary Cover   *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -212,7 +214,7 @@
       ** Incoming Payments Lvl 2 Scrn 7 details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -259,7 +261,7 @@
       ** - screen format
      C                   PARM                    NwIP2ScnFmt
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIPFilFmt
@@ -271,7 +273,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -306,7 +308,7 @@
       ** - screen format
      C                   PARM                    NwIP4ScnFmt
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -318,7 +320,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -353,7 +355,7 @@
       ** - screen format
      C                   PARM                    NwIPFilFmt
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -365,7 +367,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -399,7 +401,7 @@
       ** Incoming Payments details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -411,7 +413,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -445,7 +447,7 @@
       ** Incoming Payments details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -457,7 +459,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -491,7 +493,7 @@
       ** Incoming Payments details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -503,7 +505,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
@@ -537,7 +539,7 @@
       ** Incoming Payments details from incoming transaction
       ** - screen format
      C                   PARM                    NwIP7ScnFmt
- 
+
       * OUTPUTS
       ** Incoming Payments (additional details) for file update
      C                   PARM                    NwIP2FilFmt
@@ -549,7 +551,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr

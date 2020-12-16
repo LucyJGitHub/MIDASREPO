@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 MD053583           Date 10Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
@@ -358,6 +360,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDSVLBTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDSVLXTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDCONVPD'    GLOB_SDCONVPD                                CMG008
+     C     PFLNAME       CASEQ     'SDM901PD  '  GLOB_SDM901PD                                CFT162
      C                   ENDCS
      C                   ENDIF
 
@@ -1154,6 +1157,12 @@ O                                                                               
      C     GLOB_SDCONVPD BEGSR                                                                CMG008
       /COPY GPCPYSRCG,GPSDCONVPD                                                              CMG008
      C                   ENDSR                                                                CMG008
+      *****************************************************************                       CFT162
+      * Global Updates - Account/Customer MT900/MT910 Details                                 CFT162
+      *****************************************************************                       CFT162
+     C     GLOB_SDM901PD BEGSR                                                                CFT162
+      /COPY GPCPYSRCG,GPSDM901PD                                                              CFT162
+     C                   ENDSR                                                                CFT162
       *****************************************************************
       * Determine Updates
       *****************************************************************

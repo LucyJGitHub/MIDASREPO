@@ -1,0 +1,16 @@
+      *****************************************************************
+      *                                                               *
+      *  MIDAS - /COPY MEMBER (GL0420)                                *
+      *                                                               *
+      *  GL0420OO11 - Midas GL Balance Statements                     *
+      *                                                               *
+      *  Last Amend No. UUC102 *CREATE  Date 16Oct20                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
+      *           UUC063 - Balance Statement Enhancement              *
+      *                                                               *
+      *****************************************************************
+     O               KP                         111 '/'                         UUC102
+     O               KP      STPG          3    113                             UUC102

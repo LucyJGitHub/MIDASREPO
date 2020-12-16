@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053119           Date 02Dec19               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. UUC100             Date 07Oct20               *
+      *  Prev Amend No. MD053119           Date 02Dec19               *
+      *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052732           Date 12Mar19               *
       *                 249405             Date 09Mar18               *
@@ -84,6 +85,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC100 - Upgrade UUC027 to FBM 2.1                           *
+      *           Cover-control on journal entries input.             *
+      *           Hooks Used: GLH00634, GLH00635, GLBITHDC02,         *
+      *                       GLBITHDD01                              *
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *

@@ -15,9 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR918987           Date 13Oct20               *
+      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -37,6 +39,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918987 - Missing MT900/MT910 extension details in STP for  *
+      *             CAR CFT162. Recompile.                            *
+      *             (Child: AR922598)                                 *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -63,6 +70,9 @@
      F*                                                                   CFT002
      FMEURPRL0IF  E           K        DISK                               CFT002
      F**  ME User Repair                                                  CFT002
+     F*                                                                   CFT046
+     FMEGNCRX0IF  E           K        DISK                               CFT046
+     F**  Generation Criteria Header Extension File                       CFT046
      F*
      FME1502P1O   E                    PRINTER      KINFDS SPOOL
      F**  Generation Criteria Table Listing - Printer File
@@ -447,6 +457,30 @@
      C                     ENDIF                                          CFT009
      C                     ENDIF                                          CFT009
       *                                                                   CFT009
+      ** Access SAR details file to see if CFT046 is installed.           CFT046
+      *                                                                   CFT046
+     C                     CALL 'AOSARDR0'                                CFT046
+     C                     PARM *BLANKS   P@RTCD                          CFT046
+     C                     PARM '*VERIFY' P@OPTN                          CFT046
+     C                     PARM 'CFT046'  P@SARD                          CFT046
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT046
+      *                                                                   CFT046
+     C                     MOVE '0'       *IN70                           CFT046
+     C           P@RTCD    IFEQ *BLANKS                                   CFT046
+     C                     MOVE 'Y'       CFT046  1                       CFT046
+     C                     MOVE '1'       *IN70                           CFT046
+     C                     ELSE                                           CFT046
+     C           P@RTCD    IFEQ '*NRF'                                    CFT046
+     C                     MOVE 'N'       CFT046                          CFT046
+     C                     ELSE                                           CFT046
+     C           *LOCK     IN   LDA                                       CFT046
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CFT046
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 003 *CFT046
+     C                     Z-ADD003       DBASE            ***************CFT046
+     C                     OUT  LDA                                       CFT046
+     C                     EXSR *PSSR                                     CFT046
+     C                     ENDIF                                          CFT046
+     C                     ENDIF                                          CFT046
       *                                                                                       CSW209
       ** Check if SWIFT 2009 feature is ON                                                    CSW209
       *                                                                                       CSW209
@@ -480,6 +514,7 @@
      C                     Z-ADD*ZEROS    #HSETT
      C                     MOVEL*BLANKS   #HEXCP
      C                     MOVEL*BLANKS   #HBOKC
+     C                     MOVEL*BLANKS   #HTRAT                          CFT046
      C                     MOVEL*BLANKS   #HPYST
      C                     MOVEL*BLANKS   #HCSET
      C                     MOVEL*BLANKS   #HDSET
@@ -639,6 +674,17 @@
      C                     MOVE *OFF      *IN60                                               CSW209
      C                     ENDIF                                                              CSW209
       *                                                                                       CSW209
+     C           CFT046    IFEQ 'Y'                                                           CFT046
+     C           #HKEYS    CHAINMEGNCRX0             89                                       CFT046
+      *                                                                                       CFT046
+     C           *IN89     IFEQ '0'                                                           CFT046
+     C                     MOVELX0TRAT    #HTRAT                                              CFT046
+     C                     ELSE                                                               CFT046
+     C                     MOVE *BLANKS   #HTRAT                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
      C                     ENDSR
      C/EJECT
       *****************************************************************   CFT009

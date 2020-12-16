@@ -3940,25 +3940,30 @@
      C                   EVAL      L9PI = L_CLL9PI                                            CLE141
      C                   EVAL      L0PI = L_CLL0PI                                            CLE141
      C                   ENDIF                                                                CLE141
-      *                                                                                       CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
-     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
-     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
-     C                   EVAL      LODY = L_CLLODY                                            CLE172
-     C                   EVAL      PDLY = L_CLPDLY                                            CLE172
-     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
-     C                   EVAL      AVOP = L_CLAVOP                                            CLE172
-     C                   EVAL      CART = L_CLCART                                            CLE172
-     C                   EVAL      WGHT = L_CLWGHT                                            CLE172
-     C                   EVAL      BRAC = L_CLBRAC                                            CLE172
-     C                   EVAL      LBAC = L_CLLBAC                                            CLE172
-     C                   ENDIF                                                                CLE172
       *                                                                                       CER050
      C                   IF        CER050 = 'Y'                                               CER050
      C                   EVAL      APRC = L_CLAPRC                                            CER050
      C                   EVAL      PREM = L_CLPREM                                            CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
+     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
+     C                   EVAL      NBDY = L_CLNBDY                                            CLE172
+     C                   EVAL      LODY = L_CLLODY                                            CLE172
+     C                   EVAL      NODY = L_CLNODY                                            CLE172
+     C                   EVAL      PDLY = L_CLPDLY                                            CLE172
+     C                   EVAL      NDLY = L_CLNDLY                                            CLE172
+     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
+     C                   EVAL      NADJ = L_CLNADJ                                            CLE172
+     C                   EVAL      AVOP = L_CLAVOP                                            CLE172
+     C                   EVAL      NVOP = L_CLNVOP                                            CLE172
+     C                   EVAL      CART = L_CLCART                                            CLE172
+     C                   EVAL      WGHT = L_CLWGHT                                            CLE172
+     C                   EVAL      NGHT = L_CLNGHT                                            CLE172
+     C                   EVAL      BRAC = L_CLBRAC                                            CLE172
+     C                   EVAL      LBAC = L_CLLBAC                                            CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************

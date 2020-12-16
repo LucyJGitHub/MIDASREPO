@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056719           Date 16Sep20               *
-      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *  Last Amend No. MD056982           Date 12Oct20               *
+      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
       *                 MD055446           Date 04Apr20               *
@@ -154,6 +155,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
+      *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
       *             Messages.                                         *
       *           - Include A_PMAPBC field under AR1049708 fix.       *
@@ -10483,7 +10486,7 @@ OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                               
 ** CMDCS                                                                                    MD027115
 OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027115
 ** CMDCR                                                                                    MD051230
-OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)                                           MD051230
+OVRDBF FILE(SDCRSHL0) TOFILE(SDCRSHL0) SHARE(*NO)                                  MD051230 MD056982
 **  ARRTAG                                                                                    CSD015
 <Customer Name>                                                                               CSD015
 </Customer Name>                                                                              CSD015

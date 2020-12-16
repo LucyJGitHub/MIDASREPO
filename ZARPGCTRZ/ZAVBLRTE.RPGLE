@@ -490,7 +490,7 @@
       *****************************************************************
      C     SRBLRT        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABLRT       DDBLRT                         Default from
@@ -524,7 +524,7 @@
       *****************************************************************
      C     SRLBDY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -579,7 +579,7 @@
       *****************************************************************
      C     SRLODY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -634,7 +634,7 @@
       *****************************************************************
      C     SRPDLY        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -689,7 +689,7 @@
       *****************************************************************
      C     SRBADJ        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -773,7 +773,7 @@
       *****************************************************************
      C     SRAVOP        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -823,7 +823,7 @@
       *****************************************************************
      C     SRCART        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDCART        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -905,7 +905,7 @@
       *****************************************************************
      C     SRWGHT        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -962,7 +962,7 @@
       *****************************************************************
      C     SRBRAC        BEGSR
       *
-     C     CLE172        IFEQ      *ON                                          CLE172=ON
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABRAC       DDBRAC                         Default from
@@ -997,7 +997,7 @@
      C     SDBRACDS      PARM      SDBRACDS      DSSDY
       *
      C     PRTCD         IFEQ      *BLANKS                                      If found BRAC
-     C     CLE172        ANDEQ     *ON                                           & CLE172=ON
+     C     CLE172        ANDEQ     'Y'                                           & CLE172=ON
      C                   MOVE      ZBALBDY       DDLBAC
      C                   ENDIF
      C                   ENDIF
@@ -1139,9 +1139,9 @@
 
      C                   ENDIF
 
-     C                   EVAL      *INU7 = *ON
-     C                   EVAL      *INU8 = *ON
-     C                   EVAL      *INLR = *ON
+     C                   EVAL      *INU7 = 'Y'
+     C                   EVAL      *INU8 = 'Y'
+     C                   EVAL      *INLR = 'Y'
      C                   RETURN
 
      C                   ENDSR

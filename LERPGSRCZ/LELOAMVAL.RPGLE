@@ -869,19 +869,6 @@
      C                   EXSR      SRBCPR
      C                   ENDIF
      C                   ENDIF
-     C
-      *                                                                                       CLE172
-      ***  Validate backward-looking rate fields for BC loan event                            CLE172
-      *                                                                                       CLE172
-     C     DDATYP        IFEQ      'BC'                                                       CLE172
-     C                   EXSR      SRBLRTE                                                    CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
-      ***  Validate backward-looking rate fields for SC loan event                            CLE172
-      *                                                                                       CLE172
-     C     DDATYP        IFEQ      'SC'                                                       CLE172
-     C                   EXSR      SRBLRTE1                                                   CLE172
-     C                   ENDIF                                                                CLE172
       *
       /COPY WNCPYSRC,LELOAMV017
       *
@@ -899,6 +886,18 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields for BC loan event                            CLE172
+      *                                                                                       CLE172
+     C     DDATYP        IFEQ      'BC'                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields for SC loan event                            CLE172
+      *                                                                                       CLE172
+     C     DDATYP        IFEQ      'SC'                                                       CLE172
+     C                   EXSR      SRBLRTE1                                                   CLE172
+     C                   ENDIF                                                                CLE172
       *
       /COPY WNCPYSRC,LELOAMV018
       *

@@ -32,6 +32,7 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    U7, U8     Database error                                  *
+      *    30         No Currency and BaseRateCode input              *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -282,7 +283,6 @@
      C                   Z-ADD     Idx           Ix                             Store index
      C                   Z-ADD     *ZEROS        WDAY
       *
-     C     WFBSRC        IFNE      *BLANKS
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDBLRT
@@ -362,7 +362,6 @@
      C                   Z-ADD     VBADJ         LVBADJ
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
-     C                   ENDIF
       *
       ** If a new error was found, set the return code appropriately
      C                   IF        Idx > Ix
@@ -402,10 +401,15 @@
      C                   KFLD                    WFCYCD
      C                   KFLD                    WFBSRC
 
+     C                   SETOFF                                       30
+     C     WFCYCD        IFEQ      *BLANKS
+     C     WFBSRC        OREQ      *BLANKS
+     C                   SETON                                        30
+     C                   ENDIF
+
       ** Check if CLE172 is installed
 
      C                   EVAL      CLE172 = 'N'
-
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
@@ -456,7 +460,7 @@
 
       ** Access Base Rate Details
 
-     C     WFBSRC        IFNE      *BLANKS
+     C     *IN30         IFEQ      *OFF
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -467,11 +471,8 @@
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      BBABSRC       WFBSRC
      C                   ENDIF
-     C     PRTCD         IFEQ      '*NOSEL  '
-     C                   MOVE      *BLANKS       WFBSRC
      C                   ENDIF
-     C                   ENDIF
-      *
+
      C                   ENDSR
 
       *****************************************************************
@@ -484,6 +485,7 @@
      C     SRBLRT        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABLRT       DDBLRT                         Default from
@@ -517,7 +519,10 @@
       *****************************************************************
      C     SRLBDY        BEGSR
       *
+     C                   Z-ADD     0             WDAY                           Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -560,12 +565,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDLBDY                          Default: 00
      C                   ENDIF
       *
      C     DDLBDYOK      IFNE      'N'
-     C                   MOVE      DDLBDY        VLBDY
+     C                   Z-ADD     WDAY          VLBDY
      C                   ENDIF
       *
      C                   ENDSR
@@ -577,7 +580,10 @@
       *****************************************************************
      C     SRLODY        BEGSR
       *
+     C                   Z-ADD     0             WDAY                           Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -620,12 +626,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDLODY                          Default: 00
      C                   ENDIF
       *
      C     DDLODYOK      IFNE      'N'
-     C                   MOVE      DDLODY        VLODY
+     C                   Z-ADD     WDAY          VLODY
      C                   ENDIF
       *
      C                   ENDSR
@@ -637,7 +641,10 @@
       *****************************************************************
      C     SRPDLY        BEGSR
       *
+     C                   Z-ADD     0             WDAY                           Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -680,12 +687,10 @@
       *
      C                   ENDIF                                                  END numeric
      C                   ENDIF                                                  END default
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '00'          DDPDLY                          Default: 00
      C                   ENDIF
       *
      C     DDPDLYOK      IFNE      'N'
-     C                   MOVE      DDPDLY        VPDLY
+     C                   Z-ADD     WDAY          VPDLY
      C                   ENDIF
       *
      C                   ENDSR
@@ -698,6 +703,7 @@
      C     SRBADJ        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -765,11 +771,11 @@
      C                   ENDIF                                                  END numeric
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '0'           DDBADJ                          Default: 0
+     C                   Z-ADD     0             WNumBadj                        Default: 0
      C                   ENDIF
       *
      C     DDBADJOK      IFNE      'N'
-     C                   MOVE      DDBADJ        VBADJ
+     C                   Z-ADD     WNumBadj      VBADJ
      C                   ENDIF
       *
      C                   ENDSR
@@ -782,6 +788,7 @@
      C     SRAVOP        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -832,6 +839,7 @@
      C     SRCART        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDCART        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -897,11 +905,11 @@
      C                   ENDIF                                                  END numeric
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      '0'           DDCART                          Default: 0
+     C                   Z-ADD     0             WNumCart                        Default: 0
      C                   ENDIF
       *
      C     DDCARTOK      IFNE      'N'
-     C                   MOVE      DDCART        VCART
+     C                   Z-ADD     WNumCart      VCART
      C                   ENDIF
       *
      C                   ENDSR
@@ -914,6 +922,7 @@
      C     SRWGHT        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
@@ -971,6 +980,7 @@
      C     SRBRAC        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      BBABRAC       DDBRAC                         Default from
@@ -994,23 +1004,23 @@
       *****************************************************************
      C     SRLBAC        BEGSR
       *
-     C                   MOVE      '00'          DDLBAC                         Default: 00
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN30         ANDEQ     *OFF
+     C     DDBRAC        ANDNE     *BLANKS
       *
-     C     DDBRAC        IFNE      *BLANKS
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      WFCYCD        PKEY1
      C                   PARM      BBABRAC       PKEY2
      C     SDBRACDS      PARM      SDBRACDS      DSSDY
-      *
      C     PRTCD         IFEQ      *BLANKS                                      If found BRAC
-     C     CLE172        ANDEQ     'Y'                                           & CLE172=ON
-     C                   MOVE      ZBALBDY       DDLBAC
-     C                   ENDIF
-     C                   ENDIF
+     C                   Z-ADD     ZBALBDY       VLBAC                          Default from
+     C                   ENDIF                                                   ref. LBDY
       *
-     C                   MOVE      DDLBAC        VLBAC
+     C                   ELSE                                                   CLE172=OFF
+     C                   Z-ADD     0             VLBAC                           Default: 00
+     C                   ENDIF
       *
      C                   ENDSR
       *
@@ -1033,10 +1043,10 @@
      C     SDNBDY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNBDY                          Default: 0
+     C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
-     C                   MOVE      0             VNBDY                          Default: 0
+     C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1049,10 +1059,10 @@
      C     SDNODY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNODY                          Default: 0
+     C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
-     C                   MOVE      0             VNODY                          Default: 0
+     C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1065,10 +1075,10 @@
      C     SDNDLY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNDLY                          Default: 0
+     C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
-     C                   MOVE      0             VNDLY                          Default: 0
+     C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR
@@ -1081,10 +1091,10 @@
      C     SDNADJ        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      0             VNADJ                          Default: 0
+     C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
-     C                   MOVE      0             VNADJ                          Default: 0
+     C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
       *
      C                   ENDSR

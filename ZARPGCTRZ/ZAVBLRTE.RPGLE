@@ -66,7 +66,7 @@
       ** +--------------------------------------+
 
      FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)
-     F                                     IGNORE(CLOANCK)
+     F                                     IGNORE(CLOANCKF)
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -121,12 +121,15 @@
       ** DS for Dealing details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D                                     PREFIX(DL)
-      ** DS for  Base Rate details
+      ** DS for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(B)
       ** DS for Base rate for Accrual details
      D SDBRACDS      E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(Z)
+      ** DS for Loan details
+     D LECLOAN       E DS                  EXTNAME(LECLIPL2:*INPUT)
+     D                                     PREFIX(H)
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -481,18 +484,10 @@
 
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
-     C     LNRF          CHAIN(N)  LECLIP2L                           20
-     C     *IN20         IFEQ      *OFF
-     C                   MOVE      AVOP          HAVOP             1
-     C                   MOVE      LBDY          HLBDY             2
-     C                   MOVE      LODY          HLODY             2
-     C                   MOVE      WGHT          HWGHT             1
-     C                   MOVE      BADJ          HBADJ            14
-     C                   MOVE      PDLY          HPDLY             2
+     C     ApiName       OREQ      'PDCL'
+     C     LNRF          CHAIN(N)  LECLIPL2      LECLOAN              20
      C                   ENDIF
-     C                   ELSE
-     C                   SETOFF                                       20
-     C                   ENDIF
+
      C                   ENDSR
 
       *****************************************************************
@@ -508,10 +503,10 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      BBABLRT       DDBLRT                         Default from
+     C                   MOVE      BBABLRT       DDBLRT                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBABLRT       DDBLRT                         Default from
+     C                   MOVE      HBLRT         DDBLRT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     DDBLRT        IFEQ      'Y'
@@ -843,7 +838,7 @@
      C     ApiName       IFEQ      'CLIP'
      C     BBABLRT       ANDNE     'Y'
      C     ApiName       OREQ      'LOAM'
-     C     HABLRT        ANDNE     'Y'
+     C     HBLRT         ANDNE     'Y'
       * Backward-Looking Rate is N and Averaging Option is not blank
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
@@ -961,11 +956,11 @@
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   Z-ADD     BBAWGHT       VWGHT                           Default from
+     C                   MOVE      BBAWGHT       VWGHT                           Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C     ApiName       OREQ      'LOAM'
-     C                   Z-ADD     HWGHT         VWGHT                           Default from
+     C                   MOVE      HWGHT         VWGHT                           Default from
      C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE
@@ -1202,4 +1197,4 @@
 
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2004
+(c) Finastra International Limited 2020

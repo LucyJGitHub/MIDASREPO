@@ -5326,6 +5326,7 @@
      C                   PARM      'LOAM'        ApiName           4                          CLE172
      C                   PARM                    LACCY                                        CLE172
      C                   PARM                    LABRTT                                       CLE172
+     C                   PARM                    LALNRF                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172
@@ -5357,6 +5358,7 @@
      C                   PARM      'LOSC'        ApiName           4                          CLE172
      C                   PARM                    LACCY                                        CLE172
      C                   PARM                    LABRTT                                       CLE172
+     C                   PARM                    LALNRF                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172

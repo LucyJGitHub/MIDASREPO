@@ -32,6 +32,7 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    U7, U8     Database error                                  *
+      *    20         No Loan refernce found                          *
       *    30         No Currency and BaseRateCode input              *
       *                                                               *
       *****************************************************************
@@ -64,6 +65,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
+     FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)
+     F                                     IGNORE(CLOANCK)
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -388,6 +391,7 @@
      C                   PARM                    ApiName                        In Param
      C                   PARM                    WFCYCD                         In param
      C                   PARM                    WFBSRC                         In param
+     C                   PARM                    LNRF                           In param
      C                   PARM                    InpScrfld                      In/Out param
      C                   PARM                    Idx                            In/Out param
      C                   PARM                    FldNamXAr                      In/Out param
@@ -473,6 +477,22 @@
      C                   ENDIF
      C                   ENDIF
 
+      ** Acess Loan Details for BC and SC loan events defaulting
+
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     LNRF          CHAIN(N)  LECLIP2L                           20
+     C     *IN10         IFEQ      *OFF
+     C                   MOVE      AVOP          HAVOP             1
+     C                   MOVE      LBDY          HLBDY             2
+     C                   MOVE      LODY          HLODY             2
+     C                   MOVE      WGHT          HWGHT             1
+     C                   MOVE      BADJ          HBADJ            14
+     C                   MOVE      PDLY          HPDLY             2
+     C                   ENDIF
+     C                   ELSE
+     C                   SETOFF                                       20
+     C                   ENDIF
      C                   ENDSR
 
       *****************************************************************
@@ -526,13 +546,15 @@
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBALBDY       DDLBDY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBALBDY       DDLBDY                         Default from
      C                   ENDIF                                                   CLOANCL
       *
+     C     ApiName       IFEQ      'LOAM'                                       Default from
+     C                   MOVE      HLBDY         VLBDY                          CLOANCL
+     C                   ENDIF
      C                   ELSE
      C                   MOVEL     DDLBDY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
@@ -587,13 +609,15 @@
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBALODY       DDLODY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBALODY       DDLODY                         Default from
      C                   ENDIF                                                   CLOANCL
       *
+     C     ApiName       IFEQ      'LOAM'                                       Default from
+     C                   MOVE      HLODY         VLODY                          CLOANCL
+     C                   ENDIF
      C                   ELSE
      C                   MOVEL     DDLODY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
@@ -648,13 +672,15 @@
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAPDLY       DDPDLY                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBAPDLY       DDPDLY                         Default from
      C                   ENDIF                                                   CLOANCL
       *
+     C     ApiName       IFEQ      'LOAM'                                       Default from
+     C                   MOVE      HPDLY         VPDLY                          CLOANCL
+     C                   ENDIF
      C                   ELSE
      C                   MOVEL     DDPDLY        #1TESTN                        Check if
      C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                       numeric
@@ -707,13 +733,16 @@
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   CLOANCL
+      *
+     C     ApiName       IFEQ      'LOAM'                                       Default from
+     C     ApiName       OREQ      'LOSC'                                        CLOANCL
+     C                   MOVE      HBADJ         VBADJ
+     C                   ENDIF
      C                   ENDIF
       *
      C                   MOVE      *BLANKS       @@ALPH
@@ -792,12 +821,15 @@
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAAVOP       DDAVOP                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBAAVOP       DDAVOP                         Default from
      C                   ENDIF                                                   CLOANCL
+      *
+     C     ApiName       IFEQ      'LOAM'                                       Default from
+     C                   MOVE      HAVOP         VAVOP                          CLOANCL
+     C                   ENDIF
       *
      C                   ELSE
      C     DDAVOP        IFNE      '1'
@@ -926,11 +958,13 @@
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
      C                   MOVE      BBAWGHT       DDWGHT                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C                   MOVE      BBAWGHT       DDWGHT                         Default from
+     C                   ENDIF                                                   CLOANCL
+     C     ApiName       IFEQ      'LOAM'
+     C                   MOVE      HWGHT         VWGHT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE

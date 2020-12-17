@@ -32,7 +32,8 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    U7, U8     Database error                                  *
-      *    20         No Loan refernce found                          *
+      *    20         No Loan reference found                         *
+      *    29         No Loan reference input                         *
       *    30         No Currency and BaseRateCode input              *
       *                                                               *
       *****************************************************************
@@ -223,6 +224,8 @@
      D WFCYCD          S              3A
      D WFBSRC          S              2A
 
+      ** Work fields for cloancl key list
+     D LNRF            S              6A
       ** Generic screen fields
      D  DDBLRT         S              1A
      D  DDLBDY         S              2A
@@ -287,7 +290,6 @@
       *
      C                   MOVE      *BLANKS       ArrayInp
      C                   Z-ADD     Idx           Ix                             Store index
-     C                   Z-ADD     *ZEROS        WDAY
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
@@ -346,6 +348,7 @@
      C                   MOVEA     ArrayInp(6)   DDWGHT
      C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   MOVEA     ArrayInp(21)  DDPDLY
+     C                   EXSR      SRBLRT
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
      C                   EXSR      SRLBDY
@@ -364,6 +367,7 @@
      C     ApiName       IFEQ      'LOSC'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(7)   DDBADJ
+     C                   EXSR      SRBLRT
      C                   EXSR      SRBADJ
      C                   Z-ADD     VBADJ         LVBADJ
      C                   MOVEL     LoamValFld    OutValfld
@@ -402,12 +406,14 @@
      C                   PARM                    OutValfld                      Out param
      C                   PARM                    RetCodeOut                     Out param
 
-      **  Key list for base rate
+      **  Key list for CLOANCL
+     C     WKCLOANR      KLIST
+     C                   KFLD                    LNRF
 
-     C     WKSDBSRT      KLIST
-     C                   KFLD                    WFCYCD
-     C                   KFLD                    WFBSRC
-
+     C                   SETOFF                                       29
+     C     LNRF          IFEQ      *BLANKS
+     C                   SETON                                        29
+     C                   ENDIF
      C                   SETOFF                                       30
      C     WFCYCD        IFEQ      *BLANKS
      C     WFBSRC        OREQ      *BLANKS
@@ -485,7 +491,7 @@
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
      C     ApiName       OREQ      'PDCL'
-     C     LNRF          CHAIN(N)  LECLIPL2      LECLOAN              20
+     C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
      C                   ENDIF
 
      C                   ENDSR
@@ -500,16 +506,20 @@
      C     SRBLRT        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   MOVE      BBABLRT       DDBLRT                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
+     C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     *IN29         ANDEQ     *OFF
      C                   MOVE      HBLRT         DDBLRT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C     DDBLRT        IFEQ      'Y'
+     C     ApiName       IFEQ      'CLIP'
+     C     DDBLRT        ANDEQ     'Y'
      C     BKALDI        ANDEQ     'Y'
       * Accrue on Last Day is Y and Rate is Backward-Looking Rate
      C                   MOVE      'N'           DDBLRTOK
@@ -537,15 +547,16 @@
      C                   Z-ADD     0             WDAY                           Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBALBDY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   Z-ADD     HLBDY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -571,7 +582,7 @@
      C                   MOVE      DDLBDY        WDAY
      C                   ENDIF
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
       * Backward-Looking Rate is N and Lookback Days is not 0
      C                   MOVE      'N'           DDLBDYOK
@@ -600,15 +611,16 @@
      C                   Z-ADD     0             WDAY                           Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBALODY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   Z-ADD     HLODY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -634,7 +646,7 @@
      C                   MOVE      DDLODY        WDAY
      C                   ENDIF
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
       * Backward-Looking Rate is N and Lockout Days is not 0
      C                   MOVE      'N'           DDLODYOK
@@ -663,15 +675,16 @@
      C                   Z-ADD     0             WDAY                           Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBAPDLY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   Z-ADD     HPDLY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -697,7 +710,7 @@
      C                   MOVE      DDPDLY        WDAY
      C                   ENDIF
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
       * Backward-Looking Rate is N and Payment Delay Days is not 0
      C                   MOVE      'N'           DDPDLYOK
@@ -726,15 +739,16 @@
      C                   Z-ADD     0             WNumBadj                       Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBABADJ       WNumBadj                        Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
      C     ApiName       OREQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   Z-ADD     HBADJ         WNumBadj                        Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -784,7 +798,7 @@
      C                   PARM                    PZFSign
      C                   MOVE      PZOut15       WNumBadj
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
       * Backward-Looking Rate is N and Benchmark Adjustment is not 0
      C                   MOVE      'N'           DDBADJOK
@@ -810,15 +824,16 @@
      C     SRAVOP        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   MOVE      BBAAVOP       DDAVOP                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   MOVE      HAVOP         DDAVOP                          Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -835,10 +850,7 @@
      C                   MOVEL     '5049403'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
-     C     ApiName       IFEQ      'CLIP'
-     C     BBABLRT       ANDNE     'Y'
-     C     ApiName       OREQ      'LOAM'
-     C     HBLRT         ANDNE     'Y'
+     C     VBLRT         IFNE      'Y'
       * Backward-Looking Rate is N and Averaging Option is not blank
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
@@ -868,14 +880,15 @@
      C                   Z-ADD     0             WNumCart                       Default: 0
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDCART        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     0             WNumCart                        Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   Z-ADD     HCART         WNumCart                        Default from
      C                   ENDIF                                                    CLOANCL
       *
@@ -925,7 +938,7 @@
      C                   PARM                    PZFSign
      C                   MOVE      PZOut15       WNumCart
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS
       * Backward-looking rate is N and Compounded/Average rate is not 0
      C                   MOVE      'N'           DDCARTOK
@@ -951,15 +964,16 @@
      C     SRWGHT        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   MOVE      BBAWGHT       VWGHT                           Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C     ApiName       OREQ      'LOAM'
+     C     *IN29         ANDEQ     *OFF
      C                   MOVE      HWGHT         VWGHT                           Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -974,7 +988,7 @@
      C                   MOVEL     '5049408'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
-     C     BBABLRT       IFNE      'Y'
+     C     VBLRT         IFNE      'Y'
       * Backward-Looking Rate is N and Weight Convention is not blank
      C                   MOVE      'N'           DDWGHTOK
      C                   ADD       1             Idx
@@ -1010,21 +1024,22 @@
       *****************************************************************
      C     SRBRAC        BEGSR
       *
+     C                   MOVE      *BLANKS       VBRAC
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
      C                   MOVE      BBABRAC       DDBRAC                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
+     C     *IN29         ANDEQ     *OFF
      C                   MOVE      HBRAC         DDBRAC                          Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      *BLANKS       DDBRAC
-     C                   ENDIF                                                  END CLE172
-      *
      C                   MOVE      DDBRAC        VBRAC
+      *
+     C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
       *
@@ -1035,9 +1050,11 @@
       *****************************************************************
      C     SRLBAC        BEGSR
       *
+     C                   Z-ADD     0             VLBAC                          Default: 00
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
-     C     DDBRAC        ANDNE     *BLANKS
+     C     VBRAC         ANDNE     *ZEROS
       *
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
@@ -1049,9 +1066,7 @@
      C                   Z-ADD     ZBALBDY       VLBAC                          Default from
      C                   ENDIF                                                   ref. LBDY
       *
-     C                   ELSE                                                   CLE172=OFF
-     C                   Z-ADD     0             VLBAC                           Default: 00
-     C                   ENDIF
+     C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
       *

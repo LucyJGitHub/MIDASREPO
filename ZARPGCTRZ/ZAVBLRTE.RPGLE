@@ -482,7 +482,7 @@
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
      C     LNRF          CHAIN(N)  LECLIP2L                           20
-     C     *IN10         IFEQ      *OFF
+     C     *IN20         IFEQ      *OFF
      C                   MOVE      AVOP          HAVOP             1
      C                   MOVE      LBDY          HLBDY             2
      C                   MOVE      LODY          HLODY             2

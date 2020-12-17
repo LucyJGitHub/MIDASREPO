@@ -164,14 +164,6 @@
      D  CVLBAC                41     42S 0
      D  CVPIAD                43     47S 0
 
-      ** LOAM Backward-Looking Rate Screen fields (Input)
-     D LoamScrFld      DS
-     D  LAAVOP                 1      1
-     D  LALBDY                 2      3
-     D  LALODY                 4      5
-     D  LAWGHT                 6      6
-     D  LABADJ                 7     20
-     D  LAPDLY                21     22
 
       ** LOAM Backward-Looking Rate Valid fields (Output)
      D LoamValFld      DS
@@ -341,33 +333,33 @@
      C                   ENDIF
       *LOAM BC
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      InpScrfld     LoamScrFld
-     C                   MOVE      LAAVOP        DDAVOP
-     C                   MOVE      LALBDY        DDLBDY
-     C                   MOVE      LALODY        DDLODY
-     C                   MOVE      LAWGHT        DDWGHT
-     C                   MOVE      LABADJ        DDBADJ
-     C                   MOVE      LAPDLY        DDPDLY
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(1)   DDAVOP
+     C                   MOVEA     ArrayInp(2)   DDLBDY
+     C                   MOVEA     ArrayInp(4)   DDLODY
+     C                   MOVEA     ArrayInp(6)   DDWGHT
+     C                   MOVEA     ArrayInp(7)   DDBADJ
+     C                   MOVEA     ArrayInp(21)  DDPDLY
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
      C                   EXSR      SRLBDY
-     C                   MOVE      VLBDY         LVLBDY
+     C                   Z-ADD     VLBDY         LVLBDY
      C                   EXSR      SRLODY
-     C                   MOVE      VLODY         LVLODY
+     C                   Z-ADD     VLODY         LVLODY
      C                   EXSR      SRWGHT
      C                   MOVE      VWGHT         LVWGHT
      C                   EXSR      SRBADJ
-     C                   MOVE      VBADJ         LVBADJ
+     C                   Z-ADD     VBADJ         LVBADJ
      C                   EXSR      SRPDLY
-     C                   MOVE      VPDLY         LVPDLY
+     C                   Z-ADD     VPDLY         LVPDLY
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *LOAM SC
-     C     ApiName       IFEQ      'LOAMSC'
-     C                   MOVE      InpScrfld     LoamScrFld
-     C                   MOVE      LABADJ        DDBADJ
+     C     ApiName       IFEQ      'LOSC'
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   EXSR      SRBADJ
-     C                   MOVE      VBADJ         LVBADJ
+     C                   Z-ADD     VBADJ         LVBADJ
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *
@@ -716,7 +708,7 @@
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
      C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOAMSC'
+     C     ApiName       OREQ      'LOSC'
      C                   MOVE      BBABADJ       DDBADJ                         Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
@@ -1053,7 +1045,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
       *
@@ -1069,7 +1061,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
       *
@@ -1085,7 +1077,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
       *
@@ -1101,7 +1093,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
       *
@@ -1117,7 +1109,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
      C                   ENDIF
       *
@@ -1133,7 +1125,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
       *

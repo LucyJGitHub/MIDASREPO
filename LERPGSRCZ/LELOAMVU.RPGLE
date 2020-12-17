@@ -644,15 +644,10 @@
      C                   MOVEL     Extdata500    Extdata
       ** ExtData Buffer Pointer                                                               CLE172
      C                   Z-ADD     1             eBfp              4 0                        CLE172
-     C                   MOVEL     'LECLEXPD'    Filename                                     CLE172
-     C                   EXSR      GETRCDLN                                                   CLE172
-     C                   ADD       RecordLen     eBfp                                         CLE172
 
       ** CLE172 Fields                                                                        CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
      C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:22)                   CLE172
      C                   ADD       22            eBfp                                         CLE172
-     C                   ENDIF                                                                CLE172
 
       * Reset variables gradually updated
 
@@ -2331,23 +2326,6 @@
      C                   ENDIF                                                             MD021423E
 
      C                   ENDSR
-      ****************************************************************                      CLE172
-      *  Get Record Lengths of Transaction Data Blocks               *                      CLE172
-      ****************************************************************                      CLE172
-     C     GETRCDLN      BEGSR                                                              CLE172
-                                                                                            CLE172
-     C                   CALLB     'UTGETRCDLN'                                             CLE172
-     C                   PARM                    ReturnCode       10                        CLE172
-     C                   PARM      *ZERO         RecordLen         5 0                      CLE172
-     C                   PARM                    FileName         10                        CLE172
-     C                   PARM      '*LIBL     '  FileLib          10                        CLE172
-                                                                                            CLE172
-      ** If file not found (or any other error) shut down the program                       CLE172
-     C     ReturnCode    Ifne      *Blanks                                                  CLE172
-     C                   EXSR      *pssr                                                    CLE172
-     C                   EndIf                                                              CLE172
-                                                                                            CLE172
-     C                   ENDSR                                                              CLE172
       ******************************************************************                   AR1095624
       *                                                                *                   AR1095624
       * PDPOverride - Override pay instructions from receipt           *                   AR1095624

@@ -1411,6 +1411,7 @@
      C                   PARM      'CLIP'        ApiName           4                          CLE172
      C                   PARM                    CCLCCY                                       CLE172
      C                   PARM                    CCLBRTT                                      CLE172
+     C                   PARM      *BLANKS       XLNRF             6                          CLE172
      C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNamXAr                                    CLE172

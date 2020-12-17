@@ -216,9 +216,9 @@
      D DecCart         S              8A
      D WNumCart        S             13P 8
 
-      ** Work fields for base rate key list
-     D WFCYCD          S              3A
-     D WFBSRC          S              2A
+      ** Work fields for cloancl key list
+     D LNRF            S              6A
+
 
       ** Generic screen fields
      D  DDBLRT         S              1A
@@ -399,11 +399,10 @@
      C                   PARM                    OutValfld                      Out param
      C                   PARM                    RetCodeOut                     Out param
 
-      **  Key list for base rate
+      **  Key list for CLOANCL
 
-     C     WKSDBSRT      KLIST
-     C                   KFLD                    WFCYCD
-     C                   KFLD                    WFBSRC
+     C     WKCLOANR      KLIST
+     C                   KFLD                    LNRF
 
      C                   SETOFF                                       30
      C     WFCYCD        IFEQ      *BLANKS
@@ -481,7 +480,7 @@
 
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
-     C     LNRF          CHAIN(N)  LECLIP2L                           20
+     C     WKCLOANR      CHAIN     LECLIP2L                           20
      C     *IN20         IFEQ      *OFF
      C                   MOVE      AVOP          HAVOP             1
      C                   MOVE      LBDY          HLBDY             2

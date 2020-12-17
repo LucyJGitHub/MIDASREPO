@@ -32,6 +32,7 @@
       *  Use of indicators.                                           *
       *                                                               *
       *    U7, U8     Database error                                  *
+      *    20         No Loan refernce found                          *
       *    30         No Currency and BaseRateCode input              *
       *                                                               *
       *****************************************************************
@@ -64,6 +65,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
+     FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)
+     F                                     IGNORE(CLOANCK)
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -164,14 +167,6 @@
      D  CVLBAC                41     42S 0
      D  CVPIAD                43     47S 0
 
-      ** LOAM Backward-Looking Rate Screen fields (Input)
-     D LoamScrFld      DS
-     D  LAAVOP                 1      1
-     D  LALBDY                 2      3
-     D  LALODY                 4      5
-     D  LAWGHT                 6      6
-     D  LABADJ                 7     20
-     D  LAPDLY                21     22
 
       ** LOAM Backward-Looking Rate Valid fields (Output)
      D LoamValFld      DS
@@ -341,33 +336,33 @@
      C                   ENDIF
       *LOAM BC
      C     ApiName       IFEQ      'LOAM'
-     C                   MOVE      InpScrfld     LoamScrFld
-     C                   MOVE      LAAVOP        DDAVOP
-     C                   MOVE      LALBDY        DDLBDY
-     C                   MOVE      LALODY        DDLODY
-     C                   MOVE      LAWGHT        DDWGHT
-     C                   MOVE      LABADJ        DDBADJ
-     C                   MOVE      LAPDLY        DDPDLY
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(1)   DDAVOP
+     C                   MOVEA     ArrayInp(2)   DDLBDY
+     C                   MOVEA     ArrayInp(4)   DDLODY
+     C                   MOVEA     ArrayInp(6)   DDWGHT
+     C                   MOVEA     ArrayInp(7)   DDBADJ
+     C                   MOVEA     ArrayInp(21)  DDPDLY
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
      C                   EXSR      SRLBDY
-     C                   MOVE      VLBDY         LVLBDY
+     C                   Z-ADD     VLBDY         LVLBDY
      C                   EXSR      SRLODY
-     C                   MOVE      VLODY         LVLODY
+     C                   Z-ADD     VLODY         LVLODY
      C                   EXSR      SRWGHT
      C                   MOVE      VWGHT         LVWGHT
      C                   EXSR      SRBADJ
-     C                   MOVE      VBADJ         LVBADJ
+     C                   Z-ADD     VBADJ         LVBADJ
      C                   EXSR      SRPDLY
-     C                   MOVE      VPDLY         LVPDLY
+     C                   Z-ADD     VPDLY         LVPDLY
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *LOAM SC
-     C     ApiName       IFEQ      'LOAMSC'
-     C                   MOVE      InpScrfld     LoamScrFld
-     C                   MOVE      LABADJ        DDBADJ
+     C     ApiName       IFEQ      'LOSC'
+     C                   MOVEA     InpScrfld     ArrayInp
+     C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   EXSR      SRBADJ
-     C                   MOVE      VBADJ         LVBADJ
+     C                   Z-ADD     VBADJ         LVBADJ
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *
@@ -396,6 +391,7 @@
      C                   PARM                    ApiName                        In Param
      C                   PARM                    WFCYCD                         In param
      C                   PARM                    WFBSRC                         In param
+     C                   PARM                    LNRF                           In param
      C                   PARM                    InpScrfld                      In/Out param
      C                   PARM                    Idx                            In/Out param
      C                   PARM                    FldNamXAr                      In/Out param
@@ -481,6 +477,22 @@
      C                   ENDIF
      C                   ENDIF
 
+      ** Acess Loan Details for BC and SC loan events defaulting
+
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     LNRF          CHAIN(N)  LECLIP2L                           20
+     C     *IN20         IFEQ      *OFF
+     C                   MOVE      AVOP          HAVOP             1
+     C                   MOVE      LBDY          HLBDY             2
+     C                   MOVE      LODY          HLODY             2
+     C                   MOVE      WGHT          HWGHT             1
+     C                   MOVE      BADJ          HBADJ            14
+     C                   MOVE      PDLY          HPDLY             2
+     C                   ENDIF
+     C                   ELSE
+     C                   SETOFF                                       20
+     C                   ENDIF
      C                   ENDSR
 
       *****************************************************************
@@ -533,30 +545,32 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     DDLBDY        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C                   MOVE      BBALBDY       DDLBDY                         Default from
+     C                   Z-ADD     BBALBDY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBALBDY       DDLBDY                         Default from
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'PDCL'
+     C                   Z-ADD     HLBDY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ELSE
-     C                   MOVEL     DDLBDY        #1TESTN                        Check if
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
+     C                   ELSE                                                   Not blank
+      *
+     C                   MOVEL     DDLBDY        #1TESTN
+     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
      C                   MOVE      DDLBDY        #2TESTN
      C     #2TESTN       SCAN      NumBlank      #2CHARPOS
       *
-     C     #1CHARPOS     IFEQ      *ZERO
+     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
       * Lookback Days for Settlement is not numeric
      C                   MOVE      'N'           DDLBDYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If numeric
+     C                   ELSE                                                    If numeric
       *
-     C     #2TESTN       IFEQ      *BLANK                                       Right align
+     C     #2TESTN       IFEQ      *BLANK                                        Right align
      C                   MOVE      #1TESTN       WDAY
      C                   ELSE
      C                   MOVE      DDLBDY        WDAY
@@ -571,9 +585,9 @@
      C                   MOVEL     '5049420'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                  END numeric
-     C                   ENDIF                                                  END default
-     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blank
+     C                   ENDIF                                                  END CLE172
       *
      C     DDLBDYOK      IFNE      'N'
      C                   Z-ADD     WDAY          VLBDY
@@ -594,30 +608,32 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     DDLODY        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C                   MOVE      BBALODY       DDLODY                         Default from
+     C                   Z-ADD     BBALODY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBALODY       DDLODY                         Default from
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'PDCL'
+     C                   Z-ADD     HLODY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ELSE
-     C                   MOVEL     DDLODY        #1TESTN                        Check if
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS                       numeric
+     C                   ELSE                                                   Not blank
+      *
+     C                   MOVEL     DDLODY        #1TESTN
+     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
      C                   MOVE      DDLODY        #2TESTN
      C     #2TESTN       SCAN      NumBlank      #2CHARPOS
       *
-     C     #1CHARPOS     IFEQ      *ZERO
+     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
       * Lockout Days is not numeric
      C                   MOVE      'N'           DDLODYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If numeric
+     C                   ELSE                                                    If numeric
       *
-     C     #2TESTN       IFEQ      *BLANK                                       Right align
+     C     #2TESTN       IFEQ      *BLANK                                        Right align
      C                   MOVE      #1TESTN       WDAY
      C                   ELSE
      C                   MOVE      DDLODY        WDAY
@@ -632,9 +648,9 @@
      C                   MOVEL     '5049421'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                  END numeric
-     C                   ENDIF                                                  END default
-     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blank
+     C                   ENDIF                                                  END CLE172
       *
      C     DDLODYOK      IFNE      'N'
      C                   Z-ADD     WDAY          VLODY
@@ -655,30 +671,32 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     DDPDLY        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C                   MOVE      BBAPDLY       DDPDLY                         Default from
+     C                   Z-ADD     BBAPDLY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBAPDLY       DDPDLY                         Default from
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'PDCL'
+     C                   Z-ADD     HPDLY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ELSE
-     C                   MOVEL     DDPDLY        #1TESTN                        Check if
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                       numeric
+     C                   ELSE                                                   Not blank
+      *
+     C                   MOVEL     DDPDLY        #1TESTN
+     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
      C                   MOVE      DDPDLY        #2TESTN
      C     #2TESTN       SCAN      NUMBLANK      #2CHARPOS
       *
-     C     #1CHARPOS     IFEQ      *ZERO
+     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
       * Payment Delay Days is not numeric
      C                   MOVE      'N'           DDPDLYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If numeric
+     C                   ELSE                                                    If numeric
       *
-     C     #2TESTN       IFEQ      *BLANK                                       Right align
+     C     #2TESTN       IFEQ      *BLANK                                        Right align
      C                   MOVE      #1TESTN       WDAY
      C                   ELSE
      C                   MOVE      DDPDLY        WDAY
@@ -693,9 +711,9 @@
      C                   MOVEL     '5049422'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                  END numeric
-     C                   ENDIF                                                  END default
-     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blank
+     C                   ENDIF                                                  END CLE172
       *
      C     DDPDLYOK      IFNE      'N'
      C                   Z-ADD     WDAY          VPDLY
@@ -710,19 +728,22 @@
       *****************************************************************
      C     SRBADJ        BEGSR
       *
+     C                   Z-ADD     0             WNumBadj                       Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
       *
      C     DDBADJ        IFEQ      *BLANKS                                      If blank
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOAMSC'
-     C                   MOVE      BBABADJ       DDBADJ                         Default from
+     C                   Z-ADD     BBABADJ       WNumBadj                        Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBABADJ       DDBADJ                         Default from
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     ApiName       OREQ      'PDCL'
+     C                   Z-ADD     HBADJ         WNumBadj                        Default from
      C                   ENDIF                                                   CLOANCL
-     C                   ENDIF
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
@@ -736,7 +757,7 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0
+     C     @@ERCD        IFNE      0                                            Not numeric
       * Benchmark Adjustment is not numeric
      C                   MOVE      'N'           DDBADJOK
      C                   ADD       1             Idx
@@ -776,11 +797,9 @@
      C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
      C                   MOVEL     '5049401'     MsgIdXAr(Idx)
      C                   ENDIF
-     C                   ENDIF                                                  END numeric
       *
-     C                   ELSE                                                   CLE172=OFF
-     C                   Z-ADD     0             WNumBadj                        Default: 0
-     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END CLE172
       *
      C     DDBADJOK      IFNE      'N'
      C                   Z-ADD     WNumBadj      VBADJ
@@ -799,15 +818,17 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     DDAVOP        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C                   MOVE      BBAAVOP       DDAVOP                         Default from
+     C                   MOVE      BBAAVOP       DDAVOP                          Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBAAVOP       DDAVOP                         Default from
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'PDCL'
+     C                   MOVE      HAVOP         DDAVOP                          Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ELSE
+     C                   ELSE                                                   Not blank
+      *
      C     DDAVOP        IFNE      '1'
      C     DDAVOP        ANDNE     '2'
      C     DDAVOP        ANDNE     '3'
@@ -817,9 +838,12 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
      C                   MOVEL     '5049403'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If valid
+     C                   ELSE                                                    If valid
       *
-     C     BBABLRT       IFNE      'Y'
+     C     ApiName       IFEQ      'CLIP'
+     C     BBABLRT       ANDNE     'Y'
+     C     ApiName       OREQ      'LOAM'
+     C     HABLRT        ANDNE     'Y'
       * Backward-Looking Rate is N and Averaging Option is not blank
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
@@ -827,11 +851,11 @@
      C                   MOVEL     '5049405'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                  END valid
-     C                   ENDIF                                                  END default
+     C                   ENDIF                                                   END valid
+     C                   ENDIF                                                  END blank
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      *BLANKS       DDAVOP                          Default:blank
-     C                   ENDIF
+     C                   MOVE      *BLANKS       DDAVOP
+     C                   ENDIF                                                  END CLE172
       *
      C     DDAVOPOK      IFNE      'N'
      C                   MOVE      DDAVOP        VAVOP
@@ -846,17 +870,21 @@
       *****************************************************************
      C     SRCART        BEGSR
       *
+     C                   Z-ADD     0             WNumCart                       Default: 0
+      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     *IN30         ANDEQ     *OFF
       *
      C     DDCART        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      '0'           DDCART                         Default: 0
+     C                   Z-ADD     0             WNumCart                        Default: 0
      C                   ENDIF
      C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      '0'           DDCART                         Default: 0
-     C                   ENDIF
-     C                   ENDIF
+     C                   Z-ADD     HCART         WNumCart                        Default from
+     C                   ENDIF                                                    CLOANCL
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDCART        @@ALPH
@@ -870,13 +898,13 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0
+     C     @@ERCD        IFNE      0                                             Not numeric
       * Compounded/Average rate is not numeric
      C                   MOVE      'N'           DDCARTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If numeric
+     C                   ELSE                                                    If numeric
       *
      C                   MOVE      @@ALPH        DDCART
      C                   MOVEL     DDCART        IntCart
@@ -910,11 +938,9 @@
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
      C                   MOVEL     '5049401'     MsgIdXAr(Idx)
      C                   ENDIF
-     C                   ENDIF                                                  END numeric
       *
-     C                   ELSE                                                   CLE172=OFF
-     C                   Z-ADD     0             WNumCart                        Default: 0
-     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END CLE172
       *
      C     DDCARTOK      IFNE      'N'
      C                   Z-ADD     WNumCart      VCART
@@ -933,15 +959,17 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If blank
+      *
      C     ApiName       IFEQ      'CLIP'
-     C     ApiName       OREQ      'LOAM'
-     C                   MOVE      BBAWGHT       DDWGHT                         Default from
+     C                   Z-ADD     BBAWGHT       VWGHT                           Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBAWGHT       DDWGHT                         Default from
+     C     ApiName       OREQ      'LOAM'
+     C                   Z-ADD     HWGHT         VWGHT                           Default from
      C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE
+      *                                                                         Not blank
      C     DDWGHT        IFNE      '1'
      C     DDWGHT        ANDNE     '2'
       * Weight Convention value is invalid
@@ -949,7 +977,7 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
      C                   MOVEL     '5049408'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If valid
+     C                   ELSE                                                    If valid
       *
      C     BBABLRT       IFNE      'Y'
       * Backward-Looking Rate is N and Weight Convention is not blank
@@ -968,11 +996,11 @@
      C                   MOVEL     '5049453'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                  END valid
-     C                   ENDIF                                                  END default
+     C                   ENDIF                                                   END valid
+     C                   ENDIF                                                  END blank
      C                   ELSE                                                   CLE172=OFF
      C                   MOVE      *BLANKS       DDWGHT
-     C                   ENDIF
+     C                   ENDIF                                                  END CLE172
       *
      C     DDWGHTOK      IFNE      'N'
      C                   MOVE      DDWGHT        VWGHT
@@ -991,15 +1019,15 @@
      C     *IN30         ANDEQ     *OFF
       *
      C     ApiName       IFEQ      'CLIP'
-     C                   MOVE      BBABRAC       DDBRAC                         Default from
+     C                   MOVE      BBABRAC       DDBRAC                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
-     C                   MOVE      BBABRAC       DDBRAC                         Default from
+     C                   MOVE      HBRAC         DDBRAC                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      *BLANKS       DDBRAC                          Default:blank
-     C                   ENDIF
+     C                   MOVE      *BLANKS       DDBRAC
+     C                   ENDIF                                                  END CLE172
       *
      C                   MOVE      DDBRAC        VBRAC
       *
@@ -1053,7 +1081,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNBDY                          Default: 0
      C                   ENDIF
       *
@@ -1069,7 +1097,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNODY                          Default: 0
      C                   ENDIF
       *
@@ -1085,7 +1113,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNDLY                          Default: 0
      C                   ENDIF
       *
@@ -1101,7 +1129,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNADJ                          Default: 0
      C                   ENDIF
       *
@@ -1117,7 +1145,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
      C                   ENDIF
       *
@@ -1133,7 +1161,7 @@
      C     ApiName       IFEQ      'CLIP'
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
-     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
       *

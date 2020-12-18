@@ -24996,7 +24996,7 @@
      C     URFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         UEINR                                         S0111
      C                   Z-ADD     WBRTE         UBRTE                                         S0111
-     C                   MOVE      *BLANKS       URFIN
+     C                   MOVE      *BLANKS       URFIN                                      MD056911
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -25037,7 +25037,7 @@
      C     TRFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         TEINR                                         S0111
      C                   Z-ADD     WBRTE         TBRTE                                         S0111
-     C                   MOVE      *BLANKS       TRFIN
+     C                   MOVE      *BLANKS       TRFIN                                      MD056911
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -28167,6 +28167,7 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
+
      C*                                                                   CIR001
      C     RLSEND        ENDSR                                                                 S0111
 2877 C********************************************************************S01119

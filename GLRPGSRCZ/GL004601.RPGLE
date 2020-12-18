@@ -53,7 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057308 - Amend ASOC values for transaction accounts        *
+      *  MD057308 - Amend ASOC values for transaction accounts.       *
       *  MD055518 - Profit Centre assigned to TI postings is different*
       *             between MidasPlus and FBMidas. Profit Centre of   *
       *             TI postings will be defaulted based on the TI ICD *

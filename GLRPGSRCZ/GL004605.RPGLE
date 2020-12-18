@@ -27,7 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057038 - Additional of Debit/Credit Associated Customer    *
+      *  MD057038 - Additional of Debit/Credit Associated Customer.   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *

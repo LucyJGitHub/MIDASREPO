@@ -300,7 +300,7 @@
      D PCNEXT          S              8A                                                      CLE148
      D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034449 MD057191
      D**********                           PREFIX(DL_)                             MD034449 MD057191
-      ***External*DS*for*Dealing*Details                                           MD034449 MD057191
+      ***External*DS*for*Dealing*Details*******************************            MD034449 MD057191
                                                                                             MD034449
      D PERCD           S              1P 0                                                  MD034449
      D PAMT            S             15P 0                                                  MD034449
@@ -6484,14 +6484,14 @@
      C                   ENDIF                                                                240408
      C                   ENDIF                                                                240408
       **********                                                                   MD034449 MD057191
-      ***Access*Dealing*Details                                                    MD034449 MD057191
+      ***Access*Dealing*Details****************************************            MD034449 MD057191
       **********                                                                   MD034449 MD057191
      C**********         CALL      'AODEALR1'                                      MD034449 MD057191
      C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
      C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
      C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
       **********                                                                   MD034449 MD057191
-      **Database*Error                                                             MD034449 MD057191
+      **Database*Error*************************************************            MD034449 MD057191
       **********                                                                   MD034449 MD057191
      C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449

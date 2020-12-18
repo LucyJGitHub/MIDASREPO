@@ -14,9 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057323           Date 09Dec20               *
-      *  Prev Amend No. MD045482           Date 23Oct20               *
-      *                 MD057191           Date 02Dec20               *
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD057323           Date 09Dec20               *
+      *                 MD045482           Date 23Oct20               *
       *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
@@ -122,16 +122,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034449.                                      *
       *  MD057323 - LELERIVAL compilation error due to mis-           *
       *             alignment when MD-45482 was merged                *
       *  MD045482 - Additional Handling of NFRS and NFSN (Spread Rate *
       *             and Funding Sign). When NFRS & NFSN are blank and *
       *             When NFRS & NFSN are '*' to clear fields          *
       *           - Applied for MD057026.                             *
-      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
-      *             interest rate                                     *
-      *           - DL ICD must not be used, removed unnecessary codes*
-      *             of MD034449.                                      *
       *  MD034915A - New funding rate disappears after input. Change  *
       *              from Z-ADD to MOVE when passing value of @@AMT   *
       *              to VNFRS.                                        *

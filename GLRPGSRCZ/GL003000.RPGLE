@@ -16,7 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057038           Date 11Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. AR1075388          Date 21Nov13               *
       *                 CGL127             Date 06Aug12               *
       *                 AR845655           Date 06Oct11               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057038 - Additional of Debit/Credit Associated Customer    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
@@ -458,6 +460,11 @@
      C                   MOVE      R1CRRE        RACRRE
      C                   EVAL      RACRTT = R1CRTT
  
+      ** DB and CR Associated Customer
+
+     C                   EVAL      RADASC = R1DASC                                          MD057038
+     C                   EVAL      RACASC = R1CASC                                          MD057038
+
      C                   EXSR      SRWP1REC
  
      C                   ENDSR

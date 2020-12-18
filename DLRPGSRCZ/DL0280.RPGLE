@@ -20284,19 +20284,6 @@
      C                   MOVE      *BLANKS       TRFIN                                         CSW00
      C                   ENDIF                                                                 CSW00
      C*                                                                   CSW005
-     C     CSW005        IFEQ      'Y'                                                      MD056911
-     C     CSW011        OREQ      'Y'                                                      MD056911
-     C     UINFD         IFGE      EVCD                                                     MD056911
-     C     UINFD         ANDLE     UNICD                                                    MD056911
-     C     URFIN         ANDNE     *BLANK                                                   MD056911
-     C                   MOVE      *BLANK        URFIN                                      MD056911
-     C                   ENDIF                                                              MD056911
-     C     TINFD         IFGE      EVCD                                                     MD056911
-     C     TINFD         ANDLE     TNICD                                                    MD056911
-     C     TRFIN         ANDNE     *BLANK                                                   MD056911
-     C                   MOVE      *BLANK        TRFIN                                      MD056911
-     C                   ENDIF                                                              MD056911
-     C                   ENDIF                                                              MD056911
      C                   ENDSR                                                                 CSW00
 2877 C********************************************************************S01119
      C/EJECT                                                              S01119
@@ -24491,21 +24478,6 @@
      C                   MOVE      *BLANKS       TRFIN                                         CSW00
      C                   ENDIF                                                                 CSW00
      C*                                                                   CSW005
-     C     CSW005        IFEQ      'Y'                                                      MD056911
-     C     CSW011        OREQ      'Y'                                                      MD056911
-     C     UINFD         IFGE      EVCD                                                     MD056911
-     C     UINFD         ANDLE     UNICD                                                    MD056911
-     C     URFIN         ANDNE     *BLANK                                                   MD056911
-     C                   MOVE      *BLANK        URFIN                                      MD056911
-     C                   MOVE      '1'           *IN15                                      MD056911
-     C                   ENDIF                                                              MD056911
-     C     TINFD         IFGE      EVCD                                                     MD056911
-     C     TINFD         ANDLE     TNICD                                                    MD056911
-     C     TRFIN         ANDNE     *BLANK                                                   MD056911
-     C                   MOVE      *BLANK        TRFIN                                      MD056911
-     C                   MOVE      '1'           *IN15                                      MD056911
-     C                   ENDIF                                                              MD056911
-     C                   ENDIF                                                              MD056911
      C/COPY DLCPYSRC,DL0280C723                                                               CIR014
      C                   ENDSR                                                                 CSW00
      C/COPY WNCPYSRC,DL0280C367
@@ -25023,6 +24995,7 @@
      C     URFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         UEINR                                         S0111
      C                   Z-ADD     WBRTE         UBRTE                                         S0111
+     C                   MOVE      *BLANKS       URFIN
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -25063,6 +25036,7 @@
      C     TRFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         TEINR                                         S0111
      C                   Z-ADD     WBRTE         TBRTE                                         S0111
+     C                   MOVE      *BLANKS       TRFIN
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
@@ -25080,14 +25054,14 @@
      C                   END                                                                   S0111
       *                                                                   CSW005
       * Set Our/Their Rate Fixing Indicator to 'X' if CSW005 = 'Y'        CSW005
-     C     CSW005        IFEQ      'Y'                                                         CSW00
-     C     CSW011        OREQ      'Y'                                                         CSW01
-     C     DTLUT         IFEQ      'U'                                                         CSW00
-     C                   MOVE      'X'           URFIN                                         CSW00
-     C                   ELSE                                                                  CSW00
-     C                   MOVE      'X'           TRFIN                                         CSW00
-     C                   ENDIF                                                                 CSW00
-     C                   ENDIF                                                                 CSW00
+     C*****CSW005*****   IFEQ      'Y'                                                CSW00 MD056911
+     C*****CSW011*****   OREQ      'Y'                                                CSW01 MD056911
+     C*****DTLUT******   IFEQ      'U'                                                CSW00 MD056911
+     C**********         MOVE      'X'           URFIN                                CSW00 MD056911
+     C**********         ELSE                                                         CSW00 MD056911
+     C**********         MOVE      'X'           TRFIN                                CSW00 MD056911
+     C**********         ENDIF                                                        CSW00 MD056911
+     C**********         ENDIF                                                        CSW00 MD056911
      C*                                                                   S01119
      C     IRSEND        ENDSR                                                                 S0111
 2877 C********************************************************************S01119
@@ -28192,16 +28166,6 @@
      C                   END                                                                   CIR00
      C*                                                                   CIR001
      C                   END                                                                   CIR00
-     C     WRFIN         IFNE      *BLANK                                                   MD056911
-     C     CSW005        IFEQ      'Y'                                                      MD056911
-     C     CSW011        OREQ      'Y'                                                      MD056911
-     C     USRST         IFEQ      'P'                                                      MD056911
-     C                   MOVE      *BLANK        URFIN                                      MD056911
-     C                   ELSE                                                               MD056911
-     C                   MOVE      *BLANK        TRFIN                                      MD056911
-     C                   ENDIF                                                              MD056911
-     C                   ENDIF                                                              MD056911
-     C                   ENDIF                                                              MD056911
 
      C*                                                                   CIR001
      C     RLSEND        ENDSR                                                                 S0111

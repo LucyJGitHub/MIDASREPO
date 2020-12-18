@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054980           Date 05Oct20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD057373           Date 17Dec20              */
+/*       Prev Amend No. MD054980           Date 05Oct20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057373 - Compilation error in CGMSGUTL                    */
+/*                - Add asterisk (*) for comment format /**ADDMSGD   */
 /*       MD054980 - Retail Teller narratives not multilanguage       */
 /*                - Amend 00900/920                                  */
 /*                - Add 00970/980/990                                */
@@ -1519,14 +1522,14 @@
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT '00370') MSGF(CGPNARMSG) MSG('** VAT **') +
+/**ADDMSGD*MSGID(&LGID *TCAT '00370') MSGF(CGPNARMSG) MSG('** VAT **') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
                      (*CHAR 2)  (*CHAR 20) (*CHAR 21) (*CHAR 14) +
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
   ADDMSGD MSGID(&LGID *TCAT '00370') MSGF(CGPNARMSG) MSG('** VAT **') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
@@ -2771,7 +2774,7 @@
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT 'FB000') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
+/**ADDMSGD*MSGID(&LGID *TCAT 'FB000') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 &10') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
@@ -2779,7 +2782,7 @@
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
   ADDMSGD MSGID(&LGID *TCAT 'FB000') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 &10') +
@@ -2791,14 +2794,14 @@
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
+/**ADDMSGD*MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
                      (*CHAR 2)  (*CHAR 20) (*CHAR 21) (*CHAR 14) +
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
 ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
@@ -2909,7 +2912,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT 'F3001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
+/**ADDMSGD*MSGID(&LGID *TCAT 'F3001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 REALISED PROFIT') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
@@ -2917,7 +2920,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
  ADDMSGD MSGID(&LGID *TCAT 'F3001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 REALISED PROFIT') +
@@ -2929,7 +2932,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT 'F4001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
+/**ADDMSGD*MSGID(&LGID *TCAT 'F4001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 REALISED LOSS') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
@@ -2937,7 +2940,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
  ADDMSGD MSGID(&LGID *TCAT 'F4001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 REALISED LOSS') +
@@ -2967,7 +2970,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 10))                                                          /*CGL029*/
 
-/*ADDMSGD*MSGID(&LGID *TCAT 'F6001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
+/**ADDMSGD*MSGID(&LGID *TCAT 'F6001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 &21 &22') +
                  FMT((*CHAR 16) (*CHAR 7)  (*CHAR 7)  (*CHAR 2) +
                      (*CHAR 3)  (*CHAR 6)  (*CHAR 3)  (*CHAR 4) +
@@ -2975,7 +2978,7 @@ ADDMSGD MSGID(&LGID *TCAT 'FC000') MSGF(CGPNARMSG) MSG('&18 &19 &10') +
                      (*CHAR 14) (*CHAR 6)  (*CHAR 2)  (*CHAR 10) +
                      (*CHAR 20) (*CHAR 2)  (*CHAR 3)  (*CHAR 5) +
                      (*CHAR 1)  (*CHAR 15) (*CHAR 2)  (*CHAR 10) +
-                     (*CHAR 10))                                                          /*CGL029*/
+                     (*CHAR 10))                                                 /*CGL029 MD057373*/
 
 ADDMSGD MSGID(&LGID *TCAT 'F6001') MSGF(CGPNARMSG) MSG('&18 &19 &20 +
                 &21 &22') +

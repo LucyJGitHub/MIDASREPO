@@ -1023,11 +1023,11 @@
       ***  Validate base rate type
       *
      C                   EXSR      SRBRTT
+     C                   ENDIF                                                                CLE035
       *                                                                                       CLE172
       ***  Validate backward-looking rate fields                                              CLE172
       *                                                                                       CLE172
      C                   EXSR      SRBLRTE                                                    CLE172
-     C                   ENDIF                                                                CLE035
       *
       /COPY WNCPYSRC,LECLIP2V05
       *
@@ -1720,7 +1720,6 @@
      C                   MOVEL     'LEL0712'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
      C                   EXSR      SRBRTT                                                     CLE035
-     C                   EXSR      SRBLRTE                                                    CLE172
       *                                                                                     MD055219
      C     BASER         IFEQ      *ZEROS                                                   MD055219
      C     #DDRTSP       ANDEQ     *ZEROS                                                   MD055219

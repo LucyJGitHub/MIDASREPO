@@ -182,16 +182,16 @@
       ***  Second DS for access programs, long data structure
       *                                                                                       CLE172
      D LoanScnBlrt     DS            41                                                       CLE172
-     D  DDBLRT                 1      1
-     D  DDLBDY                 2      3
-     D  DDLODY                 4      5
-     D  DDPDLY                 6      7
-     D  DDBADJ                 8     21
-     D  DDAVOP                22     22
-     D  DDCART                23     36
-     D  DDWGHT                37     37
-     D  DDBRAC                38     39
-     D  DDLBAC                40     41
+     D  DDBLRT                 1      1                                                       CLE172
+     D  DDLBDY                 2      3                                                       CLE172
+     D  DDLODY                 4      5                                                       CLE172
+     D  DDPDLY                 6      7                                                       CLE172
+     D  DDBADJ                 8     21                                                       CLE172
+     D  DDAVOP                22     22                                                       CLE172
+     D  DDCART                23     36                                                       CLE172
+     D  DDWGHT                37     37                                                       CLE172
+     D  DDBRAC                38     39                                                       CLE172
+     D  DDLBAC                40     41                                                       CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *
       ** +--------------------------------------+
@@ -709,7 +709,7 @@
       *                                                                                       CLE172
       * Lookback Days for Accrual                                                             CLE172
       *                                                                                       CLE172
-     C                   MOVE      LBDY          DDLBAC                                       CLE172
+     C                   MOVE      LBAC          DDLBAC                                       CLE172
       *                                                                                       CLE172
      C                   ENDSR
       *****************************************************************

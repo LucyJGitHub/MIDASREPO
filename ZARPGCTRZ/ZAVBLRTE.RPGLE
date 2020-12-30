@@ -197,25 +197,16 @@
      D @@IDP           S              3P 0
      D @@IINT          S              3P 0
 	
-      ** Parameters for calling ZASIGN
-     D PZASignOk       S              1A
      D PZFld17         S             17A
-     D PZDig           S              2P 0
-     D PZDec           S              1P 0
-     D PZSDCSP         S              1A
-     D PZOut15         S             15A
-     D PZFSign         S              1A
 
      D #1TESTN         S              1A
      D #2TESTN         S              1A
      D #1CHARPOS       S              2P 0
      D #2CHARPOS       S              2P 0
      D WDAY            S              2S 0
-     D PTBADJ          S              2P 0
      D IntBadj         S              5A
      D DecBadj         S              8A
      D WNumBadj        S             13P 8
-     D PTCART          S              2P 0
      D IntCart         S              5A
      D DecCart         S              8A
      D WNumCart        S             13P 8
@@ -301,8 +292,6 @@
      C                   MOVEA     ArrayInp(22)  DDAVOP
      C                   MOVEA     ArrayInp(23)  DDCART
      C                   MOVEA     ArrayInp(37)  DDWGHT
-     C                   MOVEA     ArrayInp(38)  DDBRAC
-     C                   MOVEA     ArrayInp(40)  DDLBAC
      C                   EXSR      SRBLRT
      C                   EXSR      SRLBDY
      C                   EXSR      SRLODY
@@ -497,8 +486,6 @@
      C                   ENDSR
 
       *****************************************************************
-
-      *****************************************************************
       /EJECT
       *****************************************************************
       *  SRBLRT - Validate backward-looking rate                      *
@@ -524,12 +511,19 @@
       * Accrue on Last Day is Y and Rate is Backward-Looking Rate
      C                   MOVE      'N'           DDBLRTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)
-     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
+     C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)
+     C                   MOVEL     '5049454'     MsgIdXAr(Idx)
      C                   ENDIF
+      *
      C                   ELSE                                                   CLE172=OFF
-     C                   MOVE      'N'           DDBLRT                          Default: N
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HBLRT         DDBLRT                         Default from
+     C                   ELSE                                                    CLOANCL
+     C                   MOVE      'N'           DDBLRT
      C                   ENDIF
+      *
+     C                   ENDIF                                                  END CLE172
       *
      C     DDBLRTOK      IFNE      'N'
      C                   MOVE      DDBLRT        VBLRT
@@ -545,6 +539,9 @@
      C     SRLBDY        BEGSR
       *
      C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HLBDY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
@@ -609,6 +606,9 @@
      C     SRLODY        BEGSR
       *
      C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HLODY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
@@ -673,6 +673,9 @@
      C     SRPDLY        BEGSR
       *
      C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HPDLY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
@@ -737,6 +740,9 @@
      C     SRBADJ        BEGSR
       *
      C                   Z-ADD     0             WNumBadj                       Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HBADJ         WNumBadj                        Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
@@ -781,22 +787,8 @@
      C                   MOVEA     DLBNDCSP      ArrayBadj(6)
      C                   MOVEA     DecBadj       ArrayBadj(7)
       *
-     C     '-'           SCAN      @@ALPH        PTBADJ
-     C     PTBADJ        IFNE      0
-     C                   MOVE      '-'           PZFSign
-     C                   MOVEA     '- '          ArrayBadj(8)
-     C                   ENDIF
      C                   MOVEA     ArrayBadj     PZFld17
-      *
-     C                   CALLB     'ZASIGN'
-     C                   PARM      'Y'           PZASignOk
-     C                   PARM                    PZFld17
-     C                   PARM      5             PZDig
-     C                   PARM      8             PZDec
-     C                   PARM      DLBNDCSP      PZSDCSP
-     C                   PARM                    PZOut15
-     C                   PARM                    PZFSign
-     C                   MOVE      PZOut15       WNumBadj
+     C                   MOVE      PZFld17       WNumBadj
       *
      C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
@@ -860,8 +852,15 @@
       *
      C                   ENDIF                                                   END valid
      C                   ENDIF                                                  END blank
+      *
      C                   ELSE                                                   CLE172=OFF
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HAVOP         DDAVOP                          Default from
+     C                   ELSE                                                    CLOANCL
      C                   MOVE      *BLANKS       DDAVOP
+     C                   ENDIF
+      *
      C                   ENDIF                                                  END CLE172
       *
      C     DDAVOPOK      IFNE      'N'
@@ -878,6 +877,9 @@
      C     SRCART        BEGSR
       *
      C                   Z-ADD     0             WNumCart                       Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HCART         WNumCart                        Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
@@ -921,22 +923,8 @@
      C                   MOVEA     DLBNDCSP      ArrayCart(6)
      C                   MOVEA     DecCart       ArrayCart(7)
       *
-     C     '-'           SCAN      @@ALPH        PTCART
-     C     PTCART        IFNE      0
-     C                   MOVE      '-'           PZFSign
-     C                   MOVEA     '- '          ArrayCart(8)
-     C                   ENDIF
      C                   MOVEA     ArrayCart     PZFld17
-      *
-     C                   CALLB     'ZASIGN'
-     C                   PARM      'Y'           PZASignOk
-     C                   PARM                    PZFld17
-     C                   PARM      5             PZDig
-     C                   PARM      8             PZDec
-     C                   PARM      DLBNDCSP      PZSDCSP
-     C                   PARM                    PZOut15
-     C                   PARM                    PZFSign
-     C                   MOVE      PZOut15       WNumCart
+     C                   MOVE      PZFld17       WNumCart
       *
      C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS
@@ -969,12 +957,12 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAWGHT       VWGHT                           Default from
+     C                   MOVE      BBAWGHT       DDWGHT                          Default from
      C                   ENDIF                                                   SDBSRTPD
      C     ApiName       IFEQ      'PDCL'
      C     ApiName       OREQ      'LOAM'
      C     *IN29         ANDEQ     *OFF
-     C                   MOVE      HWGHT         VWGHT                           Default from
+     C                   MOVE      HWGHT         DDWGHT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE
@@ -1007,8 +995,15 @@
       *
      C                   ENDIF                                                   END valid
      C                   ENDIF                                                  END blank
+      *
      C                   ELSE                                                   CLE172=OFF
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HWGHT         DDWGHT                          Default from
+     C                   ELSE                                                    CLOANCL
      C                   MOVE      *BLANKS       DDWGHT
+     C                   ENDIF
+      *
      C                   ENDIF                                                  END CLE172
       *
      C     DDWGHTOK      IFNE      'N'
@@ -1024,20 +1019,17 @@
       *****************************************************************
      C     SRBRAC        BEGSR
       *
-     C                   MOVE      *BLANKS       VBRAC
+     C                   MOVE      *BLANKS       VBRAC                          Default:blank
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HBRAC         VBRAC                          Default from
+     C                   ENDIF                                                  CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBABRAC       DDBRAC                          Default from
+     C                   MOVE      BBABRAC       VBRAC                           Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   MOVE      HBRAC         DDBRAC                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C                   MOVE      DDBRAC        VBRAC
       *
      C                   ENDIF                                                  END CLE172
       *
@@ -1050,9 +1042,13 @@
       *****************************************************************
      C     SRLBAC        BEGSR
       *
-     C                   Z-ADD     0             VLBAC                          Default: 00
+     C                   Z-ADD     0             VLBAC                          Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HLBAC         VLBAC                          Default from
+     C                   ENDIF                                                  CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     *IN29         ANDEQ     *ON
      C     *IN30         ANDEQ     *OFF
      C     VBRAC         ANDNE     *ZEROS
       *
@@ -1077,7 +1073,11 @@
       *****************************************************************
      C     SDPIAD        BEGSR
       *
-     C                   MOVE      0             VPIAD                          Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HPIAD         VPIAD
+     C                   ELSE
+     C                   MOVE      0             VPIAD
+     C                   ENDIF
       *
      C                   ENDSR
       *
@@ -1089,7 +1089,11 @@
      C     SDNBDY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNBDY         VNBDY                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   Z-ADD     0             VNBDY                          Default: 0
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNBDY                          Default: 0
@@ -1105,7 +1109,11 @@
      C     SDNODY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNODY         VNODY                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   Z-ADD     0             VNODY                          Default: 0
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNODY                          Default: 0
@@ -1121,7 +1129,11 @@
      C     SDNDLY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNDLY         VNDLY                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   Z-ADD     0             VNDLY                          Default: 0
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNDLY                          Default: 0
@@ -1137,7 +1149,11 @@
      C     SDNADJ        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNADJ         VNADJ                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   Z-ADD     0             VNADJ                          Default: 0
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   Z-ADD     0             VNADJ                          Default: 0
@@ -1153,7 +1169,11 @@
      C     SDNGHT        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNGHT         VNGHT                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
@@ -1169,7 +1189,11 @@
      C     SDNVOP        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HNVOP         VNVOP                          Default from
+     C                   ELSE                                                   CLOANCL
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
+     C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
      C                   MOVE      *BLANKS       VNVOP                          Default:blank

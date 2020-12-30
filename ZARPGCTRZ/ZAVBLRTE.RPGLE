@@ -551,11 +551,6 @@
      C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBALBDY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   Z-ADD     HLBDY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE                                                   Not blank
       *
@@ -618,11 +613,6 @@
      C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBALODY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   Z-ADD     HLODY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE                                                   Not blank
       *
@@ -685,11 +675,6 @@
      C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBAPDLY       WDAY                            Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   Z-ADD     HPDLY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
       *
      C                   ELSE                                                   Not blank
       *
@@ -751,12 +736,6 @@
      C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     BBABADJ       WNumBadj                        Default from
      C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'LOSC'
-     C     ApiName       OREQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   Z-ADD     HBADJ         WNumBadj                        Default from
-     C                   ENDIF                                                   CLOANCL
       *
      C                   ENDIF                                                  END blank
       *
@@ -889,10 +868,6 @@
      C     *IN30         ANDEQ     *OFF
      C                   Z-ADD     0             WNumCart                        Default: 0
      C                   ENDIF
-     C     ApiName       IFEQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   Z-ADD     HCART         WNumCart                        Default from
-     C                   ENDIF                                                    CLOANCL
       *
      C                   ENDIF                                                  END blank
       *

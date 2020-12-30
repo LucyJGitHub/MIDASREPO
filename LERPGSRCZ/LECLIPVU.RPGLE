@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD053956           Date 29Oct19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
@@ -144,6 +145,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
@@ -565,6 +567,9 @@
      D PCust           S             10                                                       247545
      D PStKey          S              7                                                       247545
                                                                                               247545
+      ** CLIP Backward-Looking Rate Fields                                                    CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
+                                                                                              CLE172
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS
@@ -1059,14 +1064,17 @@
      C                   EXSR      GETRCDLN                                                 MD054028
      C                   ADD       RecordLen     eBfp                                       MD054028
       ** CER050 Fields                                                                      MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
+     C**********         IF        CER050 = 'Y'                                      MD054028 CLE172
      C                   EVAL      DDAPRC = %SUBST(Extdata500:eBfp:1)                       MD054028
      C                   ADD       1             eBfp                                       MD054028
      C                   EVAL      DDPREM = %SUBST(Extdata500:eBfp:15)                      MD054028
      C                   ADD       15            eBfp                                       MD054028
      C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
      C                   ADD       8             eBfp                                       MD054028
-     C                   ENDIF                                                              MD054028
+     C**********         ENDIF                                                       MD054028 CLE172
+      ** CLE172 Fields                                                                        CLE172
+     C                   EVAL      LoanScnBlrt = %SUBST(Extdata500:eBfp:41)                   CLE172
+     C                   ADD       41            eBfp                                         CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated
@@ -1582,6 +1590,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + LoanScnBlrt                            CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1610,6 +1619,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + LoanScnBlrt                            CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -2049,6 +2059,8 @@
      C                   PARM                    OKClPrim
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
 
       * OUTPUTS
 
@@ -2984,6 +2996,9 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721

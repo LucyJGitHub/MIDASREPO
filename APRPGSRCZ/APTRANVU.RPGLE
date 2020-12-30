@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -226,6 +227,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -2567,6 +2569,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn) + CLAPRDta            MD054028
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           41                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn+CLCR50Ln) +              CLE172
+     C                                       BSRDta                                           CLE172
+     C                   ADD       CLBSRTLn      Bfp                                          CLE172
+                                                                                              CLE172
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
@@ -2753,6 +2761,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LOEXLn        Bfp                                          247172
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
+      *
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     LOBLRTLn      SUBST     BUFFER:Bfp    BLRDta           22                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LOEXLn) + BLRDta                CLE172
+     C                   ADD       LOBLRTLn      Bfp                                          CLE172
+                                                                                              CLE172
 
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
@@ -6043,6 +6057,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     RecordLen     CLEXLn            4 0
       *                                                                                     MD054028
      C                   Z-ADD     24            CLCR50Ln          4 0                      MD054028
+      *                                                                                       CLE172
+     C                   Z-ADD     41            CLBSRTLn          4 0                        CLE172
                                                                                               CER049
      C                   MOVEL     *BLANKS       FileName                                     CER049
      C                   MOVEL     'LESTMP2PD'   FileName                                     CER049
@@ -6146,7 +6162,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0
-
+      *                                                                                       CLE172
+     C                   Z-ADD     22            LOBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
@@ -292,6 +294,18 @@
                                                                                               CLE025
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
+      ** LOAM Backward-Looking Rate Screen Fields                                             CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
+                                                                                              CLE172
+      ** LOAM Backward-Looking Rate Valid Fields                                              CLE172
+     D LoamValBlrt     DS                                                                     CLE172
+     D  WLAAVOP                1      1A                                                      CLE172
+     D  WLALBDY                2      3S 0                                                    CLE172
+     D  WLALODY                4      5S 0                                                    CLE172
+     D  WLAWGHT                6      6A                                                      CLE172
+     D  WLABADJ                7     13P 8                                                    CLE172
+     D  WLAPDLY               14     15S 0                                                    CLE172
+                                                                                              CLE172
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
      D                                     PREFIX(DL_)                                      MD034449
       ** External DS for Dealing Details                                                    MD034449
@@ -872,6 +886,18 @@
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields for BC loan event                            CLE172
+      *                                                                                       CLE172
+     C     DDATYP        IFEQ      'BC'                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields for SC loan event                            CLE172
+      *                                                                                       CLE172
+     C     DDATYP        IFEQ      'SC'                                                       CLE172
+     C                   EXSR      SRBLRTE1                                                   CLE172
+     C                   ENDIF                                                                CLE172
       *
       /COPY WNCPYSRC,LELOAMV018
       *
@@ -5288,6 +5314,66 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LOAM'        ApiName           4                          CLE172
+     C                   PARM                    LACCY                                        CLE172
+     C                   PARM                    LABRTT                                       CLE172
+     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LoamValBlrt                                  CLE172
+     C                   MOVE      WLAAVOP       LAAVOP                                       CLE172
+     C                   Z-ADD     WLALBDY       LALBDY                                       CLE172
+     C                   Z-ADD     WLALODY       LALODY                                       CLE172
+     C                   MOVE      WLAWGHT       LAWGHT                                       CLE172
+     C                   Z-ADD     WLABADJ       LABADJ                                       CLE172
+     C                   Z-ADD     WLAPDLY       LAPDLY                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE1 - Validate backward-looking rate fields (SC)        *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE1      BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LOSC'        ApiName           4                          CLE172
+     C                   PARM                    LACCY                                        CLE172
+     C                   PARM                    LABRTT                                       CLE172
+     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LoamValBlrt                                  CLE172
+     C                   Z-ADD     WLABADJ       LABADJ                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6017,6 +6103,10 @@
 
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
+                                                                                            CLE172
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
+
 
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr

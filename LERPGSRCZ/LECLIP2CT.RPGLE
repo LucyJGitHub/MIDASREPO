@@ -15,9 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD034449           Date 24Jan19               *      
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Negative Rate/Spread field is not displayed       *
@@ -148,6 +150,11 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
+     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+      *** Benchmark Adjustment in screen format                                               CLE172
+     D ArrayCart       S              1A   DIM(17)                                            CLE172
+      *** Compounded/Average Rate in screen format                                            CLE172
+      *
      D LoanFilFmtCL  E DS                  EXTNAME(CLOANCL)
       ***  Loan in file Format CL
       *
@@ -173,6 +180,19 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  Second DS for access programs, long data structure
+      *                                                                                       CLE172
+     D LoanScnBlrt     DS            41                                                       CLE172
+     D  DDBLRT                 1      1                                                       CLE172
+     D  DDLBDY                 2      3                                                       CLE172
+     D  DDLODY                 4      5                                                       CLE172
+     D  DDPDLY                 6      7                                                       CLE172
+     D  DDBADJ                 8     21                                                       CLE172
+     D  DDAVOP                22     22                                                       CLE172
+     D  DDCART                23     36                                                       CLE172
+     D  DDWGHT                37     37                                                       CLE172
+     D  DDBRAC                38     39                                                       CLE172
+     D  DDLBAC                40     41                                                       CLE172
+      ** CLIP Backward-Looking Rate Fields                                                    CLE172
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -188,6 +208,19 @@
      D CLE143          S              1                                                       CLE143
      D CRE073          S              1                                                       CRE073
                                                                                               CLE035
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
+     D IntCart         S              5A                                                      CLE172
+     D DecCart         S              8A                                                      CLE172
+                                                                                              CLE172
+     D @@ALPH          S             16A                                                      CLE172
+     D @@MTID          S              1A                                                      CLE172
+     D @@AMT           S             15  0                                                    CLE172
+     D @@ERCD          S              1  0                                                    CLE172
+     D @@IDP           S              3  0                                                    CLE172
+     D @@IINT          S              3  0                                                    CLE172
+     D BNDCSP          S              1A                                                      CLE172
+                                                                                              CLE172
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -586,6 +619,98 @@
                                                                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      * Backward-Looking Rate                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      BLRT          DDBLRT                                       CLE172
+      *                                                                                       CLE172
+      * Lookback Days for Settlement                                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVE      LBDY          DDLBDY                                       CLE172
+      *                                                                                       CLE172
+      * Lockout Days                                                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVE      LODY          DDLODY                                       CLE172
+      *                                                                                       CLE172
+      * Payment Delay Days                                                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVE      PDLY          DDPDLY                                       CLE172
+      *                                                                                       CLE172
+      * Benchmark Adjustment                                                                  CLE172
+      *                                                                                       CLE172
+     C                   MOVE      '.'           BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     BADJ          IntBadj                                      CLE172
+     C                   MOVE      BADJ          DecBadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
+      *                                                                                       CLE172
+      * Averaging Option                                                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      AVOP          DDAVOP                                       CLE172
+      *                                                                                       CLE172
+      * Compouned/Average Rate                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     CART          IntCart                                      CLE172
+     C                   MOVE      CART          DecCart                                      CLE172
+     C     CART          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayCart(1)                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(2)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayCart(7)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(1)                                 CLE172
+     C                   MOVEA     BNDCSP        ArrayCart(6)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayCart     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    BNDCSP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDCART                                       CLE172
+      *                                                                                       CLE172
+      * Weight Convention                                                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WGHT          DDWGHT                                       CLE172
+      *                                                                                       CLE172
+      * Base Rate for Accrual                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVE      BRAC          DDBRAC                                       CLE172
+      *                                                                                       CLE172
+      * Lookback Days for Accrual                                                             CLE172
+      *                                                                                       CLE172
+     C                   MOVE      LBAC          DDLBAC                                       CLE172
+      *                                                                                       CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -640,6 +765,10 @@
       ***  Loan in file format CK
       *
      C                   PARM                    LoanFilFmtCK
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028            1                         BUG3721

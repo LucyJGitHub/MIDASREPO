@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD024811           Date 24Jan20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD024811           Date 24Jan20               *
       *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
@@ -551,6 +553,10 @@
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
 
+      ** LE Backward-Looking Rate Fields                                                      CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
+                                                                                              CLE172
+
       ** Indices for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
@@ -636,7 +642,12 @@
      C                   MOVEL     Trans5002     TranInLOA2                                   CLE106
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   MOVEL     Extdata500    Extdata
+      ** ExtData Buffer Pointer                                                               CLE172
+     C                   Z-ADD     1             eBfp              4 0                        CLE172
 
+      ** CLE172 Fields                                                                        CLE172
+     C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:22)                   CLE172
+     C                   ADD       22            eBfp                                         CLE172
 
       * Reset variables gradually updated
 
@@ -774,6 +785,7 @@
      C                                           + S_Rec + S_Pay                              CLE106
      C                                           + InfData                                   BUG9493
      C                                           + ExtData                                    247172
+     C                                           + LoamScnBlrt                                CLE172
 
      C                   RETURN
 
@@ -1393,6 +1405,9 @@
       * Output parameters
       * Amendment Details - screen formats
      C                   PARM                    LoamScnFmt
+      *                                                                                     CLE172
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16
@@ -1482,6 +1497,9 @@
 
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
+
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
 
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -2099,6 +2117,18 @@
      C                   IF        @RTCD = *Blanks                                            CLE106
      C                   EVAL      CLE106 = 'Y'                                               CLE106
      C                   ENDIF                                                                CLE106
+
+      ** Check if CLE172 is ON                                                                CLE172
+     C                   CallB     'AOSARDR0'                                                 CLE172
+     C                   Parm      *Blanks       PRTCD                                        CLE172
+     C                   Parm      '*VERIFY'     POPTN                                        CLE172
+     C                   Parm      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C                   Move      'N'           CLE172            1                          CLE172
+     C                   If        PRTCD = *Blanks                                            CLE172
+     C                   Eval      CLE172 = 'Y'                                               CLE172
+     C                   Endif                                                                CLE172
 
       ** Determine if CSC011 is switched on
      C                   CALLB     'AOSARDR0'

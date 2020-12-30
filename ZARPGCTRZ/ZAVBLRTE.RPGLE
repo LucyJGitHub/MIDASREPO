@@ -77,9 +77,10 @@
       ** +--------------------------------------+
 
      D/COPY ZACPYSRC,PSDS
+
       *
       ** Program Status Data Structure
-
+      *
      D/COPY ZACPYSRC,STD_D_SPEC
 
       ** +--------------------------------------+
@@ -89,7 +90,9 @@
 
      D NumBlank        C                   CONST('0123456789 ')
 
+      *
       ** The maximum size of the appended error arrays
+      *
      D XArrayMax       C                   CONST(40)
 
       ** +--------------------------------------+
@@ -97,38 +100,64 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
+      *
+      ** Array of fields in error
+      *
      D FldNamXAr       S             10A   DIM(XArrayMax)
-      * Array of fields in error
+      *
+      ** Array of error message IDs
+      *
      D MsgIdXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-      * Array of error message IDs
 	
+      *
+      ** Incoming Benchmark Adjustment in screen format
+      *
      D ArrayBadj       S              1A   DIM(17)
-      * Incoming Benchmark Adjustment in screen format
+      *
+      ** Incoming Compounded/Average Rate in screen format
+      *
      D ArrayCart       S              1A   DIM(17)
-      * Incoming Compounded/Average Rate in screen format
 
+      *
+      ** Array for Input
+      *
      D ArrayInp        S              1A   DIM(200)
-      * Array for Input
 
+      *
       ** DS for Access Programs: Short Data Structure
+      *
      D DSFDY         E DS                  EXTNAME(DSFDY)
+      *
       ** DS for Access programs: Long Sata Structure
+      *
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
+      *
       ** DS for SC Switchable Features
+      *
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
+      *
       ** DS for General Ledger details
+      *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
+      *
       ** DS for Dealing details
+      *
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D                                     PREFIX(DL)
+      *
       ** DS for Base Rate details
+      *
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(B)
+      *
       ** DS for Base rate for Accrual details
+      *
      D SDBRACDS      E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(Z)
+      *
       ** DS for Loan details
+      *
      D LECLOAN       E DS                  EXTNAME(LECLIPL2:*INPUT)
      D                                     PREFIX(H)
 
@@ -141,17 +170,27 @@
 
      D ApiName         S              4A
 
+      *
       ** Index for arrays of error message ids
+      *
      D Idx             S              3P 0
+      *
       ** Passed index value
+      *
      D Ix              S              3P 0
 
+      *
       ** Input Screen fields
+      *
      D InpScrfld       DS           200
+      *
       ** Output Valid fields
+      *
      D OutValfld       DS           200
 
+      *
       ** CLIP Backward-Looking Rate Valid fields (Output)
+      *
      D CLBsrValfld     DS
      D  CVBLRT                 1      1A
      D  CVLBDY                 2      3S 0
@@ -172,7 +211,9 @@
      D  CVPIAD                43     47S 0
 
 
+      *
       ** LOAM Backward-Looking Rate Valid fields (Output)
+      *
      D LoamValFld      DS
      D  LVAVOP                 1      1A
      D  LVLBDY                 2      3S 0
@@ -181,7 +222,9 @@
      D  LVBADJ                 7     13P 8
      D  LVPDLY                14     15S 0
 
+      *
       ** Parameters for access object AOSARDR0
+      *
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
@@ -189,7 +232,9 @@
      D PKEY2           S              2A
      D CLE172          S              1A
 	
+      *
       ** Parameters for calling ZA0841
+      *
      D @@ALPH          S             16A
      D @@MTID          S              1A
      D @@AMT           S             15P 0
@@ -211,13 +256,19 @@
      D DecCart         S              8A
      D WNumCart        S             13P 8
 
+      *
       ** Work fields for base rate key list
+      *
      D WFCYCD          S              3A
      D WFBSRC          S              2A
 
+      *
       ** Work fields for cloancl key list
+      *
      D LNRF            S              6A
+      *
       ** Generic screen fields
+      *
      D  DDBLRT         S              1A
      D  DDLBDY         S              2A
      D  DDNBDY         S              2A
@@ -235,7 +286,9 @@
      D  DDBRAC         S              2A
      D  DDLBAC         S              2A
 
+      *
       ** Generic valid fields
+      *
      D  VBLRT          S              1A
      D  VLBDY          S              2S 0
      D  VNBDY          S              2S 0
@@ -254,7 +307,9 @@
      D  VLBAC          S              2S 0
      D  VPIAD          S              5S 0
 
+      *
       ** OK fields
+      *
      D DDBLRTOK        S              1A
      D DDLBDYOK        S              1A
      D DDLODYOK        S              1A
@@ -328,7 +383,9 @@
      C                   Z-ADD     VPIAD         CVPIAD
      C                   MOVEL     CLBsrValfld   OutValfld
      C                   ENDIF
-      *LOAM BC
+      *
+      ** LOAM BC
+      *
      C     ApiName       IFEQ      'LOAM'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDAVOP
@@ -352,7 +409,9 @@
      C                   Z-ADD     VPDLY         LVPDLY
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
-      *LOAM SC
+      *
+      ** LOAM SC
+      *
      C     ApiName       IFEQ      'LOSC'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(7)   DDBADJ
@@ -363,6 +422,7 @@
      C                   ENDIF
       *
       ** If a new error was found, set the return code appropriately
+      *
      C                   IF        Idx > Ix
      C                   EVAL      RetCodeOut = 'Error'
      C                   ENDIF
@@ -380,9 +440,8 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
      C     *INZSR        BEGSR
-
+      *
      C     *ENTRY        PLIST
      C                   PARM                    ApiName                        In Param
      C                   PARM                    WFCYCD                         In param
@@ -394,11 +453,12 @@
      C                   PARM                    MsgIdXAr                       In/Out param
      C                   PARM                    OutValfld                      Out param
      C                   PARM                    RetCodeOut                     Out param
-
+      *
       **  Key list for CLOANCL
+      *
      C     WKCLOANR      KLIST
      C                   KFLD                    LNRF
-
+      *
      C                   SETOFF                                       29
      C     LNRF          IFEQ      *BLANKS
      C                   SETON                                        29
@@ -408,16 +468,18 @@
      C     WFBSRC        OREQ      *BLANKS
      C                   SETON                                        30
      C                   ENDIF
-
+      *
       ** Check if CLE172 is installed
-
+      *
      C                   EVAL      CLE172 = 'N'
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CLE172'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
-      * Database error
+      *
+      ** Database error
+      *
      C                   IF        PRTCD <> *BLANKS  AND
      C                             PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -428,18 +490,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+      *
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CLE172 = 'Y'
      C                   ENDIF
-
+      *
       ** Access General Ledger details
-
+      *
      C                   CALLB     'AOGELRR1'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDGELR        PARM      SDGELR        DSSDY
-      * Database error
+      *
+      ** Database error
+      *
      C     PRTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDGELRPD'                         *************
@@ -448,9 +512,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+      *
       ** Access Dealing Details
-
+      *
      C                   CALL      'AODEALR1'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
@@ -459,9 +523,9 @@
      C     PRTCD         IFNE      *BLANK
      C                   EVAL      DLBNDCSP =  '.'
      C                   ENDIF
-
+      *
       ** Access Base Rate Details
-
+      *
      C     *IN30         IFEQ      *OFF
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
@@ -474,17 +538,17 @@
      C                   MOVE      BBABSRC       WFBSRC
      C                   ENDIF
      C                   ENDIF
-
+      *
       ** Acess Loan Details for BC and SC loan events defaulting
-
+      *
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
      C     ApiName       OREQ      'PDCL'
      C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
      C                   ENDIF
-
+      *
      C                   ENDSR
-
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -508,7 +572,9 @@
      C     ApiName       IFEQ      'CLIP'
      C     DDBLRT        ANDEQ     'Y'
      C     BKALDI        ANDEQ     'Y'
-      * Accrue on Last Day is Y and Rate is Backward-Looking Rate
+      *
+      ** Accrue on Last Day is Y and Rate is Backward-Looking Rate
+      *
      C                   MOVE      'N'           DDBLRTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)
@@ -561,7 +627,9 @@
       *
      C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
-      * Lookback Days for Settlement is not numeric
+      *
+      ** Lookback Days for Settlement is not numeric
+      *
      C                   MOVE      'N'           DDLBDYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
@@ -576,7 +644,9 @@
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
-      * Backward-Looking Rate is N and Lookback Days is not 0
+      *
+      ** Backward-Looking Rate is N and Lookback Days is not 0
+      *
      C                   MOVE      'N'           DDLBDYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
@@ -623,7 +693,9 @@
       *
      C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
-      * Lockout Days is not numeric
+      *
+      ** Lockout Days is not numeric
+      *
      C                   MOVE      'N'           DDLODYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
@@ -638,7 +710,9 @@
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
-      * Backward-Looking Rate is N and Lockout Days is not 0
+      *
+      ** Backward-Looking Rate is N and Lockout Days is not 0
+      *
      C                   MOVE      'N'           DDLODYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
@@ -685,7 +759,9 @@
       *
      C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
      C     #2CHARPOS     OREQ      *ZERO
-      * Payment Delay Days is not numeric
+      *
+      ** Payment Delay Days is not numeric
+      *
      C                   MOVE      'N'           DDPDLYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)
@@ -700,7 +776,9 @@
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
-      * Backward-Looking Rate is N and Payment Delay Days is not 0
+      *
+      ** Backward-Looking Rate is N and Payment Delay Days is not 0
+      *
      C                   MOVE      'N'           DDPDLYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)
@@ -752,7 +830,9 @@
      C                   PARM                    DLBNDCSP
       *
      C     @@ERCD        IFNE      0                                            Not numeric
-      * Benchmark Adjustment is not numeric
+      *
+      ** Benchmark Adjustment is not numeric
+      *
      C                   MOVE      'N'           DDBADJOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
@@ -771,7 +851,9 @@
       *
      C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
-      * Backward-Looking Rate is N and Benchmark Adjustment is not 0
+      *
+      ** Backward-Looking Rate is N and Benchmark Adjustment is not 0
+      *
      C                   MOVE      'N'           DDBADJOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
@@ -814,7 +896,9 @@
      C     DDAVOP        ANDNE     '2'
      C     DDAVOP        ANDNE     '3'
      C     DDAVOP        ANDNE     '4'
-      * Averaging Option value is invalid
+      *
+      ** Averaging Option value is invalid
+      *
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
@@ -822,7 +906,9 @@
      C                   ELSE                                                    If valid
       *
      C     VBLRT         IFNE      'Y'
-      * Backward-Looking Rate is N and Averaging Option is not blank
+      *
+      ** Backward-Looking Rate is N and Averaging Option is not blank
+      *
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
@@ -884,7 +970,9 @@
      C                   PARM                    DLBNDCSP
       *
      C     @@ERCD        IFNE      0                                             Not numeric
-      * Compounded/Average rate is not numeric
+      *
+      ** Compounded/Average rate is not numeric
+      *
      C                   MOVE      'N'           DDCARTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
@@ -903,7 +991,9 @@
       *
      C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS
-      * Backward-looking rate is N and Compounded/Average rate is not 0
+      *
+      ** Backward-looking rate is N and Compounded/Average rate is not 0
+      *
      C                   MOVE      'N'           DDCARTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
@@ -944,7 +1034,9 @@
       *                                                                         Not blank
      C     DDWGHT        IFNE      '1'
      C     DDWGHT        ANDNE     '2'
-      * Weight Convention value is invalid
+      *
+      ** Weight Convention value is invalid
+      *
      C                   MOVE      'N'           DDWGHTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
@@ -952,7 +1044,9 @@
      C                   ELSE                                                    If valid
       *
      C     VBLRT         IFNE      'Y'
-      * Backward-Looking Rate is N and Weight Convention is not blank
+      *
+      ** Backward-Looking Rate is N and Weight Convention is not blank
+      *
      C                   MOVE      'N'           DDWGHTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
@@ -961,7 +1055,9 @@
       *
      C     DDAVOP        IFNE      '1'
      C     DDAVOP        ANDNE     '2'
-      * Averaging Option is not 1/2 and Weight Convention is not blank
+      *
+      ** Averaging Option is not 1/2 and Weight Convention is not blank
+      *
      C                   MOVE      'N'           DDWGHTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)

@@ -888,7 +888,7 @@
      C                   MOVE      'N'           DDCARTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
-     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
+     C                   MOVEL     '5049458'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
       *
      C                   MOVE      @@ALPH        DDCART
@@ -907,7 +907,7 @@
      C                   MOVE      'N'           DDCARTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
-     C                   MOVEL     '5049401'     MsgIdXAr(Idx)
+     C                   MOVEL     '5049459'     MsgIdXAr(Idx)
      C                   ENDIF
       *
      C                   ENDIF                                                   END numeric

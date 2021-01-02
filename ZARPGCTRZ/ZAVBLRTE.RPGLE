@@ -50,8 +50,16 @@
       *  SRAVOP - Validate Averaging Option                           *
       *  SRCART - Validate Compounded/Average Rate                    *
       *  SRWGHT - Validate Weight Convention                          *
-      *  SRBRAC - Validate Base Rate for Accrual                      *
-      *  SRLBAC - Validate Lookback Days for Accrual                  *
+      *  SDBRAC - Default Base Rate for Accrual                       *
+      *  SDLBAC - Default Lookback Days for Accrual                   *
+      *  SDBLRT - Default Backward-Looking Rate                       *
+      *  SDLBDY - Default Lookback Days for Settlement                *
+      *  SDLODY - Default Lockout Days                                *
+      *  SDPDLY - Default Payment Delay Days                          *
+      *  SDBADJ - Default Benchmark Adjustment                        *
+      *  SDAVOP - Default Averaging Option                            *
+      *  SDCART - Default Compounded/Average Rate                     *
+      *  SDWGHT - Default Weight Convention                           *
       *  SDPIAD - Default Principal Interest Control Date             *
       *  SDNBDY - Default Lookback Days for Settlement                *
       *  SDNODY - Default Lockout Days                                *
@@ -210,7 +218,7 @@
      D  CVLBAC                41     42S 0
      D  CVPIAD                43     47S 0
 
-
+      *
       *
       ** LOAM Backward-Looking Rate Valid fields (Output)
       *
@@ -261,6 +269,14 @@
       *
      D WFCYCD          S              3A
      D WFBSRC          S              2A
+      *
+      ** Work fields for cloancl key list
+      *
+     D WFLNRF          S              6A
+      *
+      ** Other work fields
+      *
+     D WFCALB          S              1S 0
 
       *
       ** Work fields for cloancl key list
@@ -283,8 +299,6 @@
      D  DDCART         S             14A
      D  DDWGHT         S              1A
      D  DDNGHT         S              1A
-     D  DDBRAC         S              2A
-     D  DDLBAC         S              2A
 
       *
       ** Generic valid fields
@@ -351,6 +365,10 @@
      C                   MOVEA     ArrayInp(23)  DDCART
      C                   MOVEA     ArrayInp(37)  DDWGHT
       *
+     C                   EXSR      SDBLRT
+      *
+     C                   EXSR      SDLBDY
+      *
      C                   EXSR      SDLBDY
      C                   EXSR      SRLBDY
       *
@@ -372,8 +390,9 @@
      C                   EXSR      SDWGHT
      C                   EXSR      SRWGHT
       *
-     C                   EXSR      SRBRAC
-     C                   EXSR      SRLBAC
+      *
+     C                   EXSR      SDBRAC
+     C                   EXSR      SDLBAC
      C                   EXSR      SDPIAD
      C                   EXSR      SDNBDY
      C                   EXSR      SDNODY
@@ -413,6 +432,10 @@
      C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   MOVEA     ArrayInp(21)  DDPDLY
       *
+     C                   EXSR      SDBLRT
+      *
+     C                   EXSR      SDAVOP
+      *
      C                   EXSR      SDAVOP
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
@@ -444,6 +467,10 @@
      C     ApiName       IFEQ      'LOSC'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(7)   DDBADJ
+      *
+     C                   EXSR      SDBLRT
+      *
+     C                   EXSR      SDBADJ
       *
      C                   EXSR      SDBADJ
      C                   EXSR      SRBADJ
@@ -477,7 +504,8 @@
      C                   PARM                    ApiName                        In Param
      C                   PARM                    WFCYCD                         In param
      C                   PARM                    WFBSRC                         In param
-     C                   PARM                    LNRF                           In param
+     C                   PARM                    WFLNRF                         In param
+      *                  PARM                    WFCALB                         In param
      C                   PARM                    InpScrfld                      In/Out param
      C                   PARM                    Idx                            In/Out param
      C                   PARM                    FldNamXAr                      In/Out param
@@ -491,7 +519,7 @@
      C                   KFLD                    LNRF
       *
      C                   SETOFF                                       29
-     C     LNRF          IFEQ      *BLANKS
+     C     WFLNRF        IFEQ      *BLANKS
      C                   SETON                                        29
      C                   ENDIF
      C                   SETOFF                                       30
@@ -589,7 +617,6 @@
      C     SRBLRT        BEGSR
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
      C     ApiName       IFEQ      'CLIP'
      C     DDBLRT        ANDEQ     'Y'
      C     BKALDI        ANDEQ     'Y'
@@ -996,9 +1023,9 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SRBRAC - Validate base rate for accrual                      *
+      *  SDBRAC - Default base rate for accrual                       *
       *****************************************************************
-     C     SRBRAC        BEGSR
+     C     SDBRAC        BEGSR
       *
      C                   MOVE      *BLANKS       VBRAC                          Default:blank
      C     *IN29         IFEQ      *OFF
@@ -1019,9 +1046,9 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SRLBAC - Validate lookback days for accrual                  *
+      *  SDLBAC - Default Lookback Days for Accrual                   *
       *****************************************************************
-     C     SRLBAC        BEGSR
+     C     SDLBAC        BEGSR
       *
      C                   Z-ADD     0             VLBAC                          Default: 0
      C     *IN29         IFEQ      *OFF
@@ -1293,10 +1320,11 @@
      C     SDNBDY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNBDY         VNBDY                          Default from
-     C                   ELSE                                                   CLOANCL
-     C                   Z-ADD     0             VNBDY                          Default: 0
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNBDY         VNBDY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNBDY                           Default: 0
      C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
@@ -1313,10 +1341,11 @@
      C     SDNODY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNODY         VNODY                          Default from
-     C                   ELSE                                                   CLOANCL
-     C                   Z-ADD     0             VNODY                          Default: 0
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNODY         VNODY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNODY                           Default: 0
      C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
@@ -1328,15 +1357,16 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SDNDLY - Default next payment delay days                    *
+      *  SDNDLY - Default next payment delay days                     *
       *****************************************************************
      C     SDNDLY        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNDLY         VNDLY                          Default from
-     C                   ELSE                                                   CLOANCL
-     C                   Z-ADD     0             VNDLY                          Default: 0
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNDLY         VNDLY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNDLY                           Default: 0
      C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
@@ -1353,10 +1383,11 @@
      C     SDNADJ        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNADJ         VNADJ                          Default from
-     C                   ELSE                                                   CLOANCL
-     C                   Z-ADD     0             VNADJ                          Default: 0
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNADJ         VNADJ                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNADJ                           Default: 0
      C                   ENDIF
      C                   ENDIF
      C     ApiName       IFEQ      'LERI'
@@ -1373,9 +1404,10 @@
      C     SDNGHT        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNGHT         VNGHT                          Default from
-     C                   ELSE                                                   CLOANCL
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNGHT         VNGHT                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
      C                   MOVE      *BLANKS       VNGHT                          Default:blank
      C                   ENDIF
      C                   ENDIF
@@ -1393,9 +1425,10 @@
      C     SDNVOP        BEGSR
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HNVOP         VNVOP                          Default from
-     C                   ELSE                                                   CLOANCL
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNVOP         VNVOP                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
      C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
      C                   ENDIF

@@ -337,6 +337,9 @@
      C                   MOVE      *BLANKS       ArrayInp
      C                   Z-ADD     Idx           Ix                             Store index
       *
+     C                   EXSR      SDBLRT
+     C                   EXSR      SRBLRT
+      *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDBLRT
@@ -347,14 +350,28 @@
      C                   MOVEA     ArrayInp(22)  DDAVOP
      C                   MOVEA     ArrayInp(23)  DDCART
      C                   MOVEA     ArrayInp(37)  DDWGHT
-     C                   EXSR      SRBLRT
+      *
+     C                   EXSR      SDLBDY
      C                   EXSR      SRLBDY
+      *
+     C                   EXSR      SDLODY
      C                   EXSR      SRLODY
+      *
+     C                   EXSR      SDPDLY
      C                   EXSR      SRPDLY
+      *
+     C                   EXSR      SDBADJ
      C                   EXSR      SRBADJ
+      *
+     C                   EXSR      SDAVOP
      C                   EXSR      SRAVOP
+      *
+     C                   EXSR      SDCART
      C                   EXSR      SRCART
+      *
+     C                   EXSR      SDWGHT
      C                   EXSR      SRWGHT
+      *
      C                   EXSR      SRBRAC
      C                   EXSR      SRLBAC
      C                   EXSR      SDPIAD
@@ -387,6 +404,7 @@
       ** LOAM BC
       *
      C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'LERI'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDAVOP
      C                   MOVEA     ArrayInp(2)   DDLBDY
@@ -394,17 +412,28 @@
      C                   MOVEA     ArrayInp(6)   DDWGHT
      C                   MOVEA     ArrayInp(7)   DDBADJ
      C                   MOVEA     ArrayInp(21)  DDPDLY
-     C                   EXSR      SRBLRT
+      *
+     C                   EXSR      SDAVOP
      C                   EXSR      SRAVOP
      C                   MOVE      VAVOP         LVAVOP
+      *
+     C                   EXSR      SDLBDY
      C                   EXSR      SRLBDY
      C                   Z-ADD     VLBDY         LVLBDY
+      *
+     C                   EXSR      SDLODY
      C                   EXSR      SRLODY
      C                   Z-ADD     VLODY         LVLODY
+      *
+     C                   EXSR      SDWGHT
      C                   EXSR      SRWGHT
      C                   MOVE      VWGHT         LVWGHT
+      *
+     C                   EXSR      SDBADJ
      C                   EXSR      SRBADJ
      C                   Z-ADD     VBADJ         LVBADJ
+      *
+     C                   EXSR      SDPDLY
      C                   EXSR      SRPDLY
      C                   Z-ADD     VPDLY         LVPDLY
      C                   MOVEL     LoamValFld    OutValfld
@@ -415,9 +444,11 @@
      C     ApiName       IFEQ      'LOSC'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(7)   DDBADJ
-     C                   EXSR      SRBLRT
+      *
+     C                   EXSR      SDBADJ
      C                   EXSR      SRBADJ
      C                   Z-ADD     VBADJ         LVBADJ
+      *
      C                   MOVEL     LoamValFld    OutValfld
      C                   ENDIF
       *
@@ -544,6 +575,7 @@
      C     ApiName       IFEQ      'LOAM'
      C     ApiName       OREQ      'LOSC'
      C     ApiName       OREQ      'PDCL'
+     C     ApiName       OREQ      'LERI'
      C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
      C                   ENDIF
       *
@@ -559,17 +591,6 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBABLRT       DDBLRT                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOSC'
-     C     *IN29         ANDEQ     *OFF
-     C                   MOVE      HBLRT         DDBLRT                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     ApiName       IFEQ      'CLIP'
      C     DDBLRT        ANDEQ     'Y'
      C     BKALDI        ANDEQ     'Y'
       *
@@ -579,14 +600,6 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDBRTT'      FldNamXAr(Idx)
      C                   MOVEL     '5049454'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HBLRT         DDBLRT                         Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      'N'           DDBLRT
      C                   ENDIF
       *
      C                   ENDIF                                                  END CLE172
@@ -604,21 +617,9 @@
       *****************************************************************
      C     SRLBDY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
-     C                   Z-ADD     HLBDY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDLBDY        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   Z-ADD     BBALBDY       WDAY                            Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C                   ELSE                                                   Not blank
+     C     DDLBDY        IFNE      *BLANKS                                      Not blank
       *
      C                   MOVEL     DDLBDY        #1TESTN
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS
@@ -654,7 +655,7 @@
      C                   ENDIF
       *
      C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END blank
+     C                   ENDIF                                                  END not blank
      C                   ENDIF                                                  END CLE172
       *
      C     DDLBDYOK      IFNE      'N'
@@ -670,21 +671,9 @@
       *****************************************************************
      C     SRLODY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
-     C                   Z-ADD     HLODY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDLODY        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   Z-ADD     BBALODY       WDAY                            Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C                   ELSE                                                   Not blank
+     C     DDLODY        IFNE      *BLANKS                                      Not blank
       *
      C                   MOVEL     DDLODY        #1TESTN
      C     #1TESTN       SCAN      NumBlank      #1CHARPOS
@@ -720,7 +709,7 @@
      C                   ENDIF
       *
      C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END blank
+     C                   ENDIF                                                  END not blank
      C                   ENDIF                                                  END CLE172
       *
      C     DDLODYOK      IFNE      'N'
@@ -736,21 +725,9 @@
       *****************************************************************
      C     SRPDLY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
-     C                   Z-ADD     HPDLY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDPDLY        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   Z-ADD     BBAPDLY       WDAY                            Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C                   ELSE                                                   Not blank
+     C     DDPDLY        IFNE      *BLANKS                                      Not blank
       *
      C                   MOVEL     DDPDLY        #1TESTN
      C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
@@ -802,20 +779,7 @@
       *****************************************************************
      C     SRBADJ        BEGSR
       *
-     C                   Z-ADD     0             WNumBadj                       Default: 0
-     C     *IN29         IFEQ      *OFF
-     C                   Z-ADD     HBADJ         WNumBadj                        Default from
-     C                   ENDIF                                                   CLOANCL
-      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDBADJ        IFEQ      *BLANKS                                      If blank
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   Z-ADD     BBABADJ       WNumBadj                        Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C                   ENDIF                                                  END blank
       *
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
@@ -878,19 +842,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDAVOP        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAAVOP       DDAVOP                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'PDCL'
-     C     *IN29         ANDEQ     *OFF
-     C                   MOVE      HAVOP         DDAVOP                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C                   ELSE                                                   Not blank
+     C     DDAVOP        IFNE      *BLANKS                                      Not blank
       *
      C     DDAVOP        IFNE      '1'
      C     DDAVOP        ANDNE     '2'
@@ -916,15 +868,7 @@
      C                   ENDIF
       *
      C                   ENDIF                                                   END valid
-     C                   ENDIF                                                  END blank
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HAVOP         DDAVOP                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      *BLANKS       DDAVOP
-     C                   ENDIF
+     C                   ENDIF                                                  END not blank
       *
      C                   ENDIF                                                  END CLE172
       *
@@ -941,21 +885,7 @@
       *****************************************************************
      C     SRCART        BEGSR
       *
-     C                   Z-ADD     0             WNumCart                       Default: 0
-     C     *IN29         IFEQ      *OFF
-     C                   Z-ADD     HCART         WNumCart                        Default from
-     C                   ENDIF                                                   CLOANCL
-      *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDCART        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   Z-ADD     0             WNumCart                        Default: 0
-     C                   ENDIF
-      *
-     C                   ENDIF                                                  END blank
       *
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDCART        @@ALPH
@@ -1018,20 +948,8 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDWGHT        IFEQ      *BLANKS                                      If blank
+     C     DDWGHT        IFEQ      *BLANKS                                      Not blank
       *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAWGHT       DDWGHT                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-     C     ApiName       IFEQ      'PDCL'
-     C     ApiName       OREQ      'LOAM'
-     C     *IN29         ANDEQ     *OFF
-     C                   MOVE      HWGHT         DDWGHT                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C                   ELSE
-      *                                                                         Not blank
      C     DDWGHT        IFNE      '1'
      C     DDWGHT        ANDNE     '2'
       *
@@ -1065,15 +983,7 @@
      C                   ENDIF
       *
      C                   ENDIF                                                   END valid
-     C                   ENDIF                                                  END blank
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HWGHT         DDWGHT                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      *BLANKS       DDWGHT
-     C                   ENDIF
+     C                   ENDIF                                                  END not blank
       *
      C                   ENDIF                                                  END CLE172
       *
@@ -1132,6 +1042,229 @@
      C     PRTCD         IFEQ      *BLANKS                                      If found BRAC
      C                   Z-ADD     ZBALBDY       VLBAC                          Default from
      C                   ENDIF                                                   ref. LBDY
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDBLRT - Default backward-looking rate                       *
+      *****************************************************************
+     C     SDBLRT        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBABLRT       DDBLRT                          Default from
+     C                   ENDIF                                                   SDBSRTPD
+      *
+     C     ApiName       IFEQ      'PDCL'
+     C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     ApiName       OREQ      'LERI'
+     C     *IN29         ANDEQ     *OFF
+     C                   MOVE      HBLRT         DDBLRT                          Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C                   ELSE                                                   CLE172=OFF
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HBLRT         DDBLRT                         Default from
+     C                   ELSE                                                    CLOANCL
+     C                   MOVE      'N'           DDBLRT
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDLBDY - Default lookback days for settlement                *
+      *****************************************************************
+     C     SDLBDY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HLBDY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDLBDY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBALBDY       WDAY                            Default from
+     C                                                                           SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDLODY - Default lockout days                                *
+      *****************************************************************
+     C     SDLODY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HLODY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDLODY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBALODY       WDAY                            Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDPDLY - Default payment delay days                          *
+      *****************************************************************
+     C     SDPDLY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HPDLY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDPDLY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBAPDLY       WDAY                            Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF
+	  *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDBADJ - Default benchmark adjustment                        *
+      *****************************************************************
+     C     SDBADJ        BEGSR
+      *
+     C                   Z-ADD     0             WNumBadj                       Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HBADJ         WNumBadj                        Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDBADJ        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBABADJ       WNumBadj                        Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDAVOP - Default averaging option                            *
+      *****************************************************************
+     C     SDAVOP        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C     DDAVOP        IFEQ      *BLANKS                                      If blank
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAAVOP       DDAVOP                          Default from
+     C                   ENDIF                                                   SDBSRTPD
+      *
+     C     ApiName       IFEQ      'LOAM'
+     C     ApiName       OREQ      'PDCL'
+     C     ApiName       OREQ      'LERI'
+     C     *IN29         ANDEQ     *OFF
+     C                   MOVE      HAVOP         DDAVOP                          Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C                   ENDIF                                                  END blank
+      *
+     C                   ELSE                                                   CLE172=OFF
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HAVOP         DDAVOP                          Default from
+     C                   ELSE                                                    CLOANCL
+     C                   MOVE      *BLANKS       DDAVOP
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDCART - Default compounded/average rate                     *
+      *****************************************************************
+     C     SDCART        BEGSR
+      *
+     C                   Z-ADD     0             WNumCart                       Default: 0
+     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     HCART         WNumCart                        Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDCART        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF
+	  *
+     C                   Z-ADD     0             WNumCart                        Default: 0
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDWGHT - Default weight convention                           *
+      *****************************************************************
+     C     SDWGHT        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C     DDWGHT        IFEQ      *BLANKS                                      If blank
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAWGHT       DDWGHT                          Default from
+     C                   ENDIF                                                   SDBSRTPD
+      *
+     C     ApiName       IFEQ      'PDCL'
+     C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LERI'
+     C     *IN29         ANDEQ     *OFF
+     C                   MOVE      HWGHT         DDWGHT                          Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C                   ENDIF                                                  END blank
+      *
+     C                   ELSE                                                   CLE172=OFF
+      *
+     C     *IN29         IFEQ      *OFF
+     C                   MOVE      HWGHT         DDWGHT                          Default from
+     C                   ELSE                                                    CLOANCL
+     C                   MOVE      *BLANKS       DDWGHT
+     C                   ENDIF
       *
      C                   ENDIF                                                  END CLE172
       *

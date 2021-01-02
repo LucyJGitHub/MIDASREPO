@@ -1024,10 +1024,6 @@
       *
      C                   EXSR      SRBRTT
      C                   ENDIF                                                                CLE035
-      *                                                                                       CLE172
-      ***  Validate backward-looking rate fields                                              CLE172
-      *                                                                                       CLE172
-     C                   EXSR      SRBLRTE                                                    CLE172
       *
       /COPY WNCPYSRC,LECLIP2V05
       *
@@ -1140,6 +1136,10 @@
       ***  Validate interest validation basis
       *
      C                   EXSR      SRCALC
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
       *
       /COPY WNCPYSRC,LECLIP2V13
       *
@@ -1412,6 +1412,7 @@
      C                   PARM                    CCLCCY                                       CLE172
      C                   PARM                    CCLBRTT                                      CLE172
      C                   PARM      *BLANKS       XLNRF             6                          CLE172
+      *                  PARM                    CCLICBS                                      CLE172
      C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNamXAr                                    CLE172

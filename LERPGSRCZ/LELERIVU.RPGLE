@@ -361,6 +361,12 @@
 
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       ** LE Rollover Extra Data - File (D/B) format
+                                                                                              CLE172
+     D Ro1ScnBlrt      DS            22                                                       CLE172
+      ** LERI Backward-Looking Rate Fields (Current)                                          CLE172
+                                                                                              CLE172
+     D Ro2ScnBlrt      DS            22                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
@@ -537,6 +543,20 @@
      C                   MOVEL     InfData500    InfData                                      CAP086
      C**********         MOVEL     Extdata500    Extdata                                      CAP086
      C                   MOVEL     ExtData500    ExtData                                      CAP086
+                                                                                              CLE172
+      ** ExtData Buffer Pointer                                                               CLE172
+     C                   Z-ADD     1             eBfp              4 0                        CLE172
+     C                   MOVEL     'LELEEXPD'    Filename                                     CLE172
+     C                   EXSR      GETRCDLN                                                   CLE172
+     C                   ADD       RecordLen     eBfp                                         CLE172
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   EVAL      Ro1ScnBlrt = %SUBST(Extdata500:eBfp:22)                    CLE172
+     C                   ADD       22            eBfp                                         CLE172
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields (Current)                                               CLE172
+     C                   EVAL      Ro2ScnBlrt = %SUBST(Extdata500:eBfp:22)                    CLE172
+     C                   ADD       22            eBfp                                         CLE172
 
       ** Reset variables gradually updated
 
@@ -625,7 +645,9 @@
      C                                      TranInLERI3 +                                     246576
      C**********                            ##RECS + ##PAYS +                        246576 AR702532
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
-     C                                      InfData + ExtData                                 246576
+     C**********                            InfData + ExtData                          246576 CLE172
+     C                                      InfData + ExtData +                               CLE172
+     C                                      Ro1ScnBlrt + Ro2ScnBlrt                           CLE172
      C                   Endif                                                                246576
      C                   Else                                                                BUG8145
       ** Remerge buffer with all relevant data structures
@@ -635,7 +657,9 @@
      C**********                            ##RECS + ##PAYS + ExtData                         CAP086
      C**********                            ##RECS + ##PAYS +                        CAP086 AR702532
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
-     C                                      InfData + ExtData                                 CAP086
+     C**********                            InfData + ExtData                          CAP086 CLE172
+     C                                      InfData + ExtData +                               CLE172
+     C                                      Ro1ScnBlrt + Ro2ScnBlrt                           CLE172
      C                   EndIf                                                               BUG8145
 
      C                   MOVE      '1'           *INLR
@@ -917,6 +941,11 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM                    @ACTRV                                     AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    Ro1ScnBlrt                                   CLE172
+     C                   PARM                    Ro2ScnBlrt                                   CLE172
 
       ** OUTPUTS
       ** Rollover Instructions Details OK inds
@@ -2346,6 +2375,23 @@
      C                   END
 
      C                   ENDSR
+      ****************************************************************                        CLE172
+      *  Get Record Lengths of Transaction Data Blocks               *                        CLE172
+      ****************************************************************                        CLE172
+     C     GETRCDLN      BEGSR                                                                CLE172
+                                                                                              CLE172
+     C                   CALLB     'UTGETRCDLN'                                               CLE172
+     C                   PARM                    ReturnCode                                   CLE172
+     C                   PARM      *ZERO         RecordLen         5 0                        CLE172
+     C                   PARM                    FileName         10                          CLE172
+     C                   PARM      '*LIBL     '  FileLib          10                          CLE172
+                                                                                              CLE172
+      ** If file not found (or any other error) shut down the program                         CLE172
+     C     ReturnCode    Ifne      *BLANKS                                                    CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   EndIf                                                                CLE172
+                                                                                              CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************

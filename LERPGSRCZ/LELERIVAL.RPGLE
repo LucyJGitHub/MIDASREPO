@@ -120,7 +120,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
-      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD024812A - Consider new maturity date if non-blanks and     *
       *              rollover date = current maturity date.           *
@@ -553,6 +552,25 @@
      D   LOC9                 55     57                                                       CLE141
      D   LOC0                 58     60                                                       CLE141
                                                                                               CLE141
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Screen Fields                                             CLE172
+      *                                                                                       CLE172
+     D Ro1ScnBlrt      DS            22                                                       CLE172
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Screen Fields (Current)                                   CLE172
+      *                                                                                       CLE172
+     D Ro2ScnBlrt      DS            22                                                       CLE172
+                                                                                              CLE172
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Valid Fields                                              CLE172
+      *                                                                                       CLE172
+     D LeriValBlrt     DS                                                                     CLE172
+     D   WNVOP                 1      1A                                                      CLE172
+     D   WNBDY                 2      3S 0                                                    CLE172
+     D   WNODY                 4      5S 0                                                    CLE172
+     D   WNGHT                 6      6A                                                      CLE172
+     D   WNADJ                 7     13P 8                                                    CLE172
+     D   WNDLY                14     15S 0                                                    CLE172
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -1438,6 +1456,11 @@
      C                   EXSR      SRNFRS
 
       /COPY WNCPYSRC,LELERIV058
+
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
 
       *
       *  *------------------------------------------------------*
@@ -6936,6 +6959,38 @@
       *
 
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LERI'        ApiName           4                          CLE172
+     C                   PARM                    L_CLCCY                                      CLE172
+     C                   PARM                    L_CLBRTT                                     CLE172
+     C                   PARM                    L_CLLNRF                                     CLE172
+     C                   PARM      Ro1ScnBlrt    TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LeriValBlrt                                  CLE172
+     C                   MOVEL     WNVOP         L_CLNVOP                                     CLE172
+     C                   Z-ADD     WNBDY         L_CLNBDY                                     CLE172
+     C                   Z-ADD     WNODY         L_CLNODY                                     CLE172
+     C                   MOVEL     WNGHT         L_CLNGHT                                     CLE172
+     C                   Z-ADD     WNADJ         L_CLNADJ                                     CLE172
+     C                   Z-ADD     WNDLY         L_CLNDLY                                     CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *                                                                                       CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -9237,6 +9292,12 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM                    @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    Ro1ScnBlrt                                   CLE172
+     C                   PARM                    Ro2ScnBlrt                                   CLE172
+                                                                                              CLE172
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller

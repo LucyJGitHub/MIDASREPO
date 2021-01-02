@@ -450,6 +450,11 @@
      D ArrayRtSp       S              1A   DIM(12)                                          MD034449
       * Incoming Spread Rate in screen format                                               MD034449
                                                                                             MD034449
+     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+      *** Benchmark Adjustment in screen format                                               CLE172
+     D ArrayCart       S              1A   DIM(17)                                            CLE172
+      *** Compounded/Average Rate in screen format                                            CLE172
+                                                                                              CLE172
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
       *
@@ -807,6 +812,16 @@
       *                                                                                     MD000091
       ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
      D LoanScnBlrt     DS            41                                                       CLE172
+     D  DDBLRT                 1      1A
+     D  DDLBDY                 2      3A
+     D  DDLODY                 4      5A
+     D  DDPDLY                 6      7A
+     D  DDBADJ                 8     21A
+     D  DDAVOP                22     22A
+     D  DDCART                23     36A
+     D  DDWGHT                37     37A
+     D  DDBRAC                38     39A
+     D  DDLBAC                40     41A
                                                                                               CLE172
       ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
      D LoanValBlrt     DS                                                                     CLE172
@@ -912,6 +927,12 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+                                                                                              CLE172
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
+     D IntCart         S              5A                                                      CLE172
+     D DecCart         S              8A                                                      CLE172
+                                                                                              CLE172
      D/COPY WNCPYSRC,LEH00617
       *
       ** +--------------------------------------+
@@ -1439,6 +1460,45 @@
      C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
      C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
      C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLBLRT       DDBLRT                                       CLE172
+     C                   MOVEL     WCLLBDY       DDLBDY                                       CLE172
+     C                   MOVEL     WCLLODY       DDLODY                                       CLE172
+     C                   MOVEL     WCLPDLY       DDPDLY                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLBADJ       IntBadj                                      CLE172
+     C                   MOVE      WCLBADJ       DecBadj                                      CLE172
+     C     WCLBADJ       IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayBadj     DDBADJ                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLAVOP       DDAVOP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLCART       IntCart                                      CLE172
+     C                   MOVE      WCLCART       DecCart                                      CLE172
+     C     WCLCART       IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayCart(1)                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayCart(7)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayCart(6)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayCart     DDCART                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLWGHT       DDWGHT                                       CLE172
+     C                   MOVEL     WCLBRAC       DDBRAC                                       CLE172
+     C                   MOVEL     WCLLBAC       DDLBAC                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172

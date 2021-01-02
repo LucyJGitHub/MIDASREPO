@@ -219,7 +219,6 @@
      D  CVPIAD                43     47S 0
 
       *
-      *
       ** LOAM Backward-Looking Rate Valid fields (Output)
       *
      D LoamValFld      DS
@@ -278,10 +277,6 @@
       *
      D WFCALB          S              1S 0
 
-      *
-      ** Work fields for cloancl key list
-      *
-     D LNRF            S              6A
       *
       ** Generic screen fields
       *
@@ -351,9 +346,6 @@
      C                   MOVE      *BLANKS       ArrayInp
      C                   Z-ADD     Idx           Ix                             Store index
       *
-     C                   EXSR      SDBLRT
-     C                   EXSR      SRBLRT
-      *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDBLRT
@@ -366,8 +358,7 @@
      C                   MOVEA     ArrayInp(37)  DDWGHT
       *
      C                   EXSR      SDBLRT
-      *
-     C                   EXSR      SDLBDY
+     C                   EXSR      SRBLRT
       *
      C                   EXSR      SDLBDY
      C                   EXSR      SRLBDY
@@ -389,7 +380,6 @@
       *
      C                   EXSR      SDWGHT
      C                   EXSR      SRWGHT
-      *
       *
      C                   EXSR      SDBRAC
      C                   EXSR      SDLBAC
@@ -433,8 +423,7 @@
      C                   MOVEA     ArrayInp(21)  DDPDLY
       *
      C                   EXSR      SDBLRT
-      *
-     C                   EXSR      SDAVOP
+     C                   EXSR      SRBLRT
       *
      C                   EXSR      SDAVOP
      C                   EXSR      SRAVOP
@@ -469,8 +458,7 @@
      C                   MOVEA     ArrayInp(7)   DDBADJ
       *
      C                   EXSR      SDBLRT
-      *
-     C                   EXSR      SDBADJ
+     C                   EXSR      SRBLRT
       *
      C                   EXSR      SDBADJ
      C                   EXSR      SRBADJ
@@ -516,7 +504,7 @@
       **  Key list for CLOANCL
       *
      C     WKCLOANR      KLIST
-     C                   KFLD                    LNRF
+     C                   KFLD                    WFLNRF
       *
      C                   SETOFF                                       29
      C     WFLNRF        IFEQ      *BLANKS
@@ -618,7 +606,8 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     ApiName       IFEQ      'CLIP'
-     C     DDBLRT        ANDEQ     'Y'
+      *
+     C     DDBLRT        IFEQ      'Y'
      C     BKALDI        ANDEQ     'Y'
       *
       ** Accrue on Last Day is Y and Rate is Backward-Looking Rate
@@ -629,6 +618,7 @@
      C                   MOVEL     '5049454'     MsgIdXAr(Idx)
      C                   ENDIF
       *
+     C                   ENDIF
      C                   ENDIF                                                  END CLE172
       *
      C     DDBLRTOK      IFNE      'N'
@@ -975,7 +965,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
-     C     DDWGHT        IFEQ      *BLANKS                                      Not blank
+     C     DDWGHT        IFNE      *BLANKS                                      Not blank
       *
      C     DDWGHT        IFNE      '1'
      C     DDWGHT        ANDNE     '2'
@@ -1081,29 +1071,18 @@
       *****************************************************************
      C     SDBLRT        BEGSR
       *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBABLRT       DDBLRT                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C     ApiName       IFEQ      'PDCL'
-     C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LOSC'
-     C     ApiName       OREQ      'LERI'
-     C     *IN29         ANDEQ     *OFF
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HBLRT         DDBLRT                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HBLRT         DDBLRT                         Default from
      C                   ELSE                                                    CLOANCL
      C                   MOVE      'N'           DDBLRT
      C                   ENDIF
       *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBABLRT       DDBLRT                          Default from
+      *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
@@ -1115,14 +1094,16 @@
       *****************************************************************
      C     SDLBDY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HLBDY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     DDLBDY        ANDEQ     *BLANKS
      C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBALBDY       WDAY                            Default from
@@ -1138,14 +1119,16 @@
       *****************************************************************
      C     SDLODY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HLODY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     DDLODY        ANDEQ     *BLANKS
      C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBALODY       WDAY                            Default from
@@ -1161,19 +1144,21 @@
       *****************************************************************
      C     SDPDLY        BEGSR
       *
-     C                   Z-ADD     0             WDAY                           Default: 0
-     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HPDLY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     DDPDLY        ANDEQ     *BLANKS
      C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBAPDLY       WDAY                            Default from
       *                                                                          SDBSRTPD
-     C                   ENDIF
+     C                   ENDIF                                                  END CLE172
 	  *
      C                   ENDSR
       *
@@ -1184,14 +1169,16 @@
       *****************************************************************
      C     SDBADJ        BEGSR
       *
-     C                   Z-ADD     0             WNumBadj                       Default: 0
-     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     0             WNumBadj                       Reset WNumBadj
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HBADJ         WNumBadj                        Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     DDBADJ        ANDEQ     *BLANKS
      C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBABADJ       WNumBadj                        Default from
@@ -1207,32 +1194,17 @@
       *****************************************************************
      C     SDAVOP        BEGSR
       *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDAVOP        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAAVOP       DDAVOP                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'PDCL'
-     C     ApiName       OREQ      'LERI'
-     C     *IN29         ANDEQ     *OFF
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HAVOP         DDAVOP                          Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ENDIF                                                  END blank
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HAVOP         DDAVOP                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      *BLANKS       DDAVOP
-     C                   ENDIF
-      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     DDAVOP        ANDEQ     *BLANKS
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAAVOP       DDAVOP                          Default from
+      *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
@@ -1244,14 +1216,16 @@
       *****************************************************************
      C     SDCART        BEGSR
       *
-     C                   Z-ADD     0             WNumCart                       Default: 0
-     C     *IN29         IFEQ      *OFF
+     C                   Z-ADD     0             WNumCart                       Reset WNumCart
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HCART         WNumCart                        Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
      C     DDCART        ANDEQ     *BLANKS
      C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
 	  *
      C                   Z-ADD     0             WNumCart                        Default: 0
@@ -1267,32 +1241,17 @@
       *****************************************************************
      C     SDWGHT        BEGSR
       *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDWGHT        IFEQ      *BLANKS                                      If blank
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAWGHT       DDWGHT                          Default from
-     C                   ENDIF                                                   SDBSRTPD
-      *
-     C     ApiName       IFEQ      'PDCL'
-     C     ApiName       OREQ      'LOAM'
-     C     ApiName       OREQ      'LERI'
-     C     *IN29         ANDEQ     *OFF
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HWGHT         DDWGHT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
-     C                   ENDIF                                                  END blank
-      *
-     C                   ELSE                                                   CLE172=OFF
-      *
-     C     *IN29         IFEQ      *OFF
-     C                   MOVE      HWGHT         DDWGHT                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      *BLANKS       DDWGHT
-     C                   ENDIF
-      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     DDWGHT        ANDEQ     *BLANKS
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAWGHT       DDWGHT                          Default from
+      *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR

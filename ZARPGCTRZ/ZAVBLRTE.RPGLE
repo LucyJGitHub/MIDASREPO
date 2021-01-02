@@ -820,15 +820,16 @@
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
      C                   ELSE                                                   If numeric
       *
+     C     WNumBadj      IFEQ      0
      C                   MOVE      @@ALPH        DDBADJ
      C                   MOVEL     DDBADJ        IntBadj
      C                   MOVE      DDBADJ        DecBadj
      C                   MOVEA     IntBadj       ArrayBadj(1)
      C                   MOVEA     DLBNDCSP      ArrayBadj(6)
      C                   MOVEA     DecBadj       ArrayBadj(7)
-      *
      C                   MOVEA     ArrayBadj     PZFld17
      C                   MOVE      PZFld17       WNumBadj
+     C                   ENDIF
       *
      C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
@@ -926,15 +927,16 @@
      C                   MOVEL     '5049458'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
       *
+     C     WNumCart      IFEQ      0
      C                   MOVE      @@ALPH        DDCART
      C                   MOVEL     DDCART        IntCart
      C                   MOVE      DDCART        DecCart
      C                   MOVEA     IntCart       ArrayCart(1)
      C                   MOVEA     DLBNDCSP      ArrayCart(6)
      C                   MOVEA     DecCart       ArrayCart(7)
-      *
      C                   MOVEA     ArrayCart     PZFld17
      C                   MOVE      PZFld17       WNumCart
+     C                   ENDIF
       *
      C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS

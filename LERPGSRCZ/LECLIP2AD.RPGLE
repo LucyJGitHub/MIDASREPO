@@ -744,7 +744,7 @@
      C     DDBLRT        IFNE      @DDBLRT                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDBLRT'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049460'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDBLRT))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBLRT)                    CLE172
      C                   EVAL      DDBLRTOK        = 'N'                                      CLE172
@@ -788,7 +788,7 @@
      C     @@ERCD        ORNE      *ZERO                                                      CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDLBDY'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049461'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDLBDY))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDLBDY)                    CLE172
      C                   EVAL      DDLBDYOK        = 'N'                                      CLE172
@@ -832,7 +832,7 @@
      C     @@ERCD        ORNE      *ZERO                                                      CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDLODY'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049462'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDLODY))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDLODY)                    CLE172
      C                   EVAL      DDLODYOK        = 'N'                                      CLE172
@@ -876,7 +876,7 @@
      C     @@ERCD        ORNE      *ZERO                                                      CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDPDLY'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049463'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDPDLY))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDPDLY)                    CLE172
      C                   EVAL      DDPDLYOK        = 'N'                                      CLE172
@@ -903,7 +903,7 @@
      C     ZCMPAMTDif    IFEQ      'Y'                                                        CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDBADJ'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049464'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDBADJ))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBADJ)                    CLE172
      C                   EVAL      DDBADJOK        = 'N'                                      CLE172
@@ -916,7 +916,7 @@
      C     DDAVOP        IFNE      @DDAVOP                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDAVOP'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049465'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDAVOP))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDAVOP)                    CLE172
      C                   EVAL      DDAVOPOK        = 'N'                                      CLE172
@@ -942,7 +942,7 @@
      C     ZCMPAMTDif    IFEQ      'Y'                                                        CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDCART'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049466'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDCART))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDCART)                    CLE172
      C                   EVAL      DDCARTOK        = 'N'                                      CLE172
@@ -955,7 +955,7 @@
      C     DDWGHT        IFNE      @DDWGHT                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDWGHT'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049467'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDWGHT))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDWGHT)                    CLE172
      C                   EVAL      DDWGHTOK        = 'N'                                      CLE172
@@ -968,7 +968,7 @@
      C     DDBRAC        IFNE      @DDBRAC                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDBRAC'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049468'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDBRAC))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBRAC)                    CLE172
      C                   EVAL      DDBRACOK        = 'N'                                      CLE172
@@ -1012,7 +1012,7 @@
      C     @@ERCD        ORNE      *ZERO                                                      CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDLBAC'                                 CLE172
-     C                   EVAL      MsgIDArr(Idx)   = 'LEL0643'                                CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049469'                                CLE172
      C                   EVAL      BLen = %Len(%Trim(@DDLBAC))                                CLE172
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDLBAC)                    CLE172
      C                   EVAL      DDLBACOK        = 'N'                                      CLE172

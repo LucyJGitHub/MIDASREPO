@@ -118,15 +118,6 @@
      D MsgIdXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
 	
       *
-      ** Incoming Benchmark Adjustment in screen format
-      *
-     D ArrayBadj       S              1A   DIM(17)
-      *
-      ** Incoming Compounded/Average Rate in screen format
-      *
-     D ArrayCart       S              1A   DIM(17)
-
-      *
       ** Array for Input
       *
      D ArrayInp        S              1A   DIM(200)
@@ -248,19 +239,13 @@
      D @@ERCD          S              1P 0
      D @@IDP           S              3P 0
      D @@IINT          S              3P 0
-	
-     D PZFld17         S             17A
 
      D #1TESTN         S              1A
      D #2TESTN         S              1A
      D #1CHARPOS       S              2P 0
      D #2CHARPOS       S              2P 0
      D WDAY            S              2S 0
-     D IntBadj         S              5A
-     D DecBadj         S              8A
      D WNumBadj        S             13P 8
-     D IntCart         S              5A
-     D DecCart         S              8A
      D WNumCart        S             13P 8
 
       *
@@ -586,12 +571,9 @@
      C                   ENDIF
      C                   ENDIF
       *
-      ** Acess Loan Details for BC and SC loan events defaulting
+      ** Acess Loan Details defaulting
       *
-     C     ApiName       IFEQ      'LOAM'
-     C     ApiName       OREQ      'LOSC'
-     C     ApiName       OREQ      'PDCL'
-     C     ApiName       OREQ      'LERI'
+     C     *IN29         IFEQ      *OFF
      C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
      C                   ENDIF
       *
@@ -810,7 +792,7 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0                                            Not numeric
+     C     @@ERCD        IFNE      0
       *
       ** Benchmark Adjustment is not numeric
       *
@@ -818,17 +800,6 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
-     C                   ELSE                                                   If numeric
-      *
-     C     WNumBadj      IFEQ      0
-     C                   MOVE      @@ALPH        DDBADJ
-     C                   MOVEL     DDBADJ        IntBadj
-     C                   MOVE      DDBADJ        DecBadj
-     C                   MOVEA     IntBadj       ArrayBadj(1)
-     C                   MOVEA     DLBNDCSP      ArrayBadj(6)
-     C                   MOVEA     DecBadj       ArrayBadj(7)
-     C                   MOVEA     ArrayBadj     PZFld17
-     C                   MOVE      PZFld17       WNumBadj
      C                   ENDIF
       *
      C     VBLRT         IFNE      'Y'
@@ -842,10 +813,10 @@
      C                   MOVEL     '5049401'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                   END numeric
      C                   ENDIF                                                  END CLE172
       *
      C     DDBADJOK      IFNE      'N'
+     C                   MOVE      @@ALPH        DDBADJ
      C                   Z-ADD     WNumBadj      VBADJ
      C                   ENDIF
       *
@@ -917,7 +888,7 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@ERCD        IFNE      0
       *
       ** Compounded/Average rate is not numeric
       *
@@ -925,17 +896,6 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDCART'      FldNamXAr(Idx)
      C                   MOVEL     '5049458'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If numeric
-      *
-     C     WNumCart      IFEQ      0
-     C                   MOVE      @@ALPH        DDCART
-     C                   MOVEL     DDCART        IntCart
-     C                   MOVE      DDCART        DecCart
-     C                   MOVEA     IntCart       ArrayCart(1)
-     C                   MOVEA     DLBNDCSP      ArrayCart(6)
-     C                   MOVEA     DecCart       ArrayCart(7)
-     C                   MOVEA     ArrayCart     PZFld17
-     C                   MOVE      PZFld17       WNumCart
      C                   ENDIF
       *
      C     VBLRT         IFNE      'Y'
@@ -949,10 +909,10 @@
      C                   MOVEL     '5049459'     MsgIdXAr(Idx)
      C                   ENDIF
       *
-     C                   ENDIF                                                   END numeric
      C                   ENDIF                                                  END CLE172
       *
      C     DDCARTOK      IFNE      'N'
+     C                   MOVE      @@ALPH        DDCART
      C                   Z-ADD     WNumCart      VCART
      C                   ENDIF
       *

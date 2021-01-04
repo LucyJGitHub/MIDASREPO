@@ -275,9 +275,6 @@
       *
       ***  Loan in file format CK
      C                   PARM                    TRANFilFmtCK
-      *                                                                                       CLE172
-      ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028            1                         BUG3721
@@ -285,6 +282,9 @@
       ***  OUTPUTS parameters
       *
      C                   PARM                    LoanScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       *
       ***  Process convert file to screen 3
       *

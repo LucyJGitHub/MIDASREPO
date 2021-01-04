@@ -1104,10 +1104,6 @@
       ***  Loan in file format CK
       *
      C                   PARM                    CrLnFilFmtCK
-      *                                                                                       CLE172
-      ** Backward-Looking Rate Fields                                                         CLE172
-      *                                                                                       CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
@@ -1118,6 +1114,10 @@
       *
      C                   PARM                    CrLnScnFmt2
       *
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
+      *                                                                                       CLE172
       ** Initialise to work fields to be held.                                             AR1075452
       *                                                                                    AR1075452
      C                   EVAL      WWLNR2 = @DDLNR2                                        AR1075452

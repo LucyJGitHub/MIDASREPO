@@ -305,13 +305,19 @@
       ** OK fields
       *
      D DDBLRTOK        S              1A
+     D DDAVOPOK        S              1A
      D DDLBDYOK        S              1A
      D DDLODYOK        S              1A
-     D DDPDLYOK        S              1A
-     D DDBADJOK        S              1A
-     D DDAVOPOK        S              1A
-     D DDCARTOK        S              1A
      D DDWGHTOK        S              1A
+     D DDBADJOK        S              1A
+     D DDPDLYOK        S              1A
+     D DDNVOPOK        S              1A
+     D DDNBDYOK        S              1A
+     D DDNODYOK        S              1A
+     D DDNGHTOK        S              1A
+     D DDNADJOK        S              1A
+     D DDNDLYOK        S              1A
+     D DDCARTOK        S              1A
 
       *****************************************************************
       /EJECT
@@ -582,6 +588,29 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+      *  SDBLRT - Default backward-looking rate                       *
+      *****************************************************************
+     C     SDBLRT        BEGSR
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   MOVE      HBLRT         DDBLRT                          Default from
+     C                   ELSE                                                    CLOANCL
+     C                   MOVE      'N'           DDBLRT
+     C                   ENDIF
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBABLRT       DDBLRT                          Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
       *  SRBLRT - Validate backward-looking rate                      *
       *****************************************************************
      C     SRBLRT        BEGSR
@@ -606,6 +635,98 @@
      C     DDBLRTOK      IFNE      'N'
      C                   MOVE      DDBLRT        VBLRT
      C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDAVOP - Default averaging option                            *
+      *****************************************************************
+     C     SDAVOP        BEGSR
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   MOVE      HAVOP         DDAVOP                          Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     DDAVOP        ANDEQ     *BLANKS
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAAVOP       DDAVOP                          Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRAVOP - Validate averaging option                           *
+      *****************************************************************
+     C     SRAVOP        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C     DDAVOP        IFNE      *BLANKS                                      Not blank
+      *
+     C     DDAVOP        IFNE      '1'
+     C     DDAVOP        ANDNE     '2'
+     C     DDAVOP        ANDNE     '3'
+     C     DDAVOP        ANDNE     '4'
+      *
+      ** Averaging Option value is invalid
+      *
+     C                   MOVE      'N'           DDAVOPOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
+     C                   MOVEL     '5049403'     MsgIdXAr(Idx)
+     C                   ELSE                                                    If valid
+      *
+     C     VBLRT         IFNE      'Y'
+      *
+      ** Backward-Looking Rate is N and Averaging Option is not blank
+      *
+     C                   MOVE      'N'           DDAVOPOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
+     C                   MOVEL     '5049405'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
+     C                   ENDIF                                                   END valid
+     C                   ENDIF                                                  END not blank
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C     DDAVOPOK      IFNE      'N'
+     C                   MOVE      DDAVOP        VAVOP
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDLBDY - Default lookback days for settlement                *
+      *****************************************************************
+     C     SDLBDY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   Z-ADD     HLBDY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDLBDY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBALBDY       WDAY                            Default from
+     C                                                                           SDBSRTPD
+     C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
       *
@@ -666,6 +787,31 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+      *  SDLODY - Default lockout days                                *
+      *****************************************************************
+     C     SDLODY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   Z-ADD     HLODY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDLODY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBALODY       WDAY                            Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
       *  SRLODY - Validate lockout days                               *
       *****************************************************************
      C     SRLODY        BEGSR
@@ -713,6 +859,158 @@
       *
      C     DDLODYOK      IFNE      'N'
      C                   Z-ADD     WDAY          VLODY
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDWGHT - Default weight convention                           *
+      *****************************************************************
+     C     SDWGHT        BEGSR
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   MOVE      HWGHT         DDWGHT                          Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     ApiName       ANDEQ     'CLIP'
+     C     DDWGHT        ANDEQ     *BLANKS
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+     C                   MOVE      BBAWGHT       DDWGHT                          Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRWGHT - Validate weight convention                          *
+      *****************************************************************
+     C     SRWGHT        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C     DDWGHT        IFNE      *BLANKS                                      Not blank
+      *
+     C     DDWGHT        IFNE      '1'
+     C     DDWGHT        ANDNE     '2'
+      *
+      ** Weight Convention value is invalid
+      *
+     C                   MOVE      'N'           DDWGHTOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
+     C                   MOVEL     '5049408'     MsgIdXAr(Idx)
+     C                   ELSE                                                    If valid
+      *
+     C     VBLRT         IFNE      'Y'
+      *
+      ** Backward-Looking Rate is N and Weight Convention is not blank
+      *
+     C                   MOVE      'N'           DDWGHTOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
+     C                   MOVEL     '5049455'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
+     C     DDAVOP        IFNE      '1'
+     C     DDAVOP        ANDNE     '2'
+      *
+      ** Averaging Option is not 1/2 and Weight Convention is not blank
+      *
+     C                   MOVE      'N'           DDWGHTOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
+     C                   MOVEL     '5049453'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
+     C                   ENDIF                                                   END valid
+     C                   ENDIF                                                  END not blank
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C     DDWGHTOK      IFNE      'N'
+     C                   MOVE      DDWGHT        VWGHT
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDBADJ - Default benchmark adjustment                        *
+      *****************************************************************
+     C     SDBADJ        BEGSR
+      *
+     C                   Z-ADD     0             WNumBadj                       Reset WNumBadj
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   Z-ADD     HBADJ         WNumBadj                        Default from
+     C                   ENDIF                                                   CLOANCL
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDBADJ        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+      *
+     C                   Z-ADD     BBABADJ       WNumBadj                        Default from
+      *                                                                          SDBSRTPD
+     C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRBADJ - Validate benchmark adjustment                       *
+      *****************************************************************
+     C     SRBADJ        BEGSR
+      *
+     C     CLE172        IFEQ      'Y'                                          CLE172=ON
+      *
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDBADJ        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      8             @@IDP                          no.of dec.plcs
+     C                   PARM      5             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
+      *
+     C     @@ERCD        IFNE      0
+      *
+      ** Benchmark Adjustment is not numeric
+      *
+     C                   MOVE      'N'           DDBADJOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
+     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
+     C     VBLRT         IFNE      'Y'
+     C     WNumBadj      ANDNE     *ZEROS
+      *
+      ** Backward-Looking Rate is N and Benchmark Adjustment is not 0
+      *
+     C                   MOVE      'N'           DDBADJOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
+     C                   MOVEL     '5049401'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  END CLE172
+      *
+     C     DDBADJOK      IFNE      'N'
+     C                   MOVE      @@ALPH        DDBADJ
+     C                   Z-ADD     WNumBadj      VBADJ
      C                   ENDIF
       *
      C                   ENDSR
@@ -774,50 +1072,46 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SRBADJ - Validate benchmark adjustment                       *
+      *  SDPDLY - Default payment delay days                          *
       *****************************************************************
-     C     SRBADJ        BEGSR
+     C     SDPDLY        BEGSR
+      *
+     C                   Z-ADD     0             WDAY                           Reset WDAY
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   Z-ADD     HPDLY         WDAY                            Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
+     C     DDPDLY        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
       *
-     C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDBADJ        @@ALPH
-     C                   CALLB     'ZA0841'
-     C                   PARM      *BLANK        RetCodeOut
-     C                   PARM                    @@ALPH                         Display field
-     C                   PARM      8             @@IDP                          no.of dec.plcs
-     C                   PARM      5             @@IINT                         no.of integers
-     C                   PARM      'N'           @@MTID                         Mil/Thou
-     C                   PARM      *ZERO         @@ERCD                         Error code
-     C                   PARM      *ZERO         @@AMT                          File field
-     C                   PARM                    DLBNDCSP
-      *
-     C     @@ERCD        IFNE      0
-      *
-      ** Benchmark Adjustment is not numeric
-      *
-     C                   MOVE      'N'           DDBADJOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
-     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C     VBLRT         IFNE      'Y'
-     C     WNumBadj      ANDNE     *ZEROS
-      *
-      ** Backward-Looking Rate is N and Benchmark Adjustment is not 0
-      *
-     C                   MOVE      'N'           DDBADJOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
-     C                   MOVEL     '5049401'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
+     C                   Z-ADD     BBAPDLY       WDAY                            Default from
+      *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
+	  *
+     C                   ENDSR
       *
-     C     DDBADJOK      IFNE      'N'
-     C                   MOVE      @@ALPH        DDBADJ
-     C                   Z-ADD     WNumBadj      VBADJ
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNVOP - Default next averaging option                       *
+      *****************************************************************
+     C     SDNVOP        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNVOP         VNVOP                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   MOVE      *BLANKS       VNVOP                          Default:blank
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     ApiName       IFEQ      'LERI'
+     C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
       *
      C                   ENDSR
@@ -825,45 +1119,130 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SRAVOP - Validate averaging option                           *
+      *  SDNBDY - Default next lookback days for settlement          *
       *****************************************************************
-     C     SRAVOP        BEGSR
+     C     SDNBDY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNBDY         VNBDY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNBDY                           Default: 0
+     C                   ENDIF
+     C                   ENDIF
+     C     ApiName       IFEQ      'LERI'
+     C                   Z-ADD     0             VNBDY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNODY - Default next lockout days                          *
+      *****************************************************************
+     C     SDNODY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNODY         VNODY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNODY                           Default: 0
+     C                   ENDIF
+     C                   ENDIF
+     C     ApiName       IFEQ      'LERI'
+     C                   Z-ADD     0             VNODY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNGHT - Default next weight convention                      *
+      *****************************************************************
+     C     SDNGHT        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNGHT         VNGHT                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   MOVE      *BLANKS       VNGHT                          Default:blank
+     C                   ENDIF
+     C                   ENDIF
+     C     ApiName       IFEQ      'LERI'
+     C                   MOVE      *BLANKS       VNGHT                          Default:blank
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNADJ - Default next benchmark adjustment                   *
+      *****************************************************************
+     C     SDNADJ        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNADJ         VNADJ                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNADJ                           Default: 0
+     C                   ENDIF
+     C                   ENDIF
+     C     ApiName       IFEQ      'LERI'
+     C                   Z-ADD     0             VNADJ                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDNDLY - Default next payment delay days                     *
+      *****************************************************************
+     C     SDNDLY        BEGSR
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         IFEQ      *OFF                                         Not INSERT
+     C                   MOVE      HNDLY         VNDLY                           Default from
+     C                   ELSE                                                    CLOANCL
+      *                                                                         If INSERT
+     C                   Z-ADD     0             VNDLY                           Default: 0
+     C                   ENDIF
+     C                   ENDIF
+     C     ApiName       IFEQ      'LERI'
+     C                   Z-ADD     0             VNDLY                          Default: 0
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SDCART - Default compounded/average rate                     *
+      *****************************************************************
+     C     SDCART        BEGSR
+      *
+     C                   Z-ADD     0             WNumCart                       Reset WNumCart
+      *
+     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C                   Z-ADD     HCART         WNumCart                        Default from
+     C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDAVOP        IFNE      *BLANKS                                      Not blank
-      *
-     C     DDAVOP        IFNE      '1'
-     C     DDAVOP        ANDNE     '2'
-     C     DDAVOP        ANDNE     '3'
-     C     DDAVOP        ANDNE     '4'
-      *
-      ** Averaging Option value is invalid
-      *
-     C                   MOVE      'N'           DDAVOPOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
-     C                   MOVEL     '5049403'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If valid
-      *
-     C     VBLRT         IFNE      'Y'
-      *
-      ** Backward-Looking Rate is N and Averaging Option is not blank
-      *
-     C                   MOVE      'N'           DDAVOPOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
-     C                   MOVEL     '5049405'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C                   ENDIF                                                   END valid
-     C                   ENDIF                                                  END not blank
+     C     DDCART        ANDEQ     *BLANKS
+     C     ApiName       ANDEQ     'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     *IN30         ANDEQ     *OFF
+	  *
+     C                   Z-ADD     0             WNumCart                        Default: 0
       *
      C                   ENDIF                                                  END CLE172
-      *
-     C     DDAVOPOK      IFNE      'N'
-     C                   MOVE      DDAVOP        VAVOP
-     C                   ENDIF
       *
      C                   ENDSR
       *
@@ -914,60 +1293,6 @@
      C     DDCARTOK      IFNE      'N'
      C                   MOVE      @@ALPH        DDCART
      C                   Z-ADD     WNumCart      VCART
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRWGHT - Validate weight convention                          *
-      *****************************************************************
-     C     SRWGHT        BEGSR
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-      *
-     C     DDWGHT        IFNE      *BLANKS                                      Not blank
-      *
-     C     DDWGHT        IFNE      '1'
-     C     DDWGHT        ANDNE     '2'
-      *
-      ** Weight Convention value is invalid
-      *
-     C                   MOVE      'N'           DDWGHTOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
-     C                   MOVEL     '5049408'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If valid
-      *
-     C     VBLRT         IFNE      'Y'
-      *
-      ** Backward-Looking Rate is N and Weight Convention is not blank
-      *
-     C                   MOVE      'N'           DDWGHTOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
-     C                   MOVEL     '5049455'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C     DDAVOP        IFNE      '1'
-     C     DDAVOP        ANDNE     '2'
-      *
-      ** Averaging Option is not 1/2 and Weight Convention is not blank
-      *
-     C                   MOVE      'N'           DDWGHTOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDWGHT'      FldNamXAr(Idx)
-     C                   MOVEL     '5049453'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C                   ENDIF                                                   END valid
-     C                   ENDIF                                                  END not blank
-      *
-     C                   ENDIF                                                  END CLE172
-      *
-     C     DDWGHTOK      IFNE      'N'
-     C                   MOVE      DDWGHT        VWGHT
      C                   ENDIF
       *
      C                   ENDSR
@@ -1029,198 +1354,6 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  SDBLRT - Default backward-looking rate                       *
-      *****************************************************************
-     C     SDBLRT        BEGSR
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   MOVE      HBLRT         DDBLRT                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      'N'           DDBLRT
-     C                   ENDIF
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBABLRT       DDBLRT                          Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDLBDY - Default lookback days for settlement                *
-      *****************************************************************
-     C     SDLBDY        BEGSR
-      *
-     C                   Z-ADD     0             WDAY                           Reset WDAY
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   Z-ADD     HLBDY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDLBDY        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
-     C                   Z-ADD     BBALBDY       WDAY                            Default from
-     C                                                                           SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDLODY - Default lockout days                                *
-      *****************************************************************
-     C     SDLODY        BEGSR
-      *
-     C                   Z-ADD     0             WDAY                           Reset WDAY
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   Z-ADD     HLODY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDLODY        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
-     C                   Z-ADD     BBALODY       WDAY                            Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDPDLY - Default payment delay days                          *
-      *****************************************************************
-     C     SDPDLY        BEGSR
-      *
-     C                   Z-ADD     0             WDAY                           Reset WDAY
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   Z-ADD     HPDLY         WDAY                            Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDPDLY        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
-     C                   Z-ADD     BBAPDLY       WDAY                            Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-	  *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDBADJ - Default benchmark adjustment                        *
-      *****************************************************************
-     C     SDBADJ        BEGSR
-      *
-     C                   Z-ADD     0             WNumBadj                       Reset WNumBadj
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   Z-ADD     HBADJ         WNumBadj                        Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDBADJ        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
-     C                   Z-ADD     BBABADJ       WNumBadj                        Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDAVOP - Default averaging option                            *
-      *****************************************************************
-     C     SDAVOP        BEGSR
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   MOVE      HAVOP         DDAVOP                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     DDAVOP        ANDEQ     *BLANKS
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAAVOP       DDAVOP                          Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDCART - Default compounded/average rate                     *
-      *****************************************************************
-     C     SDCART        BEGSR
-      *
-     C                   Z-ADD     0             WNumCart                       Reset WNumCart
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   Z-ADD     HCART         WNumCart                        Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDCART        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-	  *
-     C                   Z-ADD     0             WNumCart                        Default: 0
-      *
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDWGHT - Default weight convention                           *
-      *****************************************************************
-     C     SDWGHT        BEGSR
-      *
-     C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C                   MOVE      HWGHT         DDWGHT                          Default from
-     C                   ENDIF                                                   CLOANCL
-      *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     DDWGHT        ANDEQ     *BLANKS
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-     C                   MOVE      BBAWGHT       DDWGHT                          Default from
-      *                                                                          SDBSRTPD
-     C                   ENDIF                                                  END CLE172
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
       *  SDPIAD - Default principal interest control date            *
       *****************************************************************
      C     SDPIAD        BEGSR
@@ -1229,132 +1362,6 @@
      C                   MOVE      HPIAD         VPIAD
      C                   ELSE
      C                   MOVE      0             VPIAD
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNBDY - Default next lookback days for settlement          *
-      *****************************************************************
-     C     SDNBDY        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNBDY         VNBDY                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   Z-ADD     0             VNBDY                           Default: 0
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   Z-ADD     0             VNBDY                          Default: 0
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNODY - Default next lockout days                          *
-      *****************************************************************
-     C     SDNODY        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNODY         VNODY                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   Z-ADD     0             VNODY                           Default: 0
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   Z-ADD     0             VNODY                          Default: 0
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNDLY - Default next payment delay days                     *
-      *****************************************************************
-     C     SDNDLY        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNDLY         VNDLY                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   Z-ADD     0             VNDLY                           Default: 0
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   Z-ADD     0             VNDLY                          Default: 0
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNADJ - Default next benchmark adjustment                   *
-      *****************************************************************
-     C     SDNADJ        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNADJ         VNADJ                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   Z-ADD     0             VNADJ                           Default: 0
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   Z-ADD     0             VNADJ                          Default: 0
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNGHT - Default next weight convention                      *
-      *****************************************************************
-     C     SDNGHT        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNGHT         VNGHT                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   MOVE      *BLANKS       VNGHT                          Default:blank
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   MOVE      *BLANKS       VNGHT                          Default:blank
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDNVOP - Default next averaging option                       *
-      *****************************************************************
-     C     SDNVOP        BEGSR
-      *
-     C     ApiName       IFEQ      'CLIP'
-     C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNVOP         VNVOP                           Default from
-     C                   ELSE                                                    CLOANCL
-      *                                                                         If INSERT
-     C                   MOVE      *BLANKS       VNVOP                          Default:blank
-     C                   ENDIF
-     C                   ENDIF
-     C     ApiName       IFEQ      'LERI'
-     C                   MOVE      *BLANKS       VNVOP                          Default:blank
      C                   ENDIF
       *
      C                   ENDSR

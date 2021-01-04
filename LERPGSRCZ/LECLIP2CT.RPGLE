@@ -150,9 +150,9 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
-     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+     D ArrayBadj       S              1A   DIM(20)                                            CLE172
       *** Benchmark Adjustment in screen format                                               CLE172
-     D ArrayCart       S              1A   DIM(17)                                            CLE172
+     D ArrayCart       S              1A   DIM(20)                                            CLE172
       *** Compounded/Average Rate in screen format                                            CLE172
       *
      D LoanFilFmtCL  E DS                  EXTNAME(CLOANCL)
@@ -212,11 +212,19 @@
      D CLE143          S              1                                                       CLE143
      D CRE073          S              1                                                       CRE073
                                                                                               CLE035
+      ** Parameters for calling ZA0841                                                        CLE172
+     D @@ALPH          S             16A                                                      CLE172
+     D @@MTID          S              1A                                                      CLE172
+     D @@AMT           S             15P 0                                                    CLE172
+     D @@ERCD          S              1P 0                                                    CLE172
+     D @@IDP           S              3P 0                                                    CLE172
+     D @@IINT          S              3P 0                                                    CLE172
+      *                                                                                       CLE172
      D IntBadj         S              5A                                                      CLE172
      D DecBadj         S              8A                                                      CLE172
      D IntCart         S              5A                                                      CLE172
      D DecCart         S              8A                                                      CLE172
-                                                                                              CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -646,7 +654,19 @@
      C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
-     C                   MOVEA     ArrayBadj     DDBADJ                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM      '.'           DLBNDCSP                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
       *                                                                                       CLE172
       * Averaging Option                                                                      CLE172
       *                                                                                       CLE172
@@ -667,7 +687,19 @@
      C                   MOVEA     DecCart       ArrayCart(7)                                 CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
-     C                   MOVEA     ArrayCart     DDCART                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayCart     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM      '.'           DLBNDCSP                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDCART                                       CLE172
       *                                                                                       CLE172
       * Weight Convention                                                                     CLE172
       *                                                                                       CLE172
@@ -735,10 +767,6 @@
       ***  Loan in file format CK
       *
      C                   PARM                    LoanFilFmtCK
-      *                                                                                       CLE172
-      ** Backward-Looking Rate Fields                                                         CLE172
-      *                                                                                       CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028            1                         BUG3721
@@ -748,6 +776,10 @@
       ***  Loan in screen format
       *
      C                   PARM                    LoanScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       *
       ***  Initialize program name
       *

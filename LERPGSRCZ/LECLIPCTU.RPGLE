@@ -218,6 +218,8 @@
      D TranInThir    E DS                  EXTNAME(LECLI3PD)
      D TranInFour    E DS                  EXTNAME(LECLI4PD)
      D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE172
+      * Incoming Backward-Looking Rate Screen Fields                                          CLE172
+     D TranScnBlrt     DS            41                                                       CLE172
 
       * Error indicators
      D OKClPrim      E DS                  EXTNAME(LEECLI1PD)
@@ -285,8 +287,6 @@
       * FRA/IRS Settlement Instructions - Current
      D C_FRI         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
 
-      ** CLIP Backward-Looking Rate Fields                                                    CLE172
-     D LoanScnBlrt     DS            41                                                       CLE172
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -374,6 +374,9 @@
      D CurClFour     E DS                  EXTNAME(LECLI4PD)
      D                                     PREFIX(C_)
 
+      * (Current) Backward-Looking Rate Fields in Screen Format                               CLE172
+     D CurrScnBlrt     DS            41                                                       CLE172
+                                                                                              CLE172
      D ExtData       E DS                  EXTNAME(LECLEXPD)
      D RegData       E DS                  EXTNAME(LECLRXPD)                                  CER001
       * LE (CLIP) Extra Data - File (D/B) format
@@ -1276,7 +1279,7 @@
       ** Business Day Convention Screen Detail                                                CLE172
      C                   PARM                    TranInSeven                                  CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
 
       * OUTPUTS
 
@@ -1772,8 +1775,6 @@
       * Customer loans - file formats
      C                   PARM                    ValidClil
      C                   PARM                    ValidClik
-      ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
@@ -1782,6 +1783,8 @@
 
       * Customer loans Details - screen formats 2
      C                   PARM                    CurClSeco
+      * Backward-Looking Rate Fields from file                                                CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
 
       * For Amends, convert the customer loan to screen format 3
 
@@ -1957,6 +1960,10 @@
      C                   PARM                    TranInSeco
       * (Current) Customer Loans in Screen Format :
      C                   PARM                    CurClSeco
+      * Incoming Backward-Looking Rate fields in Screen Format :                              CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
+      * (Current) Backward-Looking Rate fields in Screen Format :                             CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       * (Current) Loan in file format:
      C                   PARM                    ClilFilFmt
      C                   PARM                    ClikFilFmt

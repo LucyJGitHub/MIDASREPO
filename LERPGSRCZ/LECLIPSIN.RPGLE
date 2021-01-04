@@ -243,6 +243,8 @@
       ***  (Current) Loan in Screen Format - Screen 3
      D CrLnScnFmt4   E DS                  EXTNAME(LECLI4PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 4
+     D CurrScnBlrt     DS            41                                                       CLE172
+      ***  (Current) Backward-Looking Rate Fields in Screen Format                            CLE172
 
 
      D NwLnFilFmtCL  E DS                  EXTNAME(LEVCLILPD)
@@ -269,6 +271,8 @@
      D NwLnScnFmt4   E DS                  EXTNAME(LECLI4PD)
       ***  New Loan in Screen Format - Screen 7                                               CLE172
      D NwLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE172
+      ***  New Backward-Looking Rate Screen Fields                                            CLE172
+     D TranScnBlrt     DS            41                                                       CLE172
 
 
      D OKLnScn1      E DS                  EXTNAME(LEECLI1PD)
@@ -347,10 +351,6 @@
      D InfData       E DS                  EXTNAME(LELEIFPD)                                 BUG9221
       * LE Extra Data - Classe 1 Data - File (D/B) format                                    BUG9221
      D                                     PREFIX(IF_)                                       BUG9221
-      *                                                                                       CLE172
-     D LoanScnBlrt     DS            41                                                       CLE172
-      ** CLIP Backward-Looking Rate Fields                                                    CLE172
-      *                                                                                       CLE172
      D  TransData      DS           500
       ***  Shared data
       *
@@ -1482,6 +1482,14 @@
       ***  Current Loan in Screen Format
       *
      C                   PARM                    CrLnScnFmt2
+      *                                                                                       CLE172
+      ***  New Backward-Looking Rate fields in Screen Format                                  CLE172
+      *                                                                                       CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
+      *                                                                                       CLE172
+      ***  Current Backward-Looking Rate fields in Screen Format                              CLE172
+      *                                                                                       CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       *
       ***  Current Loan in file format
       *
@@ -1563,7 +1571,7 @@
       ** Business Day Convention Screen Detail                                                CLE172
      C                   PARM                    NwLnScnFmt7                                  CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
      C                   PARM                    OKLnScn2
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -2294,9 +2302,6 @@
       ***  Loan in file format CK
       *
      C                   PARM                    CrLnFilFmtCK
-                                                                                              CLE172
-      ** Backward-Looking Rate Fields                                                         CLE172
-     C                   PARM                    LoanScnBlrt                                  CLE172
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
@@ -2306,6 +2311,10 @@
       ***  Loan in screen format
       *
      C                   PARM                    NwLnScnFmt2
+      *                                                                                       CLE172
+      *** Backward-Looking Rate Fields                                                        CLE172
+      *                                                                                       CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
       *
      C                   CALLB     'LECLIP3CT'
       *
@@ -2357,6 +2366,7 @@
      C                   MOVEL     NwLnScnFmt2   CrLnScnFmt2
      C                   MOVEL     NwLnScnFmt3   CrLnScnFmt3
      C                   MOVEL     NwLnScnFmt4   CrLnScnFmt4
+     C                   MOVEL     TranScnBlrt   CurrScnBlrt                                  CLE172
       *
      C                   ENDSR
       *****************************************************************

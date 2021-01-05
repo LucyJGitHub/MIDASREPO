@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 14Dec20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD044083           Date 12Feb19               *
       *                 MD046248           Date 27Oct17               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Correct negative discount amount display          *
@@ -172,7 +174,28 @@
 
      D RollScnWrk2   E DS                  EXTNAME(LELERI2PD)
       *** Rollover Instructions Work fields
-      *
+      *                                                                                       CLE172
+      *** Backward-Looking Rate Screen Fields                                                 CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            46                                                       CLE172
+     D  DDNVOPB                1      1                                                       CLE172
+     D  DDNBDYB                2      3                                                       CLE172
+     D  DDNODYB                4      5                                                       CLE172
+     D  DDNGHTB                6      6                                                       CLE172
+     D  DDNADJB                7     21                                                       CLE172
+     D  DDNDLYB               22     23                                                       CLE172
+     D  DDNVOP                24     24                                                       CLE172
+     D  DDNBDY                25     26                                                       CLE172
+     D  DDNODY                27     28                                                       CLE172
+     D  DDNGHT                29     29                                                       CLE172
+     D  DDNADJ                30     44                                                       CLE172
+     D  DDNDLY                45     46                                                       CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment in screen format                                                CLE172
+      *                                                                                       CLE172
+     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+     D ArrayNadj       S              1A   DIM(17)                                            CLE172
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
       *
@@ -188,6 +211,11 @@
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for General Ledger Details
+      *                                                                                       CLE172
+      ** External DS for Dealing details                                                      CLE172
+      *                                                                                       CLE172
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CLE172
+     D                                     PREFIX(DL)                                         CLE172
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
@@ -200,6 +228,10 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
       *
+     D IntNadj         S              5A                                                      CLE172
+     D DecNadj         S              8A                                                      CLE172
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -595,6 +627,90 @@
                                                                                               CLE034
      C**********         EVAL      DDRSTA = K_RSTA                                    CLE034 CSF011A
      C                   EVAL      DDNSTA = K_RSTA                                           CSF011A
+      *                                                                                       CLE172
+      ** Next Averaging Option                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NVOP          DDNVOP                                       CLE172
+      *                                                                                       CLE172
+      ** Next Lookback Days for Settlement                                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NBDY          DDNBDY                                       CLE172
+      *                                                                                       CLE172
+      ** Next Lockout Days                                                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NODY          DDNODY                                       CLE172
+      *                                                                                       CLE172
+      ** Next Weight Convention                                                               CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NGHT          DDNGHT                                       CLE172
+      *                                                                                       CLE172
+      ** Next Benchmark Adjustment                                                            CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     NADJ          IntNadj                                      CLE172
+     C                   MOVE      NADJ          DecNadj                                      CLE172
+     C     NADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayNadj(1)                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(2)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayNadj(7)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(1)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayNadj(6)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEA     ArrayNadj     DDNADJ                                       CLE172
+      *                                                                                       CLE172
+      ** Next Payment Delay Days                                                              CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NDLY          DDNDLY                                       CLE172
+      *                                                                                       CLE172
+      ** Default New BL Rate Screen Fields at the start                                       CLE172
+      *                                                                                       CLE172
+     C                   IF        DDACTN = 'E'                                               CLE172
+      *                                                                                       CLE172
+      ** If the transaction is a fresh Rollover,                                              CLE172
+      ** default from original BL Rate Fields                                                 CLE172
+      *                                                                                       CLE172
+     C                   IF        NVOP = *BLANKS                                             CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     BADJ          IntBadj                                      CLE172
+     C                   MOVE      BADJ          DecBadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      AVOP          DDNVOPB                                      CLE172
+     C                   MOVE      LBDY          DDNBDYB                                      CLE172
+     C                   MOVE      LODY          DDNODYB                                      CLE172
+     C                   MOVE      WGHT          DDNGHTB                                      CLE172
+     C                   MOVEA     ArrayBadj     DDNADJB                                      CLE172
+     C                   MOVE      PDLY          DDNDLYB                                      CLE172
+      *                                                                                       CLE172
+      ** If the Rollover Details already exist,                                               CLE172
+      ** default the existing details                                                         CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVE      NVOP          DDNVOPB                                      CLE172
+     C                   MOVE      NBDY          DDNBDYB                                      CLE172
+     C                   MOVE      NODY          DDNODYB                                      CLE172
+     C                   MOVE      NGHT          DDNGHTB                                      CLE172
+     C                   MOVEA     ArrayNadj     DDNADJB                                      CLE172
+     C                   MOVE      NDLY          DDNDLYB                                      CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
       *
      C                   ENDSR
       *****************************************************************
@@ -791,6 +907,10 @@
       ***  Rollover Instructions in screen format
       *
      C                   PARM                    RollScnWrk2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
       *
       ***  Initialize program name
       *
@@ -948,6 +1068,16 @@
      C                   PARM                    @Return           6
      C                   PARM                    @type             1
      C*
+      ** Access Dealing Details                                                               CLE172
+      *                                                                                       CLE172
+     C                   CALL      'AODEALR1'                                                 CLE172
+     C                   PARM      *BLANKS       PRTCD                                        CLE172
+     C                   PARM      '*FIRST '     POPTN                                        CLE172
+     C     SDDEAL        PARM      SDDEAL        DSSDY                                        CLE172
+      *                                                                                       CLE172
+     C     PRTCD         IFNE      *BLANK                                                     CLE172
+     C                   EVAL      DLBNDCSP =  '.'                                            CLE172
+     C                   ENDIF                                                                CLE172
       *
      C                   ENDSR
       *****************************************************************

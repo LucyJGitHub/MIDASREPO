@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
       *                 CDL094             Date 11Jun14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -189,6 +191,9 @@
 
       * Error indicators
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
+                                                                                              CLE172
+      ** LOAM Backward-Looking Rate Fields                                                    CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
       *
       ***  Loan Details 'A' Format
      D LoanDetsA     E DS                  EXTNAME(CLOAN:CLOANCLF)
@@ -379,6 +384,7 @@
      C                                  Loa2ScnFmt +                                         CSF011A
      C                                  S_REC + S_PAY +                                       CSF011
      C                                  InfData + ExtData                                     247171
+     C                                  + LoamScnBlrt                                CLE172
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -511,6 +517,9 @@
      C**********         PARM                    DDSTAT           16                          CLE106
      C                   PARM                    DDASTS                                       CLE106
      C                   PARM                    LoamFilXFmt                                  CRE073
+      *                                                                                     CLE172
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
       *
       ** Add the action code
      C                   MOVE      @DDACTN       DDACTN

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
@@ -448,6 +450,11 @@
      D ArrayRtSp       S              1A   DIM(12)                                          MD034449
       * Incoming Spread Rate in screen format                                               MD034449
                                                                                             MD034449
+     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+      *** Benchmark Adjustment in screen format                                               CLE172
+     D ArrayCart       S              1A   DIM(17)                                            CLE172
+      *** Compounded/Average Rate in screen format                                            CLE172
+                                                                                              CLE172
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
       *
@@ -803,6 +810,39 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
+      ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
+     D LoanScnBlrt     DS            43                                                       CLE172
+     D  DDBLRT                 1      1A                                                      CLE172
+     D  DDLBDY                 2      3A                                                      CLE172
+     D  DDLODY                 4      5A                                                      CLE172
+     D  DDPDLY                 6      7A                                                      CLE172
+     D  DDBADJ                 8     22A                                                      CLE172
+     D  DDAVOP                23     23A                                                      CLE172
+     D  DDCART                24     38A                                                      CLE172
+     D  DDWGHT                39     39A                                                      CLE172
+     D  DDBRAC                40     41A                                                      CLE172
+     D  DDLBAC                42     43A                                                      CLE172
+                                                                                              CLE172
+      ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
+     D LoanValBlrt     DS                                                                     CLE172
+     D  WCLBLRT                1      1A                                                      CLE172
+     D  WCLLBDY                2      3S 0                                                    CLE172
+     D  WCLNBDY                4      5S 0                                                    CLE172
+     D  WCLLODY                6      7S 0                                                    CLE172
+     D  WCLNODY                8      9S 0                                                    CLE172
+     D  WCLPDLY               10     11S 0                                                    CLE172
+     D  WCLNDLY               12     13S 0                                                    CLE172
+     D  WCLBADJ               14     20P 8                                                    CLE172
+     D  WCLNADJ               21     27P 8                                                    CLE172
+     D  WCLAVOP               28     28A                                                      CLE172
+     D  WCLNVOP               29     29A                                                      CLE172
+     D  WCLCART               30     36P 8                                                    CLE172
+     D  WCLWGHT               37     37A                                                      CLE172
+     D  WCLNGHT               38     38A                                                      CLE172
+     D  WCLBRAC               39     40A                                                      CLE172
+     D  WCLLBAC               41     42S 0                                                    CLE172
+     D  WCLPIAD               43     47S 0                                                    CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -887,6 +927,12 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+                                                                                              CLE172
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
+     D IntCart         S              5A                                                      CLE172
+     D DecCart         S              8A                                                      CLE172
+                                                                                              CLE172
      D/COPY WNCPYSRC,LEH00617
       *
       ** +--------------------------------------+
@@ -1111,6 +1157,10 @@
       ***  Validate interest validation basis
       *
      C                   EXSR      SRCALC
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
       *
       /COPY WNCPYSRC,LECLIP2V13
       *
@@ -1370,6 +1420,89 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'CLIP'        ApiName           4                          CLE172
+     C                   PARM                    CCLCCY                                       CLE172
+     C                   PARM                    CCLBRTT                                      CLE172
+     C                   PARM      DDLNR2        XLNRF             6                          CLE172
+      *                  PARM                    CCLICBS                                      CLE172
+     C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNamXAr                                    CLE172
+     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LoanValBlrt                                  CLE172
+     C                   MOVE      WCLBLRT       CCLBLRT                                      CLE172
+     C                   Z-ADD     WCLLBDY       CCLLBDY                                      CLE172
+     C                   Z-ADD     WCLNBDY       CCLNBDY                                      CLE172
+     C                   Z-ADD     WCLLODY       CCLLODY                                      CLE172
+     C                   Z-ADD     WCLNODY       CCLNODY                                      CLE172
+     C                   Z-ADD     WCLPDLY       CCLPDLY                                      CLE172
+     C                   Z-ADD     WCLNDLY       CCLNDLY                                      CLE172
+     C                   Z-ADD     WCLBADJ       CCLBADJ                                      CLE172
+     C                   Z-ADD     WCLNADJ       CCLNADJ                                      CLE172
+     C                   MOVE      WCLAVOP       CCLAVOP                                      CLE172
+     C                   MOVE      WCLNVOP       CCLNVOP                                      CLE172
+     C                   Z-ADD     WCLCART       CCLCART                                      CLE172
+     C                   MOVE      WCLWGHT       CCLWGHT                                      CLE172
+     C                   MOVE      WCLNGHT       CCLNGHT                                      CLE172
+     C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
+     C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
+     C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLBLRT       DDBLRT                                       CLE172
+     C                   MOVEL     WCLLBDY       DDLBDY                                       CLE172
+     C                   MOVEL     WCLLODY       DDLODY                                       CLE172
+     C                   MOVEL     WCLPDLY       DDPDLY                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLBADJ       IntBadj                                      CLE172
+     C                   MOVE      WCLBADJ       DecBadj                                      CLE172
+     C     WCLBADJ       IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayBadj     DDBADJ                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLAVOP       DDAVOP                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLCART       IntCart                                      CLE172
+     C                   MOVE      WCLCART       DecCart                                      CLE172
+     C     WCLCART       IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayCart(1)                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayCart(7)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntCart       ArrayCart(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayCart(6)                                 CLE172
+     C                   MOVEA     DecCart       ArrayCart(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEA     ArrayCart     DDCART                                       CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLWGHT       DDWGHT                                       CLE172
+     C                   MOVEL     WCLBRAC       DDBRAC                                       CLE172
+     C                   MOVEL     WCLLBAC       DDLBAC                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6318,6 +6451,9 @@ E004 C                   ENDIF
                                                                                             MD053143
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInScr7                                 MD053143
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller

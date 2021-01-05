@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -332,6 +334,9 @@
 
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+      *                                                                                       CLE172
+     D LoamScnBlrt     DS            22                                                       CLE172
+      ** LE Backward-Looking Rate Fields                                                      CLE172
 
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
@@ -740,6 +745,10 @@
       * Output parameters
       * Amendment details - screen format
      C                   PARM                    LoamScnFmt
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                  CLE172
       *
       ***  Output only screen field : Loan status (Not used in CTL)
      C                   PARM                    DDSTAT           16
@@ -831,6 +840,8 @@
 
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
 
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr

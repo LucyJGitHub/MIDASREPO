@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
@@ -424,6 +425,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *

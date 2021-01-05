@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -326,6 +328,8 @@
      D CAP086          S              1A   INZ('N')                                           CAP086
      D CLE036          S              1A   INZ('N')                                          BUG9507
      D CRE073          S              1A   INZ('N')                                           CRE073
+      ** Switchable feature CLE172                                                            CLE172
+     D CLE172          S              1A   INZ('N')                                           CLE172
      D WFuncType       S              8                                                      BUG3760
      D WIdntifier      S             40                                                      BUG3760
      D WBranch         S              3                                                      BUG3760
@@ -798,6 +802,15 @@
      C                   EVAL      NDMT = L_CLRDMT                                            CRE073
      C                   EVAL      NDFD = L_CLRDFD                                            CRE073
      C                   ENDIF                                                                CRE073
+      *
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      NVOP = L_CLNVOP                                            CLE172
+     C                   EVAL      NBDY = L_CLNBDY                                            CLE172
+     C                   EVAL      NODY = L_CLNODY                                            CLE172
+     C                   EVAL      NGHT = L_CLNGHT                                            CLE172
+     C                   EVAL      NADJ = L_CLNADJ                                            CLE172
+     C                   EVAL      NLDY = L_CLNLDY                                            CLE172
+     C                   ENDIF
       *
      C                   Z-ADD     BJRDNB        LCD
       *
@@ -1987,6 +2000,29 @@
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      *                                                                                       CLE172
+      ** Access SAR details to see if CLE172 is switched on.                                  CLE172
+      *                                                                                       CLE172
+     C                   CALL      'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       PRTCD                                        CLE172
+     C                   PARM      '*VERIFY'     POPTN                                        CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRTCD <> *BLANKS AND                                       CLE172
+     C                             PRTCD <> '*NRF   '                                         CLE172
+     C     *LOCK         IN        LDA                                                        CLE172
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE172
+     C                   EVAL      DBase = 71                                                 CLE172
+     C                   EVAL      DBKey = 'CLE172'                                           CLE172
+     C                   OUT       LDA                                                        CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
+     C                   IF        PRTCD = *BLANKS                                            CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
      C                   ENDSR
       ****************************************************************
       /EJECT

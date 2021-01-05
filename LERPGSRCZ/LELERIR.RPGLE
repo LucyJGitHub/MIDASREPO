@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 14Dec20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
       *                 MD028338           Date 25Nov14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -218,6 +220,11 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)                                  246574
       ** Rollover Extra Data - User's Enhancement(s) data                                     246574
                                                                                               246574
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            46                                                       CLE172
+      *                                                                                       CLE172
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank Details
 
@@ -392,7 +399,9 @@
      C**********                       ##RECS + ##PAYS +                             CSF011 AR702532
      C**********                           InfData + ExtData                         246574 AR702532
      C                                 NwRoScnFmt3 + @ACTRV + ##RECS +                      AR702532
-     C                                 ##PAYS + InfData + ExtData                           AR702532
+     C*                                ##PAYS + InfData + ExtData                    AR702532 CLE172
+     C                                 ##PAYS + InfData + ExtData +                           CLE172
+     C                                 LeriScnBlrt                                            CLE172
 
      C                   MOVE      '1'           *INLR
      C                   RETURN
@@ -544,6 +553,10 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** Update 'Current' Loan with Loan in Screen Format
 

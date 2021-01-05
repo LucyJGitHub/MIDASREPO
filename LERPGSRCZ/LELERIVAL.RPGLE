@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD024812A          Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 14Dec20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -118,6 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD024812A - Consider new maturity date if non-blanks and     *
       *              rollover date = current maturity date.           *
@@ -550,6 +552,41 @@
      D   LOC9                 55     57                                                       CLE141
      D   LOC0                 58     60                                                       CLE141
                                                                                               CLE141
+      *                                                                                       CLE172
+      *** Backward-Looking Rate Screen Fields                                                 CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            46                                                       CLE172
+     D  DDNVOPB                1      1                                                       CLE172
+     D  DDNBDYB                2      3                                                       CLE172
+     D  DDNODYB                4      5                                                       CLE172
+     D  DDNGHTB                6      6                                                       CLE172
+     D  DDNADJB                7     21                                                       CLE172
+     D  DDNDLYB               22     23                                                       CLE172
+     D  DDNVOP                24     24                                                       CLE172
+     D  DDNBDY                25     26                                                       CLE172
+     D  DDNODY                27     28                                                       CLE172
+     D  DDNGHT                29     29                                                       CLE172
+     D  DDNADJ                30     44                                                       CLE172
+     D  DDNDLY                45     46                                                       CLE172
+      *                                                                                       CLE172
+      ** New LERI Backward-Looking Rate Fields for validation input                           CLE172
+      *                                                                                       CLE172
+     D NRoScnBlrt      DS            23                                                       CLE172
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Valid Fields                                              CLE172
+      *                                                                                       CLE172
+     D LeriValBlrt     DS                                                                     CLE172
+     D   WNVOP                 1      1A                                                      CLE172
+     D   WNBDY                 2      3S 0                                                    CLE172
+     D   WNODY                 4      5S 0                                                    CLE172
+     D   WNGHT                 6      6A                                                      CLE172
+     D   WNADJ                 7     13P 8                                                    CLE172
+     D   WNDLY                14     15S 0                                                    CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment in screen format                                                CLE172
+      *                                                                                       CLE172
+     D ArrayNadj       S              1A   DIM(17)                                            CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -694,6 +731,9 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
                                                                                             MD000091
+     D IntNadj         S              5A                                                      CLE172
+     D DecNadj         S              8A                                                      CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -1435,6 +1475,11 @@
      C                   EXSR      SRNFRS
 
       /COPY WNCPYSRC,LELERIV058
+
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
 
       *
       *  *------------------------------------------------------*
@@ -6933,6 +6978,73 @@
       *
 
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     LeriScnBlrt   NRoScnBlrt                                   CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'LERI'        ApiName           4                          CLE172
+     C                   PARM                    L_CLCCY                                      CLE172
+     C                   PARM                    L_CLNBRA                                     CLE172
+     C                   PARM                    L_CLLNRF                                     CLE172
+      *                  PARM                    CCLICBS                                      CLE172
+     C                   PARM      NRoScnBlrt    TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNameArr                                   CLE172
+     C                   PARM                    MsgIDArr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LeriValBlrt                                  CLE172
+     C                   MOVEL     WNVOP         L_CLNVOP                                     CLE172
+     C                   Z-ADD     WNBDY         L_CLNBDY                                     CLE172
+     C                   Z-ADD     WNODY         L_CLNODY                                     CLE172
+     C                   MOVEL     WNGHT         L_CLNGHT                                     CLE172
+     C                   Z-ADD     WNADJ         L_CLNADJ                                     CLE172
+     C                   Z-ADD     WNDLY         L_CLNDLY                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WNVOP         DDNVOP                                       CLE172
+     C                   MOVE      WNVOP         DDNVOPB                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WNBDY         DDNBDY                                       CLE172
+     C                   MOVE      WNBDY         DDNBDYB                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WNODY         DDNODY                                       CLE172
+     C                   MOVE      WNODY         DDNODYB                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WNGHT         DDNGHT                                       CLE172
+     C                   MOVE      WNGHT         DDNGHTB                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WNADJ         IntNadj                                      CLE172
+     C                   MOVE      WNADJ         DecNadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayNadj(1)                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayNadj(7)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayNadj(6)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEA     ArrayNadj     DDNADJ                                       CLE172
+     C                   MOVEA     ArrayNadj     DDNADJB                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVE      WNDLY         DDNDLY                                       CLE172
+     C                   MOVE      WNDLY         DDNDLYB                                      CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *                                                                                       CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -9234,6 +9346,11 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM                    @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
+                                                                                              CLE172
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -67,12 +68,13 @@
       *                 225959             Date 23Mar04               *
       *                 CGL029             Date 01Sep03               *
       *                 222373             Date 29Oct03               *
-      *                 CDE005             Date 23Sep02
+      *                 CDE005             Date 23Sep02               *
       *                 CLE030             Date 29Aug02               *
       *                 CAP074  *CREATE    Date 26Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -215,6 +217,9 @@
      D TranInSeco    E DS                  EXTNAME(LECLI2PD)
      D TranInThir    E DS                  EXTNAME(LECLI3PD)
      D TranInFour    E DS                  EXTNAME(LECLI4PD)
+     D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE172
+      * Incoming Backward-Looking Rate Screen Fields                                          CLE172
+     D TranScnBlrt     DS            43                                                       CLE172
 
       * Error indicators
      D OKClPrim      E DS                  EXTNAME(LEECLI1PD)
@@ -281,6 +286,7 @@
 
       * FRA/IRS Settlement Instructions - Current
      D C_FRI         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
+
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
@@ -368,6 +374,9 @@
      D CurClFour     E DS                  EXTNAME(LECLI4PD)
      D                                     PREFIX(C_)
 
+      * (Current) Backward-Looking Rate Fields in Screen Format                               CLE172
+     D CurrScnBlrt     DS            43                                                       CLE172
+                                                                                              CLE172
      D ExtData       E DS                  EXTNAME(LECLEXPD)
      D RegData       E DS                  EXTNAME(LECLRXPD)                                  CER001
       * LE (CLIP) Extra Data - File (D/B) format
@@ -1267,6 +1276,10 @@
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
      C                   PARM                    OKClPrim                                    BUG3721
+      ** Business Day Convention Screen Detail                                                CLE172
+     C                   PARM                    TranInSeven                                  CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
 
       * OUTPUTS
 
@@ -1770,6 +1783,8 @@
 
       * Customer loans Details - screen formats 2
      C                   PARM                    CurClSeco
+      * Backward-Looking Rate Fields from file                                                CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
 
       * For Amends, convert the customer loan to screen format 3
 
@@ -1945,6 +1960,10 @@
      C                   PARM                    TranInSeco
       * (Current) Customer Loans in Screen Format :
      C                   PARM                    CurClSeco
+      * Incoming Backward-Looking Rate fields in Screen Format :                              CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
+      * (Current) Backward-Looking Rate fields in Screen Format :                             CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       * (Current) Loan in file format:
      C                   PARM                    ClilFilFmt
      C                   PARM                    ClikFilFmt

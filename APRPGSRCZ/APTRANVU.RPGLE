@@ -2570,7 +2570,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
       *** Backward-Looking Rate Fields (CLE172)                                               CLE172
-     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           41                          CLE172
+     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           43                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn+CLCR50Ln) +              CLE172
      C                                       BSRDta                                           CLE172
      C                   ADD       CLBSRTLn      Bfp                                          CLE172
@@ -2655,7 +2655,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LEEXLn        Bfp                                          CLE172
      C                                                                                        CLE172
       *** Backward-Looking Rate Fields (CLE172)                                               CLE172
-     C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         44                          CLE172
+     C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         46                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:LEEXLn) + LEBLRDta              CLE172
                                                                                               CLE172
      C
@@ -6115,7 +6115,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LEEXLn            4 0
       *                                                                                       CLE172
-     C                   Z-ADD     44            LEBLRTLn          4 0                        CLE172
+     C                   Z-ADD     46            LEBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************

@@ -23,7 +23,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. CLE172             Date 14Dec20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -362,11 +362,10 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       ** LE Rollover Extra Data - File (D/B) format
                                                                                               CLE172
-     D Ro1ScnBlrt      DS            22                                                       CLE172
-      ** LERI Backward-Looking Rate Fields (Current)                                          CLE172
-                                                                                              CLE172
-     D Ro2ScnBlrt      DS            22                                                       CLE172
+      *                                                                                       CLE172
       ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            46                                                       CLE172
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
@@ -551,12 +550,9 @@
      C                   ADD       RecordLen     eBfp                                         CLE172
                                                                                               CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   EVAL      Ro1ScnBlrt = %SUBST(Extdata500:eBfp:22)                    CLE172
-     C                   ADD       22            eBfp                                         CLE172
+     C                   EVAL      LeriScnBlrt = %SUBST(Extdata500:eBfp:46)                   CLE172
+     C                   ADD       46            eBfp                                         CLE172
                                                                                               CLE172
-      ** Backward-Looking Rate Fields (Current)                                               CLE172
-     C                   EVAL      Ro2ScnBlrt = %SUBST(Extdata500:eBfp:22)                    CLE172
-     C                   ADD       22            eBfp                                         CLE172
 
       ** Reset variables gradually updated
 
@@ -647,7 +643,7 @@
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
      C**********                            InfData + ExtData                          246576 CLE172
      C                                      InfData + ExtData +                               CLE172
-     C                                      Ro1ScnBlrt + Ro2ScnBlrt                           CLE172
+     C                                      LeriScnBlrt                                       CLE172
      C                   Endif                                                                246576
      C                   Else                                                                BUG8145
       ** Remerge buffer with all relevant data structures
@@ -659,7 +655,7 @@
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
      C**********                            InfData + ExtData                          CAP086 CLE172
      C                                      InfData + ExtData +                               CLE172
-     C                                      Ro1ScnBlrt + Ro2ScnBlrt                           CLE172
+     C                                      LeriScnBlrt                                       CLE172
      C                   EndIf                                                               BUG8145
 
      C                   MOVE      '1'           *INLR
@@ -835,6 +831,10 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** Update 'Current' Loan with Loan in Screen Format
      C                   MOVEL     NwRoScnFmt    CrRoScnFmt
@@ -944,8 +944,7 @@
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
-     C                   PARM                    Ro1ScnBlrt                                   CLE172
-     C                   PARM                    Ro2ScnBlrt                                   CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** OUTPUTS
       ** Rollover Instructions Details OK inds

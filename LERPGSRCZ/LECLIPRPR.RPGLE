@@ -289,7 +289,7 @@
       ***  (Current) Loan in Screen Format - Screen 3
      D CrLnScnFmt4   E DS                  EXTNAME(LECLI4PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 4
-     D CurrScnBlrt     DS            41                                                       CLE172
+     D CurrScnBlrt     DS            43                                                       CLE172
       ***  (Current) Backward-Looking Rate Fields in Screen Format                            CLE172
 
 
@@ -318,7 +318,7 @@
       ***  New Loan in Screen Format - Screen 4
      D NwLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE172
       ***  New Loan in Screen Format - Screen 7                                               CLE172
-     D TranScnBlrt     DS            41                                                       CLE172
+     D TranScnBlrt     DS            43                                                       CLE172
       ***  New Backward-Looking Rate Screen Fields                                            CLE172
 
 

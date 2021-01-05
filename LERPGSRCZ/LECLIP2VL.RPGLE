@@ -811,17 +811,17 @@
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
       ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
-     D LoanScnBlrt     DS            41                                                       CLE172
+     D LoanScnBlrt     DS            43                                                       CLE172
      D  DDBLRT                 1      1A                                                      CLE172
      D  DDLBDY                 2      3A                                                      CLE172
      D  DDLODY                 4      5A                                                      CLE172
      D  DDPDLY                 6      7A                                                      CLE172
-     D  DDBADJ                 8     21A                                                      CLE172
-     D  DDAVOP                22     22A                                                      CLE172
-     D  DDCART                23     36A                                                      CLE172
-     D  DDWGHT                37     37A                                                      CLE172
-     D  DDBRAC                38     39A                                                      CLE172
-     D  DDLBAC                40     41A                                                      CLE172
+     D  DDBADJ                 8     22A                                                      CLE172
+     D  DDAVOP                23     23A                                                      CLE172
+     D  DDCART                24     38A                                                      CLE172
+     D  DDWGHT                39     39A                                                      CLE172
+     D  DDBRAC                40     41A                                                      CLE172
+     D  DDLBAC                42     43A                                                      CLE172
                                                                                               CLE172
       ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
      D LoanValBlrt     DS                                                                     CLE172

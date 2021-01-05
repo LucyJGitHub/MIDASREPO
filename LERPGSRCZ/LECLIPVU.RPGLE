@@ -461,7 +461,7 @@
      D TranInExt     E DS                  EXTNAME(LESTMP2PD)                                 CER049
      D                                     PREFIX(Q)                                          CER049
       * Incoming Backward-Looking Rate Screen Fields                                          CLE172
-     D TranScnBlrt     DS            41                                                       CLE172
+     D TranScnBlrt     DS            43                                                       CLE172
 
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
@@ -519,7 +519,7 @@
      D                                     PREFIX(@)                                          CLE141
 
       * (Current) Backward-Looking Rate Fields in Screen Format                               CLE172
-     D CurrScnBlrt     DS            41                                                       CLE172
+     D CurrScnBlrt     DS            43                                                       CLE172
                                                                                               CLE172
      D ClExtFilFmt   E DS                  EXTNAME(BYLOANX0)                                MD044880
      D                                     PREFIX(@)                                        MD044880

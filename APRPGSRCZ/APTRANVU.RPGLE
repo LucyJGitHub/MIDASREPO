@@ -2570,7 +2570,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
       *** Backward-Looking Rate Fields (CLE172)                                               CLE172
-     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           41                          CLE172
+     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           43                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn+CLCR50Ln) +              CLE172
      C                                       BSRDta                                           CLE172
      C                   ADD       CLBSRTLn      Bfp                                          CLE172
@@ -2652,6 +2652,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LEIFLn        Bfp                                          CAP086
 
      C     LEEXLn        SUBST     BUFFER:Bfp    ExtData
+     C                   ADD       LEEXLn        Bfp                                          CLE172
+     C                                                                                        CLE172
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         44                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LEEXLn) + LEBLRDta              CLE172
+                                                                                              CLE172
+     C
 
      C                   CALL      'LELERIVU'
      C                   PARM                    HeadIn
@@ -2761,6 +2768,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LOEXLn        Bfp                                          247172
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
+      *
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     LOBLRTLn      SUBST     BUFFER:Bfp    BLRDta           22                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LOEXLn) + BLRDta                CLE172
+     C                   ADD       LOBLRTLn      Bfp                                          CLE172
+                                                                                              CLE172
 
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
@@ -6101,6 +6114,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LEEXLn            4 0
+      *                                                                                       CLE172
+     C                   Z-ADD     44            LEBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************
@@ -6156,7 +6171,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0
-
+      *                                                                                       CLE172
+     C                   Z-ADD     22            LOBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************

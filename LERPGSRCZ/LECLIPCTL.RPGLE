@@ -324,7 +324,7 @@
      D TranInFour    E DS                  EXTNAME(LECLI4PD)
      D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE172
       ** Incoming Backward-Looking Rate Fields                                                CLE172
-     D TranScnBlrt     DS            41                                                       CLE172
+     D TranScnBlrt     DS            43                                                       CLE172
                                                                                               CLE172
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
@@ -369,7 +369,7 @@
      D CurClFour     E DS                  EXTNAME(LECLI4PD)
      D                                     PREFIX(@)
       * (Current) Backward-Looking Rate Fields in Screen Format                               CLE172
-     D CurrScnBlrt     DS            41                                                       CLE172
+     D CurrScnBlrt     DS            43                                                       CLE172
 
       * Error indicators
      D OKClPrim      E DS                  EXTNAME(LEECLI1PD)

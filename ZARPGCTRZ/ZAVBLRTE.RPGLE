@@ -101,8 +101,6 @@
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
 
-     D NumBlank        C                   CONST('0123456789 ')
-
       *
       ** The maximum size of the appended error arrays
       *
@@ -256,10 +254,6 @@
      D @@IDP           S              3P 0
      D @@IINT          S              3P 0
 
-     D #1TESTN         S              1A
-     D #2TESTN         S              1A
-     D #1CHARPOS       S              2P 0
-     D #2CHARPOS       S              2P 0
      D WDAY            S              2S 0
      D WNumBadj        S             13P 8
      D WNumNadj        S             13P 8
@@ -421,7 +415,7 @@
       *
       ** LOAM BC
       *
-     C     ApiName       IFEQ      'LOAM'          			
+     C     ApiName       IFEQ      'LOAM'
 
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDAVOP
@@ -832,28 +826,30 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLBDY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDLBDY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDLBDY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDLBDY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
-      *
-      ** Lookback Days for Settlement is not numeric
+      ** Lookback Days is not numeric
       *
      C                   MOVE      'N'           DDLBDYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDLBDY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -911,14 +907,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLODY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDLODY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDLODY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDLODY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lockout Days is not numeric
       *
@@ -927,12 +930,7 @@
      C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDLODY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1070,6 +1068,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDBADJ        IFNE      *BLANKS                                      Not blanks
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1103,6 +1102,7 @@
      C                   Z-SUB     WNumBadj      WNumBadj
      C                   ENDIF
      C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
@@ -1158,14 +1158,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDPDLY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDPDLY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDPDLY        #1TESTN
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
-     C                   MOVE      DDPDLY        #2TESTN
-     C     #2TESTN       SCAN      NUMBLANK      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Payment Delay Days is not numeric
       *
@@ -1174,12 +1181,7 @@
      C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDPDLY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1339,14 +1341,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNBDY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNBDY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNBDY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDNBDY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lookback Days for Settlement is not numeric
       *
@@ -1355,12 +1364,7 @@
      C                   MOVEL     'DDNBDY'      FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNBDY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1436,14 +1440,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNODY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNODY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNODY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDNODY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lockout Days is not numeric
       *
@@ -1452,12 +1463,7 @@
      C                   MOVEL     'DDNODY'      FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNODY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1621,6 +1627,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDNADJ        IFNE      *BLANKS                                      Not blank
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDNADJ        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1654,6 +1661,7 @@
      C                   Z-SUB     WNumNadj      WNumNadj
      C                   ENDIF
      C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumNadj      ANDNE     *ZEROS
@@ -1727,14 +1735,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNDLY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNDLY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNDLY        #1TESTN
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
-     C                   MOVE      DDNDLY        #2TESTN
-     C     #2TESTN       SCAN      NUMBLANK      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Payment Delay Days is not numeric
       *
@@ -1743,12 +1758,7 @@
      C                   MOVEL     'DDNDLY'      FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNDLY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1805,6 +1815,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDBADJ        IFNE      *BLANKS                                      Not blanks
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDCART        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1838,6 +1849,7 @@
      C                   Z-SUB     WNumCart      WNumCart
      C                   ENDIF
      C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS

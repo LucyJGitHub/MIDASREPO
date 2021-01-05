@@ -150,10 +150,6 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
-     D ArrayBadj       S              1A   DIM(20)                                            CLE172
-      *** Benchmark Adjustment in screen format                                               CLE172
-     D ArrayCart       S              1A   DIM(20)                                            CLE172
-      *** Compounded/Average Rate in screen format                                            CLE172
       *
      D LoanFilFmtCL  E DS                  EXTNAME(CLOANCL)
       ***  Loan in file Format CL
@@ -197,6 +193,9 @@
      D  DDBRAC                40     41A                                                      CLE172
      D  DDLBAC                42     43A                                                      CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D ArrayBadj       S              1A   DIM(15)                                            CLE172
+     D ArrayCart       S              1A   DIM(15)                                            CLE172
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -220,6 +219,8 @@
      D @@IDP           S              3P 0                                                    CLE172
      D @@IINT          S              3P 0                                                    CLE172
       *                                                                                       CLE172
+     D WNumBadj        S             13P 8                                                    CLE172
+     D WNumCart        S             13P 8                                                    CLE172
      D IntBadj         S              5A                                                      CLE172
      D DecBadj         S              8A                                                      CLE172
      D IntCart         S              5A                                                      CLE172
@@ -641,8 +642,12 @@
       *                                                                                       CLE172
       * Benchmark Adjustment                                                                  CLE172
       *                                                                                       CLE172
-     C                   MOVEL     BADJ          IntBadj                                      CLE172
-     C                   MOVE      BADJ          DecBadj                                      CLE172
+     C                   Z-ADD     BADJ          WNumBadj                                     CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   Z-SUB     WNumBadj      WNumBadj                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEL     WNumBadj      IntBadj                                      CLE172
+     C                   MOVE      WNumBadj      DecBadj                                      CLE172
      C     BADJ          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
      C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
@@ -664,7 +669,7 @@
      C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
      C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
      C                   PARM      *ZERO         @@AMT                          File field    CLE172
-     C                   PARM      '.'           DLBNDCSP                                     CLE172
+     C                   PARM                    DLBNDCSP                                     CLE172
       *                                                                                       CLE172
      C                   MOVE      @@ALPH        DDBADJ                                       CLE172
       *                                                                                       CLE172
@@ -674,8 +679,12 @@
       *                                                                                       CLE172
       * Compouned/Average Rate                                                                CLE172
       *                                                                                       CLE172
-     C                   MOVEL     CART          IntCart                                      CLE172
-     C                   MOVE      CART          DecCart                                      CLE172
+     C                   Z-ADD     CART          WNumCart                                     CLE172
+     C     CART          IFLT      0                                                          CLE172
+     C                   Z-SUB     WNumCart      WNumCart                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEL     WNumCart      IntCart                                      CLE172
+     C                   MOVE      WNumCart      DecCart                                      CLE172
      C     CART          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayCart(1)                                 CLE172
      C                   MOVEA     IntCart       ArrayCart(2)                                 CLE172
@@ -697,7 +706,7 @@
      C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
      C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
      C                   PARM      *ZERO         @@AMT                          File field    CLE172
-     C                   PARM      '.'           DLBNDCSP                                     CLE172
+     C                   PARM                    DLBNDCSP                                     CLE172
       *                                                                                       CLE172
      C                   MOVE      @@ALPH        DDCART                                       CLE172
       *                                                                                       CLE172

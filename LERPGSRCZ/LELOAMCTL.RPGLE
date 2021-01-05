@@ -335,8 +335,11 @@
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
       ** LE Backward-Looking Rate Fields                                                      CLE172
+      ** LE Backward-Looking Rate Fields in screen format                                     CLE172
+     D LoamFmtBlrt     DS            23                                                       CLE172
+                                                                                              CLE172
 
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
@@ -748,7 +751,7 @@
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
-     C                   PARM                    LoamScnBlrt                                  CLE172
+     C                   PARM                    LoamFmtBlrt                                  CLE172
       *
       ***  Output only screen field : Loan status (Not used in CTL)
      C                   PARM                    DDSTAT           16

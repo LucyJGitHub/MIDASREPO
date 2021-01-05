@@ -137,7 +137,7 @@
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
 
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
                                                                                               CLE172
 
       ** +--------------------------------------+

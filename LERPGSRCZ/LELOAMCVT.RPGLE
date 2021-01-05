@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034915           Date 26Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035672           Date 07Sep15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -43,6 +44,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - Incorrect rate/spread (positive) is displayed.    *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *
@@ -318,7 +322,11 @@
      C                             (CLE036= 'Y' and *IN01 = '0'and                          MD035672
      C                                   (LO_BRTT  <> 0 or LO_BASR  <> 0                    MD035672
      C                                     or LO_BRTE  <> 0))                               MD035672
+     C                   IF        RTSP < 0                                                 MD057191
      C                   MOVEL     ZFIELD        DDRTSP                                       CRE073
+     C                   ELSE                                                               MD057191
+     C                   MOVE      ZFIELD        DDRTSP                                     MD057191
+     C                   ENDIF                                                              MD057191
      C                   Else                                                                 CLE106
      C**********         MOVE      ZFIELD        DDFXRT                                CLE106 CRE073
      C                   MOVEL     ZFIELD        DDFXRT                                       CRE073

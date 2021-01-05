@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054876           Date 26Aug20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD054876           Date 26Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD054707           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -70,6 +71,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034915.                                      *
       *  MD054876 - Negative funding rate is not allowed in Lending.  *
       *             Enhance fix MD034915, populate WFSRP after call   *
       *             to VALAMT.                                        *
@@ -310,10 +315,10 @@
      D  FYLDC        E                     EXTFLD(FSYLDC)                                     225959
       ***  Yield Curve                                                                        225959
       *
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034915
-     D                                     PREFIX(DL_)                                      MD034915
-      ** External DS for Dealing Details                                                    MD034915
-      *                                                                                     MD034915
+     D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034915 MD057191
+     D**********                           PREFIX(DL_)                             MD034915 MD057191
+      ***External*DS*for*Dealing*Details*******************************            MD034915 MD057191
+      **********                                                                   MD034915 MD057191
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -585,6 +590,7 @@
       ** Number of integers                                                                 MD034915
      D @@IINT          S              3  0                                                  MD034915
                                                                                             MD034915
+     D DL_BNDCSP       S              1A                                                    MD057191
       ***  Index for arrays of of warning message ids etc
       *
       ** +--------------------------------------+
@@ -3132,19 +3138,19 @@ E004 C                   ENDIF
      C                   EVAL      CLE036 = 'Y'                                            BUG10391R
      C                   ENDIF                                                             BUG10391R
      C/COPY WNCPYSRC,LEH01455
-      *                                                                                     MD034915
-      ** Access Dealing Details                                                             MD034915
-      *                                                                                     MD034915
-     C                   CALL      'AODEALR1'                                               MD034915
-     C                   PARM      *BLANKS       @RTCD                                      MD034915
-     C                   PARM      '*FIRST '     @OPTN                                      MD034915
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034915
-      *                                                                                     MD034915
-      ** Database Error                                                                     MD034915
-      *                                                                                     MD034915
-     C     @RTCD         IFNE      *BLANK                                                   MD034915
+      **********                                                                   MD034915 MD057191
+      ***Access*Dealing*Details****************************************            MD034915 MD057191
+      **********                                                                   MD034915 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034915 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034915 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034915 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034915 MD057191
+      **********                                                                   MD034915 MD057191
+      ***Database*Error************************************************            MD034915 MD057191
+      **********                                                                   MD034915 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034915 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034915
-     C                   ENDIF                                                              MD034915
+     C**********         ENDIF                                                     MD034915 MD057191
       *                                                                                       CLE051
       ** Determine if CLE051 is installed                                                     CLE051
      C                   MOVEL     'N'           CLE051            1                          CLE051

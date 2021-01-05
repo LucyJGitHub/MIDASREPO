@@ -42,31 +42,36 @@
       *                                                               *
       *  *PSSR - Error processing                                     *
       *  *INZSR - Initialise                                          *
+      *  SDBLRT - Default Backward-Looking Rate                       *
       *  SRBLRT - Validate Backward-Looking Rate                      *
-      *  SRLBDY - Validate Lookback Days for Settlement               *
-      *  SRLODY - Validate Lockout Days                               *
-      *  SRPDLY - Validate Payment Delay Days                         *
-      *  SRBADJ - Validate Benchmark Adjustment                       *
+      *  SDAVOP - Default Averaging Option                            *
       *  SRAVOP - Validate Averaging Option                           *
-      *  SRCART - Validate Compounded/Average Rate                    *
+      *  SDLBDY - Default Lookback Days for Settlement                *
+      *  SRLBDY - Validate Lookback Days for Settlement               *
+      *  SDLODY - Default Lockout Days                                *
+      *  SRLODY - Validate Lockout Days                               *
+      *  SDWGHT - Default Weight Convention                           *
       *  SRWGHT - Validate Weight Convention                          *
+      *  SDBADJ - Default Benchmark Adjustment                        *
+      *  SRBADJ - Validate Benchmark Adjustment                       *
+      *  SDPDLY - Default Payment Delay Days                          *
+      *  SRPDLY - Validate Payment Delay Days                         *
+      *  SDNVOP - Default Averaging Option                            *
+      *  SRNBDY - Validate Lookback Days for Settlement               *
+      *  SDNODY - Default Lockout Days                                *
+      *  SRRODY - Validate Lockout Days                               *
+      *  SDNGHT - Default Weight Convention                           *
+      *  SRNGHT - Validate Weight Convention                          *
+      *  SDNADJ - Default Benchmark Adjustment                        *
+      *  SRNADJ - Validate Benchmark Adjustment                       *
+      *  SDNDLY - Default Payment Delay Days                          *
+      *  SRNDLY - Validate Payment Delay Days                         *
+      *  SDCART - Default Compounded/Average Rate                     *
+      *  SRCART - Validate Compounded/Average Rate                    *
       *  SDBRAC - Default Base Rate for Accrual                       *
       *  SDLBAC - Default Lookback Days for Accrual                   *
-      *  SDBLRT - Default Backward-Looking Rate                       *
-      *  SDLBDY - Default Lookback Days for Settlement                *
-      *  SDLODY - Default Lockout Days                                *
-      *  SDPDLY - Default Payment Delay Days                          *
-      *  SDBADJ - Default Benchmark Adjustment                        *
-      *  SDAVOP - Default Averaging Option                            *
-      *  SDCART - Default Compounded/Average Rate                     *
-      *  SDWGHT - Default Weight Convention                           *
       *  SDPIAD - Default Principal Interest Control Date             *
-      *  SDNBDY - Default Lookback Days for Settlement                *
-      *  SDNODY - Default Lockout Days                                *
-      *  SDNDLY - Default Payment Delay Days                          *
-      *  SDNADJ - Default Benchmark Adjustment                        *
-      *  SDNVOP - Default Averaging Option                            *
-      *  SDNGHT - Default Weight Convention                           *
+      *  SRFRSHRO - Determine if First Rollover Event                 *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -348,8 +353,7 @@
       * MAIN PROCEDURE                                                    *
       *********************************************************************
       *
-     C                   MOVE      *BLANKS       ArrayInp
-     C                   Z-ADD     Idx           Ix                             Store index
+     C                   EXSR      RSTFLDS
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
@@ -640,6 +644,36 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+      *  RSTFLDS  - Subroutine for resetting work fields              *
+      *                                                               *
+      *****************************************************************
+     C     RSTFLDS       BEGSR
+      *
+     C                   MOVE      *BLANKS       ArrayInp
+     C                   Z-ADD     Idx           Ix                             Store index
+      *
+      ** Reset OK Fields
+      *
+     C                   EVAL      DDBLRTOK = *BLANK
+     C                   EVAL      DDAVOPOK = *BLANK
+     C                   EVAL      DDLBDYOK = *BLANK
+     C                   EVAL      DDLODYOK = *BLANK
+     C                   EVAL      DDWGHTOK = *BLANK
+     C                   EVAL      DDBADJOK = *BLANK
+     C                   EVAL      DDPDLYOK = *BLANK
+     C                   EVAL      DDNVOPOK = *BLANK
+     C                   EVAL      DDNBDYOK = *BLANK
+     C                   EVAL      DDNODYOK = *BLANK
+     C                   EVAL      DDNGHTOK = *BLANK
+     C                   EVAL      DDNADJOK = *BLANK
+     C                   EVAL      DDNDLYOK = *BLANK
+     C                   EVAL      DDCARTOK = *BLANK
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
       *  SDBLRT - Default backward-looking rate                       *
       *****************************************************************
      C     SDBLRT        BEGSR
@@ -651,11 +685,17 @@
      C                   ENDIF
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     ApiName       OREQ      'LERI'
+     C     HBRTT         ANDNE     WFBSRC
+      *
      C                   MOVE      BBABLRT       DDBLRT                          Default from
       *                                                                          SDBSRTPD
+     C                   ENDIF
+      *
      C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
@@ -1182,7 +1222,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HAVOP         DDNVOP
@@ -1262,15 +1302,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HLBDY         WDAY
@@ -1359,15 +1399,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HLODY         WDAY
@@ -1460,7 +1500,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HWGHT         DDNGHT
@@ -1553,7 +1593,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HBADJ         WNumNadj
@@ -1650,15 +1690,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HPDLY         WDAY

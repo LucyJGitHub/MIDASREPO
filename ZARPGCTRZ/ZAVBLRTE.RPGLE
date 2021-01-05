@@ -42,31 +42,36 @@
       *                                                               *
       *  *PSSR - Error processing                                     *
       *  *INZSR - Initialise                                          *
+      *  SDBLRT - Default Backward-Looking Rate                       *
       *  SRBLRT - Validate Backward-Looking Rate                      *
-      *  SRLBDY - Validate Lookback Days for Settlement               *
-      *  SRLODY - Validate Lockout Days                               *
-      *  SRPDLY - Validate Payment Delay Days                         *
-      *  SRBADJ - Validate Benchmark Adjustment                       *
+      *  SDAVOP - Default Averaging Option                            *
       *  SRAVOP - Validate Averaging Option                           *
-      *  SRCART - Validate Compounded/Average Rate                    *
+      *  SDLBDY - Default Lookback Days for Settlement                *
+      *  SRLBDY - Validate Lookback Days for Settlement               *
+      *  SDLODY - Default Lockout Days                                *
+      *  SRLODY - Validate Lockout Days                               *
+      *  SDWGHT - Default Weight Convention                           *
       *  SRWGHT - Validate Weight Convention                          *
+      *  SDBADJ - Default Benchmark Adjustment                        *
+      *  SRBADJ - Validate Benchmark Adjustment                       *
+      *  SDPDLY - Default Payment Delay Days                          *
+      *  SRPDLY - Validate Payment Delay Days                         *
+      *  SDNVOP - Default Averaging Option                            *
+      *  SRNBDY - Validate Lookback Days for Settlement               *
+      *  SDNODY - Default Lockout Days                                *
+      *  SRRODY - Validate Lockout Days                               *
+      *  SDNGHT - Default Weight Convention                           *
+      *  SRNGHT - Validate Weight Convention                          *
+      *  SDNADJ - Default Benchmark Adjustment                        *
+      *  SRNADJ - Validate Benchmark Adjustment                       *
+      *  SDNDLY - Default Payment Delay Days                          *
+      *  SRNDLY - Validate Payment Delay Days                         *
+      *  SDCART - Default Compounded/Average Rate                     *
+      *  SRCART - Validate Compounded/Average Rate                    *
       *  SDBRAC - Default Base Rate for Accrual                       *
       *  SDLBAC - Default Lookback Days for Accrual                   *
-      *  SDBLRT - Default Backward-Looking Rate                       *
-      *  SDLBDY - Default Lookback Days for Settlement                *
-      *  SDLODY - Default Lockout Days                                *
-      *  SDPDLY - Default Payment Delay Days                          *
-      *  SDBADJ - Default Benchmark Adjustment                        *
-      *  SDAVOP - Default Averaging Option                            *
-      *  SDCART - Default Compounded/Average Rate                     *
-      *  SDWGHT - Default Weight Convention                           *
       *  SDPIAD - Default Principal Interest Control Date             *
-      *  SDNBDY - Default Lookback Days for Settlement                *
-      *  SDNODY - Default Lockout Days                                *
-      *  SDNDLY - Default Payment Delay Days                          *
-      *  SDNADJ - Default Benchmark Adjustment                        *
-      *  SDNVOP - Default Averaging Option                            *
-      *  SDNGHT - Default Weight Convention                           *
+      *  SRFRSHRO - Determine if First Rollover Event                 *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -95,8 +100,6 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
-     D NumBlank        C                   CONST('0123456789 ')
 
       *
       ** The maximum size of the appended error arrays
@@ -221,7 +224,7 @@
      D  LVPDLY                14     15S 0
 
       *
-      ** LOAM Backward-Looking Rate Valid fields (Output)
+      ** LERI Backward-Looking Rate Valid fields (Output)
       *
      D LeriValFld      DS
      D  LVNVOP                 1      1A
@@ -251,10 +254,6 @@
      D @@IDP           S              3P 0
      D @@IINT          S              3P 0
 
-     D #1TESTN         S              1A
-     D #2TESTN         S              1A
-     D #1CHARPOS       S              2P 0
-     D #2CHARPOS       S              2P 0
      D WDAY            S              2S 0
      D WNumBadj        S             13P 8
      D WNumNadj        S             13P 8
@@ -348,8 +347,7 @@
       * MAIN PROCEDURE                                                    *
       *********************************************************************
       *
-     C                   MOVE      *BLANKS       ArrayInp
-     C                   Z-ADD     Idx           Ix                             Store index
+     C                   EXSR      RSTFLDS
       *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
@@ -465,10 +463,12 @@
      C                   MOVEA     ArrayInp(4)   DDNODY
      C                   MOVEA     ArrayInp(6)   DDNGHT
      C                   MOVEA     ArrayInp(7)   DDNADJ
-     C                   MOVEA     ArrayInp(21)  DDNDLY
+     C                   MOVEA     ArrayInp(22)  DDNDLY
       *
      C                   EXSR      SDBLRT
      C                   EXSR      SRBLRT
+      *
+     C                   EXSR      SRFRSHRO
       *
      C                   EXSR      SDNVOP
      C                   EXSR      SRNVOP
@@ -638,6 +638,36 @@
       *****************************************************************
       /EJECT
       *****************************************************************
+      *  RSTFLDS  - Subroutine for resetting work fields              *
+      *                                                               *
+      *****************************************************************
+     C     RSTFLDS       BEGSR
+      *
+     C                   MOVE      *BLANKS       ArrayInp
+     C                   Z-ADD     Idx           Ix                             Store index
+      *
+      ** Reset OK Fields
+      *
+     C                   EVAL      DDBLRTOK = *BLANK
+     C                   EVAL      DDAVOPOK = *BLANK
+     C                   EVAL      DDLBDYOK = *BLANK
+     C                   EVAL      DDLODYOK = *BLANK
+     C                   EVAL      DDWGHTOK = *BLANK
+     C                   EVAL      DDBADJOK = *BLANK
+     C                   EVAL      DDPDLYOK = *BLANK
+     C                   EVAL      DDNVOPOK = *BLANK
+     C                   EVAL      DDNBDYOK = *BLANK
+     C                   EVAL      DDNODYOK = *BLANK
+     C                   EVAL      DDNGHTOK = *BLANK
+     C                   EVAL      DDNADJOK = *BLANK
+     C                   EVAL      DDNDLYOK = *BLANK
+     C                   EVAL      DDCARTOK = *BLANK
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
       *  SDBLRT - Default backward-looking rate                       *
       *****************************************************************
      C     SDBLRT        BEGSR
@@ -649,11 +679,17 @@
      C                   ENDIF
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     *IN29         ANDEQ     *ON                                          And INSERT
      C     *IN30         ANDEQ     *OFF
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     ApiName       OREQ      'LERI'
+     C     HBRTT         ANDNE     WFBSRC
+      *
      C                   MOVE      BBABLRT       DDBLRT                          Default from
       *                                                                          SDBSRTPD
+     C                   ENDIF
+      *
      C                   ENDIF                                                  END CLE172
       *
      C                   ENDSR
@@ -790,28 +826,30 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLBDY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDLBDY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDLBDY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDLBDY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
-      *
-      ** Lookback Days for Settlement is not numeric
+      ** Lookback Days is not numeric
       *
      C                   MOVE      'N'           DDLBDYOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDLBDY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -869,14 +907,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDLODY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDLODY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDLODY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDLODY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lockout Days is not numeric
       *
@@ -885,12 +930,7 @@
      C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDLODY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1028,6 +1068,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDBADJ        IFNE      *BLANKS                                      Not blanks
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1061,6 +1102,7 @@
      C                   Z-SUB     WNumBadj      WNumBadj
      C                   ENDIF
      C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumBadj      ANDNE     *ZEROS
@@ -1116,14 +1158,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDPDLY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDPDLY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDPDLY        #1TESTN
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
-     C                   MOVE      DDPDLY        #2TESTN
-     C     #2TESTN       SCAN      NUMBLANK      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Payment Delay Days is not numeric
       *
@@ -1132,12 +1181,7 @@
      C                   MOVEL     'DDPDLY'      FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDPDLY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1180,7 +1224,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HAVOP         DDNVOP
@@ -1260,15 +1304,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HLBDY         WDAY
@@ -1297,14 +1341,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNBDY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNBDY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNBDY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDNBDY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lookback Days for Settlement is not numeric
       *
@@ -1313,12 +1364,7 @@
      C                   MOVEL     'DDNBDY'      FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNBDY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1357,15 +1403,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HLODY         WDAY
@@ -1394,14 +1440,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNODY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNODY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNODY        #1TESTN
-     C     #1TESTN       SCAN      NumBlank      #1CHARPOS
-     C                   MOVE      DDNODY        #2TESTN
-     C     #2TESTN       SCAN      NumBlank      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Lockout Days is not numeric
       *
@@ -1410,12 +1463,7 @@
      C                   MOVEL     'DDNODY'      FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNODY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1458,7 +1506,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HWGHT         DDNGHT
@@ -1551,7 +1599,7 @@
       *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HBADJ         WNumNadj
@@ -1579,6 +1627,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDNADJ        IFNE      *BLANKS                                      Not blank
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDNADJ        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1591,7 +1640,7 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0
+     C     @@ERCD        IFNE      0                                             Not numeric
       *
       ** Benchmark Adjustment is not numeric
       *
@@ -1599,7 +1648,20 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDNADJ'      FldNamXAr(Idx)
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
+     C                   ELSE                                                    If numeric
+      *
+     C                   MOVE      *BLANK        WSign
+     C     @@AMT         IFLT      0
+     C                   Z-SUB     @@AMT         @@AMT
+     C                   MOVE      '-'           WSign
      C                   ENDIF
+     C                   MOVE      @@AMT         @@ALPH
+     C                   MOVE      @@ALPH        WNumNadj
+     C     WSign         IFEQ      '-'
+     C                   Z-SUB     WNumNadj      WNumNadj
+     C                   ENDIF
+     C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumNadj      ANDNE     *ZEROS
@@ -1615,7 +1677,6 @@
      C                   ENDIF                                                  END CLE172
       *
      C     DDNADJOK      IFNE      'N'
-     C                   MOVE      @@ALPH        DDNADJ
      C                   Z-ADD     WNumNadj      VNADJ
      C                   ENDIF
       *
@@ -1630,27 +1691,27 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNLDY         VNDLY                           Default from
+     C                   MOVE      HNDLY         VNDLY                           Default from
      C                   ELSE                                                    CLOANCL
       *                                                                         If INSERT
      C                   Z-ADD     0             VNDLY                           Default: 0
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
-      *
       ** Reset WDAY
       *
      C                   Z-ADD     0             WDAY
       *
+     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
+      *
       ** If Base Rate Code is unchanged, default from CLOANCL
       *
-     C                   IF        HNBRA = HBRTT
+     C                   IF        WFBSRC = HNBRA
       *
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HPDLY         WDAY
      C                   ELSE
-     C                   MOVE      HNLDY         WDAY
+     C                   MOVE      HNDLY         WDAY
      C                   ENDIF
       *
       ** If Base Rate Code was changed, default from SDBSRTPD
@@ -1674,14 +1735,21 @@
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
      C     DDNDLY        IFNE      *BLANKS                                      Not blank
+     C     WDAY          ANDEQ     0                                            And not def.
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDNDLY        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH                         Display field
+     C                   PARM      0             @@IDP                          no.of dec.plcs
+     C                   PARM      2             @@IINT                         no.of integers
+     C                   PARM      'N'           @@MTID                         Mil/Thou
+     C                   PARM      *ZERO         @@ERCD                         Error code
+     C                   PARM      *ZERO         @@AMT                          File field
+     C                   PARM                    DLBNDCSP
       *
-     C                   MOVEL     DDNDLY        #1TESTN
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS
-     C                   MOVE      DDNDLY        #2TESTN
-     C     #2TESTN       SCAN      NUMBLANK      #2CHARPOS
-      *
-     C     #1CHARPOS     IFEQ      *ZERO                                         Not numeric
-     C     #2CHARPOS     OREQ      *ZERO
+     C     @@ERCD        IFNE      0                                             Not numeric
+     C     @@AMT         ORLT      0
       *
       ** Payment Delay Days is not numeric
       *
@@ -1690,12 +1758,7 @@
      C                   MOVEL     'DDNDLY'      FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
-      *
-     C     #2TESTN       IFEQ      *BLANK                                        Right align
-     C                   MOVE      #1TESTN       WDAY
-     C                   ELSE
-     C                   MOVE      DDNDLY        WDAY
-     C                   ENDIF
+     C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
      C     WDAY          ANDNE     *ZEROS
@@ -1752,6 +1815,7 @@
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
       *
+     C     DDBADJ        IFNE      *BLANKS                                      Not blanks
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDCART        @@ALPH
      C                   CALLB     'ZA0841'
@@ -1785,6 +1849,7 @@
      C                   Z-SUB     WNumCart      WNumCart
      C                   ENDIF
      C                   ENDIF                                                   END numeric
+     C                   ENDIF                                                  END blanks
       *
      C     VBLRT         IFNE      'Y'
      C     WNumCart      ANDNE     *ZEROS
@@ -1830,7 +1895,6 @@
       *
       *****************************************************************
       /EJECT
-      *****************************************************************
       *****************************************************************
       *  SDLBAC - Default Lookback Days for Accrual                   *
       *****************************************************************

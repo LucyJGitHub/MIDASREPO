@@ -155,17 +155,17 @@
       ***  (Current) Loan in Screen Format 2
      D                                     PREFIX(@)
                                                                                               CLE172
-     D CurrScnBlrt     DS                                                                     CLE172
+     D CurrScnBlrt     DS            43                                                       CLE172
      D  @DDBLRT                1      1A                                                      CLE172
      D  @DDLBDY                2      3A                                                      CLE172
      D  @DDLODY                4      5A                                                      CLE172
      D  @DDPDLY                6      7A                                                      CLE172
-     D  @DDBADJ                8     21A                                                      CLE172
-     D  @DDAVOP               22     22A                                                      CLE172
-     D  @DDCART               23     36A                                                      CLE172
-     D  @DDWGHT               37     37A                                                      CLE172
-     D  @DDBRAC               38     39A                                                      CLE172
-     D  @DDLBAC               40     41A                                                      CLE172
+     D  @DDBADJ                8     22A                                                      CLE172
+     D  @DDAVOP               23     23A                                                      CLE172
+     D  @DDCART               24     38A                                                      CLE172
+     D  @DDWGHT               39     39A                                                      CLE172
+     D  @DDBRAC               40     41A                                                      CLE172
+     D  @DDLBAC               42     43A                                                      CLE172
       ***  (Current) Backward-Looking Rate Fields in Screen Format                            CLE172
       *
      D NewLoanScn2   E DS                  EXTNAME(LECLI2PD)
@@ -755,7 +755,7 @@
       *-----------------------------------------*                                             CLE172
       *                                                                                       CLE172
      C     DDLBDY        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDLBDY                                       CLE172
+     C                   MOVEL     '00'          DDLBDY                                       CLE172
      C                   ELSE                                                                 CLE172
      C                   MOVE      *BLANKS       @@ALPH                                       CLE172
      C                   Z-ADD     *ZEROS        WDAY                                         CLE172
@@ -776,7 +776,7 @@
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C     @DDLBDY       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDLBDY                                      CLE172
+     C                   MOVEL     '00'          @DDLBDY                                      CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172
@@ -799,7 +799,7 @@
       *-----------------------------------------*                                             CLE172
       *                                                                                       CLE172
      C     DDLODY        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDLODY                                       CLE172
+     C                   MOVEL     '00'          DDLODY                                       CLE172
      C                   ELSE                                                                 CLE172
      C                   MOVE      *BLANKS       @@ALPH                                       CLE172
      C                   Z-ADD     *ZEROS        WDAY                                         CLE172
@@ -820,7 +820,7 @@
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C     @DDLODY       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDLODY                                      CLE172
+     C                   MOVEL     '00'          @DDLODY                                      CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172
@@ -843,7 +843,7 @@
       *-----------------------------------------*                                             CLE172
       *                                                                                       CLE172
      C     DDPDLY        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDPDLY                                       CLE172
+     C                   MOVEL     '00'          DDPDLY                                       CLE172
      C                   ELSE                                                                 CLE172
      C                   MOVE      *BLANKS       @@ALPH                                       CLE172
      C                   Z-ADD     *ZEROS        WDAY                                         CLE172
@@ -864,7 +864,7 @@
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C     @DDPDLY       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDPDLY                                      CLE172
+     C                   MOVEL     '00'          @DDPDLY                                      CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172
@@ -979,7 +979,7 @@
       *-----------------------------------------*                                             CLE172
       *                                                                                       CLE172
      C     DDLBAC        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDLBAC                                       CLE172
+     C                   MOVEL     '00'          DDLBAC                                       CLE172
      C                   ELSE                                                                 CLE172
      C                   MOVE      *BLANKS       @@ALPH                                       CLE172
      C                   Z-ADD     *ZEROS        WDAY                                         CLE172
@@ -1000,7 +1000,7 @@
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C     @DDLBAC       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDLBAC                                      CLE172
+     C                   MOVEL     '00'          @DDLBAC                                      CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172

@@ -1075,8 +1075,8 @@
      C                   ADD       8             eBfp                                       MD054028
      C**********         ENDIF                                                       MD054028 CLE172
       ** CLE172 Fields                                                                        CLE172
-     C                   EVAL      TranScnBlrt = %SUBST(Extdata500:eBfp:41)                   CLE172
-     C                   ADD       41            eBfp                                         CLE172
+     C                   EVAL      TranScnBlrt = %SUBST(Extdata500:eBfp:43)                   CLE172
+     C                   ADD       43            eBfp                                         CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated

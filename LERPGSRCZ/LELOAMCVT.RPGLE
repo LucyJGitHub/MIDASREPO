@@ -147,7 +147,7 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
-     D ArrayBadj       S              1A   DIM(17)                                            CLE172
+     D ArrayBadj       S              1A   DIM(20)                                            CLE172
       *** Benchmark Adjustment in screen format                                               CLE172
       *
       ***  Loan Amendment in file Format
@@ -169,8 +169,12 @@
       *** EXTERNAL DS FOR SAR DETAILS                                                         CLE106
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE106
      D SC_LCD        E                     EXTFLD(LCD)                                        CLE106
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CLE172
+     D                                     PREFIX(DL)                                         CLE172
+      ***  External DS for Dealing details                                                    CLE172
       *                                                                                       CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+      *                                                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
      D  DDAVOP                 1      1
      D  DDLBDY                 2      3
      D  DDLODY                 4      5
@@ -191,17 +195,18 @@
      D CRE073          S              1A                                                      CRE073
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         240408
                                                                                               CLE106
-     D IntBadj         S              5A                                                      CLE172
-     D DecBadj         S              8A                                                      CLE172
                                                                                               CLE172
+      ** Parameters for calling ZA0841                                                        CLE172
      D @@ALPH          S             16A                                                      CLE172
      D @@MTID          S              1A                                                      CLE172
-     D @@AMT           S             15  0                                                    CLE172
-     D @@ERCD          S              1  0                                                    CLE172
-     D @@IDP           S              3  0                                                    CLE172
-     D @@IINT          S              3  0                                                    CLE172
-     D BNDCSP          S              1A                                                      CLE172
-                                                                                              CLE172
+     D @@AMT           S             15P 0                                                    CLE172
+     D @@ERCD          S              1P 0                                                    CLE172
+     D @@IDP           S              3P 0                                                    CLE172
+     D @@IINT          S              3P 0                                                    CLE172
+      *                                                                                       CLE172
+     D IntBadj         S              5A                                                      CLE172
+     D DecBadj         S              8A                                                      CLE172
+      *                                                                                       CLE172
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -438,6 +443,7 @@
      C                   MOVEL     LARDFD        DDRDFD                                       CRE073
                                                                                               CRE073
      C                   ENDIF                                                                CRE073
+     C                   IF        DDATYP = 'BC'                                              CLE172
       * Lookback Days for Settlement                                                          CLE172
       *                                                                                       CLE172
      C                   MOVE      LBDY          DDLBDY                                       CLE172
@@ -452,18 +458,16 @@
       *                                                                                       CLE172
       * Benchmark Adjustment                                                                  CLE172
       *                                                                                       CLE172
-     C                   MOVE      '.'           BNDCSP                                       CLE172
-      *                                                                                       CLE172
      C                   MOVEL     BADJ          IntBadj                                      CLE172
      C                   MOVE      BADJ          DecBadj                                      CLE172
      C     BADJ          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
      C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(7)                                 CLE172
      C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
      C                   ELSE                                                                 CLE172
      C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(6)                                 CLE172
      C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
@@ -477,7 +481,7 @@
      C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
      C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
      C                   PARM      *ZERO         @@AMT                          File field    CLE172
-     C                   PARM                    BNDCSP                                       CLE172
+     C                   PARM      '.'           DLBNDCSP                                     CLE172
       *                                                                                       CLE172
      C                   MOVE      @@ALPH        DDBADJ                                       CLE172
       *                                                                                       CLE172
@@ -488,7 +492,38 @@
       * Weight Convention                                                                     CLE172
       *                                                                                       CLE172
      C                   MOVE      WGHT          DDWGHT                                       CLE172
-
+     C                   ENDIF                                                                CLE172
+     C                   IF        DDATYP = 'SC'                                              CLE172
+      *                                                                                       CLE172
+      * Benchmark Adjustment                                                                  CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     BADJ          IntBadj                                      CLE172
+     C                   MOVE      BADJ          DecBadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(7)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
+     C                   MOVEA     DLBNDCSP      ArrayBadj(6)                                 CLE172
+     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM      '.'           DLBNDCSP                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDBADJ                                       CLE172
+     C                   ENDIF                                                                CLE172
       *
       ***  Return
      C                   RETURN
@@ -623,6 +658,17 @@
       *
       ***  Initialise program name
      C                   MOVEL     'LELOAMCVT'   DBPGM
+      *                                                                                       CLE172
+      ** Access Dealing Details                                                               CLE172
+      *                                                                                       CLE172
+     C                   CALL      'AODEALR1'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*FIRST '     @OPTN                                        CLE172
+     C     SDDEAL        PARM      SDDEAL        DSSDY                                        CLE172
+      *                                                                                       CLE172
+     C     @RTCD         IFNE      *BLANK                                                     CLE172
+     C                   EVAL      DLBNDCSP =  '.'                                            CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE106
       *                                                                                       CLE106
       ** Determine if CLEC106is switched on                                                   CLE106

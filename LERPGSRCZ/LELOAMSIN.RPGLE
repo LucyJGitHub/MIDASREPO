@@ -183,7 +183,10 @@
      D OKAmndScn     E DS                  EXTNAME(LEELOAMPD)
       *                                                                                       CLE172
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
+                                                                                              CLE172
+      ** LE Backward-Looking Rate Fields in screen format (Current)                           CLE172
+     D LoamFmtBlrt     DS            23                                                       CLE172
                                                                                               CLE172
       *
       ***  Loan Details 'A' Format
@@ -1433,7 +1436,7 @@
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
       ** Backward-Looking Rate Fields                                                       CLE172
-     C                   PARM                    LoamScnBlrt                                CLE172
+     C                   PARM                    LoamFmtBlrt                                CLE172
       *
       ** Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

@@ -2570,7 +2570,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
       *** Backward-Looking Rate Fields (CLE172)                                               CLE172
-     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           41                          CLE172
+     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           43                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn+CLCR50Ln) +              CLE172
      C                                       BSRDta                                           CLE172
      C                   ADD       CLBSRTLn      Bfp                                          CLE172

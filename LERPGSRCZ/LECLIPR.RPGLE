@@ -314,7 +314,7 @@
      D NwCLIPExtFmt  E DS                  EXTNAME(BYLOANX0) PREFIX(BY)                      LLN022A
                                                                                               CLE172
       ** CLIP Backward-Looking Rate Fields                                                    CLE172
-     D LoanScnBlrt     DS            41                                                       CLE172
+     D LoanScnBlrt     DS            43                                                       CLE172
       *                                                                                       CLE148
       ** Parameters for calling AOSVALR0 (System Value Access Object)                         CLE148
       *                                                                                       CLE148

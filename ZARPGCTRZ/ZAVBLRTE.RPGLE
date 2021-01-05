@@ -221,7 +221,7 @@
      D  LVPDLY                14     15S 0
 
       *
-      ** LOAM Backward-Looking Rate Valid fields (Output)
+      ** LERI Backward-Looking Rate Valid fields (Output)
       *
      D LeriValFld      DS
      D  LVNVOP                 1      1A
@@ -465,10 +465,12 @@
      C                   MOVEA     ArrayInp(4)   DDNODY
      C                   MOVEA     ArrayInp(6)   DDNGHT
      C                   MOVEA     ArrayInp(7)   DDNADJ
-     C                   MOVEA     ArrayInp(21)  DDNDLY
+     C                   MOVEA     ArrayInp(22)  DDNDLY
       *
      C                   EXSR      SDBLRT
      C                   EXSR      SRBLRT
+      *
+     C                   EXSR      SRFRSHRO
       *
      C                   EXSR      SDNVOP
      C                   EXSR      SRNVOP
@@ -1591,7 +1593,7 @@
      C                   PARM      *ZERO         @@AMT                          File field
      C                   PARM                    DLBNDCSP
       *
-     C     @@ERCD        IFNE      0
+     C     @@ERCD        IFNE      0                                             Not numeric
       *
       ** Benchmark Adjustment is not numeric
       *
@@ -1599,7 +1601,19 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDNADJ'      FldNamXAr(Idx)
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
+     C                   ELSE                                                    If numeric
+      *
+     C                   MOVE      *BLANK        WSign
+     C     @@AMT         IFLT      0
+     C                   Z-SUB     @@AMT         @@AMT
+     C                   MOVE      '-'           WSign
      C                   ENDIF
+     C                   MOVE      @@AMT         @@ALPH
+     C                   MOVE      @@ALPH        WNumNadj
+     C     WSign         IFEQ      '-'
+     C                   Z-SUB     WNumNadj      WNumNadj
+     C                   ENDIF
+     C                   ENDIF                                                   END numeric
       *
      C     VBLRT         IFNE      'Y'
      C     WNumNadj      ANDNE     *ZEROS
@@ -1615,7 +1629,6 @@
      C                   ENDIF                                                  END CLE172
       *
      C     DDNADJOK      IFNE      'N'
-     C                   MOVE      @@ALPH        DDNADJ
      C                   Z-ADD     WNumNadj      VNADJ
      C                   ENDIF
       *
@@ -1630,7 +1643,7 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNLDY         VNDLY                           Default from
+     C                   MOVE      HNDLY         VNDLY                           Default from
      C                   ELSE                                                    CLOANCL
       *                                                                         If INSERT
      C                   Z-ADD     0             VNDLY                           Default: 0
@@ -1650,7 +1663,7 @@
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HPDLY         WDAY
      C                   ELSE
-     C                   MOVE      HNLDY         WDAY
+     C                   MOVE      HNDLY         WDAY
      C                   ENDIF
       *
       ** If Base Rate Code was changed, default from SDBSRTPD
@@ -1830,7 +1843,6 @@
       *
       *****************************************************************
       /EJECT
-      *****************************************************************
       *****************************************************************
       *  SDLBAC - Default Lookback Days for Accrual                   *
       *****************************************************************

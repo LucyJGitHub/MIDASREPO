@@ -12,10 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103 *CREATE     Date 10Aug20               *
+      *  Last Amend No. MD057291           Date 01Jan21               *
+      *  Prev Amend No. CSD103 *CREATE     Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057291 - New Lockedout concept in the calculator based     *
+      *             from updated BRD of the General Section           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
@@ -261,9 +264,15 @@
                                    if wLockOutRate <> 0;
                                         bsrhDS(i).appliedRate  = wLockOutRate;
                                    else;
-                                        if wLockOutDate <> 0 and
-                                           (wlockOutDate <
-                                             bsrhDS(i).historyDate);
+
+                                         //if wLockOutDate <> 0 and                         MD057291
+                                         //   (wlockOutDate <                               MD057291
+                                         //    bsrhDS(i).historyDate);                      MD057291
+                                         // Start of change MD057291
+                                          if wLockOutDate <> 0 and
+                                             (wlockOutDate <=
+                                               bsrhDS(i).historyDate);
+                                         // End of change MD057291
                                              bsrhDS(i).appliedRate  =
                                                 bsrhDS(i-1).appliedRate;
                                         else;

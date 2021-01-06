@@ -423,7 +423,7 @@
      C                   MOVEA     ArrayInp(4)   DDLODY
      C                   MOVEA     ArrayInp(6)   DDWGHT
      C                   MOVEA     ArrayInp(7)   DDBADJ
-     C                   MOVEA     ArrayInp(21)  DDPDLY
+     C                   MOVEA     ArrayInp(22)  DDPDLY
       *
      C                   EXSR      SDBLRT
      C                   EXSR      SRBLRT
@@ -801,6 +801,7 @@
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HLBDY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -882,6 +883,7 @@
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HLODY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
@@ -1133,6 +1135,7 @@
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
+     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HPDLY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *

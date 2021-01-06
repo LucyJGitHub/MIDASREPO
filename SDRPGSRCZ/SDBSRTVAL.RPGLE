@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057444           Date 05Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
       *                 AR641183           Date 27Nov12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057444 - Fixed negative value and buffer length for BADJ   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
@@ -168,8 +170,8 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
-     D ArrayBadj       S              1A   DIM(17)                                            CSD103
-      * Incoming Benchmark Adjustment in screen format                                        CSD103
+     D*ArrayBadj*      S              1A   DIM(17)                                   CSD103 MD057444
+      **Incoming*Benchmark*Adjustment*in*screen*format*****************              CSD103 MD057444
                                                                                               CSD103
      D BaseRateIn    E DS                  EXTNAME(SDBSRSPD)
       * Incoming Base Rate in screen format
@@ -225,15 +227,20 @@
       ** Data Structure for Event Codes Substitution                                        MD000091
                                                                                               CSD103
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
+     D*BasRBckfld      DS            27                                              CSD103 MD057444
+     D BasRBckfld      DS            28                                                     MD057444
      D  DDBLRT                 1      1                                                       CSD103
      D  DDLBDY                 2      3                                                       CSD103
      D  DDLODY                 4      5                                                       CSD103
      D  DDPDLY                 6      7                                                       CSD103
-     D  DDBADJ                 8     21                                                       CSD103
-     D  DDAVOP                22     22                                                       CSD103
-     D  DDBRAC                23     24                                                       CSD103
-     D  DDWGHT                25     25                                                       CSD103
+     D**DDBADJ**               8     21                                              CSD103 MD057444
+     D**DDAVOP**              22     22                                              CSD103 MD057444
+     D**DDBRAC**              23     24                                              CSD103 MD057444
+     D**DDWGHT**              25     25                                              CSD103 MD057444
+     D  DDBADJ                 8     22                                                     MD057444
+     D  DDAVOP                23     23                                                     MD057444
+     D  DDBRAC                24     25                                                     MD057444
+     D  DDWGHT                26     26                                                     MD057444
                                                                                               CSD103
      D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
      D                                     PREFIX(W)                                          CSD103
@@ -281,12 +288,14 @@
      D #1TESTN         S              1A                                                     BUG3124
                                                                                              BUG3124
      D #1CHARPOS       S              2  0                                                    CSD103
-                                                                                              CSD103
      D #2CHARPOS       S              2  0                                                    CSD103
                                                                                               CSD103
-     D IntBadj         S              5A                                                      CSD103
-     D DecBadj         S              8A                                                      CSD103
-                                                                                              CSD103
+     D*IntBadj**      S              5A                                              CSD103 MD057444
+     D*DecBadj**      S              8A                                              CSD103 MD057444
+                                                                                     CSD103 MD057444
+     D WNumBadj        S             13P 8                                                  MD057444
+     D WSign           S              1A                                                    MD057444
+                                                                                            MD057444
       ** Alpha field for numeric validation                                                   240065
      D @@ALPH          S             16A                                                      240065
       ** Millions/Thousands id (Y=function on)                                                240065
@@ -600,29 +609,40 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ELSE                                                                 CSD103
       *                                                                                       CSD103
-     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
-     C                   MOVEL     DDBADJ        IntBadj                                      CSD103
-     C                   MOVE      DDBADJ        DecBadj                                      CSD103
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
-      *                                                                                       CSD103
-     C     '-'           SCAN      @@ALPH        PTBADJ            2 0                        CSD103
-     C     PTBADJ        IFNE      0                                                          CSD103
-     C                   MOVE      '-'           PZFSign                                      CSD103
-     C                   MOVEA     '- '          ArrayBadj(8)                                 CSD103
-     C                   ENDIF                                                                CSD103
-     C                   MOVEA     ArrayBadj     PZFld17                                      CSD103
-      *                                                                                       CSD103
-     C                   CALLB     'ZASIGN'                                                   CSD103
-     C                   PARM      'Y'           PZASignOk                                    CSD103
-     C                   PARM                    PZFld17                                      CSD103
-     C                   PARM      5             PZDig                                        CSD103
-     C                   PARM      8             PZDec                                        CSD103
-     C                   PARM      BNDCSP        PZSDCSP                                      CSD103
-     C                   PARM                    PZOut15                                      CSD103
-     C                   PARM                    PZFSign                                      CSD103
-     C                   MOVE      PZOut15       WNumBadj         13 8                        CSD103
+     C**********         MOVE      @@ALPH        DDBADJ                              CSD103 MD057444
+     C**********         MOVEL     DDBADJ        IntBadj                             CSD103 MD057444
+     C**********         MOVE      DDBADJ        DecBadj                             CSD103 MD057444
+     C**********         MOVEA     IntBadj       ArrayBadj(1)                        CSD103 MD057444
+     C**********         MOVEA     BNDCSP        ArrayBadj(6)                        CSD103 MD057444
+     C**********         MOVEA     DecBadj       ArrayBadj(7)                        CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C*****'-'**         SCAN      @@ALPH        PTBADJ            2 0               CSD103 MD057444
+     C*****PTBADJ        IFNE      0                                                 CSD103 MD057444
+     C**********         MOVE      '-'           PZFSign                             CSD103 MD057444
+     C**********         MOVEA     '- '          ArrayBadj(8)                        CSD103 MD057444
+     C**********         ENDIF                                                       CSD103 MD057444
+     C**********         MOVEA     ArrayBadj     PZFld17                             CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C**********         CALLB     'ZASIGN'                                          CSD103 MD057444
+     C**********         PARM      'Y'           PZASignOk                           CSD103 MD057444
+     C**********         PARM                    PZFld17                             CSD103 MD057444
+     C**********         PARM      5             PZDig                               CSD103 MD057444
+     C**********         PARM      8             PZDec                               CSD103 MD057444
+     C**********         PARM      BNDCSP        PZSDCSP                             CSD103 MD057444
+     C**********         PARM                    PZOut15                             CSD103 MD057444
+     C**********         PARM                    PZFSign                             CSD103 MD057444
+     C**********         MOVE      PZOut15       WNumBadj         13 8               CSD103 MD057444
+     C                   MOVE      *BLANK        WSign                                      MD057444
+     C     @@AMT         IFLT      0                                                        MD057444
+     C                   Z-SUB     @@AMT         @@AMT                                      MD057444
+     C                   MOVE      '-'           WSign                                      MD057444
+     C                   ENDIF                                                              MD057444
+     C                   MOVE      @@AMT         @@ALPH                                     MD057444
+     C                   MOVE      @@ALPH        WNumBadj                                   MD057444
+     C     WSign         IFEQ      '-'                                                      MD057444
+     C                   Z-SUB     WNumBadj      WNumBadj                                   MD057444
+     C                   ENDIF                                                              MD057444
+     C                   ENDIF                                                              MD057444
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
      C     WNumBadj      ANDNE     *ZEROS                                                     CSD103
@@ -776,8 +796,6 @@
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDIF                                                                CSD103
@@ -1451,11 +1469,11 @@
      C                   MOVE      DDLODY        BVLODY                          Looking Rate CSD103
      C                   MOVE      DDPDLY        BVPDLY                          screen flds  CSD103
       *                                                                          to valid     CSD103
-     C     PTBADJ        IFNE      0                                                          CSD103
-     C                   Z-SUB     WNumBadj      BVBADJ                                       CSD103
-     C                   ELSE                                                                 CSD103
+     C*****PTBADJ        IFNE      0                                                 CSD103 MD057444
+     C**********         Z-SUB     WNumBadj      BVBADJ                              CSD103 MD057444
+     C**********         ELSE                                                        CSD103 MD057444
      C                   Z-ADD     WNumBadj      BVBADJ                                       CSD103
-     C                   ENDIF                                                                CSD103
+     C**********         ENDIF                                                       CSD103 MD057444
       *                                                                                       CSD103
      C                   MOVE      DDAVOP        BVAVOP                                       CSD103
      C                   MOVE      DDBRAC        BVBRAC                                       CSD103

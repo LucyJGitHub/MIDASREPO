@@ -193,7 +193,7 @@
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
                                                                                               CLE172
       ** LOAM Backward-Looking Rate Fields                                                    CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
       *
       ***  Loan Details 'A' Format
      D LoanDetsA     E DS                  EXTNAME(CLOAN:CLOANCLF)

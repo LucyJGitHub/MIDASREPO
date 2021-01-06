@@ -245,7 +245,10 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CLE172
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
+                                                                                              CLE172
+      ** LE Backward-Looking Rate Fields in screen format                                     CLE172
+     D LoamFmtBlrt     DS            23                                                       CLE172
                                                                                               CLE172
 
       * LE Amendment extra data in file (D/B) format
@@ -576,6 +579,7 @@
       * Clear file/screen formats
      C                   CLEAR                   N_LOAM_F
      C                   CLEAR                   N_LOAM_S
+     C                   CLEAR                   LoamScnBlrt                                  CLE172
       *
       * Reset errors
      C                   MOVE      *ALL'Y'       LOAM_OK
@@ -1463,7 +1467,7 @@
      C                   PARM                    N_LOAM_S
       *                                                                                     CLE172
       ** Backward-Looking Rate Fields                                                       CLE172
-     C                   PARM                    LoamScnBlrt                                CLE172
+     C                   PARM                    LoamFmtBlrt                                CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16
@@ -1474,6 +1478,7 @@
       *
       * Update 'current' amendment with amendment in screen format
      C                   MOVEL     N_LOAM_S      C_LOAM_S
+     C                   MOVEL     LoamScnBlrt   LoamFmtBlrt                                CLE172
       *
      C                   ENDSR
       *****************************************************************

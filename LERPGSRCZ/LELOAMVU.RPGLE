@@ -554,9 +554,11 @@
      D ExtData500      S            500A
 
       ** LE Backward-Looking Rate Fields                                                      CLE172
-     D LoamScnBlrt     DS            22                                                       CLE172
+     D LoamScnBlrt     DS            23                                                       CLE172
                                                                                               CLE172
-
+      ** LE Backward-Looking Rate Fields in screen format                                     CLE172
+     D LoamFmtBlrt     DS            23                                                       CLE172
+                                                                                              CLE172
       ** Indices for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
@@ -647,7 +649,7 @@
 
       ** CLE172 Fields                                                                        CLE172
      C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:22)                   CLE172
-     C                   ADD       22            eBfp                                         CLE172
+     C                   ADD       23            eBfp                                         CLE172
 
       * Reset variables gradually updated
 
@@ -1407,7 +1409,7 @@
      C                   PARM                    LoamScnFmt
       *                                                                                     CLE172
       ** Backward-Looking Rate Fields                                                       CLE172
-     C                   PARM                    LoamScnBlrt                                CLE172
+     C                   PARM                    LoamFmtBlrt                                CLE172
       *
       ***  Output only screen field : Loan status
      C                   PARM                    DDSTAT           16

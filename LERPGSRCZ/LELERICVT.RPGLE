@@ -193,8 +193,8 @@
       *                                                                                       CLE172
       ** Benchmark Adjustment in screen format                                                CLE172
       *                                                                                       CLE172
-     D ArrayBadj       S              1A   DIM(17)                                            CLE172
-     D ArrayNadj       S              1A   DIM(17)                                            CLE172
+     D ArrayBadj       S              1A   DIM(15)                                            CLE172
+     D ArrayNadj       S              1A   DIM(15)                                            CLE172
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
@@ -228,6 +228,17 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
       *
+      ** Parameters for calling ZA0841                                                        CLE172
+      *                                                                                       CLE172
+     D @@ALPH          S             16A                                                      CLE172
+     D @@MTID          S              1A                                                      CLE172
+     D @@AMT           S             15P 0                                                    CLE172
+     D @@ERCD          S              1P 0                                                    CLE172
+     D @@IDP           S              3P 0                                                    CLE172
+     D @@IINT          S              3P 0                                                    CLE172
+      *                                                                                       CLE172
+     D WNumNadj        S             13P 8                                                    CLE172
+     D WNumBadj        S             13P 8                                                    CLE172
      D IntNadj         S              5A                                                      CLE172
      D DecNadj         S              8A                                                      CLE172
      D IntBadj         S              5A                                                      CLE172
@@ -646,9 +657,13 @@
       *                                                                                       CLE172
       ** Next Benchmark Adjustment                                                            CLE172
       *                                                                                       CLE172
-     C                   MOVEL     NADJ          IntNadj                                      CLE172
-     C                   MOVE      NADJ          DecNadj                                      CLE172
-     C     NADJ          IFLT      0                                                          CLE172
+     C                   Z-ADD     NADJ          WNumNadj                                     CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   Z-SUB     WNumNadj      WNumNadj                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEL     WNumNadj      IntNadj                                      CLE172
+     C                   MOVE      WNumNadj      DecNadj                                      CLE172
+     C     BADJ          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayNadj(1)                                 CLE172
      C                   MOVEA     IntNadj       ArrayNadj(2)                                 CLE172
      C                   MOVEA     DLBNDCSP      ArrayNadj(7)                                 CLE172
@@ -659,7 +674,19 @@
      C                   MOVEA     DecNadj       ArrayNadj(7)                                 CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
-     C                   MOVEA     ArrayNadj     DDNADJ                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayNadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    DLBNDCSP                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDNADJ                                       CLE172
       *                                                                                       CLE172
       ** Next Payment Delay Days                                                              CLE172
       *                                                                                       CLE172
@@ -676,8 +703,13 @@
       *                                                                                       CLE172
       ** Benchmark Adjustment                                                                 CLE172
       *                                                                                       CLE172
-     C                   MOVEL     BADJ          IntBadj                                      CLE172
-     C                   MOVE      BADJ          DecBadj                                      CLE172
+      *                                                                                       CLE172
+     C                   Z-ADD     BADJ          WNumBadj                                     CLE172
+     C     BADJ          IFLT      0                                                          CLE172
+     C                   Z-SUB     WNumBadj      WNumBadj                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEL     WNumBadj      IntBadj                                      CLE172
+     C                   MOVE      WNumBadj      DecBadj                                      CLE172
      C     BADJ          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
      C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
@@ -689,11 +721,23 @@
      C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayBadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    DLBNDCSP                                     CLE172
+      *                                                                                       CLE172
      C                   MOVE      AVOP          DDNVOPB                                      CLE172
      C                   MOVE      LBDY          DDNBDYB                                      CLE172
      C                   MOVE      LODY          DDNODYB                                      CLE172
      C                   MOVE      WGHT          DDNGHTB                                      CLE172
-     C                   MOVEA     ArrayBadj     DDNADJB                                      CLE172
+     C                   MOVE      @@ALPH        DDNADJB                                      CLE172
      C                   MOVE      PDLY          DDNDLYB                                      CLE172
       *                                                                                       CLE172
       ** If the Rollover Details already exist,                                               CLE172
@@ -704,7 +748,7 @@
      C                   MOVE      NBDY          DDNBDYB                                      CLE172
      C                   MOVE      NODY          DDNODYB                                      CLE172
      C                   MOVE      NGHT          DDNGHTB                                      CLE172
-     C                   MOVEA     ArrayNadj     DDNADJB                                      CLE172
+     C                   MOVE      @@ALPH        DDNADJB                                      CLE172
      C                   MOVE      NDLY          DDNDLYB                                      CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172

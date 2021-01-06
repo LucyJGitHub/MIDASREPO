@@ -2314,7 +2314,7 @@
       *                                                                                       CLE172
       *** Backward-Looking Rate Fields                                                        CLE172
       *                                                                                       CLE172
-     C                   PARM                    TranScnBlrt                                  CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       *
      C                   CALLB     'LECLIP3CT'
       *

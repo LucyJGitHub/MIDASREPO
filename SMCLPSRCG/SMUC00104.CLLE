@@ -1,0 +1,77 @@
+**********************************************************/
+BASEBND                                                  */
+T('Midas SM Transfer and correct records of files')      */
+**********************************************************/
+                                                         */
+as - Implementation module                               */
+                                                         */
+C00104 - Transfer files to have correct data and correct */
+         records of files in alphanumeric - Global       */
+                                                         */
+ Finastra International Limited 2020                     */
+                                                         */
+t Amend No. MD057448  *CREATE  Date 07Jan21              */
+                                                         */
+**********************************************************/
+                                                         */
+57448 - Component REC74 00001 failed during COB.         */
+        Introduce a global counter part of SMUC00105.    */
+                                                         */
+**********************************************************/
+ PGM        PARM(&LAYER)
+
+ COPYRIGHT  TEXT('(c) Finastra International Limited 2020')
+
+ DCL        VAR(&LAYER)    TYPE(*CHAR) LEN(7)
+
+fixes declaration*/
+ DCL        VAR(&GPREFIX) TYPE(*CHAR) LEN(2)
+ DCL        VAR(&ZPREFIX) TYPE(*CHAR) LEN(2)
+
+R0 params declaration*/
+ DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
+ DCL        VAR(&ZVAL) TYPE(*CHAR) LEN(200)
+ DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+
+nitor message. */
+ MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+
+ IF         COND(&LAYER *EQ 'Global') THEN(DO)
+ system prefix*/
+    CALL       PGM(GPAOSVALR0) PARM(&AORTN 'BrgMidasGlobalPrefix' +
+                 &SVAL ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                 ' ' ' ' ' ' ' ' ' ' ' ')
+ prefix*/
+ CHGVAR     VAR(&GPREFIX) VALUE(%SST(&SVAL 1 2))
+ ENDDO
+
+
+ IF         COND(&LAYER *EQ 'Zonal ') THEN(DO)
+ystem prefix*/
+ CALL       PGM(AOSVALR0) PARM(&AORTN 'BrgMidasSystemPrefix' &ZVAL ' ' +
+              ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+              ' ' ' ' ' ')
+refix*/
+ CHGVAR     VAR(&ZPREFIX) VALUE(%SST(&ZVAL 1 2))
+ ENDDO
+
+
+1050 to fix corrupted data */
+
+ CALL       PGM(SMU01050) PARM(&LAYER &ZPREFIX &GPREFIX)
+
+1051 to correct data */
+
+ CALL       PGM(SMU01051) PARM(&LAYER)
+
+ GOTO       CMDLBL(END)
+
+
+ CHGJOB     SWS(XXXXXX11)
+
+
+ ENDPGM
+
+
+

@@ -266,16 +266,12 @@
                                         bsrhDS(i).appliedRate  = wLockOutRate;
                                    else;
 
-       //**********                        if wLockOutDate <> 0 and                       //MD057291
-       //**********                           (wlockOutDate <                             //MD057291
-       //**********                            bsrhDS(i).historyDate);                    //MD057291
-       // Start of change MD057291
                                           if wLockOutDate <> 0 and
-                                             (wlockOutDate <=
+       //**********                          (wlockOutDate <                              //MD057291
+                                             (wlockOutDate <=                             //MD057291
                                                bsrhDS(i).historyDate);
-       // End of change MD057291
-                                             bsrhDS(i).appliedRate  =
-                                                bsrhDS(i-1).appliedRate;
+                                               bsrhDS(i).appliedRate  =
+                                                  bsrhDS(i-1).appliedRate;
                                         else;
                                              bsrhDS(i).appliedRate  =
                                              bsrhDS(i-lookBackDays).

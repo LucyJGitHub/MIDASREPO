@@ -648,7 +648,7 @@
      C                   Z-ADD     1             eBfp              4 0                        CLE172
 
       ** CLE172 Fields                                                                        CLE172
-     C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:22)                   CLE172
+     C                   EVAL      LoamScnBlrt = %SUBST(Extdata500:eBfp:23)                   CLE172
      C                   ADD       23            eBfp                                         CLE172
 
       * Reset variables gradually updated

@@ -17,8 +17,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD057291 - New Lockedout concept in the calculator based     *
-      *             from updated BRD of the General Section           *
+      *  MD057291 - Lockout concept update (Retrieve the rate of the  *
+      *             previous interest period when lockout date is     *
+      *             reached)                                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *  Last Amend No. MD057038           Date 11Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1075388          Date 21Nov13               *
       *                 AR845655           Date 06Oct11               *
       *                 CRE067             Date 05Oct10               *
       *                 BUG27831A          Date 04Aug10               *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057038 - Added two new fields for Debit and Credit         *
+      *             Associated Customer (Recompile)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
@@ -33,7 +36,7 @@
       *  CAP204 - Retail Account Transfer                             *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZGLATMIL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZGLATMIPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -42,9 +45,9 @@ O    F                                     USROPN
 O
 O    D Z_GLATMIPD    E DS                  EXTNAME(GZGLATMIPD)
 O    D G_GLATMIPD    E DS                  EXTNAME(GZGLATMIPD) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -87,9 +90,9 @@ O    C                   ELSE
 O    C                   WRITE     W_GLATMID0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -108,7 +111,7 @@ O
 O    C     K_GZGLATMIL1  KLIST
 O    C                   KFLD                    R1BRCA
 O    C                   KFLD                    R1TREF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -116,15 +119,15 @@ O    C                   KFLD                    R1TREF
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -139,10 +142,10 @@ O    C                   KFLD                    R1TREF
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

@@ -177,8 +177,8 @@
      D  DDLBDY                 2      3
      D  DDLODY                 4      5
      D  DDWGHT                 6      6
-     D  DDBADJ                 7     20
-     D  DDPDLY                21     22
+     D  DDBADJ                 7     21
+     D  DDPDLY                22     23
       ** LE Backward-Looking Rate Fields                                                      CLE172
       *
       *                                                                                       CLE172

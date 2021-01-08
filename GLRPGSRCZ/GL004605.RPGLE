@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *  Last Amend No. MD057038           Date 11Nov20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1075388          Date 21Nov13               *
       *                 CRE067             Date 05Oct10               *
       *                 BUG28036           Date 16Aug10               *
       *                 BUG27831B          Date 09Aug10               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057038 - Additional of Debit/Credit Associated Customer.   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
@@ -637,6 +639,8 @@
      C                   EVAL      G1CRSQ = R1CRSQ
      C                   EVAL      G1REJC = *BLANKS
      C                   EVAL      G1EXDT = R1EXDT
+     C                   EVAL      G1DASC = R1DASC                                         MD057038
+     C                   EVAL      G1CASC = R1CASC                                         MD057038
  
      C                   ENDSR
       *****************************************************************
@@ -780,11 +784,13 @@
      C                   EVAL      RDBBR = I_G1DBBR
      C                   EVAL      RDBCU = I_G1DBCU
      C                   EVAL      RDBCY = I_G1DBCY
+     C                   EVAL      RDASC = I_G1DASC                                         MD057038
      C                   MOVEL     I_G1DBAC      RDBAC
      C                   MOVEL     I_G1DBSQ      RDBSQ
      C                   EVAL      RCRBR = I_G1CRBR
      C                   EVAL      RCRCU = I_G1CRCU
      C                   EVAL      RCRCY = I_G1CRCY
+     C                   EVAL      RCASC = I_G1CASC                                         MD057038
      C                   MOVEL     I_G1CRAC      RCRAC
      C                   MOVEL     I_G1CRSQ      RCRSQ
  
@@ -848,11 +854,13 @@
      C                   EVAL      RDBBR2 = R1DBBR
      C                   EVAL      RDBCU2 = R1DBCU
      C                   EVAL      RDBCY2 = R1DBCY
+     C                   EVAL      RDASC2 = R1DASC                                          MD057038
      C                   MOVEL     R1DBAC        RDBAC2
      C                   MOVEL     R1DBSQ        RDBSQ2
      C                   EVAL      RCRBR2 = R1CRBR
      C                   EVAL      RCRCU2 = R1CRCU
      C                   EVAL      RCRCY2 = R1CRCY
+     C                   EVAL      RCASC2 = R1CASC                                          MD057038
      C                   MOVEL     R1CRAC        RCRAC2
      C                   MOVEL     R1CRSQ        RCRSQ2
  

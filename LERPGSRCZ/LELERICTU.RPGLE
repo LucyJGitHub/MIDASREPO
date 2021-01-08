@@ -26,7 +26,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. CLE172             Date 14Dec20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -70,7 +70,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
-      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -345,6 +344,11 @@
      D InfData       E DS                  EXTNAME(LELEIFPD)                                AR702532
      D                                     PREFIX(IF_)                                      AR702532
                                                                                             AR702532
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            46                                                       CLE172
+      *                                                                                       CLE172
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -738,6 +742,10 @@
      C                   PARM                    C_LERI
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       *  If action is X, the VAL module validates the current file fields
       *  instead of the screen fields and move these fields into V fields
@@ -866,6 +874,10 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM      *BLANK        @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
       *
       * OUTPUTS
 
@@ -1094,6 +1106,10 @@
       *
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
 
      C                   CALLB     'LELERIAMD'
@@ -1687,6 +1703,10 @@
       *
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       ** DATA SUBSTITUTION
 

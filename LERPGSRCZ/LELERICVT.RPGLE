@@ -658,12 +658,12 @@
       ** Next Benchmark Adjustment                                                            CLE172
       *                                                                                       CLE172
      C                   Z-ADD     NADJ          WNumNadj                                     CLE172
-     C     BADJ          IFLT      0                                                          CLE172
+     C     NADJ          IFLT      0                                                          CLE172
      C                   Z-SUB     WNumNadj      WNumNadj                                     CLE172
      C                   ENDIF                                                                CLE172
      C                   MOVEL     WNumNadj      IntNadj                                      CLE172
      C                   MOVE      WNumNadj      DecNadj                                      CLE172
-     C     BADJ          IFLT      0                                                          CLE172
+     C     NADJ          IFLT      0                                                          CLE172
      C                   MOVEA     '-'           ArrayNadj(1)                                 CLE172
      C                   MOVEA     IntNadj       ArrayNadj(2)                                 CLE172
      C                   MOVEA     DLBNDCSP      ArrayNadj(7)                                 CLE172

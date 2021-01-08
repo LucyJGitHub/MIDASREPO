@@ -383,8 +383,9 @@
      C**********                        Loa2ScnFmt + S_REC + S_PAY +                   247171 CSF011
      C                                  Loa2ScnFmt +                                         CSF011A
      C                                  S_REC + S_PAY +                                       CSF011
-     C                                  InfData + ExtData                                     247171
-     C                                  + LoamScnBlrt                                CLE172
+     C**********                        InfData + ExtData                        CLE172       247171
+     C                                  InfData + LoamScnBlrt +                  CLE172
+     C                                  ExtData                                  CLE172
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -512,14 +513,14 @@
       * Output parameters
       * Amendment Details - screen formats
      C                   PARM                    LoamScnFmt
+      *                                                                                     CLE172
+      ** Backward-Looking Rate Fields                                                       CLE172
+     C                   PARM                    LoamScnBlrt                                CLE172
       *
       **  Output only screen field : Loan status
      C**********         PARM                    DDSTAT           16                          CLE106
      C                   PARM                    DDASTS                                       CLE106
      C                   PARM                    LoamFilXFmt                                  CRE073
-      *                                                                                     CLE172
-      ** Backward-Looking Rate Fields                                                       CLE172
-     C                   PARM                    LoamScnBlrt                                CLE172
       *
       ** Add the action code
      C                   MOVE      @DDACTN       DDACTN

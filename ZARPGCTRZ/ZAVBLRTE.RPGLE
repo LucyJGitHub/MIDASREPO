@@ -665,6 +665,7 @@
       *
      C                   ENDSR
       *
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -674,23 +675,26 @@
       *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HBLRT         DDBLRT                          Default from
-     C                   ELSE                                                    CLOANCL
-     C                   MOVE      'N'           DDBLRT
-     C                   ENDIF
+     C                   ENDIF                                                   CLOANCL
       *
-     C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     *IN30         ANDEQ     *OFF
+     C     CLE172        IFEQ      'Y'                                          If CLE172=ON
+     C     *IN30         ANDEQ     *OFF                                         And BSRC EXIST
       *
-     C     ApiName       IFEQ      'CLIP'
+     C     ApiName       IFEQ      'CLIP'                                       If CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     ApiName       OREQ      'LERI'
-     C     HBRTT         ANDNE     WFBSRC
-      *
+     C     ApiName       OREQ      'LERI'                                       If LERI
+     C     HBRTT         ANDNE     WFBSRC                                       And Edited BSRC
      C                   MOVE      BBABLRT       DDBLRT                          Default from
       *                                                                          SDBSRTPD
      C                   ENDIF
       *
-     C                   ENDIF                                                  END CLE172
+     C                   ENDIF
+      *
+      ** If DDBLRT is not Y, CLE172 = OFF, loan is not in CLOANCL, or
+      ** not in SDBSRTPD, then default to N. Disregard input BLRT.
+     C     DDBLRT        IFNE      'Y'
+     C                   MOVE      'N'           DDBLRT
+     C                   ENDIF
       *
      C                   ENDSR
       *
@@ -731,18 +735,21 @@
       *****************************************************************
      C     SDAVOP        BEGSR
       *
+     C     *DDAVOP       IFEQ      *BLANKS                                      If blank
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HAVOP         DDAVOP                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     DDAVOP        ANDEQ     *BLANKS
+     C     *IN30         ANDEQ     *OFF                                         And BSRC EXIST
+     C     ApiName       ANDEQ     'CLIP'                                       And CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
      C                   MOVE      BBAAVOP       DDAVOP                          Default from
       *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   ENDSR
       *
@@ -783,6 +790,16 @@
      C                   ENDIF                                                   END valid
      C                   ENDIF                                                  END not blank
       *
+     C                   ELSE                                                   CLE172=OFF
+      *
+     C     DDAVOP        IFNE      *BLANKS                                      Not blank
+     C     DDAVOP        ANDNE      HAVOP                                       And not CLOANCL
+     C                   MOVE      'N'           DDAVOPOK
+     C                   ADD       1             Idx
+     C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
+     C                   MOVEL     '5049400'     MsgIdXAr(Idx)
+     C                   ENDIF
+      *
      C                   ENDIF                                                  END CLE172
       *
      C     DDAVOPOK      IFNE      'N'
@@ -800,20 +817,21 @@
       *
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
+     C     DDLBDY        IFEQ      *BLANKS                                      If blank
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HLBDY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDLBDY        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF                                         And BSRC EXIST
+     C     ApiName       ANDEQ     'CLIP'                                       And CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
      C                   Z-ADD     BBALBDY       WDAY                            Default from
      C                                                                           SDBSRTPD
-     C                   ENDIF                                                  END CLE172
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   ENDSR
       *
@@ -853,7 +871,7 @@
      C                   MOVE      @@AMT         WDAY
       *
      C     VBLRT         IFNE      'Y'
-     C     WDAY          ANDNE     *ZEROS
+     C     WDAY          ANDNE     0
       *
       ** Backward-Looking Rate is N and Lookback Days is not 0
       *
@@ -868,6 +886,7 @@
      C                   ENDIF                                                  END CLE172
       *
      C     DDLBDYOK      IFNE      'N'
+     C                   MOVE      WDAY          DDLBDY
      C                   Z-ADD     WDAY          VLBDY
      C                   ENDIF
       *
@@ -882,20 +901,22 @@
       *
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
+     C     DDLODY        IFEQ      *BLANKS                                      If blank
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HLODY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDLODY        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF                                         And BSRC EXIST
+     C     ApiName       ANDEQ     'CLIP'                                       And CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBALODY       WDAY                            Default from
       *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   ENDSR
       *
@@ -950,6 +971,7 @@
      C                   ENDIF                                                  END CLE172
       *
      C     DDLODYOK      IFNE      'N'
+     C                   MOVE      WDAY          DDLODY
      C                   Z-ADD     WDAY          VLODY
      C                   ENDIF
       *
@@ -962,20 +984,26 @@
       *****************************************************************
      C     SDWGHT        BEGSR
       *
+     C     DDWGHT        IFEQ      *BLANKS                                      If blank
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HWGHT         DDWGHT                          Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     ApiName       ANDEQ     'CLIP'
-     C     DDWGHT        ANDEQ     *BLANKS
-     C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
       *
-     C     DDAVOP        IFEQ      '1'                                          And AVOP=1/2
-     C     DDAVOP        OREQ      '2'
+     C     *IN30         IFEQ      *OFF                                         If BSRC EXIST
+     C     ApiName       ANDEQ     'CLIP'                                       And CLIP
+     C     *IN29         ANDEQ     *ON                                          And INSERT
      C                   MOVE      BBAWGHT       DDWGHT                          Default from
       *                                                                          SDBSRTPD
+     C                   ENDIF
+      *
+     C     DDWGHT        IFEQ      *BLANKS                                      If still blank
+     C     DDAVOP        ANDEQ     '1'                                          And AVOP=1/2
+     C     DDWGHT        OREQ      *BLANKS
+     C     DDAVOP        ANDEQ     '2'
+     C                   MOVE      '1'           DDWGHT                          Default 1
      C                   ENDIF
       *
      C                   ENDIF                                                  END CLE172
@@ -1045,19 +1073,21 @@
       *
      C                   Z-ADD     0             WNumBadj                       Reset WNumBadj
       *
+     C     DDBADJ        IFEQ      *BLANKS                                      If blank
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   Z-ADD     HBADJ         WNumBadj                        Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDBADJ        ANDEQ     *BLANKS
-     C     ApiName       ANDEQ     'CLIP'
+     C     *IN30         ANDEQ     *OFF                                         And BSRT EXIST
+     C     ApiName       ANDEQ     'CLIP'                                       And CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
-      *
      C                   Z-ADD     BBABADJ       WNumBadj                        Default from
       *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDIF                                                  END blank
       *
      C                   ENDSR
       *
@@ -1134,20 +1164,21 @@
       *
      C                   Z-ADD     0             WDAY                           Reset WDAY
       *
+     C     DDPDLY        IFEQ      *BLANKS
+      *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
-     C     DDLBDY        ANDEQ     *BLANKS
      C                   Z-ADD     HPDLY         WDAY                            Default from
      C                   ENDIF                                                   CLOANCL
       *
      C     CLE172        IFEQ      'Y'                                          CLE172=ON
-     C     DDPDLY        ANDEQ     *BLANKS
+     C     *IN30         ANDEQ     *OFF
      C     ApiName       ANDEQ     'CLIP'
      C     *IN29         ANDEQ     *ON                                          And INSERT
-     C     *IN30         ANDEQ     *OFF
       *
      C                   Z-ADD     BBAPDLY       WDAY                            Default from
       *                                                                          SDBSRTPD
      C                   ENDIF                                                  END CLE172
+     C                   ENDIF
 	  *
      C                   ENDSR
       *
@@ -1202,6 +1233,7 @@
      C                   ENDIF                                                  END CLE172
       *
      C     DDPDLYOK      IFNE      'N'
+     C                   MOVE      WDAY          DDPDLY
      C                   Z-ADD     WDAY          VPDLY
      C                   ENDIF
       *
@@ -1694,7 +1726,7 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNDLY         VNDLY                           Default from
+     C                   MOVE      HNLDY         VNDLY                           Default from
      C                   ELSE                                                    CLOANCL
       *                                                                         If INSERT
      C                   Z-ADD     0             VNDLY                           Default: 0
@@ -1714,7 +1746,7 @@
      C                   IF        FreshRO = 'Y'
      C                   MOVE      HPDLY         WDAY
      C                   ELSE
-     C                   MOVE      HNDLY         WDAY
+     C                   MOVE      HNLDY         WDAY
      C                   ENDIF
       *
       ** If Base Rate Code was changed, default from SDBSRTPD

@@ -289,8 +289,6 @@
      D ArrayRtSp       S              1A   DIM(12)                                          MD034449
       * Incoming Spread Rate in screen format                                               MD034449
                                                                                             MD034449
-     D ArrayBadj       S              1A   DIM(17)                                            CLE172
-      *** Benchmark Adjustment in screen format                                               CLE172
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE025
      D SCA_LCD       E                     EXTFLD(LCD)                                        CLE025
                                                                                               CLE025
@@ -298,12 +296,12 @@
      D PCNEXT          S              8A                                                      CLE148
       ** LOAM Backward-Looking Rate Screen Fields                                             CLE172
      D LoamScnBlrt     DS            23                                                       CLE172
-     D  DDAVOP                 1      1A                                                      CLE172
-     D  DDLBDY                 2      3A                                                      CLE172
-     D  DDLODY                 4      5A                                                      CLE172
-     D  DDWGHT                 6      6A                                                      CLE172
-     D  DDBADJ                 7     21A                                                      CLE172
-     D  DDPDLY                21     22A                                                      CLE172
+     D  DDAVOP                 1      1                                                       CLE172
+     D  DDLBDY                 2      3                                                       CLE172
+     D  DDLODY                 4      5                                                       CLE172
+     D  DDWGHT                 6      6                                                       CLE172
+     D  DDBADJ                 7     21                                                       CLE172
+     D  DDPDLY                22     23                                                       CLE172
                                                                                               CLE172
       ** LOAM Backward-Looking Rate Valid Fields                                              CLE172
      D LoamValBlrt     DS                                                                     CLE172
@@ -635,9 +633,6 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
-                                                                                              CLE172
-     D IntBadj         S              5A                                                      CLE172
-     D DecBadj         S              8A                                                      CLE172
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -893,10 +888,6 @@
      C                   EXSR      SRPDCL                                                     CLE134
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
-      ** If no errors set up fields of the valid file
-     C                   IF        Idx = 0
-     C                   EXSR      SetupValid
-     C                   ENDIF
       *                                                                                       CLE172
       ***  Validate backward-looking rate fields for BC loan event                            CLE172
       *                                                                                       CLE172
@@ -909,6 +900,10 @@
      C     DDATYP        IFEQ      'SC'                                                       CLE172
      C                   EXSR      SRBLRTE1                                                   CLE172
      C                   ENDIF                                                                CLE172
+      ** If no errors set up fields of the valid file
+     C                   IF        Idx = 0
+     C                   EXSR      SetupValid
+     C                   ENDIF
       *
       /COPY WNCPYSRC,LELOAMV018
       *
@@ -5335,9 +5330,9 @@
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'LOAM'        ApiName           4                          CLE172
-     C                   PARM                    LACCY                                        CLE172
-     C                   PARM                    LABRTT                                       CLE172
-     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      *BLANKS       TMPCY             3                          CLE172
+     C                   PARM      *BLANKS       TMPBRT            2                          CLE172
+     C                   PARM                    DDLOAN                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172
@@ -5358,21 +5353,6 @@
      C                   MOVEL     WLALBDY       DDLBDY                                       CLE172
      C                   MOVEL     WLALODY       DDLODY                                       CLE172
      C                   MOVEL     WLAWGHT       DDWGHT                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     WLABADJ       IntBadj                                      CLE172
-     C                   MOVE      WLABADJ       DecBadj                                      CLE172
-     C     WLABADJ       IFLT      0                                                          CLE172
-     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
-     C                   MOVEA     DL_BNDCSP     ArrayBadj(7)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
-     C                   ELSE                                                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
-     C                   MOVEA     DL_BNDCSP     ArrayBadj(6)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
-     C                   ENDIF                                                                CLE172
-     C                   MOVEA     ArrayBadj     DDBADJ                                       CLE172
-      *                                                                                       CLE172
      C                   MOVEL     WLAPDLY       DDPDLY                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
@@ -5387,9 +5367,9 @@
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'LOSC'        ApiName           4                          CLE172
-     C                   PARM                    LACCY                                        CLE172
-     C                   PARM                    LABRTT                                       CLE172
-     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      *BLANKS       TMPCY             3                          CLE172
+     C                   PARM      *BLANKS       TMPBRT            2                          CLE172
+     C                   PARM                    DDLOAN                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172
@@ -5400,20 +5380,6 @@
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
      C                   MOVEL     TempOutDS     LoamValBlrt                                  CLE172
      C                   Z-ADD     WLABADJ       LABADJ                                       CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     WLABADJ       IntBadj                                      CLE172
-     C                   MOVE      WLABADJ       DecBadj                                      CLE172
-     C     WLABADJ       IFLT      0                                                          CLE172
-     C                   MOVEA     '-'           ArrayBadj(1)                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CLE172
-     C                   MOVEA     DL_BNDCSP     ArrayBadj(7)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CLE172
-     C                   ELSE                                                                 CLE172
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CLE172
-     C                   MOVEA     DL_BNDCSP     ArrayBadj(6)                                 CLE172
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CLE172
-     C                   ENDIF                                                                CLE172
-     C                   MOVEA     ArrayBadj     DDBADJ                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172

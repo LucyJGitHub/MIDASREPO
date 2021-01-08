@@ -383,9 +383,9 @@
      C**********                        Loa2ScnFmt + S_REC + S_PAY +                   247171 CSF011
      C                                  Loa2ScnFmt +                                         CSF011A
      C                                  S_REC + S_PAY +                                       CSF011
-     C**********                        InfData + ExtData                                     247171
-     C                                  InfData + ExtData +                          CLE172   247171
-     C                                  LoamScnBlrt                                  CLE172
+     C**********                        InfData + ExtData                        CLE172       247171
+     C                                  InfData + LoamScnBlrt +                  CLE172
+     C                                  ExtData                                  CLE172
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************

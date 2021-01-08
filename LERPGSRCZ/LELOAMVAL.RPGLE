@@ -888,10 +888,6 @@
      C                   EXSR      SRPDCL                                                     CLE134
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
-      ** If no errors set up fields of the valid file
-     C                   IF        Idx = 0
-     C                   EXSR      SetupValid
-     C                   ENDIF
       *                                                                                       CLE172
       ***  Validate backward-looking rate fields for BC loan event                            CLE172
       *                                                                                       CLE172
@@ -904,6 +900,10 @@
      C     DDATYP        IFEQ      'SC'                                                       CLE172
      C                   EXSR      SRBLRTE1                                                   CLE172
      C                   ENDIF                                                                CLE172
+      ** If no errors set up fields of the valid file
+     C                   IF        Idx = 0
+     C                   EXSR      SetupValid
+     C                   ENDIF
       *
       /COPY WNCPYSRC,LELOAMV018
       *
@@ -5330,9 +5330,9 @@
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'LOAM'        ApiName           4                          CLE172
-     C                   PARM                    LACCY                                        CLE172
-     C                   PARM                    LABRTT                                       CLE172
-     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      *BLANKS       TMPCY             3                          CLE172
+     C                   PARM      *BLANKS       TMPBRT            2                          CLE172
+     C                   PARM                    DDLOAN                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172
@@ -5367,9 +5367,9 @@
       *                                                                                       CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'LOSC'        ApiName           4                          CLE172
-     C                   PARM                    LACCY                                        CLE172
-     C                   PARM                    LABRTT                                       CLE172
-     C                   PARM                    LALNRF                                       CLE172
+     C                   PARM      *BLANKS       TMPCY             3                          CLE172
+     C                   PARM      *BLANKS       TMPBRT            2                          CLE172
+     C                   PARM                    DDLOAN                                       CLE172
      C                   PARM      LoamScnBlrt   TempInpDS       200                          CLE172
      C                   PARM                    Idx                                          CLE172
      C                   PARM                    FldNameArr                                   CLE172

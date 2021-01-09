@@ -576,12 +576,12 @@
       ** LERI Backward-Looking Rate Valid Fields                                              CLE172
       *                                                                                       CLE172
      D LeriValBlrt     DS                                                                     CLE172
-     D   VNVOP                 1      1A                                                      CLE172
-     D   VNBDY                 2      3S 0                                                    CLE172
-     D   VNODY                 4      5S 0                                                    CLE172
-     D   VNGHT                 6      6A                                                      CLE172
-     D   VNADJ                 7     13P 8                                                    CLE172
-     D   VNDLY                14     15S 0                                                    CLE172
+     D   VNVOPB                1      1A                                                      CLE172
+     D   VNBDYB                2      3S 0                                                    CLE172
+     D   VNODYB                4      5S 0                                                    CLE172
+     D   VNGHTB                6      6A                                                      CLE172
+     D   VNADJB                7     13P 8                                                    CLE172
+     D   VNDLYB               14     15S 0                                                    CLE172
       *                                                                                       CLE172
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
@@ -727,7 +727,10 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
                                                                                             MD000091
+     D ArrayNadj       S              1A   DIM(15)                                            CLE172
      D WNumNadj        S             13P 8                                                    CLE172
+     D IntNadj         S              5A                                                      CLE172
+     D DecNadj         S              8A                                                      CLE172
      D WSign           S              1A                                                      CLE172
       *                                                                                       CLE172
       ** +--------------------------------------+
@@ -1718,12 +1721,12 @@
       *
       ** Update Backward-Looking Rate Fields
       *
-     C                   MOVEL     VNVOP         L_CLNVOP                                     CLE172
-     C                   Z-ADD     VNBDY         L_CLNBDY                                     CLE172
-     C                   Z-ADD     VNODY         L_CLNODY                                     CLE172
-     C                   MOVEL     VNGHT         L_CLNGHT                                     CLE172
-     C                   Z-ADD     VNADJ         L_CLNADJ                                     CLE172
-     C                   Z-ADD     VNDLY         L_CLNDLY                                     CLE172
+     C                   MOVEL     VNVOPB        L_CLNVOP                                     CLE172
+     C                   Z-ADD     VNBDYB        L_CLNBDY                                     CLE172
+     C                   Z-ADD     VNODYB        L_CLNODY                                     CLE172
+     C                   MOVEL     VNGHTB        L_CLNGHT                                     CLE172
+     C                   Z-ADD     VNADJB        L_CLNADJ                                     CLE172
+     C                   Z-ADD     VNDLYB        L_CLNDLY                                     CLE172
       *
       **  Update fields from CLOANCK - Valid file
       *
@@ -7009,11 +7012,43 @@
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
      C                   MOVEL     TempOutDS     LeriValBlrt                                  CLE172
       *                                                                                       CLE172
-     C                   MOVE      VNVOP         DDNVOP                                       CLE172
-     C                   MOVE      VNBDY         DDNBDY                                       CLE172
-     C                   MOVE      VNODY         DDNODY                                       CLE172
-     C                   MOVE      VNGHT         DDNGHT                                       CLE172
-     C                   MOVE      VNDLY         DDNDLY                                       CLE172
+     C                   MOVE      VNVOPB        DDNVOPB                                      CLE172
+     C                   MOVE      VNBDYB        DDNBDYB                                      CLE172
+     C                   MOVE      VNODYB        DDNODYB                                      CLE172
+     C                   MOVE      VNGHTB        DDNGHTB                                      CLE172
+     C                   MOVE      VNADJB        DDNADJB                                      CLE172
+      *
+     C                   Z-ADD     VNADJB        WNumNadj                                     CLE172
+     C     VNADJB        IFLT      0                                                          CLE172
+     C                   Z-SUB     WNumNadj      WNumNadj                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   MOVEL     WNumNadj      IntNadj                                      CLE172
+     C                   MOVE      WNumNadj      DecNadj                                      CLE172
+     C     VNADJB        IFLT      0                                                          CLE172
+     C                   MOVEA     '-'           ArrayNadj(1)                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(2)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayNadj(7)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(8)                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEA     IntNadj       ArrayNadj(1)                                 CLE172
+     C                   MOVEA     DL_BNDCSP     ArrayNadj(6)                                 CLE172
+     C                   MOVEA     DecNadj       ArrayNadj(7)                                 CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVE      *BLANKS       @@ALPH                                       CLE172
+     C                   MOVEA     ArrayNadj     @@ALPH                                       CLE172
+     C                   CALLB     'ZA0841'                                                   CLE172
+     C                   PARM      *BLANK        RetCodeOut                                   CLE172
+     C                   PARM                    @@ALPH                         Display field CLE172
+     C                   PARM      8             @@IDP                          no.of dec.plcsCLE172
+     C                   PARM      5             @@IINT                         no.of integersCLE172
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CLE172
+     C                   PARM      *ZERO         @@ERCD                         Error code    CLE172
+     C                   PARM      *ZERO         @@AMT                          File field    CLE172
+     C                   PARM                    DL_BNDCSP                                    CLE172
+      *                                                                                       CLE172
+     C                   MOVE      @@ALPH        DDNADJB                                      CLE172
+     C                   MOVE      VNDLYB        DDNDLYB                                      CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172

@@ -273,7 +273,6 @@
       ** Other work fields
       *
      D WFCALB          S              1S 0
-     D FreshRO         S              1A
 
       *
       ** Generic screen fields
@@ -467,8 +466,6 @@
       *
      C                   EXSR      SDBLRT
      C                   EXSR      SRBLRT
-      *
-     C                   EXSR      SRFRSHRO
       *
      C                   EXSR      SDNVOP
      C                   EXSR      SRNVOP
@@ -735,7 +732,7 @@
       *****************************************************************
      C     SDAVOP        BEGSR
       *
-     C     *DDAVOP       IFEQ      *BLANKS                                      If blank
+     C     DDAVOP        IFEQ      *BLANKS                                      If blank
       *
      C     *IN29         IFEQ      *OFF                                         If LOAN EXIST
      C                   MOVE      HAVOP         DDAVOP                          Default from
@@ -793,7 +790,7 @@
      C                   ELSE                                                   CLE172=OFF
       *
      C     DDAVOP        IFNE      *BLANKS                                      Not blank
-     C     DDAVOP        ANDNE      HAVOP                                       And not CLOANCL
+     C     DDAVOP        ANDNE     HAVOP                                        And not CLOANCL
      C                   MOVE      'N'           DDAVOPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDAVOP'      FldNamXAr(Idx)
@@ -1007,6 +1004,8 @@
      C                   ENDIF
       *
      C                   ENDIF                                                  END CLE172
+      *
+     C                   ENDIF                                                  End blank
       *
      C                   ENDSR
       *
@@ -1257,20 +1256,17 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNVOP = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HAVOP         DDNVOP
-     C                   ELSE
-     C                   MOVE      HNVOP         DDNVOP
+     C                   IF        *IN29 = *OFF
+     C                   EVAL      DDNVOP = HNVOP
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+      ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   ELSE
-     C                   MOVE      BBAAVOP       DDNVOP
+     C                   IF        CLE172 = *ON
+      *
+     C                   EVAL      DDNVOP = BBAAVOP
       *
      C                   ENDIF
       *
@@ -1345,20 +1341,17 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HLBDY         WDAY
-     C                   ELSE
-     C                   MOVE      HNBDY         WDAY
+     C                   IF        *IN29 = *OFF
+     C                   EVAL      WDAY = HNBDY
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+      ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   ELSE
-     C                   MOVE      BBALBDY       WDAY
+     C                   IF        CLE172 = *ON
+      *
+     C                   EVAL      WDAY = BBALBDY
       *
      C                   ENDIF
       *
@@ -1444,20 +1437,17 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HLODY         WDAY
-     C                   ELSE
-     C                   MOVE      HNODY         WDAY
+     C                   IF        *IN29 = *OFF
+     C                   EVAL      WDAY = HNODY
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+      ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   ELSE
-     C                   MOVE      BBALODY       WDAY
+     C                   IF        CLE172 = *ON
+      *
+     C                   EVAL      WDAY = BBALODY
       *
      C                   ENDIF
       *
@@ -1539,20 +1529,20 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNGHT = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HWGHT         DDNGHT
-     C                   ELSE
-     C                   MOVE      HNGHT         DDNGHT
+     C                   IF        *IN29 = *OFF AND DDNVOP <> '3' AND
+     C                             DDNVOP <> '4'
+     C                   EVAL      DDNGHT = HNGHT
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+     C                   IF        CLE172 = 'Y'
       *
-     C                   ELSE
-     C                   MOVE      BBAWGHT       DDNGHT
+      ** Default to 1 only if blank and Averaging option is 1 or 2
+      *
+     C                   IF        DDNVOP = '1' OR DDNVOP = '2'
+     C                   EVAL      DDNGHT = '1'
+     C                   ENDIF
       *
      C                   ENDIF
       *
@@ -1632,20 +1622,17 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNADJ = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HBADJ         WNumNadj
-     C                   ELSE
-     C                   MOVE      HNADJ         WNumNadj
+     C                   IF        *IN29 = *OFF
+     C                   EVAL      WNumNadj = HNADJ
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+      ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   ELSE
-     C                   MOVE      BBABADJ       WNumNadj
+     C                   IF        CLE172 = *ON
+      *
+     C                   EVAL      WNumNadj = BBABADJ
       *
      C                   ENDIF
       *
@@ -1739,20 +1726,17 @@
       *
      C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
       *
-      ** If Base Rate Code is unchanged, default from CLOANCL
+      ** Initially default from CLOANCL. Retained if CLE172 is off
       *
-     C                   IF        WFBSRC = HNBRA
-      *
-     C                   IF        FreshRO = 'Y'
-     C                   MOVE      HPDLY         WDAY
-     C                   ELSE
-     C                   MOVE      HNLDY         WDAY
+     C                   IF        *IN29 = *OFF
+     C                   EVAL      WDAY = HNDLY
      C                   ENDIF
       *
-      ** If Base Rate Code was changed, default from SDBSRTPD
+      ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   ELSE
-     C                   MOVE      BBAPDLY       WDAY
+     C                   IF        CLE172 = *ON
+      *
+     C                   EVAL      WDAY = BBAPDLY
       *
      C                   ENDIF
       *
@@ -1970,26 +1954,6 @@
      C                   MOVE      HPIAD         VPIAD
      C                   ELSE
      C                   MOVE      0             VPIAD
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRFRSHRO - Subroutine for determining if the transaction is  *
-      *             the first Rollover Event for the Loan Reference   *
-      *                                                               *
-      *****************************************************************
-     C     SRFRSHRO      BEGSR
-      *
-      ** Since NVOP is a mandatory field for backward-looking rates,
-      ** it is used to determine if a rollover event exists for the loan
-      *
-     C                   IF        HNVOP = *BLANKS
-     C                   EVAL      FreshRO = 'Y'
-     C                   ELSE
-     C                   EVAL      FreshRO = 'N'
      C                   ENDIF
       *
      C                   ENDSR

@@ -1295,7 +1295,7 @@
       *
      C                   MOVE      'N'           DDNVOPOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNVOPB'     FldNamXAr(Idx)
+     C                   MOVEL     'DDNVOP'      FldNamXAr(Idx)
      C                   MOVEL     '5049403'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
@@ -1305,7 +1305,7 @@
       *
      C                   MOVE      'N'           DDNVOPOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNVOPB'     FldNamXAr(Idx)
+     C                   MOVEL     'DDNVOP'      FldNamXAr(Idx)
      C                   MOVEL     '5049405'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1572,7 +1572,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
      C                   MOVEL     '5049408'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
@@ -1582,7 +1582,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
      C                   MOVEL     '5049455'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1593,7 +1593,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
      C                   MOVEL     '5049453'     MsgIdXAr(Idx)
      C                   ENDIF
       *

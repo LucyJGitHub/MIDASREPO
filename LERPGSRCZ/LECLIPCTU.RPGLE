@@ -287,7 +287,6 @@
       * FRA/IRS Settlement Instructions - Current
      D C_FRI         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
 
-
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS

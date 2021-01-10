@@ -325,7 +325,7 @@
      D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE172
       ** Incoming Backward-Looking Rate Fields                                                CLE172
      D TranScnBlrt     DS            43                                                       CLE172
-                                                                                              CLE172
+
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(VL_)
@@ -409,7 +409,6 @@
 
       * FRA/IRS Settlement Instructions - Current
      D C_FRA         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
-
 
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid

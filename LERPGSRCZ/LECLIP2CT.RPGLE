@@ -150,7 +150,6 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
-      *
      D LoanFilFmtCL  E DS                  EXTNAME(CLOANCL)
       ***  Loan in file Format CL
       *

@@ -939,7 +939,8 @@
      C                   MOVEL     *BLANK        NwLnScnFmt2
      C                   MOVEL     *BLANK        NwLnScnFmt3
      C                   MOVEL     *BLANK        NwLnScnFmt4
-     C                   MOVEL     *BLANK        TranScnBlrt
+     C                   MOVEL     *BLANK        NwLnScnFmt7                                  CLE172
+     C                   MOVEL     *BLANK        TranScnBlrt                                  CLE172
       *
       ***  Reset errors
       *

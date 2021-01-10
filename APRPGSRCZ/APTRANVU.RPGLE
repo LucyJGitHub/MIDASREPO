@@ -6065,7 +6065,7 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                     MD054028
      C                   Z-ADD     24            CLCR50Ln          4 0                      MD054028
       *                                                                                       CLE172
-     C                   Z-ADD     41            CLBSRTLn          4 0                        CLE172
+     C                   Z-ADD     43            CLBSRTLn          4 0                        CLE172
                                                                                               CER049
      C                   MOVEL     *BLANKS       FileName                                     CER049
      C                   MOVEL     'LESTMP2PD'   FileName                                     CER049

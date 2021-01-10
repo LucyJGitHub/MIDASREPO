@@ -357,7 +357,7 @@
      C                   MOVEA     ArrayInp(8)   DDBADJ
      C                   MOVEA     ArrayInp(23)  DDAVOP
      C                   MOVEA     ArrayInp(24)  DDCART
-     C                   MOVEA     ArrayInp(38)  DDWGHT
+     C                   MOVEA     ArrayInp(39)  DDWGHT
       *
      C                   EXSR      SDBLRT
      C                   EXSR      SRBLRT

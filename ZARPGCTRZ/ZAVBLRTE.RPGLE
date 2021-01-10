@@ -1254,7 +1254,8 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNVOP = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNVOP = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1264,7 +1265,7 @@
       *
       ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   IF        CLE172 = *ON
+     C                   IF        CLE172 = 'Y'
       *
      C                   EVAL      DDNVOP = BBAAVOP
       *
@@ -1294,7 +1295,7 @@
       *
      C                   MOVE      'N'           DDNVOPOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNVOP'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNVOPB'     FldNamXAr(Idx)
      C                   MOVEL     '5049403'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
@@ -1304,7 +1305,7 @@
       *
      C                   MOVE      'N'           DDNVOPOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNVOP'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNVOPB'     FldNamXAr(Idx)
      C                   MOVEL     '5049405'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1339,7 +1340,8 @@
       *
      C                   Z-ADD     0             WDAY
       *
-     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNBDY = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1349,7 +1351,7 @@
       *
       ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   IF        CLE172 = *ON
+     C                   IF        CLE172 = 'Y'
       *
      C                   EVAL      WDAY = BBALBDY
       *
@@ -1389,7 +1391,7 @@
       *
      C                   MOVE      'N'           DDNBDYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNBDY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNBDYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049423'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
      C                   MOVE      @@AMT         WDAY
@@ -1401,7 +1403,7 @@
       *
      C                   MOVE      'N'           DDNBDYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNBDY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNBDYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049420'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1435,7 +1437,8 @@
       *
      C                   Z-ADD     0             WDAY
       *
-     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNODY = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1445,7 +1448,7 @@
       *
       ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   IF        CLE172 = *ON
+     C                   IF        CLE172 = 'Y'
       *
      C                   EVAL      WDAY = BBALODY
       *
@@ -1485,7 +1488,7 @@
       *
      C                   MOVE      'N'           DDNODYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNODY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNODYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049424'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
      C                   MOVE      @@AMT         WDAY
@@ -1497,7 +1500,7 @@
       *
      C                   MOVE      'N'           DDNODYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNODY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNODYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049421'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1527,7 +1530,8 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNGHT = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNGHT = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1568,7 +1572,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
      C                   MOVEL     '5049408'     MsgIdXAr(Idx)
      C                   ELSE                                                    If valid
       *
@@ -1578,7 +1582,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
      C                   MOVEL     '5049455'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1589,7 +1593,7 @@
       *
      C                   MOVE      'N'           DDNGHTOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNGHT'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNGHTB'     FldNamXAr(Idx)
      C                   MOVEL     '5049453'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1620,7 +1624,8 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C                   IF        ApiName = 'LERI' AND DDNADJ = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNADJ = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1630,7 +1635,7 @@
       *
       ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   IF        CLE172 = *ON
+     C                   IF        CLE172 = 'Y'
       *
      C                   EVAL      WNumNadj = BBABADJ
       *
@@ -1668,7 +1673,7 @@
       *
      C                   MOVE      'N'           DDNADJOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNADJ'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNADJB'     FldNamXAr(Idx)
      C                   MOVEL     '5049426'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
       *
@@ -1692,7 +1697,7 @@
       *
      C                   MOVE      'N'           DDNADJOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNADJ'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNADJB'     FldNamXAr(Idx)
      C                   MOVEL     '5049401'     MsgIdXAr(Idx)
      C                   ENDIF
       *
@@ -1713,7 +1718,7 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNLDY         VNDLY                           Default from
+     C                   MOVE      HNDLY         VNDLY                           Default from
      C                   ELSE                                                    CLOANCL
       *                                                                         If INSERT
      C                   Z-ADD     0             VNDLY                           Default: 0
@@ -1724,7 +1729,8 @@
       *
      C                   Z-ADD     0             WDAY
       *
-     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS
+     C                   IF        ApiName = 'LERI' AND DDNDLY = *BLANKS AND
+     C                             VBLRT = 'Y'
       *
       ** Initially default from CLOANCL. Retained if CLE172 is off
       *
@@ -1734,7 +1740,7 @@
       *
       ** Default from SDBSRTPD if CLE172 is on
       *
-     C                   IF        CLE172 = *ON
+     C                   IF        CLE172 = 'Y'
       *
      C                   EVAL      WDAY = BBAPDLY
       *
@@ -1774,7 +1780,7 @@
       *
      C                   MOVE      'N'           DDNDLYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNDLY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNDLYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049425'     MsgIdXAr(Idx)
      C                   ELSE                                                    If numeric
      C                   MOVE      @@AMT         WDAY
@@ -1786,7 +1792,7 @@
       *
      C                   MOVE      'N'           DDNDLYOK
      C                   ADD       1             Idx
-     C                   MOVEL     'DDNDLY'      FldNamXAr(Idx)
+     C                   MOVEL     'DDNDLYB'     FldNamXAr(Idx)
      C                   MOVEL     '5049422'     MsgIdXAr(Idx)
      C                   ENDIF
       *

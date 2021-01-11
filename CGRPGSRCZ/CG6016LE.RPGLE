@@ -703,20 +703,6 @@
      C                   EXSR      PSHGRS
      C*
      C                   Z-ADD     0             R1                3 0
-      *                                                                                       CLE172
-      ** Init New Fields LIBOR                                                                CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     *BLANKS       BLRT              1                          CLE172
-     C                   MOVEL     *BLANKS       LBDY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       LODY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       PDLY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       BADJ             13 8                        CLE172
-     C                   MOVEL     *BLANKS       WGHT              1                          CLE172
-     C                   MOVEL     *BLANKS       BRAC              1 0                        CLE172
-     C                   MOVEL     *BLANKS       LBAC              2 0                        CLE172
-     C                   MOVEL     *BLANKS       PRPL             22 0                        CLE172
-     C                   MOVEL     *BLANKS       AVOP              1                          CLE172
-     C                   MOVEL     *BLANKS       CART             2015                        CLE172
      C*
      C** Loan Reference
      C*

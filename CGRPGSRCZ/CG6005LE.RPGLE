@@ -1186,23 +1186,6 @@
      C                   EXSR      PSHGRS
      C*
      C                   Z-ADD     0             R1                3 0
-      *                                                                                       CLE172
-      ** Init New Fields LIBOR                                                                CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     *BLANKS       BLRT              1                          CLE172
-     C                   MOVEL     *BLANKS       LBDY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       LODY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       PDLY              2 0                        CLE172
-     C                   MOVEL     *BLANKS       BADJ             13 8                        CLE172
-     C                   MOVEL     *BLANKS       WGHT              1                          CLE172
-     C                   MOVEL     *BLANKS       BRAC              1 0                        CLE172
-     C                   MOVEL     *BLANKS       LBAC              2 0                        CLE172
-     C                   MOVEL     *BLANKS       PRPL             22 0                        CLE172
-     C                   MOVEL     *BLANKS       AVOP              1                          CLE172
-     C                   MOVEL     *BLANKS       CART             2015                        CLE172
-     C                   MOVEL     *BLANKS       LICA             13 8                        CLE172
-     C                   MOVEL     *BLANKS       ITAC             13 8                        CLE172
-     C                   MOVEL     *BLANKS       ITAM             13 8                        CLE172
      C*
      C**  Base Rate Name.
      C*
@@ -3403,45 +3386,6 @@
      C                   MOVEL     'PRINCIPA'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
      C                   MOVEL     PRPL          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Line Items                                                                           CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'S'           #@RDE                                        CLE172
-     C                   MOVEL     'LINEITEM'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     LICA          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Interest Amounts Accrued For Each Day                                                CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'D'           #@RDE                                        CLE172
-     C                   MOVEL     'INTACCRE'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     ITAC          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Interest                                                                             CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'T'           #@RDE                                        CLE172
-     C                   MOVEL     'INTAMOUN'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     ITAM          R#DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *

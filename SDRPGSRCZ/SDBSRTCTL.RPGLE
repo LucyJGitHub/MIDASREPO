@@ -834,6 +834,9 @@
      C                   Z-ADD     *ZERO         BVVDRC
      C                   Z-ADD     *ZERO         BVNBRT
      C                   Z-ADD     *ZERO         BVVDNR
+     C                   Z-ADD     *ZERO         BVLBDY                                       CSD103
+     C                   Z-ADD     *ZERO         BVLODY                                       CSD103
+     C                   Z-ADD     *ZERO         BVPDLY                                       CSD103
      C                   Z-ADD     *ZERO         BVBADJ                                       CSD103
 
      C                   ENDSR

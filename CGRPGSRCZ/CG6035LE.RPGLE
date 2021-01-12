@@ -1505,19 +1505,6 @@
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
-      ** Principal                                                                            CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'L'           #@RDE                                        CLE172
-     C                   MOVEL     'PRINCIPA'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     PRPL          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
      C*
      C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
      C*

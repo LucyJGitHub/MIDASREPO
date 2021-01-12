@@ -2523,18 +2523,21 @@
       *                                                                                      BUG3760
      C                   ENDIF                                                               BUG3760
                                                                                               CSC024
-      ** Check if enhancement CSC024 (Open Month End) is on                                   CSC024
+      ***Check*if*enhancement*CSC024*(Open*Month*End**is*on                          CSC024 MD055065
+      ** Check if enhancement CSC054 (Period End Adjustment) is on                          MD055065
                                                                                               CSC024
      C                   CALLB     'AOSARDR0'                                                 CSC024
      C                   PARM      *BLANKS       @RTCD                                        CSC024
      C                   PARM      '*VERIFY'     @OPTN                                        CSC024
-     C                   PARM      'CSC024'      @SARD                                        CSC024
+     C**********         PARM      'CSC024'      @SARD                               CSC024 MD055065
+     C                   PARM      'CSC054'      @SARD                                      MD055065
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC024
                                                                                               CSC024
      C                   IF        @RTCD <> *BLANKS AND                                       CSC024
      C                             @RTCD <> '*NRF   '                                         CSC024
      C                   EVAL      DBFile = 'SCSARDPD'                                        CSC024
-     C                   EVAL      DBKey  = 'CSC024'                                          CSC024
+     C**********         EVAL      DBKey  = 'CSC024'                                 CSC024 MD055065
+     C                   EVAL      DBKey  = 'CSC054'                                        MD055065
      C                   EVAL      DBase  = 3                                                 CSC024
      C                   EXSR      *PSSR                                                      CSC024
      C                   ENDIF                                                                CSC024

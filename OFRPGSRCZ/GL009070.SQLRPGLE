@@ -24,6 +24,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027208B - GLRTNOTD not updated by the time totals are      *
       *              calculated                                       *

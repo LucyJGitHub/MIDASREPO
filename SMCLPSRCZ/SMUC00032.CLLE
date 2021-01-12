@@ -9,14 +9,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD057289           Date 06Jan21             */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BG26993            Date 26Jan10              */
+/*                      BG26993            Date 26Jan10              */
 /*                      248369 *C *CREATE  Date 20Jun07              */
 /*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057289 - There is inconsistency with migration script     */
+/*                  SMUC00032 and GL0600 processing for newly opened */
+/*                  accounts.                                        */
+/*                - Clear PRFC value if Analytical Accounting is ON. */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG26993 - Delivery of upgrade programs to core.             */
 /*               - Renamed S248369C01.                               */
@@ -25,17 +30,35 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
- 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                   /*MD057289*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                          VALUE('*FIRST')                                               /*MD057289*/
+             DCL        VAR(&SDMMOD) TYPE(*CHAR) LEN(128)                               /*MD057289*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2005')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &SDMMOD)                         /*MD057289*/
+/**/                                                                                    /*MD057289*/
+/* Database error  */                                                                   /*MD057289*/
+/**/                                                                                    /*MD057289*/
+             IF         COND(&RTCD *NE '       ') THEN(DO)                              /*MD057289*/
+                SNDPGMMSG  MSG('Error on access to ICD file +
+                              SDMMODPD') TOMSGQ(MOPERQ)                                 /*MD057289*/
+                CHGJOB     JOB(XXXXXX11)                                                /*MD057289*/
+                GOTO       CMDLBL(ERROR)                                                /*MD057289*/
+             ENDDO                                                                      /*MD057289*/
+/**/                                                                                    /*MD057289*/
+/* Check if Analytical Accounting module is installed  */                               /*MD057289*/
+/**/                                                                                    /*MD057289*/
+             IF         COND(%SST(&SDMMOD 100 1) *EQ 'Y') THEN(DO)                      /*MD057289*/
 /* Build string to delete record. */
              CHGVAR     VAR(&STM_STR) VALUE('update ACCNTAB set +
                           PRFC =' *BCAT &QUOTE *BCAT &QUOTE *BCAT +
@@ -48,10 +71,12 @@
 /* ... and run the SQL. */
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
- 
+             ENDDO                                                                      /*MD057289*/
+/**/                                                                                    /*MD057289*/
+
              GOTO       CMDLBL(END)
- 
+
 ERROR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:         ENDPGM

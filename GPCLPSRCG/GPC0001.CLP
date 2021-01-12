@@ -163,9 +163,9 @@
 /**********      GOTO       CMDLBL(END) */                                       /*245526 AR957053*/
 /**********    ENDDO */                                                          /*245526 AR957053*/
                                                                                           /*245526*/
-               IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*245526*/
-                CALL       PGM(GLC005020)                                                 /*245526*/
-               ENDDO                                                                      /*245526*/
+/**********    IF         COND(&RTCD *EQ '       ') THEN(DO)                  */ /*245526 MD057401*/
+/**********     CALL       PGM(GLC005020)                                     */ /*245526 MD057401*/
+/**********    ENDDO                                                          */ /*245526 MD057401*/
              ENDDO                                                                        /*245526*/
                                                                                           /*245526*/
 /** Submit PEA Handshaking Jobs */                                                        /*CSC054*/

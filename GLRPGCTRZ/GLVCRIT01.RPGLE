@@ -353,7 +353,7 @@
      C                   Add       1             Idx
      C                   MoveL     'DDCACP'      FldNamXAr(Idx)
      C**********         MoveL     'RE71324'     MsgIDXAr(Idx)                              MD057244
-     C                   MoveL     'RE71421'     MsgIDXAr(Idx)                              MD057244
+     C                   MoveL     'RE71423'     MsgIDXAr(Idx)                              MD057244
      C                   ENDIF
      C                   ENDIF
      C                   END

@@ -29,7 +29,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD057401 - LEC2016 00001 loops during COB                   */
+/*       MD057401 - LEC2016 00001 loops during COB. Change feature   */
+/*                  CLE016 to CLE006, Change *BLANKS to '  ', comment*/
+/*                  out call to GLC005020.                           */
 /*       AR957053 - At MP1.4.11.06 IR01, GOC0122 00001 runs in COB if*/
 /*                  CLE106 and CLE016 are switched on (Pf/SCSARCPD). */
 /*                  Call EODMONITOR if these features are switched ON*/

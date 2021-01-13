@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD057444           Date 05Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057444 - Fixed negative value and buffer length for BADJ   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -205,7 +207,8 @@
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
+     D*BasRBckfld      DS            27                                              CSD103 MD057444
+     D BasRBckfld      DS            28                                                     MD057444
                                                                                               CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -318,6 +321,7 @@
 
       * Processing for deletes
      C                   WHEN         DDACTN = 'D'
+     C                   EXSR      ValidateBr                                                CSD103
      C                   CLEAR                   ValdBasRat
      C                   MOVEL     BasRFilFmt    ValdBasRat
      C                   EVAL      V_BVTYLC = DDACTN
@@ -337,11 +341,6 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
-     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469

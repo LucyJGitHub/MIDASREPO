@@ -34,7 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
       *  CER059 - German Feature Upgrade to Delhi                     *

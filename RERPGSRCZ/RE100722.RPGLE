@@ -31,7 +31,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *           (Recompile)                                         *

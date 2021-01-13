@@ -22,7 +22,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG28163 - Forward movements does not appear on PABE         *
       *             (Recompile due to GPCLEARPD reinstatement)        *

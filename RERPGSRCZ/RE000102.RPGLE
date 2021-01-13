@@ -32,7 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD022132C- Process all retail accounts.                      *
       *           - Applied for MD-35969.                             *
       *  MD022132 - Triggers don't pick up Rollback deletes of ABC    *

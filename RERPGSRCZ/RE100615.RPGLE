@@ -30,7 +30,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR976539 - Purge request fails. CAP204 should be reversed.   *
       *             (Child:AR976540)                                  *

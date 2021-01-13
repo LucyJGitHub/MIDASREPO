@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD051892           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
       *                 MD038593           Date 09Jun16               *
@@ -98,6 +99,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051892 - Proj settlement amnt calculated at defaulted rate *
@@ -1405,7 +1407,8 @@
       *                                                                                       CLE035
       ***  Determine rate                                                                     CLE035
       *                                                                                       CLE035
-     C                   IF        FC_LPBR <> 0                                               CLE035
+     C**********         IF        FC_LPBR <> 0                                        CLE035 CSD103
+     C                   IF        FC_LPBR <> *BLANKS                                         CSD103
       *                                                                                       CLE035
       ***  Read Base rate details                                                             CLE035
       *                                                                                       CLE035
@@ -1432,7 +1435,8 @@
       *
       ***  Determine rate
       *
-     C                   if        FC_LPBR <> 0
+     C**********         if        FC_LPBR <> 0                                               CSD103
+     C                   if        FC_LPBR <> *BLANKS                                         CSD103
       *
       ***  Read Base rate details
       *

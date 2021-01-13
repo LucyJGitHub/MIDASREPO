@@ -21,7 +21,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - API: Repeated Held Item reversals are allowed.   *
       *              Recompiled due to changed PF/HELDIHB.            *

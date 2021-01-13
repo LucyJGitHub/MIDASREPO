@@ -34,7 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR679670 - Apply fix 255837                                  *
       *  255837 - Fix overdraft validation.  Amend program so that    *

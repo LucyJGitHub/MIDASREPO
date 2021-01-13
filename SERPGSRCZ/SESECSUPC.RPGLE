@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -205,7 +208,7 @@
       ** Securities for file update - file format
      D NwSEFilFmt    E DS                  EXTNAME(SEVSECSPD)
       *
- 
+
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *
@@ -534,13 +537,13 @@
      C                   MOVEL     WProcErr      WMQError
      C                   MOVE      ARErrMod      WMQError
      C                   MOVEL     WMQError      PMQErrLong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMsgSndRtn
      C                   PARM                    PMQErrLong
      C                   PARM                    PDummyMsgID
      C                   PARM                    PDummyMsgF
- 
+
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARErrMod = *BLANK
      C                   OUT       APDUMP
@@ -662,13 +665,13 @@
       ** the file to prevent program processing the same record again.
      C                   IF        RetCodeOut = '*ERROR ' OR
      C                             RetCodeOut = '*RECUPD'
- 
+
      C     KSEVL1        CHAIN     SEVSECSL1                          02
       *
       ** Write details of record to error file (same format as SEVSECSPD).
      C                   WRITE     SEVSECSERR
      C                   DELETE    SEVSECSD1
- 
+
      C/COPY WNCPYSRC,SESECSUC03
       *                                                                                      LLN022A
       ** If Bank of England switched on DELETE record from valid extra                       LLN022A
@@ -714,15 +717,15 @@
       *
       ** Send message to system operator.
      C                   MOVEL     WDBerrUpd     PDBError
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMsgSndRtn
      C                   PARM                    PDBError
      C                   PARM                    PDummyMsgID
      C                   PARM                    PDummyMsgF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
       *
       ** Read valid security details.
@@ -738,7 +741,7 @@
      C                   PARM                    PLockStateE
      C                   PARM                    PMember
      C                   PARM                    PReturn
- 
+
      C                   ENDIF
       *
       ** End loop for data queue prompt.
@@ -748,7 +751,7 @@
       *
       ** Exit from program.
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -893,7 +896,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRtcd         IFEQ      *BLANK
      C                   MOVEL     'Y'           CSE007
      C                   ELSE
@@ -920,7 +923,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRtcd         IFEQ      *BLANK
      C                   MOVEL     'Y'           CEU017
      C                   ELSE
@@ -947,7 +950,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRtcd         IFEQ      *BLANK
      C                   MOVEL     'Y'           S01511
      C                   ELSE

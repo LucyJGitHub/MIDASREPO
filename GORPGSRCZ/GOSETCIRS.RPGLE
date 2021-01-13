@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11830           Date 11Aug06               *
+      *                 BUG11830           Date 11Aug06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR DEREGULATION - COMMON LAYER/STANDING DATA     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -36,28 +39,28 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D CIRS          E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -65,24 +68,24 @@
      C                   PARM                    CIRS
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -197,20 +200,20 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       **  Access Base Currency Decimal Places
- 
+
      C                   MOVEL     BJCYCD        @CYCD
      C                   EXSR      ACSCCY
      C                   MOVEL     A6NBDP        BaseCDP           1 0
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

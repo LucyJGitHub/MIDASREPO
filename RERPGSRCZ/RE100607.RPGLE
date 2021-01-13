@@ -34,7 +34,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR980046 - MEMOS and RSACMTPD is not updated. Reversed       *
       *             255387 because MEMOS and RSACMTPD should be       *

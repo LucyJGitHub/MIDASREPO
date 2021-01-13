@@ -55,7 +55,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *             (Recompile)                                       *
       *  MD056297 - Ensure GLACNTQD will be updated with SO projection*
       *  MD032170 - Ensure that GLACNTQD will be updated with the     *
       *             correct balance.                                  *

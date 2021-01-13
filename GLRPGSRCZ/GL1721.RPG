@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD052955           Date 15Jul19               *
-      *  Prev Amend No. MD033917           Date 19Feb18               *
+      *  Last Amend No. MD053990           Date 12Jan21               *
+      *  Prev Amend No. MD052955           Date 15Jul19               *
+      *                 MD033917           Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032075           Date 23Jun15               *
       *                 MD032027           Date 22Jan15               *
@@ -43,6 +44,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD053990 - GLC1721 Loan IQ data had invalid.                 *
+      *           - Validate account sequence.                        *
       *  MD052955 - COB - Failed Component GLC2000 00001              *
       *  MD033917 - Non retail account with blank transaction type    *
       *             reflected as having an Unpaid Item error          *
@@ -407,6 +410,8 @@
       *                                                                                       CGL160
      I              'CGL047DftTranType'   C         DFTTTY                                    CRE020
      I              'BlockAcCheck'        C         C#BLKA                                    247241
+      *                                                                                     MD053990
+     I              'Invalid Acct Seq '   C         NAR46                                   MD053990
       *
       **********************************************************************************************
       /EJECT
@@ -877,6 +882,17 @@
      C                     MOVELNAR03     ERNAR
      C                     EXSR RPTERR
      C                     ENDIF                           E2
+      *                                                                                     MD053990
+      **  Validate account sequence                                                         MD053990
+     C                     TESTN          BTACSN     21                                     MD053990
+     C                     MOVELBTACSN    ##ACSN                                            MD053990
+     C           *IN21     IFEQ *OFF                       B2                               MD053990
+     C           ##ACSN    ORLE 0                                                           MD053990
+     C           ##ACSN    ORGT 99                                                          MD053990
+     C                     MOVE 'Y'       FAIL                                              MD053990
+     C                     MOVELNAR46     ERNAR                                             MD053990
+     C                     EXSR RPTERR                                                      MD053990
+     C                     ENDIF                           E2                               MD053990
       *
       **  Check if account exists if branch & currency are valid
      C           *IN07     IFEQ *OFF                       B2

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
@@ -527,6 +529,10 @@
      D                                     PREFIX(DL_)                                      MD034449
       ** External DS for Dealing Details                                                    MD034449
                                                                                             MD034449
+     D SDLIBF        E DS                  EXTNAME(SDLIBRFLD)                                 CLE172
+     D                                     PREFIX(LB)                                         CLE172
+      ** External DS for LIBOR field Details                                                  CLE172
+                                                                                              CLE172
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -803,6 +809,39 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       *                                                                                     MD000091
+      ** CLIP Backward-Looking Rate Screen Fields                                             CLE172
+     D LoanScnBlrt     DS            43                                                       CLE172
+     D  DDBLRT                 1      1A                                                      CLE172
+     D  DDLBDY                 2      3A                                                      CLE172
+     D  DDLODY                 4      5A                                                      CLE172
+     D  DDPDLY                 6      7A                                                      CLE172
+     D  DDBADJ                 8     22A                                                      CLE172
+     D  DDAVOP                23     23A                                                      CLE172
+     D  DDCART                24     38A                                                      CLE172
+     D  DDWGHT                39     39A                                                      CLE172
+     D  DDBRAC                40     41A                                                      CLE172
+     D  DDLBAC                42     43A                                                      CLE172
+                                                                                              CLE172
+      ** CLIP Backward-Looking Rate Valid Fields                                              CLE172
+     D LoanValBlrt     DS                                                                     CLE172
+     D  WCLBLRT                1      1A                                                      CLE172
+     D  WCLLBDY                2      3S 0                                                    CLE172
+     D  WCLNBDY                4      5S 0                                                    CLE172
+     D  WCLLODY                6      7S 0                                                    CLE172
+     D  WCLNODY                8      9S 0                                                    CLE172
+     D  WCLPDLY               10     11S 0                                                    CLE172
+     D  WCLNDLY               12     13S 0                                                    CLE172
+     D  WCLBADJ               14     20P 8                                                    CLE172
+     D  WCLNADJ               21     27P 8                                                    CLE172
+     D  WCLAVOP               28     28A                                                      CLE172
+     D  WCLNVOP               29     29A                                                      CLE172
+     D  WCLCART               30     36P 8                                                    CLE172
+     D  WCLWGHT               37     37A                                                      CLE172
+     D  WCLNGHT               38     38A                                                      CLE172
+     D  WCLBRAC               39     40A                                                      CLE172
+     D  WCLLBAC               41     42S 0                                                    CLE172
+     D  WCLPIAD               43     47S 0                                                    CLE172
+      *                                                                                       CLE172
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1111,6 +1150,10 @@
       ***  Validate interest validation basis
       *
      C                   EXSR      SRCALC
+      *                                                                                       CLE172
+      ***  Validate backward-looking rate fields                                              CLE172
+      *                                                                                       CLE172
+     C                   EXSR      SRBLRTE                                                    CLE172
       *
       /COPY WNCPYSRC,LECLIP2V13
       *
@@ -1370,6 +1413,59 @@
      C                   ENDIF
       *
      C                   ENDSR
+      *                                                                                       CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZAVBLRTE'                                                 CLE172
+     C                   PARM      'CLIP'        ApiName           4                          CLE172
+     C                   PARM                    CCLCCY                                       CLE172
+     C                   PARM                    CCLBRTT                                      CLE172
+     C                   PARM      DDLNR2        XLNRF             6                          CLE172
+      *                  PARM                    CCLICBS                                      CLE172
+     C                   PARM      LoanScnBlrt   TempInpDS       200                          CLE172
+     C                   PARM                    Idx                                          CLE172
+     C                   PARM                    FldNamXAr                                    CLE172
+     C                   PARM                    MsgIDXAr                                     CLE172
+     C                   PARM                    TempOutDS       200                          CLE172
+     C                   PARM      *BLANKS       RetCodeOut                                   CLE172
+      *                                                                                       CLE172
+     C     RetCodeOut    IFNE      'Error'                                                    CLE172
+     C                   MOVEL     TempOutDS     LoanValBlrt                                  CLE172
+     C                   MOVE      WCLBLRT       CCLBLRT                                      CLE172
+     C                   Z-ADD     WCLLBDY       CCLLBDY                                      CLE172
+     C                   Z-ADD     WCLNBDY       CCLNBDY                                      CLE172
+     C                   Z-ADD     WCLLODY       CCLLODY                                      CLE172
+     C                   Z-ADD     WCLNODY       CCLNODY                                      CLE172
+     C                   Z-ADD     WCLPDLY       CCLPDLY                                      CLE172
+     C                   Z-ADD     WCLNDLY       CCLNDLY                                      CLE172
+     C                   Z-ADD     WCLBADJ       CCLBADJ                                      CLE172
+     C                   Z-ADD     WCLNADJ       CCLNADJ                                      CLE172
+     C                   MOVE      WCLAVOP       CCLAVOP                                      CLE172
+     C                   MOVE      WCLNVOP       CCLNVOP                                      CLE172
+     C                   Z-ADD     WCLCART       CCLCART                                      CLE172
+     C                   MOVE      WCLWGHT       CCLWGHT                                      CLE172
+     C                   MOVE      WCLNGHT       CCLNGHT                                      CLE172
+     C                   MOVE      WCLBRAC       CCLBRAC                                      CLE172
+     C                   Z-ADD     WCLLBAC       CCLLBAC                                      CLE172
+     C                   Z-ADD     WCLPIAD       CCLPIAD                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     WCLBLRT       DDBLRT                                       CLE172
+     C                   MOVEL     WCLLBDY       DDLBDY                                       CLE172
+     C                   MOVEL     WCLLODY       DDLODY                                       CLE172
+     C                   MOVEL     WCLPDLY       DDPDLY                                       CLE172
+     C                   MOVEL     WCLAVOP       DDAVOP                                       CLE172
+     C                   MOVEL     WCLWGHT       DDWGHT                                       CLE172
+     C                   MOVEL     WCLBRAC       DDBRAC                                       CLE172
+     C                   MOVEL     WCLLBAC       DDLBAC                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4290,6 +4386,49 @@ E004 C                   ENDIF
       *                                                                                     BUG22311
      C                   ENDIF                                                              BUG22311
       *
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                             AND CCLBLRT = 'Y'                                          CLE172
+     C                             AND WLNPT <> 63                                            CLE172
+     C                             AND WLNPT <> 65                                            CLE172
+     C                             AND WLNPT <> 67                                            CLE172
+     C                   EVAL      LBBLRT = CCLBLRT                                           CLE172
+     C                   Z-ADD     CCLCART       LBCART                                       CLE172
+     C                   EVAL      LBAVOP = CCLAVOP                                           CLE172
+     C                   Z-ADD     CCLLBDY       LBLBDY                                       CLE172
+     C                   Z-ADD     CCLLODY       LBLODY                                       CLE172
+     C                   Z-ADD     CCLPDLY       LBPLDY                                       CLE172
+     C                   Z-ADD     CCLBADJ       LBBADJ                                       CLE172
+     C                   EVAL      LBWGHT = CCLWGHT                                           CLE172
+     C                   EVAL      LBBRST = CCLBRTT                                           CLE172
+     C                   EVAL      LBBRAC = CCLBRAC                                           CLE172
+     C                   Z-ADD     CCLRTSP       LBSPRD                                       CLE172
+     C                   EVAL      LBSPIN = CCLSPIN                                           CLE172
+     C                   Z-ADD     CCLLBAC       LBLBAC                                       CLE172
+     C                   EVAL      LBTCCY = CCLCCY                                            CLE172
+     C                   MOVE      CCLICBS       LBCALB                                       CLE172
+     C                   EVAL      LBADDI = CCLADDI                                           CLE172
+     C                   EVAL      LBIRDP = *ZERO                                             CLE172
+     C                   EVAL      LBPRFL = ' '                                               CLE172
+     C                   EVAL      LBPAMT = *ZERO                                             CLE172
+     C                   Z-ADD     ZIAMT         LBPAMT                                       CLE172
+     C                   EVAL      LBTNTA = *ZERO                                             CLE172
+     C                   EVAL      ZIEND = ZIBEG + 1                                          CLE172
+     C                   Z-ADD     ZIBEG         LBSTDT                                       CLE172
+     C                   Z-ADD     ZIEND         LBENDT                                       CLE172
+     C                   Z-ADD     ZIBEG         LBVALU                                       CLE172
+     C                   CALL      'ZACMPINT'                                                 CLE172
+     C                   PARM      '*INTMT*'     @OPTN                                        CLE172
+     C                   PARM      '       '     @RTCD                                        CLE172
+     C     SDLIBF        PARM      SDLIBF        DSSDY                                        CLE172
+     C                   IF        @RTCD = *BLANKS                                            CLE172
+     C                   Z-ADD     LBTNTA        ZINTR                                        CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      DBFile = 'SDBSHSPD'                                        CLE172
+     C                   EVAL      DBKey  = LBBRST                                            CLE172
+     C                   EVAL      DBase  = 17                                                CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ELSE                                                                 CLE172
      C                   CALLB     'MM1030'
      C                   PARM                    ZIBEG             5 0
      C                   PARM                    ZIEND             5 0
@@ -4298,6 +4437,7 @@ E004 C                   ENDIF
      C                   PARM                    ZIRATE           11 7
      C                   PARM                    CCLRDFC
      C                   PARM      *ZERO         ZINTR            15 0
+     C                   ENDIF                                                                CLE172
       *
       ***  For amend
       *
@@ -6318,6 +6458,9 @@ E004 C                   ENDIF
                                                                                             MD053143
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInScr7                                 MD053143
+                                                                                              CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    LoanScnBlrt                                  CLE172
       ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller
@@ -6682,6 +6825,26 @@ E004 C                   ENDIF
      C                   IF        @RTCD = *BLANKS                                            CLE170
      C                   EVAL      CLE170 = 'Y'                                               CLE170
      C                   ENDIF                                                                CLE170
+      *                                                                                       CLE172
+      ** Check if CLE172 LIBOR Deregulation is installed.                                     CLE172
+      *                                                                                       CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE172
+     C                   PARM      'CLE172'      @SARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE172
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE172
+     C                   EVAL      DBKey  = 'CLE172'                                          CLE172
+     C                   EVAL      DBase  = 16                                                CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
+     C                   IF        @RTCD = *BLANKS                                            CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                     MD031736
       ** Check if CLE011 is ON.                                                             MD031736
       *                                                                                     MD031736

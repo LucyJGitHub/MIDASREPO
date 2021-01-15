@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055682           Date 31Jul20               *
-      *  Prev Amend No. MD055132           Date 30Jan20               *
+      *  Last Amend No. MD056556           Date 31Aug20               *
+      *  Prev Amend No. MD055682           Date 31Jul20               *
+      *                 MD055132           Date 30Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP210             Date 28Sep12               *
       *                 AR1064975          Date 05Dec12               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055682 - Deliverable Data Split for TRIG                   *
       *  MD055132 - GO_ONL_SYN Array index is out of range            *
       *  MD046248 - Finastra Rebranding                               *
@@ -48,7 +50,7 @@
       *                                                               *
       *****************************************************************
 
-     FGPGLOBFL0 IF   E           K DISK    INFSR(*PSSR)
+     F*GPGLOBFL0 IF   E           K DISK    INFSR(*PSSR)                                    MD056556
      F*SCTRIGL1* IF   E           K DISK    INFSR(*PSSR)                                    MD055682
      FGPSOLOGPD O  A E             DISK    INFSR(*PSSR)
      FGOOSJSPD  IF   E             DISK    INFSR(*PSSR)                                    BUG16177A
@@ -72,6 +74,7 @@
      D #CNT            S              3P 0                                                    CAP210
      D #TEMPVAL        S           2500A                                                      CAP210
      D SCTRIG        E DS                  EXTNAME(SCTRGJW0)                                MD055682
+     D GPGLOBF       E DS                  EXTNAME(GPGLFJW0)                                MD056556
 
 
      C     *ENTRY        PLIST
@@ -154,9 +157,24 @@
 
       * Read all global 'GZ' files
 
-     C     *LOVAL        SETLL     GPGLOBFD0
-     C                   READ      GPGLOBFD0                              99    *
-     C     *IN99         DOWEQ     '0'
+     C******LOVAL        SETLL     GPGLOBFD0                                                MD056556
+     C**********         READ      GPGLOBFD0                              99    *           MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ declare ACursor insensitive scroll cursor for                                       MD056556
+     C+ select * from GPGLFJW0                                                              MD056556
+     C+ order by GFZPF, GFZLF                                                               MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ open ACursor                                                                        MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C******IN99         DOWEQ     '0'                                                      MD056556
+     C                   DOW       SQLCODE = 0                                              MD056556
 
       * If on-line synchronisation is required for the file
       * (GFOLSY = T (trigger), B (background) or N (None))
@@ -185,9 +203,16 @@
      C                   ENDIF
      C                   ENDIF
 
-     C                   READ      GPGLOBFD0                              99    *
+     C**********         READ      GPGLOBFD0                              99    *           MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD056556
+     C+ close ACursor                                                                       MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
      C                   ENDSR
       *********************************************************************
       /SPACE 5

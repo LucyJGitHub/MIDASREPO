@@ -2,7 +2,9 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(GOOSJSPDN) TOFILE(GOOSJSPD) SHARE(*NO)           *
-/*STD *  RPGBASEMOD                                                   *
+/**** *  RPGBASEMOD                                                   *                     MD056556
+/*STD *  RPGSQLMOD                                                    *                     MD056556
+/*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD056556
 /*EXI *  TEXT('Midas GO On-line synch. of global layer')              *
       *****************************************************************
       *                                                               *
@@ -12,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD056556           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD055147           Date 24Jan20               *
       *                 CLE070             Date 19Jun19               *
       *                 MD054605           Date 17Oct19               *
@@ -111,6 +114,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD055147 - No replication of SDSVL* if triggers are not      *
@@ -247,7 +251,7 @@
       *                                                               *
       *****************************************************************
 
-     FGPGLOBFL0 IF   E           K DISK    INFSR(*PSSR)
+     F*GPGLOBFL0 IF   E           K DISK    INFSR(*PSSR)                                    MD056556
      FGOOSCIL0  UF A E           K DISK    INFSR(*PSSR) COMMIT
      FGOOSJSPD  UF   E             DISK    INFSR(*PSSR) COMMIT
      FGOOSJSPDN UF   E             DISK    INFSR(*PSSR)
@@ -294,6 +298,7 @@
      D                 DS
      D  MsgInfo                1     10
      D  Instruction            1      5
+     D GPGLOBF       E DS                  EXTNAME(GPGLFJW0)                                MD056556
 
 
      C     *ENTRY        PLIST
@@ -613,9 +618,24 @@
 
       * Read all global 'GZ' files
 
-     C     *LOVAL        SETLL     GPGLOBFD0
-     C                   READ      GPGLOBFD0                              99    *
-     C     *IN99         DOWEQ     '0'
+     C******LOVAL        SETLL     GPGLOBFD0                                                MD056556
+     C**********         READ      GPGLOBFD0                              99    *           MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ declare ACursor insensitive scroll cursor for                                       MD056556
+     C+ select * from GPGLFJW0                                                              MD056556
+     C+ order by GFZPF, GFZLF                                                               MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ open ACursor                                                                        MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C******IN99         DOWEQ     '0'                                                      MD056556
+     C                   DOW       SQLCODE = 0                                              MD056556
 
       * Store each file that may require on-line synchronisation
 
@@ -632,9 +652,16 @@
      C                   endif
      C                   ENDIF
 
-     C                   READ      GPGLOBFD0                              99    *
+     C**********         READ      GPGLOBFD0                              99    *           MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD056556
+     C+ close ACursor                                                                       MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
      C                   ENDSR
       *********************************************************************
       /SPACE 5

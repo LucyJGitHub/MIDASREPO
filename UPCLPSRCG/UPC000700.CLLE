@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD056558           Date 31Aug20              */
-/*       Prev Amend No. MD056765           Date 16Sep20              */
+/*       Last Amend No. MD056556           Date 31Aug20              */
+/*       Prev Amend No. MD056558           Date 31Aug20              */
+/*                      MD056765           Date 16Sep20              */
 /*                      MD056695           Date 09Sep20              */
 /*                      MD055682           Date 31Jul20              */
 /*                      MD055681           Date 31Jul20              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056556 - Deliverable Data Split for GPGLOBFPD             */
 /*       MD056558 - Deliverable Data Split for GODTACPD              */
 /*       MD056765 - Copy SCSAREPD into QTEMP before update.          */
 /*       MD056695 - Program fails when copying empty file            */
@@ -417,7 +419,7 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD055682*/
              ENDDO                                                                      /*MD055682*/
                                                                                         /*MD055682*/
-/* GODTCCTD */                                                                          /*MD056558*/
+                                                                                        /* GODTCCTD */                                                                          /*MD056558*/
              IF         COND(&FILE *EQ 'GODTCCTD') THEN(DO)                             /*MD056558*/
              CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
                              *TCAT 'DMLIB')                                             /*MD056558*/
@@ -431,6 +433,20 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056558*/
              ENDDO                                                                      /*MD056558*/
                                                                                         /*MD056558*/
+/* GPGLFCTD */                                                                          /*MD056556*/
+             IF         COND(&FILE *EQ 'GPGLFCTD') THEN(DO)                             /*MD056556*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD056556*/
+             CHKOBJ     OBJ(&LIBMOV/GPGLOBFPD) OBJTYPE(*FILE)                           /*MD056556*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056556*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056556*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056556*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056556*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'GPGLOBFPD')                                          /*MD056556*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056556*/
+             ENDDO                                                                      /*MD056556*/
+                                                                                        /*MD056556*/
              ENDDO                                                                      /*MD054955*/
                                                                                         /*MD054955*/
              GOTO       CMDLBL(END)

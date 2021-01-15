@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD056558             Date 31Aug20             *
-      *  Prev Amend No. MD056694             Date 09Sep20             *
+      *  Last Amend No. MD056807             Date 20Sep20             *
+      *  Prev Amend No. MD056558             Date 31Aug20             *
+      *                 MD056694             Date 09Sep20             *
       *                 MD055682             Date 31Jul20             *
       *                 MD055681             Date 31Jul20             *
       *                 MD055242             Date 10Feb20             *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056807 - Deliverable Data Split for Compliance Watch       *
       *  MD056558 - Deliverable Data Split for GODTACPD               *
       *  MD056694 - New deliverable data file UPDDSFPD.               *
       *  MD055682 - Deliverable Data Split for TRIG                   *
@@ -955,6 +957,8 @@
      C                             or ChkFile = 'SCTRGXTD'                                  MD055682
      C                             or ChkFile = 'SCSRTXTD'                                  MD055682
      C                             or ChkFile = 'GODTCXTD'                                  MD056558
+     C                             or ChkFile = 'SDCWFXTD'                                  MD056807
+     C                             or ChkFile = 'SDCWMXTD'                                  MD056807
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -1076,6 +1080,8 @@
      C                             or Member = 'SCTRGCTD'                                   MD055682
      C                             or Member = 'SCSRTCTD'                                   MD055682
      C                             or Member = 'GODTCCTD'                                   MD056558
+     C                             or Member = 'SDCWFCTD'                                   MD056807
+     C                             or Member = 'SDCWMCTD'                                   MD056807
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'

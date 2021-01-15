@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD056558           Date 31Aug20              */
-/*       Prev Amend No. MD056765           Date 16Sep20              */
+/*       Last Amend No. MD056807           Date 20Sep20              */
+/*       Prev Amend No. MD056558           Date 31Aug20              */
+/*                      MD056765           Date 16Sep20              */
 /*                      MD056695           Date 09Sep20              */
 /*                      MD055682           Date 31Jul20              */
 /*                      MD055681           Date 31Jul20              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056807 - Deliverable Data Split for Compliance Watch      */
 /*       MD056558 - Deliverable Data Split for GODTACPD              */
 /*       MD056765 - Copy SCSAREPD into QTEMP before update.          */
 /*       MD056695 - Program fails when copying empty file            */
@@ -431,6 +433,34 @@
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056558*/
              ENDDO                                                                      /*MD056558*/
                                                                                         /*MD056558*/
+/* SDCWFCTD */                                                                          /*MD056807*/
+             IF         COND(&FILE *EQ 'SDCWFCTD') THEN(DO)                             /*MD056807*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056807*/
+             CHKOBJ     OBJ(&LIBMOV/SDCWFCPD) OBJTYPE(*FILE)                            /*MD056807*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056807*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056807*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056807*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056807*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDCWFCPD')                                           /*MD056807*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056807*/
+             ENDDO                                                                      /*MD056807*/
+                                                                                        /*MD056807*/
+/* SDCWMCTD */                                                                          /*MD056807*/
+             IF         COND(&FILE *EQ 'SDCWMCTD') THEN(DO)                             /*MD056807*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'DMLIB')                                             /*MD056807*/
+             CHKOBJ     OBJ(&LIBMOV/SDCWMOPD) OBJTYPE(*FILE)                            /*MD056807*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD056807*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD056807*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056807*/
+             ADDLIBLE   LIB(&LIBMOV)                                                    /*MD056807*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'SDCWMOPD')                                           /*MD056807*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD056807*/
+             ENDDO                                                                      /*MD056807*/
+                                                                                        /*MD056807*/
              ENDDO                                                                      /*MD054955*/
                                                                                         /*MD054955*/
              GOTO       CMDLBL(END)

@@ -9,10 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD050405  *CREATE  Date 03Jun20              */
+/*       Last Amend No. MD057446           Date 12Jan21              */
+/*       Prev Amend No. MD050405  *CREATE  Date 03Jun20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057446 - Duplicate key error on SMUPGCTD when running     */
+/*                  PRCA. Create separate programs for global and    */
+/*                  zonal schema upgrade. Move zone processing to    */
+/*                  new program SMUC00505.                           */
 /*       MD050405 - Fusion Midas 2.1 Platform Upgrade                */
 /*                                                                   */
 /*********************************************************************/
@@ -24,7 +29,7 @@
              DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GLOBPRFX) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2) */                            /*MD057446*/
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
@@ -68,10 +73,10 @@
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
                 CHGVAR     VAR(&BFLIB) VALUE(&GLOBPRFX *TCAT 'BFLIB')
              ENDDO
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
-                CHGVAR     VAR(&BFLIB) VALUE(&ZONEPRFX *TCAT +
-                             &GLOBPRFX *TCAT 'BFLIB')
-             ENDDO
+/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)      */                       /*MD057446*/
+/**********     CHGVAR     VAR(&BFLIB) VALUE(&ZONEPRFX *TCAT + */                       /*MD057446*/
+/**********                  &GLOBPRFX *TCAT 'BFLIB')          */                       /*MD057446*/
+/**********  ENDDO                                             */                       /*MD057446*/
 
 /** Create the schema upgrade status data area if not exists */
              CHKOBJ     OBJ(&GPLIB/SMBUPSTAT) OBJTYPE(*DTAARA)
@@ -239,15 +244,15 @@ ABNOR:
                              &SVALK9 &SVAL9 &SVALK10 &SVAL10)
              ENDDO
 
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
-                CHGVAR     VAR(&SVALK4) VALUE('BrgMidasGlobalPrefix')
-                CHGVAR     VAR(&SVALK5) VALUE('BrgMidasSystemPrefix')
-                CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
-                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
-                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
-                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
-                             &SVAL9 &SVALK10 &SVAL10)
-             ENDDO
+/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                 */            /*MD057446*/
+/**********     CHGVAR     VAR(&SVALK4) VALUE('BrgMidasGlobalPrefix')     */            /*MD057446*/
+/**********     CHGVAR     VAR(&SVALK5) VALUE('BrgMidasSystemPrefix')     */            /*MD057446*/
+/**********     CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 + */            /*MD057446*/
+/**********                  &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +      */            /*MD057446*/
+/**********                  &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +       */            /*MD057446*/
+/**********                  &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +      */            /*MD057446*/
+/**********                  &SVAL9 &SVALK10 &SVAL10)                     */            /*MD057446*/
+/**********  ENDDO                                                        */            /*MD057446*/
 
              IF         COND(&RSVALRTNC *NE ' ') THEN(DO)
                 CHGVAR     VAR(&ERRORFLAG) VALUE('E')
@@ -257,7 +262,7 @@ ABNOR:
              CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL2 1 10))
              CHGVAR     VAR(&BRGSRCLIB) VALUE(%SST(&SVAL3 1 10))
              CHGVAR     VAR(&GLOBPRFX) VALUE(%SST(&SVAL4 1 2))
-             CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL5 1 2))
+/**********  CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL5 1 2))            */            /*MD057446*/
 
              ENDSUBR
 
@@ -296,10 +301,10 @@ ABNOR:
                 CHGVAR     VAR(&AUTL) VALUE(&GLOBPRFX *TCAT 'DATABASE')
              ENDDO
 
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
-                CHGVAR     VAR(&OWNER) VALUE(&ZONEPRFX *TCAT 'OWNER')
-                CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE')
-             ENDDO
+/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)               */              /*MD057446*/
+/**********     CHGVAR     VAR(&OWNER) VALUE(&ZONEPRFX *TCAT 'OWNER')   */              /*MD057446*/
+/**********     CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE') */              /*MD057446*/
+/**********  ENDDO                                                      */              /*MD057446*/
 
              CHGOWNAUT  OBJ(&BFLIB/*ALL) OBJTYPE(*ALL) +
                           NEWOWN(&OWNER) PUBAUT(*USE) +
@@ -311,10 +316,10 @@ ABNOR:
                 CHGVAR     VAR(&JRN) VALUE('GPJRN')
              ENDDO
 
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
-                CHGVAR     VAR(&JLIB) VALUE(&ZONEPRFX *TCAT 'JLIB')
-                CHGVAR     VAR(&JRN) VALUE('ICJRN')
-             ENDDO
+/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)           */                  /*MD057446*/
+/**********     CHGVAR     VAR(&JLIB) VALUE(&ZONEPRFX *TCAT 'JLIB') */                  /*MD057446*/
+/**********     CHGVAR     VAR(&JRN) VALUE('ICJRN')                 */                  /*MD057446*/
+/**********  ENDDO                                                  */                  /*MD057446*/
 
              STRJRNPF   FILE(&BFLIB/*ALL) JRN(&JLIB/&JRN) +
                           IMAGES(*BOTH)

@@ -5,7 +5,6 @@
 /*EXI *  TEXT('Midas LE Validate Facility Amount from VDAT')          *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  Midas - Customer Lending Module                              *
       *                                                               *
       *  LE000630 - Validate Facility Amount on Input                 *
@@ -37,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *

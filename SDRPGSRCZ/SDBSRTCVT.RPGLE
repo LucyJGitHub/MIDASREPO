@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057444           Date 05Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057444 - Fixed negative value and buffer length for BADJ   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  240065 - Allow negative base rates to be displayed.          *
@@ -123,19 +125,26 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
-     D ArrayBadj       S              1A   DIM(14)                                            CSD103
+     D*ArrayBadj       S              1A   DIM(14)                                   CSD103 MD057444
+     D ArrayBadj       S              1A   DIM(15)                                          MD057444
                                                                                               CSD103
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
+     D*BasRBckfld      DS            27                                              CSD103 MD057444
+     D BasRBckfld      DS            28                                                     MD057444
      D  DDBLRT                 1      1                                                       CSD103
      D  DDLBDY                 2      3                                                       CSD103
      D  DDLODY                 4      5                                                       CSD103
      D  DDPDLY                 6      7                                                       CSD103
-     D  DDBADJ                 8     21                                                       CSD103
-     D  DDAVOP                22     22                                                       CSD103
-     D  DDBRAC                23     24                                                       CSD103
-     D  DDWGHT                25     25                                                       CSD103
-     D  DDLBAC                26     27                                                       CSD103
+     D**DDBADJ**               8     21                                              CSD103 MD057444
+     D**DDAVOP**              22     22                                              CSD103 MD057444
+     D**DDBRAC**              23     24                                              CSD103 MD057444
+     D**DDWGHT**              25     25                                              CSD103 MD057444
+     D**DDLBAC**              26     27                                              CSD103 MD057444
+     D  DDBADJ                 8     22                                                     MD057444
+     D  DDAVOP                23     23                                                     MD057444
+     D  DDBRAC                24     25                                                     MD057444
+     D  DDWGHT                26     26                                                     MD057444
+     D  DDLBAC                27     28                                                     MD057444
                                                                                               CSD103
      D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
      D                                     PREFIX(W)                                          CSD103
@@ -163,6 +172,7 @@
      D WrkRate         S             11  7                                                    240065
      D IntNbrt         S              4A                                                      240065
                                                                                               240065
+     D WNumBadj        S             13P 8                                                  MD057444
      D IntBadj         S              5A                                                      CSD103
      D DecBadj         S              8A                                                      CSD103
                                                                                               CSD103
@@ -380,8 +390,14 @@
       *                                                                                       CSD103
       * Benchmark Adjustment                                                                  CSD103
       *                                                                                       CSD103
-     C                   MOVEL     BABADJ        IntBadj                                      CSD103
-     C                   MOVE      BABADJ        DecBadj                                      CSD103
+     C                   Z-ADD     BABADJ        WNumBadj                                   MD057444
+     C     BABADJ        IFLT      0                                                        MD057444
+     C                   Z-SUB     WNumBadj      WNumBadj                                   MD057444
+     C                   ENDIF                                                              MD057444
+     C**********         MOVEL     BABADJ        IntBadj                             CSD103 MD057444
+     C**********         MOVE      BABADJ        DecBadj                             CSD103 MD057444
+     C                   MOVEL     WNumBadj      IntBadj                                    MD057444
+     C                   MOVE      WNumBadj      DecBadj                                    MD057444
      C     BABADJ        IFLT      0                                                          CSD103
      C                   MOVEA     '-'           ArrayBadj(1)                                 CSD103
      C                   MOVEA     IntBadj       ArrayBadj(2)                                 CSD103

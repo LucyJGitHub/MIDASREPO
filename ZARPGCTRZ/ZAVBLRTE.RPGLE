@@ -1713,7 +1713,7 @@
       *
      C     ApiName       IFEQ      'CLIP'
      C     *IN29         IFEQ      *OFF                                         Not INSERT
-     C                   MOVE      HNLDY         VNDLY                           Default from
+     C                   MOVE      HNDLY         VNDLY                           Default from
      C                   ELSE                                                    CLOANCL
       *                                                                         If INSERT
      C                   Z-ADD     0             VNDLY                           Default: 0

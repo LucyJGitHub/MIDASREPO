@@ -12,10 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103 *CREATE     Date 10Aug20               *
+      *  Last Amend No. MD057291           Date 01Jan21               *
+      *  Prev Amend No. CSD103 *CREATE     Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057291 - Lockout concept update (Retrieve the rate of the  *
+      *             previous interest period when lockout date is     *
+      *             reached)                                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
@@ -261,11 +265,13 @@
                                    if wLockOutRate <> 0;
                                         bsrhDS(i).appliedRate  = wLockOutRate;
                                    else;
-                                        if wLockOutDate <> 0 and
-                                           (wlockOutDate <
-                                             bsrhDS(i).historyDate);
-                                             bsrhDS(i).appliedRate  =
-                                                bsrhDS(i-1).appliedRate;
+
+                                          if wLockOutDate <> 0 and
+       //**********                          (wlockOutDate <                              //MD057291
+                                             (wlockOutDate <=                             //MD057291
+                                               bsrhDS(i).historyDate);
+                                               bsrhDS(i).appliedRate  =
+                                                  bsrhDS(i-1).appliedRate;
                                         else;
                                              bsrhDS(i).appliedRate  =
                                              bsrhDS(i-lookBackDays).

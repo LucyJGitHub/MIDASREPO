@@ -14,7 +14,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD057444           Date 05Jan21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
@@ -228,6 +229,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  MD057444 - Fixed negative value and buffer length for BADJ   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -826,7 +828,8 @@
      D DRejFlg         S              1                                                     MD030856
                                                                                               CSD103
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
+     D*BasRBckfld      DS            27                                              CSD103 MD057444
+     D BasRBckfld      DS            28                                                     MD057444
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2886,8 +2889,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
       ** Backward-Looking Rate Fields                                                         CSD103
-     C     27            SUBST     BUFFER:Bfp    BasRBckfld                                   CSD103
-     C                   ADD       27            Bfp                                          CSD103
+     C*****27***         SUBST     BUFFER:Bfp    BasRBckfld                          CSD103 MD057444
+     C**********         ADD       27            Bfp                                 CSD103 MD057444
+     C     28            SUBST     BUFFER:Bfp    BasRBckfld                                 MD057444
+     C                   ADD       28            Bfp                                        MD057444
 
      C                   CALL      'SDBSRTVU'
 

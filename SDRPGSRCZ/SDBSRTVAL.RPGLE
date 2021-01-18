@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057444           Date 05Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
       *                 AR641183           Date 27Nov12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057444 - Fixed negative value and buffer length for BADJ   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
@@ -168,8 +170,8 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
-     D ArrayBadj       S              1A   DIM(17)                                            CSD103
-      * Incoming Benchmark Adjustment in screen format                                        CSD103
+     D*ArrayBadj*      S              1A   DIM(17)                                   CSD103 MD057444
+      **Incoming*Benchmark*Adjustment*in*screen*format*****************              CSD103 MD057444
                                                                                               CSD103
      D BaseRateIn    E DS                  EXTNAME(SDBSRSPD)
       * Incoming Base Rate in screen format
@@ -225,15 +227,20 @@
       ** Data Structure for Event Codes Substitution                                        MD000091
                                                                                               CSD103
       ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
+     D*BasRBckfld      DS            27                                              CSD103 MD057444
+     D BasRBckfld      DS            28                                                     MD057444
      D  DDBLRT                 1      1                                                       CSD103
      D  DDLBDY                 2      3                                                       CSD103
      D  DDLODY                 4      5                                                       CSD103
      D  DDPDLY                 6      7                                                       CSD103
-     D  DDBADJ                 8     21                                                       CSD103
-     D  DDAVOP                22     22                                                       CSD103
-     D  DDBRAC                23     24                                                       CSD103
-     D  DDWGHT                25     25                                                       CSD103
+     D**DDBADJ**               8     21                                              CSD103 MD057444
+     D**DDAVOP**              22     22                                              CSD103 MD057444
+     D**DDBRAC**              23     24                                              CSD103 MD057444
+     D**DDWGHT**              25     25                                              CSD103 MD057444
+     D  DDBADJ                 8     22                                                     MD057444
+     D  DDAVOP                23     23                                                     MD057444
+     D  DDBRAC                24     25                                                     MD057444
+     D  DDWGHT                26     26                                                     MD057444
                                                                                               CSD103
      D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
      D                                     PREFIX(W)                                          CSD103
@@ -281,12 +288,14 @@
      D #1TESTN         S              1A                                                     BUG3124
                                                                                              BUG3124
      D #1CHARPOS       S              2  0                                                    CSD103
-                                                                                              CSD103
      D #2CHARPOS       S              2  0                                                    CSD103
                                                                                               CSD103
-     D IntBadj         S              5A                                                      CSD103
-     D DecBadj         S              8A                                                      CSD103
-                                                                                              CSD103
+     D*IntBadj**      S              5A                                              CSD103 MD057444
+     D*DecBadj**      S              8A                                              CSD103 MD057444
+                                                                                     CSD103 MD057444
+     D WNumBadj        S             13P 8                                                  MD057444
+     D WSign           S              1A                                                    MD057444
+                                                                                            MD057444
       ** Alpha field for numeric validation                                                   240065
      D @@ALPH          S             16A                                                      240065
       ** Millions/Thousands id (Y=function on)                                                240065
@@ -450,7 +459,7 @@
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
       *                                                                                       CSD103
-     C     CSD103        IFEQ      'Y'                                                        CSD103
+     C     CSD103        IFEQ      'Y'                                          If CSD103=ON  CSD103
       *                                                                                       CSD103
       * Validate Backward-Looking Rate                                                        CSD103
       *                                                                                       CSD103
@@ -466,32 +475,48 @@
       *                                                                                       CSD103
       * Validate Lookback Days                                                                CSD103
       *                                                                                       CSD103
-     C                   Z-ADD     *ZEROS        WDAY              2 0                        CSD103
-     C                   MOVE      Numbers       NUMBLANK         11                          CSD103
-     C                   MOVEL     ' '           NUMBLANK                                     CSD103
+     C**********         Z-ADD     *ZEROS        WDAY              2 0               CSD103 MD057444
+     C**********         MOVE      Numbers       NUMBLANK         11                 CSD103 MD057444
+     C**********         MOVEL     ' '           NUMBLANK                            CSD103 MD057444
       *                                                                                       CSD103
-     C     DDLBDY        IFEQ      *BLANKS                                      Default: 00   CSD103
-     C                   MOVE      '00'          DDLBDY                                       CSD103
-     C                   ELSE                                                                 CSD103
+     C     DDLBDY        IFEQ      *BLANKS                                      If blank      CSD103
+     C                   MOVE      '00'          DDLBDY                          Default: 00  CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDLBDY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
-     C                   MOVEL     DDLBDY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
-      *                                                                                       CSD103
-     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
-     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C**********         MOVE      DDLBDY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #1CHARPOS                           CSD103 MD057444
+     C**********         MOVEL     DDLBDY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #2CHARPOS                           CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C*****#1CHARPOS     IFEQ      *ZERO                                             CSD103 MD057444
+     C*****#2CHARPOS     OREQ      *ZERO                                             CSD103 MD057444
+     C                   MOVE      *BLANKS       @@ALPH                                     MD057444
+     C                   MOVE      DDLBDY        @@ALPH                                     MD057444
+     C                   CALLB     'ZA0841'                                                 MD057444
+     C                   PARM      *BLANK        RetCodeOut                                 MD057444
+     C                   PARM                    @@ALPH                                     MD057444
+     C                   PARM      0             @@IDP                                      MD057444
+     C                   PARM      2             @@IINT                                     MD057444
+     C                   PARM      'N'           @@MTID                                     MD057444
+     C                   PARM      *ZERO         @@ERCD                                     MD057444
+     C                   PARM      *ZERO         @@AMT                                      MD057444
+     C                   PARM                    BNDCSP                                     MD057444
+      *                                                                                     MD057444
+     C     @@ERCD        IFNE      0                                            Not numeric MD057444
+     C     @@AMT         ORLT      0                                                        MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDLBDYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
      C                   MOVEL     'DDLBDY'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049423'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If numeric    CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDLBDY        WDAY                                         CSD103
+     C**********         MOVE      DDLBDY        WDAY                                CSD103 MD057444
+     C                   MOVE      @@AMT         DDLBDY                                     MD057444
      C     DDBLRT        IFEQ      'N'                                                        CSD103
-     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C*****WDAY*         ANDNE     *ZEROS                                            CSD103 MD057444
+     C     @@AMT         ANDNE     *ZEROS                                                   MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDLBDYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
@@ -500,33 +525,49 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END numeric   CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Lockout Days                                                                 CSD103
       *                                                                                       CSD103
-     C     DDLODY        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '00'          DDLODY                         Default: 00   CSD103
-     C                   ELSE                                                                 CSD103
+     C     DDLODY        IFEQ      *BLANKS                                      If blank      CSD103
+     C                   MOVE      '00'          DDLODY                          Default: 00  CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDLODY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
-     C                   MOVEL     DDLODY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
-      *                                                                                       CSD103
-     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
-     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C**********         MOVE      DDLODY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #1CHARPOS                           CSD103 MD057444
+     C**********         MOVEL     DDLODY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #2CHARPOS                           CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C*****#1CHARPOS     IFEQ      *ZERO                                             CSD103 MD057444
+     C*****#2CHARPOS     OREQ      *ZERO                                             CSD103 MD057444
+     C                   MOVE      *BLANKS       @@ALPH                                     MD057444
+     C                   MOVE      DDLODY        @@ALPH                                     MD057444
+     C                   CALLB     'ZA0841'                                                 MD057444
+     C                   PARM      *BLANK        RetCodeOut                                 MD057444
+     C                   PARM                    @@ALPH                                     MD057444
+     C                   PARM      0             @@IDP                                      MD057444
+     C                   PARM      2             @@IINT                                     MD057444
+     C                   PARM      'N'           @@MTID                                     MD057444
+     C                   PARM      *ZERO         @@ERCD                                     MD057444
+     C                   PARM      *ZERO         @@AMT                                      MD057444
+     C                   PARM                    BNDCSP                                     MD057444
+      *                                                                                     MD057444
+     C     @@ERCD        IFNE      0                                            Not numeric MD057444
+     C     @@AMT         ORLT      0                                                        MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDLODYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
      C                   MOVEL     'DDLODY'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049424'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If numeric    CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDLODY        WDAY                                         CSD103
+     C**********         MOVE      DDLODY        WDAY                                CSD103 MD057444
+     C                   MOVE      @@AMT         DDLODY                                     MD057444
      C     DDBLRT        IFEQ      'N'                                                        CSD103
-     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C*****WDAY*         ANDNE     *ZEROS                                            CSD103 MD057444
+     C     @@AMT         ANDNE     *ZEROS                                                   MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDLODYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
@@ -535,33 +576,49 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END numeric   CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Payment Delay Days                                                           CSD103
       *                                                                                       CSD103
-     C     DDPDLY        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '00'          DDPDLY                         Default: 00   CSD103
-     C                   ELSE                                                                 CSD103
+     C     DDPDLY        IFEQ      *BLANKS                                      If blank      CSD103
+     C                   MOVE      '00'          DDPDLY                          Default: 00  CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDPDLY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #1CHARPOS                                    CSD103
-     C                   MOVEL     DDPDLY        #1TESTN                                      CSD103
-     C     #1TESTN       SCAN      NUMBLANK      #2CHARPOS                                    CSD103
-      *                                                                                       CSD103
-     C     #1CHARPOS     IFEQ      *ZERO                                                      CSD103
-     C     #2CHARPOS     OREQ      *ZERO                                                      CSD103
+     C**********         MOVE      DDPDLY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #1CHARPOS                           CSD103 MD057444
+     C**********         MOVEL     DDPDLY        #1TESTN                             CSD103 MD057444
+     C*****#1TESTN       SCAN      NUMBLANK      #2CHARPOS                           CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C*****#1CHARPOS     IFEQ      *ZERO                                             CSD103 MD057444
+     C*****#2CHARPOS     OREQ      *ZERO                                             CSD103 MD057444
+     C                   MOVE      *BLANKS       @@ALPH                                     MD057444
+     C                   MOVE      DDPDLY        @@ALPH                                     MD057444
+     C                   CALLB     'ZA0841'                                                 MD057444
+     C                   PARM      *BLANK        RetCodeOut                                 MD057444
+     C                   PARM                    @@ALPH                                     MD057444
+     C                   PARM      0             @@IDP                                      MD057444
+     C                   PARM      2             @@IINT                                     MD057444
+     C                   PARM      'N'           @@MTID                                     MD057444
+     C                   PARM      *ZERO         @@ERCD                                     MD057444
+     C                   PARM      *ZERO         @@AMT                                      MD057444
+     C                   PARM                    BNDCSP                                     MD057444
+      *                                                                                     MD057444
+     C     @@ERCD        IFNE      0                                            Not numeric MD057444
+     C     @@AMT         ORLT      0                                                        MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDPDLYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
      C                   MOVEL     'DDPDLY'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049425'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If numeric    CSD103
       *                                                                                       CSD103
-     C                   MOVE      DDPDLY        WDAY                                         CSD103
+     C**********         MOVE      DDPDLY        WDAY                                CSD103 MD057444
+     C                   MOVE      @@AMT         DDPDLY                                     MD057444
      C     DDBLRT        IFEQ      'N'                                                        CSD103
-     C     WDAY          ANDNE     *ZEROS                                                     CSD103
+     C*****WDAY*         ANDNE     *ZEROS                                            CSD103 MD057444
+     C     @@AMT         ANDNE     *ZEROS                                                   MD057444
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDPDLYOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
@@ -570,59 +627,69 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END numeric   CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Benchmark Adjustment                                                         CSD103
       *                                                                                       CSD103
-     C     DDBADJ        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '0'           DDBADJ                         Default: 0    CSD103
-     C                   ELSE                                                                 CSD103
+     C     DDBADJ        IFEQ      *BLANKS                                      If blank      CSD103
+     C                   MOVE      '0'           DDBADJ                          Default: 0   CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
      C                   MOVE      *BLANKS       @@ALPH                                       CSD103
      C                   MOVE      DDBADJ        @@ALPH                                       CSD103
      C                   CALLB     'ZA0841'                                                   CSD103
      C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM                    @@ALPH                         Display field CSD103
-     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
-     C                   PARM      5             @@IINT                         no.of integersCSD103
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
-     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
-     C                   PARM      *ZERO         @@AMT                          File field    CSD103
+     C                   PARM                    @@ALPH                                       CSD103
+     C                   PARM      8             @@IDP                                        CSD103
+     C                   PARM      5             @@IINT                                       CSD103
+     C                   PARM      'N'           @@MTID                                       CSD103
+     C                   PARM      *ZERO         @@ERCD                                       CSD103
+     C                   PARM      *ZERO         @@AMT                                        CSD103
      C                   PARM                    BNDCSP                                       CSD103
 	  *                                                                                      CSD103
-     C     @@ERCD        IFNE      0                                                          CSD103
+     C     @@ERCD        IFNE      0                                            Not numeric   CSD103
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDBADJOK                                     CSD103
      C                   ADD       1             Ix                                           CSD103
      C                   MOVEL     'DDBADJ'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049426'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If numeric    CSD103
       *                                                                                       CSD103
-     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
-     C                   MOVEL     DDBADJ        IntBadj                                      CSD103
-     C                   MOVE      DDBADJ        DecBadj                                      CSD103
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
-      *                                                                                       CSD103
-     C     '-'           SCAN      @@ALPH        PTBADJ            2 0                        CSD103
-     C     PTBADJ        IFNE      0                                                          CSD103
-     C                   MOVE      '-'           PZFSign                                      CSD103
-     C                   MOVEA     '- '          ArrayBadj(8)                                 CSD103
-     C                   ENDIF                                                                CSD103
-     C                   MOVEA     ArrayBadj     PZFld17                                      CSD103
-      *                                                                                       CSD103
-     C                   CALLB     'ZASIGN'                                                   CSD103
-     C                   PARM      'Y'           PZASignOk                                    CSD103
-     C                   PARM                    PZFld17                                      CSD103
-     C                   PARM      5             PZDig                                        CSD103
-     C                   PARM      8             PZDec                                        CSD103
-     C                   PARM      BNDCSP        PZSDCSP                                      CSD103
-     C                   PARM                    PZOut15                                      CSD103
-     C                   PARM                    PZFSign                                      CSD103
-     C                   MOVE      PZOut15       WNumBadj         13 8                        CSD103
+     C**********         MOVE      @@ALPH        DDBADJ                              CSD103 MD057444
+     C**********         MOVEL     DDBADJ        IntBadj                             CSD103 MD057444
+     C**********         MOVE      DDBADJ        DecBadj                             CSD103 MD057444
+     C**********         MOVEA     IntBadj       ArrayBadj(1)                        CSD103 MD057444
+     C**********         MOVEA     BNDCSP        ArrayBadj(6)                        CSD103 MD057444
+     C**********         MOVEA     DecBadj       ArrayBadj(7)                        CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C*****'-'**         SCAN      @@ALPH        PTBADJ            2 0               CSD103 MD057444
+     C*****PTBADJ        IFNE      0                                                 CSD103 MD057444
+     C**********         MOVE      '-'           PZFSign                             CSD103 MD057444
+     C**********         MOVEA     '- '          ArrayBadj(8)                        CSD103 MD057444
+     C**********         ENDIF                                                       CSD103 MD057444
+     C**********         MOVEA     ArrayBadj     PZFld17                             CSD103 MD057444
+      **********                                                                     CSD103 MD057444
+     C**********         CALLB     'ZASIGN'                                          CSD103 MD057444
+     C**********         PARM      'Y'           PZASignOk                           CSD103 MD057444
+     C**********         PARM                    PZFld17                             CSD103 MD057444
+     C**********         PARM      5             PZDig                               CSD103 MD057444
+     C**********         PARM      8             PZDec                               CSD103 MD057444
+     C**********         PARM      BNDCSP        PZSDCSP                             CSD103 MD057444
+     C**********         PARM                    PZOut15                             CSD103 MD057444
+     C**********         PARM                    PZFSign                             CSD103 MD057444
+     C**********         MOVE      PZOut15       WNumBadj         13 8               CSD103 MD057444
+     C                   MOVE      *BLANK        WSign                                      MD057444
+     C     @@AMT         IFLT      0                                                        MD057444
+     C                   Z-SUB     @@AMT         @@AMT                                      MD057444
+     C                   MOVE      '-'           WSign                                      MD057444
+     C                   ENDIF                                                              MD057444
+     C                   MOVE      @@AMT         @@ALPH                                     MD057444
+     C                   MOVE      @@ALPH        WNumBadj                                   MD057444
+     C     WSign         IFEQ      '-'                                                      MD057444
+     C                   Z-SUB     WNumBadj      WNumBadj                                   MD057444
+     C                   ENDIF                                                              MD057444
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
      C     WNumBadj      ANDNE     *ZEROS                                                     CSD103
@@ -634,12 +701,12 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END numeric   CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Averaging Option                                                             CSD103
       *                                                                                       CSD103
-     C     DDAVOP        IFEQ      *BLANKS                                                    CSD103
+     C     DDAVOP        IFEQ      *BLANKS                                      If blank      CSD103
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'Y'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
@@ -650,9 +717,9 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
-     C     DDAVOP        IFNE      '1'                                                        CSD103
+     C     DDAVOP        IFNE      '1'                                          Not valid     CSD103
      C     DDAVOP        ANDNE     '2'                                                        CSD103
      C     DDAVOP        ANDNE     '3'                                                        CSD103
      C     DDAVOP        ANDNE     '4'                                                        CSD103
@@ -662,7 +729,7 @@
      C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049403'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If valid      CSD103
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
@@ -673,12 +740,12 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END valid     CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Base Rate for Accrual                                                        CSD103
       *                                                                                       CSD103
-     C     DDBRAC        IFNE      *BLANKS                                                    CSD103
+     C     DDBRAC        IFNE      *BLANKS                                      Not blank     CSD103
       *                                                                                       CSD103
      C                   SETOFF                                       93                      CSD103
      C                   MOVE      DDCYCD        WBACYCD                                      CSD103
@@ -733,20 +800,20 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
       * Validate Weight Convention                                                            CSD103
       *                                                                                       CSD103
-     C     DDWGHT        IFEQ      *BLANKS                                                    CSD103
+     C     DDWGHT        IFEQ      *BLANKS                                      If blank      CSD103
       *                                                                                       CSD103
      C     DDAVOP        IFEQ      '1'                                                        CSD103
      C     DDAVOP        OREQ      '2'                                          If AVOP = 1/2 CSD103
-     C                   MOVE      '1'           DDWGHT                         Default: 1    CSD103
+     C                   MOVE      '1'           DDWGHT                          Default: 1   CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   Not blank     CSD103
       *                                                                                       CSD103
-     C     DDWGHT        IFNE      '1'                                                        CSD103
+     C     DDWGHT        IFNE      '1'                                          Not valid     CSD103
      C     DDWGHT        ANDNE     '2'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
      C                   MOVE      'N'           DDWGHTOK                                     CSD103
@@ -754,7 +821,7 @@
      C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
      C                   MOVEL     '5049408'     MsgIdXAr(Ix)                                 CSD103
      C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
+     C                   ELSE                                                   If valid      CSD103
       *                                                                                       CSD103
      C     DDBLRT        IFEQ      'N'                                                        CSD103
      C                   EXSR      RESETERRS                                                  CSD103
@@ -775,12 +842,12 @@
      C                   EXSR      UPDATERRS                                                  CSD103
      C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END valid     CSD103
+     C                   ENDIF                                                  END blank     CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END CSD103    CSD103
       *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
+     C                   ENDIF                                                  END Action    CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -1451,11 +1518,11 @@
      C                   MOVE      DDLODY        BVLODY                          Looking Rate CSD103
      C                   MOVE      DDPDLY        BVPDLY                          screen flds  CSD103
       *                                                                          to valid     CSD103
-     C     PTBADJ        IFNE      0                                                          CSD103
-     C                   Z-SUB     WNumBadj      BVBADJ                                       CSD103
-     C                   ELSE                                                                 CSD103
+     C*****PTBADJ        IFNE      0                                                 CSD103 MD057444
+     C**********         Z-SUB     WNumBadj      BVBADJ                              CSD103 MD057444
+     C**********         ELSE                                                        CSD103 MD057444
      C                   Z-ADD     WNumBadj      BVBADJ                                       CSD103
-     C                   ENDIF                                                                CSD103
+     C**********         ENDIF                                                       CSD103 MD057444
       *                                                                                       CSD103
      C                   MOVE      DDAVOP        BVAVOP                                       CSD103
      C                   MOVE      DDBRAC        BVBRAC                                       CSD103

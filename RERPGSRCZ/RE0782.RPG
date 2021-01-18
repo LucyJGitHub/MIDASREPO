@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c)Finastra International Limited 2001                       *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD057047           Date 15Jan21               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD034202           Date 26Jun15               *
       *                 MD031950           Date 17Jun15               *
       *                 CGL165             Date 15Mar15               *
@@ -95,6 +96,10 @@
      F*                                                               *
 0012 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057047 - When RetailNegativeIntDsp is 'N', RE0782P6 report *
+      *             report shows a negative interest rate as positive *
+      *             instead of zero. Program should zeroise negative  *
+      *             interest rate if RetailNegativeIntDsp is 'N'.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD034202 - Also always re-access alternative account to      *
@@ -1511,6 +1516,8 @@
      I                                       22  24 BRC1                                      CGL029
 0628  *                                                                   S01270
      I              9999                  C         MAXVAL                                  CRE083AW
+      ** Work variables                                                                     MD057047
+     I              'RetailNegativeIntDsp'C         WPARM                                   MD057047
      I*
      I/COPY WNCPYSRC,RE0782IIP3
      I*
@@ -1576,6 +1583,46 @@
      C           MBIN      IFEQ 'Y'                                       S01117
      C                     SETON                     88                   S01117
      C                     END                                            S01117
+      *                                                                                     MD057047
+      ** Check System Value: determine if 196882 should be used or not                      MD057047
+      ** Set up parameter so access object checks RetailNegativeIntDsp                      MD057047
+      *                                                                                     MD057047
+     C                     MOVELWPARM     SVALK1                                            MD057047
+      *                                                                                     MD057047
+     C                     CALL 'AOSVALR0'                                                  MD057047
+     C                     PARM           RTNCDE  7                                         MD057047
+     C                     PARM           SVALK1 20                                         MD057047
+     C                     PARM           SVAL1 200                                         MD057047
+     C                     PARM           SVALK2 20                                         MD057047
+     C                     PARM           SVAL2 200                                         MD057047
+     C                     PARM           SVALK3 20                                         MD057047
+     C                     PARM           SVAL3 200                                         MD057047
+     C                     PARM           SVALK4 20                                         MD057047
+     C                     PARM           SVAL4 200                                         MD057047
+     C                     PARM           SVALK5 20                                         MD057047
+     C                     PARM           SVAL5 200                                         MD057047
+     C                     PARM           SVALK6 20                                         MD057047
+     C                     PARM           SVAL6 200                                         MD057047
+     C                     PARM           SVALK7 20                                         MD057047
+     C                     PARM           SVAL7 200                                         MD057047
+     C                     PARM           SVALK8 20                                         MD057047
+     C                     PARM           SVAL8 200                                         MD057047
+     C                     PARM           SVALK9 20                                         MD057047
+     C                     PARM           SVAL9 200                                         MD057047
+     C                     PARM           SVALK0 20                                         MD057047
+     C                     PARM           SVAL10200                                         MD057047
+      * If the system value is not found then default value to 'N'                          MD057047
+     C           RTNCDE    IFNE '        '                                                  MD057047
+     C                     MOVE 'N'       WNEGIN                                            MD057047
+     C                     ELSE                                                             MD057047
+      * Isolate the first character of SVAL1 which = 'Y' or 'N'.                            MD057047
+     C                     MOVELSVAL1     WNEGIN  1                                         MD057047
+     C           WNEGIN    IFEQ 'N'                                                         MD057047
+     C                     MOVE 'N'       WNEGIN                                            MD057047
+     C                     ELSE                                                             MD057047
+     C                     MOVE 'Y'       WNEGIN                                            MD057047
+     C                     ENDIF                                                            MD057047
+     C                     ENDIF                                                            MD057047
      C**                                                                  S01117
      C                     Z-ADD0         NORE1   50                      S01117
      C                     Z-ADD0         NORE2   50                      S01117
@@ -3217,11 +3264,19 @@
 1087 C**
      C*                                                    E11564
      C           ZINP      IFLT 0                          E11564
-     C                     Z-SUBZINP      ZINP             E11564
+     C           WNEGIN    ANDEQ'N'                                                         MD057047
+     C                     Z-ADD*ZERO     ZINP                                              MD057047
+     C**********           Z-SUBZINP      ZINP                                       E11564 MD057047
      C                     END                             E11564
      C*                                                    E11564
 1088 C                     Z-ADDZINP      ZINPWN  40
 1089 C                     MOVE ZINP      ZINPA   7
+     C           ZINP      IFLT 0                                                           MD057047
+     C           WNEGIN    ANDEQ'Y'                                                         MD057047
+     C                     Z-SUBZINP      ZINPX  117                                        MD057047
+1    C                     MOVE ZINPX     ZINPA                                             MD057047
+     C                     ENDIF                                                            MD057047
+     C           ZINPWN    COMP 0                      26                                   MD057047
 1090 C                     MOVEAZINPA     ARR
 1091 C                     Z-ADD7         X       20
 1092 C           TRAIL0    TAG

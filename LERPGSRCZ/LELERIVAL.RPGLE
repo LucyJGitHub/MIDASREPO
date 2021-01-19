@@ -7016,8 +7016,7 @@
      C                   MOVE      VNBDYB        DDNBDYB                                      CLE172
      C                   MOVE      VNODYB        DDNODYB                                      CLE172
      C                   MOVE      VNGHTB        DDNGHTB                                      CLE172
-     C                   MOVE      VNADJB        DDNADJB                                      CLE172
-      *
+      *                                                                                       CLE172
      C                   Z-ADD     VNADJB        WNumNadj                                     CLE172
      C     VNADJB        IFLT      0                                                          CLE172
      C                   Z-SUB     WNumNadj      WNumNadj                                     CLE172
@@ -7048,6 +7047,7 @@
      C                   PARM                    DL_BNDCSP                                    CLE172
       *                                                                                       CLE172
      C                   MOVE      @@ALPH        DDNADJB                                      CLE172
+      *                                                                                       CLE172
      C                   MOVE      VNDLYB        DDNDLYB                                      CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172

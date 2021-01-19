@@ -809,7 +809,7 @@
      C                   EVAL      NODY = L_CLNODY                                            CLE172
      C                   EVAL      NGHT = L_CLNGHT                                            CLE172
      C                   EVAL      NADJ = L_CLNADJ                                            CLE172
-     C                   EVAL      NLDY = L_CLNLDY                                            CLE172
+     C                   EVAL      NDLY = L_CLNDLY                                            CLE172
      C                   ENDIF
       *
      C                   Z-ADD     BJRDNB        LCD

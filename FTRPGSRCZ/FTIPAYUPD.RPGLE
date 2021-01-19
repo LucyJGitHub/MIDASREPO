@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. MD020135           Date 03Jun20               *
+      *  Last Amend No. MD048586           Date 11Jan21               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -96,6 +97,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
@@ -754,13 +757,13 @@
       *
      C/COPY WNCPYSRC,FTH00450
       *                                                                                       CFT157
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00451
-     C                   ENDIF                                                                CFT157
+     C**********         ENDIF                                                       CFT157 MD048586
       *
       ** Blank out temporary variable for Change Type.
       *
@@ -798,15 +801,15 @@
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,FTIPAYDC04
       *
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
       ** Clear all positions in store.
       *
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00453
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
       *
       ** Call CL program to deallocate this reference to a dataarea                           261468
       *                                                                                       261468

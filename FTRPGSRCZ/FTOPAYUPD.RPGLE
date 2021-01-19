@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023298A          Date 03Jun20               *
-      *  Prev Amend No. MD020135           Date 03Jun20               *
+      *  Last Amend No. MD048586           Date 11Jan21               *
+      *  Prev Amend No. MD023298A          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
       *  MD023298A - Front office ID already exists for OTPAYDQD.     *
       *              Do not write to OTPAYDQD when jobname is         *
       *              QZDASSINIT.                                      *
@@ -771,10 +774,10 @@
      C                   EXSR      INSSR                                                     BUG4449
       *  Clear stored values
      C/COPY WNCPYSRC,FTH00472
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   Exsr      SRCLR
      C/COPY WNCPYSRC,FTH00473
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
 
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
@@ -872,10 +875,10 @@
       *  Clear stored values
      C     UPDEND        TAG
      C/COPY WNCPYSRC,FTH00478
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   EXSR      SRCLR
      C/COPY WNCPYSRC,FTH00479
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
                                                                                               201577
       ** Call CL program to deallocate this reference to a dataarea                           201577
                                                                                               201577

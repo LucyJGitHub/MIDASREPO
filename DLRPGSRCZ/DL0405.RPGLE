@@ -29,8 +29,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057457 - GLC0802C 00001 failed due to FOOB on GL0580AU.    *
-      *           - Replace the condition from ‘WDecSum > 1000’ to    *
-      *              to ‘WDecSum >= 1000’. Patterned after MD-51930.  *
+      *           - Replace the condition from 'WDecSum > 1000' to    *
+      *              to 'WDecSum >= 1000'. Patterned after MD-51930.  *
       *  MD055401 - FX Netting / incorrect projected movement on      *
       *             nostro for Nets inserted at D-1. Fix on this      *
       *             program is additional to reported case. Fix here  *

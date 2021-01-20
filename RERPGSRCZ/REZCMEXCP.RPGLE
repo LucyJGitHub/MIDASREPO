@@ -37,8 +37,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. AR928996A          Date 03May12               *
+      *  Last Amend No. AR1067893          Date 14Dec12               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1067893 - Cashman STP IBAN check does not work.            *
+      *              Check for IBAN in message. (Child:AR1067894)     *
       *  223783 - Call AOIBANR4 with correct parameter                *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
@@ -365,10 +368,14 @@
      C                   Z-ADD     ACOD          KACCD
      C                   Z-ADD     ACSQ          KACSQ
      C                   MOVEL     'Y'           FOUND
-     C                   ENDIF
+                                                                                           AR1067893
+     C                   Else                                                              AR1067893
+                                                                                           AR1067893
+     C**********         ENDIF                                                             AR1067893
      C*
      C* Get GL account if IBAN given
-     C     CFT004        Wheneq    'Y'
+     C*****CFT004        Wheneq    'Y'                                                     AR1067893
+     C                   If        Cft004 = 'Y'                                            AR1067893
      C                   CALL      'AOIBANR4'                           90
      C                   PARM                    P@RTCD
      C**********         PARM      '*VERIFY'     P@OPTN                                       223783
@@ -387,6 +394,10 @@
      C                   MOVEL     'Y'           FOUND
      C                   ENDIF
      C*
+     C                   Endif                                                             AR1067893
+                                                                                           AR1067893
+     C                   Endif                                                             AR1067893
+                                                                                           AR1067893
      C                   ENDSL
      C                   ENDIF
      C*

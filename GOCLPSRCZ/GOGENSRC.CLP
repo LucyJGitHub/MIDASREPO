@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056556           Date 31Aug20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 02Jun08              */
+/*                      BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG10215           Date 27Sep06              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056556 - Deliverable Data Split for GPGLOBFPD             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Replace non-standard codes.                       */
 /*       BUG10215 - Global replication needs a global interface      */
@@ -32,24 +34,25 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(3 0) VALUE(0)
              DCL        VAR(&FIRST) TYPE(*CHAR) LEN(1)
              DCL        VAR(&GORPG) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GPRPG) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GPCPY) TYPE(*CHAR) LEN(10)
- 
-             DCLF       FILE(GPGLOBFPD)
- 
+
+/*********   DCLF       FILE(GPGLOBFPD) */                                              /*MD056556*/
+             DCLF       FILE(GPGLFJW0)                                                  /*MD056556*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              DLTF       FILE(QTEMP/GORPGG)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/GPRPGG)
@@ -67,7 +70,7 @@
              MONMSG     MSGID(CPF0000)                                                  /*BUG10215*/
              DLTF       FILE(QTEMP/GPCPYSRCG.)                                          /*BUG10215*/
              MONMSG     MSGID(CPF0000)                                                  /*BUG10215*/
- 
+
              CRTSRCPF   FILE(QTEMP/GORPGG) RCDLEN(112)
              CRTSRCPF   FILE(QTEMP/GPRPGG) RCDLEN(112)
              CRTSRCPF   FILE(QTEMP/GPCPYG) RCDLEN(112)
@@ -76,7 +79,7 @@
              CRTSRCPF   FILE(QTEMP/GOGENSRCZ.) RCDLEN(112)                              /*BUG10215*/
              CRTSRCPF   FILE(QTEMP/GPGENSRCG.) RCDLEN(112)                              /*BUG10215*/
              CRTSRCPF   FILE(QTEMP/GPCPYSRCG.) RCDLEN(112)                              /*BUG10215*/
- 
+
              ADDPFM     FILE(QTEMP/GORPGG) MBR(GORPGG) +
                           TEXT('Generated Code') SRCTYPE(RPGLE)
              ADDPFM     FILE(QTEMP/GPRPGG) MBR(GPRPGG) +
@@ -87,13 +90,13 @@
                           TEXT('Generated Code') SRCTYPE(RPGLE)
              ADDPFM     FILE(QTEMP/GPCPYSRG) MBR(GPCPYSRG) +
                           TEXT('Generated Code') SRCTYPE(RPGLE)
- 
+
              OVRDBF     FILE(GORPGG) TOFILE(QTEMP/GORPGG)
              OVRDBF     FILE(GPRPGG) TOFILE(QTEMP/GPRPGG)
              OVRDBF     FILE(GPCPYG) TOFILE(QTEMP/GPCPYG)
              OVRDBF     FILE(GPCPYWHG) TOFILE(QTEMP/GPCPYWHG)
              OVRDBF     FILE(GPCPYSRG) TOFILE(QTEMP/GPCPYSRG)
- 
+
 /************RMVM       FILE(GPCPYSRCG) MBR(GPZOLSYNWH)    **************************/  /*BUG10215*/
 /************MONMSG     MSGID(CPF0000)                     **************************/  /*BUG10215*/
 /************RMVM       FILE(GPCPYSRCG) MBR(GPZOLSYNSR)    **************************/  /*BUG10215*/
@@ -112,7 +115,7 @@ LOOP:        RCVF
              CLRPFM     FILE(GPCPYSRG)
              CALL       PGM(GOZGENSRC) PARM(&GFZPF &GFZLF &FIRST +
                           &GORPG &GPRPG &GPCPY)
- 
+
 /* Bulk Synchronisation*/
              IF         COND(&GFBLSY = 'Y') THEN(DO)
              CPYF       FROMFILE(GORPGG) TOFILE(GOGENSRCZ.) +
@@ -121,7 +124,7 @@ LOOP:        RCVF
 /************             TOFILE(GORPGSRCG) TOMBR(&GORPG) +    ***********************/ /*BUG10215*/
 /************             MBROPT(*REPLACE)                     ***********************/ /*BUG10215*/
              ENDDO
- 
+
 /* On-line Synchronisation*/
 /************IF         COND(&GFOLSY = 'T' *OR &GFOLSY = 'B') THEN(DO)   *************/ /*BUG10215*/
              IF         COND(&GFOLSY ='T' *OR &GFOLSY ='B' *OR &GFOLSY ='N') THEN(DO)   /*BUG10215*/
@@ -147,18 +150,18 @@ LOOP:        RCVF
 /************CPYF       FROMFILE(GPCPYSRG) TOFILE(GPCPYSRCG) +  **********************/ /*BUG10215*/
 /************             TOMBR(GPZOLSYNSR) MBROPT(*ADD)        **********************/ /*BUG10215*/
              ENDDO
- 
+
              GOTO CMDLBL(LOOP)
- 
+
  ABNOR:
- 
+
 /* Abnormal termination */
- 
+
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(MEM5003) MSGF(MIDAS) TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

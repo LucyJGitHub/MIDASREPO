@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE172             Date 23Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -252,6 +254,90 @@
      C                     ELSE
      C                     COMIT
      C                     ENDIF
+     C*                                                                   CLE172
+     C*  If the customer code is not blank call CG6065LE, otherwise       CLE172
+     C*  read through LELOANL4 and call CG6065LE for each customer found. CLE172
+     C*                                                                   CLE172
+     C           WCUS      IFNE *BLANK                                    CLE172
+     C           CLE172    ANDEQ'Y'                                       CLE172
+     C*                                                                   CLE172
+     C                     CALL 'CG6065LE'                                CLE172
+     C                     PARM *BLANKS   ##RTCD  7                       CLE172
+     C                     PARM W0CMT     ##CMT   3                       CLE172
+     C                     PARM           PRENT                           CLE172
+     C                     PARM           WPARM                           CLE172
+     C*                                                                   CLE172
+     C**  Error in called program.                                        CLE172
+     C           ##RTCD    IFNE *BLANK                                    CLE172
+     C                     EXSR SRAUDT                                    CLE172
+     C** Database error                                                   CLE172
+     C                     MOVEL'CG6065LE'W0FILE           ***************CLE172
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *CLE172
+     C                     Z-ADD01        W0ERNB           ***************CLE172
+     C                     MOVEL'MEM5003' W0MSGD                          CLE172
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
+     C                     EXSR SRERR                                     CLE172
+     C                     ENDIF                                          CLE172
+     C*                                                                   CLE172
+     C                     COMIT                                          CLE172
+     C*                                                                   CLE172
+     C                     ELSE                            WCUS EQ 0   K  CLE172
+     C*                                                                   CLE172
+     C           PRENT     IFEQ 'ALL'                                     CLE172
+     C           *LOVAL    SETLLLELOANL4                                  CLE172
+     C                     READ LELOANL4                 50               CLE172
+     C                     ELSE                                           CLE172
+     C           PRENT     SETLLLELOANL4                                  CLE172
+     C           PRENT     READELELOANL4                 50               CLE172
+     C                     ENDIF                                          CLE172
+     C*                                                                   CLE172
+     C           *IN50     DOWEQ'0'                                       CLE172
+     C*                                                                   CLE172
+     C**  Increment the count of LELOANL4 records read.                   CLE172
+     C                     ADD  1         ##DREC  50                      CLE172
+     C*                                                                   CLE172
+     C*  If the loans for current customer have already been processed    CLE172
+     C*  go to another customer                                           CLE172
+     C*                                                                   CLE172
+     C           BRCA      IFEQ #PRENT                                    CLE172
+     C           CNUM      ANDEQ##WCUS                                    CLE172
+     C           PRENT     IFEQ 'ALL'                                     CLE172
+     C                     READ LELOANL4                 50               CLE172
+     C                     ELSE                                           CLE172
+     C           PRENT     READELELOANL4                 50               CLE172
+     C                     ENDIF                                          CLE172
+     C                     ITER                                           CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE BRCA      #PRENT                          CLE172
+     C                     MOVE CNUM      WCUS                            CLE172
+     C                     MOVE CNUM      ##WCUS                          CLE172
+     C                     ENDIF                                          CLE172
+     C*                                                                   CLE172
+     C** Produce Confirmation                                             CLE172
+     C*                                                                   CLE172
+     C           CLE172    IFEQ 'Y'                                       CLE172
+     C                     CALL 'CG6065LE'                                CLE172
+     C                     PARM *BLANKS   ##RTCD  7                       CLE172
+     C                     PARM W0CMT     ##CMT   3                       CLE172
+     C                     PARM           #PRENT                          CLE172
+     C                     PARM           WPARM                           CLE172
+     C*                                                                   CLE172
+     C**  Error in called program.                                        CLE172
+     C           ##RTCD    IFNE *BLANK                                    CLE172
+     C*                                                                   CLE172
+     C                     EXSR SRAUDT                                    CLE172
+     C*                                                                   CLE172
+     C** Database error                                                   CLE172
+     C                     MOVEL'CG6065LE'W0FILE           ***************CLE172
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *CLE172
+     C                     Z-ADD01        W0ERNB           ***************CLE172
+     C                     MOVEL'MEM5003' W0MSGD                          CLE172
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
+     C                     EXSR SRERR                                     CLE172
+     C                     ELSE                                           CLE172
+     C                     COMIT                                          CLE172
+     C                     ENDIF                                          CLE172
+     C                     ENDIF                                          CLE172
      C*
      C** Read next record from LELOANL4
      C*
@@ -332,6 +418,18 @@
      C**********           Z-ADD*ZEROS    ##WCUS  60                                          CSD027
      C                     MOVE *BLANKS   ##WCUS  6                                           CSD027
      C                     MOVE *BLANK    #PRENT  3
+      ** Access switchable features file to check for CLE172              CLE172
+     C                     CALL 'AOSARDR0'                                CLE172
+     C                     PARM *BLANKS   W@RTCD  7                       CLE172
+     C                     PARM '*VERIFY' W@OPTN  7                       CLE172
+     C                     PARM 'CLE172'  W@SARD  6                       CLE172
+      *                                                                   CLE172
+     C           W@RTCD    IFEQ *BLANK                                    CLE172
+     C                     MOVE 'Y'       CLE172  1                       CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE 'N'       CLE172                          CLE172
+     C                     ENDIF                                          CLE172
+      *                                                                   CLE172
      C*
      C**  Copyright
      C                     MOVEACPY@      ACT@   80

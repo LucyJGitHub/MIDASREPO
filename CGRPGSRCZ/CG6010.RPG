@@ -21,8 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 23Oct20               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CCB020             Date 06Aug12               *
@@ -52,6 +53,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -532,6 +534,47 @@
      C                     ELSE                                           CLE004
      C                     MOVE 'Y'       ##COPD                          CLE004
      C                     ENDIF                                          CLE004
+     C*                                                                   CLE172
+     C*  If Loan is authorised and Loan is not 'Linked to Syndicate'      CLE172
+     C*                                                                   CLE172
+     C           CLE172    IFEQ 'Y'                                       CLE172
+     C           LAASTS    ANDEQ'A'                                       CLE172
+     C           LNKS      ANDNE'Y'                                       CLE172
+     C           CLE172    OREQ 'Y'                                       CLE172
+     C           ASTS      ANDEQ'A'                                       CLE172
+     C           LNKS      ANDNE'Y'                                       CLE172
+     C           CLE172    OREQ 'N'                                       CLE172
+     C*                                                                   CLE172
+     C* If Consolidated Confirmations is 'Y' call CG6015LE                CLE172
+     C*                                                                   CLE172
+     C           BPCONR    IFNE 'Y'                                       CLE172
+     C*                                                                   CLE172
+     C** Produce Confirmation                                             CLE172
+     C*                                                                   CLE172
+     C                     CALL 'CG6015LE'                                CLE172
+     C                     PARM *BLANKS   ##RTCD  7                       CLE172
+     C                     PARM W0CMT     ##CMT   3                       CLE172
+     C                     PARM *BLANK    ##COPD  1                       CLE172
+     C                     PARM *BLANK    ##AUTO  1                       CLE172
+     C                     PARM           DSPARM                          CLE172
+     C*                                                                   CLE172
+     C**  Error in called program.                                        CLE172
+     C           ##RTCD    IFNE *BLANK                                    CLE172
+     C*                                                                   CLE172
+     C                     EXSR SRAUDT                                    CLE172
+     C*                                                                   CLE172
+     C** Database error                                                   CLE172
+     C                     MOVEL'CG6015LE'W0FILE           ***************CLE172
+     C                     MOVEL##RTCD    W0KEY            * DBERR 03     CLE172
+     C                     Z-ADD03        W0ERNB           ***************CLE172
+     C                     MOVEL'MEM5003' W0MSGD                          CLE172
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
+     C                     EXSR SRERR                                     CLE172
+     C                     END                                            CLE172
+     C*                                                                   CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE 'Y'       ##COPD                          CLE172
+     C                     ENDIF                                          CLE172
      C*
      C/COPY WNCPYSRC,CG6010C002
      C** Confirmation Produced?
@@ -704,7 +747,18 @@
      C                     ELSE                                           136778
      C                     MOVE 'N'       CLE004                          136778
      C                     ENDIF                                          136778
-      *                                                                   136778
+      ** Access switchable features file to check for CLE172              CLE172
+     C                     CALL 'AOSARDR0'                                CLE172
+     C                     PARM *BLANKS   W@RTCD  7                       CLE172
+     C                     PARM '*VERIFY' W@OPTN  7                       CLE172
+     C                     PARM 'CLE172'  W@SARD  6                       CLE172
+      *                                                                   CLE172
+     C           W@RTCD    IFEQ *BLANK                                    CLE172
+     C                     MOVE 'Y'       CLE172  1                       CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE 'N'       CLE172                          CLE172
+     C                     ENDIF                                          CLE172
+      *                                                                   CLE172
      C**  Copyright
      C                     MOVEACPY@      ACT@   80
       ***Get*the midas phase data area                                                 142773 CCB020

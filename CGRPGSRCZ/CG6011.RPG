@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE172             Date 23Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -216,6 +218,30 @@
      C                     MOVEL'MIDAS  ' W0MSGF
      C                     EXSR SRERR
      C                     END
+      *                                                                   CLE172
+     C** Produce Confirmation                                             CLE172
+     C*                                                                   CLE172
+     C           CLE172    IFEQ 'Y'                                       CLE172
+     C                     CALL 'CG6016'                                  CLE172
+     C                     PARM *BLANKS   ##RTCD  7                       CLE172
+     C                     PARM W0CMT     ##CMT   3                       CLE172
+     C                     PARM *BLANK    ##COPD  1                       CLE172
+     C                     PARM *BLANK    ##AUTO  1                       CLE172
+     C                     PARM           DSPARM                          CLE172
+     C*                                                                   CLE172
+     C**  Error in called program.                                        CLE172
+     C           ##RTCD    IFNE *BLANK                                    CLE172
+     C*                                                                   CLE172
+     C                     EXSR SRAUDT                                    CLE172
+     C*                                                                   CLE172
+     C** Database error                                                   CLE172
+     C                     MOVEL'CG6016  'W0FILE           ***************CLE172
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *CLE172
+     C                     Z-ADD01        W0ERNB           ***************CLE172
+     C                     MOVEL'MEM5003' W0MSGD                          CLE172
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
+     C                     EXSR SRERR                                     CLE172
+     C                     END                                            CLE172
      C*
      C** Confirmation Produced?
      C*
@@ -365,6 +391,18 @@
      C**  Initialise work fields
      C                     Z-ADD*ZEROS    ##DREC
      C*
+      ** Access switchable features file to check for CLE172              CLE172
+     C                     CALL 'AOSARDR0'                                CLE172
+     C                     PARM *BLANKS   W@RTCD  7                       CLE172
+     C                     PARM '*VERIFY' W@OPTN  7                       CLE172
+     C                     PARM 'CLE172'  W@SARD  6                       CLE172
+      *                                                                   CLE172
+     C           W@RTCD    IFEQ *BLANK                                    CLE172
+     C                     MOVE 'Y'       CLE172  1                       CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE 'N'       CLE172                          CLE172
+     C                     ENDIF                                          CLE172
+      *                                                                   CLE172
      C**  Copyright
      C                     MOVEACPY@      ACT@   80
      C*

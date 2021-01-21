@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT101CC1          Date 06Nov20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. MD048586           Date 11Jan21               *
+      *  Prev Amend No. HUT101CC1          Date 06Nov20               *
+      *                 CSW220             Date 09Mar20               *
       *                 HUT101             Date 12May20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -96,6 +97,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
       *  HUT101CC1 - Copy CSW220 processing from FT0060 here          *
       *           so that SWIFT works in line with HUT101 feature     *
       *           Addition of hook HUT101_016                         *
@@ -756,13 +759,13 @@
       *
      C/COPY WNCPYSRC,FTH00450
       *                                                                                       CFT157
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00451
-     C                   ENDIF                                                                CFT157
+     C**********         ENDIF                                                       CFT157 MD048586
       *
       ** Blank out temporary variable for Change Type.
       *
@@ -800,15 +803,15 @@
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,FTIPAYDC04
       *
-     C     @CFT157       IFEQ      'Y'                                                        CFT157
-     C     IPCHTP        ANDEQ     'S'                                                        CFT157
-     C                   ELSE                                                                 CFT157
+     C*****@CFT157       IFEQ      'Y'                                               CFT157 MD048586
+     C*****IPCHTP        ANDEQ     'S'                                               CFT157 MD048586
+     C**********         ELSE                                                        CFT157 MD048586
       *                                                                                       CFT157
       ** Clear all positions in store.
       *
      C                   EXSR      SRClr
      C/COPY WNCPYSRC,FTH00453
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
       *
       ** Call CL program to deallocate this reference to a dataarea                           261468
       *                                                                                       261468

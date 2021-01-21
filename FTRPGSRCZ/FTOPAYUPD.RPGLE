@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. HUT101             Date 27Mar20               *
+      *  Last Amend No. MD048586           Date 11Jan21               *
+      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *                 HUT101             Date 27Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -124,6 +125,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
       *           Payment Authorisation for Funds Transfer            *
@@ -768,10 +771,10 @@
      C                   EXSR      INSSR                                                     BUG4449
       *  Clear stored values
      C/COPY WNCPYSRC,FTH00472
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   Exsr      SRCLR
      C/COPY WNCPYSRC,FTH00473
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
 
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
@@ -869,10 +872,10 @@
       *  Clear stored values
      C     UPDEND        TAG
      C/COPY WNCPYSRC,FTH00478
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   EXSR      SRCLR
      C/COPY WNCPYSRC,FTH00479
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
                                                                                               201577
       ** Call CL program to deallocate this reference to a dataarea                           201577
                                                                                               201577

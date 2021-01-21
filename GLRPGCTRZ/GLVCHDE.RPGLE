@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *  Last Amend No. MD057244           Date 18Dec20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046635           Date 10Aug17               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057244 - Error message for alternative account error is    *
+      *             not descriptive enough. Use errror message that   *
+      *             details 'selected account is using an alternate   *
+      *             account.                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
@@ -428,7 +433,8 @@
      C                   Move      'N'           DDCHBROk
      C                   Add       1             Idx
      C                   MoveL     'DDCHCP'      FldNamXAr(Idx)
-     C                   MoveL     'RE71324'     MsgIDXAr(Idx)
+     C**********         MoveL     'RE71324'     MsgIDXAr(Idx)                              MD057244
+     C                   MoveL     'RE71421'     MsgIDXAr(Idx)                              MD057244
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF

@@ -12,11 +12,13 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD055681             Date 31Jul20             *
-      *  Prev Amend No. MD056103   *CREATE   Date 17Jun20             *
+      *  Last Amend No. MD057231             Date 18Nov20             *
+      *  Prev Amend No. MD055681             Date 31Jul20             *
+      *                 MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057231 - In case of error, add SETON LR and dump           *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056103 - Deliverable Data Split migration                  *
       *                                                               *
@@ -263,6 +265,8 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return
      C                   Endif
 
@@ -289,6 +293,8 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return
      C                   Endif
 
@@ -409,6 +415,8 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return
      C                   Endif
 
@@ -449,6 +457,8 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return
      C                   Endif
 
@@ -543,6 +553,8 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return
      C                   Endif
      C                   Endif
@@ -685,6 +697,8 @@
      C                   If        SQLCode <> 0                                             MD055681
      C                             and SQLCode <> 100                                       MD055681
      C                   eval      ERROR = '*Error'                                         MD055681
+     C                   Dump                                                               MD057231
+     C                   Seton                                        LR                    MD057231
      C                   Return                                                             MD055681
      C                   Endif                                                              MD055681
                                                                                             MD055681

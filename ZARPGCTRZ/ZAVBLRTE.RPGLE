@@ -348,6 +348,10 @@
       *
      C                   EXSR      RSTFLDS
       *
+      ** Access Loan Details defaulting
+      *
+     C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
+      *
      C     ApiName       IFEQ      'CLIP'
      C                   MOVEA     InpScrfld     ArrayInp
      C                   MOVEA     ArrayInp(1)   DDBLRT
@@ -548,16 +552,6 @@
      C     WKCLOANR      KLIST
      C                   KFLD                    WFLNRF
       *
-     C                   SETOFF                                       29
-     C     WFLNRF        IFEQ      *BLANKS
-     C                   SETON                                        29
-     C                   ENDIF
-     C                   SETOFF                                       30
-     C     WFCYCD        IFEQ      *BLANKS
-     C     WFBSRC        OREQ      *BLANKS
-     C                   SETON                                        30
-     C                   ENDIF
-      *
       ** Check if CLE172 is installed
       *
      C                   EVAL      CLE172 = 'N'
@@ -626,10 +620,6 @@
      C                   MOVE      BBABSRC       WFBSRC
      C                   ENDIF
       *
-      ** Acess Loan Details defaulting
-      *
-     C     WKCLOANR      CHAIN     LECLIPL2      LECLOAN              20
-      *
      C                   ENDSR
       *
       *****************************************************************
@@ -642,6 +632,24 @@
       *
      C                   MOVE      *BLANKS       ArrayInp
      C                   Z-ADD     Idx           Ix                             Store index
+     C                   SETOFF                                       29
+     C                   SETOFF                                       30
+      *
+     C     WFLNRF        IFEQ      *BLANKS
+     C                   SETON                                        29
+     C                   ENDIF
+     C     WFCYCD        IFEQ      *BLANKS
+     C     WFBSRC        OREQ      *BLANKS
+     C                   SETON                                        30
+     C                   ENDIF
+      *
+     C     ApiName       IFEQ      'CLIP'
+     C     ApiName       OREQ      'LOAM'
+     C     ApiName       OREQ      'LOSC'
+     C     ApiName       OREQ      'LERI'
+     C     ApiName       OREQ      'PDCL'
+     C                   EVAL      DLBNDCSP =  '.'
+     C                   ENDIF
       *
       ** Reset OK Fields
       *

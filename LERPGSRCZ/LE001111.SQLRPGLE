@@ -26,6 +26,7 @@
       *****************************************************************
 
      FLECLIPL2  UF   E           K DISK    INFSR(*PSSR)
+     F                                     IGNORE(CLOANCKF)
       ** Midas LE Customer Loans File
 
       *****************************************************************
@@ -80,7 +81,7 @@
      C                             SQLCODE <> 100
      C                   EVAL      DBFILE = 'CLOANCL'
      C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBPGM  = 'SMU01052'
+     C                   EVAL      DBPGM  = 'LE001111'
      C                   EVAL      DBASE  = SQLCODE
      C                   EXSR      *PSSR
      C                   ENDIF
@@ -94,7 +95,7 @@
      C                   ELSE
      C                   EVAL      DBFILE = 'LECLIPL2'
      C                   EVAL      DBKEY  = 'LOAN NOT FOUND'
-     C                   EVAL      DBPGM  = 'SMU01052'
+     C                   EVAL      DBPGM  = 'LE001111'
      C                   EVAL      DBASE  = 002
      C                   EXSR      *PSSR
      C                   ENDIF

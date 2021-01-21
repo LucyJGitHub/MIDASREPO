@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Kill Object Locks in COB for zzDZLIB')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000364 - Midas SC Kill Object Locks in COB for zzDZLIB   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056731  *CREATE  Date 01Oct20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  MD056731 - 24x7 APIs - AMAD entry fails when account cust.       */
+/*               also input from 24x7 API                            */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+/** Declare the variables for rerun checking */
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000364')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
+
+             DCL        VAR(&ORET) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(7) VALUE('  DZLIB')
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2020')
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/** Reset Indicators */
+             CHGJOB     SWS(00000000)
+
+             SNDPGMMSG  MSG('Kill object locks for zzDZLIB') TOMSGQ(MRUNQ)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DZLIB 1 2)) VALUE(&SYSID)
+
+/** Check the current status of this component */
+             CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/** Restart Process */
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+             ENDDO
+
+/** Set Cob Flag */
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/** Check objeck locks for lib zzDZLIB*/
+             CHGVAR     VAR(&OBJN) VALUE('*ALL')
+             CHGVAR     VAR(&OBJL) VALUE(&DZLIB)
+             CHGVAR     VAR(&OBJT) VALUE('*FILE')
+             SCKOBJLCK  OBJ(&OBJN) LIB(&OBJL) OBJTYPE(&OBJT) +
+                          JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG  MSG('Job terminated, database in error.') +
+                             TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(DBERR)
+             ENDDO
+
+/** Reset Cob Flag = ' '  */
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/** Skip to End */
+             RMVPFTRG   FILE(&DZLIB/T_APIMSG) TRGTIME(*AFTER) +
+                          TRGEVENT(*UPDATE) /*MD056767*/
+             MONMSG     MSGID(CPF32C6 CPD321B CPC3206)
+
+             RMVPFTRG   FILE(&DZLIB/SDCUSTPD) TRGTIME(*AFTER) +
+                        TRGEVENT(*INSERT)
+             MONMSG     MSGID(CPC3204)
+
+             GOTO       CMDLBL(END)
+
+DBERR:       SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited 2020')
+ENDPGM

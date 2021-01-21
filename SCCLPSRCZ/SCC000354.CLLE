@@ -9,10 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*       Last Amend No. MD056585           Date 24Aug20              */
+/*       Prev Amend No. MD056584           Date 24Aug20              */
+/*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056585 - 24x7 APIs - SCC000352 issue with DTAARA/SCND24X7 */
+/*       MD056584 - 24x7 APIs - SCC000356 runs in I/C                */
 /*       CAP702 - 24x7 APIs - Common Processing                      */
 /*                                                                   */
 /*********************************************************************/
@@ -33,7 +37,7 @@
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&NBRRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&ALLPRC) TYPE(*CHAR) LEN(1) VALUE('N')
-             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000354')                 /*EFIX*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000354')
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&JOB1) TYPE(*CHAR) LEN(10)
@@ -168,6 +172,7 @@ PROCESS:
 
                   IF    COND(&NBRRCD *LT &NO24x7)  THEN(DO)
              CHGDTAARA  DTAARA(&DZLIB/SCND24X7 (1 5)) VALUE('DAY  ')
+             MONMSG     MSGID(CPF0000 MCH0000)  /*MD056585*/
              CHGDTAARA  DTAARA(&GMLIB/SCND24X7 (1 5)) VALUE('DAY  ')
              MONMSG     MSGID(CPF0000 MCH0000)
                   ENDDO
@@ -183,6 +188,7 @@ PROCESS:
                           THEN(DO)
 
              CHGDTAARA  DTAARA(&DZLIB/SCND24X7 (1 5)) VALUE('DAY  ')
+             MONMSG     MSGID(CPF0000 MCH0000)  /*MD056585*/
              CHGDTAARA  DTAARA(&GMLIB/SCND24X7 (1 5)) VALUE('DAY  ')
              MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
@@ -211,6 +217,7 @@ PROCESS:
 
 END:
 /* Retrieve sbmjob to end it    */
+             DLYJOB     DLY(2)                     /*MD056584*/
              RTVDTAARA  DTAARA(&DZLIB/&DANAM) RTNVAR(&DANAD)
              CHGVAR VAR(&JOB1) VALUE(%SST(&DANAD 1 10))
              CHGVAR VAR(&USER1) VALUE(%SST(&DANAD 11 10))
@@ -226,6 +233,7 @@ END:
  ABNOR:
 
 /* Retrieve sbmjob to end it    */
+             DLYJOB     DLY(2)                     /*MD056584*/
              RTVDTAARA  DTAARA(&DZLIB/&DANAM) RTNVAR(&DANAD)
              CHGVAR VAR(&JOB1) VALUE(%SST(&DANAD 1 10))
              CHGVAR VAR(&USER1) VALUE(%SST(&DANAD 11 10))

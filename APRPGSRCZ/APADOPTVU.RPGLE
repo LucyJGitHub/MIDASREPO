@@ -64,26 +64,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** Entry parameters
      D MidasUser       S             10
      D Lang            S              2
@@ -99,7 +99,7 @@
      D APIRetC         S              1
      D***ApHead*         S            200                                            AR971184 CSD102
      D ApHead          S            318                                                       CSD102
- 
+
      D Jobd            DS            20
      D JobDName                1     10    INZ('MIDASIC   ')
      D System                 11     12
@@ -120,10 +120,10 @@
      D Parm            DS          3200                                                      244122
      D OffSetB               361    364B 0
      D LibCountB             365    368B 0
- 
+
      D***Len             S              4B 0 INZ(1000)                                       244122
      D Len             S              4B 0 INZ(3200)                                         244122
- 
+
       * If this buffer needs to increase a separate parameter will need to be added
      D Buffer          S           9999
      D Buffer2         S           9999                                                      BUG4646
@@ -134,7 +134,7 @@
      D Buffer7         S           9999                                                      BUG4646
      D Buffer8         S           9999                                                      BUG4646
      D Buffer9         S           9999                                                      BUG4646
- 
+
       * If this Message array needs to increase a separate parameter will need to be added    BG1105
      D MsgArrOut       S           9999    INZ(*BLANKS)                                       BG1105
                                                                                               BG1105
@@ -142,7 +142,7 @@
      D OffSet          S              9  0
      D InLibl          S           2750
      D Command         S           2764
- 
+
       * Error message format for retrieve jobd libl
      DQUSEC            DS
       *                                             Qus EC
@@ -158,9 +158,9 @@
       *                                             Varying length
      D QUSExcData             17     46
       *                                             Varying length field Exception Data
- 
+
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C     System        PARM                    Sys               2
      C                   PARM                    MidasUser
@@ -175,10 +175,10 @@
      C                   PARM                    APIRetC
      C                   PARM                    ReservId                       BUG2480
      C                   PARM                    ApHead                                     AR971184
- 
+
      C                   Eval      APIRetC = '1'
       *
-     C                   Z-ADD     0             A                 3 0
+     C                   Z-ADD     0             A                 3 0                        CAP702
      C                   Eval      A = %SCAN('MIDASCOB':APHEAD)                               CAP702
      C     A             IFGT      0                                                          CAP702
       * Set up job description library list                                                   CAP702
@@ -253,11 +253,11 @@
      C                   Eval      InLibl = %SubSt(Parm:OffSet:OffLen)
      C                   Eval      Command = ('CHGLIBL LIBL(' +
      C                             InLibl + ')')
- 
+
      C                   Call      'QCMDEXC'                              92
      C                   Parm                    Command
      C                   Parm      2764          Length           15 5
- 
+
       * The VarBuffer field is of variable length so should be defined
       * prior to the move to the API buffer
      C**********         Eval      %Len(VarBuffer) = 32000                                   BUG4646
@@ -280,7 +280,7 @@
      C                   EVAL      Buffer7=%SUBST(VarBuffer3:1:9999)                         BUG4646
      C                   EVAL      Buffer8=%SUBST(VarBuffer3:10000:9999)                     BUG4646
      C                   EVAL      Buffer9=%SUBST(VarBuffer3:19999:9999)                     BUG4646
- 
+
       * Call the API Validate and update program
      C                   CALL      'APCTRANVU'
      C                   PARM                    Sys
@@ -301,7 +301,7 @@
      C                   PARM                    APIRetC
      C                   PARM                    ReservId                       BUG2480
      C                   PARM                    ApHead                                     AR971184
- 
+
       * Set the variable buffer to have the smallest required length
      C                   MOVEL     Buffer        VarBuffer
      C**********         EVAL      %SUBST(VarBuffer:10000) = Buffer2                BUG4646 BUG12784
@@ -320,7 +320,7 @@
      C                   Eval      VarBuffer2 = %trimr(VarBuffer2)                            BG7666
      C                   Endif                                                               BUG8011
      C                   Eval      VarBuffer3 = %trimr(VarBuffer3)                           BUG4646
- 
+
       * Set the variable message array to have the smallest required length                   BG1105
      C                   Eval      %Len(VarMsgArrO) = %Len(MsgArrOut)                         BG2743
      C                   MoveL     MsgArrOut     VarMsgArrO                                   BG1105
@@ -334,13 +334,13 @@
       *  Initialisation                                              *
       ****************************************************************
      C     *INZSR        BEGSR
- 
+
       **--------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
- 
+
       ** Check for switchable feature CAP702                                                  CAP702
      C                   Call      'AOSARDR0'                                                 CAP702
      C                   Parm      *Blanks       @RTCD             7                          CAP702

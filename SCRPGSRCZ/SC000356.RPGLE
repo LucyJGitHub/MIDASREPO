@@ -18,10 +18,12 @@
       *                                                               *
       *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CAP702  *CREATE    Date 12May20               *
+      *  Last Amend No. MD056760           Date 16Sep20               *
+      *  Prev Amend No. CAP702  *CREATE    Date 12May20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056760 - Front Office ID required for NIGHT API messages   *
       *  CAP702 - 24x7 APIs - Common Processing                       *
       *                                                               *
       *****************************************************************
@@ -50,8 +52,11 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-     FAPI24X7SL3UF A E           K DISK    INFSR(*PSSR)
-      ** Midas AP Queued Data file
+     F****API24X7SL3UF A E           K DISK    INFSR(*PSSR)                     MD056760
+      **** Midas AP Queued Data file                                            MD056760
+      *                                                                         MD056760
+     FAPI24X7SL4UF A E           K DISK    INFSR(*PSSR)                         MD056760
+      ** Midas AP Queued Data file                                              MD056760
       *
      FSCCDJNPD  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
@@ -109,12 +114,6 @@
      D ControlInf      DS
      D  CTRLInfo1                     1
 
-     D WQMSGS          DS
-     D  APINME                45     48
-
-     D WAPOUT          DS         32000
-     D  BufAP                 45     48
-
      D ZATRNLGL        DS           168
      D  AAFOTR                 1     20
      D  AATMES                21     46
@@ -148,6 +147,12 @@
      C     *ENTRY        PLIST
      C                   PARM                    JournalEnt
      C                   PARM                    ControlInf
+      *
+     C     KAPIX4        KLIST                                                  MD056760
+     C                   KFLD                    KFOTR            20            MD056760
+     C                   KFLD                    KTRID            50            MD056760
+     C                   KFLD                    KMMOD             2            MD056760
+     C                   KFLD                    KACTN             1            MD056760
       *
       * If the first byte of Control Information is 0, no data has been
       *  passed so simply return
@@ -232,14 +237,26 @@ E1   C                   ENDIF
       *    ------        -----
       *
      C     File_Name     IFEQ      'ZATRNLOGPD'
-     C                   Eval      ZATRNLGL = %TRIM(%Subst(JournalEnt:126:168))
+     C********           Eval      ZATRNLGL = %TRIM(%Subst(JournalEnt:126:168)) MD056760
+     C                   Eval      ZATRNLGL = %Subst(JournalEnt:126:168)        MD056760
      C                   END
       *
-      ** Access API24X7SPD using MQMSID
-      *
-     C                   MOVEL     AAFOTR        KMQFOI           20
-      *
-     C     KMQFOI        CHAIN     API24X7SL3                         71
+      ***Access*API24X7SPD*using*MQMSID******                                   MD056760
+      ********                                                                  MD056760
+     C********           MOVEL     AAFOTR        KMQFOI           20            MD056760
+      ********                                                                  MD056760
+     C*****KMQFOI        CHAIN     API24X7SL3                         71        MD056760
+      ********                                                                  MD056760
+      ** Access API24X7SPD using AAFOTR, AAMIDT2, AAMIDA and AAACTN             MD056760
+      ** Front Office Id, Midas Trans Id2, Midas Module and Action Code         MD056760
+      *                                                                         MD056760
+     C                   MOVEL     AAFOTR        KFOTR                          MD056760
+     C                   MOVEL     AAMIDT2       KTRID                          MD056760
+     C                   MOVEL     AAMIDA        KMMOD                          MD056760
+     C                   MOVEL     AAACTN        KACTN                          MD056760
+      *                                                                         MD056760
+     C     KAPIX4        CHAIN     API24X7SL4                         71        MD056760
+      *                                                                         MD056760
      C                   IF        *IN71 = *off
       *
      C     APSTAT        IFEQ      ' '
@@ -251,6 +268,7 @@ E1   C                   ENDIF
      C                   MOVEL     'E'           APSTAT
      C                   ENDIF
      C                   ENDIF
+      *
      C                   UPDATE    API24X7SD0
       *
      C                   ENDIF

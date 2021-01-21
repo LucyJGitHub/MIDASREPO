@@ -5,20 +5,18 @@
 /*                                                                   */
 /*       Midas - Implementation Module                               */
 /*                                                                   */
-/*       SMUC00504 - FusionBanking Platform Schema Upgrade           */
+/*       SMUC00505 - FusionBanking Platform Schema Upgrade           */
 /*                                                                   */
-/*       (c) Finastra International Limited 2020                     */
+/*       (c) Finastra International Limited 2021                     */
 /*                                                                   */
-/*       Last Amend No. MD057446           Date 12Jan21              */
-/*       Prev Amend No. MD050405  *CREATE  Date 03Jun20              */
+/*       Last Amend No. MD057446  *CREATE  Date 12Jan21              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
 /*       MD057446 - Duplicate key error on SMUPGCTD when running     */
 /*                  PRCA. Create separate programs for global and    */
-/*                  zonal schema upgrade. Move zone processing to    */
-/*                  new program SMUC00505.                           */
-/*       MD050405 - Fusion Midas 2.1 Platform Upgrade                */
+/*                  zonal schema upgrade. Transfer zone processing   */
+/*                  from program SMUC00504 to this program.          */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&LAYER &NEWBFLIB)
@@ -29,12 +27,12 @@
              DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GLOBPRFX) TYPE(*CHAR) LEN(2)
-/**********  DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2) */                            /*MD057446*/
+             DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
              DCL        VAR(&BACKUPLIB) TYPE(*CHAR) LEN(10)
@@ -43,10 +41,10 @@
              DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
 
-/*/COPY GPCPYSRCG,GPSVALDCL */
+/*/COPY SDCPYSRC,SDSVALDCL */
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
-                          2020')
+                          2021')
 
 /** Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -67,22 +65,19 @@
              ENDDO
 
 /** Setup program variables */
-             CHGVAR     VAR(&GPLIB) VALUE(&GLOBPRFX *TCAT 'GPLIB')
-             CHGVAR     VAR(&OWNER) VALUE(&GLOBPRFX *TCAT 'OWNER')
-             CHGVAR     VAR(&AUTL) VALUE(&GLOBPRFX *TCAT 'DATABASE')
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
-                CHGVAR     VAR(&BFLIB) VALUE(&GLOBPRFX *TCAT 'BFLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&ZONEPRFX *TCAT 'DPLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&ZONEPRFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE')
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&BFLIB) VALUE(&ZONEPRFX *TCAT +
+                             &GLOBPRFX *TCAT 'BFLIB')
              ENDDO
-/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)      */                       /*MD057446*/
-/**********     CHGVAR     VAR(&BFLIB) VALUE(&ZONEPRFX *TCAT + */                       /*MD057446*/
-/**********                  &GLOBPRFX *TCAT 'BFLIB')          */                       /*MD057446*/
-/**********  ENDDO                                             */                       /*MD057446*/
 
 /** Create the schema upgrade status data area if not exists */
-             CHKOBJ     OBJ(&GPLIB/SMBUPSTAT) OBJTYPE(*DTAARA)
+             CHKOBJ     OBJ(&DPLIB/SMZUPSTAT) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(DO)
-                CALL       PGM(UPC000034) PARM('SMBUPSTAT' 'SMDTASRCGP' +
-                             &BRGSRCLIB &GPLIB ' ' ' ' &OWNER +
+                CALL       PGM(UPC000034) PARM('SMZUPSTAT' 'SMDTASRCDP' +
+                             &BRGSRCLIB &DPLIB ' ' ' ' &OWNER +
                              &AUTL &RETURN)
                 IF         COND(&RETURN = 'E') THEN(DO)
                    GOTO       CMDLBL(ABNOR)
@@ -90,7 +85,7 @@
              ENDDO
 
 /** Check the schema upgrade status */
-             RTVDTAARA  DTAARA(&GPLIB/SMBUPSTAT) RTNVAR(&STATUS)
+             RTVDTAARA  DTAARA(&DPLIB/SMZUPSTAT) RTNVAR(&STATUS)
 
 /** If status is nonblank, this is a re-run of a previous failure */
 /** Do recovery point processing */
@@ -106,49 +101,10 @@
                 GOTO       CMDLBL(PHASEC)
              ENDDO
 
-             IF         COND(&STATUS *EQ 'D') THEN(DO)
-                GOTO       CMDLBL(PHASED)
-             ENDDO
-
-             IF         COND(&STATUS *EQ 'E') THEN(DO)
-                GOTO       CMDLBL(PHASEE)
-             ENDDO
-
-/** PHASEA: Migration of data from old schema to new schema */
+/** PHASEA: Creation of old schema library backup before deletion */
 PHASEA:
              CHGVAR     VAR(&STATUS) VALUE('A')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
-
-/** Create the schema migration details file if not exists*/
-             CHKOBJ     OBJ(&GPLIB/SMBFMGTD) OBJTYPE(*FILE)
-             MONMSG     MSGID(CPF9801) EXEC(DO)
-                CALL       PGM(UPC000034) PARM('SMBFMGTD' 'SMSQLSRCGP' +
-                             &BRGSRCLIB &GPLIB ' ' ' ' &OWNER +
-                             &AUTL &RETURN)
-                IF         COND(&RETURN = 'E') THEN(DO)
-                   GOTO       CMDLBL(ABNOR)
-                ENDDO
-
-/** Copy delivered SMBFMCTD */
-                CPYF       FROMFILE(&BRGDTALIB/SMBFMGTD) +
-                             TOFILE(&GPLIB/SMBFMGTD) MBROPT(*REPLACE)
-
-/** Start journalling */
-                STRJRNPF   FILE(SMBFMGTD) JRN(GPJRN) IMAGES(*BOTH) +
-                             OMTJRNE(*OPNCLO)
-             ENDDO
-
-/** Call program to migrate data */
-             CALL       PGM(SMU00504) PARM(&LAYER &BFLIB &NEWBFLIB +
-                          &RETURN)
-             IF         COND(&RETURN = 'E') THEN(DO)
-                GOTO       CMDLBL(ABNOR)
-             ENDDO
-
-/** PHASEB: Creation of old schema library backup before deletion */
-PHASEB:
-             CHGVAR     VAR(&STATUS) VALUE('B')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+             CHGDTAARA  DTAARA(&DPLIB/SMZUPSTAT) VALUE(&STATUS)
 
              RTVJOBA    DATE(&TODAY)
              CHGVAR     VAR(&BACKUPLIB) VALUE('#' *TCAT &BFLIB)
@@ -168,35 +124,21 @@ PHASEB:
                              OUTPUT(*PRINT)
              ENDDO
 
-/** PHASEC: Deletion of all Midas views dependent to old schema */
-PHASEC:
-             CHGVAR     VAR(&STATUS) VALUE('C')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
-
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
-                CHGVAR     VAR(&BACKUPLIB) VALUE('#.' *TCAT &GLOBPRFX +
-                             *TCAT 'GMLIB')
-                CALL       PGM(SMU00505) PARM(&LAYER &BACKUPLIB &RETURN)
-                IF         COND(&RETURN = 'E') THEN(DO)
-                   GOTO       CMDLBL(ABNOR)
-                ENDDO
-             ENDDO
-
-/** PHASED: Deletion of all objects from the old schema library */
+/** PHASEB: Deletion of all objects from the old schema library */
 /** And also, replacing it with the delivered new schema objects */
-PHASED:
-             CHGVAR     VAR(&STATUS) VALUE('D')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+PHASEB:
+             CHGVAR     VAR(&STATUS) VALUE('B')
+             CHGDTAARA  DTAARA(&DPLIB/SMZUPSTAT) VALUE(&STATUS)
 
              CLRLIB     LIB(&BFLIB)
              CPYLIB     FROMLIB(&NEWBFLIB) TOLIB(&BFLIB) +
                           CRTLIB(*NO)
 
-/** PHASEE: Update of new schema objects to use Midas journalling */
+/** PHASEC: Update of new schema objects to use Midas journalling */
 /** And also, update object ownership and authority */
-PHASEE:
-             CHGVAR     VAR(&STATUS) VALUE('E')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+PHASEC:
+             CHGVAR     VAR(&STATUS) VALUE('C')
+             CHGDTAARA  DTAARA(&DPLIB/SMZUPSTAT) VALUE(&STATUS)
 
 /** Delete existing journals and use the Midas Journalling */
              CALLSUBR   SUBR(CHGJRN)
@@ -205,13 +147,9 @@ PHASEE:
              ENDDO
 
 /** Program successful completion */
-/** Migration completed, reset status of SMBFMGTD */
-             CPYF       FROMFILE(&BRGDTALIB/SMBFMGTD) +
-                          TOFILE(&GPLIB/SMBFMGTD) MBROPT(*REPLACE)
-
 /** Set status to blanks */
              CHGVAR     VAR(&STATUS) VALUE(' ')
-             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+             CHGDTAARA  DTAARA(&DPLIB/SMZUPSTAT) VALUE(&STATUS)
 
              GOTO       CMDLBL(ENDPGM)
 
@@ -235,24 +173,15 @@ ABNOR:
              CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredDtaLib')
              CHGVAR     VAR(&SVALK3) VALUE('BrgDeliveredSrcLib')
 
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
                 CHGVAR     VAR(&SVALK4) VALUE('BrgMidasGlobalPrefix')
-                CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC &SVALK1 +
-                             &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
-                             &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
-                             &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
-                             &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+                CHGVAR     VAR(&SVALK5) VALUE('BrgMidasSystemPrefix')
+                CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 +
+                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                             &SVAL9 &SVALK10 &SVAL10)
              ENDDO
-
-/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                 */            /*MD057446*/
-/**********     CHGVAR     VAR(&SVALK4) VALUE('BrgMidasGlobalPrefix')     */            /*MD057446*/
-/**********     CHGVAR     VAR(&SVALK5) VALUE('BrgMidasSystemPrefix')     */            /*MD057446*/
-/**********     CALL       PGM(AOSVALR0) PARM(&RSVALRTNC &SVALK1 &SVAL1 + */            /*MD057446*/
-/**********                  &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +      */            /*MD057446*/
-/**********                  &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +       */            /*MD057446*/
-/**********                  &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +      */            /*MD057446*/
-/**********                  &SVAL9 &SVALK10 &SVAL10)                     */            /*MD057446*/
-/**********  ENDDO                                                        */            /*MD057446*/
 
              IF         COND(&RSVALRTNC *NE ' ') THEN(DO)
                 CHGVAR     VAR(&ERRORFLAG) VALUE('E')
@@ -262,7 +191,7 @@ ABNOR:
              CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL2 1 10))
              CHGVAR     VAR(&BRGSRCLIB) VALUE(%SST(&SVAL3 1 10))
              CHGVAR     VAR(&GLOBPRFX) VALUE(%SST(&SVAL4 1 2))
-/**********  CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL5 1 2))            */            /*MD057446*/
+             CHGVAR     VAR(&ZONEPRFX) VALUE(%SST(&SVAL5 1 2))
 
              ENDSUBR
 
@@ -296,30 +225,20 @@ ABNOR:
              ENDDO
 
 /** Change ownership & authority of all objects w/in schema Library */
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
-                CHGVAR     VAR(&OWNER) VALUE(&GLOBPRFX *TCAT 'OWNER')
-                CHGVAR     VAR(&AUTL) VALUE(&GLOBPRFX *TCAT 'DATABASE')
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&OWNER) VALUE(&ZONEPRFX *TCAT 'OWNER')
+                CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE')
              ENDDO
-
-/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)               */              /*MD057446*/
-/**********     CHGVAR     VAR(&OWNER) VALUE(&ZONEPRFX *TCAT 'OWNER')   */              /*MD057446*/
-/**********     CHGVAR     VAR(&AUTL) VALUE(&ZONEPRFX *TCAT 'DATABASE') */              /*MD057446*/
-/**********  ENDDO                                                      */              /*MD057446*/
 
              CHGOWNAUT  OBJ(&BFLIB/*ALL) OBJTYPE(*ALL) +
                           NEWOWN(&OWNER) PUBAUT(*USE) +
                           AUTL(&AUTL) CHGLIB(N)
 
 /** Journal all files within schema library using Midas Journal */
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
-                CHGVAR     VAR(&JLIB) VALUE(&GLOBPRFX *TCAT 'GJLIB')
-                CHGVAR     VAR(&JRN) VALUE('GPJRN')
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&JLIB) VALUE(&ZONEPRFX *TCAT 'JLIB')
+                CHGVAR     VAR(&JRN) VALUE('ICJRN')
              ENDDO
-
-/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO)           */                  /*MD057446*/
-/**********     CHGVAR     VAR(&JLIB) VALUE(&ZONEPRFX *TCAT 'JLIB') */                  /*MD057446*/
-/**********     CHGVAR     VAR(&JRN) VALUE('ICJRN')                 */                  /*MD057446*/
-/**********  ENDDO                                                  */                  /*MD057446*/
 
              STRJRNPF   FILE(&BFLIB/*ALL) JRN(&JLIB/&JRN) +
                           IMAGES(*BOTH)

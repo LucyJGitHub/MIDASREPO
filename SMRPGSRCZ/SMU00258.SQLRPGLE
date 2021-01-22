@@ -15,13 +15,16 @@
       *  Function:  This program will correct LASQ field in CLOANCL   *
       *             file for PDCL Loan Fees                           *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 05Feb18               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025112 *CREATE   Date 20Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *

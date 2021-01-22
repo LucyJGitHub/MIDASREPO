@@ -1149,7 +1149,9 @@
       *                                                                                       CLE172
       ***  Validate backward-looking rate fields                                              CLE172
       *                                                                                       CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
      C                   EXSR      SRBLRTE                                                    CLE172
+     C                   ENDIF                                                                CLE172
       *
       /COPY WNCPYSRC,LECLIP2V13
       *
@@ -6575,6 +6577,23 @@ E004 C                   ENDIF
      C     @RTCD         IFEQ      *BLANKS                                                   BUG3721
      C                   MOVE      'Y'           CAS005                                      BUG3721
      C                   END                                                                 BUG3721
+                                                                                              CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE172
+     C                   PARM      'CLE172'      @SARD                                        CLE172
+                                                                                              CLE172
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE172
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE172
+     C                   EVAL      DBKEY  = 'CLE172'                            ************* CLE172
+     C                   EVAL      DBASE  = 16                                  * DBERR 016 * CLE172
+     C                   EXSR      *PSSR                                        ************* CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE172
+     C                   MOVE      'Y'           CLE172                                       CLE172
+     C                   END                                                                  CLE172
       *                                                                                       CLE030
       ***  Determine if Release authorisation enhancement feature                             CLE030
       ***  is installed                                                                       CLE030

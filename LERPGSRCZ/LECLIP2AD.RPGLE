@@ -212,18 +212,6 @@
      D OKLnScr2      E DS                  EXTNAME(LEECLI2PD)
       ***  Error indicators screen 2
       *                                                                                       CLE172
-     D DDBLRTOK        S              1A                                                      CLE172
-     D DDLBDYOK        S              1A                                                      CLE172
-     D DDLODYOK        S              1A                                                      CLE172
-     D DDPDLYOK        S              1A                                                      CLE172
-     D DDBADJOK        S              1A                                                      CLE172
-     D DDAVOPOK        S              1A                                                      CLE172
-     D DDCARTOK        S              1A                                                      CLE172
-     D DDWGHTOK        S              1A                                                      CLE172
-     D DDBRACOK        S              1A                                                      CLE172
-     D DDLBACOK        S              1A                                                      CLE172
-      ***  Error indicators for Backward-Looking Rate                                         CLE172
-      *                                                                                       CLE172
      D @@ALPH          S             16A                                                      CLE172
      D @@MTID          S              1A                                                      CLE172
      D @@AMT           S             15P 0                                                    CLE172

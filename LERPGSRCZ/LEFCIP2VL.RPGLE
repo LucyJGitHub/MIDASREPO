@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918343           Date 25Apr12               *
-      *  Prev Amend No. MD027517           Date 08Jul14               *
+      *  Last Amend No. MD021699A          Date 19Sep13               *
+      *  Prev Amend No. 259227             Date 16Aug13               *
+      *                 AR918343           Date 25Apr12               *
+      *                 MD027517           Date 08Jul14               *
       *                 AR896408           Date 31Jan1F               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -72,6 +74,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021699A - Additional changes relating to closing date.     *
+      *  259227 - Default closing date to facility start date instead *
+      *           of facility expiry date. Applied fix 126246.        *
+      *           Applied for MD021699.                               *
       *  AR918343 - Tried to remove drawing types from facility but   *
       *             BFM did not allow.                                *
       *             Defaulting of drawing types should only occured   *
@@ -1538,11 +1544,11 @@
       *
      C     DDCDTE        IFEQ      *BLANKS
       * Default to start date
-     C     CLE106        IFEQ      'Y'                                                        CLE106
-     C                   MOVE      W#DTEX        ZDAYNO                                       CLE106
-     C                   ELSE                                                                 CLE106
+     C*****CLE106        IFEQ      'Y'                                                 CLE106 259227
+     C**********         MOVE      W#DTEX        ZDAYNO                                CLE106 259227
+     C**********         ELSE                                                          CLE106 259227
      C                   MOVE      W#DTAP        ZDAYNO
-     C                   ENDIF                                                                CLE106
+     C**********         ENDIF                                                         CLE106 259227
       *                                                                                       CLE106
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
@@ -1570,10 +1576,14 @@
 
      C     ZDAYNO        IFLT      W#DTAP
      C     ZDAYNO        ORGT      W#DTEX
-     C                   Move      'N'           DDCDTEOK
-     C                   Add       1             Idx
-     C                   Movel     'DDCDTE'      FldNamXAr(Idx)
-     C                   Movel     'LEF0083'     MsgIDXAr(Idx)
+     C**********         Move      'N'           DDCDTEOK                                  MD021699A
+     C**********         Add       1             Idx                                       MD021699A
+     C**********         Movel     'DDCDTE'      FldNamXAr(Idx)                            MD021699A
+     C**********         Movel     'LEF0083'     MsgIDXAr(Idx)                             MD021699A
+      ** Closing date passed from java layer (DS/TranInSeco)                               MD021699A
+      ** Not set by user. Closing date cannot be seen on User Input Screen                 MD021699A
+      ** Set Closing Date = Start Date                                                     MD021699A
+     C                   MOVE      W#DTAP        ZDAYNO                                    MD021699A
      C                   ENDIF
      C                   ENDIF
 

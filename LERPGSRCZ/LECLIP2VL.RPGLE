@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055219           Date 27May20               *
-      *  Prev Amend No. MD055059           Date 21May20               *
+      *  Last Amend No. AR918333           Date 08Mar12               *
+      *  Prev Amend No. MD055219           Date 27May20               *
+      *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
       *                 MD055714           Date 06May20               *
@@ -130,6 +131,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918333 - Warning message LEL0559 is spurious and should not*
+      *             be displayed. As a local fix, do not issue warning*
+      *             LEL0559. (Child: AR918334)                        *      
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
       *  MD055059 - Allow negative fixed rate                         *
@@ -4809,6 +4813,10 @@ E004 C                   ENDIF
      C                   Z-ADD     WCRPYA        WSVRA                          Repay Amnt   BUG3721
                                                                                              BUG3721
      C                   ELSE                                                                BUG3721
+      *                                                                                     AR918333
+      ** As local change, skip showing of warning message LEL0559.                          AR918333
+      *                                                                                     AR918333
+     C                   GOTO      SKIP                                                     AR918333
                                                                                              BUG3721
       ** Show Warning message if different from calculated                                   BUG3721
                                                                                              BUG3721
@@ -4859,6 +4867,7 @@ E004 C                   ENDIF
                                                                                              BUG3721
      C**********         ENDIF                                                       BUG3721 BUG4351
      C                   ENDIF                                                               BUG3721
+     C     SKIP          TAG                                                                AR918333
                                                                                              BUG3721
      C                   ENDIF                                                               BUG3721
                                                                                              BUG3721

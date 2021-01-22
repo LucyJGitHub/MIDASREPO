@@ -9,12 +9,15 @@
       *                                                               *
       *  SMU00256 - Midas SM Upgrade for ORBR field in CLOANCL        *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 05Feb18               *
       *                 MD023442A*CREATE   Date 02Jan14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023442A - Update CLOANCL->ORBR field for Facility Fees     *

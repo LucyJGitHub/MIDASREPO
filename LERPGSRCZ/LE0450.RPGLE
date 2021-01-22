@@ -426,7 +426,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
-      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
@@ -1414,7 +1413,8 @@
      F***NCLONCL   O    F 1829        DISK                                             CRE073 CLE134
      F***NCLONCL   O    F 1905        DISK                                             CLE134 CLE141
      F***NCLONCL   O    F 2025        DISK                                             CLE141 CER050
-     FNCLONCL   O    F 2039        DISK                                                       CER050
+     F***NCLONCL   O    F 2039        DISK                                             CER050 CLE172
+     FNCLONCL   O    F 2084        DISK                                                       CLE172
      F***NCLONCK O   F     469            DISK                     S01518 CLE004
      F***NCLONCK*O   F    1103            DISK                     CLE004 123335
      F***NCLONCK*O   F    1111            DISK                     123335 CEU004
@@ -1456,7 +1456,8 @@
      F***MCLONCL   O    F 1805        DISK                                             CRE073 CLE134
      F***MCLONCL   O    F 1881        DISK                                             CLE134 CLE141
      F***MCLONCL   O    F 2001        DISK                                             CLE141 CER050
-     FMCLONCL   O    F 2015        DISK                                                       CER050
+     F***MCLONCL   O    F 2015        DISK                                             CER050 CLE172
+     FMCLONCL   O    F 2060        DISK                                                       CLE172
 0019 F***MCLONCK*O***F     400            DISK                      S10227S01518
 0019 F***MCLONCK O   F     469            DISK                     S01518 CLE004
      F***MCLONCK*O   F    1103            DISK                     CLE004 123335
@@ -3040,6 +3041,23 @@ L118 I                             P   72   77 7RTSPL
      I                               1996 2025  LOCPI                                         CLE141
      I                               2026 2026  APRC                                          CER050
      I                               2027 2039 0PREM                                          CER050
+     I                               2040 2040  BLRT                                          CLE172
+     I                               2041 2042 0LBDY                                          CLE172
+     I                               2043 2044 0NBDY                                          CLE172
+     I                               2045 2046 0LODY                                          CLE172
+     I                               2047 2048 0NODY                                          CLE172
+     I                               2049 2050 0PDLY                                          CLE172
+     I                               2051 2052 0NDLY                                          CLE172
+     I                             P 2053 2059 8BADJ                                          CLE172
+     I                             P 2060 2066 8NADJ                                          CLE172
+     I                               2067 2067  AVOP                                          CLE172
+     I                               2068 2068  NVOP                                          CLE172
+     I                             P 2069 2075 8CART                                          CLE172
+     I                               2076 2076  WGHT                                          CLE172
+     I                               2077 2077  NGHT                                          CLE172
+     I                               2078 2079  BRAC                                          CLE172
+     I                               2080 2081 0LBAC                                          CLE172
+     I                             P 2082 2084 0PIAD                                          CLE172
 0194 I**
 0195 I**   /FIELDS TO DEFINE WHOLE RECORD
 0196 I**
@@ -4343,6 +4361,23 @@ L118 I                             P   72   77 7RTSPL
      I              SLST                        SLSTX                                      AR1083279
      I              APRC                        XAPRC                                         CER050
      I              PREM                        XPREM                                         CER050
+     I              BLRT                        BLRTX                                         CLE172
+     I              LBDY                        LBDYX                                         CLE172
+     I              NBDY                        NBDYX                                         CLE172
+     I              LODY                        LODYX                                         CLE172
+     I              NODY                        NODYX                                         CLE172
+     I              PDLY                        PDLYX                                         CLE172
+     I              NDLY                        NDLYX                                         CLE172
+     I              BADJ                        BADJX                                         CLE172
+     I              NADJ                        NADJX                                         CLE172
+     I              AVOP                        AVOPX                                         CLE172
+     I              NVOP                        NVOPX                                         CLE172
+     I              CART                        CARTX                                         CLE172
+     I              WGHT                        WGHTX                                         CLE172
+     I              NGHT                        NGHTX                                         CLE172
+     I              BRAC                        BRACX                                         CLE172
+     I              LBAC                        LBACX                                         CLE172
+     I              PIAD                        PIADX                                         CLE172
       *                                                                                       185526
       **  Redefine some of the unneeded CLOANCK fields for safety                             185526
      ICLOANCKF
@@ -21250,6 +21285,23 @@ C    C                   ENDIF                                                  
      O                       XRFN              1874                                           CLE134
      O                       APRC              2026                                           CER050
      O                       PREM              2039                                           CER050
+     O                       BLRT              2040                                           CLE172
+     O                       LBDY              2042                                           CLE172
+     O                       NBDY              2044                                           CLE172
+     O                       LODY              2046                                           CLE172
+     O                       NODY              2048                                           CLE172
+     O                       PDLY              2050                                           CLE172
+     O                       NDLY              2052                                           CLE172
+     O                       BADJ              2059P                                          CLE172
+     O                       NADJ              2066P                                          CLE172
+     O                       AVOP              2067                                           CLE172
+     O                       NVOP              2068                                           CLE172
+     O                       CART              2075P                                          CLE172
+     O                       WGHT              2076                                           CLE172
+     O                       NGHT              2077                                           CLE172
+     O                       BRAC              2079                                           CLE172
+     O                       LBAC              2081                                           CLE172
+     O                       PIAD              2084P                                          CLE172
       *                                                                   CAC001
       *                                                                   CAC001
 3450 ONCLONCK   D    62
@@ -21915,6 +21967,23 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE134
      O                       APRC              2002                                           CER050
      O                       PREM              2015                                           CER050
+     O                       BLRT              2016                                           CLE172
+     O                       LBDY              2018                                           CLE172
+     O                       NBDY              2020                                           CLE172
+     O                       LODY              2022                                           CLE172
+     O                       NODY              2024                                           CLE172
+     O                       PDLY              2026                                           CLE172
+     O                       NDLY              2028                                           CLE172
+     O                       BADJ              2035P                                          CLE172
+     O                       NADJ              2042P                                          CLE172
+     O                       AVOP              2043                                           CLE172
+     O                       NVOP              2044                                           CLE172
+     O                       CART              2051P                                          CLE172
+     O                       WGHT              2052                                           CLE172
+     O                       NGHT              2053                                           CLE172
+     O                       BRAC              2055                                           CLE172
+     O                       LBAC              2057                                           CLE172
+     O                       PIAD              2060P                                          CLE172
       *                                                                   CAC001
 3450 OMCLONCK   D    63                                                         S10227
      O*                                                                   S01270

@@ -9592,10 +9592,18 @@
                                                                                               CLE172
      C                   EVAL      CLE172 = 'N'                                               CLE172
      C                   CALL      'AOSARDR0'                                                 CLE172
-     C                   PARM      *Blanks       PRetCode                                     CLE172
+     C                   PARM      *BLANKS       PRetCode                                     CLE172
      C                   PARM      '*VERIFY'     POption                                      CLE172
      C                   PARM      'CLE172'      PSARD                                        CLE172
-     C     SCSARD        PARM      *Blanks       DSFDY                                        CLE172
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRetCode <> *BLANKS AND                                    CLE172
+     C                             PRetCode <> '*NRF   '                                      CLE172
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE172
+     C                   EVAL      DBKEY  = 'CLE172'                            ************* CLE172
+     C                   EVAL      DBASE  = 6                                   * DBERR 006 * CLE172
+     C                   EXSR      *PSSR                                        ************* CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE172
      C                   IF        PRetCode = *BLANKS                                         CLE172
      C                   EVAL      CLE172 = 'Y'                                               CLE172

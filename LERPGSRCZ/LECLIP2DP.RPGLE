@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025521           Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025521 - Recompile due to changes on LECLI2PD.             *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

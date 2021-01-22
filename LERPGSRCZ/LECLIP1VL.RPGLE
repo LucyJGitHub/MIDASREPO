@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918361           Date 02Apr12               *
-      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *  Last Amend no. 251946             Date 16Sep13               *
+      *  Prev Amend No. AR918361           Date 02Apr12               *
+      *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
@@ -171,6 +172,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251946 - Consider rollover warning message only if CLE030    *
+      *           is switched on. Patterned fix after 248041.         *
+      *         - Applied for MD022245.                               *
       *  AR918361 - No error message for rollover frequency when not  *
       *             defined in facility rollover types. Validate the  *
       *             rollover frequency properly against the facility  *
@@ -5779,6 +5783,7 @@ B001 C     ZERR          IFNE      *BLANKS
       **********                                                                     CLE030 BUG10657
      C**********         ELSE                                                        CLE030 BUG10657
      C**********         Z-ADD     WSVRD         W1RLDT                               CLE030 BUG4351
+     C     CLE030        IFEQ      'Y'                                                        251946
      C                   MOVE      'W'           DDRLDTOK                                     CLE030
      C                   ADD       1             WId                                          CLE030
      C                   MOVEL     'DDRLDT'      WFldNmXAr(WId)                               CLE030
@@ -5789,6 +5794,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C     CLE030        ANDEQ     'Y'                                                      BUG10733
      C                   EVAL      CCLLSTS = 'Q'                                              CLE030
      C                   ENDIF                                                                CLE030
+     C                   ENDIF                                                                251946
      C**********         ENDIF                                                       CLE030 BUG10657
      C                   ENDIF
       *

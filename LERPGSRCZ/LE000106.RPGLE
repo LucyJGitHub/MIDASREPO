@@ -78,6 +78,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021372 - Rollover of a Syndicated Loan crashes with        *
+      *             Java NullPointer error                            *
+      *           - Migrated loans - Pf/LeTrefPd - file field AREF    *
+      *             character delimiter '¦' not correct.  It should   *
+      *             be '|'.                                           *      
       *  MD026171 - Decimal data error occurred. Initialise field     *
       *             INMAAN to zero this will prevent the DBERR.       *
       *  AR674226 - Manual transaction reached 999. Increase the size *

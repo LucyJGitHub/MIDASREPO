@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 235031             Date 27Sep13               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD024741           Date 02Apr13               *
+      *  Prev Amend No. 235031             Date 27Sep13               *
+      *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
@@ -152,6 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024741 - Deletion of customer details not allowed.         *
+      *             Condition BUG27866 on CRN001 being ON.            *      
       *  235031 - Not to allow closure/deletion of customers linked   *
       *           to a live FT transaction. Also recompiled SP8SD0001.*
       *           Applied for MD-53056                                *
@@ -2414,6 +2417,9 @@
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
+     C                   IF        CRN001 = 'N'                                             MD024741
+     C                   EVAL      @WQUTP = 'N'                                             MD024741
+     C                   ENDIF                                                              MD024741
       *
       *  Customer Deletion Pre-checks - Client Details
       *
@@ -5133,6 +5139,28 @@
      C                   ELSE                                                                 CSD028
      C                   EVAL      CSD028 = 'N'                                               CSD028
      C                   ENDIF                                                                CSD028
+      *                                                                                     MD024741
+     C                   CALLB     'AOSARDR0'                                               MD024741
+     C                   PARM      *BLANKS       @RTCD                                      MD024741
+     C                   PARM      '*VERIFY'     @OPTN                                      MD024741
+     C                   PARM      'CRN001'      @SARD             6                        MD024741
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD024741
+      *                                                                                     MD024741
+      * DATABASE ERROR                                                                      MD024741
+      *                                                                                     MD024741
+     C     @RTCD         IFNE      *BLANKS                                                  MD024741
+     C     @RTCD         ANDNE     '*NRF   '                                                MD024741
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD024741
+     C                   MOVEL     '902'         DBASE                                      MD024741
+     C                   MOVEL     'CSD021'      DBKEY                                      MD024741
+     C                   EXSR      *PSSR                                                    MD024741
+     C                   ENDIF                                                              MD024741
+      *                                                                                     MD024741
+     C     @RTCD         IFEQ      *BLANK                                                   MD024741
+     C                   MOVEL     'Y'           CRN001            1                        MD024741
+     C                   ELSE                                                               MD024741
+     C                   MOVEL     'N'           CRN001                                     MD024741
+     C                   ENDIF                                                              MD024741
                                                                                               CSD079
       ** Check if enhancement S01425 is on                                                    CSD079
                                                                                               CSD079

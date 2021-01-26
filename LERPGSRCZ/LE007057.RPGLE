@@ -22,11 +22,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1042505 *CREATE  Date 19Mar13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1042505 *CREATE  Date 19Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1042505 - MFU is not included on rebuild of fclty exposure.*
       *              Create a new function to update FCLTYFN for MFU  *
@@ -66,21 +69,21 @@
       **   F-specs
       **   =======
       ** +--------------------------------------+
- 
+
      FLEMFUXPD  IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(MF_)
- 
+
      FFCLTY     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
- 
+
      FPEFCLFL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:PEFCLFLF)
- 
+
      FHISUPD    IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(HISACTF)
      F                                     PREFIX(H_)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -104,7 +107,7 @@
       *
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       ** Data Area giving Installation Control Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  External DS for Bank Details
       *
@@ -123,23 +126,23 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Second DS for access programs, long data structure
       *
- 
+
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures
       **   ==========================
       ** +--------------------------------------+
- 
+
      D  WKEY1                  1     11
      D  K1CNUM                 1      6
      D  K1FACT                 7      9  0
      D  K1FCNO                10     11  0
      D  K1FCTY                 7     11  0
- 
+
      D                 DS
      D  RUN0                   1      3P 0
      D  RUN1                   4      6P 0
@@ -153,7 +156,7 @@
      D  RUN9                  28     30P 0
      D  RUNS                   1     30P 0
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
      D  OAM1                   1      7P 0
      D  OAM2                   8     14P 0
@@ -167,13 +170,13 @@
      D  OA10                  64     70P 0
      D  OAM                    1     70P 0
      D                                     DIM(10)
- 
- 
+
+
       ** +--------------------------------------+
       **   Declared variables
       **   ==================
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D CLE014          S              1
      D CLE023          S              1
@@ -193,31 +196,31 @@
      D WSCNUM          S              6
      D WSFACT          S              3  0
      D WSFCNO          S              2  0
- 
+
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
      D ZRATE2          S             13P 8
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       **
       **   Initial processing is performed automatically: *INZSR is
       **   executed at program activation.
       **
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   READ      LEMFUXPD                               01
- 
+
      C                   DOW       *IN01 = '0'
       *
       ** Perform Detail and Update Processing.
@@ -229,10 +232,10 @@
       *
      C                   READ      LEMFUXPD                               01
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = '1'
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -241,7 +244,7 @@
       *                                                               *
       *****************************************************************
      C     SRDETL        BEGSR
- 
+
      C                   MOVEA     *ZEROS        WOAM
      C                   EVAL      K1BRCA = MF_BRCA
      C                   EVAL      K1CNUM = MF_CNUM
@@ -291,7 +294,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -301,7 +304,7 @@
       *                                                               *
       *****************************************************************
      C     SRAVAI        BEGSR
- 
+
      C                   IF        MF_UCCY <> FCCY
       *
       ** Convert utilisation amount using utilisation exchange rate
@@ -313,7 +316,7 @@
      C                   EVAL      WBASE = 16
      C                   MOVEL     FCCY          WBKEY
      C                   EXSR      SRCURR
- 
+
      C                   EVAL      FCDP = A6NBDP
       *
       ** If CLE023 is installed, save currency spot rate for update of
@@ -474,7 +477,7 @@
       *                                                               *
       *****************************************************************
      C     SRCAAV        BEGSR
- 
+
      C     K#KY01        CHAIN     FCLTYFMF                           02
       *
      C                   IF        *IN02 = '1'
@@ -651,7 +654,7 @@
       *
      C                   UPDATE    FCLTYFNF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -688,7 +691,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       *
       ** Define data areas.
       *
@@ -819,7 +822,7 @@
      C                   KFLD                    K1CNUM
      C                   KFLD                    K1FACT
      C                   KFLD                    K1FCNO
- 
+
       *
       ** Read to HISUPD/FACHISAF.
       *
@@ -827,9 +830,9 @@
      C                   KFLD                    K1BRCA
      C                   KFLD                    K1CNUM
      C                   KFLD                    K1FCTY
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -845,17 +848,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
 **  POWR   **      POWERS OF TEN

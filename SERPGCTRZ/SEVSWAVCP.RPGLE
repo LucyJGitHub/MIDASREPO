@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  BUG11323 - Change the no. of digits before the decimal point *
@@ -173,11 +176,11 @@
       ** Edit the field before displaying to screen
       *
      C                   EXSR      SREditFld
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -185,11 +188,11 @@
       *  SRValWeAveCo - Validation for Weighted Average Coupon        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValWeAveCo  BEGSR
       *
      C                   IF        DDWACP <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVEL     DDWACP        ZFIELD
      C**********         EVAL      ZADIG = 7                                                BUG11323
@@ -209,7 +212,7 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDWACP'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0572'     MsgIdXAr(Idx)
- 
+
      C                   ELSE
      C                   MOVE      ZFIELD        WWacp
      C                   ENDIF
@@ -219,7 +222,7 @@
      C                   ELSE
      C                   EVAL      WWacp = *ZERO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -228,9 +231,9 @@
       *  SREditFld - Edit the field for screen output                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SREditFld     BEGSR
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      S1WACP        ZFIELD
      C                   EVAL      ZADEC = 4
@@ -251,9 +254,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -285,9 +288,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -296,7 +299,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

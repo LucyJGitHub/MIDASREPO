@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -202,11 +205,11 @@
      C                   IF        OKNMCY = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKNMCY <> 'N'
      C                   MOVEL     DDNMCY        S1NMCY
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -217,7 +220,7 @@
       *                                                               *
       *****************************************************************
      C     SRValNmCcy    BEGSR
- 
+
      C                   IF        DDNMCY = *BLANKS
      C                   MOVE      'N'           OKNMCY
      C                   ADD       1             IDx
@@ -229,7 +232,7 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDNMCY                                 01
- 
+
      C                   IF        *IN01 = *ON
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKNMCY
@@ -241,34 +244,34 @@
      C                   EVAL      MsgDtaXAr(Idx) = LenStr + %TRIM(DDNMCY)                  MD000091
      C                   GOTO      EValNmCcy
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDNMCY        PCKEY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   MOVE      'N'           OKNMCY
      C                   ADD       1             IDx
      C                   MOVEL     'DDNMCY'      FldNamXAr(IDx)
- 
+
      C                   IF        PRTCD = '*NOSEL '
      C                   EVAL      DDNMCY = *BLANKS
      C                   MOVEL     'SEA0109'     MsgIdXAr(IDx)
      C                   GOTO      EValNmCcy
      C                   ENDIF
- 
+
      C                   MOVEL     'SEA0247'     MsgIdXAr(IDx)
      C**********         MOVEL     DDNMCY        MsgDtaXAr(IDx)                             MD000091
      C                   EVAL      BLen = %Len(%Trim(DDNMCY))                               MD000091
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDNMCY)                   MD000091
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        DDNMCY
      C                   Z-ADD     A6NBDP        PNMDP
      C                   Z-ADD     A6SPRT        PRate1
@@ -277,11 +280,11 @@
      C                   ELSE
      C                   MOVE      'M'           PMDI1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValNmCcy     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

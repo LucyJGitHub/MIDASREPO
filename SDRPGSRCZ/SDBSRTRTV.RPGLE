@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 03May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 03May13               *
       *                 AR641183           Date 27Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR641183 - Allow amendment and deletion if Front Office ID   *
@@ -467,16 +469,16 @@
       *
       * Base Rate Number must be numeric
       *
-     C     SubForTRNN    IFEQ      0
-     C     DDBSRC        IFLT      '0'
-     C     DDBSRC        ORGT      '99'
-     C                   MOVE      'N'           OKBSRC
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDBSRC'      FldNameArr(Ix)
-     C                   MOVEL     'USR4434'     MsgIdArr(Ix)
-     C                   GOTO      EVAL
-     C                   END
-     C                   END
+     C*****SubForTRNN    IFEQ      0                                                          CSD103
+     C*****DDBSRC        IFLT      '0'                                                        CSD103
+     C*****DDBSRC        ORGT      '99'                                                       CSD103
+     C**********         MOVE      'N'           OKBSRC                                       CSD103
+     C**********         ADD       1             Ix                                           CSD103
+     C**********         MOVEL     'DDBSRC'      FldNameArr(Ix)                               CSD103
+     C**********         MOVEL     'USR4434'     MsgIdArr(Ix)                                 CSD103
+     C**********         GOTO      EVAL                                                       CSD103
+     C**********         END                                                                  CSD103
+     C**********         END                                                                  CSD103
       *
       * If Authorisation check is on,                                                         CSD012
       * check if unathorised record exists on Authorisation Log.                              CSD012

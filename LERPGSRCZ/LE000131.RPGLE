@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052008           Date 05Oct18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052008           Date 05Oct18               *
       *                 MD051940           Date 21Sep18               *
       *                 MD051242           Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
@@ -48,6 +49,8 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052008 - Rounding off issue on PDCL amount using           *
       *             settlement account with partial balance           *

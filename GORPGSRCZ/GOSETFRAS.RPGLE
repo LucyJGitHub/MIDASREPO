@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 BUG13562           Date 16Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  BUG13562 - Matured FRAs and SE Trades are still linked       *
@@ -184,7 +186,8 @@
  
       * Get floating side fields
  
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   EXSR      OUR
      C                   Z-ADD     TEINR         FixRate
      C                   ELSE
@@ -267,7 +270,8 @@
       *
      C                   MOVE      UCUCY         W#CUCY            3
      C                   Z-ADD     UPAMT         W#PAMT           13 0
-     C                   Z-ADD     UBRTT         W#BRTT            2 0
+     C**********         Z-ADD     UBRTT         W#BRTT            2 0                        CSD103
+     C                   MOVE      UBRTT         W#BRTT            2                          CSD103
      C                   Z-ADD     UBRTE         W#BRTE           11 7
      C                   Z-ADD     URTSP         W#RTSP           11 7
      C                   Z-ADD     UEINR         W#EINR           11 7
@@ -296,7 +300,8 @@
       *
      C                   MOVE      TCUCY         W#CUCY            3
      C                   Z-ADD     TPAMT         W#PAMT           13 0
-     C                   Z-ADD     TBRTT         W#BRTT            2 0
+     C**********         Z-ADD     TBRTT         W#BRTT            2 0                        CSD103
+     C                   MOVE      TBRTT         W#BRTT            2                          CSD103
      C                   Z-ADD     TBRTE         W#BRTE           11 7
      C                   Z-ADD     TRTSP         W#RTSP           11 7
      C                   Z-ADD     TEINR         W#EINR           11 7

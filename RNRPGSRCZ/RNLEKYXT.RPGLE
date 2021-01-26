@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1056323          Date 14Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
       *              LKEYFED (Recompile)                              *
@@ -1162,7 +1164,8 @@
      c                   eval      indacoba    = 0                                          BUG11435
      c                   endsl
  
-     c                   if        brtt <> 0
+     c**********         if        brtt <> 0                                                  CSD103
+     c                   if        brtt <> *blanks                                            CSD103
      c                   eval      amortisa    = 2
      c                   eval      typintra    = 2
      c                   else

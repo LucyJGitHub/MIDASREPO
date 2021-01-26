@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -190,9 +193,9 @@
      C                   IF        OKNMDP = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKNMDP <> 'N'
- 
+
      C                   SELECT
       *
       ** If processing type is '7', field must be equal to '4'.
@@ -205,21 +208,21 @@
       *
      C                   WHEN      PPROT = '8'
      C                   Z-ADD     PNMDP         S1NMDP
- 
+
      C                   OTHER
- 
+
      C                   IF        CEU018 = 'Y'
      C                   MOVE      DDNMDP        S1NMDP
      C                   ELSE
      C                   Z-ADD     *ZERO         S1NMDP
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -240,7 +243,7 @@
       *                                                                                       186556
      C                   IF        PPROT = '7' OR
      C                             PPROT = '8'
- 
+
       ** If processing type is '7', field must be equal to '4'.                               186556
       *                                                                                       186556
      C                   IF        PPROT = '7'                                                186556
@@ -264,7 +267,7 @@
       *
       ** else entry is optional and must be between 0 and 4.
      C                   ELSE
- 
+
      C                   IF        DDNMDP <> *BLANK
      C                   IF        DDNMDP < '0' OR
      C                             DDNMDP > '4'
@@ -274,9 +277,9 @@
      C                   MOVEL     'SEA0140'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

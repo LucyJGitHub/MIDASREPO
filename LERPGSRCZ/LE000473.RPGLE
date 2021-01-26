@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054851           Date 20Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054851           Date 20Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD052296           Date 26Nov18               *
       *                 MD048443           Date 08Dec17               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054851 - PDCL Y is reflected as difference on LE3180P1     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
@@ -821,7 +823,8 @@
      DWFACLT           S              5
 
      DWAMTP            S              2
-     DWBRTT            S              2
+     D*BRTT*****       S              2                                                       CSD103
+     DWBRTT            S              2A                                                      CSD103
      DWRTSP            S             11  7
      DWPRAM            S             13  0
      DWINTA            S             13  0
@@ -1048,12 +1051,14 @@
 
      D SysPrefix       S              2A
 
-     D wPBSR           S              2S 0
+     D*wPBSR           S              2S 0                                                    CSD103
+     D wPBSR           S              2A                                                      CSD103
      D wPBRT           S             11P 7
      D wPRSP           S             11P 7
      D wPRSI           S              1A
      D wPICB           S              1A
-     D wIBSR           S              2S 0
+     D*wIBSR           S              2S 0                                                    CSD103
+     D wIBSR           S              2A                                                      CSD103
      D wIBRT           S             11P 7
      D wIRSP           S             11P 7
      D wIRSI           S              1A
@@ -1686,7 +1691,8 @@
      C     K_MQLG        CHAIN     LEMQLGLC                           98                    MD022465
      C                   IF        AYPOPR = 'Y'                                            MD021423E
      C                             AND C_RECI = 'D' AND *IN98 = '1'                         MD022465
-     C                             AND (wIBSR <> 0 OR wPBSR <> 0)                          MD021423E
+     C**********                   AND (wIBSR <> 0 OR wPBSR <> 0)                   MD021423E CSD103
+     C                             AND (wIBSR <> *BLANKS OR wPBSR <> *BLANKS)                 CSD103
       *                                                                                    MD021423E
      C                   IF        YPSIIN <> 'Y'                                           MD021423E
      C                   MOVE      AYPBSR        WBRTT             2                       MD021423E
@@ -4615,7 +4621,8 @@
      C                   EXSR      SRGetRates
      C                   IF        WPIIN = 'P'
      C                             OR WPIIN ='T'                                            MD048443
-     C                   IF        wPBSR <> 0
+     C*********          IF        wPBSR <> 0                                                 CSD103
+     C                   IF        wPBSR <> *BLANKS                                           CSD103
      C                   MOVEL     wPBSR         PBSR              2
      C                   EVAL      PFldData  = PBSR
      C                   MOVEL     '1'           CHINF
@@ -4623,7 +4630,8 @@
      C                   MOVE      'Y'           BCODEFLG          1                        MD031225
      C                   ENDIF
      C                   ELSEIF    WPIIN = 'I'
-     C                   IF        wIBSR <> 0
+     C*********          IF        wIBSR <> 0                                                 CSD103
+     C                   IF        wIBSR <> *BLANKS                                           CSD103
      C                   MOVEL     wIBSR         IBSR              2
      C                   EVAL      PFldData  = IBSR
      C                   MOVEL     '1'           CHINF
@@ -4633,7 +4641,8 @@
      C                   ENDIF
      C                   OTHER
      C**********         MOVEL     AUCBSR        PFldData                                   MD031851
-     C                   IF        AUCBSR <> 0                                              MD031225
+     C**********         IF        AUCBSR <> 0                                       MD031225 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   MOVEL     AUCBSR        PFldData                                   MD031851
      C                   MOVE      'Y'           BCODEFLG                                   MD031225
      C                   MOVE      'N'           RATESPFL                                   MD031851
@@ -6223,7 +6232,8 @@
      C     W@LOAN        CHAIN     LEPRATL1
      C                   IF        %FOUND(LEPRATL1)
       *
-     C                   IF        (B2PBSR <> 0) OR
+     C**********         IF        (B2PBSR <> 0) OR                                           CSD103
+     C                   IF        (B2PBSR <> *BLANKS) OR                                     CSD103
      C                             (B2PBRT <> 0) OR
      C                             (B2PRSP <> 0) OR
      C                             (B2PRAT <> *BLANKS)
@@ -6244,7 +6254,8 @@
      C                   MOVE      AYPICB        wPICB
      C                   ENDIF
       *
-     C                   IF        (B2IBSR <> 0) OR
+     C**********         IF        (B2IBSR <> 0) OR                                           CSD103
+     C                   IF        (B2IBSR <> *BLANKS) OR                                     CSD103
      C                             (B2IBRT <> 0) OR
      C                             (B2IRSP <> 0) OR
      C                             (B2IRAT <> *BLANKS)

@@ -16,7 +16,8 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CLE172             Date 23Oct20               *
-      *  Prev Amend No. MD054660           Date 19Nov19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054660           Date 19Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
@@ -71,6 +72,8 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  CLE172 - Libor Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054660 - Incorrect Next Interest Repayment Date for loans  *
       *             with repayment type 1 or 3.                       *
       *  CER050 - Annualised Percentage Rate                          *

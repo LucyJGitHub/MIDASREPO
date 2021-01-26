@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CLE172             Date 23Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE141             Date 08Feb16               *
@@ -62,6 +63,8 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  CLE172 - Libor Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
@@ -989,15 +992,18 @@
      C                   ADD       1             Q
      C                   MOVEL     'ROLINT'      @STK(Q)
      C*
-     C     NBRA          IFEQ      *ZERO
+     C*****NBRA***       IFEQ      *ZERO                                                      CSD103
+     C     NBRA          IFEQ      *BLANKS                                                    CSD103
      C     CLE036        ANDEQ     'N'
-     C     NBRA          OREQ      *ZERO
+     C*****NBRA***       OREQ      *ZERO                                                      CSD103
+     C     NBRA          OREQ      *BLANKS                                                    CSD103
      C     NBSR          ANDEQ     *ZERO
      C     CLE036        ANDEQ     'Y'
      C                   MOVE      NRTS          @@INTR
      C*
      C                   ELSE
-     C     NBRA          IFNE      *ZERO
+     C*****NBRA***       IFNE      *ZERO                                                      CSD103
+     C     NBRA          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      NBRA          ##NBRA            2
      C*  Access SDBSRTPD file for Interest Base Rate table
      C                   CALL      'AOBSRTR0'

@@ -16,7 +16,8 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CLE172             Date 23Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -624,7 +625,9 @@
      C*
      C** Next Base Rate Type
      C*
-     C     ##BCOD        IFNE      0
+     C********** ##BCOD        IFNE      0                                                    CSD103
+     C     ##BCOD        IFNE      *BLANKS                                                    CSD103
+     C                   ENDIF
      C*
      C                   ADD       1             R1
      C                   CLEAR                   R#DATA
@@ -1091,14 +1094,16 @@
      C** If first record for loan:
      C*
      C     LNRF          IFNE      ##SLNR
-     C                   Z-ADD     NBRA          ##BCOD            2 0
+     C**********         Z-ADD     NBRA          ##BCOD            2 0                        CSD103
+     C                   MOVE      NBRA          ##BCOD            2                          CSD103
      C                   END
      C*
      C** If Base Rate Code change or Rollover, save new code
      C*
      C     AMTP          IFEQ      'BC'
      C     AMTP          OREQ      'RO'
-     C                   Z-ADD     NBRA          ##BCOD
+     C**********         Z-ADD     NBRA          ##BCOD            2 0                        CSD103
+     C                   MOVE      NBRA          ##BCOD            2                          CSD103
      C                   END
      C*
      C**  Unwind subroutine stack name
@@ -1389,7 +1394,8 @@
      C                   Z-ADD     0             ##SRTS           11 7
      C                   MOVE      *BLANKS       ##SSIN            2
      C                   Z-ADD     0             ##SINT           11 7
-     C                   Z-ADD     0             ##BCOD            2 0
+     C**********           Z-ADD0         ##BCOD  20                                          CSD103
+     C                   MOVE      *BLANKS       ##BCOD            2                          CSD103
      C*
      C**  Copyright
      C*

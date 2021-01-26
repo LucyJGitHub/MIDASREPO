@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CLE172             Date 23Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER049             Date 06Dec10               *
@@ -57,6 +58,8 @@
      F*---------------------------------------------------------------*
      F*                                                               *
       *  CLE172 - Libor Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *

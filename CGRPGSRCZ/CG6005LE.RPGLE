@@ -3258,38 +3258,25 @@
 325800210122     C                   CLEAR                   R#DATA                                       CLE172
 325900210122     C                   CLEAR                   R#DEFN                                       CLE172
 326000210122     C                   CLEAR                   #@RDE                                        CLE172
-326100210122     C                   MOVE      'TE'          #@RDE                                        CLE172
-326200210122     C                   MOVEL     'BCKLOKRA'    #@RDE                                        CLE172
+326100210127     C                   MOVE      'OD'          #@RDE                                        CLE172
+326200210127     C                   MOVEL     'BASERATC'    #@RDE                                        CLE172
 326300210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
 326400210122     C                   MOVEL     BLRT          R#DATA                                       CLE172
 326500210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
 326600210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-326700210122      *                                                                                       CLE172
-326800210122      ** Averaging Option                                                                     CLE172
-326900210122      *                                                                                       CLE172
-327000210122     C                   ADD       1             R1                                           CLE172
-327100210122     C                   CLEAR                   R#DATA                                       CLE172
-327200210122     C                   CLEAR                   R#DEFN                                       CLE172
-327300210122     C                   CLEAR                   #@RDE                                        CLE172
-327400210122     C                   MOVE      'N'           #@RDE                                        CLE172
-327500210122     C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
-327600210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-327700210122     C                   MOVEL     AVOP          R#DATA                                       CLE172
-327800210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-327900210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-328000210122      *                                                                                       CLE172
-328100210122      ** Compounded/Average Rate                                                              CLE172
-328200210122      *                                                                                       CLE172
-328300210122     C                   ADD       1             R1                                           CLE172
-328400210122     C                   CLEAR                   R#DATA                                       CLE172
-328500210122     C                   CLEAR                   R#DEFN                                       CLE172
-328600210122     C                   CLEAR                   #@RDE                                        CLE172
-328700210122     C                   MOVE      'AR'          #@RDE                                        CLE172
-328800210122     C                   MOVEL     'COMPOUND'    #@RDE                                        CLE172
-328900210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-329000210122     C                   MOVEL     CART          R#DATA                                       CLE172
-329100210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-329200210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+326601210127      *                                                                                       CLE172
+326602210127      ** Benchmark Adjustment Days                                                            CLE172
+326603210127      *                                                                                       CLE172
+326604210127     C                   ADD       1             R1                                           CLE172
+326605210127     C                   CLEAR                   R#DATA                                       CLE172
+326606210127     C                   CLEAR                   R#DEFN                                       CLE172
+326607210127     C                   CLEAR                   #@RDE                                        CLE172
+326608210127     C                   MOVE      'OD'          #@RDE                                        CLE172
+326609210127     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
+326610210127     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+326611210127     C                   MOVEL     BADJ          R#DATA                                       CLE172
+326612210127     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+326613210127     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
 329300210122      *                                                                                       CLE172
 329400210122      ** Lookback Days                                                                        CLE172
 329500210122      *                                                                                       CLE172
@@ -3323,64 +3310,25 @@
 332300210122     C                   CLEAR                   R#DATA                                       CLE172
 332400210122     C                   CLEAR                   R#DEFN                                       CLE172
 332500210122     C                   CLEAR                   #@RDE                                        CLE172
-332600210122     C                   MOVE      'YS'          #@RDE                                        CLE172
-332700210122     C                   MOVEL     'DLYPAYDA'    #@RDE                                        CLE172
+332600210127     C                   MOVE      'YS'          #@RDE                                        CLE172
+332700210127     C                   MOVEL     'DLYPAYDA'    #@RDE                                        CLE172
 332800210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
 332900210122     C                   MOVEL     PDLY          R#DATA                                       CLE172
 333000210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
 333100210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-333200210122      *                                                                                       CLE172
-333300210122      ** Benchmark Adjustment Days                                                            CLE172
-333400210122      *                                                                                       CLE172
-333500210122     C                   ADD       1             R1                                           CLE172
-333600210122     C                   CLEAR                   R#DATA                                       CLE172
-333700210122     C                   CLEAR                   R#DEFN                                       CLE172
-333800210122     C                   CLEAR                   #@RDE                                        CLE172
-333900210122     C                   MOVE      'OD'          #@RDE                                        CLE172
-334000210122     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
-334100210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-334200210122     C                   MOVEL     BADJ          R#DATA                                       CLE172
-334300210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-334400210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-334500210122      *                                                                                       CLE172
-334600210122      ** Weight Convention                                                                    CLE172
-334700210122      *                                                                                       CLE172
-334800210122     C                   ADD       1             R1                                           CLE172
-334900210122     C                   CLEAR                   R#DATA                                       CLE172
-335000210122     C                   CLEAR                   R#DEFN                                       CLE172
-335100210122     C                   CLEAR                   #@RDE                                        CLE172
-335200210122     C                   MOVE      'TN'          #@RDE                                        CLE172
-335300210122     C                   MOVEL     'WGHTCONV'    #@RDE                                        CLE172
-335400210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-335500210122     C                   MOVEL     WGHT          R#DATA                                       CLE172
-335600210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-335700210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-335800210122      *                                                                                       CLE172
-335900210122      ** Base Rate Code for Accrual                                                           CLE172
-336000210122      *                                                                                       CLE172
-336100210122     C                   ADD       1             R1                                           CLE172
-336200210122     C                   CLEAR                   R#DATA                                       CLE172
-336300210122     C                   CLEAR                   R#DEFN                                       CLE172
-336400210122     C                   CLEAR                   #@RDE                                        CLE172
-336500210122     C                   MOVE      'CR'          #@RDE                                        CLE172
-336600210122     C                   MOVEL     'BSRTCDAC'    #@RDE                                        CLE172
-336700210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-336800210122     C                   MOVEL     BRAC          R#DATA                                       CLE172
-336900210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-337000210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-337100210122      *                                                                                       CLE172
-337200210122      ** Lookback Days for Accrual                                                            CLE172
-337300210122      *                                                                                       CLE172
-337400210122     C                   ADD       1             R1                                           CLE172
-337500210122     C                   CLEAR                   R#DATA                                       CLE172
-337600210122     C                   CLEAR                   R#DEFN                                       CLE172
-337700210122     C                   CLEAR                   #@RDE                                        CLE172
-337800210122     C                   MOVE      'CR'          #@RDE                                        CLE172
-337900210122     C                   MOVEL     'LBACDYAC'    #@RDE                                        CLE172
-338000210122     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-338100210122     C                   MOVEL     LBAC          R#DATA                                       CLE172
-338200210122     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-338300210122     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
+333101210127      *                                                                                       CLE172
+333102210127      ** Averaging Option                                                                     CLE172
+333103210127      *                                                                                       CLE172
+333104210127     C                   ADD       1             R1                                           CLE172
+333105210127     C                   CLEAR                   R#DATA                                       CLE172
+333106210127     C                   CLEAR                   R#DEFN                                       CLE172
+333107210127     C                   CLEAR                   #@RDE                                        CLE172
+333108210127     C                   MOVE      'N'           #@RDE                                        CLE172
+333109210127     C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
+333110210127     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
+333111210127     C                   MOVEL     AVOP          R#DATA                                       CLE172
+333112210127     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
+333113210127     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
 338400210122      *
 338500210122     C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
 338600210122     C*

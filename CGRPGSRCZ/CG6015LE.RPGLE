@@ -1092,36 +1092,23 @@
      C                   CLEAR                   R#DATA                                       CLE172
      C                   CLEAR                   R#DEFN                                       CLE172
      C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'TE'          #@RDE                                        CLE172
-     C                   MOVEL     'BCKLOKRA'    #@RDE                                        CLE172
+     C                   MOVE      'OD'          #@RDE                                        CLE172
+     C                   MOVEL     'BASERATC'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
      C                   MOVEL     BLRT          R#DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
-      ** Averaging Option                                                                     CLE172
+      ** Benchmark Adjustment Days                                                            CLE172
       *                                                                                       CLE172
      C                   ADD       1             R1                                           CLE172
      C                   CLEAR                   R#DATA                                       CLE172
      C                   CLEAR                   R#DEFN                                       CLE172
      C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'N'           #@RDE                                        CLE172
-     C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
+     C                   MOVE      'OD'          #@RDE                                        CLE172
+     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     AVOP          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Compounded/Average Rate                                                              CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'AR'          #@RDE                                        CLE172
-     C                   MOVEL     'COMPOUND'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     CART          R#DATA                                       CLE172
+     C                   MOVEL     BADJ          R#DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -1164,55 +1151,16 @@
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
-      ** Benchmark Adjustment Days                                                            CLE172
+      ** Averaging Option                                                                     CLE172
       *                                                                                       CLE172
      C                   ADD       1             R1                                           CLE172
      C                   CLEAR                   R#DATA                                       CLE172
      C                   CLEAR                   R#DEFN                                       CLE172
      C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'OD'          #@RDE                                        CLE172
-     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
+     C                   MOVE      'N'           #@RDE                                        CLE172
+     C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     BADJ          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Weight Convention                                                                    CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'OD'          #@RDE                                        CLE172
-     C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     WGHT          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Base Rate Code for Accrual                                                           CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'TE'          #@RDE                                        CLE172
-     C                   MOVEL     'BRACCRRA'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     BRAC          R#DATA                                       CLE172
-     C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
-     C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *                                                                                       CLE172
-      ** Lookback Days for Accrual                                                            CLE172
-      *                                                                                       CLE172
-     C                   ADD       1             R1                                           CLE172
-     C                   CLEAR                   R#DATA                                       CLE172
-     C                   CLEAR                   R#DEFN                                       CLE172
-     C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'TE'          #@RDE                                        CLE172
-     C                   MOVEL     'BRACCRRA'    #@RDE                                        CLE172
-     C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     LBAC          R#DATA                                       CLE172
+     C                   MOVEL     AVOP          R#DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172

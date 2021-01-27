@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27790 *CREATE   Date 02Jul10               *
+      *  Last Amend No. MD050666           Date 17Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27790 *CREATE   Date 02Jul10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050666 - Adaptive Database Upgrade                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
       *                                                               *
@@ -98,7 +100,7 @@
      D  DATA                   1     41
      D  DAT                    1     41
      D                                     DIM(41)
- 
+
      D #RPGN           S             10A   DIM(999)
      D #BUFF           S              4S 0 DIM(999)
      D #LENG           S              4S 0 DIM(999)
@@ -107,7 +109,7 @@
      D #DESC           S             30A   DIM(999)
      D #TYPE           S              1A   DIM(999)
      D #KEY            S              1A   DIM(999)
- 
+
      D                 DS
      D W#KFLD                  1    120
      D I#KEY1                  1     10
@@ -141,14 +143,14 @@
      C                   EXSR      LIST_FLDS
       *
      C                   ENDIF
- 
+
      C                   MOVE      *BLANK        UBA
      C                   IF        CFTYPE = 'U1'
      C                   MOVEA     CFDATA        UBA
      C                   ENDIF
- 
+
      C                   SETON                                        20
- 
+
      CLRN20PDspNoDif     CABNE     '*YES'        NOREP
      CLR                 Z-ADD     1             CHLINE
      CLR                 EXSR      PAG
@@ -159,7 +161,7 @@
      CLR   NOREP         TAG
       *****************************************************************
      C     LIST_FLDS     BEGSR
- 
+
      C                   MOVE      *BLANK        FieldHEAD
      C                   Z-ADD     0             #X
       *
@@ -223,6 +225,7 @@
      C                   ENDIF
      C                   Z-ADD     1             CHLINE
      C                   EXSR      PAG
+     C                   MOVEL     FDDESC        FDDESX           30                       MD050666
      C                   EXCEPT    FLDS
      C                   ENDIF
       *
@@ -737,7 +740,8 @@
       *
      O          E            FLDS        1
      O                       FDRPGN              10
-     O                       FDDESC              40
+     O*********              FDDESC              40                                         MD050666
+     O                       FDDESX              40                                         MD050666
      O                       FLD_Befor           81
      O                       FLD_After          132
       *

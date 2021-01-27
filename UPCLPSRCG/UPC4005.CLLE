@@ -1,0 +1,294 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Global Compare Server')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4005 - ADBU Global Compare Server                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD050666 *CREATE   Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD050666 - Adaptive Database Upgrade.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIB1 &LIB2 &BRGBRGLIB &LAYER)
+
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LOGFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOGFILEA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDUPD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&JUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/* Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/* Create Data Queue to communicate with the 4 jobs submitted */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&DTQN) VALUE('ADBC_GSVR')
+             CHGVAR     VAR(&PLIB) VALUE(&LIB1 *TCAT 'GPLIB')
+             DLTDTAQ    DTAQ(&PLIB/ADBC_GSVR)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(&PLIB/ADBC_GSVR) MAXLEN(50) TEXT('UP +
+                           Server DTAQ for Global')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&DTQN) VALUE('ADBC_ZSVR')
+             CHGVAR     VAR(&PLIB) VALUE(&LIB1 *TCAT 'DPLIB')
+             DLTDTAQ    DTAQ(&PLIB/ADBC_ZSVR)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(&PLIB/ADBC_ZSVR) MAXLEN(50) TEXT('UP +
+                           Server DTAQ for Zone')
+             ENDDO
+
+/* Update Compare Work File UPUSER */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPUSER')
+             RTVJOBA    USER(&JUSER)
+             CHGVAR     VAR(&FLDVAL) VALUE(&JUSER)
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Update Compare Work File job Status with 'Running' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPCMSS')
+             CHGVAR     VAR(&FLDVAL) VALUE('R')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* Wait for the 4 jobs to complete */
+LOOP:
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'DONE') THEN(CHGVAR +
+                          VAR(&COUNT) VALUE(&COUNT + 1))
+
+             IF         COND(&MSGDATA *EQ 'FAIL') THEN(CHGVAR +
+                          VAR(&COUNT) VALUE(&COUNT + 1))
+
+             IF         COND(&MSGDATA *EQ 'FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))
+
+             IF         COND(&COUNT *LT 4) THEN(GOTO LOOP)
+
+/* If there is a FAIL */
+             IF         COND(&FAIL *EQ 'Y') THEN(DO)
+/* Update Compare Work File job Status with 'Abnormal' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPCMSS')
+             CHGVAR     VAR(&FLDVAL) VALUE('A')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             ENDDO
+
+             ELSE       CMD(DO)
+
+/* Update Compare Work File job Status with 'Complete' */
+             CHGVAR        VAR(&FLDUPD) VALUE('UPCMSS')
+             CHGVAR     VAR(&FLDVAL) VALUE('C')
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* As the 4 Compare jobs have ended, combine the 4 logs into one */
+/*If *GLOBAL */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LOGFILEA) VALUE('UPGLOGPD')
+             ENDDO
+/*If *ZONE */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&LOGFILEA) VALUE('UPZLOGPD')
+             ENDDO
+
+             CLRPFM     FILE(&LOGFILEA)
+
+
+/* Copy DM-GM log */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'GM')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'DM')
+             ENDDO
+
+             CPYF       FROMFILE(&BRGBRGLIB/&LOGFILE) +
+                          TOFILE(&LOGFILEA) MBROPT(*ADD)
+
+/* Copy DP-GP log */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'GP')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'DP')
+             ENDDO
+
+             CPYF       FROMFILE(&BRGBRGLIB/&LOGFILE) +
+                          TOFILE(&LOGFILEA) MBROPT(*ADD)
+
+/* Copy DTA-GTA log */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'GT')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'DT')
+             ENDDO
+             CPYF       FROMFILE(&BRGBRGLIB/&LOGFILE) +
+                          TOFILE(&LOGFILEA) MBROPT(*ADD)
+
+/* Copy DV-GV log */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'GV')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&LOGFILE) VALUE('LOG' *TCAT &LIB1 *TCAT +
+                          &LIB2 *TCAT 'DV')
+             ENDDO
+             CPYF       FROMFILE(&BRGBRGLIB/&LOGFILE) +
+                          TOFILE(&LOGFILEA) MBROPT(*ADD)
+
+/* List of dependent files */
+             CLRPFM     FILE(UPXREFPD)
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+/* clear driver fromprevious run */
+                 CLRPFM     FILE(UPGDRVTD)
+                 CLRPFM     FILE(UPGXRFPD)
+             OVRDBF     FILE(UPXREFPD) TOFILE(UPGXRFPD)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+/* clear driver from previous run */
+                 CLRPFM     FILE(UPZDRVTD)
+                 CLRPFM     FILE(UPZXRFPD)
+             OVRDBF     FILE(UPXREFPD) TOFILE(UPZXRFPD)
+             ENDDO
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILEA)
+
+             CALL       PGM(UPXREFLS) PARM(&LAYER)
+
+/* Submit report */
+             SBMJOB     CMD(CALL PGM(UPC4006) PARM(&LIB1 &LIB2 +
+                          &LAYER &BRGBRGLIB)) JOB(UP_ADBURPT) JOBD(SETUP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM) OUTQ(*JOBD) +
+                          INLLIBL(*CURRENT)
+
+/* Wait for DONE message */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL       PGM(QRCVDTAQ) PARM('ADBC_GSVR' '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL       PGM(QRCVDTAQ) PARM('ADBC_ZSVR' '*LIBL' &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+             ENDDO
+
+             ENDDO
+
+/* update end time */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+             ENDDO
+
+/* finally delete DTAQ */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPGADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBC_GSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPZADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBC_ZSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+
+/* update end time */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CALL UPGCMPWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CALL UPZCMPWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)
+             ENDDO
+
+/* finally delete DTAQ */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPGADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBC_GSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             DLTDTAQ    DTAQ(&PLIB/UPZADBCDTQ)
+             MONMSG     MSGID(CPF0000)
+             DLTDTAQ    DTAQ(&PLIB/ADBC_ZSVR)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program UPC4005 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/* End program */
+
+ END:        ENDPGM

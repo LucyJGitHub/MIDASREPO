@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 17May13              */
+/*       Last Amend No. MD050666           Date 17Mar20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 17May13              */
 /*                      A1076141           Date 11Jan13              */
 /*                      BUG27790  *CREATE  Date 18Jun10              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050666 - Adaptive Database Upgrade.                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Allow compare where there is no unique key.      */
@@ -29,7 +31,7 @@
              PGM        PARM(&FILE1 &FILE2 &TFILE &KEYFLD &MBROVR +
                           &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +
                           &RPTFLDNO &KEYF &FLD &OFILE &OMBR)                            /*A1076141*/
- 
+
              DCL        VAR(&FILE1) TYPE(*CHAR) LEN(20)
              DCL        VAR(&FILE2) TYPE(*CHAR) LEN(20)
              DCL        VAR(&TFILE) TYPE(*CHAR) LEN(20)
@@ -45,7 +47,7 @@
              DCL        VAR(&FLD) TYPE(*CHAR) LEN(122)
              DCL        VAR(&OFILE) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OMBR) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&F1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&L1) TYPE(*CHAR) LEN(10)
              DCL        VAR(&F2) TYPE(*CHAR) LEN(10)
@@ -78,16 +80,16 @@
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&SQLSTR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -98,11 +100,11 @@
                           file for UTC000003')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
              IF         COND(&MBROVR *EQ '*CURUSR') THEN(DO)
                 RTVJOBA    USER(&MBROVR)
              ENDDO
- 
+
 /* Add members for the specified member override. */
              ADDPFM     FILE(UTFLDDPD) MBR(&MBROVR)
              MONMSG     MSGID(CPF0000)
@@ -115,19 +117,19 @@
              ADDLFM     FILE(UTFLDDL2) MBR(&MBROVR) +
                           DTAMBRS((UTFLDDPD (&MBROVR)))
              MONMSG     MSGID(CPF0000)
- 
+
 /* Create temporary copy of file to hold records' key data. */
              DLTF       FILE(QTEMP/UTCFKDPD)
              MONMSG     MSGID(CPF0000)
              CRTDUPOBJ  OBJ(UTCFKDPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP)
- 
+
 /* Create temporary copy of file to hold comparison data. */
              DLTF       FILE(QTEMP/UTCMPFPD)
              MONMSG     MSGID(CPF0000)
              CRTDUPOBJ  OBJ(UTCMPFPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP)
- 
+
 /* Separate files and library names. */
              CHGVAR     VAR(&F1) VALUE(%SST(&FILE1 1 10))
              CHGVAR     VAR(&L1) VALUE(%SST(&FILE1 11 10))
@@ -137,7 +139,7 @@
              CHGVAR     VAR(&TL) VALUE(%SST(&TFILE 11 10))
              CHGVAR     VAR(&KF) VALUE(%SST(&KEYF 1 10))
              CHGVAR     VAR(&KL) VALUE(%SST(&KEYF 11 10))
- 
+
 /* If *RRN then get list of fields for template file; this will have already */
 /*  been done in the validity checker for *FLD or *FILE.                     */
 /**********  IF         COND(&KEYFLD *EQ '*RRN') THEN(DO)                            */ /*MD021155*/
@@ -149,7 +151,7 @@
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
 /* If *FLD entered then retrieve key fields from parameter string. */
 KEYFLD:
              IF         COND(&KEYFLD *EQ '*FLD') THEN(DO)
@@ -168,13 +170,13 @@ FIELDLOOP:
                    GOTO       CMDLBL(FIELDLOOP)
                 ENDDO
              ENDDO
- 
+
 /* Add overrides. */
              OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR)
              OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR)
              OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR)
              OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR)
- 
+
 RECOMPARE:
              CHGJOB     SWS(00000000)
 /* Depending if this a recompare then perform validity checking if changes */
@@ -267,7 +269,7 @@ FIELDLOOPR:
                    ENDDO
                 ENDDO
              ENDDO
- 
+
 /* Processs key fields.  If *FILE entered then retrieve key fields from */
 /*  outfile.                                                            */
              IF         COND(&KEYFLD *EQ '*FILE') THEN(DO)
@@ -285,7 +287,7 @@ FIELDLOOPR:
                    GOTO       CMDLBL(ERROR)
                 ENDDO
              ENDDO
- 
+
 EXTRACT:
 /* Extract file 1. */
              CLRPFM     FILE(QTEMP/UTCFKDPD) MBR(CMPF1)
@@ -303,7 +305,7 @@ EXTRACT:
                           MBR(CMPF2) SHARE(*NO) SEQONLY(*YES 1000)
              CALL       PGM(UT000008) PARM(&TF &KEYFLDS)
              DLTOVR     FILE(UTCFKDPD INPFILE)
- 
+
 /* If no key was selected then perform additional processing to generate new */         /*MD021155*/
 /*  files with grouping.                                                     */         /*MD021155*/
              IF         COND(&KEYFLD *EQ '*NONE') THEN(DO)                              /*MD021155*/
@@ -323,7 +325,7 @@ EXTRACT:
                              MBR(CMPF1) SHARE(*NO) SEQONLY(*YES 1000)                   /*MD021155*/
                 CALL       PGM(UT000008) PARM('UT0000541' &KEYFLDS)                     /*MD021155*/
                 DLTOVR     FILE(UTCFKDPD INPFILE)                                       /*MD021155*/
- 
+
                 OVRDBF     FILE(INPFILE) TOFILE(QTEMP/UT0000542) +
                              SEQONLY(*YES 100)                                          /*MD021155*/
                 OVRDBF     FILE(UTCFKDPD) TOFILE(QTEMP/UTCFKDPD) +
@@ -337,7 +339,7 @@ EXTRACT:
                 CHGVAR     VAR(&F2) VALUE('UT0000542')                                  /*MD021155*/
                 CHGVAR     VAR(&TF) VALUE('UT0000541')                                  /*MD021155*/
              ENDDO                                                                      /*MD021155*/
- 
+
 /* Perform compare. */
              CLRPFM     FILE(QTEMP/UTCMPFPD)
              OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD)
@@ -345,7 +347,7 @@ EXTRACT:
                           MBR(CMPF1) SEQONLY(*YES 1000)
              OVRDBF     FILE(CFKD2) TOFILE(QTEMP/UTCFKDPD) +
                           MBR(CMPF2) SEQONLY(*YES 1000)
- 
+
 /* Perform override based on whether the compare is being done through the */           /*MD021155*/
 /*  actual database file or the extract for *NONE keys.                    */           /*MD021155*/
              IF         COND(&KEYFLD *EQ '*NONE') THEN(DO)                              /*MD021155*/
@@ -358,11 +360,11 @@ EXTRACT:
              ENDDO                                                                      /*MD021155*/
              CALL       PGM(UT000009) PARM(&F1 &F2 &TF &IGNMTCH)
              DLTOVR     FILE(UTCMPFPD CFKD1 CFKD2 INPFILE1 INPFILE2)
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(SNDPGMMSG +
                           MSG('CMPF has reached its limit of +
                           matching records!!!!'))
- 
+
 /* If no key was selected then update compare file to have proper file names */         /*MD021155*/
 /*  rather than 'UT000054*'.                                                 */         /*MD021155*/
              IF         COND(&KEYFLD *EQ '*NONE') THEN(DO)                              /*MD021155*/
@@ -379,7 +381,7 @@ EXTRACT:
                 RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                              COMMIT(*NONE)                                              /*MD021155*/
              ENDDO                                                                      /*MD021155*/
- 
+
 /* If 'display' requested. */
              IF         COND(&OUTPUT *EQ '*       ') THEN(DO)
                 IF         COND(&KEYFLD *NE '*FILE') THEN(DO)
@@ -396,7 +398,7 @@ EXTRACT:
                    GOTO       CMDLBL(RECOMPARE)
                 ENDDO
              ENDDO
- 
+
 /* If 'report' requested. */
              IF         COND(&OUTPUT *EQ '*PRINT  ') THEN(DO)
                 OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD)
@@ -405,7 +407,7 @@ EXTRACT:
                              &DSPNODIF &RPTFLDNO)
                 DLTOVR     FILE(UTCMPFPD UT000023P1)
              ENDDO
- 
+
 /* If 'outfile' requested. */
              IF         COND(&OUTPUT *EQ '*OUTFILE') THEN(DO)
                 CHGVAR     VAR(&OF) VALUE(%SST(&OFILE 1 10))
@@ -413,11 +415,12 @@ EXTRACT:
                 CPYF       FROMFILE(QTEMP/UTCMPFPD) TOFILE(&OL/&OF) +
                              FROMMBR(*FIRST) TOMBR(&OMBR) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2869 CPF2817)                                       /*MD050666*/
              ENDDO
- 
+
 /* Delete outstanding overrides. */
              DLTOVR     FILE(UTFLDDPD UTFLDDL0 UTFLDDL1 UTFLDDL2)
- 
+
 /* Check if member is now empty and if it is then remove members. */
              RTVMBRD    FILE(UTFLDDPD) MBR(&MBROVR) +
                           NBRCURRCD(&NBRCURRCD)
@@ -427,9 +430,9 @@ EXTRACT:
                 RMVM       FILE(UTFLDDL2) MBR(&MBROVR)
                 RMVM       FILE(UTFLDDPD) MBR(&MBROVR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -446,6 +449,6 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
- 
+
 ENDPGM:
              ENDPGM

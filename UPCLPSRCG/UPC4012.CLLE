@@ -1,0 +1,334 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Reconcile PF Files Compare')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4012 - ADBU Reconcile PF Files Compare                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD050666 *CREATE   Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD050666 - Adaptive Database Upgrade.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRFX &REFS &LAYER &BRGBRGLIB &ERROR)
+
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&REFS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOGFILE) TYPE(*CHAR) LEN(10) VALUE('UPRCLGPD')
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSP1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSP2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&NMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0) VALUE(40)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCLF       FILE(UPZDRVTD) OPNID(ZONE)
+             DCLF       FILE(UPGDRVTD) OPNID(GLOB)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/** Global Monitor Message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+/** Clear log file */
+
+             DLTF       FILE(&BRGBRGLIB/&LOGFILE)
+             MONMSG     MSGID(CPF0000)
+             CLRPFM     FILE(UPRCLGPD)
+             CPYF       FROMFILE(UPRCLGPD) TOFILE(&BRGBRGLIB/&LOGFILE) +
+                          CRTFILE(*YES)
+             CLRPFM     FILE(&BRGBRGLIB/&LOGFILE)
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+ RCVFZ:      RCVF       OPNID(ZONE)
+
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+             GOTO       CMDLBL(NEXT)
+             ENDDO
+             IF         COND(%SUBSTRING(&ZONE_DRACTN 1 7) *EQ 'IGNORE') THEN(DO)
+             GOTO       CMDLBL(RCVFZ)
+             ENDDO
+             IF         COND(%SUBSTRING(&ZONE_DRACTN 1 20) *EQ 'File will be deleted') THEN(DO)
+             GOTO       CMDLBL(RCVFZ)
+             ENDDO
+             CHGVAR     VAR(&PATLEN) VALUE(4)
+             CALL       PGM(QCLSCAN) PARM(&ZONE_DRACTN &STRLEN &STRPOS 'DTAQ'         +
+                             &PATLEN '0' '0' '' &RESULT)
+             IF         COND(&RESULT > 0) THEN(DO)
+             GOTO       CMDLBL(RCVFZ)
+             ENDDO
+
+             CHGVAR     VAR(&PATLEN) VALUE(6)
+             CALL       PGM(QCLSCAN) PARM(&ZONE_DRACTN &STRLEN &STRPOS 'DTAARA'         +
+                             &PATLEN '0' '0' '' &RESULT)
+             IF         COND(&RESULT > 0) THEN(DO)
+             GOTO       CMDLBL(RCVFZ)
+             ENDDO
+
+/* if LF */
+             IF         COND(%SUBSTRING(&ZONE_DRLIB 4 1) *EQ 'V') THEN(DO)
+                CALLSUBR   SUBR(RCL_LF)
+             ENDDO
+                ELSE       CMD(DO)
+/* if LF */
+                CALLSUBR   SUBR(ZRCL_PF)
+             ENDDO
+
+             GOTO       CMDLBL(RCVFZ)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+ RCVFG:      RCVF       OPNID(GLOB)
+
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+             GOTO       CMDLBL(NEXT)
+             ENDDO
+             IF         COND(%SUBSTRING(&GLOB_DRACTN 1 7) *EQ 'IGNORE') THEN(DO)
+             GOTO       CMDLBL(RCVFG)
+             ENDDO
+             IF         COND(%SUBSTRING(&GLOB_DRACTN 1 20) *EQ 'File will be deleted') THEN(DO)
+             GOTO       CMDLBL(RCVFG)
+             ENDDO
+             CHGVAR     VAR(&PATLEN) VALUE(4)
+             CALL       PGM(QCLSCAN) PARM(&GLOB_DRACTN &STRLEN &STRPOS 'DTAQ'         +
+                             &PATLEN '0' '0' '' &RESULT)
+             IF         COND(&RESULT > 0) THEN(DO)
+             GOTO       CMDLBL(RCVFG)
+             ENDDO
+
+             CHGVAR     VAR(&PATLEN) VALUE(6)
+             CALL       PGM(QCLSCAN) PARM(&GLOB_DRACTN &STRLEN &STRPOS 'DTAARA'         +
+                             &PATLEN '0' '0' '' &RESULT)
+             IF         COND(&RESULT > 0) THEN(DO)
+             GOTO       CMDLBL(RCVFG)
+             ENDDO
+
+/* if LF */
+             IF         COND(%SUBSTRING(&GLOB_DRLIB 4 1) *EQ 'V') THEN(DO)
+                CALLSUBR   SUBR(RCL_LF)
+             ENDDO
+                ELSE       CMD(DO)
+/* if LF */
+                CALLSUBR   SUBR(GRCL_PF)
+                ENDDO
+
+             GOTO       CMDLBL(RCVFG)
+             ENDDO
+
+
+NEXT:
+             RTVJOBA    NBR(&JBNO)
+             CHGVAR     VAR(&NMBR) VALUE('C_' *TCAT &JBNO)
+
+/* Copy FLDDAT */
+             RMVM       FILE(UTFLDDPD) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             CPYF       FROMFILE(UTADBJW0) TOFILE(UTFLDDPD) +
+                          FROMMBR(*FIRST) TOMBR(&NMBR) MBROPT(*ADD) +
+                          FMTOPT(*MAP *DROP)
+
+/* run FILECOMP to ouput difference into JRNIMA */
+             CMPF FILE1(QTEMP/DSPFFD1) FILE2(QTEMP/DSPFFD2) TFILE(DSPFFD1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(WHFILE WHFLDI) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFFD1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFFD2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
+             CALL       PGM(UT000037) PARM(&PRFX &REFS ' ' &DSP1 &DSP2)
+
+/* Remove members as they will be added back by CMPF */
+             DLTOVR     FILE(UTCMPFPD)
+             DLTF       FILE(QTEMP/UTCMPFPD#)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */
+             CMPF FILE1(QTEMP/DSPFDBA1) FILE2(QTEMP/DSPFDBA2) TFILE(DSPFDBA1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(ATFILE) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDBA1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDBA2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
+             CALL       PGM(UT000037) PARM(&PRFX &REFS ' ' &DSP1 &DSP2)
+
+/* Remove members as they will be added back by CMPF */
+             DLTOVR     FILE(UTCMPFPD)
+             DLTF       FILE(QTEMP/UTCMPFPD#)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTFLDDL0) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL1) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+             RMVM       FILE(UTFLDDL2) MBR(&NMBR)
+             MONMSG     MSGID(CPF7310)
+
+/* run CMPF to ouput difference into QTEMP/UTCMPFPD# */
+             CMPF FILE1(QTEMP/DSPFDRF1) FILE2(QTEMP/DSPFDRF2) TFILE(DSPFDRF1) +
+                         MBROVR(&NMBR) KEYFLD(*FLD) OUTPUT(*OUTFILE) +
+                         FLD(RFFILE RFNAME) OUTFILE(QTEMP/UTCMPFPD#)
+/* call report program*/
+             CHGVAR     VAR(&DSP1) VALUE('DSPFDRF1')
+             CHGVAR     VAR(&DSP2) VALUE('DSPFDRF2')
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)
+             OVRDBF     FILE(UTCMPFPD) TOFILE(QTEMP/UTCMPFPD#)
+             OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)
+             CALL       PGM(UT000037) PARM(&PRFX &REFS ' ' &DSP1 &DSP2)
+
+/* generate report */
+             /* If *ZONE mode */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                 DLTF       FILE(&BRGBRGLIB/UPZRCLPD)
+                 MONMSG     MSGID(CPF0000)
+                 CPYF       FROMFILE(UPRCLGPD) +
+                             TOFILE(&BRGBRGLIB/UPZRCLPD) CRTFILE(*YES)
+                 OVRDBF FILE(UPCLOGPD) TOFILE(UPZRCLPD)
+                 OVRPRTF    FILE(UP4017P1) OUTQ(*JOB)
+                 CALL       PGM(UP4017) PARM(&PRFX &REFS &LAYER)
+                 OVRPRTF    FILE(UP4016P1) OUTQ(*JOB)
+                 CALL       PGM(UP4016) PARM(&PRFX &REFS &LAYER)
+             ENDDO
+
+             /* If *GLOBAL mode */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                 DLTF       FILE(&BRGBRGLIB/UPGRCLPD)
+                 MONMSG     MSGID(CPF0000)
+                 CPYF       FROMFILE(UPRCLGPD) +
+                             TOFILE(&BRGBRGLIB/UPGRCLPD) CRTFILE(*YES)
+                 OVRDBF FILE(UPCLOGPD) TOFILE(UPGRCLPD)
+                 OVRPRTF    FILE(UP4017P1) OUTQ(*JOB)
+                 CALL       PGM(UP4017) PARM(&PRFX &REFS &LAYER)
+                 OVRPRTF    FILE(UP4016P1) OUTQ(*JOB)
+                 CALL       PGM(UP4016) PARM(&PRFX &REFS &LAYER)
+             ENDDO
+
+                 CALL       PGM(UP4018) PARM(&PRFX &REFS &LAYER)
+
+             GOTO       CMDLBL(END)
+
+
+/* Abnormal termination */
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&ERROR) VALUE('*Error')
+
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to compare LF                                                   */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RCL_LF)
+
+
+
+             ENDSUBR
+/******************************************************************************/
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to compare PF                                                   */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(ZRCL_PF)
+
+
+             CHGVAR        VAR(&RFLIB) VALUE(&REFS *TCAT %SUBSTRING(&ZONE_DRLIB 3 8))
+
+/* DSPFFD LIB1 */
+             DSPFFD     FILE(&ZONE_DRLIB/&ZONE_DRFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFFD1) OUTMBR(*FIRST +
+                             *ADD)
+/* DSPFFD LIB2 */
+             DSPFFD     FILE(&RFLIB/&ZONE_DRFILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DSPFFD2) OUTMBR(*FIRST +
+                             *ADD)
+
+/* DSPFD *BASATR LIB1 */
+             DSPFD      FILE(&ZONE_DRLIB/&ZONE_DRFILE) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDBA1) +
+                          OUTMBR(*FIRST *ADD)
+/* DSPFD *BASATR LIB2 */
+             DSPFD      FILE(&RFLIB/&ZONE_DRFILE) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDBA2) +
+                          OUTMBR(*FIRST *ADD)
+
+/* DSPFD *RCDFMT LIB1 */
+             DSPFD      FILE(&ZONE_DRLIB/&ZONE_DRFILE) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDRF1) +
+                          OUTMBR(*FIRST *ADD)
+/* DSPFD *RCDFMTT LIB2 */
+             DSPFD      FILE(&RFLIB/&ZONE_DRFILE) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDRF2) +
+                          OUTMBR(*FIRST *ADD)
+
+             ENDSUBR
+/******************************************************************************/
+/******************************************************************************/
+             SUBR       SUBR(GRCL_PF)
+
+
+             CHGVAR        VAR(&RFLIB) VALUE(&REFS *TCAT %SUBSTRING(&GLOB_DRLIB 3 8))
+
+/* DSPFFD LIB1 */
+             DSPFFD     FILE(&GLOB_DRLIB/&GLOB_DRFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/DSPFFD1) OUTMBR(*FIRST +
+                             *ADD)
+/* DSPFFD LIB2 */
+             DSPFFD     FILE(&RFLIB/&GLOB_DRFILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DSPFFD2) OUTMBR(*FIRST +
+                             *ADD)
+
+/* DSPFD *BASATR LIB1 */
+             DSPFD      FILE(&GLOB_DRLIB/&GLOB_DRFILE) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDBA1) +
+                          OUTMBR(*FIRST *ADD)
+/* DSPFD *BASATR LIB2 */
+             DSPFD      FILE(&RFLIB/&GLOB_DRFILE) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDBA2) +
+                          OUTMBR(*FIRST *ADD)
+
+/* DSPFD *RCDFMT LIB1 */
+             DSPFD      FILE(&GLOB_DRLIB/&GLOB_DRFILE) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDRF1) +
+                          OUTMBR(*FIRST *ADD)
+/* DSPFD *RCDFMTT LIB2 */
+             DSPFD      FILE(&RFLIB/&GLOB_DRFILE) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPFDRF2) +
+                          OUTMBR(*FIRST *ADD)
+
+             ENDSUBR
+/******************************************************************************/
+
+/* End program */
+
+ END:        ENDPGM

@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG27790 *CREATE   Date 29Jun10               *
+      *  Last Amend No. MD050666           Date 17Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG27790 *CREATE   Date 29Jun10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050666 - Adaptive Database Upgrade                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27790 - New utility                                       *
       *                                                               *
@@ -86,9 +88,12 @@
      D OTP             S              1    DIM(240)
      D OTW             S              1    DIM(240)
      D                 DS
-     D  SRCDTA                 1     80
-     D  S                      1     80
-     D                                     DIM(80) ASCEND
+     D**SRCDTA**               1     80                                                     MD050666
+     D**S*******               1     80                                                     MD050666
+     D**********                           DIM(80) ASCEND                                   MD050666
+     D  SRCDTA                 1    100                                                     MD050666
+     D  S                      1    100                                                     MD050666
+     D                                     DIM(100) ASCEND                                  MD050666
      D                 DS
      D  SSDATA                 1     41
      D  DAT                    1     41
@@ -288,7 +293,8 @@
      C                   MOVEL     *BLANK        S
      C                   MOVEA     FDRPGN        S(1)
      C                   MOVEA     FDDESC        S(8)
-     C                   MOVEA     DAT           S(40)
+     C**********         MOVEA     DAT           S(40)                                      MD050666
+     C                   MOVEA     DAT           S(60)                                      MD050666
      C                   END
       *
      C                   WRITE     SUBFLREC

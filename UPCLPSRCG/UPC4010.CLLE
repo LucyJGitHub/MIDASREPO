@@ -1,0 +1,528 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Main Update Program')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4010 - ADBU Main Update Program                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD050666 *CREATE   Date 17Mar20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD050666 - Adaptive Database Upgrade.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGREFER) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('UPC4010')
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Prepare temporary files, job, etc. */
+             CALLSUBR   SUBR(PREPARE)
+
+/* Make sure driver file is not empty */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                RTVMBRD    FILE(UPGDRVTD) NBRCURRCD(&NBRCURRCD)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE  ') THEN(DO)
+                RTVMBRD    FILE(UPZDRVTD) NBRCURRCD(&NBRCURRCD)
+             ENDDO
+
+             IF         COND(&NBRCURRCD = 0) THEN(DO)
+                CHGVAR     VAR(&ERROR) VALUE('*Empty')
+                   GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Check if ADBU is installed in the system*/
+             CHGVAR     VAR(&SVALK1) VALUE('BrgADBUGlobalRefer')
+             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+
+/* If not installed, prompt for substitue values */
+             If         COND(&RTNCODE *EQ '*NRF   ') THEN(DO)
+/* Retrieve required System Values. */
+                CALLSUBR   SUBR(RTVSVALP)
+
+/* For a general error just report. */
+                IF         COND(&ERRORFLAG *EQ 'E') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* If a System Value is blank then send specific error message. */
+                IF         COND(&ERRORFLAG *EQ 'B') THEN(DO)
+                   CALLSUBR   SUBR(BLANKSVAL)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+
+/* Set up library list. */
+                CALLSUBR   SUBR(SETUPLIBLP)
+
+/* Prompt for manual insert of Reference Prefixes */
+             CHGVAR     VAR(&ERRPGM) VALUE('UP4022')
+             CALL UP4022 (&GLOBP &ZONEP 'P' &ERROR)
+                IF         COND(&ERROR *EQ '*Return   ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                IF         COND(&ERROR *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&BRGREFER) VALUE(&GLOBP)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE  ') THEN(DO)
+             CHGVAR     VAR(&BRGREFER) VALUE(&ZONEP)
+             ENDDO
+
+             ENDDO
+
+             ELSE CMD(DO)
+
+/* Retrieve required System Values. */
+             CALLSUBR   SUBR(RTVSVAL)
+
+/* For a general error just report. */
+             IF         COND(&ERRORFLAG *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If a System Value is blank then send specific error message. */
+             IF         COND(&ERRORFLAG *EQ 'B') THEN(DO)
+                CALLSUBR   SUBR(BLANKSVAL)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* Set up library list. */
+             CALLSUBR   SUBR(SETUPLIBL)
+             ENDDO
+
+/* If *GLOBAL */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+/* Check that monitor file is present in bridge library */
+
+/* Retrieve log for PRFX system */
+             CALL UPGUPDWR ('*CHECK    ' &PFX ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* If *ZONE */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+/* Check that monitor file is present in bridge library */
+/*           CLRPFM     FILE(UPZUPDTD) */
+
+/* Retrieve log for PRFX system */
+             CALL UPZUPDWR ('*CHECK    ' &PFX ' ' ' ' &ERROR &RETURN)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC4010')
+
+/* If file is empty (Compare option never ran), send message to   */
+             IF         COND(&RETURN *EQ 'Not_found ') THEN(DO)
+/* screen: 'Do you want to proceed with the update for the zone?  */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                RTVMSG     MSGID(UPM1004) MSGF(UTMSGF) MSG(&MESSAGE)
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                RTVMSG     MSGID(UPM1008) MSGF(UTMSGF) MSG(&MESSAGE)
+             ENDDO
+                CHGDTAARA  DTAARA(MIDASMSG (101 60)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'N') THEN(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* Initialize work table */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UPGUPDWR ('*WRITE    ' &PFX ' ' ' ' &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UPZUPDWR ('*WRITE    ' &PFX ' ' ' ' &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* Submit update */
+             CALL       PGM(UPC4011) PARM(&PFX &BRGREFER &LAYER +
+                          &BRGBRGLIB)
+/* Compare GM  */
+/* Compare GP  */
+/* Compare GTA */
+/* Compare GV  */
+
+/* Display monitor */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UP4014  PARM(&PFX &BRGREFER &ERROR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UP4015  PARM(&PFX &BRGREFER &ERROR )
+             ENDDO
+
+/* Check for problems with deliverables list creation. */
+       /*       CALLSUBR   SUBR(CHKDLVLST) */
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+/* If file is not empty (Compare option ran previously), send message to   */
+             IF         COND(&RETURN *EQ 'Found     ') THEN(DO)
+/* screen: 'Do you want to check the status of previous run?' */
+                RTVMSG     MSGID(UPM1002) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'Y') THEN(DO)
+/* Display monitor */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UP4014  PARM(&PFX &BRGREFER &ERROR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UP4015  PARM(&PFX &BRGREFER &ERROR )
+             ENDDO
+/* Check for problems with deliverables list creation. */
+       /*       CALLSUBR   SUBR(CHKDLVLST) */
+                   GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+                IF         COND(&REPLY1 *EQ 'N') THEN(DO)
+/* Display screen: 'Do you want to proceed with the update phase? */
+                RTVMSG     MSGID(UPM1004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 60)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM1003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'N') THEN(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+
+/* Initialize work table */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UPGUPDWR ('*WRITE    ' &PFX ' ' ' ' &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UPZUPDWR ('*WRITE    ' &PFX ' ' ' ' &ERROR &RETURN)
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
+             ENDDO
+
+/* Submit compare. */
+             CALL       PGM(UPC4011) PARM(&PFX &BRGREFER &LAYER +
+                          &BRGBRGLIB)
+/* Compare GM  */
+/* Compare GP  */
+/* Compare GTA */
+/* Compare GV  */
+
+/* Display monitor */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL UP4014  PARM(&PFX &BRGREFER &ERROR)
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL UP4015  PARM(&PFX &BRGREFER &ERROR )
+             ENDDO
+
+/* Check for problems with deliverables list creation. */
+       /*       CALLSUBR   SUBR(CHKDLVLST) */
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                ENDDO
+
+
+ERROR:
+             IF         COND(&ERROR *EQ '*ACTIVE') THEN(DO)
+             RTVMSG     MSGID(UPM1005) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 60)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             ENDDO
+             ELSE CMD(DO)
+             IF         COND(&ERROR *EQ '*DBIntegri') THEN(DO)
+             RTVMSG     MSGID(UPM1006) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 60)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             ENDDO
+             ELSE CMD(DO)
+             IF         COND(&ERROR *EQ '*Empty') THEN(DO)
+             RTVMSG     MSGID(UPM1007) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 60)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             ENDDO
+             ELSE CMD(DO)
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             ENDDO
+             ENDDO
+             ENDDO
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to prepare for run.                                             */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PREPARE)
+
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+
+/* Create data area for screen message handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800)
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to set up the library list.                                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(SETUPLIBL)
+
+                ADDLIBLE   LIB(&BRGBRGLIB) POSITION(*LAST)
+             MONMSG     MSGID(CPF2103)
+
+             SAVLIBL    SAVDTL(UPC4000)
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to set up the library list.                                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(SETUPLIBLP)
+
+             RMVLIBLE   LIB(FBM21_ADBU)
+             MONMSG     MSGID(CPF0000)
+
+             ADDLIBLE   LIB(FBM21_ADBU) POSITION(*FIRST)
+             MONMSG     MSGID(CPF2103)
+
+             ADDLIBLE   LIB(&BRGBRGLIB) POSITION(*LAST)
+             MONMSG     MSGID(CPF2103)
+
+             SAVLIBL    SAVDTL(UPC4000)
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to retrieve System Values.                                      */
+/* Note: even if the job is being run for a zone it still needs to retrieve   */
+/*  some global values.                                                       */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RTVSVAL)
+
+/* Retrieve the appropriate System Values and perform other layer specific */
+/*  code.                                                                  */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredBrgLib')
+             CHGVAR     VAR(&SVALK3) VALUE('BrgADBUGlobalRefer')
+             CHGVAR     VAR(&ERRPGM) VALUE('UPSVALR0')
+             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+             CALLSUBR   SUBR(CHECKSVAL)
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
+             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2))
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasSystemPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredBrgLib')
+             CHGVAR     VAR(&SVALK3) VALUE('BrgADBUSystemRefer')
+             CHGVAR     VAR(&ERRPGM) VALUE('UPSVALR0')
+             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+             CALLSUBR   SUBR(CHECKSVAL)
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
+             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2))
+             ENDDO
+
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to retrieve System Values.                                      */
+/* Note: even if the job is being run for a zone it still needs to retrieve   */
+/*  some global values.                                                       */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RTVSVALP)
+
+/* Retrieve the appropriate System Values and perform other layer specific */
+/*  code.                                                                  */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredBrgLib')
+             CHGVAR     VAR(&ERRPGM) VALUE('UPSVALR0')
+             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+             CALLSUBR   SUBR(CHECKSVALP)
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasSystemPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredBrgLib')
+             CHGVAR     VAR(&ERRPGM) VALUE('UPSVALR0')
+             CALL       PGM(UPSVALR0) PARM(&LAYER &RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+             CALLSUBR   SUBR(CHECKSVALP)
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
+             ENDDO
+
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for checking the call to System Values.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKSVAL)
+
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL1 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL2 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL3 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL3 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for checking the call to System Values.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKSVALP)
+
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL1 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL2 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+
+             ENDSUBR
+
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for reporting blank System Values.                              */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(BLANKSVAL)
+
+             RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'ENTER' ' ')
+
+             ENDSUBR
+
+ENDPGM:
+             ENDPGM
+

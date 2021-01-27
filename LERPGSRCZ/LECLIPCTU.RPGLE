@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -422,7 +424,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                  MD057528
+     D  NBRAM                117    118                                                     MD057528
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR836982           Date 16May14               *
+      *  Last Amend No. MD057258           Date 27Jan21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR836982           Date 16May14               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR836982 - COB component REC62N failed due to inserted       *
       *             accounts with back valued rate change date.       *
@@ -50,7 +52,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -69,65 +71,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-     DAMDRIB           S              2S 0
+      **AMMDRIB           S              2S 0                                               MD057528
+     DAMDRIB           S              2                                                     MD057528
      DRIDICT           S              2S 0
      DRIDCST           S              5S 0
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                             MD000091
@@ -136,7 +139,7 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -151,16 +154,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
       *
-     C                   Move      DDDRIB        SADRIB            2 0
+     C**********         Move      DDDRIB        SADRIB            2 0                      MD057528
+     C                   Move      DDDRIB        SADRIB            2                        MD057528
      C                   MOVE      DDDICT        SADICT            2 0
      C                   MOVE      DDDCST        SADCST            5 0
       *
@@ -321,7 +325,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -373,9 +377,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

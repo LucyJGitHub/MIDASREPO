@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -286,7 +288,8 @@
      C     GENPIC        BEGSR
 
      C                   MOVEL     *BLANKS       SXRIB
-     C     PXRIB         IFNE      '00'
+     C*****PXRIB         IFNE      '00'                                                     MD057528
+     C     PXRIB         IFNE      *BLANKS                                                  MD057528
      C                   MOVEL     PXRIB         SXRIB
      C                   END
      C                   MOVEL     *BLANKS       SXRIS

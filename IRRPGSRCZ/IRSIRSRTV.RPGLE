@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1230,7 +1232,8 @@
      C                   EVAL      UNRL = *ZEROS                                              CAP056
      C                   EVAL      UNRLP = *ZEROS                                             CAP056
      C                   EVAL      DDTM = *ZEROS                                              CAP056
-     C                   EVAL      BRSQ = *ZEROS                                              CAP056
+     C**********         EVAL      BRSQ = *ZEROS                                     CAP056 MD057528
+     C                   EVAL      BRSQ = *BLANKS                                           MD057528
      C                   EVAL      LSWC = *ZEROS                                              CAP056
      C                   EVAL      LSWS = *ZEROS                                              CAP056
      C                   EVAL      ORED = *ZEROS                                              CAP056

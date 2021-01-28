@@ -15,8 +15,9 @@
       *                                                                    *
       *  (c) Finastra International Limited 2002                           *
       *                                                                    *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035360           Date 06Aug15               *
+      *  Last Amend No. MD057498           Date 26Jan21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035360           Date 06Aug15               *
       *                 MD035030           Date 14Jul15               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -44,6 +45,11 @@
       *                                                                    *
       **********************************************************************
       *                                                                    *
+      *  MD057498 - Unable to complete OPAY transaction due error     *
+      *             MMA0932 in SWIFT MT202 indicator field. Change    *
+      *             error displayed to be a warning if sender's       *
+      *             correspondent and destination are not the same    *
+      *             entity and MT202 indicator remains unticked.      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035360 - Database error encountered due to parameter error *
       *             in FTVODCS                                        *
@@ -863,6 +869,12 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
+      *                                                                                     MD057498
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD057498
+      *                                                                                     MD057498
+     C                   PARM                    WFldNmXAr                                  MD057498
+     C                   PARM                    WMsgIDXAr                                  MD057498
+     C                   PARM                    WMsgDtaXAr                                 MD057498
       * OK Flags
      C                   Parm                    OKFlagsDS
       *  Validation Work Fields

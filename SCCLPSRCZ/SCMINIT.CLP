@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020B            Date 06Aug12              */
+/*       Last Amend No. MD039086           Date 27Jan21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020B            Date 06Aug12              */
 /*                      CSD083             Date 27May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -78,6 +79,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD039086 - Submit GO_ONL_ABC background updater             */
+/*                  Applied for MD-57273.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020B - COB Restructure - Secondary COB Infrastructure    */
 /*       CSD083 - Watch List Compliance Upgrade                      */
@@ -220,6 +223,7 @@
              DCL        VAR(&CSD015) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD015*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD015*/
              DCL        VAR(&CSD083) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD083*/
+             DCL        VAR(&CAP205) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD039086*/
              DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                    /*CSD015*/
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CSD015*/
              DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                    /*CSD015*/
@@ -478,6 +482,15 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
              CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SAR &SARREC)  /*176691*/
              IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
                           VAR(&CLE010) VALUE('Y'))                    /*176691*/
+                                                                                        /*MD039086*/
+ /* Check if CAP205 - ABC is on */                                                      /*MD039086*/
+                                                                                        /*MD039086*/
+             CHGVAR     VAR(&RTNC) VALUE('       ')                                     /*MD039086*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD039086*/
+             CHGVAR     VAR(&SAR) VALUE('CAP205')                                       /*MD039086*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SAR &SARREC)                    /*MD039086*/
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR VAR(&CAP205) +
+                          VALUE('Y'))                                                   /*MD039086*/
 /**/                                                                  /*176691*/
              CHGVAR     VAR(&RTNC) VALUE('       ')                   /*124115*/
 /*********** IF         COND(&CLE004 *EQ 'Y' *AND &CLE006 *EQ 'Y') +
@@ -519,6 +532,12 @@ LOOP2:            CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK)                /*061601*/
              CALL       PGM(REC101201)                                                    /*CRE008*/
              CALL       PGM(REC101501)                                                    /*CRE008*/
              ENDDO                                                                        /*CRE008*/
+                                                                                        /*MD039086*/
+/* Restart ABC update files job */                                                      /*MD039086*/
+                                                                                        /*MD039086*/
+             IF         COND(&CAP205 *EQ 'Y') THEN(DO)                                  /*MD039086*/
+                CALL       PGM(GLC007011)                                               /*MD039086*/
+             ENDDO                                                                      /*MD039086*/
 /**/                                                                                      /*CGP004*/
 /* Restart the Audit Reporting batch job                                                  /*CGP004*/
 /**/                                                                                      /*CGP004*/

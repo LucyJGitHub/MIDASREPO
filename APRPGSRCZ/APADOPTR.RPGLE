@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057522           Date 29Jan21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD022060           Date 27Aug13               *
       *                 AR1096230          Date 11Apr13               *
       *                 AR1060863          Date 06Apr13               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057522 - 24x7: CAP702 - Loss of some API requests sent     *
+      *             during COB.                                       *
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022060 - Reverse fix BUG12784 in APADOPTVU. It limits the  *
@@ -70,26 +73,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** Entry parameters
      D MidasUser       S             10
      D Lang            S              2
@@ -107,20 +110,31 @@
      D APIRetC         S              1
      D***ApHead*         S            200                                            AR971184 CSD102
      D ApHead          S            318                                                       CSD102
- 
+
      D Jobd            DS            20
      D JobDName                1     10    INZ('MIDASIC   ')
      D System                 11     12
      D XLib                   13     20    INZ('XLIB    ')
- 
+     D Jobd24x7        DS            20                                                     MD057522
+     D Name24x7                1     10    INZ('MIDAS24X7 ')                                MD057522
+     D Sys24x7                11     12                                                     MD057522
+     D Lib24x7                13     20    INZ('X24LIB  ')                                  MD057522
+      *                                                                                     MD057522
+     D SCND24X7S     E DS                  EXTNAME(SCND24X7)                                MD057522
+      *                                                                                     MD057522
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD057522
+      *                                                                                     MD057522
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD057522
+      *                                                                                     MD057522
+
      D***Parm            DS          1000                                                    244122
      D Parm            DS          3200                                                      244122
      D OffSetB               361    364B 0
      D LibCountB             365    368B 0
- 
+
      D***Len             S              4B 0 INZ(1000)                                       244122
      D Len             S              4B 0 INZ(3200)                                         244122
- 
+
       * If this buffer needs to increase a separate parameter will need to be added
      D Buffer          S           9999
      D Buffer2         S           9999                                                      BUG4646
@@ -131,7 +145,7 @@
      D Buffer7         S           9999                                                      BUG4646
      D Buffer8         S           9999                                                      BUG4646
      D Buffer9         S           9999                                                      BUG4646
- 
+
       * If this Message array needs to increase a separate parameter will need to be added    BG1105
      D MsgArrOut       S           9999    INZ(*BLANKS)                                       BG1105
                                                                                               BG1105
@@ -139,7 +153,7 @@
      D OffSet          S              9  0
      D InLibl          S           2750
      D Command         S           2764
- 
+
       * Error message format for retrieve jobd libl
      DQUSEC            DS
       *                                             Qus EC
@@ -155,9 +169,9 @@
       *                                             Varying length
      D QUSExcData             17     46
       *                                             Varying length field Exception Data
- 
+
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C     System        PARM                    Sys               2
      C                   PARM                    MidasUser
@@ -173,16 +187,61 @@
      C                   PARM                    VarMsgArrO                                   BG1105
      C                   PARM                    APIRetC
      C                   PARM                    ApHead                                     AR971184
- 
+
      C                   Eval      APIRetC = '1'
+      *                                                                                     MD057522
+     C                   EVAL      A = %SCAN('MIDASCOB':APHEAD)                             MD057522
+      *                                                                                     MD057522
+     C     A             IFGT      0                                                        MD057522
+      *                                                                                     MD057522
+      ** Set up job description library list                                                MD057522
+     C                   CALL      'QWDRJOBD'                           9697                MD057522
+     C                   PARM                    Parm                                       MD057522
+     C                   PARM                    Len                                        MD057522
+     C                   PARM      'JOBD0100'    Format                                     MD057522
+     C                   PARM                    Jobd                                       MD057522
+     C                   PARM                    QUSEC                                      MD057522
+     C                   ELSE                                                               MD057522
+      *                                                                                     MD057522
+     C     CAP702        IFEQ      'Y'                                                      MD057522
+     C     *DtaAra       DEFINE    SCND24X7      SCND24X7S                                  MD057522
+     C                   IN        SCND24X7S                                                MD057522
+     C                   MOVE      NDMODE        SNMODE            5                        MD057522
+      *                                                                                     MD057522
+      ** Set up job description library list                                                MD057522
+     C                   MOVE      System        Sys24x7                                    MD057522
+      *                                                                                     MD057522
+     C     SNMODE        IFEQ      'NIGHT'                                                  MD057522
+     C                   Call      'QWDRJOBD'                           9697                MD057522
+     C                   PARM                    Parm                                       MD057522
+     C                   PARM                    Len                                        MD057522
+     C                   PARM      'JOBD0100'    Format                                     MD057522
+     C                   PARM                    Jobd24x7                                   MD057522
+     C                   PARM                    QUSEC                                      MD057522
+     C                   ELSE                                                               MD057522
+      *                                                                                     MD057522
+      ** Set up job description library list                                                MD057522
+     C                   CALL      'QWDRJOBD'                           9697                MD057522
+     C                   PARM                    Parm                                       MD057522
+     C                   PARM                    Len                                        MD057522
+     C                   PARM      'JOBD0100'    Format                                     MD057522
+     C                   PARM                    Jobd                                       MD057522
+     C                   PARM                    QUSEC                                      MD057522
+     C                   ENDIF                                                              MD057522
+      *                                                                                     MD057522
+     C                   ELSE                                                               MD057522
       *
       * Set up job description library list
      C                   Call      'QWDRJOBD'                           9697
-     C                   Parm                    Parm
-     C                   Parm                    Len
-     C                   Parm      'JOBD0100'    Format           10
-     C                   Parm                    Jobd
-     C                   Parm                    QUSEC
+     C                   PARM                    Parm
+     C                   PARM                    Len
+     C                   PARM      'JOBD0100'    Format           10
+     C                   PARM                    Jobd
+     C                   PARM                    QUSEC
+      *                                                                                     MD057522
+     C                   ENDIF                                                              MD057522
+     C                   ENDIF                                                              MD057522
+      *                                                                                     MD057522
      C                   If        QUSEI = 'CPF9801' OR
      C                             QUSEI = 'CPF9810'
      C                   EVAL      APIRetC = '0'
@@ -205,11 +264,11 @@
      C                   Eval      InLibl = %SubSt(Parm:OffSet:OffLen)
      C                   Eval      Command = ('CHGLIBL LIBL(' +
      C                             InLibl + ')')
- 
+
      C                   Call      'QCMDEXC'                              92
      C                   Parm                    Command
      C                   Parm      2764          Length           15 5
- 
+
       * The VarBuffer field is of variable length so should be defined
       * prior to the move to the API buffer
      C**********         Eval      %Len(VarBuffer) = 32000                                   BUG4646
@@ -234,7 +293,7 @@
      C                   EVAL      Buffer7=%SUBST(VarBuffer3:1:9999)                         BUG4646
      C                   EVAL      Buffer8=%SUBST(VarBuffer3:10000:9999)                     BUG4646
      C                   EVAL      Buffer9=%SUBST(VarBuffer3:19999:9999)                     BUG4646
- 
+
       * Call the API Validate and update program
      C                   CALL      'APCTRANR'
      C                   PARM                    Sys
@@ -256,7 +315,7 @@
      C                   PARM                    MsgArrOUT
      C                   PARM                    APIRetC
      C                   PARM                    ApHead                                     AR971184
- 
+
      C                   MoveL     Buffer        VarBuffer
      C**********         EVAL      %SUBST(VarBuffer:10000) = Buffer2                BUG4646 BUG12784
      C**********         EVAL      %SUBST(VarBuffer:10034) = Buffer2              BUG12784 AR1060863
@@ -277,7 +336,7 @@
      C                   Eval      VarBuffer2 = %trimr(VarBuffer2)                            BG7666
      C                   Endif                                                               BUG8011
      C                   Eval      VarBuffer3 = %trimr(VarBuffer3)                           BUG4646
- 
+
      C                   Eval      %Len(VarMsgArrO) = %Len(MsgArrOut)                         BG2743
      C                   MoveL     MsgArrOut     VarMsgArrO                                   BG1105
      C                   Eval      VarMsgArrO = %trimr(VarMsgArrO)                            BG1105
@@ -290,13 +349,26 @@
       *  Initialisation                                              *
       ****************************************************************
      C     *INZSR        BEGSR
- 
+      *                                                                                     MD057522
+      ** Check for switchable feature CAP702                                                MD057522
+     C                   CALL      'AOSARDR0'                                               MD057522
+     C                   PARM      *Blanks       @RTCD             7                        MD057522
+     C                   PARM      '*VERIFY'     @OPTN             7                        MD057522
+     C                   PARM      'CAP702'      @SARD             6                        MD057522
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD057522
+                                                                                            MD057522
+     C                   IF        @RTCD = *Blanks                                          MD057522
+     C                   MOVEL     'Y'           CAP702            1                        MD057522
+     C                   ELSE                                                               MD057522
+     C                   MOVEL     'N'           CAP702                                     MD057522
+     C                   ENDIF                                                              MD057522
+
       **--------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

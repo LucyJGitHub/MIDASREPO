@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. CSD102             Date 08Jan19              */
+/*       Last Amend No. MD057522           Date 29Jan21              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      CSD102             Date 08Jan19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR1079502          Date 03Feb13              */
 /*                      AR1076364          Date 09Jan13              */
@@ -41,6 +42,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057522 - 24x7: CAP702 - Loss of some API requests sent    */
+/*                  during COB.                                      */
 /*       CSD101 - Password Encryption                                */
 /*       CSD102 - Password Length Extension (Recompile)              */
 /*       MD046248 - Finastra Rebranding                              */
@@ -85,7 +88,7 @@
                           &BUFFER8 &BUFFER9  &MSGARR &APIRETC &APHEAD)                 /*AR1075853*/
 /**********               &BUFFER8 &BUFFER9  &MSGARR &APIRETC)       */        /*BUG4646 AR1075853*/
 /**********               &FWDBCK &TRANSID &BUFFER &MSGARR &APIRETC) */                  /*BUG4646*/
- 
+
              DCL        VAR(&SYS)       TYPE(*CHAR) LEN(2)
              DCL        VAR(&USER)      TYPE(*CHAR) LEN(10)
              DCL        VAR(&LANG)      TYPE(*CHAR) LEN(2)
@@ -103,44 +106,86 @@
              DCL        VAR(&BUFFER7)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
              DCL        VAR(&BUFFER8)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
              DCL        VAR(&BUFFER9)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
- 
+
 /******      DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(2000)                      /*BG1105*/
              DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(9999)                      /*BG1105*/
              DCL        VAR(&APIRETC)   TYPE(*CHAR) LEN(1)
- 
+
 /**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)             */                     /*CCB020*/
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                 /*AR1076364*/
              DCL        VAR(&SWS)   TYPE(*CHAR) LEN(8)
 /**********  DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)          */            /*AR971184 CSD102*/
              DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                                 /*CSD102*/
- 
+
 /* Work variables                                                    */
              DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
              DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                 /*247277*/
              DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)                                 /*247277*/
              DCL        VAR(&TYPE ) TYPE(*CHAR) LEN(1)
              DCL        VAR(&DMVTYPE) TYPE(*CHAR) LEN(2)                                  /*CAP087*/
- 
+                                                                                        /*MD057522*/
+             DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(7)                                  /*MD057522*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                               /*MD057522*/
+             DCL        VAR(&ND24X7) TYPE(*CHAR) LEN(5)                                 /*MD057522*/
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD057522*/
+
 /* Parameters for call to MLC0030                                    */
              DCL        VAR(&PARM)  TYPE(*CHAR) LEN(1000)
                                                                                           /*CCB020*/
 /**Parameter*for*call*to*CBC001001**/                                           /*CCB020 AR1076364*/
 /**********  DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)             */           /*CCB020 AR1076364*/
              DCL        VAR(&COBFL)  TYPE(*CHAR) LEN(08)                               /*AR1075853*/
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1075853*/
 /**Check*for*Input*Cycle**********************************************/                   /*CCB020*/
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                 */                   /*CCB020*/
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                   /*AR1076364*/
+                                                                                        /*MD057522*/
+                                                                                        /*MD057522*/
+             CHGVAR     VAR(&CAP702) VALUE('N')                                         /*MD057522*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' 'CAP702' &SCSARD)           /*MD057522*/
+             IF         COND(&RTNCD *EQ ' ') THEN(CHGVAR +
+                          VAR(&CAP702) VALUE('Y'))                                      /*MD057522*/
+                                                                                        /*MD057522*/
+             IF         COND(&CAP702 = 'Y') THEN(DO)                                    /*MD057522*/
+             RTVDTAARA  DTAARA(SCND24X7) RTNVAR(&ND24X7)                                /*MD057522*/
+             ENDDO                                                                      /*MD057522*/
+                                                                                        /*MD057522*/
+                                                                                        /*MD057522*/
+             IF         COND((&CAP702 *EQ 'Y') *AND (&ND24X7 = 'DAY') *AND +
+                          (&MPHAS *EQ 'C')) THEN(DO)                                    /*MD057522*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                          *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                        /*MD057522*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :The system is under+
+                             going transition to daytime mode. It will just +
+                             take a few seconds. Please try to submit your +
+                             transaction again after a few seconds:')                   /*MD057522*/
+                GOTO       CMDLBL(END)                                                  /*MD057522*/
+             ENDDO                                                                      /*MD057522*/
+             ENDDO                                                                      /*MD057522*/
+                                                                                        /*MD057522*/
+                                                                                        /*MD057522*/
+             IF         COND((&CAP702 *NE 'Y') *OR ((&ND24X7 *EQ 'DAY') *AND +
+                          (&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                           *AND (&CAP702 *EQ 'Y'))) THEN(DO)                            /*MD057522*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                          *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                        /*MD057522*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
+                             cycle.  Entry prohibited:')                                /*MD057522*/
+                GOTO       CMDLBL(END)                                                  /*MD057522*/
+             ENDDO                                                                      /*MD057522*/
+                                                                                        /*MD057522*/
+             ENDDO                                                                      /*MD057522*/
+                                                                                        /*MD057522*/
                                                                                           /*CCB020*/
 /**Call*program*CBC001001*to*check*if*program*is*in*COB*or*IC**/                /*CCB020 AR1076364*/
 /**If*the*return*value*is**YES,*system*is*in*COB**/                             /*CCB020 AR1076364*/
                                                                                           /*CCB020*/
 /**********  CALL       PGM(CBC001001) PARM(&COBST)                */           /*CCB020 AR1076364*/
- 
+
 /* If CoB query, return 'Y' for Cob, 'N' for Input Cycle              */
              IF         COND(&TRANSTYPE = 'COB') THEN(DO)
 /**********     IF         COND(&MPHAS *NE 'A') THEN(DO)              */                  /*CCB020*/
@@ -155,7 +200,7 @@
                    GOTO       CMDLBL(END)
                 ENDDO
              ENDDO
- 
+
 /* Any other transactions not allowed in CoB.                         */
 /**********  IF         COND(&MPHAS *NE 'A') THEN(DO)              */                     /*CCB020*/
 /**********  IF         COND(&COBST = '*YES') THEN(DO)          */              /*CCB020 AR1075853*/
@@ -168,9 +213,9 @@
                              cycle. Entry prohibited:')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
              CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
- 
+
 /* Reclaim resource                                                   */                  /*BG3169*/
              RCLRSC                                                                       /*BG3169*/
  /* MPLUS_ERR is created by DBERRCTL */                                                   /*NAD009*/
@@ -229,7 +274,7 @@
                           OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
              OVRDBF     FILE(LEPDUELC) TOFILE(LEPDUELC) +
                           OVRSCOPE(*JOB) SHARE(*NO)                                    /*AR1079502*/
- 
+
 /* Get the depot movement type - walk-in/walk-out                     */
              IF         COND(&TRANSTYPE = 'DPMV') THEN(DO)
 /***************CHGVAR     VAR(&TRANSTYPE) VALUE('DP' *CAT +
@@ -251,7 +296,7 @@
                              VALUE('MV'))                                                 /*CAP087*/
              CHGVAR     VAR(&TRANSTYPE) VALUE('DP' *CAT &DMVTYPE)                         /*CAP087*/
              ENDDO
- 
+
 /* Log call to APCTRANVU */                                                              /*CGP004*/
                                                                                          /*CGP004*/
              CALL       PGM(GPAUUIUPD) PARM('R' &SYS &USER &LANG +
@@ -273,11 +318,11 @@
                           &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
                           &BUFFER7 &BUFFER8 &BUFFER9 +
                           &MSGARR &APIRETC &APHEAD)                                     /*AR971184*/
- 
+
              RTVJOBA    SWS(&SWS)
              IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
              GOTO       CMDLBL(END)
  ABNOR:
              CHGVAR     VAR(&MSGARR) VALUE(':::Database error has +
@@ -308,7 +353,7 @@
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(MP_OK))                           /*NAD009*/
              CHGVAR     VAR(&APIRETC) VALUE('0')                                          /*NAD009*/
 MP_OK:                                                                                    /*NAD009*/
- 
+
  /* Check for any unhandled errors   */
              IF         COND(&APIRETC = '0' *AND &MSGARR = *BLANK) +
                           THEN(DO)

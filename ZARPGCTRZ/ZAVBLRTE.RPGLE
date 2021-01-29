@@ -1000,8 +1000,11 @@
      C     *IN30         IFEQ      *OFF                                         If BSRC EXIST
      C     ApiName       ANDEQ     'CLIP'                                       And CLIP
      C     *IN29         ANDEQ     *ON                                          And INSERT
+     C     DDAVOP        IFEQ      '1'                                          If AVOP=1/2
+     C     DDAVOP        OREQ      '2'                                          (not blankable)
      C                   MOVE      BBAWGHT       DDWGHT                          Default from
       *                                                                          SDBSRTPD
+     C                   ENDIF
      C                   ENDIF
       *
      C     DDWGHT        IFEQ      *BLANKS                                      If still blank
@@ -1013,7 +1016,7 @@
       *
      C                   ENDIF                                                  END CLE172
       *
-     C                   ENDIF                                                  End blank
+     C                   ENDIF                                                  END blank
       *
      C                   ENDSR
       *

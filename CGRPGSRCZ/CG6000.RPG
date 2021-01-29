@@ -74,6 +74,7 @@
      F*                 CCG008 *CREATE     Date 30OCT95               *
      F*                                                               *
      F*---------------------------------------------------------------*
+     F*  AMENDMENT HISTORY                                            *
       *                                                               *
       *  CLE172 - Libor Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -334,6 +335,46 @@
      C           LSTS      ANDEQ'A'                                       136778
      C           LNKS      ANDNE'Y'                                       CLE004
      C           CLE004    OREQ 'N'                                       136778
+     C*                                                                   CLE172
+     C** IF CSD103 AND CLE172 IS SWITCHED ON.                             CLE172
+     C*                                                                   CLE172
+     C           CSD103    IFEQ 'Y'                                       CLE172
+     C           CLE172    ANDEQ'Y'                                       CLE172
+     C*                                                                   CLE172
+     C** If Consolidated Confirmations is 'Y' call CG6005LE               CLE172
+     C*                                                                   CLE172
+     C           BPCONR    IFNE 'Y'                                       CLE172
+     C/COPY WNCPYSRC,CG6000C002                                           CLE172
+     C*                                                                   CLE172
+     C**  Produce Confirmation.                                           CLE172
+     C*                                                                   CLE172
+     C                     CALL 'CG6005LE'                                CLE172
+     C                     PARM *BLANKS   ##RTCD  7                       CLE172
+     C                     PARM W0CMT     ##CMT   3                       CLE172
+     C                     PARM *BLANK    ##COPD  1                       CLE172
+     C                     PARM *BLANK    ##AUTO  1                       CLE172
+     C                     PARM *BLANKS   ##SPPS  1                       CLE172
+     C                     PARM           DSPARM                          CLE172
+     C*                                                                   CLE172
+     C**  If call ended in error, execute error processing.               CLE172
+     C*                                                                   CLE172
+     C           ##RTCD    IFNE *BLANK                                    CLE172
+     C                     EXSR SRAUDT                                    CLE172
+     C                     MOVEL'CG6005LE'W0FILE           ************   CLE172
+     C                     MOVEL##RTCD    W0KEY            * DBERR 01 *   CLE172
+     C                     Z-ADD1         W0ERNB           ************   CLE172
+     C                     MOVEL'MEM5003' W0MSGD                          CLE172
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
+     C                     EXSR SRERR                                     CLE172
+     C                     ENDIF                                          CLE172
+     C*                                                                   CLE172
+     C/COPY WNCPYSRC,CG6000C003                                           CLE172
+     C                     ELSE                                           CLE172
+     C                     MOVE 'Y'       ##COPD                          CLE172
+     C*                                                                   CLE172
+     C                     ENDIF                           BPCONR = 'Y'   CLE172
+      *                                                                   CLE172
+     C                     ELSE                                           CLE172
      C*                                                                   CLE004
      C* If Consolidated Confirmations is 'Y' call CG6005                  CLE004
      C*                                                                   CLE004
@@ -368,6 +409,8 @@
      C                     MOVE 'Y'       ##COPD                          CLE004
      C*                                                                   CLE004
      C                     ENDIF                           BPCONR = 'Y'   CLE004
+      *                                                    CSD103 = 'N'   CLE172
+     C                     ENDIF                           CLE172 = 'N'   CLE172
      C*
      C**  If a confirmation is produced,
      C*
@@ -428,90 +471,6 @@
      C                     COMIT
      C*                                                                   CLE004
      C                     ENDIF                           LSTS,LNKS      CLE004
-     C*  If Loan is authorised and Loan is not 'Linked to Syndicate'      CLE172
-     C*                                                                   CLE172
-     C           CSD103    IFEQ 'Y'                                       CLE172
-     C           CLE172    ANDEQ'Y'                                       CLE172
-     C           LSTS      ANDEQ'A'                                       CLE172
-     C           LNKS      ANDNE'Y'                                       CLE172
-     C*                                                                   CLE172
-     C* If Consolidated Confirmations is not 'Y' call CG6005              CLE172
-     C*                                                                   CLE172
-     C           BPCONR    IFNE 'Y'                                       CLE172
-     C/COPY WNCPYSRC,CG6000C002                                           CLE172
-     C*                                                                   CLE172
-     C*                                                                   CLE172
-     C**  Produce Confirmation.                                           CLE172
-     C*                                                                   CLE172
-     C                     CALL 'CG6005LE'                                CLE172
-     C                     PARM *BLANKS   ##RTCD  7                       CLE172
-     C                     PARM W0CMT     ##CMT   3                       CLE172
-     C                     PARM *BLANK    ##COPD  1                       CLE172
-     C                     PARM *BLANK    ##AUTO  1                       CLE172
-     C                     PARM *BLANKS   ##SPPS  1                       CLE172
-     C                     PARM           DSPARM                          CLE172
-     C*                                                                   CLE172
-     C**  If call ended in error, execute error processing.               CLE172
-     C*                                                                   CLE172
-     C           ##RTCD    IFNE *BLANK                                    CLE172
-     C                     EXSR SRAUDT                                    CLE172
-     C                     MOVEL'CG6005LE'W0FILE           ************   CLE172
-     C                     MOVEL##RTCD    W0KEY            * DBERR 01 *   CLE172
-     C                     Z-ADD1         W0ERNB           ************   CLE172
-     C                     MOVEL'MEM5003' W0MSGD                          CLE172
-     C                     MOVEL'MIDAS  ' W0MSGF                          CLE172
-     C                     EXSR SRERR                                     CLE172
-     C                     ENDIF                                          CLE172
-     C*                                                                   CLE172
-     C/COPY WNCPYSRC,CG6000C003                                           CLE172
-     C                     ELSE                                           CLE172
-     C                     MOVE 'Y'       ##COPD                          CLE172
-     C*                                                                   CLE172
-     C                     ENDIF                           BPCONR = 'Y'   CLE172
-     C*                                                                   CLE172
-     C**  If a confirmation is produced,                                  CLE172
-     C*                                                                   CLE172
-     C           ##COPD    IFEQ 'Y'                                       CLE172
-     C           ##SPPS    ANDEQ'N'                                       CLE172
-     C*                                                                   CLE172
-     C**  Set the 'Confirmation printed indicator' in LTRIXL1 to 'Y'.     CLE172
-     C*                                                                   CLE172
-     C                     MOVEL'Y'       CNPR                            CLE172
-     C                     UPDATLTRIXF                                    CLE172
-     C*                                                                   CLE172
-     C**  Update the Confirmations bit setting on CLOANCL.                CLE172
-     C*                                                                   CLE172
-     C                     BITON'01'      CNFI                            CLE172
-     C           ##RCD1    IFEQ 'R'                                       CLE172
-     C                     BITON'2'       CNFI                            CLE172
-     C                     ENDIF                                          CLE172
-     C*                                                                   CLE172
-     C                     UPDATCLOANCLF                                  CLE172
-     C*                                                                   CLE172
-     C**  If the confirmation produced also requires auto-transmission,   CLE172
-     C**  Write to LEEXTAA, LEEXTAB and LEEXTAC.                          CLE172
-     C*                                                                   CLE172
-     C           ##AUTO    IFEQ 'Y'                                       CLE172
-     C                     EXSR SRWLEN                                    CLE172
-     C                     ENDIF                                          CLE172
-     C*                                                                   CLE172
-     C                     ELSE                                           CLE172
-     C*                                                                   CLE172
-     C**  If a confirmation is not produced, set the 'Confirmation        CLE172
-     C**  printed indicator' in LTRIXL1 to 'S'.                           CLE172
-     C*                                                                   CLE172
-     C                     MOVEL'S'       CNPR                            CLE172
-     C                     MOVE LRECI     RECI                            CLE172
-     C                     MOVE LLASN     LASN                            CLE172
-     C                     UPDATLTRIXF                                    CLE172
-     C*                                                                   CLE172
-     C                     ENDIF                                       '  CLE172
-     C*                                                                   CLE172
-     C**  Commit changes.                                                 CLE172
-     C*                                                                   CLE172
-     C                     COMIT                                          CLE172
-     C*                                                                   CLE172
-     C                     ENDIF                                          CLE172
      C/COPY WNCPYSRC,CG6000C005
      C*                                                                   CLE004
      C                     ENDIF                           CNRQ='Y'       CLE004

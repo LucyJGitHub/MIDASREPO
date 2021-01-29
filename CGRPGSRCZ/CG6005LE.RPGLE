@@ -3261,7 +3261,7 @@
      C                   MOVE      'OD'          #@RDE                                        CLE172
      C                   MOVEL     'BASERATC'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     BLRT          R#DATA                                       CLE172
+     C                   MOVEL     BRTT          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -3274,7 +3274,7 @@
      C                   MOVE      'OD'          #@RDE                                        CLE172
      C                   MOVEL     'BMRKADJC'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     BADJ          R#DATA                                       CLE172
+     C                   MOVEL     BADJ          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -3287,7 +3287,7 @@
      C                   MOVE      'AY'          #@RDE                                        CLE172
      C                   MOVEL     'LOOKBCKD'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     LBDY          R#DATA                                       CLE172
+     C                   MOVEL     LBDY          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -3300,7 +3300,7 @@
      C                   MOVE      'AY'          #@RDE                                        CLE172
      C                   MOVEL     'LOCKOUTD'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     LODY          R#DATA                                       CLE172
+     C                   MOVEL     LODY          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -3313,7 +3313,7 @@
      C                   MOVE      'YS'          #@RDE                                        CLE172
      C                   MOVEL     'DLYPAYDA'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     PDLY          R#DATA                                       CLE172
+     C                   MOVEL     PDLY          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
       *                                                                                       CLE172
@@ -3323,13 +3323,13 @@
      C                   CLEAR                   R#DATA                                       CLE172
      C                   CLEAR                   R#DEFN                                       CLE172
      C                   CLEAR                   #@RDE                                        CLE172
-     C                   MOVE      'N'           #@RDE                                        CLE172
+     C                   MOVE      'N '          #@RDE                                        CLE172
      C                   MOVEL     'AVGOPTIO'    #@RDE                                        CLE172
      C     ##RDE         CAT       #@RDE:1       ##RDE                                        CLE172
-     C                   MOVEL     AVOP          R#DATA                                       CLE172
+     C                   MOVEL     AVOP          ##DATA                                       CLE172
      C                   MOVEL     R#DATA        ##D(R1)                                      CLE172
      C                   MOVEL     R#DEFN        ##R(R1)                                      CLE172
-      *
+      *                                                                                       CLE172
      C**  Accumulate RDEs and associated data and output to PF/CGUDTPD.
      C*
      C                   EXSR      SRADTA

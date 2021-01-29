@@ -190,6 +190,7 @@
 
      C                   Eval      APIRetC = '1'
       *                                                                                     MD057522
+     C                   Z-ADD     0             A                 3 0                      MD057522
      C                   EVAL      A = %SCAN('MIDASCOB':APHEAD)                             MD057522
       *                                                                                     MD057522
      C     A             IFGT      0                                                        MD057522

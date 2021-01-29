@@ -234,11 +234,11 @@
       *
       * Set up job description library list
      C                   Call      'QWDRJOBD'                           9697
-     C                   PARM                    Parm
-     C                   PARM                    Len
-     C                   PARM      'JOBD0100'    Format           10
-     C                   PARM                    Jobd
-     C                   PARM                    QUSEC
+     C                   Parm                    Parm
+     C                   Parm                    Len
+     C                   Parm      'JOBD0100'    Format           10
+     C                   Parm                    Jobd
+     C                   Parm                    QUSEC
       *                                                                                     MD057522
      C                   ENDIF                                                              MD057522
      C                   ENDIF                                                              MD057522

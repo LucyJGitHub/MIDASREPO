@@ -124,7 +124,7 @@
 /**********  DCL        VAR(&SLT) TYPE(*CHAR) LEN(89) VALUE('UBRTT +          */        /*MD057528*/
 /**********               *NE 0 & UFRFD *EQ 0 & VDAT *EQ       *OR +          */        /*MD057528*/
 /**********               TBRTT *NE 0 & TFRFD *EQ 0 & VDAT *EQ      ')        */        /*MD057528*/
-             DCL        VAR(&SLT) TYPE(*CHAR) LEN(89) VALUE('UBRTT +
+             DCL        VAR(&SLT) TYPE(*CHAR) LEN(91) VALUE('UBRTT +
                           *NE    & UFRFD *EQ 0 & VDAT *EQ       *OR +
                           TBRTT *NE    & TFRFD *EQ 0 & VDAT *EQ      ')                 /*MD057528*/
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*046856*/

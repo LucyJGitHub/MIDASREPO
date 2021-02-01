@@ -10,13 +10,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1071195          Date 25Jan13               *
-      *  Prev Amend No. AR685870           Date 10Dec10               *
+      *  Last Amend No. MD056559           Date 31Aug20               *
+      *  Prev Amend No. AR1071195          Date 25Jan13               *
+      *                 AR685870           Date 10Dec10               *
       *                 BUG28093A          Date 08Sep10               *
       *                 BUG28093 *CREATE   Date 03Sep10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056559 - Deliverable Data Split for SCSQLSPD               *
       *  AR1071195 - Optimise API UDF Extension Files Housekeeping    *
       *  AR685870 - Introduce sequence number field.                  *
 /*    *             (Child: AR685871)                                 *
@@ -27,7 +29,7 @@
       /EJECT
       *****************************************************************
      F***APUDTKPD  IF   E             DISK                                                 AR1071195
-     FSCSQLSPD  IF   E             DISK                                                    AR1071195
+     F*SCSQLSPD* IF   E             DISK                                          AR1071195 MD056559
 
       *****************************************************************
 
@@ -51,6 +53,7 @@
      D PreMarker       S            500A                                                   AR1071195
      D PostMarker      S            500A                                                   AR1071195
      D SQLLen          S              3  0 INZ(0)                                          AR1071195
+     D SCSQLS        E DS                  EXTNAME(SCSQLJW0)                                MD056559
 
       *****************************************************************
       /EJECT
@@ -88,11 +91,24 @@
 
      C*****1****         SETLL     APUDTKPD                                                AR1071195
      C**********         READ      APUDTKPD                                                AR1071195
-     C     1             SETLL     SCSQLSPD                                                AR1071195
-     C                   READ      SCSQLSPD                                                AR1071195
+     C*****1*****        SETLL     SCSQLSPD                                       AR1071195 MD056559
+     C**********         READ      SCSQLSPD                                       AR1071195 MD056559
 
      C**********         DOW       NOT %EOF(APUDTKPD)                                      AR1071195
-     C                   DOW       NOT %EOF(SCSQLSPD)                                      AR1071195
+     C**********         DOW       NOT %EOF(SCSQLSPD)                             AR1071195 MD056559
+     C/EXEC SQL                                                                             MD056559
+     C+ declare ACursor insensitive scroll cursor for                                       MD056559
+     C+ select * from SCSQLJW0                                                              MD056559
+     C/END-EXEC                                                                             MD056559
+                                                                                            MD056559
+     C/EXEC SQL                                                                             MD056559
+     C+ open ACursor                                                                        MD056559
+     C/END-EXEC                                                                             MD056559
+                                                                                            MD056559
+     C/EXEC SQL                                                                             MD056559
+     C+ fetch next from ACursor into :SCSQLS                                                MD056559
+     C/END-EXEC                                                                             MD056559
+     C                   DOW       SQLCODE = 0                                              MD056559
 
      C**********         IF        APSEQN = '01' AND                              AR685870 AR1071195
      C**********                   APCON2 <> *BLANKS                              AR685870 AR1071195
@@ -129,9 +145,16 @@
      C**********         ENDIF                                                    AR685870 AR1071195
 
      C**********         READ      APUDTKPD                                                AR1071195
-     C                   READ      SCSQLSPD                                                AR1071195
+     C**********         READ      SCSQLSPD                                       AR1071195 MD056559
+     C/EXEC SQL                                                                             MD056559
+     C+ fetch next from ACursor into :SCSQLS                                                MD056559
+     C/END-EXEC                                                                             MD056559
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD056559
+     C+ close ACursor                                                                       MD056559
+     C/END-EXEC                                                                             MD056559
+                                                                                            MD056559
      C                   EVAL      *INLR = *ON
      C                   RETURN
 

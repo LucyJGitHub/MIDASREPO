@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056556           Date 31Aug20               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR690003           Date 07Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR690003 - SC000103 continued even if there is no Source     *
@@ -103,8 +105,8 @@
      F                                     USROPN
 
       ** Global Files
-     FGPGLOBFL1 IF   E           K DISK    INFSR(*PSSR)
-     F                                     USROPN                                            BUG8387
+     F*GPGLOBFL1 IF   E           K DISK    INFSR(*PSSR)                                    MD056556
+     F**********                           USROPN                                   BUG8387 MD056556
                                                                                              BUG8417
       ** Midas SC Enabled/disabled switchable features file                                  BUG8417
      F*SCSAREL0*UF A E           K DISK    INFSR(*PSSR)                             BUG8417 MD055681
@@ -220,6 +222,7 @@
                                                                                              BUG8501
      D WKeyACOD        S                   LIKE(A5ACCD)                                      BUG8501
      D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
+     D GPGLOBF       E DS                  EXTNAME(GPGLFJW0)                                MD056556
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -720,19 +723,40 @@
 
       ** Synchrinize all global file
 
-     C                   OPEN      GPGLOBFL1                                                 BUG8387
-     C     *LOVAL        SETLL     GPGLOBFL1
-     C                   READ      GPGLOBFL1
-     C                   DOW       NOT %EOF(GPGLOBFL1)
+     C**********         OPEN      GPGLOBFL1                                        BUG8387 MD056556
+     C******LOVAL        SETLL     GPGLOBFL1                                                MD056556
+     C**********         READ      GPGLOBFL1                                                MD056556
+     C**********         DOW       NOT %EOF(GPGLOBFL1)                                      MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ declare ACursor insensitive scroll cursor for                                       MD056556
+     C+ select * from GPGLFJW0                                                              MD056556
+     C+ order by GFGPF                                                                      MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ open ACursor                                                                        MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
+                                                                                            MD056556
+     C                   DOW       SQLCODE = 0                                              MD056556
      C                   IF        GFGPF <> 'GZSDBRCHPD' AND
      C                             GFGPF <> 'GZRSACMTPD'
      C                   CALL      'GOC0100'
      C                   PARM                    GFGPF
      C                   ENDIF
-     C                   READ      GPGLOBFL1
+     C**********         READ      GPGLOBFL1                                                MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ fetch next from ACursor into :GPGLOBF                                               MD056556
+     C/END-EXEC                                                                             MD056556
      C                   ENDDO
-     C                   CLOSE     GPGLOBFL1                                                 BUG8387
+     C**********         CLOSE     GPGLOBFL1                                        BUG8387 MD056556
 
+     C/EXEC SQL                                                                             MD056556
+     C+ close ACursor                                                                       MD056556
+     C/END-EXEC                                                                             MD056556
      C                   ENDSR
       *****************************************************************
       /EJECT

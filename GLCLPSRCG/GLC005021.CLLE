@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1057854          Date 19Nov12              */
+/*       Last Amend No. MD056889           Date 11Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1057854          Date 19Nov12              */
 /*                      AR1015290          Date 20Oct12              */
 /*                      AR918665           Date 20Oct12              */
 /*                      CSC043             Date 18Jun10              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1057854 - Geneva Drop 01 Build Issues - RPG Program       */
 /*                   Compilation Error                               */
@@ -38,7 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PREFIX)
- 
+
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)
              DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
@@ -77,16 +79,17 @@
              DCL        VAR(&LIBEXT) TYPE(*CHAR) LEN(200)                              /*AR1015290*/
 /*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
 /**********  DCLF       FILE(GLEODMPD) */                                               /*AR918665*/
-             DCLF       FILE(GPSDJARFPD)                                               /*AR1015290*/
- 
+/**********  DCLF       FILE(GPSDJARFPD) */                                  /*AR1015290**MD056889*/
+             DCLF       FILE(GPJARJW0)                                                  /*MD056889*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2004')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              OVRPRTF FILE(QPRINT) MAXRCDS(999999) OVRSCOPE(*JOB)
 /*                                                                                        /*CSC043*/
 /** Get the global IASP system values */                                                  /*CSC043*/
@@ -112,31 +115,31 @@
                                                                                           /*CSC043*/
              ENDDO                                                                        /*CSC043*/
                                                                                           /*CSC043*/
- 
+
 /* Check if the EODMONITOR job is running */
- 
+
              ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
- 
+
 /* Log job details */
- 
+
              RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNBR)
- 
+
 /* Log the EODMONITOR job details */
- 
+
              CHGVAR     VAR(&GLEODMON) VALUE(&JOBNAME *CAT &JOBUSER +
                           *CAT &JOBNBR)
              CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(&GLEODMON)
- 
+
 /* Get 'GlobalJavaPath' system value from file GPSVALPD  */
- 
+
 /**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +               */                /*BUG27747A*/
 /**********               'GlobalJavaPathStem' &JAVAPATH &SVALK2 +   */                /*BUG27747A*/
 /**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +     */                /*BUG27747A*/
 /**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +    */                /*BUG27747A*/
 /**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +     */                /*BUG27747A*/
 /**********               &SVALK0 &SVAL10)                           */                /*BUG27747A*/
- 
+
 /**/                                                                                   /*BUG27747A*/
 /*  Get 'GlobalJavaPathStem' and 'GlobalJavaHome'     */                               /*BUG27747A*/
 /*  system values from file GPSVALPD                  */                               /*BUG27747A*/
@@ -149,10 +152,10 @@
                           &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
                                                                                        /*BUG27747A*/
 /* If the 'GlobalJavaPathStem' system value is missing then end abnormally */
- 
+
              IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Get 'GlobalJavaHome' system value from file GPSVALPD  */                             /*BUG27747*/
                                                                                         /*BUG27747*/
 /**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +               */                /*BUG27747A*/
@@ -192,17 +195,17 @@
              ALCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL)) WAIT(30)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
              CHGVAR     VAR(&GPLIB) VALUE(&PREFIX *CAT 'GPLIB')
- 
+
 /**********  CHGVAR     VAR(&LNKNAME) VALUE('eod' *CAT 'EXT')                          /*AR1015290*/
              CHGVAR     VAR(&LNKNAME) VALUE('A')                                       /*AR1015290*/
 /**********  RMVLNK     OBJLNK(&LNKNAME)                           */                  /*AR1015290*/
 /**********  MONMSG     MSGID(CPF0000)                             */                  /*AR1015290*/
 /**********  ADDLNK     OBJ(&JAVAPATH) NEWLNK(&LNKNAME)            */                  /*AR1015290*/
 /**********  MONMSG     MSGID(CPFA0A0)                             */                  /*AR1015290*/
- 
+
 /**********  CLRPFM     FILE(&GPLIB/GLEODMPD)                      */                  /*AR1015290*/
 /**********  MONMSG     MSGID(CPF0000)                             */                  /*AR1015290*/
- 
+
 /*                                                                                        /*CSC043*/
 /** If IASP environment */                                                                /*CSC043*/
 /*                                                                                        /*CSC043*/
@@ -218,9 +221,9 @@
                           &GPLIB *TCAT +
                           '.LIB/GLEODMPD.FILE/GLEODMPD.MBR') */                        /*AR1015290*/
 /**********  ENDDO                                                              /*CSC043 AR1057854*/
- 
+
 /**********  QSH        CMD(&LSCOMMAND)                            */                  /*AR1015290*/
- 
+
 /**********  CHGVAR     VAR(&CLASSPATH) VALUE(&JAVAPATH *TCAT ':') */                  /*AR1015290*/
 /**********READNEXT: */                                                                 /*AR918665*/
 /**********  RCVF    */                                                                 /*AR918665*/
@@ -233,10 +236,11 @@
 /**********  GOTO       CMDLBL(READNEXT) */                                             /*AR918665*/
 /**********ENDFILE: */                                                                  /*AR918665*/
              DLCOBJ     OBJ((GLMLCLJLCK *DTAARA *EXCL))
- 
+
              CHGVAR     VAR(&CLASSPATH) VALUE('A')                                     /*AR1015290*/
                                                                                        /*AR1015290*/
- SETUP_PATH: RCVF       RCDFMT(GPSDJARFD0)                                             /*AR1015290*/
+/*SETUP_PATH: RCVF       RCDFMT(GPSDJARFD0) */                               /*AR1015290**MD056889*/
+ SETUP_PATH: RCVF       RCDFMT(GPJARJT0)                                                /*MD056889*/
                                                                                        /*AR1015290*/
              /* END OF FILE */                                                         /*AR1015290*/
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END_PATH))                     /*AR1015290*/
@@ -250,40 +254,40 @@
  END_PATH:                                                                             /*AR1015290*/
                                                                                        /*AR1015290*/
 /* Build the QSH command string */
- 
+
              CHGVAR     VAR(&CLASSPATH) VALUE(&LNKNAME *TCAT +
                           '/eodmonitor' *TCAT ':' *TCAT &CLASSPATH)
              CHGVAR     VAR(&COMMAND) VALUE(' com.misys.midas.+
                           midasplus.eod.EODMonitor')
- 
+
              CHGVAR     VAR(&EXECUTE) VALUE('java -cp ' *CAT +
                           &CLASSPATH *TCAT &COMMAND)
- 
+
 /* Execute the QSH command string */
- 
+
              QSH        CMD(&EXECUTE)
- 
+
 /* For a normal end set the abnormal termination indicator off */
- 
+
              CHGVAR     VAR(&ABNOR) VALUE('N')
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC005021 ended abnormally - see job +
                           log') TOMSGQ(GPOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  ENDPGM:
- 
+
 /* Only clear the job information for an abnormal end */
- 
+
              IF         COND(&ABNOR *NE 'Y') THEN(DO)
                 CHGDTAARA  DTAARA(GLEODMON (1 26)) VALUE(' ')
                 MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              ENDPGM

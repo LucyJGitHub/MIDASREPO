@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD056889           Date 11Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /*                      BUG27747A          Date 25Jun10              */
 /*                      BUG27747           Date 22Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       BUG27747A - Error in CALCMGR_zz and LTVMNTR_zz (Reopen)     */
@@ -38,7 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -70,45 +72,46 @@
              DCL        VAR(&JAVA_PATH) TYPE(*CHAR) LEN(1024)                             /*CLE040*/
              DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)                           /*BUG27747*/
   /*         DCLF       FILE(SDJARFPD)           */                            /*CLE040*/ /*CSD028*/
-             DCLF       FILE(SDJARFL0)                                                    /*CSD028*/
- 
+/**********  DCLF       FILE(SDJARFL0) */                                       /*CSD028**MD056889*/
+             DCLF       FILE(SDJARJW1)                                                  /*MD056889*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('GLC001500 - GL COB Collateral Revaluation') +
                           TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /** Start commitment control */
- 
+
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)
              MONMSG     MSGID(CPF8351)
- 
+
 /* Create data area LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
- 
+
 /* Setup system prefix variable from SDSTAT data area */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
- 
+
 /* Call program CB0160 to get value of restart indicator */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is not a restart */
- 
+
              IF         COND(&STAT *NE 'Y') THEN(DO)
                DLTF       FILE(XGLCOLLPD)
                MONMSG     MSGID(CPF2105)
@@ -134,126 +137,126 @@
                MONMSG     MSGID(CPF2105)
                DLTF       FILE(XSEBLKPPD)
                MONMSG     MSGID(CPF2105)
- 
+
                CPYF       FROMFILE(GLCOLLPD) TOFILE(&DPLIB/XGLCOLLPD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(GLCOLAPD) TOFILE(&DPLIB/XGLCOLAPD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(SDCLLMPD) TOFILE(&DPLIB/XSDCLLMPD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(FOCLTD) TOFILE(&DPLIB/XFOCLTD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(SDFOCSPD) TOFILE(&DPLIB/XSDFOCSPD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
 /**********    CPYF       FROMFILE(FCLTYFM) TOFILE(&DPLIB/XFCLTYFM) +  */                /*BUG3571*/
 /**********                 MBROPT(*REPLACE) CRTFILE(*YES)             */                /*BUG3571*/
                CPYF       FROMFILE(FCLTYFM) TOFILE(&DPLIB/XFCLTYFM) +
                             MBROPT(*REPLACE)                                             /*BUG3571*/
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(LEFCLTQD) TOFILE(&DPLIB/XLEFCLTQD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(ACCNTAB) TOFILE(&DPLIB/XACCNTAB) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(DEALSDC) TOFILE(&DPLIB/XDEALSDC) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(MMDELDPP) TOFILE(&DPLIB/XMMDELDPP) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(SEBLKPPD) TOFILE(&DPLIB/XSEBLKPPD) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
              ENDDO
- 
+
 /* If it is a restart */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
                CPYF       FROMFILE(XGLCOLLPD) TOFILE(GLCOLLPD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(GLCOLLPD))
- 
+
                CPYF       FROMFILE(XGLCOLAPD) TOFILE(GLCOLAPD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(GLCOLAPD))
- 
+
                CPYF       FROMFILE(XSDCLLMPD) TOFILE(SDCLLMPD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(SDCLLMPD))
- 
+
                CPYF       FROMFILE(XFOCLTD) TOFILE(FOCLTD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(FOCLTD))
- 
+
                CPYF       FROMFILE(XSDFOCSPD) TOFILE(SDFOCSPD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(SDFOCSPD))
- 
+
                CPYF       FROMFILE(XFCLTYFM) TOFILE(FCLTYFM) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(FCLTYFM))
- 
+
                CPYF       FROMFILE(XLEFCLTQD) TOFILE(LEFCLTQD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(LEFCLTQD))
- 
+
                CPYF       FROMFILE(XCLOANCL) TOFILE(CLOANCL) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(CLOANCL))
- 
+
                CPYF       FROMFILE(XACCNTAB) TOFILE(ACCNTAB) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(ACCNTAB))
- 
+
                CPYF       FROMFILE(XDEALSDC) TOFILE(DEALSDC) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(DEALSDC))
- 
+
                CPYF       FROMFILE(XMMDELDPP) TOFILE(MMDELDPP) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(MMDELDPP))
- 
+
                CPYF       FROMFILE(XSEBLKPPD) TOFILE(SEBLKPPD) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(SEBLKPPD))
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                                                                                          /*BUG3523*/
 /* Get 'JavaPath' system value from file SDSVALPD  */                                    /*BUG3523*/
@@ -272,7 +275,7 @@
                           &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
                           &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
                           &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
- 
+
 /* If the 'JavaPathStem' system value is missing then end abnormally */                  /*BUG3523*/
                                                                                          /*BUG3523*/
              IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
@@ -297,19 +300,19 @@
                                                                                          /*BUG3523*/
              RMVLNK     OBJLNK(B)                                                        /*BUG3523*/
              MONMSG     MSGID(CPFA0A9)                                                   /*BUG3523*/
- 
+
 /** Add links to system */
- 
+
 /**********  ADDLNK     OBJ('/QOpenSys/midasplus') NEWLNK(A)                             /*BUG3523*/
              ADDLNK     OBJ(&JAVAPATH) NEWLNK(A)                                         /*BUG3523*/
              MONMSG     MSGID(CPFA0A0)
- 
+
 /**********  ADDLNK     OBJ('/QOpenSys/midasplus/lib') NEWLNK(B)                         /*BUG3523*/
              CHGVAR     VAR(&JAVAPATH2) VALUE(&JAVAPATH *TCAT +
                           '/lib/ext')                                                    /*BUG3523*/
              ADDLNK     OBJ(&JAVAPATH2) NEWLNK(B)                                        /*BUG3523*/
              MONMSG     MSGID(CPFA0A0)
- 
+
 /* Get 'BrgMidasSystemPrefix' system value from file SDSVALPD  */                         /*CLE040*/
                                                                                           /*CLE040*/
              CALL       PGM(AOSVALR0) PARM(&RTNCDE +
@@ -326,10 +329,10 @@
                                                                                           /*CLE040*/
 /** Setup environment variable CLASSPATH with the necessary directories */
 /** for invoking the java calculator methods */
- 
+
              RMVENVVAR  ENVVAR(CLASSPATH)
              MONMSG     MSGID(CPFA981)
- 
+
 /** Setup environment variable JAVA_HOME */                                             /*BUG27747*/
                                                                                         /*BUG27747*/
              RMVENVVAR  ENVVAR(JAVA_HOME)                                               /*BUG27747*/
@@ -424,7 +427,8 @@
 /**********               A/logs:+                                                        /*CLE040*/
 /**********               A/calmancl')                                            /*BUG3523 CLE040*/
                                                                                           /*CLE040*/
- SETUP_PATH: RCVF       RCDFMT(SDJARFD0)                                                  /*CLE040*/
+/*SETUP_PATH: RCVF       RCDFMT(SDJARFD0) */                                    /*CLE040**MD056889*/
+ SETUP_PATH: RCVF       RCDFMT(SDJARJT1)                                                /*MD056889*/
                                                                                           /*CLE040*/
              /* END OF FILE */                                                            /*CLE040*/
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))                      /*CLE040*/
@@ -446,17 +450,17 @@
                                                                                         /*BUG27747*/
              ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)                             /*BUG27747*/
              MONMSG     MSGID(CPFA0A0)                                                  /*BUG27747*/
- 
+
 /* Call GL COB Collateral Revaluation */
- 
+
              CALL       PGM(GL001500)
- 
+
 /* If no error occured in the program */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
                CHGVAR     VAR(&STAT) VALUE('N')
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                DLTF       FILE(XGLCOLLPD)
@@ -484,31 +488,31 @@
                DLTF       FILE(XSEBLKPPD)
                MONMSG     MSGID(CPF2105)
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             GLC001500 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ MRUNQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 END:
- 
+
              ENDPGM

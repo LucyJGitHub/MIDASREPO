@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. EML104             Date 05Feb20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD057455           Date 27Jan21               *
+      *  Prev Amend No. EML104             Date 05Feb20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
       *                 MD023441           Date 15Nov13               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057455 - Remove validation that prohibits conversion of    *
+      *             non-SWIFT characters when network is MTCASH       *
       *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
       *           Structured field :86:                               *
       *           Add EML104_027, EML104_028                          *
@@ -800,10 +803,10 @@
       *                                                                                       CMG008
      C                   ENDIF                                                                CMG008
       *                                                                                       CMG008
-     C                   IF        D1CONV = 'Y' AND D1MCNW = 'Y'                              CMG008
-     C                   EVAL      ZAMSID = 'USR4015'                                         CMG008
-     C                   EVAL      *IN56 = *ON                                                CMG008
-     C                   ENDIF                                                                CMG008
+     C**********         IF        D1CONV = 'Y' AND D1MCNW = 'Y'                     CMG008 MD057455
+     C**********         EVAL      ZAMSID = 'USR4015'                                CMG008 MD057455
+     C**********         EVAL      *IN56 = *ON                                       CMG008 MD057455
+     C**********         ENDIF                                                       CMG008 MD057455
       *                                                                                       CMG008
       ** If an error found                                                                    CMG008
       *                                                                                       CMG008

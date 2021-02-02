@@ -1,0 +1,229 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Correct utilisation records in FACHISA')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       UTCLE0850 - CL program to reverse all required utilisations,*/
+/*                   regenerate US records, and trigger              */
+/*                   recalcualtion.                                  */
+/*                                                                   */
+/*       (C) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056104 *CREATE   Date 07Aug20              */
+/*       Prev Amend No. Xxnnnnnn           Date DDMMMYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD056104 - Numerous incorrect utilisation records found in  */
+/*                  FACHISA.                                         */
+/*                - Reverse all required utilisation records and     */
+/*                  regenerate US records from LEMNFUPD.             */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&MODE)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+
+/*System prefixes declaration*/
+             DCL        VAR(&ZPREFIX) TYPE(*CHAR) LEN(2)
+
+/*Library names declaration*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(20)
+
+/*file name declaration*/
+             DCL        VAR(&FACHISA) TYPE(*CHAR) VALUE('FACHISA')
+             DCL        VAR(&XFACHISA) TYPE(*CHAR) VALUE('XFACHISA')
+
+             DCL        VAR(&FACHISH) TYPE(*CHAR) VALUE('FACHISH')
+             DCL        VAR(&XFACHISH) TYPE(*CHAR) VALUE('XFACHISH')
+
+             DCL        VAR(&FACACT) TYPE(*CHAR) VALUE('FACACT')
+             DCL        VAR(&XFACACT) TYPE(*CHAR) VALUE('XFACACT')
+
+/*Boolean variables for errors*/
+             DCL        VAR(&ERRORSQL) TYPE(*LGL) VALUE('0')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+
+/**/
+/* Create LDA if it doesn't exist */
+/**/
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+
+/**/
+/* Passed parameter is invalid */
+/**/
+             IF         COND((&MODE *NE 'A') *AND (&MODE *NE +
+                          'a') *AND (&MODE *NE 'U')  +
+                          *AND (&MODE *NE 'u')) THEN(DO)
+/**/
+                SNDPGMMSG  MSG('Invalid parameter passed to UTCLE0850') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Invalid parameter +
+                             passed. It should either be ''U'' ''u'' for Update +
+                             and ''A'' or ''a'' for Audit.') MSGTYPE(*ESCAPE)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+/*Get Zone system prefix*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPREFIX)
+
+/*Create the library names with prefixes*/
+             CHGVAR     VAR(&DMLIB) VALUE(&ZPREFIX *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&ZPREFIX *TCAT 'DPLIB')
+
+
+/*Clear temporary file where list of facilities to be recalculated are stored*/
+             CLRPFM     FILE(UTLE0850PD)
+
+/*backup of files*/
+
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) THEN(DO)
+
+                CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+                MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                ENDDO
+
+/*backup FACHISA*/
+                CPYF       FROMFILE(&DMLIB/&FACHISA) TOFILE(&DPLIB/&XFACHISA) +
+                             MBROPT(*REPLACE)
+
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   CLRPFM     FILE(&XFACHISA)
+                ENDDO
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in copying PF/FACHISA to +
+                                PF/XFACHISA. Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+
+
+/*backup FACHISH*/
+                CPYF       FROMFILE(&DMLIB/&FACHISH) TOFILE(&DPLIB/&XFACHISH) +
+                             MBROPT(*REPLACE)
+
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   CLRPFM     FILE(&XFACHISH)
+                ENDDO
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in copying PF/FACHISH to +
+                                PF/XFACHISH. Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+
+/*backup FACACT*/
+                CPYF       FROMFILE(&DMLIB/&FACACT) TOFILE(&DPLIB/&XFACACT) +
+                             MBROPT(*REPLACE)
+
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   CLRPFM     FILE(&XFACACT)
+                ENDDO
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in copying PF/FACACT to +
+                                PF/XFACACT. Process terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+
+             ENDDO
+
+/*Call program that reverses all required utilisation records in FACHISA*/
+             CHGJOB     SWS(XXXXXX00)
+
+             CHGVAR     VAR(&RUNP) VALUE('YES')
+
+             CALL       PGM(UTLE0850A) PARM(&MODE)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                        CHGVAR VAR(&ERRORSQL) VALUE('1')
+                        GOTO CMDLBL(ABNOR)
+             ENDDO
+
+/*Call program that generates 'US' records from LEMNFUPD*/
+             CALL       PGM(UTLE0850B) PARM(&MODE)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRORSQL) VALUE('1')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/*Call program that reports all facilties that have been processed and tagged for recalculation*/
+/*This program has no parm for mode and report is generated during update only*/
+/*If error, clear PF*/
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) THEN(DO)
+                CALL       PGM(UTLE0850C)
+
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   /*If error, clear PF*/
+                   CLRPFM     FILE(UTLE0850PD)
+                   CHGVAR     VAR(&ERRORSQL) VALUE('1')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+
+             SNDPGMMSG  MSG('Utility completed successfully.')
+             GOTO       CMDLBL(END)
+ABNOR:
+/*Restore backup*/
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) +
+                        THEN(DO)
+                IF         COND((&RUNP *EQ 'YES') *AND (&ERRORSQL *EQ '1')) +
+                             THEN(DO)
+
+                /*RESTORE FACHISA*/
+                   CPYF       FROMFILE(&DPLIB/&XFACHISA) TOFILE(&DMLIB/&FACHISA) +
+                                MBROPT(*REPLACE) FMTOPT(*NONE)
+
+                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                      SNDUSRMSG  MSG('Error occurred in restoring PF/FACHISA from +
+                                   PF/XFACHISA. Process terminated.  Please +
+                                   restore manually PF/FACHISA from PF/XFACHISA.') +
+                                   MSGTYPE(*INFO)
+                   ENDDO
+                   SNDUSRMSG  MSG('Error on UTLE0850. Please check Joblog') +
+                                MSGTYPE(*INFO)
+
+                /*RESTORE FACHISH*/
+                   CPYF       FROMFILE(&DPLIB/&XFACHISH) TOFILE(&DMLIB/&FACHISH) +
+                                MBROPT(*REPLACE) FMTOPT(*NONE)
+
+                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                      SNDUSRMSG  MSG('Error occurred in restoring PF/FACHISH from +
+                                   PF/XFACHISH. Process terminated.  Please +
+                                   restore manually PF/FACHISH from PF/XFACHISH.') +
+                                   MSGTYPE(*INFO)
+                   ENDDO
+                   SNDUSRMSG  MSG('Error on UTLE0850. Please check Joblog') +
+                                MSGTYPE(*INFO)
+
+                /*RESTORE FACACT*/
+                   CPYF       FROMFILE(&DPLIB/&XFACACT) TOFILE(&DMLIB/&FACACT) +
+                                MBROPT(*REPLACE) FMTOPT(*NONE)
+
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                      CLRPFM     FILE(&XFACACT)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                      SNDUSRMSG  MSG('Error occurred in restoring PF/FACACT from +
+                                   PF/XFACACT. Process terminated.  Please restore +
+                                   manually PF/FACACT from PF/XFACACT.') +
+                                   MSGTYPE(*INFO)
+                   ENDDO
+                   SNDUSRMSG  MSG('Error on UTLE0850. Please check Joblog') +
+                                MSGTYPE(*INFO)
+                ENDDO
+             ENDDO
+
+             SNDUSRMSG  MSG('Utility failed. Please check Joblog') MSGTYPE(*INFO)
+
+END:
+             ENDPGM

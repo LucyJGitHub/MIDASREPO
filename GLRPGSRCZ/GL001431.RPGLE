@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD019928           Date 23May13               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
@@ -46,7 +47,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD019928 - Access error on ACCNTL0 in AOACCTR0 wrongly       *
-      *             reported.                                         *      
+      *             reported.                                         *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR401845 - MT940 generation does not take into account       *

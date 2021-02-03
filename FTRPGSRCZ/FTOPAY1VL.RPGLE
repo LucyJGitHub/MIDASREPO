@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT106             Date 06Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057498           Date 26Jan21               *
+      *  Prev Amend No. HUT106             Date 06Apr20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
       *                 CFT142             Date 20Feb15               *
@@ -105,6 +106,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057498 - Unable to complete OPAY transaction due error     *
+      *             MMA0932 in SWIFT MT202 indicator field. Change    *
+      *             error displayed to be a warning if sender's       *
+      *             correspondent and destination are not the same    *
+      *             entity and MT202 indicator remains unticked.      *
       *  HUT106 - Upgrade HUT012 to FBM 2.1 SP22                      *
       *           Allow FISC Bank Reference to be entered in SWIFT ID *
       *           Field                                               *
@@ -2230,6 +2236,12 @@
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
+      *                                                                                     MD057498
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD057498
+      *                                                                                     MD057498
+     C                   Parm                    WFldNmXAr                                  MD057498
+     C                   Parm                    WMsgIDXAr                                  MD057498
+     C                   Parm                    WMsgDtaXAr                                 MD057498
 
       * OK Flags
      C                   Parm                    OKFlagsDS

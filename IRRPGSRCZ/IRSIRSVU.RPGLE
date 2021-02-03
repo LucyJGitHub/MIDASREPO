@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056546           Date 16Sep20               *
-      *  Prev Amend No. MD044553           Date 08May17               *
+      *  Last Amend No. MD057437           Date 20Jan21               *
+      *  Prev Amend No. MD056546           Date 16Sep20               *
+      *                 MD044553           Date 08May17               *
       *                 MD054906           Date 18Dec19               *
       *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
@@ -115,6 +116,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057437 - IRS - Their Details - Negative Principal Amount   *
+      *             Fix is to not allow CIRS transaction with         *
+      *             Principal change (Decrease) that will result to   *
+      *             zero or negative amount.                          *
       *  MD056546 - Serious Midas Error encountered on CIRS Input     *
       *             Reversed MD044553                                 *
       *  MD044553 - Corrected buffer position for WIP timestamp       *
@@ -1110,6 +1115,7 @@ RGC                                                                             
      D POP10           S             20A                                                    MD054117
      D PVL10           S            200A                                                    MD054117
      D PCIDCF          S              1A                                                    MD054117
+     D NewPrinAmt      S                   LIKE(RSUPAMT)                                    MD057437
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -3930,6 +3936,12 @@ RGC                                                                             
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
+      *                                                                                     MD057437
+      ** Reset working variable                                                             MD057437
+     C                   EVAL      NewPrinAmt = 0                                           MD057437
+      *                                                                                     MD057437
+      ** Get the original Principal Amount                                                  MD057437
+     C                   EVAL      NewPrinAmt = RSUPAMT                                     MD057437
      C                   DOW       I<X                                          BUG4646
                                                                                 BUG4646
      C                   EVAL      PCHGSCH=PCSA(I)                              BUG4646
@@ -4518,6 +4530,23 @@ RGC                                                                             
      C                   ELSE                                                   BUG5610
      C                   MOVE      @@ALPH        WZFIELD          16                          245692
      C                   MOVE      @@AMT         PZFIELD          16                          245692
+      *                                                                                     MD057437
+      ** Add/subtract principal change amount to original                                   MD057437
+     C                   IF        PCIDFLG = 'I'                                            MD057437
+     C                   Eval      NewPrinAmt = NewPrinAmt + @@AMT                          MD057437
+     C                   ENDIF                                                              MD057437
+     C                   IF        PCIDFLG = 'D'                                            MD057437
+     C                   Eval      NewPrinAmt = NewPrinAmt - @@AMT                          MD057437
+     C                   ENDIF                                                              MD057437
+      *                                                                                     MD057437
+      ** Resulting Principal amount should be greater than 0                                MD057437
+     C                   IF        NewPrinAmt <= 0 AND                                      MD057437
+     C                             PValType = 'P'                                           MD057437
+     C                   EVAL      Idx = Idx + 1                                            MD057437
+     C                   EVAL      MsgIDArr(Idx) = '5049480'                                MD057437
+     C                   EVAL      FldNameArr(Idx) = 'SAMTTPC'                              MD057437
+     C                   ENDIF                                                              MD057437
+      *                                                                                     MD057437
      C**********         CALLB     'ZEDIT'                                            BUG5610 245692
      C**********         PARM      PZFIELD       WZFIELD          16                  BUG5610 245692
      C**********         PARM                    PZADEC                               BUG5610 245692

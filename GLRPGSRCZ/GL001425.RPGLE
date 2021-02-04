@@ -15,7 +15,7 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. EML104A            Date 27Oct20               *
-      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. EML104             Date 04Feb20               *
       *                 EML102             Date 22Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026965           Date 16May14               *

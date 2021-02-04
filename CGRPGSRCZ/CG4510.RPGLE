@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD055869           Date 03Jun20               *
+      *  Last Amend No. EML102A            Date 29Jan21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD055869           Date 03Jun20               *
       *                 AR325224           Date 19May20               *
       *                 EML102             Date 11Aug19               *
       *                 CMG008             Date 20Feb20               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102A - Moved EML102 codes from CG4510C005 to EML102_030   *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -3612,6 +3614,7 @@
      C                   ENDIF                                                                216937
      C                   ENDIF                                                                216937
      C*                                                                                       216937
+     C/COPY WNCPYSRC,EML102_030                                                              EML102A
       **  Accumulate RDE's and associated data and output to                               BUG23277A
       **  PF/CGUDTAPD.                                                                     BUG23277A
      C                   EXSR      SRADTA                                                  BUG23277A

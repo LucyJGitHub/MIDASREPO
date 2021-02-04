@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD048795           Date 15Jan18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EMP106             Date 28Jan21              */
+/*       Prev Amend No. MD048795           Date 15Jan18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      BUG23732           Date 23Apr09              */
 /*                      BUG23123           Date 09Mar09              */
 /*                      BUG23008           Date 20Feb09              */
@@ -41,6 +42,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       EMP106   - Introduced EMP106_005 to add ovrdbf by NADC03    */
 /*       MD048795 - Added FX0960 call for FX Netting Projections     */
 /*                  generation when settlement is retail             */
 /*       MD046248 - Finastra Rebranding                              */
@@ -211,6 +213,7 @@
 /*/COPY WNCPYSRC,DLC10006                                            */
              OVRDBF     FILE(PHASD) TOFILE(PHASA)                     /*E10090*/
              CHGJOB     SWS(00000000)                                 /*E10090*/
+/*/COPY WNCPYSRC,EMP106_005                                                               /*EMP106*/
              CALL       SD0670                                        /*E10090*/
              DLTOVR     FILE(*ALL)                                    /*E10090*/
 /**/                                                                  /*E10090*/

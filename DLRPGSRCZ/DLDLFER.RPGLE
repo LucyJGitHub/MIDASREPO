@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG20261           Date 30Jan13               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG20261 - Settlement details are blanked upon enquire of    *
+      *             dealing fee.                                      *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -409,6 +413,11 @@
      C                   PARM      *BLANKS       ##FRIS
      C                   PARM      DDFCCY        InRCCY                                      CSF011A
      C                   PARM      DDFCCY        InPCCY                                      CSF011A
+      *                                                                                     BUG20261
+     C                   MOVEL     DFBENN        DDBENN                                     BUG20261
+     C                   MOVEL     DFDCHG        DDDCHG                                     BUG20261
+     C                   MOVEL(P)  DFROBN        DDROBN                                     BUG20261
+      *                                                                                     BUG20261
 
      C                   ENDSR
       *****************************************************************

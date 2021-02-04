@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD019928           Date 23May13               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD019928 - Access error on ACCNTL0 in AOACCTR0 wrongly       *
+      *             reported.                                         *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR401845 - MT940 generation does not take into account       *
@@ -807,10 +810,20 @@
 
       ** Add the issue on the audit report.
 
-     C                   IF        P@RTCD <> *BLANKS
+     C**********         IF        P@RTCD <> *BLANKS                                        MD019928
+     C                   IF        P@RTCD = '*NRF'                                          MD019928
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PACMNT = 'Midas Account Detail not found'
      C                   EXSR      $AuditRpt                                    Report Issue
+     C                   ELSE                                                               MD019928
+     C                   IF        P@RTCD <> *BLANK                                         MD019928
+     C                   EVAL      DBASE = 1                                                MD019928
+     C                   EVAL      DBFILE = 'AOACCTR0'                                      MD019928
+     C                   EXSR      *PSSR                                                    MD019928
+     C                   EVAL      PACMNT = 'ACCNTL0, ACCNTL1 access error'                 MD019928
+     C                   EXSR      $AuditRpt                                                MD019928
+     C                   RETURN                                                             MD019928
+     C                   ENDIF                                                              MD019928
      C                   ENDIF
 
       *    ---------     -----

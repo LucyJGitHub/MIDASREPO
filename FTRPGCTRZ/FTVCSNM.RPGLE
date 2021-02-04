@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051679           Date 09Nov18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG20229           Date 30Jan13               *
+      *  Prev Amend No. MD051679           Date 09Nov18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
       *                 MD000091           Date 15May13               *
       *                 CFT120             Date 28Sep12               *
@@ -71,6 +72,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG20229 - Error message MMA3000 occurred                    *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  MD051679 - Added clear before reading SDNOSTPD to ensure that*
       *             no values are carried out when reading again. Also*
       *             added a validation to not set ODMTT to 'F' if     *
@@ -929,7 +932,8 @@ E2    *                                                                         
                                                                                               CSW207
      C                   If        @RtCd = *Blanks                                            CSW207
       *                                                                                       250600
-     C                   Eval      C#JANO = @ORDCS                                            250600
+     C**********         Eval      C#JANO = @ORDCS                                   250600 BUG20229
+     C                   Eval      C#JANO = SORC1                                           BUG20229
       *                                                                                       250600
      C     JACMKY1       KLIST                                                                250600
      C                   KFLD                    C#JANO            6                          250600

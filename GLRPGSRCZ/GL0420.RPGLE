@@ -14,8 +14,11 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. UUC105             Date 19Oct20               *
-      *  Prev Amend No. UUC102             Date 16Oct20               *
+      *  Last Amend No. AR1068690          Date 14Dec12               *
+      *  Prev Amend No. 260897             Date 19Oct12               *
+      *                 244144             Date 19Oct12               *
+      *                 UUC105             Date 19Oct20               *
+      *                 UUC102             Date 16Oct20               *
       *                 CGL195             Date 07Oct20               *
       *                 AR1088283          Date 20Mar13               *
       *                 220877             Date 22Mar19               *
@@ -163,6 +166,10 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1068690 - Apply 260897 244144 (Child:AR1069087)            *
+      *  260897 - Negative rate shown on account statement.           *
+      *  244144 - initialised arrays VDAR & VCAR after adding the     *
+      *           amount to VDDR & VDCR respectively.                 *
       *  UUC105 - upgrade of UUC070 to FBM 2.1                        *
       *           NRA in Retail Account Information                   *
       *           Added hooks UUC105_009, UUC105_010, UUC105_011,     *
@@ -3179,6 +3186,11 @@
      C                   END                                                                  E16612
      C                   END                                                                  E16612
      C                   END                                                                  E16612
+     C*  Negative rate shown on account statement                                             260897
+     C     INTR          IFLT      0                                                          260897
+     C                   Z-ADD     0             INTR                                         260897
+     C                   END                                                                  260897
+     C*                                                                                       260897
 0747 C*    CHECK FOR FULL PAGE                                            S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP19                                           S01408
@@ -3774,6 +3786,8 @@
 0812 C     CLBF          SUB       VCAR(I)       CLBF
 0813 C     VDDR          ADD       VDAR(I)       VDDR
 0814 C     VDCR          ADD       VCAR(I)       VDCR
+     C                   Z-ADD     0             VDAR(I)                                      244144
+     C                   Z-ADD     0             VCAR(I)                                      244144
      C/COPY WNCPYSRC,GL0420C048
 0815 C**   INCREMENT INDEX & DATE.
 0816 C     I             ADD       1             I

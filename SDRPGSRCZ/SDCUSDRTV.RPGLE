@@ -30,8 +30,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *  Last Amend No. MD024741           Date 02Apr13               *
+      *  Prev Amend No. 235031             Date 27Sep13               *
+      *                 260405             Date 04Apr20               *
+      *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
@@ -151,6 +153,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024741 - Deletion of customer details not allowed.         *
+      *             Condition BUG27866 on CRN001 being ON.            *      
+      *  235031 - Not to allow closure/deletion of customers linked   *
+      *           to a live FT transaction. Also recompiled SP8SD0001.*
+      *           Applied for MD-53056                                *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -824,6 +831,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
+     D   WDS2051              51     51                                                     MD053056
 
      D @WCDS3          DS           200
      D   WDS3000               1    200
@@ -2409,6 +2417,9 @@
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
+     C                   IF        CRN001 = 'N'                                             MD024741
+     C                   EVAL      @WQUTP = 'N'                                             MD024741
+     C                   ENDIF                                                              MD024741
       *
       *  Customer Deletion Pre-checks - Client Details
       *
@@ -2823,6 +2834,17 @@
      C                   GOTO      EVALAD                                                     198304
      C                   ENDIF                                                                198304
       *                                                                                       198304
+      ** CASE: WRK.Customer Deln Flag 051 is Do not delete                                    235031
+      *                                                                                       235031
+     C     WDS2051       IFEQ      'F'                                                        235031
+     C                   MOVEL     'N'           OKCUST                                       235031
+     C                   ADD       1             Ix                                           235031
+     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               235031
+     C**********         MOVEL     'USR9430'     MsgIdArr(Ix)                        235031 MD053056
+     C                   MOVEL     'USR9431'     MsgIdArr(Ix)                               MD053056
+     C                   GOTO      EVALAD                                                     235031
+     C                   ENDIF                                                                235031
+      *                                                                                       235031
       * Customer defined on SDCLLMPD.
       * CASE: WRK.Customer Deln Flag 027 is Do not delete
      C     WDS1027       IFEQ      'F'
@@ -5117,6 +5139,28 @@
      C                   ELSE                                                                 CSD028
      C                   EVAL      CSD028 = 'N'                                               CSD028
      C                   ENDIF                                                                CSD028
+      *                                                                                     MD024741
+     C                   CALLB     'AOSARDR0'                                               MD024741
+     C                   PARM      *BLANKS       @RTCD                                      MD024741
+     C                   PARM      '*VERIFY'     @OPTN                                      MD024741
+     C                   PARM      'CRN001'      @SARD             6                        MD024741
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD024741
+      *                                                                                     MD024741
+      * DATABASE ERROR                                                                      MD024741
+      *                                                                                     MD024741
+     C     @RTCD         IFNE      *BLANKS                                                  MD024741
+     C     @RTCD         ANDNE     '*NRF   '                                                MD024741
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD024741
+     C                   MOVEL     '902'         DBASE                                      MD024741
+     C                   MOVEL     'CSD021'      DBKEY                                      MD024741
+     C                   EXSR      *PSSR                                                    MD024741
+     C                   ENDIF                                                              MD024741
+      *                                                                                     MD024741
+     C     @RTCD         IFEQ      *BLANK                                                   MD024741
+     C                   MOVEL     'Y'           CRN001            1                        MD024741
+     C                   ELSE                                                               MD024741
+     C                   MOVEL     'N'           CRN001                                     MD024741
+     C                   ENDIF                                                              MD024741
                                                                                               CSD079
       ** Check if enhancement S01425 is on                                                    CSD079
                                                                                               CSD079

@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD036924           Date 06Nov19               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD034146           Date 18Jan17               *
+      *  Prev Amend No. AR928430           Date 18Jan17               *
+      *                 MD022358           Date 13Sep13               *
+      *                 MD036924           Date 06Nov19               *
+      *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026120           Date 13May14               *
@@ -69,6 +72,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034146 - Include risk and sub partipant on list of facility*
+      *             to check for existing loan.                       *
+      *  AR928430 - Do not allow closure/reversal of facility when    *
+      *             there is an existing loan.                        *
+      *           - Applied for MD034146.                             *
+      *  MD022358 - Amendment to facility details cannot be performed *
+      *             on the same day as the reactivation of the ex-    *
+      *             pired facility.                                   *
+      *           - If Facility is either closed or expired, check    *
+      *             for records in PF/LEFCAMPD if it has been reacti- *
+      *             vated.                                            *
       *  MD036924 - Cannot enquire on certain screen when customer is *
       *             closed. Added checking if customer is closed      *
       *             during validation of customer.                    *
@@ -198,6 +212,11 @@
      F                                     IGNORE(CLOANZ1F)
      F                                     IGNORE(CLOANCKF)
      F                                     PREFIX(CL_)
+      **  Use CLOANL6 to check o/s loans for syndicated facility                            AR928430
+      *                                                                                     AR928430
+     FCLOANL6   IF   E           K DISK    INFSR(*PSSR)                                     AR928430
+     F                                     RENAME(CLOANCLF:CLOANCL6)                        AR928430
+     F                                     PREFIX(C3)                                       AR928430
       **  Live Utilisation Retrieval Index
      FLEMNFUL6  IF   E           K DISK    INFSR(*PSSR)
      F**********                           PREFIX(L6_)                                      AR674226
@@ -1020,9 +1039,22 @@
      C                   GOTO      EVALAA
      C                   END
  
+      **  If Facility is either closed or expired, check for records                        MD022358
+      **  in PF/LEFCAMPD if it has been reactivated.                                        MD022358
+     C                   MOVE      *OFF          WREAC                                      MD022358
+     C     F7_RECI       IFEQ      'C'                                                      MD022358
+     C     F7_RECI       OREQ      'E'                                                      MD022358
+     C                   MOVEL     DDCSSN        K3CNUM                                     MD022358
+     C                   MOVE      DDFACT        K3FACT                                     MD022358
+     C                   MOVE      DDFCNO        K3FCNO                                     MD022358
+     C                   EXSR      SRCKFR                                                   MD022358
+     C                   ENDIF                                                              MD022358
+                                                                                            MD022358
       * Amendments are only allowed on live records
+      * and reactivated facilities (i.e. WREAC is *ON)                                      MD022358
      C     F7_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
+     C     WREAC         ANDNE     *ON                                                      MD022358
                                                                                               CLE041
      C     AGF1_RECI     ORNE      'D'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041
@@ -1270,6 +1302,39 @@
       *
      C                   ENDDO
       *
+      ** Checking for syndicated facility.                                                  AR928430
+      *                                                                                     AR928430
+     C     FC_SYIN       IFEQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'I'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      AR928430
+     C     FC_PRTR       ANDEQ     'P'                                                      AR928430
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'R'                                                      MD034146
+     C     FC_SYIN       OREQ      'Y'                                                      MD034146
+     C     FC_PRTR       ANDEQ     'S'                                                      MD034146
+      *                                                                                     AR928430
+     C     K#KY02        SETLL     CLOANL6                                                  AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C     *IN80         DOWEQ     *OFF                                                     AR928430
+      *                                                                                     AR928430
+     C     C3RECI        IFEQ      'D'                                                      AR928430
+      *                                                                                     AR928430
+     C     ZDAYNO        IFLT      C3MDAT                                                   AR928430
+     C     DDACTN        OREQ      'R'                                                      AR928430
+     C     DDACTN        OREQ      'C'                                                      AR928430
+     C                   MOVE      'Y'           W#ERR4                                     AR928430
+     C                   LEAVE                                                              AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
+     C     K#KY02        READE     CLOANL6                                80                AR928430
+      *                                                                                     AR928430
+     C                   ENDDO                                                              AR928430
+      *                                                                                     AR928430
+     C                   ENDIF                                                              AR928430
+      *                                                                                     AR928430
      C                   ENDSR
       ***********************************************************
       /EJECT

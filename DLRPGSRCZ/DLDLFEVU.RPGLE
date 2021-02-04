@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. BUG20261           Date 30Jan13               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,6 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG20261 - Settlement details are blanked upon enquire of    *
+      *             dealing fee.                                      *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -1038,6 +1042,8 @@
      C                   MOVE      FLCVMR        V_DLCVMR
      C                   MOVE      FLPSCY        V_DLSCCY
      C                   MOVE      FLIC72        V_DLICCY
+     C                   MOVEL     DDBENN        V_DLBENN                                   BUG20261
+     C                   MOVEL     DDDCHG        V_DLDCHG                                   BUG20261
  
      C     ValSetExit    TAG
  

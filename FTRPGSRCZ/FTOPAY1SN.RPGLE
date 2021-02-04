@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR928996A          Date 03May12               *
-      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *  Last Amend No. 230453             Date 03Jul13               *
+      *  Prev Amend No. AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
       *                 MD054130           Date 28Aug19               *
       *                 MD052529           Date 12Feb19               *
@@ -173,6 +174,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230453 - Extend details for the Third Reimbursement          *
+      *         - Applied for MD020977.                               *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *
@@ -9055,6 +9058,12 @@
      C                   MOVEL     INB3          SINB3                                        195220
      C                   MOVEL     INB4          SINB4                                        195220
      C                   MOVEL     INB5          SINB5                                        195220
+      *                                                                                       230453
+     C                   MOVEL     OPTRI1        STRI1                                        230453
+     C                   MOVEL     OPTRI2        STRI2                                        230453
+     C                   MOVEL     OPTRI3        STRI3                                        230453
+     C                   MOVEL     OPTRI4        STRI4                                        230453
+     C                   MOVEL     OPTRI5        STRI5                                        230453
       *                                                                                       195220
      C                   ENDIF                                                                195220
       *

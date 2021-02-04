@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD040876           Date 26Aug16               *
+      *  Last Amend No. 248772             Date 05Feb13               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD040876           Date 26Aug16               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CGL132             Date 01May13               *
@@ -80,6 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248772 - Garbage Data in Depot Movements Repair Queue due to *
+      *           incorrect parameter list.                           *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *
@@ -1332,6 +1336,7 @@
      C     T1SECOD       PLIST                                                                CSE022
      C                   PARM                    APHead                                       CSE022
      C                   PARM                    Trans1                                       CSE022
+     C                   PARM                    RegData                                      248772
      C                   PARM                    ExtData                                      CSE022
      C                   PARM                    OthDData                                     CSE022
      C                   PARM                    #ProcPgm                                     CSE022

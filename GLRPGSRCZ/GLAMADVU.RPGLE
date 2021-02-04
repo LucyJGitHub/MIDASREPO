@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR979910           Date 07Jun12               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. AR398205           Date 31Jan13               *
+      *  Prev Amend No. AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *      
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,6 +145,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR398205 - Opening accounts                                  *
+      *             Default the Statement Frequency to blanks.        *
+      *           - Applied for AR1068690 (Child: AR1069087)          *
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
@@ -3145,7 +3149,8 @@
      C**********         MOVE      'N'           DDBAC                                      MD055212
       *
       ** Dft the Statement Freq to the value held on the GL ICD (SdGelr)
-     C                   MOVE      BKDSFC        DDSTFQ
+     C**********         MOVE      BKDSFC        DDSTFQ                                     AR398205
+     C                   MOVE      *BLANKS       DDSTFQ                                     AR398205
       *                                                                                       240312
       ** Blank the next statement day field if it is an invalid period                        240312
      C                   If        BKDSFC <> 'M' and                                          240312

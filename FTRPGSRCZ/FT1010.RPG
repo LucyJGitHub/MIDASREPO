@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *  Last Amend No. MD043098           Date 15Dec16               *
+      *  Prev Amend No. 250664             Date 31Jan13               *
+      *                 CFT162             Date 16Oct20               *
+      *                 CFT046             Date 13Oct20               *
       *                 AR1001970          Date 12Jul12               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
@@ -84,6 +86,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD043098 - Partially apply GEMS 232866 to bypass DBASE 900.  *
+      *  250664 - Omit DB error when no record is found in            *
+      *           OTPAYXPD and INPAYXPD.                              *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
       *           RE Transaction Type for FT payments                 *
@@ -3401,13 +3407,14 @@
       *                                                                   CFT014
      C           CFT014    IFEQ 'Y'                                       CFT014
       *                                                                   CFT014
-     C           *IN79     IFEQ *ON                                       CFT014
-     C                     Z-ADD22        WBASE            ************   CFT014
-     C                     MOVELPREF      WBKEY            * DBERR022 *   CFT014
-     C                     MOVEL'INPAYXL0'WBFILE           ************   CFT014
-     C                     EXSR ABORT                                     CFT014
-     C                     ENDIF                                          CFT014
+     C********** *IN79     IFEQ *ON                                                    CFT014 250664
+     C**********           Z-ADD22        WBASE            ************                CFT014 250664
+     C**********           MOVELPREF      WBKEY            * DBERR022 *                CFT014 250664
+     C**********           MOVEL'INPAYXL0'WBFILE           ************                CFT014 250664
+     C**********           EXSR ABORT                                                  CFT014 250664
+     C**********           ENDIF                                                       CFT014 250664
       *                                                                   CFT014
+     C           *IN79     IFEQ '0'                                                           250664
      C                     CALL 'AOCURRR0'                                CFT014
      C                     PARM *BLANKS   WRTCD                           CFT014
      C                     PARM '*KEY   ' WOPTN                           CFT014
@@ -3617,6 +3624,7 @@
      C                     ENDIF                                          CFT014
       *                                                                   CFT014
      C                     ENDIF                                          CFT014
+     C                     ENDIF                                                              250664
       *                                                                   CFT003
       ***If*found, delete INPAYXL0                                        CFT003 195945
       **********                                                          CFT003 195945
@@ -4245,6 +4253,7 @@
       *                                                                   CFT009
       ** Get charges currency decimal places.                             CFT009
       *                                                                   CFT009
+     C           INCHGC    IFNE *BLANKS                                                     MD043098 
      C                     CALL 'AOCURRR0'                                CFT009
      C                     PARM *BLANKS   WRTCD                           CFT009
      C                     PARM '*KEY   ' WOPTN                           CFT009
@@ -4253,7 +4262,8 @@
       *                                                                   CFT009
      C           WRTCD     IFNE *BLANKS                                   CFT009
      C                     Z-ADD900       WBASE            ************   CFT009
-     C                     MOVELNDCY      WBKEY            * DBERR 900*   CFT009
+     C**********           MOVELNDCY      WBKEY            * DBERR 900*              CFT009 MD043098
+     C                     MOVELINCHGC    WBKEY            * DBERR 900*                     MD043098
      C                     MOVEL'SDCURRPD'WBFILE           ************   CFT009
      C                     EXSR ABORT                                     CFT009
      C                     ENDIF                                          CFT009
@@ -4331,6 +4341,7 @@
      C                     Z-ADDWCHGDP    ZADEC                           CFT009
      C                     EXSR ZEDIT                                     CFT009
      C                     MOVE ZFIELD    M5CHGA                          CFT009
+     C                     ENDIF                                                            MD043098
       *                                                                   CFT009
       ** Totals                                                           CFT009
       *                                                                   CFT009
@@ -5362,13 +5373,14 @@
       *                                                                   CFT014
      C           CFT014    IFEQ 'Y'                                       CFT014
       *                                                                   CFT014
-     C           *IN79     IFEQ *ON                                       CFT014
-     C                     Z-ADD14        WBASE            ************   CFT014
-     C                     MOVELPREF      WBKEY            * DBERR014 *   CFT014
-     C                     MOVEL'OTPAYXL0'WBFILE           ************   CFT014
-     C                     EXSR ABORT                                     CFT014
-     C                     ENDIF                                          CFT014
+     C********** *IN79     IFEQ *ON                                                    CFT014 250664
+     C**********           Z-ADD14        WBASE            ************                CFT014 250664
+     C**********           MOVELPREF      WBKEY            * DBERR014 *                CFT014 250664
+     C**********           MOVEL'OTPAYXL0'WBFILE           ************                CFT014 250664
+     C**********           EXSR ABORT                                                  CFT014 250664
+     C**********           ENDIF                                                       CFT014 250664
       *                                                                   CFT014
+     C           *IN79     IFEQ '0'                                                           250664
      C                     CALL 'AOCURRR0'                                CFT014
      C                     PARM *BLANKS   WRTCD                           CFT014
      C                     PARM '*KEY   ' WOPTN                           CFT014
@@ -5492,6 +5504,7 @@
      C                     ENDIF                                          CFT014
       *                                                                   CFT014
      C                     ENDIF                                          CFT014
+     C                     ENDIF                                                              250664
       *                                                                   CFT014
      C           *IN79     IFEQ *OFF                                      CFT014
      C                     DELETOTPAYXDF                                  CFT014

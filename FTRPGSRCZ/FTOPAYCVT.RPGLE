@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CFT046             Date 13Oct20               *
+      *  Last Amend No. 230453             Date 03Jul12               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CFT046             Date 13Oct20               *
       *                 MD052529           Date 12Feb19               *
       *                 MD039094           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
@@ -76,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230453 - Expand field details for Third Reimbursement        *
+      *         - Applied for MD020977.                               *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
       *           RE Transaction Type for FT payments                 *
@@ -1726,6 +1729,34 @@
      C                   Movel     OPTRI3        STRI3                          CFT014
      C                   Movel     OPTRI4        STRI4                          CFT014
      C                   Movel     OPTRI5        STRI5                          CFT014
+      *                                                                                       230453
+     C     SACTION       IFEQ      'E'                                                        230453
+      *                                                                                       230453
+     C                   CLEAR                   P8FT                                         230453
+     C                   MOVEL     *BLANKS       W8STMT                                       230453
+     C                   MOVEL     PSPROCPGM     W8CPGM                                       230453
+     C                   MOVEL     '*ENQ  '      W8ACT                                        230453
+     C                   Z-ADD     5             W8NLIN                                       230453
+      *                                                                                       230453
+     C                   MOVEL     OPTRIT        W8TYPE                                       230453
+     C                   MOVEL     *BLANKS       P8LINS                                       230453
+     C                   MOVEL     *BLANKS       WADDRSS                                      230453
+     C                   MOVEL     OPTRI1        WADCHK1                                      230453
+     C                   MOVEL     OPTRI2        WADCHK2                                      230453
+     C                   MOVEL     OPTRI3        WADCHK3                                      230453
+     C                   MOVEL     OPTRI4        WADCHK4                                      230453
+     C                   MOVEL     OPTRI5        WADCHK5                                      230453
+     C                   MOVEL     WADDRSS       P8LINS                                       230453
+      *                                                                                       230453
+     C                   EXSR      SREXPGM                                                    230453
+      *                                                                                       230453
+     C     35            SUBST     P8SCR:1       STRI1                                        230453
+     C     35            SUBST     P8SCR:36      STRI2                                        230453
+     C     35            SUBST     P8SCR:71      STRI3                                        230453
+     C     35            SUBST     P8SCR:106     STRI4                                        230453
+     C     35            SUBST     P8SCR:141     STRI5                                        230453
+      *                                                                                       230453
+     C                   ENDIF                                                                230453
                                                                                 CFT014
       ** Instruction Codes                                                      CFT014
                                                                                 CFT014

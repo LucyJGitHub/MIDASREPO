@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. 236576             Date 03Jul13               *
+      *  Prev Amend No. 230453             Date 03Jul13               *
+      *                 227661             Date 03Jul13               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -48,6 +51,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  236576 - Amend program to proceed checking specified value   *
+      *           as a SWIFT ID even after it has not been found in   *
+      *           the customers file.  Also, amended program to send  *
+      *           a warning message if value specified is less than   *
+      *           11 characters and seems to be an address.           *
+      *         - Applied for MD021003.                               *
+      *  230453 - Customer type should be 'C' if shortname was entered*
+      *           Revised fix 227661 and pattern processing from      *
+      *           FTVACBA.                                            *
+      *         - Applied for MD020977.                               *
+      *  227661 - Fix is to consider receiver's correspondent as an   *
+      *           address if not found in PF/SDCUSTPD. Fix patterned  *
+      *           after 220254.                                       *
+      *         - Applied for MD021004.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -80,7 +97,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -99,90 +116,90 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      **COPY*FTCPYSRC,SFTVALCSLE                                                               257144
       /COPY FTCPYSRC,SFTVALCSLL                                                               257144
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY2PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** Array of valid swift characters
      D SWCH            S              1    DIM(47) CTDATA PERRCD(47)
- 
+
       ** External data structure for customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Midas Counterparty NOSTROS
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** Midas BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
- 
+
      D SRCODS          DS           175
      D  DSRCO1Pos1             1      1                                         CFT004
      D  DSRCO1                 1     35
@@ -190,39 +207,39 @@
      D  DSRCO3                71    105
      D  DSRCO4               106    140
      D  DSRCO5               141    175
- 
+
      D CLSWTK          DS
      D  SW                     1     12
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D C#CNUM          S             10
      D C#KYST          S              7
      D C#OPTN          S              7
      D C#RTCD          S              7
- 
+
      D R               S              2  0
      D Q               S              2  0
- 
+
       * This prog only
      D ADLINE          S              1
      D ADSLON          S              1
      D ##CSID          S              1
- 
+
       ** IBAN character test arrays                                             CFT004
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)            CFT004
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)            CFT004
@@ -248,7 +265,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -266,12 +283,12 @@
      C                   Eval      AD#4 = 'N'
      C                   Eval      AD#5 = 'N'
      C                   Eval      AD#6 = 'N'
- 
- 
+
+
       * Sender's Correspondent
       *
      C                   Exsr      VRCVCOR
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKRco1 = 'N' or
@@ -289,9 +306,9 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       ******************************************************************
       /EJECT
@@ -300,17 +317,17 @@
       ******************************************************************
      C*
      C     VRCVCOR       BEGSR
- 
+
      C                   Eval      DSRCO1 = SRCO1
      C                   Eval      DSRCO2 = SRCO2
      C                   Eval      DSRCO3 = SRCO3
      C                   Eval      DSRCO4 = SRCO4
      C                   Eval      DSRCO5 = SRCO5
      C                   Eval      @RCRT = *Blanks
- 
+
       *  Receiver's Correspondent is Optional
      C                   If        SRCODS <> *Blanks
- 
+
       *  ? not allowed
      C     '?'           Scan      SRCO1         Y#                3 0    90
       *
@@ -321,10 +338,10 @@
      C                   Movel     'SRCO1'       FldNamXAr(Idx)
      C                   Movel     'MMA1037'     MsgIdXAr(Idx)
      C                   End
- 
+
       * No error
      C                   If        OKRco1 <> 'N'
- 
+
      C                   Movel(P)  SRCODS        ADDRSS
       *
       *  If first ten characters used then try to find via SDCUSTPD
@@ -336,7 +353,7 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 10 characters should be key for SDCUST
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        C#CNUM
@@ -351,28 +368,44 @@
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
      C     SDCUST        Parm      *Blanks       DSSDY
- 
+
      C                   If        C#RTCD = *Blanks
- 
+     C**********                   or C#KYST <> '*CSHT  '                              227661 230453
+     C                             and C#KYST <> '*ERROR '                                    227661
+
       * Overwrite shortname
      C                   If        ADSLSH <> '/'
      C                   Movel(P)  BBCUST        SRCO1
      C                   Else
      C                   Movel(P)  BBCUST        SRCO2
      C                   End
- 
+
      C                   Eval      @RCRT = 'C'
- 
+
+     C                   End
+      *                                                                                       227661
+      ** Treat the beneficiary as an address if it is not found in                            227661
+      ** PF/SDCUSTPD.                                                                         227661
+      *                                                                                       227661
+     C**********         If        C#KYST = '*ERROR ' or                               227661 230453
+     C**********                   C#KYST = '*CSHT  ' or                               227661 230453
+     C**********                   ADSLSH = '/'                                        227661 230453
+     C                   If        C#KYST = '*ERROR '                                         230453
+     C                             and ADSLSH = '/'                                           230453
+     C                             or C#RTCD = '*NRF'                                         230453
+     C                             and C#KYST = '*CSHT'                                       230453
+     C                   Eval      @RCRT = 'A'                                                227661
+     C                   Endif                                                                227661
      C                   End
      C                   End
-     C                   End
- 
+
      C                   If        OKRco1 <> 'N' and
-     C                             @RCRT = *Blanks
- 
+     C                             @RCRT <> 'C'                                               236576
+     C**********                   @RCRT = *Blanks                                            236576
+
       *  If 1st 11 Chars of 1st line then SWIFT address assumed
       *  Or first is '/' and second is SWIFT Address
- 
+
       *  If field does not begin with '/' and is not longer than 11
       *  characters, validate as a S.W.I.F.T. Address
      C                   If        ADCH26 = *Blanks and
@@ -383,18 +416,18 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
+
       *  First 11 characters should be key for CLSWT.
      C                   If        ADSLSH <> '/'
      C                   Movel     ADCHK1        CLSWTK
      C                   Else
      C                   Movel     ADCHK2        CLSWTK
      C                   End
- 
+
      C                   Exsr      SWIFT
- 
+
      C                   If        ##CSID = 'Y'
- 
+
      C                   If        *IN31 = *On
       * Send error to screen
      C**********         Add       1             Idx                                          CSD089
@@ -412,14 +445,14 @@
      C                   End
      C**********         Movel     'MMA1038'     MsgIdXAr(Idx)                                CSD089
      C                   Movel     'MMA1038'     WMsgIdXAr(WIx)                               CSD089
- 
+
      C                   Else
      C                   Eval      @RCRT = 'S'
       *
       *  No SWIFT address record.
      C                   If        *IN32 = *On and
      C                             *IN31 = *Off
- 
+
       *  If text changed then warning needs to be changed
      C                   If        ADSLSH <> '/'
      C                   Movel     CLSWTK        @RCO1
@@ -428,7 +461,7 @@
      C                   Add       1             WIx
      C                   Movel     'MMA1039'     WMsgIdXAr(WIx)
      C                   Movel     'SRCO1'       WFldNmXAr(WIx)
- 
+
      C                   Else
      C                   Movel     CLSWTK        @RCO2
       * Send warning to screen
@@ -437,16 +470,18 @@
      C                   Movel     'MMA1039'     WMsgIdXAr(WIx)
      C                   Movel     'SRCO2'       WFldNmXAr(WIx)
      C                   End
- 
+
      C                   End
      C                   End
      C                   End
      C                   End
      C                   End
- 
+
      C                   If        OKRco1 <> 'N' and
-     C                             @RCRT = *Blanks
- 
+     C                             @RCRT <> 'C' and                                           236576
+     C                             @RCRT <> 'S'                                               236576
+     C**********                   @RCRT = *Blanks                                            236576
+
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
      C                             ADEXCS = *Blanks and
@@ -456,24 +491,38 @@
      C                             ADCHK2 <> *Blanks and
      C                             ADSLSH = '/' and
      C                             ADSLS2 <> '/'
- 
-      *  First 10 characters should be key for SDCUST
-      * Send error to screen
-     C                   Add       1             Idx
-     C                   If        ADSLSH <> '/'
-     C                   Move      'N'           OKRco1
-     C                   Movel     'SRCO1'       FldNamXAr(Idx)
-     C                   Else
-     C                   Move      'N'           OKRco2
-     C                   Movel     'SRCO2'       FldNamXAr(Idx)
-     C                   End
-     C                   Movel     'MMA1040'     MsgIdXAr(Idx)
- 
-     C                   Else
+
+      ***First*10*characters*should*be*key*for*SDCUST******************                       236576
+      **Send*error*to*screen*******************************************                       236576
+     C**********         Add       1             Idx                                          236576
+     C**********         If        ADSLSH <> '/'                                              236576
+     C**********         Move      'N'           OKRco1                                       236576
+     C**********         Movel     'SRCO1'       FldNamXAr(Idx)                               236576
+     C**********         Else                                                                 236576
+     C**********         Move      'N'           OKRco2                                       236576
+     C**********         Movel     'SRCO2'       FldNamXAr(Idx)                               236576
+     C**********         End                                                                  236576
+     C**********         Movel     'MMA1040'     MsgIdXAr(Idx)                                236576
+      *                                                                                       236576
+      ** First 10 characters should be key for SDCUST                                         236576
+      ** Send error to screen                                                                 236576
+      *                                                                                       236576
+     C                   Add       1             WIx                                          236576
+     C                   If        ADSLSH <> '/'                                              236576
+     C                   Move      'W'           OKRco1                                       236576
+     C                   Movel     'SRCO1'       WFldNmXAr(WIx)                               236576
+     C                   Else                                                                 236576
+     C                   Move      'W'           OKRco2                                       236576
+     C                   Movel     'SRCO2'       WFldNmXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+     C                   Movel     'MMA1342'     WMsgIdXAr(WIx)                               236576
+     C                   EndIf                                                                236576
+
+     C**********         Else                                                                 236576
       * Validate as an address
      C                   Eval      ADLINE = 'Y'
      C                   Exsr      ADCHK
- 
+
       *  Depending on the indicators, highlight the field in error
      C                   If        *IN91 = *On
       * Send error to screen
@@ -490,8 +539,8 @@
      C                   Movel     'SRCO1'       FldNamXAr(Idx)
      C                   Movel     'MMA1042'     MsgIdXAr(Idx)
      C                   End
-     C                   End
- 
+     C**********         End                                                                  236576
+
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKRco1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -502,7 +551,7 @@
      C                   Movel     'SRCO1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKRco2                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -513,7 +562,7 @@
      C                   Movel     'SRCO2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#3 = 'Y'
      C**********         Move      'N'           OKRco3                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -524,7 +573,7 @@
      C                   Movel     'SRCO3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#4 = 'Y'
      C**********         Move      'N'           OKRco4                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -535,7 +584,7 @@
      C                   Movel     'SRCO4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#5 = 'Y'
      C**********         Move      'N'           OKRco5                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -546,7 +595,7 @@
      C                   Movel     'SRCO5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
      C                   End
- 
+
       *  If no errors then customer is an address
      C                   If        OKRco1 = 'Y'and
      C                             OKRco2 = 'Y'and
@@ -556,7 +605,7 @@
      C                             @RCRT = *Blanks
      C                   Eval      @RCRT = 'A'
      C                   End
- 
+
      C                   End
                                                                                 CFT014
       ** Error when bank operation code entered is 'SPRI', or 'SSTD' or         CFT014
@@ -667,7 +716,7 @@
      C                   ENDIF                                                  CFT004
      C                                                                          CFT004
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF RECEIVER'S CORRESPONDENT VALIDATION                    *
@@ -675,51 +724,51 @@
      C/EJECT
       * Subroutine SWIFT
      E/COPY FTCPYSRC,SFTSWFTCLE
- 
+
       * Subroutine ADCHK
      E/COPY FTCPYSRC,SFTADDRCLE
- 
+
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
- 
+
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInSecA
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. UUC103             Date 20Oct20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. AR1042753          Date 25Jan17               *
+      *  Prev Amend No. UUC103             Date 20Oct20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG009             Date 24Oct19               *
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1042753 - Exclude posting with blank GLOTTP for FT0325     *
+      *              processing. (Child: AR1042754)                   *
+      *              Applied for MD-41622.                            *
       *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
       *           UUC061 - SWIFT Statement Enhancement                *
       *           Use Hooks GLH00180, GLH00207, GLH00208, GLH00414,   *
@@ -410,6 +414,7 @@
       ** Format MT950 subfields
 
      C                   IF        WkModuleID = 'FT'                            Fund Transfer
+     C                             AND GLOTTP <> *BLANKS                                   AR1042753
      C                   EXSR      $FT0325
      C                   ENDIF
 

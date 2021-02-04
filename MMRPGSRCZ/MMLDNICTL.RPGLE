@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031031           Date 23Feb15               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD029160           Date 05Sep14               *
+      *  Prev Amend No. MD031031           Date 23Feb15               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -127,6 +128,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029160 - APISERVER job fall over when trying to send in a  *
+      *             LDNI Cancellation. Extend DealFil2 length and     *
+      *             changes in the MMVLDNIPD file.                    *
       *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
       *             NASS, FRA, CIRS and SIRS. Write to extension file *
       *             whether CLE025 is *ON or *OFF.                    *
@@ -425,7 +429,8 @@
      D QQPON1        E                     EXTFLD(QQPONS)                                     CGL029
      D QQINS1        E                     EXTFLD(QQINSA)                                     CGL029
      D DealFil1                1   1900                                                       260027
-     D DealFil2             1901   1907                                                       260027
+     D***DealFil2             1901   1907                                            260027 MD029160
+     D DealFil2             1901   1920                                                     MD029160
       * (Current) Deal in File Format
      D***DELDRecIns            456    524                                                     CGL029
      D***DELDPayIns            525   1083                                                     CGL029

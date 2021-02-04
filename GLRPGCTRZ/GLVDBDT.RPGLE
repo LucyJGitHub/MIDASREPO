@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR836982           Date 16May14               *
+      *  Last Amend No. MD021241           Date 02Feb21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR836982           Date 16May14               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021241 - No B/V rate change due to wrong last rate change  *
+      *             date on A/C. Initialise ZDAYNO to zero.           *
+      *           - Applied for MD057353.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR836982 - COB component REC62N failed due to inserted       *
       *             accounts with back valued rate change date.       *
@@ -159,6 +163,7 @@
      C                   MoveL     *Blanks       MsgIDXAr
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
+     C                   Z-Add     0             ZDAYNO                                     MD021241
       *
      C                   Move      DDDRIB        SADRIB            2 0
      C                   MOVE      DDDICT        SADICT            2 0

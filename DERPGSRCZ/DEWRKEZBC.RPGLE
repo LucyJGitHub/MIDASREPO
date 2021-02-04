@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,7 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
@@ -52,10 +52,10 @@
 
      D/COPY ZACPYSRC,STD_D_SPEC
 
-     D*E#BRTT***       S              2S 0                                                  MD057528
-     D*P#BRTT***       S              2S 0                                                  MD057528
-     D E#BRTT          S              2A                                                    MD057528
-     D P#BRTT          S              2A                                                    MD057528
+     D*E#BRTT***       S              2S 0                                                    CSD103
+     D*P#BRTT***       S              2S 0                                                    CSD103
+     D E#BRTT          S              2A                                                      CSD103
+     D P#BRTT          S              2A                                                      CSD103
 
       * Set Position Fields
 
@@ -155,8 +155,8 @@
       ** Base Rate
       ** Interest Rate
       ** Interest Rate Type
-     C**********         PARM                    E#BRTT            2 0                      MD057528
-     C                   PARM                    E#BRTT            2                        MD057528
+     C**********         PARM                    E#BRTT            2 0                        CSD103
+     C                   PARM                    E#BRTT            2                          CSD103
      C                   PARM                    E#BRTE           11 7
      C                   PARM                    E#IRAT           11 7
      C                   PARM                    E#IRTP            1
@@ -165,8 +165,8 @@
       ** Base Rate Code
       ** Base Rate
       ** Interest/Discount Rate
-     C**********         PARM                    P#BRTT            2 0                      MD057528
-     C                   PARM                    P#BRTT            2                        MD057528
+     C**********         PARM                    P#BRTT            2 0                        CSD103
+     C                   PARM                    P#BRTT            2                          CSD103
      C                   PARM                    P#BRTE           11 7
      C                   PARM                    P#IRAT           11 7
 

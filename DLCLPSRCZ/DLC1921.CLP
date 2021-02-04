@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD057528           Date 27Jan21              */
+/*       Last Amend No. CSD103             Date 10Aug20              */
 /*       Prev Amend No. MD048071           Date 08Nov17              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD028276           Date 25Nov14              */
@@ -53,7 +53,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD057528 - Conversion of remaining BaseRateCode to Alphanum */
+/*       CSD103 - Libor Deregulation - Common Layer/Standing Data    */
 /*       MD048071 - Input Cycle Batch Job DLC1921 Looping. Add error */
 /*                  monitoring after ROLLBACK so that when it fails  */
 /*                  job will end.                                    */
@@ -121,12 +121,12 @@
              DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CHSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
-/**********  DCL        VAR(&SLT) TYPE(*CHAR) LEN(89) VALUE('UBRTT +          */        /*MD057528*/
-/**********               *NE 0 & UFRFD *EQ 0 & VDAT *EQ       *OR +          */        /*MD057528*/
-/**********               TBRTT *NE 0 & TFRFD *EQ 0 & VDAT *EQ      ')        */        /*MD057528*/
+/**********  DCL        VAR(&SLT) TYPE(*CHAR) LEN(89) VALUE('UBRTT +          */          /*CSD103*/
+/**********               *NE 0 & UFRFD *EQ 0 & VDAT *EQ       *OR +          */          /*CSD103*/
+/**********               TBRTT *NE 0 & TFRFD *EQ 0 & VDAT *EQ      ')        */          /*CSD103*/
              DCL        VAR(&SLT) TYPE(*CHAR) LEN(91) VALUE('UBRTT +
                           *NE    & UFRFD *EQ 0 & VDAT *EQ       *OR +
-                          TBRTT *NE    & TFRFD *EQ 0 & VDAT *EQ      ')                 /*MD057528*/
+                          TBRTT *NE    & TFRFD *EQ 0 & VDAT *EQ      ')                   /*CSD103*/
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*046856*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*046856*/
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*S01522*/

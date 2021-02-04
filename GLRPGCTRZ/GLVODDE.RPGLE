@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR579557           Date 14Sep15               *
       *                 CGL165             Date 23Feb15               *
@@ -35,7 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR579557 - Account Maintenance - date must be deleted in     *
       *             Debit Int/Overdraft Tab. Applied fix 254456.      *
@@ -167,8 +167,8 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-     D*AMDRIB***       S              2S 0                                                  MD057528
-     DAMDRIB           S              2A                                                    MD057528
+     D*AMDRIB***       S              2S 0                                                    CSD103
+     DAMDRIB           S              2A                                                      CSD103
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
@@ -672,8 +672,8 @@
      C                   ENDIF
       *
       ** IF Dr.Base Rate OR Dr.Rate/Spread have been amended
-     C**********         Move      DDDRIB        WWDRIB            2 0                      MD057528
-     C                   Move      DDDRIB        WWDRIB            2                        MD057528
+     C**********         Move      DDDRIB        WWDRIB            2 0                        CSD103
+     C                   Move      DDDRIB        WWDRIB            2                          CSD103
       *
      C                   CallB     'ZALIGN'
      C                   Parm                    ZAlignOk

@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -60,7 +59,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1120,8 +1118,8 @@
      C                   EVAL      CrUNRL = *ZEROS
      C                   EVAL      CrUNRLP = *ZEROS
      C                   EVAL      CrDDTM = *ZEROS
-     C**********         EVAL      CrBRSQ = *ZEROS                                          MD057528
-     C                   EVAL      CrBRSQ = *BLANKS                                         MD057528
+     C**********         EVAL      CrBRSQ = *ZEROS                                            CSD103
+     C                   EVAL      CrBRSQ = *BLANKS                                           CSD103
      C                   EVAL      CrLSWC = *ZEROS
      C                   EVAL      CrLSWS = *ZEROS
      C                   EVAL      CrORED = *ZEROS
@@ -1244,8 +1242,8 @@
      C                   EVAL      UNRL = *ZEROS
      C                   EVAL      UNRLP = *ZEROS
      C                   EVAL      DDTM = *ZEROS
-     C**********         EVAL      BRSQ = *ZEROS                                            MD057528
-     C                   EVAL      BRSQ = *BLANKS                                           MD057528
+     C**********         EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
      C                   EVAL      LSWC = *ZEROS
      C                   EVAL      LSWS = *ZEROS
      C                   EVAL      ORED = *ZEROS

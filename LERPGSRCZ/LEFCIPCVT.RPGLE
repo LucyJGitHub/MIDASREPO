@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 AR804792           Date 05Sep11               *
       *                 CSF011A            Date 28Nov11               *
@@ -46,9 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR804792 - Late Payment Penalty Spread was displayed as      *
@@ -738,12 +735,11 @@
      C                   MOVEL(P)  FPLPTP        DDLPTP
 
       * Base rate
-     C**********         IF        FPLPBR=*ZERO                                             MD057528
-     C                   IF        FPLPBR=*ZERO                                             MD057528
-     C                   EVAL      DDLPBR=*BLANKS
-     C                   ELSE
-     C                   MOVEL(P)  FPLPBR        DDLPBR                                     MD057528
-     C                   END
+     C**********         IF        FPLPBR=*ZERO                                               CSD103
+     C**********         EVAL      DDLPBR=*BLANKS                                             CSD103
+     C**********         ELSE                                                                 CSD103
+     C                   MOVE      FPLPBR        DDLPBR                                       CSD103
+     C**********         END                                                                  CSD103
 
       *  Late Payment Penalty Amount
       *

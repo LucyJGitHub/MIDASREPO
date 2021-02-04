@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045010           Date 05Apr17               *
@@ -46,7 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
@@ -261,8 +261,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D**NBRAM***             117    118  0                                                  MD057528
-     D  NBRAM                117    118                                                     MD057528
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123

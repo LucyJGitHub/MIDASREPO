@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057528           Date 27Jan21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD054028           Date 05Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
@@ -68,7 +67,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -735,12 +733,12 @@
       *
       * Base Rate Type
       *
-     C**********         IF        AMDRIB=*ZERO                                             MD057528
-     C                   IF        AMDRIB=*BLANKS                                           MD057528
+     C**********         IF        AMDRIB=*ZERO                                               CSD103
+     C                   IF        AMDRIB=*BLANKS                                             CSD103
      C                   EVAL      DDDRIB=*BLANKS
      C                   ELSE
-     C**********         MOVEL(P)  AMDRIB        DDDRIB                                     MD057528
-     C                   MOVEL     AMDRIB        DDDRIB                                     MD057528
+     C**********         MOVEL(P)  AMDRIB        DDDRIB                                       CSD103
+     C                   MOVEL     AMDRIB        DDDRIB                                       CSD103
      C                   ENDIF
       *
       * Rate/Spread & Sign
@@ -994,12 +992,12 @@
       *
       * Base Rate Type
       *
-     C**********         IF        AMCRIB=*ZERO                                             MD057528
-     C                   IF        AMCRIB=*BLANKS                                           MD057528
+     C**********         IF        AMCRIB=*ZERO                                               CSD103
+     C                   IF        AMCRIB=*BLANKS                                             CSD103
      C                   EVAL      DDCRIB=*BLANKS
      C                   ELSE
-     C**********         MOVEL(P)  AMCRIB        DDCRIB                                     MD057528
-     C                   MOVEL     AMCRIB        DDCRIB                                     MD057528
+     C**********         MOVEL(P)  AMCRIB        DDCRIB                                       CSD103
+     C                   MOVEL     AMCRIB        DDCRIB                                       CSD103
      C                   ENDIF
       *
       * Rate/Spread & Sign

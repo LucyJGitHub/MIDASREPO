@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057258           Date 27Jan21               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR836982           Date 16May14               *
       *                 MD000091           Date 07May13               *
@@ -29,7 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057528 - Conversion of remaining BaseRateCode to Alphanum  *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR836982 - COB component REC62N failed due to inserted       *
       *             accounts with back valued rate change date.       *
@@ -126,8 +126,8 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-      **AMMDRIB           S              2S 0                                               MD057528
-     DAMDRIB           S              2                                                     MD057528
+      **AMMDRIB           S              2S 0                                                 CSD103
+     DAMDRIB           S              2                                                       CSD103
      DRIDICT           S              2S 0
      DRIDCST           S              5S 0
 
@@ -163,8 +163,8 @@
      C                   MoveL     *Blanks       MsgDtaXAr
      C                   Z-Add     0             Idx
       *
-     C**********         Move      DDDRIB        SADRIB            2 0                      MD057528
-     C                   Move      DDDRIB        SADRIB            2                        MD057528
+     C**********         Move      DDDRIB        SADRIB            2 0                        CSD103
+     C                   Move      DDDRIB        SADRIB            2                          CSD103
      C                   MOVE      DDDICT        SADICT            2 0
      C                   MOVE      DDDCST        SADCST            5 0
       *

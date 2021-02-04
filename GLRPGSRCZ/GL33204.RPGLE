@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL142             Date 06Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL142             Date 06Aug12               *
       *                 CGL120  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL142 - Tactical COB changes GL                             *
       *  CGL120 - GL COB Components Task Split                        *
@@ -32,15 +35,15 @@
      FZACCNTAB  O    E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACCNTABF2)
       * Midas GL Account Balance Extract Driver
- 
+
      FACJND4    IF   E           K DISK    INFSR(*PSSR) INCLUDE(APOSTPDF)
       * Midas GL Postings Details
- 
+
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
       * Midas GL Accounts master
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

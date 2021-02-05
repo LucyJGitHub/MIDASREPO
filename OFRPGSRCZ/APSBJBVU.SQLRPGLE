@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056610           Date 07Sep20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP090A            Date 04Nov13               *
       *                 CAP090   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056610 - Deliverable Data Split for APPGMSTD               *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP090A - Initiate Batch Process API                         *
@@ -231,7 +233,8 @@
      C/EXEC SQL
      C+ SELECT SJPROGRAM
      C+ into :InProgram
-     C+ FROM APPGMSTD
+     C**FROM*APPGMSTD                                                                       MD056610
+     C+ FROM APPGSJW0                                                                       MD056610
      C+ WHERE SJProcType = :ApProcType
      C/END-EXEC
 

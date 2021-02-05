@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD057231             Date 18Nov20             *
-      *  Prev Amend No. MD054733             Date 02Dec19             *
+      *  Last Amend No. MD057288             Date 01Dec20             *
+      *  Prev Amend No. MD057231             Date 18Nov20             *
+      *                 MD054733             Date 02Dec19             *
       *                 MD056020             Date 18Jun20             *
       *                 MD054955             Date 16Dec19             *
       *                 MD055832             Date 14May20             *
@@ -25,6 +26,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057288 - During migration, some XTD files are on top of    *
+      *             LIBL causing incorrect update. Fix is to add      *
+      *             correct library while updating XTD.               *      
       *  MD057231 - Add dump in case of error                         *
       *             ACOF, BRCH and MLMTRAN are twice in GPWIPCTD and  *
       *             this causes missing record in XTD for the zones.  *
@@ -181,7 +185,9 @@
      C                   ENDDO
 
      C                   eval      SQLDynStmt = *BLANKS
-     C                   eval      SQLDynStmt = 'delete from ' + EXTINDEX +
+     C**********         eval      SQLDynStmt = 'delete from ' + EXTINDEX +                 MD057288
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD057288
+     C                             %trimr(BSCHEMA) + '/' + EXTINDEX +                       MD057288
      C                             ' A where not exists (select * from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX +
      C**********                   ' B ' +  %trimr(WHERE) + ')'                             MD055832
@@ -316,14 +322,18 @@
      C                   eval      PINSERT = %trimr(PINSERT) + ')'
 
      C**********         eval      SQLDynStmt = 'insert into ' + KXINDEX +                  MD054605
-     C                   eval      SQLDynStmt = 'insert into ' + EXTINDEX +                 MD054605
+     C**********         eval      SQLDynStmt = 'insert into ' + EXTINDEX +        MD054605 MD057288
+     C                   eval      SQLDynStmt = 'insert into ' +                            MD057288
+     C                             %trimr(KMSCHEMA) + '/' + EXTINDEX  +                     MD057288
      C**********                   %trimr(PINSERT) + ' select ' +                           MD054605
      C                             ' (select ' +                                            MD054605
      C                             %trimr(PSELECT) + ' from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX  +
      C                             ' A where not exists (select * from ' +
      C**********                   XINDEX +  ' B ' + %trimr(WHERE) + ')'                    MD054605
-     C                             EXTINDEX +  ' B ' + %trimr(WHERE) + '))'                 MD054605
+     C**********                   EXTINDEX +  ' B ' + %trimr(WHERE) + '))'        MD054605 MD057288
+     C                             %trimr(KMSCHEMA) + '/' + EXTINDEX  +                     MD057288
+     C                             ' B ' + %trimr(WHERE) + '))'                             MD057288
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt

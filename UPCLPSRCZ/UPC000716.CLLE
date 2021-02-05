@@ -9,11 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MDPHS005 *CREATE   Date 18Jun20              */
+/*       Last Amend No. MD057231           Date 18Nov20              */
+/*       Prev Amend No. MD056103 *CREATE   Date 18Jun20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MDPHS005 - Deliverable Data Split migration                 */
+/*       MD057231 - Allow selected to be migrated                    */
+/*                  Move OVRDBF into the RCVF loop                   */
+/*       MD056193 - Deliverable Data Split migration                 */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE &OLDLIB &NEWLIB)
@@ -72,11 +75,11 @@ ABNOR:
                           DTAMBRS((UTFLDDPD (&MBROVR)))
              MONMSG     MSGID(CPF0000)
 
-/* Add overrides. */
-             OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR)
-             OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR)
-             OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR)
-             OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR)
+/**Add*overrides.**/                                                                    /*MD057231*/
+/**********  OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR) */                                  /*MD057231*/
+/**********  OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR) */                                  /*MD057231*/
+/**********  OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR) */                                  /*MD057231*/
+/**********  OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR) */                                  /*MD057231*/
 
 READNEXT:
              RCVF
@@ -89,6 +92,17 @@ READNEXT:
              GOTO       CMDLBL(READNEXT)
              ENDDO
 
+/* Consider Report Flag */                                                              /*MD057231*/
+             IF         COND(&DDSRPT *NE 'Y') THEN(DO)                                  /*MD057231*/
+             GOTO       CMDLBL(READNEXT)                                                /*MD057231*/
+             ENDDO                                                                      /*MD057231*/
+                                                                                        /*MD057231*/
+/* Add overrides. */                                                                    /*MD057231*/
+             OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR)                                     /*MD057231*/
+             OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR)                                     /*MD057231*/
+             OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR)                                     /*MD057231*/
+             OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR)                                     /*MD057231*/
+                                                                                        /*MD057231*/
              CALL       PGM(UT000022) PARM(&DDSNWF 'X')
 
              DLTOVR     FILE(UTFLDDPD UTFLDDL0 UTFLDDL1 UTFLDDL2)
@@ -144,6 +158,18 @@ UPDNEXT:
              GOTO       CMDLBL(UPDNEXT)
              ENDDO
 
+/* Consider Migrate Flag */                                                             /*MD057231*/
+             IF         COND(&DDSMIG *NE 'Y') THEN(DO)                                  /*MD057231*/
+/* Synchronize XTD only */                                                              /*MD057231*/
+             CALL       PGM(UP000701) PARM(&ERROR &DDSNWF &NEWLIB)                      /*MD057231*/
+             IF         COND(&ERROR *NE ' ') THEN(DO)                                   /*MD057231*/
+                SNDPGMMSG  MSG('Error synchronizing file ' *CAT &DDSNWF +
+                             *TCAT '. Check dump produced.') MSGTYPE(*DIAG)             /*MD057231*/
+             CHGVAR     VAR(&ERROR) VALUE('         ')                                  /*MD057231*/
+             ENDDO                                                                      /*MD057231*/
+             GOTO       CMDLBL(UPDNEXT)                                                 /*MD057231*/
+             ENDDO                                                                      /*MD057231*/
+                                                                                        /*MD057231*/
              CHGVAR     VAR(&OLDFILE) VALUE(&DDSNWF)
 /* If not blank, check that Original File exist in the old system */
              IF         COND(&DDSORF *NE ' ') THEN(DO)
@@ -169,6 +195,12 @@ UPDNEXT:
              CALL       PGM(UP000710) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
              ENDDO
 
+             IF         COND(&ERROR *NE ' ') THEN(DO)                                   /*MD057231*/
+                SNDPGMMSG  MSG('Error updating file ' *CAT &DDSNWF +
+                             *TCAT '. Check dump produced.') MSGTYPE(*DIAG)             /*MD057231*/
+             CHGVAR     VAR(&ERROR) VALUE('         ')                                  /*MD057231*/
+             ENDDO                                                                      /*MD057231*/
+                                                                                        /*MD057231*/
              GOTO       CMDLBL(UPDNEXT)
 
 ENDSR:

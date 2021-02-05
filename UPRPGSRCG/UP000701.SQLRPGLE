@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054733             Date 02Dec19             *
-      *  Prev Amend No. MD056020             Date 18Jun20             *
+      *  Last Amend No. MD057231             Date 18Nov20             *
+      *  Prev Amend No. MD054733             Date 02Dec19             *
+      *                 MD056020             Date 18Jun20             *
       *                 MD054955             Date 16Dec19             *
       *                 MD055832             Date 14May20             *
       *                 MD055829             Date 12May20             *
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057231 - Add dump in case of error                         *
+      *             ACOF, BRCH and MLMTRAN are twice in GPWIPCTD and  *
+      *             this causes missing record in XTD for the zones.  *
       *  MD054733 - Merge GPWPBCTD to GPWIPCTD.                       *
       *  MD056020 - Dumps generated in PRCA because of SQL error      *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
@@ -198,6 +202,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
      C                   ELSE
@@ -222,6 +227,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * Additional process for GPWIPBTD as the Bespoke records are the zonal WIP config
@@ -244,6 +250,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
      C                   ENDIF
@@ -330,6 +337,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
      C                   ELSE
 
@@ -347,6 +355,7 @@
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * Add GPWIPXTD records with blank zone for global API                                 MD055469
@@ -363,6 +372,7 @@
      C                   If        SQLCode <> 0                                             MD055469
      C                             and SQLCode <> 100                                       MD055469
      C                   eval      ERROR = '*Error'                                         MD055469
+     C                   Dump                                                               MD057231
      C                   Endif                                                              MD055469
                                                                                             MD055469
       * Add GPWIPBTD records with zone (bespoke) in case new API
@@ -385,6 +395,7 @@
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
      C                   EVAL      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   ENDIF
 
       * Add GPWIPXTD records with zone (bespoke) in case new API
@@ -396,11 +407,14 @@
      C+ WC_AUTLVL, WC_ZONE, 'B'
      C+ FROM GPWIPBTD A where
      C+ not exists (select * from GPWIPXTD B
-     C+ where A.WC_API = B.WC_API and B.WC_ZONE <> '*REFZONE'))
+     C**where*A.WC_API*=*B.WC_API*and*B.WC_ZONE*<>*'*REFZONE'))                             MD057231
+     C+ where A.WC_API = B.WC_API and B.WC_ZONE <> '*REFZONE' and                           MD057231
+     C+ WC_ZONE <> '        '))                                                             MD057231
      C/end-exec
      C                   If        SQLCode <> 0
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   Endif
 
       * update GPWIPBTD records (bespoke) in case of change in core fields
@@ -428,6 +442,7 @@
      C                   IF        SQLCODE <> 0
      C                             and SQLCode <> 100
      C                   EVAL      ERROR = '*Error'
+     C                   Dump                                                               MD057231
      C                   ENDIF
 
       * if CFT157 fields are left blank, then initialize them with values from CTD          MD054733
@@ -450,6 +465,7 @@
      C                   IF        SQLCODE <> 0                                             MD054733
      C                             and SQLCode <> 100                                       MD054733
      C                   EVAL      ERROR = '*Error'                                         MD054733
+     C                   Dump                                                               MD057231
      C                   ENDIF                                                              MD054733
      C                                                                                      MD054733
      C                   ENDIF                                                              MD054733

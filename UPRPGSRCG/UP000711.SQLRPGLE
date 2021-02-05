@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD056103   *CREATE   Date 17Jun20             *
+      *  Last Amend No. MD057231             Date 18Nov20             *
+      *  Prev Amend No. MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057231 - Add fields introduced by MD054733                 *
       *  MD056103 - Deliverable Data Split migration                  *
       *                                                               *
       *****************************************************************
@@ -135,7 +137,9 @@
      C                             ' as WC_ZONE, ' +
      C                             'WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, ' +
      C                             'WC_BOFLD3, WC_BOFLD4, ' +
-     C                             'WC_BOFLD5, ''B'' FROM ' + %trimr(SCHEMAT) +
+     C**********                   'WC_BOFLD5, ''B'' FROM ' + %trimr(SCHEMAT) +             MD057231
+     C                             'WC_BOFLD5, ''B'', WCAN, WCAC, WCAT, WCBSTP'+            MD057231
+     C                             ' FROM ' + %trimr(SCHEMAT) +                             MD057231
      C                             '/GPWIPCTD A where A.WC_ZONE ' +
      C                             ' = ''*REFZONE'' and not exists '+
      C                             ' (select * from ' + %trimr(SCHEMAM) +
@@ -209,7 +213,9 @@
      C                             'WC_ZONE, ' +
      C                             'WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, ' +
      C                             'WC_BOFLD3, WC_BOFLD4, ' +
-     C                             'WC_BOFLD5, ''B'' FROM ' + %trimr(OLDLIB) +
+     C**********                   'WC_BOFLD5, ''B'' FROM ' + %trimr(OLDLIB) +              MD057231
+     C                             'WC_BOFLD5, ''B'', WCAN, WCAC, WCAT, WCBSTP'+            MD057231
+     C                             ' FROM ' + %trimr(OLDLIB) +                              MD057231
      C                             '/T_WIPCF A where not exists ' +
      C                             ' (select * from ' + %trimr(SCHEMAM) +
      C                             '/GPWIPBTD B where A.WC_API ' +
@@ -284,7 +290,11 @@
      C                             ' (select * from ' + %trimr(OLDLIB) +
      C                             '/T_WIPCF A where A.WC_API ' +
      C                             ' = B.WC_API and A.WC_ZONE =' +
-     C                             '''' + %trimr(X_ZONE) + '''' + ')'
+     C**********                   '''' + %trimr(X_ZONE) + '''' + ')'                       MD057231
+      * Make sure only XTD records for the zone are updated                                 MD057231
+     C                             '''' + %trimr(X_ZONE) + '''' + ')' +                     MD057231
+     C                             'and WC_ZONE = ' +                                       MD057231
+     C                             '''' + %trimr(X_ZONE) + ''''                             MD057231
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt

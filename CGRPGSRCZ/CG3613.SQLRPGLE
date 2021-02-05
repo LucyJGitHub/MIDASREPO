@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. CSC053             Date 20Aug18               *
+      *  Last Amend No. MD057288           Date 01Dec20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 CSC053             Date 20Aug18               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,8 @@
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057288 - Return Codes are OS dependent, hence should be    *                             
+      *             in XTD. Recompiled.                               *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  CSC053 - FTP Secure Connections to SWIFT and CM              *
       *         - Incorrect FTP log message "Streamfile not           *

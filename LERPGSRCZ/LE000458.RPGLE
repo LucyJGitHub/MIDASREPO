@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD048575           Date 07Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057275           Date 20Jan21               *
+      *  Prev Amend No. MD048575           Date 07Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1097202          Date 28Mar13               *
       *                 AR1063739            Date 03Dec12             *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057275 - Multiple UTCHOBJEX calls by LEC06A 00010. Removed *
+      *             SETON INLR.                                       *
       *  MD048575 - LE: MR amount transfered to PDCL                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -234,7 +237,7 @@
  
      C                   EXSR      POSTR2
  
-     C                   EVAL      *INLR = *ON
+     C**********         EVAL      *INLR = *ON                                              MD057275
  
      C                   RETURN
  

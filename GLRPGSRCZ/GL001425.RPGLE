@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. EML104             Date 04Feb20               *
-      *  Prev Amend No. EML102             Date 22Nov19               *
+      *  Last Amend No. EML104A            Date 27Oct20               *
+      *  Prev Amend No. EML104             Date 04Feb20               *
+      *                 EML102             Date 22Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026965           Date 16May14               *
       *                 CGL135A            Date 10Jul13               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104A- Recompiled due to changed EML102_021                *
       *  EML104 - Upgrade of EML010 to FBM2.1 SP23                    *
       *       EML010 - Structured field :86:                          *
       *             Use hook: GLH00520                                *

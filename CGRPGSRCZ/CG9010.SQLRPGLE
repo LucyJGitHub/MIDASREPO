@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD057512           Date 08Feb21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD054011           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043920           Date 02Feb17               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057512 - CGC2050 00001 component runs too long             *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -645,9 +647,9 @@
      C+ order by CPPCOR, CPPTYP, CPPSTP, CPCORR, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955
                                                                                             MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ close ACursor                                                                       MD054955
-     C/END-EXEC                                                                             MD054955
+     C**********/EXEC SQL                                                          MD054955 MD057512
+     C**********+ close ACursor                                                    MD054955 MD057512
+     C**********/END-EXEC                                                          MD054955 MD057512
                                                                                             MD054955
      C/EXEC SQL                                                                             MD054955
      C+ open ACursor                                                                        MD054955
@@ -673,6 +675,9 @@
      C/END-EXEC                                                                             MD054955
       *
      C                   ENDDO                                                  DoW
+     C/EXEC SQL                                                                             MD057512
+     C+ close ACursor                                                                       MD057512
+     C/END-EXEC                                                                             MD057512
       *
      C                   ENDDO                                                  Do 3
       *
@@ -691,9 +696,9 @@
      C+ order by CPMACT, CPCORR, CPPTYP, CPPSTP, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955
                                                                                             MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ close BCursor                                                                       MD054955
-     C/END-EXEC                                                                             MD054955
+     C**********/EXEC SQL                                                          MD054955 MD057512
+     C**********+ close BCursor                                                    MD054955 MD057512
+     C**********/END-EXEC                                                          MD054955 MD057512
                                                                                             MD054955
      C/EXEC SQL                                                                             MD054955
      C+ open BCursor                                                                        MD054955
@@ -738,6 +743,9 @@
      C/END-EXEC                                                                             MD054955
       *
      C                   ENDDO                                                  DoW
+     C/EXEC SQL                                                                             MD057512
+     C+ close BCursor                                                                       MD057512
+     C/END-EXEC                                                                             MD057512
       *
      C                   ENDIF
       *
@@ -840,9 +848,9 @@
      C+ order by CPPCOR, CPPTYP, CPPSTP, CPCORR, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955
                                                                                             MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ close CCursor                                                                       MD054955
-     C/END-EXEC                                                                             MD054955
+     C**********/EXEC SQL                                                          MD054955 MD057512
+     C**********+ close CCursor                                                    MD054955 MD057512
+     C**********/END-EXEC                                                          MD054955 MD057512
                                                                                             MD054955
      C/EXEC SQL                                                                             MD054955
      C+ open CCursor                                                                        MD054955
@@ -866,6 +874,9 @@
      C/END-EXEC                                                                             MD054955
       *                                                                   CCG004
      C                   ENDDO                                                  DoW            CCG00
+     C/EXEC SQL                                                                             MD057512
+     C+ close CCursor                                                                       MD057512
+     C/END-EXEC                                                                             MD057512
       *                                                                   CCG004
      C                   ENDDO                                                  Do 3           CCG00
       *                                                                   CCG004
@@ -883,9 +894,9 @@
      C+ order by CPMACT, CPCORR, CPPTYP, CPPSTP, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955
                                                                                             MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ close ECursor                                                                       MD054955
-     C/END-EXEC                                                                             MD054955
+     C**********/EXEC SQL                                                          MD054955 MD057512
+     C**********+ close ECursor                                                    MD054955 MD057512
+     C**********/END-EXEC                                                          MD054955 MD057512
                                                                                             MD054955
      C/EXEC SQL                                                                             MD054955
      C+ open ECursor                                                                        MD054955
@@ -930,6 +941,9 @@
      C/END-EXEC                                                                             MD054955
       *                                                                   CCG004
      C                   ENDDO                                                  DoW            CCG00
+     C/EXEC SQL                                                                             MD057512
+     C+ close ECursor                                                                       MD057512
+     C/END-EXEC                                                                             MD057512
       *                                                                   CCG004
      C                   ENDIF                                                                 CCG00
       *                                                                   CCG004

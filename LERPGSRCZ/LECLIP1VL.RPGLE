@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD029863           Date 18Jan18               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD029863           Date 18Jan18               *
+      *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -170,6 +172,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *
       *           - Applied for MD049247.                             *
@@ -8546,7 +8551,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
@@ -78,6 +80,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -269,14 +274,14 @@
       *  Array for job name                                                                   CSC022
      D ARRJBNAM        S             10A   DIM(10)                                            CSC022
      D @EI             S              1    DIM(60)
- 
+
       *
      D CrLnFilFmtCL  E DS                  EXTNAME(CLOANCL) PREFIX(L)
       ***  Current Loan in File Format CL
      D CrLnFilFmtCK  E DS                  EXTNAME(CLOANCK) PREFIX(K)
       ***  Current Loan in File Format CK
- 
- 
+
+
      D CrLnScnFmt1   E DS                  EXTNAME(LECLI1PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 1
      D CrLnScnFmt2   E DS                  EXTNAME(LECLI2PD)  PREFIX(@)
@@ -285,8 +290,8 @@
       ***  (Current) Loan in Screen Format - Screen 3
      D CrLnScnFmt4   E DS                  EXTNAME(LECLI4PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 4
- 
- 
+
+
      D NwLnFilFmtCL  E DS                  EXTNAME(LEVCLILPD)
       ***  New Loan in File Format CL
      D***CLREC**              459    527                                                      CGL029
@@ -297,11 +302,11 @@
      D***CLPAYEX             1597   1614                                               CGL029 TDA023
      D  CLRECEx             1597   1614                                                       TDA023
      D  CLPAYEX             1615   1632                                                       TDA023
- 
+
      D NwLnFilFmtCK  E DS                  EXTNAME(LEVCLIKPD) PREFIX(K_)
       ***  New Loan in File Format CK
- 
- 
+
+
      D NwLnScnFmt1   E DS                  EXTNAME(LECLI1PD)
       ***  New Loan in Screen Format - Screen 1
      D NwLnScnFmt2   E DS                  EXTNAME(LECLI2PD)
@@ -310,8 +315,8 @@
       ***  New Loan in Screen Format - Screen 3
      D NwLnScnFmt4   E DS                  EXTNAME(LECLI4PD)
       ***  New Loan in Screen Format - Screen 4
- 
- 
+
+
      D OKLnScn1      E DS                  EXTNAME(LEECLI1PD)
       ***  Error indicators Screen 1
      D OKLnScn2      E DS                  EXTNAME(LEECLI2PD)
@@ -320,7 +325,7 @@
       ***  Error indicators Screen 3
      D OKLnScn4      E DS                  EXTNAME(LEECLI4PD)
       ***  Error indicators Screen 4
- 
+
       *                                                                                       CSC022
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                   CSC022
       ** Midas SC Jobs handling commitment control data area                                  CSC022
@@ -330,7 +335,7 @@
       *****************************
       ** Settlement instructions **
       *****************************
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ***  File receive instructions
      D***FLREC**                1     69                                                      CGL029
@@ -341,16 +346,16 @@
      D  FLPAY                 21    565                                                       CGL029
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ***  File FRA/IRS instructions
- 
- 
+
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ***  Screen receive instructions
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ***  Screen payment instructions
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ***  Screen FRA/IRS instructions
- 
- 
+
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ***  Midas API Message Header Format Definition
       *
@@ -359,16 +364,16 @@
       *
      D SDSTAT        E DS                  EXTNAME(SDSTAT)  DTAARA(SDSTAT)
       ***  SDSTAT Data Structure
- 
- 
+
+
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)
       ***  Pay Settlement Instructions - Current
      D CrRecSttmt    E DS                  EXTNAME(SDESSRPD) PREFIX(@)
       ***  Receive Settlement Instructions - Current
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
       ***  FRA/IRS Settlement Instructions - Current
- 
- 
+
+
      D @SETIN          DS
       ***  Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -1100,7 +1105,7 @@
      C                   EXSR      SDtDtaSubs
      C                   END
      C                   END
- 
+
      C                   END
       *
       ***  If action code, or loan number were NOT OK
@@ -1135,7 +1140,7 @@
       * SNDM@1 - Send a message to first screen
       *****************************************************************
      C     SNDM@1        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ***  If there are fundamental errors in this transaction
@@ -2423,9 +2428,9 @@
       ***  Retrieve loan
       *
      C                   CALLB     'LECLIPRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM      *BLANK        RetCodeOut
       *
@@ -2449,14 +2454,14 @@
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
- 
+
       * OUTPUTS
- 
+
       * Loan Processing Type
      C                   PARM                    LoanPtyp          2 0
       * Loan Type
      C                   PARM                    LoanType          4
- 
+
       * (Current) Customer loan CL in file format
      C                   PARM                    CrLnFilFmtCL
       * (Current) Customer loan CK in file format
@@ -2485,7 +2490,7 @@
       ***  Save the loan record Id
      C                   MOVEL     LRECI         PLnRcdId          1
      C                   Z-ADD     LCHGA         WCHGA                                       BUG3721
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2747,7 +2752,7 @@
      C                   PARM      '0'           @INKC             1
      C                   PARM      '0'           @INKK             1                        MD036070
      C                   PARM      '0'           @INKL             1
- 
+
       *
       * If Part Sold, move Rec settl insts into Our start date settl insts
       *               and  Pay settl insts into Our maturity date settl insts
@@ -2778,9 +2783,9 @@
       ***  Extra validation after the Extended Settlements
       *
      C                   CALLB     'LECLIPEVL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode
       * Loan details screen 1 and 2
@@ -2794,9 +2799,9 @@
      C                   PARM                    DDRSCY                                       CLE031
       ***  Loan Type                                                                          CLE031
      C                   PARM                    LoanType                                     CLE031
- 
+
       * OUTPUTS
- 
+
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKLnScn1
      C                   PARM                    OKLnScn2
@@ -2822,7 +2827,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
- 
+
       *
       ***  CK/3 - End program
       *
@@ -2845,9 +2850,9 @@
       * DETP@S - Determine parameters for settlement details screen   *
       *****************************************************************
      C     DETP@S        BEGSR
- 
+
       ** If loan is not a participation sold
- 
+
      C     LoanType      IFNE      'PTSO'
       *
       ** ... set up date of receipt.
@@ -2876,7 +2881,7 @@
       ** .. set up date of payment
       *
      C                   Z-ADD     WSVVD         ##DATP
- 
+
      C                   ELSE
       *
       ** ... set up date of payment.
@@ -2905,7 +2910,7 @@
       ** .. set up date of receipt
       *
      C                   Z-ADD     WSVVD         ##DATR
- 
+
      C                   ENDIF
       *
       ** .. set up customer
@@ -2969,7 +2974,7 @@
      C                   MOVE      CLSCCY        FLRSCY                                       CLE031
      C                   MOVE      CLPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       *
       ***  If settlement instructions are not defined,
       ***  and payment/receipt dates are ,no in the past, default them
@@ -3139,13 +3144,13 @@
      C                   MOVEL     WOSDA         CLOSDA
      C                   MOVE      WOSDB         CLOSDB
      C                   MOVEL     WTSTN         CLTSTN
- 
+
      C                   MOVE      WMDST         CLMDST
      C                   MOVEL     WOMDA         CLOMDA
      C                   MOVE      WOMDB         CLOMDB
      C                   MOVEL     WTMAN         CLTMAN
      C                   MOVEL     WFACO         CLFACO
- 
+
      C                   END
       *
      C                   ENDSR

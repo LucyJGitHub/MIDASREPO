@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054105           Date 27Jan20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054105           Date 27Jan20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE141             Date 01Mar16               *
@@ -52,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054105 - Rate fixing of loans at rollover is incorrect.    *
       *             Correct the data type of parameter PZDaysFwd from *
       *             packed to zoned by using PZDaysFwdS instead.      *

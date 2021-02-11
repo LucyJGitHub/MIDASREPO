@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055219           Date 27May20               *
-      *  Prev Amend No. MD055059           Date 21May20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD055219           Date 27May20               *
+      *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
       *                 MD055714           Date 06May20               *
@@ -130,6 +132,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
       *  MD055059 - Allow negative fixed rate                         *

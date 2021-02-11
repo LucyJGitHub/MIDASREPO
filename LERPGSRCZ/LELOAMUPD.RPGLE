@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *      
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054317           Date 09Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050018           Date 05Nov18               *
       *                 MD047554           Date 11Oct17               *
@@ -103,7 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054317 - PDCL X not generated for freq based repayment     *      
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *

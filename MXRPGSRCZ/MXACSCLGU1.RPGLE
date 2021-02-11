@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
@@ -34,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -52,15 +57,15 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANZ1F : CLOANHHF)
       * All Loans
- 
+
      FMXSLECLPD IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF: MXSLECLP0)
       * Saved Loans
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -78,109 +83,109 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
      D LoanProcTypes   C                   '70 71 72'
- 
+
       * Guarantee
      D CLGU1         E DS                  EXTNAME(CLOANCL)
- 
- 
+
+
       ** External DS for BANK details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      C     *ENTRY        PLIST
      C/COPY MXCPYSRC,MXACSPRMI
- 
- 
+
+
       * Use input link-to field
- 
+
      C                   MOVEL     I#LFD1        A_LNRF            6
- 
+
       * Error if no loan number is supplied
- 
+
      C     A_LNRF        IFEQ      *BLANK
      C*****A_LNRF        OREQ      '000000'                                                   CLE148
      C                   EVAL      I#ERMS = 'INVALID LOAN NUMBER: '
      C                             + A_LNRF
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Get the loan from CLOANCL
- 
+
      C                   MOVEL     A_LNRF        LNRF
      C     LNRF          CHAIN     CLOANCLF                           99        *
- 
+
       * If the loan isn't found
       * and this is a current extract
       * it is an error
- 
+
      C     *IN99         IFEQ      '1'
      C     I#EXTT        ANDEQ     'C'
      C                   EVAL      I#ERMS = 'LOAN NOT ON CLOANCL:'
      C                             + A_LNRF
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * If the loan isn't on CLOANCL
       * Get the loan from MXSLECLPD
- 
+
      C     *IN99         IFEQ      '1'
      C                   CLEAR                   CLGU1
      C                   MOVEL     A_LNRF        LNRF
      C     LNRF          CHAIN     MXSLECLP0                          99        *
      C                   ENDIF
- 
+
       * If the loan isn't available
       * and this is a driver format
       *  Indicate that loan is not to be extracted
- 
+
      C     *IN99         IFEQ      '1'
      C     CFLFMT        ANDEQ     '*DRIVER   '
      C                   MOVEL     '*NOEXT '     I#RTCD
      C                   ELSE
- 
+
       * If this is a driver format
- 
+
      C     CFLFMT        IFEQ      '*DRIVER   '
- 
+
       * If the loan has not the required processing type
       * (The %editc BIF is used to convert PTYP to character)
       *  Indicate that loan is not to be extracted
- 
+
      C                   IF        %scan(%editc(PTYP : 'X') :
      C                                   LoanProcTypes) = 0
      C                   MOVEL     '*NOEXT '     I#RTCD
      C                   ELSE
- 
+
       * Determine if branch is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     BRCA          I#BRCA
      C                   EXSR      BRCA_FLT
- 
+
       * Determine if loan type/sub type is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     LTYP          I#LTYP
      C                   MOVEL     SUTP          I#SUTP
      C                   MOVEL     PTYP          Proc_Type
      C                   EXSR      LTST_FLT
- 
+
       * If the branch or loan type/sub type are NOT for export
       *  Indicate that loan is not to be extracted
- 
+
      C     Exp_BRCA      IFNE      'Y'
      C     Exp_LTST      ORNE      'Y'
      C                   MOVEL     '*NOEXT '     I#RTCD
@@ -188,14 +193,14 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Set up output data
- 
+
      C                   EVAL      InData = CLGU1
- 
- 
+
+
       * Return
- 
+
      C                   RETURN
       *
       /SPACE 5
@@ -220,17 +225,17 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Load branches for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      BRCA_FLT
- 
+
       * Load loan type/sub types for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      LTST_FLT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

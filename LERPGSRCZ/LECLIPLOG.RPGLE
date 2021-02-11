@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CDL094             Date 01Sep14               *
@@ -50,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -164,19 +169,19 @@
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       ***  File Payment instructions
      D  FLPAY                  1    559
- 
+
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
- 
+
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
- 
+
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
- 
+
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
- 
+
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for Bank Details
@@ -204,7 +209,7 @@
       ** Ê ==============                       Ê
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -318,9 +323,9 @@
       *
      C                   ELSE
       *
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
      C                   PARM                    F_PAY
      C                   PARM                    F_REC
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -329,7 +334,7 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      DDCURR        #TRCCY                                      CSF011A
      C                   PARM      DDCURR        #TPCCY                                      CSF011A
- 
+
       *
      C                   EVAL      TRANSDTL = LoanScnFmt1+ LoanScnFmt2+
      C                                        LoanScnFmt3+ LoanScnFmt4+

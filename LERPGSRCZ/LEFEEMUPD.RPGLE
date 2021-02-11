@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034020           Date 19Jul17               *
@@ -83,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -209,7 +214,7 @@
       *           use as APIs. Fee input Transaction Details          *
       *                                                               *
       *****************************************************************
- 
+
      FLEFEEDL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFEEDF:LEFEEDF1)
      F                                     COMMIT
@@ -305,19 +310,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -326,7 +331,7 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **  Table
      D CURR            S              3    DIM(150)                             ALL CCYS
      D TXND            S              1  0 DIM(150)                             Tlx NtcDay/CCY
@@ -334,11 +339,11 @@
       ** Watch List Description Compiled Time Array                                          BUG3760
      DWLARR            S             35    DIM(26) CTDATA PERRCD(2)                          BUG3760
      D*W#FRNT***       S              8A                                           MD024342 MD025467
- 
+
       *****************************************************************
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID FEE
      D ValidFeem     E DS                  EXTNAME(LEVFEEMPD)
- 
+
       * Original Fee in File Format                                                          BUG3760
      D OrgFeeFFmt    E DS                  EXTNAME(LEFEED)                                   BUG3760
      D                                     PREFIX(PV_)                                       BUG3760
@@ -348,38 +353,38 @@
      D QQOURS1       E                     EXTFLD(QQOURS)                                     CGL029
      D LEFEQD        E DS                  EXTNAME(LESTMPPD)                                  CER049
       ***  Externally desc'd DS for screen Loans extension                                    CER049
- 
+
       ** Fee Details OK indicator
      D OkFee         E DS                  EXTNAME(LEEFEEMPD)
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
       ** DATA AREA TO READ PREVIOUS RUN DATE
      D JNSTAT          DS           200
      D  PRUN                 103    105P 0
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** External DS for Nostro Details
- 
+
      D SDCLND        E DS                  EXTNAME(SDCLNDPD) PREFIX(ic)                       CLE134
                                                                                               CLE134
       ** Customer lending ICD                                                                 CLE134
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details.
- 
+
      D SDFACT        E DS                  EXTNAME(SDFACTPD)                                  CLE134
                                                                                               CLE134
       ** External DS for facility type details                                                CLE134
@@ -393,7 +398,7 @@
                                                                                               CAS011
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  First DS for access programs, LONG data structure.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short data structure for access objects
                                                                                              BUG3760
@@ -420,7 +425,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
      D WTimestamp      S             26A
      D Timestamp       S             26Z                                                     BUG8144
@@ -475,7 +480,7 @@
      D KspXRFI         S                   INZ LIKE(spXRFI)                                   CLE134
      D KspXRFN         S                   INZ LIKE(spXRFN)                                   CLE134
      D WFENPYD         S                   INZ LIKE(FENPYD)                                 AR812101
- 
+
       ** CRE020 Variables                                                                     CRE020
      D CRE020          S              1A                                                      CRE020
      D KRefNo          S             30A                                                      CRE020
@@ -523,7 +528,7 @@
      D  WFSEQ                 18     19  0
      D**WFPKEY**               1     19  0                                                    CSD027
      D  WFPKEY                 1     19                                                       CSD027
- 
+
       *
       ** Work file of update to LE position files
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
@@ -743,7 +748,7 @@
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite
      C                   CALL      'SFC000026'
      C                   PARM      *BLANKS       USER             10
@@ -762,7 +767,7 @@
      C**********         MOVE      *BLANK        WMsgIDArr                                   BUG4478
      C**********         MOVE      *BLANK        WMsgDtaArr                                  BUG4478
      C**********         Z-ADD     0             Wx                                          BUG4478
- 
+
      C                   MOVE      VFCNUM        WCNUM
      C                   MOVE      VFFACL        WFAC02
      C                   MOVEL     VFFACL        WFAC03
@@ -782,56 +787,56 @@
      C                   EVAL      WADJY = AUADJY                                             CAS011
      C                   ENDIF                                                                CAS011
      C                   ENDIF                                                                CAS011
- 
+
      C                   CALLB     'ZAGENTMSTM'                                              BUG8144
      C                   PARM                    TimeStamp                                   BUG8144
       *                                                                                      BUG8144
      C                   SELECT
- 
+
       **  Write Fee record
       **  ================
- 
+
      C     VFLCHT        WHENEQ    'I'
      C                   EXSR      WRITER
- 
+
       **  Update Fee record
       **  =================
- 
+
      C     VFLCHT        WHENEQ    'A'
      C                   EXSR      AMENDR
- 
+
       **  Authorise Fee
       **  =============
      C     VFLCHT        WHENEQ    'X'
      C                   EXSR      AMENDR
- 
+
       **  Delete Fee record
       **  ==================
- 
+
      C     VFLCHT        WHENEQ    'D'
      C                   EXSR      AMENDR
- 
+
      C                   ENDSL
- 
+
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
       ** Setup Fee support log
- 
+
      C                   CALLB     'LEFEEMLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    VFLCHT
      C                   PARM                    CrFeFilFmt
      C                   PARM                    CLE006
      C                   PARM                    TRANSDTL
- 
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'LEFEEM'
      C                   EVAL      APUSERID = PSUser
      C                   MOVEL     VFPCRF        APFOTRANID
@@ -846,9 +851,9 @@
      C                   EVAL      PDealNo = W@VFCNUM + W@VFLOAN +
      C                                       W@VFFSEQ
      C                   ENDIF
- 
+
      C                   EVAL      PADealNo = *BLANKS
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -856,22 +861,22 @@
      C                   PARM      *BLANKS       WTimestamp
      C                   PARM                    PDealNo
      C                   PARM                    PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occured,
- 
+
      C                   IF        RetCodeOut <> *BLANKS
- 
+
      C                   EVAL      @@RTCD    = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Update the trailer if no errors
       **  Else report an error
- 
+
      C     Ix            IFEQ      0
      C                   EXSR      UPDTRL
       *
@@ -930,7 +935,7 @@
      C                   ENDIF                                                                260840
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01182
- 
+
      C                   ELSE
      C     @@RTCD        IFEQ      *BLANK
      C                   MOVEL     '*ERROR    '  @@RTCD
@@ -938,7 +943,7 @@
      C                   ENDIF
       *
       * Keep The Fee sequence
- 
+
      C                   EVAL      WWFSEQ  = FEFSEQ
                                                                                               CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
@@ -965,7 +970,7 @@
      C                   ENDIF                                                                CRE020
       *
       * EXIT FROM PROGRAM
- 
+
      C                   RETURN
      C****************************************************************
       /EJECT
@@ -974,10 +979,10 @@
       * WRITER   : Write a record to Fee file                         *
       *****************************************************************
      C     WRITER        BEGSR
- 
+
       * INITIALIZE FEE
      C                   CLEAR                   CrFeFilFmt
- 
+
       ** Find next available sequence no. for insert
       *
      C     VFFSEQ        IFEQ      0
@@ -1085,7 +1090,7 @@
      C                   ELSE
      C                   MOVE      ' '           PTFI
      C                   ENDIF
- 
+
      C*****FELOAN        IFEQ      0                                                          CLE148
      C     FELOAN        IFEQ      *BLANKS                                                    CLE148
      C                   MOVE      *BLANKS       FELTYP
@@ -1159,7 +1164,7 @@
      C                   MOVEL     VFIUSR        IUSR
      C                   MOVEL     VFAUSR        AUSR
      C                   MOVEL     VFXUSR        XUSR
- 
+
      C                   MOVE      *BLANK        GFPT
      C                   MOVE      *BLANK        PTAI
      C                   MOVE      *BLANK        SMAC
@@ -1198,7 +1203,7 @@
       ** Write a new record to file LEFEED
       *
      C                   WRITE     LEFEEDF1                             78
- 
+
       ** Update Settlement Allocation file with generated Fee Sequence                       BUG9225
                                                                                              BUG9225
      C     PCRF          CHAIN     LESTALLA                           99                     BUG9225
@@ -1413,7 +1418,7 @@
      C                   MOVEL     VFSYIN        FESYIN                                       CLE106
      C                   MOVE      VFSTAL        FESTAL                                       CLE034
       *
- 
+
      C     BPFEAU        IFEQ      'N'
      C     CLE002        OREQ      'N'
      C     VFAUTH        OREQ      'Y'                                                        CAP086
@@ -2354,7 +2359,7 @@
      C     FEEPTI        OREQ      'Y'
      C                   MOVE      'R'           FESWRI
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Action Code is Amend
@@ -2429,7 +2434,7 @@
      C     VFOMDB        ORNE      OMDB
      C                   MOVE      'Y'           WAMDED
      C                   ELSE
- 
+
      C*****CEU004        IFEQ      'Y'                                                        260783
      C     VFSCCY        IFNE      FESCCY
      C     VFICCY        ORNE      FEICCY
@@ -2517,7 +2522,7 @@
      C     VFOMDB        ORNE      OMDB
      C                   MOVE      'Y'           WAMDED
      C                   ELSE
- 
+
      C*****CEU004        IFEQ      'Y'                                                        260783
      C     VFSCCY        IFNE      FESCCY
      C     VFICCY        ORNE      FEICCY
@@ -2743,7 +2748,7 @@
       *
      C                   Z-ADD     VFPEND        FEPEND
      C                   Z-ADD     VFFAMT        FEFAMT
- 
+
      C     VFPTFI        IFEQ      'P'
      C     VFPTFI        OREQ      'S'                                                        CLE106
      C     VFPTFI        OREQ      'R'                                                        CLE106
@@ -3045,16 +3050,16 @@
      C                   MOVE      *BLANKS       KCNUM
      C                   CALL      'AONOSTR0'    PLIST1
       ** Call Nostro Details Access Object
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      *BLANK        ZLOC
      C                   ELSE
      C                   MOVE      A7NOSN        ZLOC
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EXSR      ZFWDT
       ** Calculate Number of days forward
       *
@@ -3316,16 +3321,16 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       **  DEFINE DTAARA JNSTAT
      C     *DTAARA       DEFINE                  JNSTAT
- 
+
      C                   IN        SDSTAT                                                    BUG3760
      C     CSC011        IFEQ      'Y'
      C                   IN        SC24X7
      C**********         IN        SDSTAT                                                    BUG3760
      C                   END
- 
+
       ** Determine if EMU LE Settlement Currency Conversion
       ** Upgrade feature is installed
      C                   CALL      'AOSARDR0'
@@ -3338,7 +3343,7 @@
      C                   ELSE
      C                   MOVE      'N'           CEU004
      C                   ENDIF
- 
+
       ** Determine if Customer Lending Enhancements - Authorisation
       ** feature is installed
      C                   CALLB     'AOSARDR0'
@@ -3346,7 +3351,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE002            1
      C                   ELSE
@@ -3360,7 +3365,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE006            1
      C                   ELSE
@@ -3374,7 +3379,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE007            1
      C                   ELSE
@@ -3389,7 +3394,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE009'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE009            1
      C                   ELSE
@@ -3973,7 +3978,7 @@
      C                   PARM                    KEYG             10
      C                   PARM                    KEYH              1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -4021,11 +4026,11 @@
       /EJECT
       ********************************************************************
      C     ZTNLU1        BEGSR
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    NATN              5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4772,7 +4777,7 @@
      C                   EVAL      wFeeFclty = FEFACL                                         CLE164
      C                   EVAL      wFeeLoan = FELOAN                                          CLE164
      C                   EVAL      wFeeSeqn = FEFSEQ                                          CLE164
- 
+
      C                   CALLP     UPDATE_MATRIX(                                             CLE164
      C                               wRetCode                                                 CLE164
      C                             : wAction                                                  CLE164

@@ -10,11 +10,16 @@
       *                                                               *
       *  (c)Finastra International Limited 2016                       *
       *                                                               *
-      *  Last Amend No. MD054017           Date 04Sep19               *
-      *  Prev Amend No. CER050  *CREATE    Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054017           Date 04Sep19               *
+      *                 CER050  *CREATE    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate (APR)                    *
       *                                                               *

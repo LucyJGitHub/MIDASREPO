@@ -1193,7 +1193,7 @@
      C                   ENDIF
      C                   MOVE      SMAM          ZZAMT                                       254361A
      C                   EXSR      SRTrailer                                                  254361
-
+                                                                                              254361   
      C/COPY WNCPYSRC,FTH00407
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487

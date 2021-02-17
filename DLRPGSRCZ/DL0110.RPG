@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 231185             Date 01Oct13               *
-      *  Prev Amend No. MD020081           Date 25Apr13               *
+      *  Last Amend No. AR991639           Date 29Jun12               *
+      *  Prev Amend No. AR898005           Date 24Jan12               *
+      *                 231185             Date 01Oct13               *
+      *                 MD020081           Date 25Apr13               *
       *                 UUC105             Date 19Oct20               *
       *                 AR960398           Date 30Apr12               *
       *                 MD056099           Date 26Jun20               *
@@ -322,6 +324,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR991639 - IBAN (23) is losing last character. Pgm fld BENAN *
+      *             has to be increased from 22 to 23.                *
+      *             (Child: AR993989)                                 *
+      *  AR898005 - Missing the Beneficiary A/C line details          *
+      *             Add Beneficiary A/C line details in the confo.    *
+      *             Applied 193021. (Child: AR898006)                 *
       *  231185 - Show interest account on a separate field.          *
       *         - Applied for MD022569.                               *
       *  MD020081 - DL0110P1 prints two pages instead of one.         *
@@ -7495,6 +7503,13 @@
      C           DTYP      ANDNE'LT'                                      CDL006
      C/COPY WNCPYSRC,DL0110CCP5                                           S01408
      C*                                                                   S01408
+     C*                                                                                     AR898005
+      ** Setup Beneficiary a/c line position if 'YOURSELVES'                                AR898005
+     C           @@60      IFEQ '1'                                                         AR898005
+     C                     MOVE *BLANKS   CPTN                                              AR898005
+     C                     MOVELBENAN     CPTN                                              AR898005
+     C                     END                                                              AR898005
+     C*                                                                                     AR898005
      C*                                                                   S01310
 1219 C                     EXSR EXCPT
       *                                                                   CDL018
@@ -9930,6 +9945,8 @@
 1395 C                     MOVE BLANK     AWCPNM                          S01194
 1396 C                     MOVE BLANK     CPTN
 1396 C                     MOVE BLANK     AWCNTN                          S01194
+     C**********           MOVE BLANK     BENAN  22                                AR898005 AR991639
+     C                     MOVE BLANK     BENAN  23                                         AR991639
 1397 C                     MOVE BLANK     ARRAY
      C                     MOVE *BLANK    CSTRD   1                       S01194
      C                     MOVE *BLANK    CNTRD   1                       S01194
@@ -9973,10 +9990,12 @@ TA06 CORN62 51             MOVELPAY       ADD
 1420 C*    AND TOWN FROM COUNTERPARTY SHORTNAME OR CUSTOMER NO.
 1421 C  N05      CUSTNO    COMP CNUMA                    60
 1422 C   05      CUSTNO    COMP PCUSA                    60
+     C                     MOVE *IN60     @@60    1                                         AR898005
 1330 C***60*               MOVE *BLANKS   CPNM                     S01177 S01194
 1330 C   60                MOVE *BLANKS   AWCPNM                          S01194
 1423 C***60*               MOVELYERSEL    CPNM                            S01194
 1423 C   60                MOVELYERSEL    AWCPNM                          S01194
+     C   60                MOVELBENA      BENAN                                             AR898005
      C/COPY WNCPYSRC,DL0110C055
 1424 C   60                GOTO ENDCPN
 1425 C*****                MOVELCUSTNO    CLIKEY                          S01194
@@ -10015,6 +10034,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      C/COPY WNCPYSRC,DL0110C057
 1429 C                     MOVELBBCRTN    CPTN                            S01194
 1429 C                     MOVELBBCRTN    AWCNTN                          S01194
+     C                     MOVELBENA      BENAN                                             AR898005
      C                     END                                            S01194
      C/COPY WNCPYSRC,DL0110C221
 1428 C***08                MOVELCRNM      CPNM                            S01194

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. AR858146           Date 17Nov11               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
       *                 MD047741           Date 31Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -90,6 +91,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR858146 - Apply 262215.  Multibranch to be set to Y if      *
+      *             coming from API.  (Child: AR858147)               *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246 and MD025083                  *
@@ -1357,7 +1360,8 @@ E1   C                   ENDIF                                                  
      C                   MOVE      'H'           BRBTSF
      C                   MOVE      B2VALI        BRVALI
      C                   MOVE      B2TMST        BRTMST
-     C                   MOVE      'N'           BRMBRB
+     C**********         MOVE      'N'           BRMBRB                                     AR858146
+     C                   MOVE      'Y'           BRMBRB                                     AR858146
      C                   MOVE      B2FRNT        BRFRNT
      C                   MOVE      B2FRNT        BRBDES
      C                   MOVE      'H'           BRBHAI

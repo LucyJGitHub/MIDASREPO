@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 252696             Date 09Nov20               *
-      *  Prev Amend No. 257943             Date 22May20               *
+      *  Last Amend No. 254361             Date 15Feb21               *
+      *  Prev Amend No. 252696             Date 09Nov20               *
+      *                 257943             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
@@ -102,6 +103,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254361 - Delete only the message which is currently selected *
+      *           for routing.                                        *
+      *         - Applied for MD-57585                                *
       *  252696 - Ensure that field Swift Reference field is save in  *
       *           in INPAYDD file for MidasPlus.                      *
       *         - Applied for MD-57173                                *
@@ -3549,12 +3553,18 @@
       ** file if the user cancels so that other workstations can access it                   BUG1282
                                                                                              BUG1282
      C                   CALL      'ME1070'                             0101                 BUG1282
-     C                   PARM      '*END   '     PACT                                        BUG1282
-     C                   PARM      *ZEROS        PMSGR                                       BUG1282
-     C                   PARM      *ZEROS        PKPRT                                       BUG1282
-     C                   PARM      *BLANKS       PMOR                                        BUG1282
-     C                   PARM      *BLANKS       PMIR                                        BUG1282
-     C                   PARM      *BLANKS       PRTN                                        BUG1282
+     C                   PARM      '*DEL   '     PActC             7                          254361
+     C                   PARM                    PMsgr                                        254361
+     C                   PARM                    PKprt                                        254361
+     C                   PARM                    PMor                                         254361
+     C                   PARM                    PMir                                         254361
+     C                   PARM      *BLANKS       PRtn                                         254361
+     C**********         PARM      '*END   '     PACT                                 BUG1282 254361
+     C**********         PARM      *ZEROS        PMSGR                                BUG1282 254361
+     C**********         PARM      *ZEROS        PKPRT                                BUG1282 254361
+     C**********         PARM      *BLANKS       PMOR                                 BUG1282 254361
+     C**********         PARM      *BLANKS       PMIR                                 BUG1282 254361
+     C**********         PARM      *BLANKS       PRTN                                 BUG1282 254361
                                                                                              BUG1282
       ** If call to program resulted in an error, then end program.                          BUG1282
                                                                                              BUG1282

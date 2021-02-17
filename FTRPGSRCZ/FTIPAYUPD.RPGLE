@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. HUT101CC1          Date 06Nov20               *
+      *  Last Amend No. 254361A            Date 15Feb21               *
+      *  Prev Amend No. 254361             Date 15Feb21               *
+      *                 MD048586           Date 11Jan21               *
+      *                 HUT101CC1          Date 06Nov20               *
       *                 CSW220             Date 09Mar20               *
       *                 HUT101             Date 12May20               *
       *                 MD054037           Date 23Sep19               *
@@ -97,6 +99,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254361A- Populate ZZAMT before call to SR/SRTrailer.         *
+      *         - Applied for MD-57585                                *
+      *  254361 - Update trailer right after update of inpaydd.       *
+      *         - Applied for MD-57585                                *
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
       *  HUT101CC1 - Copy CSW220 processing from FT0060 here          *
@@ -1185,6 +1191,9 @@
      C                   Z-ADD     002           DBase
      C                   EXSR      *PSSR
      C                   ENDIF
+     C                   MOVE      SMAM          ZZAMT                                       254361A
+     C                   EXSR      SRTrailer                                                  254361
+                                                                                              254361   
      C/COPY WNCPYSRC,FTH00407
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
@@ -1297,8 +1306,8 @@
       *
       ** Update Incoming Payments trailer with Payment Amount.
       *
-     C                   MOVE      SMAM          ZZAMT
-     C                   EXSR      SRTrailer
+     C**********         MOVE      SMAM          ZZAMT                                       254361A
+     C**********         EXSR      SRTrailer                                                  254361
       *
      C                   IF        CAP211 = 'Y' AND PAuth = 'Y' AND                           CAP211
      C                             SVGOP = 'Y' AND OPIN = 'Y'                                 CAP211

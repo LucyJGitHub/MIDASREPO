@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -211,6 +213,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            50                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -718,6 +723,8 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -825,6 +832,12 @@
      C                   Z-ADD     *ZERO         BVVDRC
      C                   Z-ADD     *ZERO         BVNBRT
      C                   Z-ADD     *ZERO         BVVDNR
+     C                   Z-ADD     *ZERO         BVBADJ                                       CSD103
+     C                   Z-ADD     *ZERO         BVFLOR                                       CSD103
+     C                   Z-ADD     *ZERO         BVLBDY                                       CSD103
+     C                   Z-ADD     *ZERO         BVLODY                                       CSD103
+     C                   Z-ADD     *ZERO         BVRRDP                                       CSD103
+     C                   Z-ADD     *ZERO         BVDBAV                                       CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -976,6 +989,8 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    BasRFilFmt
      C                   PARM                    CurTrTran
+      * LIBOR Fields                                                                          CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.

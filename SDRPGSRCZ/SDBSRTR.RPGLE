@@ -13,17 +13,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG4660            Date 08Nov04               *
+      *                 BUG4660            Date 08Nov04               *
       *                 BUG4469            Date 06Oct04               *
       *                 CAP084  *CREATE    Date 15Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG4660 - Current Base Rate must not be updated during amend.*
       *  BUG4469- Stopping changes being overwritten by other user    *
@@ -32,7 +34,7 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -44,70 +46,78 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D BasRScnFmt    E DS                  EXTNAME(SDBSRSPD)
       * Base rates in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D BasRFilFmt    E DS                  EXTNAME(SDBSRTPD)
       ** Base rates in file format
- 
+
       **-----------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       **-----------------------------------------------------------------------
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
       * Fields defined for CSD012
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')
- 
+
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+                                                                                              CSD103
+      * SD Extra data in file (D/B) format                                                    CSD103
+     D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
+                                                                                              CSD103
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            50                                                       CSD103
+                                                                                              CSD103
+     D AAuth           S              1A                                                      CSD103
+
       ** +--- Start of main processing -----------------------------------+
- 
+
      C                   CLEAR                   BasRFilFmt
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -120,7 +130,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      SDBSRTRED
@@ -146,20 +156,23 @@
      C     Idx           IFEQ      0
      C                   EXSR      SDBSRTCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDBSRS'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       * Build buffer with required output
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
      C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
- 
+     C                                      + ExtData                                         CSD103
+     C                                      + AAuth                                           CSD103
+     C                                      + LiborFlds                                       CSD103
+
      C                   SETON                                        LR
      C                   RETURN
       /EJECT
@@ -178,12 +191,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'SDUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,SDBSRTVM01
       *
@@ -200,7 +213,7 @@
      C                   MOVEL     '100'         DBASE                          * DBERR 100 *
      C                   EXSR      *PSSR                                        *************
      C                   END
- 
+
       ** Check if CSD012 is installed
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -212,7 +225,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSD012
      C                   ENDIF
- 
+
       ** If CSD012 is ON, check if base rate authorisation is ON
  B1  C     CSD012        IFEQ      'Y'
       *
@@ -243,7 +256,7 @@
      C     SVAL11        IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   Z-ADD     1             DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -294,25 +307,25 @@
       * Base rate currency and code read
      C                   PARM      *BLANK        @CYCDRed          3
      C                   PARM      *BLANK        @BSRCRed          2
- 
+
      C                   ENDSR
       **********************************************************************
      C     SDBSRTRTV     BEGSR
       **********************************************************************
- 
+
      C                   CALLB     'SDBSRTRTV'
- 
+
       * Inputs
       * Return code
      C                   PARM      *BLANKS       ReturnCode
- 
+
       * Mode = '*FRONT' (Front office transaction interface)
       * Mode = '      ' (Not front office transaction interface)
      C                   PARM                    ModeofOp          6
       *
       * Response mode
      C                   PARM                    APRESPMODE        1
- 
+
       * Action code
      C                   PARM                    DDACTN            1
       *
@@ -324,11 +337,11 @@
       *
       * Midas base rate number
      C                   PARM                    DDBSRC            2
- 
+
       * Outputs
       * Current base rate in file format
      C                   PARM                    BasRFilFmt
- 
+
       * OK - Action code
      C                   PARM                    OKActn            1
       *
@@ -337,15 +350,15 @@
       *
       * OK - Base rate code
      C                   PARM                    OKBSRC            1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * ICD - Private banking
      C                   PARM                    BGN4ST            1
       *
@@ -354,31 +367,34 @@
       *
       * Midas base rate name
      C                   PARM                    DDBSRN           30
- 
+
       * Base rate authorisation required
      C                   PARM                    AUTHRQ            1
- 
+
       * Authorisation mode
      C                   PARM                    AUTHMD            1
- 
+
      C                   ENDSR
       **********************************************************************
      C     SDBSRTCVT     BEGSR
       **********************************************************************
- 
+
      C                   CALLB     'SDBSRTCVT'
- 
+
       * Inputs
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Current base rate in file format
      C                   PARM                    BasRFilfmt
- 
+
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
- 
+                                                                                              CSD103
+      * LIBOR Screen Fields from File                                                         CSD103
+     C                   PARM                    LiborFlds                                    CSD103
+
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the
       * next CoB, but it is shown on the browse/listview screen as the

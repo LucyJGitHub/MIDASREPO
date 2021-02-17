@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG22152           Date 14Jan09               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG22152 - Missing authorization field in repository.        *
@@ -195,6 +197,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            49                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -328,6 +333,8 @@
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
+     C                                                    + AAuth                             CSD103
+     C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
 
@@ -361,6 +368,8 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -746,6 +755,9 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+                                                                                              CSD103
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
      C                   ENDSR
       *****************************************************************

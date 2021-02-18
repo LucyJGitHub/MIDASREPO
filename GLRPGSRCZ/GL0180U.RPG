@@ -14,8 +14,9 @@
      F*                                                               *
      F*   CREATED FOR SAR S01234. GL TEMPLATE ENHANCEMENTS            *
      F*                                                               *
-      *  Last Amend No. MD055224           Date 05Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057157           Date 16Feb21               *
+      *  Prev Amend No. MD055224           Date 05Mar20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027838           Date 02Jul14               *
       *                 AR1093096          Date 30Sep13               *
       *                 CAP207             Date 10Feb11               *
@@ -40,6 +41,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD057157 - Java Journal Entry screen not showing all batches *
+      *           - Write record in BITH extension table GLJENHQD.    *
+      *             Applied for MD-57419.                             *
       *  MD055224 - BITH have incomplete journal details              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027838 - Match the structure of GLJENPL1 for GLJESPL1.     *
@@ -84,6 +88,11 @@
       *                                                                                       CGL013
      FTGZBTEX1O   E           K        DISK                                                 MD055224
      F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD055224
+      *                                                                                     MD057157
+     FGLJEHQL0O   E           K        DISK                                                 MD057157
+      *                                                                                     MD057157
+      ** GL Journal Entry Header Extension File                                             MD057157
+      *                                                                                     MD057157
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,GL0180UFPG                                           S01408
      F*                                                                   S01408
@@ -150,6 +159,17 @@
      C                     MOVE P@BHNO    DDBTNB                                            MD055224
      C                     MOVE BJRDNB    DDBEDT                                            MD055224
      C                     WRITETGZBTHD0                                                    MD055224
+      *                                                                                     MD057157
+      ** Write record to GLJENHQD if CGL125 is ON                                           MD057157
+      *                                                                                     MD057157
+     C           CGL125    IFEQ 'Y'                                                         MD057157
+     C                     MOVELP@BHNO    HQBTCH                                            MD057157
+     C                     MOVELBTIBCA    HQBRCD                                            MD057157
+     C                     MOVEL*BLANKS   HQFRID                                            MD057157
+     C                     MOVEL'R'       HQJETP                                            MD057157
+     C                     WRITEGLJEHQD0                                                    MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C                     ENDIF                                                            MD055224
      C*                                                    ¦
      C* Once Stand Jou Posting Record found Write it to GL Batch Posting
@@ -249,6 +269,31 @@
      C                     MOVE 'N'       CGL013                                              CGL013
      C                     ENDIF                                                              CGL013
       *                                                                                       CGL013
+      *                                                                                     MD057157
+      **  Access SAR details file to see if CGL125 SAR is installed.                        MD057157
+      *                                                                                     MD057157
+     C                     CALL 'AOSARDR0'                                                  MD057157
+     C                     PARM *BLANKS   PRTCD                                             MD057157
+     C                     PARM '*VERIFY' POPTN                                             MD057157
+     C                     PARM 'CGL125'  PSARD                                             MD057157
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD057157
+      *                                                                                     MD057157
+     C           PRTCD     IFNE *BLANKS                                                     MD057157
+     C           PRTCD     ANDNE'*NRF    '                                                  MD057157
+     C           *LOCK     IN   LDA                                                         MD057157
+     C                     MOVE 'SCSARDPD'DBFILE                                            MD057157
+     C                     MOVEL'003'     DBASE                                             MD057157
+     C                     MOVEL'CGL125'  DBKEY                                             MD057157
+     C                     OUT  LDA                                                         MD057157
+     C                     EXSR *PSSR                                                       MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
+     C           PRTCD     IFEQ *BLANK                                                      MD057157
+     C                     MOVE 'Y'       CGL125  1                                         MD057157
+     C                     ELSE                                                             MD057157
+     C                     MOVE 'N'       CGL125                                            MD057157
+     C                     ENDIF                                                            MD057157
+      *                                                                                     MD057157
      C           KJESX     KLIST                                                              CGL013
      C                     KFLD           P@IFBN                                              CGL013
      C                     KFLD           BTBINB                                              CGL013

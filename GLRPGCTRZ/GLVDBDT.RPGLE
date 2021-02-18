@@ -126,7 +126,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-      **AMMDRIB           S              2S 0                                                 CSD103
+     D*AMMDRIB**       S              2S 0                                                    CSD103
      DAMDRIB           S              2                                                       CSD103
      DRIDICT           S              2S 0
      DRIDCST           S              5S 0

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
@@ -424,6 +425,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
@@ -1304,7 +1306,8 @@
      F***LOUPDL1   IP  AF 1829    10AIDISK    KEYLOC(2)                                CRE073 CLE134
      F***LOUPDL1   IP  AF 1905    10AIDISK    KEYLOC(2)                                CLE134 CLE141
      F***LOUPDL1   IP  AF 2025    10AIDISK    KEYLOC(2)                                CLE141 CER050
-     FLOUPDL1   IP  AF 2039    10AIDISK    KEYLOC(2)                                          CER050
+     F***LOUPDL1   IP  AF 2039    10AIDISK    KEYLOC(2)                                CER050 CLE172
+     FLOUPDL1   IP  AF 2110    10AIDISK    KEYLOC(2)                                          CLE172
      FLELOMKL1  IF   E           K DISK                                                       CLE134
      F                                     IGNORE(LOAMSDHF)                                   CLE134
      F                                     RENAME(LOAMSDKF:LOMNEWF)                           CLE134
@@ -1411,7 +1414,8 @@
      F***NCLONCL   O    F 1829        DISK                                             CRE073 CLE134
      F***NCLONCL   O    F 1905        DISK                                             CLE134 CLE141
      F***NCLONCL   O    F 2025        DISK                                             CLE141 CER050
-     FNCLONCL   O    F 2039        DISK                                                       CER050
+     F***NCLONCL   O    F 2039        DISK                                             CER050 CLE172
+     FNCLONCL   O    F 2110        DISK                                                       CLE172
      F***NCLONCK O   F     469            DISK                     S01518 CLE004
      F***NCLONCK*O   F    1103            DISK                     CLE004 123335
      F***NCLONCK*O   F    1111            DISK                     123335 CEU004
@@ -1453,7 +1457,8 @@
      F***MCLONCL   O    F 1805        DISK                                             CRE073 CLE134
      F***MCLONCL   O    F 1881        DISK                                             CLE134 CLE141
      F***MCLONCL   O    F 2001        DISK                                             CLE141 CER050
-     FMCLONCL   O    F 2015        DISK                                                       CER050
+     F***MCLONCL   O    F 2015        DISK                                             CER050 CLE172
+     FMCLONCL   O    F 2086        DISK                                                       CLE172
 0019 F***MCLONCK*O***F     400            DISK                      S10227S01518
 0019 F***MCLONCK O   F     469            DISK                     S01518 CLE004
      F***MCLONCK*O   F    1103            DISK                     CLE004 123335
@@ -3037,6 +3042,29 @@ L118 I                             P   72   77 7RTSPL
      I                               1996 2025  LOCPI                                         CLE141
      I                               2026 2026  APRC                                          CER050
      I                               2027 2039 0PREM                                          CER050
+      *                                                                                       CLE172
+     I                               2040 2040  BLRT                                          CLE172
+     I                               2041 2050  RFRR                                          CLE172
+     I                               2051 2054  CALM                                          CLE172
+     I                             P 2055 2060 7BADJ                                          CLE172
+     I                             P 2061 2066 7FLOR                                          CLE172
+     I                               2067 2068 0LBDY                                          CLE172
+     I                               2069 2070 0LODY                                          CLE172
+     I                               2071 2071  OPSH                                          CLE172
+     I                               2072 2073 0RRDP                                          CLE172
+     I                               2074 2074 0DBAV                                          CLE172
+     I                               2075 2075  RTKN                                          CLE172
+      *                                                                                       CLE172
+     I                               2076 2076  NBLRT                                         CLE172
+     I                               2077 2086  NRFRR                                         CLE172
+     I                               2087 2090  NCALM                                         CLE172
+     I                             P 2091 2096 7NBADJ                                         CLE172
+     I                             P 2097 2102 7NFLOR                                         CLE172
+     I                               2103 2104 0NLBDY                                         CLE172
+     I                               2105 2106 0NLODY                                         CLE172
+     I                               2107 2107  NOPSH                                         CLE172
+     I                               2108 2109 0NRRDP                                         CLE172
+     I                               2110 2110 0NDBAV                                         CLE172
 0194 I**
 0195 I**   /FIELDS TO DEFINE WHOLE RECORD
 0196 I**
@@ -4340,6 +4368,27 @@ L118 I                             P   72   77 7RTSPL
      I              SLST                        SLSTX                                      AR1083279
      I              APRC                        XAPRC                                         CER050
      I              PREM                        XPREM                                         CER050
+     I              BLRT                        XBLRT                                         CLE172
+     I              RFRR                        XRFRR                                         CLE172
+     I              CALM                        XCALM                                         CLE172
+     I              BADJ                        XBADJ                                         CLE172
+     I              FLOR                        XFLOR                                         CLE172
+     I              LBDY                        XLBDY                                         CLE172
+     I              LODY                        XLODY                                         CLE172
+     I              OPSH                        XOPSH                                         CLE172
+     I              RRDP                        XRRDP                                         CLE172
+     I              DBAV                        XDBAV                                         CLE172
+     I              RTKN                        XRTKN                                         CLE172
+     I              NBLRT                       XNBLRT                                        CLE172
+     I              NRFRR                       XNRFRR                                        CLE172
+     I              NCALM                       XNCALM                                        CLE172
+     I              NBADJ                       XNBADJ                                        CLE172
+     I              NFLOR                       XNFLOR                                        CLE172
+     I              NLBDY                       XNLBDY                                        CLE172
+     I              NLODY                       XNLODY                                        CLE172
+     I              NOPSH                       XNOPSH                                        CLE172
+     I              NRRDP                       XNRRDP                                        CLE172
+     I              NDBAV                       XNDBAV                                        CLE172
       *                                                                                       185526
       **  Redefine some of the unneeded CLOANCK fields for safety                             185526
      ICLOANCKF
@@ -5583,6 +5632,29 @@ L118 I                             P   72   77 7RTSPL
      C                   GOTO      ENDDBE                                                     CLE154
      C                   ENDIF                                                                CLE154
      C                   ENDIF                                                                CLE154
+      *                                                                                       CLE172
+      ** Access SAR details to check if CLE172 is installed                                   CLE172
+      *                                                                                       CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   CALL      'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE172
+     C                   PARM      'CLE172'      @SARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C     @RTCD         IFEQ      *BLANK                                                     CLE172
+     C                   MOVE      'Y'           CLE172                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C     @RTCD         IFNE      '*NRF   '                                                  CLE172
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE172
+     C                   MOVEL     'CLE172 '     DBKEY                                        CLE172
+     C                   Z-ADD     42            DBASE                                        CLE172
+     C                   MOVE      *ON           *INU7                                        CLE172
+     C                   MOVE      *ON           *INU8                                        CLE172
+     C                   MOVE      *ON           *INLR                                        CLE172
+     C                   GOTO      ENDDBE                                                     CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
       *
      C**********         MOVE      'N'           CFC006            1              AR1097176 MD020563
      C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
@@ -9974,6 +10046,36 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEL     NDFD          RDFD
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       CLE172
+      ** Override values of Libor Deregulation fields w/ Rollover updates                     CLE172
+      *                                                                                       CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+     C     NBLRT         ANDNE     *BLANKS                                                    CLE172
+     C                   MOVEL     NBLRT         BLRT                                         CLE172
+     C                   MOVEL     NRFRR         RFRR                                         CLE172
+     C                   MOVEL     NCALM         CALM                                         CLE172
+     C                   Z-ADD     NBADJ         BADJ                                         CLE172
+     C                   Z-ADD     NFLOR         FLOR                                         CLE172
+     C                   Z-ADD     NLBDY         LBDY                                         CLE172
+     C                   Z-ADD     NLODY         LODY                                         CLE172
+     C                   MOVEL     NOPSH         OPSH                                         CLE172
+     C                   Z-ADD     NRRDP         RRDP                                         CLE172
+     C                   Z-ADD     NDBAV         DBAV                                         CLE172
+      *                                                                                       CLE172
+      ** Reset the Libor Rollover fields                                                      CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     *BLANKS       NBLRT                                        CLE172
+     C                   MOVEL     *BLANKS       NRFRR                                        CLE172
+     C                   MOVEL     *BLANKS       NCALM                                        CLE172
+     C                   Z-ADD     0             NBADJ                                        CLE172
+     C                   Z-ADD     0             NFLOR                                        CLE172
+     C                   Z-ADD     0             NLBDY                                        CLE172
+     C                   Z-ADD     0             NLODY                                        CLE172
+     C                   MOVEL     *BLANKS       NOPSH                                        CLE172
+     C                   Z-ADD     0             NRRDP                                        CLE172
+     C                   Z-ADD     0             NDBAV                                        CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
      C                   EXSR      NEWSRT
       *                                                                   116330
       **Get*latest*'br'*'bc'*'ro'*from*history.********************116330 CLE004
@@ -21247,6 +21349,28 @@ C    C                   ENDIF                                                  
      O                       XRFN              1874                                           CLE134
      O                       APRC              2026                                           CER050
      O                       PREM              2039                                           CER050
+      *                                                                                       CLE172
+     O                       BLRT              2040                                           CLE172
+     O                       RFRR              2050                                           CLE172
+     O                       CALM              2054                                           CLE172
+     O                       BADJ              2060P                                          CLE172
+     O                       FLOR              2066P                                          CLE172
+     O                       LBDY              2068                                           CLE172
+     O                       LODY              2070                                           CLE172
+     O                       OPSH              2071                                           CLE172
+     O                       RRDP              2073                                           CLE172
+     O                       DBAV              2074                                           CLE172
+     O                       RTKN              2075                                           CLE172
+     O                       NBLRT             2076                                           CLE172
+     O                       NRFRR             2086                                           CLE172
+     O                       NCALM             2090                                           CLE172
+     O                       NBADJ             2096P                                          CLE172
+     O                       NFLOR             2102P                                          CLE172
+     O                       NLBDY             2104                                           CLE172
+     O                       NLODY             2106                                           CLE172
+     O                       NOPSH             2107                                           CLE172
+     O                       NRRDP             2109                                           CLE172
+     O                       NDBAV             2110                                           CLE172
       *                                                                   CAC001
       *                                                                   CAC001
 3450 ONCLONCK   D    62
@@ -21912,6 +22036,28 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE134
      O                       APRC              2002                                           CER050
      O                       PREM              2015                                           CER050
+      *                                                                                       CLE172
+     O                       BLRT              2016                                           CLE172
+     O                       RFRR              2026                                           CLE172
+     O                       CALM              2030                                           CLE172
+     O                       BADJ              2036P                                          CLE172
+     O                       FLOR              2042P                                          CLE172
+     O                       LBDY              2044                                           CLE172
+     O                       LODY              2046                                           CLE172
+     O                       OPSH              2047                                           CLE172
+     O                       RRDP              2059                                           CLE172
+     O                       DBAV              2050                                           CLE172
+     O                       RTKN              2051                                           CLE172
+     O                       NBLRT             2052                                           CLE172
+     O                       NRFRR             2062                                           CLE172
+     O                       NCALM             2066                                           CLE172
+     O                       NBADJ             2072P                                          CLE172
+     O                       NFLOR             2078P                                          CLE172
+     O                       NLBDY             2080                                           CLE172
+     O                       NLODY             2082                                           CLE172
+     O                       NOPSH             2083                                           CLE172
+     O                       NRRDP             2085                                           CLE172
+     O                       NDBAV             2086                                           CLE172
       *                                                                   CAC001
 3450 OMCLONCK   D    63                                                         S10227
      O*                                                                   S01270

@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073C            Date 09Oct17               *
@@ -132,6 +134,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR DEREGULATION - Lending                        *
+      *  CSD103 - LIBOR DEREGULATION - COMMON LAYER/STANDING DATA     *
       *  CER050 - Annualised Percentage Rate                          *
       *           Applied for MD-55510.
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -380,6 +384,7 @@
       *         LE0310P1                                              *                       CLE028
 0033 F*       12      WORK INDICATOR - LIVE RECORD
 0034 F* 13            CLOAN - TRAILER FOR UPDATE
+     F*       13      CLE172 is switched ON                                                   CLE172
      F*       14      RECOURSE INDICATOR BLANK
      F*       15      Analytical Accounting is installed                  CAC001
       *               or Revenue Analysis is installed                    CDE002
@@ -1861,6 +1866,18 @@
      C           PRTCD     IFEQ *BLANKS                                                       CER073
      C                     MOVE 'Y'       CER073                                              CER073
      C                     ENDIF                                                              CER073
+      *                                                                                       CLE172
+      ** Check if CLE172 is switched ON                                                       CLE172
+      *                                                                                       CLE172
+     C                     MOVE 'N'       CLE172  1                                           CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM *BLANKS   PRTCD                                               CLE172
+     C                     PARM '*VERIFY' POPTN                                               CLE172
+     C                     PARM 'CLE172'  PSARD                                               CLE172
+      *                                                                                       CLE172
+     C           PRTCD     IFEQ *BLANKS                                                       CLE172
+     C                     MOVE 'Y'       CLE172                                              CLE172
+     C                     ENDIF                                                              CLE172
       *                                                                                       CER050
       ** Determine if CER050 feature is enabled                                               CER050
       *                                                                                       CER050
@@ -2269,6 +2286,13 @@ STOP  *                                                                   CLE004
      C                     ENDIF                                                              CER050
      C                     ENDIF                                                              CER050
       *                                                                                       CER050
+     C*                                                                                       CLE172
+     C*    Output LIBOR Deregulation Field Indicator                                          CLE172
+     C*                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVE *ON       *IN13                                               CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
 0440 C                     EXSR DETAB
      C/COPY WNCPYSRC,LE0310C003
 0441 C*
@@ -2788,7 +2812,8 @@ STOP  *                                                                   CLE004
 0628 C*
 0629 C*    CHECK FIELDS TO BE BLANK ON REPORT IF ZERO ON FILE
 0630 C*
-0631 C           BRTT      COMP 0                    56
+0631 C********** BRTT      COMP 0                    56                                       CSD103
+0631 C           BRTT      COMP ' '                  56                                       CSD103
 0632 C           IFDY      COMP 0                    57
 0633 C           RLDY      COMP 0                    58
 0634 C           REPT      COMP 0                    59
@@ -2797,7 +2822,8 @@ STOP  *                                                                   CLE004
 0637 C           BLDY      COMP 0                    62
 0638 C           BCXR      COMP 0                    63
 0639 C           FCXR      COMP 0                    64
-0640 C           NBRA      COMP 0                    65
+0640 C********** NBRA      COMP 0                    65                                       CSD103
+0640 C           NBRA      COMP ' '                  65                                       CSD103
       *                                                                                       CLE036
       ** Set Indicators for Specific Base Rates                                               CLE036
       *                                                                                       CLE036
@@ -3658,7 +3684,8 @@ STOP  *                                                                   CLE004
      C                     Z-ADDFSEQ      RFSEQ                           CLE004
      C                     MOVE CCY       RLCCY                           CLE004
      C                     MOVE VDATO     RVDAT                           CLE004
-     C                     Z-ADDBRTT      RBRTT                           CLE004
+     C**********           Z-ADDBRTT      RBRTT                                        CLE004 CSD103
+     C                     MOVE BRTT      RBRTT                                               CSD103
      C                     MOVE CHIN      RCHIN                           CLE004
      C                     MOVE IPFR      RIPFR                           CLE004
      C                     MOVE ADDI      RADDI                           CLE004
@@ -4001,6 +4028,22 @@ STOP  *                                                                   CLE004
      C                     MOVE *ON       *IN17                                               CLE034
      C                     ENDIF                                                              CLE034
      C                     ENDIF                                                              CLE034
+      *                                                                                       CLE172
+      ** If CLE172 is switched on, print LIBOR Deregulation Details                           CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVELBLRT      RBLRT                                               CLE172
+     C                     MOVELRFRR      RRFRR                                               CLE172
+     C                     MOVELCALM      RCALM                                               CLE172
+     C                     MOVELBADJ      RBADJ                                               CLE172
+     C                     MOVELFLOR      RFLOR                                               CLE172
+     C                     MOVELLBDY      RLBDY                                               CLE172
+     C                     MOVELLODY      RLODY                                               CLE172
+     C                     MOVELOPSH      ROPSH                                               CLE172
+     C                     MOVELRRDP      RRRDP                                               CLE172
+     C                     MOVELDBAV      RDBAV                                               CLE172
+     C                     MOVELRTKN      RRTKN                                               CLE172
+     C                     ENDIF                                                              CLE172
       *                                                                   CEU020
      C                     ENDSR                                          CLE006
       /EJECT                                                              CLE004
@@ -4088,6 +4131,13 @@ STOP  *                                                                   CLE004
       *                                                                                       CLE034
      C                     ENDIF                                          CLE004
       *                                                                   CLE004
+      *                                                                                       CLE172
+      ** If CLE172 is installed, print LIBOR DEREGULATION Details                             CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     EXSR SRPRLB                                                        CLE172
+     C                     ENDIF                                                              CLE172
+      *                                                                                       CLE172
      C                     ENDSR                           *** WRITP2 *** CLE004
       /EJECT                                                                                  CLE034
       *****************************************************************                       CLE034
@@ -4148,6 +4198,26 @@ STOP  *                                                                   CLE004
       *                                                                                       CLE034
      C                     ENDSR                                                              CLE034
       *                                                                                       CLE034
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *                                                               *                       CLE172
+      *  SRPRLB - subroutine to print LIBOR deregulation details      *                       CLE172
+      *                                                               *                       CLE172
+      *  Called by:                                                   *                       CLE172
+      *  Calls: None                                                  *                       CLE172
+      *                                                               *                       CLE172
+      *****************************************************************                       CLE172
+      *                                                                                       CLE172
+     C           SRPRLB    BEGSR                                                              CLE172
+      *                                                                                       CLE172
+      ** Write header and print settlement allocation to next page.                           CLE172
+      *                                                                                       CLE172
+     C                     WRITEHEADP2                                                        CLE172
+     C                     WRITESUBHD1                                                        CLE172
+     C                     WRITELIBOR                                                         CLE172
+      *                                                                                       CLE172
+     C                     ENDSR                                                              CLE172
+      *                                                                                       CLE172
       /EJECT                                                              CLE004
       *****************************************************************   CLE004
       *  CSARC4 - subroutine to check if SAR CLE004 is switched *ON.  *   CLE004
@@ -5693,6 +5763,120 @@ STOP  *                                                                   CLE004
      O                         ACCARA    56 ' ,   ,   ,   , 0 .  -'                          CER073C
      O                                   68 'CONTRACT ID'                                     CER073
      O                         ACSCID   132                                                   CER073
+     OLE0310P1D  203   30 13                                                                  CLE172
+     O                                   24 'REFERENCE  LE0310P1'                             CLE172
+     O                         TITL      89                                                   CLE172
+     O                                  104 'DATE'                                            CLE172
+     O                         RUNA     112                                                   CLE172
+     O                                  122 'PAGE'                                            CLE172
+     O                         PAGE  Z  128                                                   CLE172
+     O        D  1     30 13                                                                  CLE172
+     O       OR        OF                                                                     CLE172
+     O                                   40 'LOANS AND PARTICIPATIONS'                        CLE172
+     O                                   59 'PURCHASED AND SOLD'                              CLE172
+     O                                   77 'MAINTENANCE TODAY'                               CLE172
+     O                       75          87 'BRANCH'                                          CLE172
+     O                       75BRCA      91                                                   CLE172
+     O                       75          92 '-'                                               CLE172
+     O                       75BRNM     122                                                   CLE172
+     O        D  1     30 13                                                                  CLE172
+     O       OR        OF                                                                     CLE172
+     O                                   40 '------------------------'                        CLE172
+     O                                   60 '--------------------'                            CLE172
+     O                                   77 '-----------------'                               CLE172
+     O        D  1     30 13                                                                  CLE172
+     O                                  108 'ACTION'                                          CLE172
+     O                         CHTPA    111                                                   CLE172
+     O                                  126 'BOOK CODE'                                       CLE172
+     O                         BOKC     130                                                   CLE172
+     O        D  1     30N31 13                                                               CLE172
+     O                                   13 'CUSTOMER'                                        CLE172
+     O                         CRNM1     35                                                   CLE172
+     O                                   41 'LOAN'                                            CLE172
+     O                         LNRF      48                                                   CLE172
+     O                                   59 'FAC. CUST'                                       CLE172
+     O/COPY WNCPYSRC,LE0310O002                                                               CLE172
+     O                         FCUS      66                                                   CLE172
+     O                                   76 'FACILITY'                                        CLE172
+     O                         FTYP      80                                                   CLE172
+     O                                   81 '/'                                               CLE172
+     O                         FSEQ      83                                                   CLE172
+     O                                   94 'LOAN TYPE'                                       CLE172
+     O                         LTYP      98                                                   CLE172
+     O                                  109 'SUB TYPE'                                        CLE172
+     O                         SUTP     113                                                   CLE172
+     O                         CLAS     117                                                   CLE172
+     O/COPY WNCPYSRC,LE0310O003                                                               CLE172
+     O                                  125 'A/C SEQ'                                         CLE172
+     O                         LASQ     128                                                   CLE172
+     O        D  1     30 31 13                                                               CLE172
+     O                                   17 'ORIG BORROWER'                                   CLE172
+     O                         CRNM2     38                                                   CLE172
+     O                                   51 'LOAN'                                            CLE172
+     O                         LNRF      58                                                   CLE172
+     O                                   68 'FAC. CUST'                                       CLE172
+     O                         FCUS      75                                                   CLE172
+     O                                   84 'FACILITY'                                        CLE172
+     O                         FTYP      88                                                   CLE172
+     O                                   89 '/'                                               CLE172
+     O                         FSEQ      91                                                   CLE172
+     O                                  101 'LOAN TYPE'                                       CLE172
+     O                         LTYP     104                                                   CLE172
+     O                                  113 'SUB TYPE'                                        CLE172
+     O                         SUTP     116                                                   CLE172
+     O                         CLAS     120                                                   CLE172
+     O                                  128 'A/C SEQ'                                         CLE172
+     O                         LASQ     131                                                   CLE172
+     O        D  2     30 33 13                                                               CLE172
+     O       OR  1     30N33                                                                  CLE172
+     O                N31                13 'NO.'                                             CLE172
+     O                N31      CNUM      21                                                   CLE172
+     O                 31                17 'NO.'                                             CLE172
+     O                 31      OLNO      24                                                   CLE172
+     O                                   40 'CCY'                                             CLE172
+     O                         CCY       45                                                   CLE172
+     O                                   58 'AMOUNT'                                          CLE172
+     O                 35      CPAM      78 ' ,   ,   ,   , 0 -'                              CLE172
+     O                 36      CPAM      78 '   ,   ,   , 0 . -'                              CLE172
+     O                 37      CPAM      78 '  ,   ,   , 0 .  -'                              CLE172
+     O                 38      CPAM      78 ' ,   ,   , 0 .   -'                              CLE172
+     O                 31                96 'PURCHASED FROM'                                  CLE172
+     O                 31      CRNM1    118                                                   CLE172
+     O                 32                94 'SALE OF LOAN'                                    CLE172
+     O                 32      OLNO     104                                                   CLE172
+     O        D  1     30N33 13                                                               CLE172
+     O                                   87 'RECOURSE'                                        CLE172
+     O                         RCSI     113                                                   CLE172
+     O                 14               113 'N'                                               CLE172
+     O        D  2     30    13                                                               CLE172
+     O                                   26 'BACKWARD LOOKING RATE'                           CLE172
+     O                         RBLRT     35                                                   CLE172
+     O                                   60 'DAY BASIS FOR AVERAGE'                           CLE172
+     O                         RDBAV     69                                                   CLE172
+     O                                  101 'RATE ROUNDING DECIMAL'                           CLE172
+     O                                  108 ' PLACES'                                         CLE172
+     O                         RRRDP    112                                                   CLE172
+     O        D  1     30    13                                                               CLE172
+     O                                   16 'RATES KNOWN'                                     CLE172
+     O                         RRTKN     35                                                   CLE172
+     O                                   52 'LOOKBACK DAYS'                                   CLE172
+     O                         RLBDY     69                                                   CLE172
+     O                                   94 'RISK FREE RATE'                                  CLE172
+     O                         RRFRR    112                                                   CLE172
+     O        D  1     30    13                                                               CLE172
+     O                                   23 'OBSERVATION PERIOD'                              CLE172
+     O                                   29 ' SHIFT'                                          CLE172
+     O                         ROPSH     35                                                   CLE172
+     O                                   51 'LOCKOUT DAYS'                                    CLE172
+     O                         RLODY     69                                                   CLE172
+     O                                  100 'BENCHMARK ADJUSTMENT'                            CLE172
+     O                         RBADJ    112 ' , 0 .       '                                   CLE172
+     O        D  1     30    13                                                               CLE172
+     O                                   23 'CALCULATION METHOD'                              CLE172
+     O                         RCALM     35                                                   CLE172
+     O                                   85 'FLOOR'                                           CLE172
+     O                         RFLOR    112 ' , 0 .       '                                   CLE172
+      *                                                                                       CLE172
      O        E  2 3           EHDR1                                                          CLE034
      O                                   24 'REFERENCE  LE0310P1'                             CLE034
      O                         TITL      89                                                   CLE034

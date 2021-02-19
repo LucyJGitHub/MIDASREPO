@@ -33,6 +33,7 @@
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *

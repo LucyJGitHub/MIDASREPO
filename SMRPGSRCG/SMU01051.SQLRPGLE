@@ -303,10 +303,6 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
-     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
-     C                   EXSR      *PSSR
-     C                   ENDIF
-      *
      C                   IF        PMBR <> *BLANKS
      C                   EVAL      Command = ('DLTOVR '+PMBR+'')
      C                   CALL      'QCMDEXC'

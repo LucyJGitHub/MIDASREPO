@@ -12,17 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 BUG28163           Date 05Oct10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG28163           Date 05Oct10               *
       *                 BUG27914           Date 09Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP203  *CREATE    Date 02Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG28163 - Forward movements does not appear on PABE         *
       *             (Recompile due to GPCLEARPD reinstatement)        *

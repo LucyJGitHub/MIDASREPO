@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas ZA Validate backward-looking rate fields')       *
+/*EXI *  TEXT('Midas ZA Validate Backward Looking Rate Fields')       *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data module                                 *
       *                                                               *
-      *  ZAVBLRTE - Validate backward-looking rate fields             *
+      *  ZAVBLRTE - Validate Backward Looking Rate Fields             *
       *                                                               *
       *  Function:  This module receives a parameter containing the   *
       *             Backward-Looking Rate fields and confirms whether *
@@ -21,7 +21,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103 *CREATE     Date 10Aug20               *
+      *  Last Amend No. CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -29,12 +29,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Use of indicators.                                           *
+      *  Use of indicators                                            *
       *                                                               *
       *    U7, U8     Database error                                  *
-      *    20         No Loan reference found                         *
-      *    29         No Loan reference input                         *
-      *    30         No Currency and BaseRateCode input              *
+      *    90         End of File for CLOANCL                         *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -42,26 +40,18 @@
       *                                                               *
       *  *PSSR - Error processing                                     *
       *  *INZSR - Initialise                                          *
-      *  SDBLRT - Default  Backward-Looking Rate                      *
+      *  RSTFLDS - Subroutine for resetting work fields               *
       *  SRBLRT - Validate Backward-Looking Rate                      *
-      *  SDRFRR - Default  Risk Free Rate                             *
-      *  SRRFRR - Validate Risk Free Rate                             *
-      *  SDCALM - Default  Calculation Method                         *
-      *  SRCALM - Validate Calculation Method                         *
-      *  SDBADJ - Default  Benchmark Adjustment                       *
-      *  SRBADJ - Validate Benchmark Adjustment                       *
-      *  SDFLOR - Default  Floor                                      *
-      *  SRFLOR - Validate Floor                                      *
-      *  SDLBDY - Default  Lookback Days                              *
-      *  SRLBDY - Validate Lookback Days                              *
-      *  SDLODY - Default  Lockout Days                               *
-      *  SRLODY - Validate Lockout Days                               *
-      *  SDOPSH - Default  Observation Period Shift                   *
-      *  SROPSH - Validate Observation Period Shift                   *
-      *  SDDBAV - Default  Day Basis for Average                      *
-      *  SRDBAV - Validate Day Basis for Average                      *
-      *  SDRTKN - Default  Rates Known                                *
-      *  SRRTKN - Validate Rates Known                                *
+      *  SRRFRR - Validate Risk Free Rate Field                       *
+      *  SRCALM - Validate Calculation Method Field                   *
+      *  SRBADJ - Validate Benchmark Adjustment Field                 *
+      *  SRFLOR - Validate Floor Field                                *
+      *  SRLBDY - Validate Lookback Days Field                        *
+      *  SRLODY - Validate Lockout Days Field                         *
+      *  SROPSH - Validate Observation Period Shift Field             *
+      *  SRRRDP - Validate Rate Rounding Decimal Places               *
+      *  SRDBAV - Validate Day Basis for Average Field                *
+      *  SRRTKN - Populate Rates Known Field                          *   						
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -69,8 +59,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
+      ** ARR Calculator Parameter Details File
+     FSDLIBRTD  IF   E           K DISK    INFSR(*PSSR)
+
+      ** Lending Loans File
      FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANCKF)
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -80,268 +75,848 @@
       ** +--------------------------------------+
 
      D/COPY ZACPYSRC,PSDS
-
-      *
       ** Program Status Data Structure
-      *
+
      D/COPY ZACPYSRC,STD_D_SPEC
 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-      *
+
       ** The maximum size of the appended error arrays
-      *
      D XArrayMax       C                   CONST(40)
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-      *
+
       ** Array of fields in error
-      *
      D FldNamXAr       S             10A   DIM(XArrayMax)
-      *
+
       ** Array of error message IDs
-      *
      D MsgIdXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
 	
-      *
-      ** Array for Input
-      *
-     D ArrayInp        S              1A   DIM(200)
+      ** Array for allowed processing type for loan
+     D WLPtyp          S              2A   DIM(9) CTDATA PERRCD(20)
 
-      *
-      ** DS for Access Programs: Short Data Structure
-      *
-     D DSFDY         E DS                  EXTNAME(DSFDY)
-      *
       ** DS for Access programs: Long Sata Structure
-      *
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
-      *
-      ** DS for SC Switchable Features
-      *
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
-      *
-      ** DS for Dealing details
-      *
+      ** DS for Dealing Details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
-     D                                     PREFIX(DL)
-      *
-      ** DS for Base Rate details
-      *
+
+      ** DS for Base Rate Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
-     D                                     PREFIX(B)
+
+      ** DS for Loan Details
+     D CLOANL        E DS                  EXTNAME(LECLIPL2:*INPUT)
+     D                                     PREFIX(CL)
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
-     D @RUN            S              1
+     D @RUN            S              1A
 
+      ** Program Entry Parameters
      D ApiName         S              4A
+     D TransRef        S              6A
+     D TransType       S              2A
+     D TransCCY        S              3A
+     D TransBSRC       S              2A
+     D TransICBS       S              1S 0
+     D TransCHTP       S              1A
 
-      *
       ** Index for arrays of error message ids
-      *
      D Idx             S              3P 0
-      *
+
       ** Passed index value
-      *
      D Ix              S              3P 0
 
-      *
       ** Input Screen fields
-      *
      D InpScrfld       DS           200
-      *
+
       ** Output Valid fields
-      *
      D OutValfld       DS           200
 
-      *
-      ** BSRT Backward-Looking Rate Valid fields (Output)
-      *
-     D BsrtValfld      DS
-     D  BVBLRT                 1      1A
-     D  BVRFRR                 2     11A
-     D  BVCALM                12     15A
-     D  BVBADJ                16     22P 7
-     D  BVFLOR                27     37P 7
-     D  BVLBDY                42     43S 0
-     D  BVLODY                44     45S 0
-     D  BVOPSH                46     46A
-     D  BVRRDP                47     48S 0
-     D  BVDBAV                49     49S 0
+      ** Incoming Backward-Looking Rate Screen Fields (Input)
+     D TranScnBlrt     DS
+     D  DDBLRT                        1A
+     D  DDRFRR                       10A
+     D  DDCALM                        4A
+     D  DDBADJ                       13A
+     D  DDFLOR                       13A
+     D  DDLBDY                        2A
+     D  DDLODY                        2A
+     D  DDOPSH                        1A
+     D  DDRRDP                        2A
+     D  DDDBAV                        1A
+     D  DDRTKN                        1A
 
-      *
-      ** Parameters for access objects
-      *
+      ** Backward-Looking Rate Valid fields (Output)
+     D BLRTValFlds     DS
+     D  VBLRT                         1A
+     D  VRFRR                        10A
+     D  VCALM                         4A
+     D  VBADJ                        11P 7
+     D  VFLOR                        11P 7
+     D  VLBDY                         2S 0
+     D  VLODY                         2S 0
+     D  VOPSH                         1A
+     D  VRRDP                         2S 0
+     D  VDBAV                         1S 0
+     D  VRTKN                         1A
+
+      ** Parameters for base rate code access object
      D PRTCD           S              7A
      D POPTN           S              7A
      D PKEY1           S              3A
      D PKEY2           S              2A
-	
-      *
+
       ** Parameters for calling ZA0841
-      *
      D @@ALPH          S             16A
-     D @@MTID          S              1A
-     D @@AMT           S             15P 0
-     D @@ERCD          S              1P 0
      D @@IDP           S              3P 0
      D @@IINT          S              3P 0
+     D @@MTID          S              1A
+     D @@ERCD          S              1P 0
+     D @@AMT           S             15P 0
 
+      ** Work Variables
      D WDAY            S              2S 0
-     D WNumBadj        S             11P 7
-     D WNumFlor        S             11P 7
+     D WDBAV           S              1S 0
+     D WNumBADJ        S             11P 7
+     D WNumFLOR        S             11P 7
      D WSign           S              1A
+     D KSCRFLD         S                   LIKE(SCRFLD)
+     D KINTVAL         S                   LIKE(INTVAL)
 
-      *
-      ** Work fields for base rate key list
-      *
-     D WFCYCD          S              3A
-     D WFBSRC          S              2A
-      *
-      ** Work fields for cloancl key list
-      *
-     D WFLNRF          S              6A
-
-      *
-      ** Generic screen fields
-      *
-     D  DDBLRT         S              1A
-     D  DDRFRR         S             10A
-     D  DDCALM         S              4A
-     D  DDBADJ         S             13A
-     D  DDFLOR         S             13A
-     D  DDLBDY         S              2A
-     D  DDLODY         S              2A
-     D  DDOPSH         S              1A
-     D  DDRRDP         S              2A
-     D  DDDBAV         S              1A
-     D  DDRTKN         S              1A
-
-      *
-      ** Generic valid fields
-      *
-     D  VBLRT          S              1A
-     D  VRFRR          S             10A
-     D  VCALM          S              4A
-     D  VBADJ          S             11P 0
-     D  VFLOR          S             11P 0
-     D  VLBDY          S              2S 0
-     D  VLODY          S              2S 0
-     D  VOPSH          S              1A
-     D  VRRDP          S              2S 0
-     D  VDBAV          S              1S 0
-     D  VRTKN          S              1A
-
-      *
       ** OK fields
-      *
-     D  DDBLRTOK       S              1A
-     D  DDRFRROK       S              1A
-     D  DDCALMOK       S              1A
-     D  DDBADJOK       S              1A
-     D  DDFLOROK       S              1A
-     D  DDLBDYOK       S              1A
-     D  DDLODYOK       S              1A
-     D  DDOPSHOK       S              1A
-     D  DDRRDPOK       S              1A
-     D  DDDBAVOK       S              1A
-     D  DDRTKNOK       S              1A
+     D DDBLRTOK        S              1A
+     D DDRFRROK        S              1A
+     D DDCALMOK        S              1A
+     D DDBADJOK        S              1A
+     D DDFLOROK        S              1A
+     D DDLBDYOK        S              1A
+     D DDLODYOK        S              1A
+     D DDOPSHOK        S              1A
+     D DDRRDPOK        S              1A
+     D DDDBAVOK        S              1A
+     D DDRTKNOK        S              1A
 
       *****************************************************************
       /EJECT
       *****************************************************************
       *
-      ** +--- Start of Main processing -----------------------------------+
-      ** ¦                                                                ¦
-      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-      ** ¦ executed at program activation.                                ¦
-      ** ¦                                                                ¦
-      ** +----------------------------------------------------------------+
+      ** +--- Start of Main processing -------------------------------+
+      ** ¦                                                            ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR  ¦
+      ** ¦ is executed at program activation.                         ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
 
-      *********************************************************************
-      * MAIN PROCEDURE                                                    *
-      *********************************************************************
-      *
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+
+      ** Reset work fields
      C                   EXSR      RSTFLDS
-      *
-     C     ApiName       IFEQ      'BSRT'
-      *
-      ** Access Base Rate Details
+
+      ** Move inputs to Backward-Looking Rate data structure
+     C                   MOVEL     InpScrfld     TranScnBlrt
+
+      ** If called from a transaction input (e.g. CLIP, LDNI) and
+      ** currency/base rate code are not blanks, access the
+      ** base rate code table to get the default values
+     C                   IF        TransCCY  <> *BLANKS and
+     C                             TransBSRC <> *BLANKS
+
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      WFCYCD        PKEY1
-     C                   PARM      WFBSRC        PKEY2
+     C                   PARM      TransCCY      PKEY1
+     C                   PARM      TransBSRC     PKEY2
      C     SDBSRT        PARM      SDBSRT        DSSDY
-     C     PRTCD         IFEQ      *BLANKS
-     C                   MOVE      BBABSRC       WFBSRC
+
      C                   ENDIF
-      *
-     C                   MOVEA     InpScrfld     ArrayInp
-     C                   MOVEA     ArrayInp(1)   DDBLRT
-     C                   MOVEA     ArrayInp(2)   DDRFRR
-     C                   MOVEA     ArrayInp(12)  DDCALM
-     C                   MOVEA     ArrayInp(16)  DDBADJ
-     C                   MOVEA     ArrayInp(29)  DDFLOR
-     C                   MOVEA     ArrayInp(42)  DDLBDY
-     C                   MOVEA     ArrayInp(44)  DDLODY
-     C                   MOVEA     ArrayInp(46)  DDOPSH
-     C                   MOVEA     ArrayInp(47)  DDRRDP
-     C                   MOVEA     ArrayInp(49)  DDDBAV
-      *
-     C                   EXSR      SDBLRT
+
+      ** Validate Backward-Looking Rate Indicator
      C                   EXSR      SRBLRT
-     C                   EXSR      SDRFRR
+
+     C                   IF        DDBLRTOK <> 'N'
+
+      ** Validate Risk Free Rate
      C                   EXSR      SRRFRR
-     C                   EXSR      SDCALM
+
+      ** Validate Calculation Method
      C                   EXSR      SRCALM
-     C                   EXSR      SDBADJ
+
+      ** Validate Benchmark Adjustment
      C                   EXSR      SRBADJ
-     C                   EXSR      SDFLOR
+
+      ** Validate Flor
      C                   EXSR      SRFLOR
-     C                   EXSR      SDLBDY
+
+      ** Validate Lookback Days
      C                   EXSR      SRLBDY
-     C                   EXSR      SDLODY
+
+      ** Validate Lockout Days
      C                   EXSR      SRLODY
-     C                   EXSR      SDOPSH
+
+      ** Validate Observation Period Shift
      C                   EXSR      SROPSH
-     C                   EXSR      SDRRDP
+
+      ** Validate Rate Rounding Decimal Places
      C                   EXSR      SRRRDP
-     C                   EXSR      SDDBAV
+
+      ** Validate Day Basis for Average
      C                   EXSR      SRDBAV
-      *
-     C                   MOVE      VBLRT         BVBLRT
-     C                   MOVE      VRFRR         BVRFRR
-     C                   MOVE      VCALM         BVCALM
-     C                   Z-ADD     VBADJ         BVBADJ
-     C                   Z-ADD     VFLOR         BVFLOR
-     C                   Z-ADD     VLBDY         BVLBDY
-     C                   Z-ADD     VLODY         BVLODY
-     C                   MOVE      VOPSH         BVOPSH
-     C                   Z-ADD     VRRDP         BVRRDP
-     C                   Z-ADD     VDBAV         BVDBAV
-     C                   MOVEL     BsrtValfld    OutValfld
-      *
+
+      ** Populate Rates Known
+     C                   EXSR      SRRTKN
+
      C                   ENDIF
-      *
+
+     C                   MOVEL     BLRTValFlds   OutValfld
+
       ** If a new error was found, set the return code appropriately
-      *
      C                   IF        Idx > Ix
      C                   EVAL      RetCodeOut = 'Error'
      C                   ENDIF
 
      C                   RETURN
 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  RSTFLDS - Subroutine for resetting work fields               *
+      *****************************************************************
+     C     RSTFLDS       BEGSR
+
+     C                   CLEAR                   TranScnBlrt
+     C                   CLEAR                   BLRTValFlds
+     C                   CLEAR                   OutValfld
+
+      ** Store current number of error index
+     C                   Z-ADD     Idx           Ix
+
+      ** Reset OK Fields
+     C                   EVAL      DDBLRTOK = *BLANK
+     C                   EVAL      DDRFRROK = *BLANK
+     C                   EVAL      DDCALMOK = *BLANK
+     C                   EVAL      DDBADJOK = *BLANK
+     C                   EVAL      DDFLOROK = *BLANK
+     C                   EVAL      DDLBDYOK = *BLANK
+     C                   EVAL      DDLODYOK = *BLANK
+     C                   EVAL      DDOPSHOK = *BLANK
+     C                   EVAL      DDRRDPOK = *BLANK
+     C                   EVAL      DDDBAVOK = *BLANK
+     C                   EVAL      DDRTKNOK = *BLANK
+
+      ** Reset Indicators
+     C                   SETOFF                                       90
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRBLRT - Validate Backward Looking Rate Field                *
+      *****************************************************************
+     C     SRBLRT        BEGSR
+
+      ** Default value depending on where this program is called
+     C                   IF        DDBLRT = *BLANKS
+     C                   SELECT
+
+      ** Default to 'N' if blank
+     C                   WHEN      ApiName = 'BSRT'
+     C                   EVAL      DDBLRT = 'N'
+
+      ** Default value from base rate code
+     C                   WHEN      ApiName = 'CLIP'
+     C                   EVAL      DDBLRT = BABLRT
+
+     C                   ENDSL
+     C                   ENDIF
+
+      ** Value must be 'Y' or 'N'
+     C                   IF        DDBLRT <> 'Y' and
+     C                             DDBLRT <> 'N'
+     C                   EVAL      DDBLRTOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'
+     C                   EVAL      MsgIdXAr(Idx) = '5049400'
+     C                   ELSE
+
+      ** Issue error if the loan type used is not allowed for
+      ** backward looking rate
+     C                   IF        ApiName = 'CLIP'
+
+     C                   IF        %LOOKUP(TransType:WLPtyp) = 0 and
+     C                             DDBLRT = 'Y'
+     C                   EVAL      DDBLRTOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'
+     C                   EVAL      MsgIdXAr(Idx) = '5049403'
+     C                   ENDIF
+     C
+     C                   ENDIF
+
+      ** Issue error if the base rate was used in a loan
+      ** and the backward looking rate field is changed
+     C                   IF        ApiName = 'BSRT'
+
+     C     *LOVAL        SETLL     LECLIPL2
+     C                   DOW       *IN90 = *OFF
+     C                   READ      LECLIPL2      CLOANL                   90
+     C                   IF        TransCCY = CLCCY and
+     C                             TransBSRC = CLNBRA and
+     C                             DDBLRT <> BABLRT
+     C                   EVAL      DDBLRTOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'
+     C                   EVAL      MsgIdXAr(Idx) = '504945n'
+     C                   LEAVE
+     C                   ENDIF
+     C                   ENDDO
+
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   IF        DDBLRTOK <> 'N'
+     C                   MOVE      DDBLRT        VBLRT
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRFRR - Validate Risk Free Rate Field                       *
+      *****************************************************************
+     C     SRRFRR        BEGSR
+
+     C                   IF        DDRFRR = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      DDRFRR = BARFRR
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must exist on ARR Calculator Parameter Details File
+     C                   IF        DDBLRT = 'Y'
+
+     C                   EVAL      KSCRFLD = 'RFR'
+     C                   EVAL      KINTVAL = DDRFRR
+     C     KLIBR         CHAIN     SDLIBRTD
+     C                   IF        NOT %FOUND(SDLIBRTD)
+     C                   EVAL      DDRFRROK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDRFRR'
+     C                   EVAL      MsgIdXAr(Idx) = '5049404'
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDRFRR <> *BLANKS
+     C                   EVAL      DDRFRROK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDRFRR'
+     C                   EVAL      MsgIdXAr(Idx) = '5049405'
+     C                   ENDIF
+
+     C                   IF        DDRFRROK <> 'N'
+     C                   MOVE      DDRFRR        VRFRR
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRCALM - Validate Calculation Method Field                   *
+      *****************************************************************
+     C     SRCALM        BEGSR
+
+     C                   IF        DDCALM = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      DDCALM = BACALM
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must exist on ARR Calculator Parameter Details File
+     C                   IF        DDBLRT = 'Y'
+
+     C                   EVAL      KSCRFLD = 'METHOD'
+     C                   EVAL      KINTVAL = DDCALM
+     C     KLIBR         CHAIN     SDLIBRTD
+     C                   IF        NOT %FOUND(SDLIBRTD)
+     C                   EVAL      DDCALMOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDCALM'
+     C                   EVAL      MsgIdXAr(Idx) = '5049406'
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDCALM <> *BLANKS
+     C                   EVAL      DDCALMOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDCALM'
+     C                   EVAL      MsgIdXAr(Idx) = '5049407'
+     C                   ENDIF
+
+     C                   IF        DDCALMOK <> 'N'
+     C                   MOVE      DDCALM        VCALM
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRBADJ - Validate Benchmark Adjustment Field                 *
+      *****************************************************************
+     C     SRBADJ        BEGSR
+
+     C                   EVAL      WNumBADJ = 0
+     C                   IF        DDBADJ = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      WNumBADJ = BABADJ
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must be numeric not exceeding 4 int and 7 decimal places
+     C                   IF        DDBLRT = 'Y' and
+     C                             DDBADJ <> *BLANKS
+
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDBADJ        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH
+     C                   PARM      7             @@IDP
+     C                   PARM      4             @@IINT
+     C                   PARM      'N'           @@MTID
+     C                   PARM      *ZERO         @@ERCD
+     C                   PARM      *ZERO         @@AMT
+     C                   PARM                    BNDCSP
+
+     C                   IF        @@ERCD <> *ZERO
+     C                   EVAL      DDBADJOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
+     C                   EVAL      MsgIdXAr(Idx) = '5049426'
+     C                   ELSE
+
+     C                   EVAL      WSign = *BLANK
+     C                   IF        @@AMT < 0
+     C                   Z-SUB     @@AMT         @@AMT
+     C                   EVAL      WSign = '-'
+     C                   ENDIF
+     C                   MOVE      @@AMT         @@ALPH
+     C                   MOVE      @@ALPH        WNumBADJ
+     C                   IF        WSign = '-'
+     C                   Z-SUB     WNumBADJ      WNumBADJ
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDBADJ <> *BLANKS
+     C                   EVAL      DDBADJOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
+     C                   EVAL      MsgIdXAr(Idx) = '5049401'
+     C                   ENDIF
+
+     C                   IF        DDBADJOK <> 'N'
+     C                   Z-ADD     WNumBADJ      VBADJ
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRFLOR - Validate Floor Field                                *
+      *****************************************************************
+     C     SRFLOR        BEGSR
+
+     C                   EVAL      WNumFLOR = 0
+     C                   IF        DDFLOR = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      WNumFLOR = BAFLOR
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must be numeric not exceeding 4 int and 7 decimal places
+     C                   IF        DDBLRT = 'Y' and
+     C                             DDFLOR <> *BLANKS
+
+     C                   MOVE      *BLANKS       @@ALPH
+     C                   MOVE      DDFLOR        @@ALPH
+     C                   CALLB     'ZA0841'
+     C                   PARM      *BLANK        RetCodeOut
+     C                   PARM                    @@ALPH
+     C                   PARM      7             @@IDP
+     C                   PARM      4             @@IINT
+     C                   PARM      'N'           @@MTID
+     C                   PARM      *ZERO         @@ERCD
+     C                   PARM      *ZERO         @@AMT
+     C                   PARM                    BNDCSP
+
+     C                   IF        @@ERCD <> *ZERO
+     C                   EVAL      DDFLOROK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
+     C                   EVAL      MsgIdXAr(Idx) = '5049408'
+     C                   ELSE
+
+     C                   EVAL      WSign = *BLANK
+     C                   IF        @@AMT < 0
+     C                   Z-SUB     @@AMT         @@AMT
+     C                   EVAL      WSign = '-'
+     C                   ENDIF
+     C                   MOVE      @@AMT         @@ALPH
+     C                   MOVE      @@ALPH        WNumFlor
+     C                   IF        WSign = '-'
+     C                   Z-SUB     WNumBadj      WNumFlor
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDFLOR <> *BLANKS
+     C                   EVAL      DDFLOROK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
+     C                   EVAL      MsgIdXAr(Idx) = '5049409'
+     C                   ENDIF
+
+     C                   IF        DDFLOROK <> 'N'
+     C                   Z-ADD     WNumFLOR      VFLOR
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRLBDY - Validate Lookback Days Field                        *
+      *****************************************************************
+     C     SRLBDY        BEGSR
+
+     C                   EVAL      WDAY = 0
+     C                   IF        DDLBDY = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      WDAY = BALBDY
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must be numeric from 00 to 99
+     C                   IF        DDBLRT = 'Y' and
+     C                             DDLBDY <> *BLANKS
+
+     C                   IF        DDLBDY < '00' or
+     C                             DDLBDY > '99'
+     C                   EVAL      DDLBDYOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
+     C                   EVAL      MsgIdXAr(Idx) = '5049423'
+     C                   ELSE
+     C                   MOVEL     DDLBDY        WDAY
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDLBDY <> *BLANKS and
+     C                             DDLBDY <> '00'
+     C                   EVAL      DDLBDYOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
+     C                   EVAL      MsgIdXAr(Idx) = '5049420'
+     C                   ENDIF
+
+     C                   IF        DDLBDYOK <> 'N'
+     C                   MOVEL     WDAY          DDLBDY
+     C                   Z-ADD     WDAY          VLBDY
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRLODY - Validate Lockout Days Field                         *
+      *****************************************************************
+     C     SRLODY        BEGSR
+
+     C                   EVAL      WDAY = 0
+     C                   IF        DDLODY = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      WDAY = BALODY
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must be numeric from 00 to 99
+     C                   IF        DDBLRT = 'Y' and
+     C                             DDLODY <> *BLANKS
+
+     C                   IF        DDLODY < '00' or
+     C                             DDLODY > '99'
+     C                   EVAL      DDLODYOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
+     C                   EVAL      MsgIdXAr(Idx) = '5049424'
+     C                   ELSE
+     C                   MOVEL     DDLODY        WDAY
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDLODY <> *BLANKS and
+     C                             DDLODY <> '00'
+     C                   EVAL      DDLBDYOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
+     C                   EVAL      MsgIdXAr(Idx) = '5049421'
+     C                   ENDIF
+
+     C                   IF        DDLODYOK <> 'N'
+     C                   MOVEL     WDAY          DDLODY
+     C                   Z-ADD     WDAY          VLODY
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SROPSH - Validate Observation Period Shift Field             *
+      *****************************************************************
+     C     SROPSH        BEGSR
+
+      ** Default value depending on where this program is called
+     C                   IF        DDOPSH = *BLANKS
+     C                   SELECT
+
+      ** Default to 'N' if blank
+     C                   WHEN      ApiName = 'BSRT'
+     C                   EVAL      DDOPSH = 'N'
+
+      ** Default value from base rate code
+     C                   WHEN      ApiName = 'CLIP'
+     C                   EVAL      DDOPSH = BAOPSH
+
+     C                   ENDSL
+     C                   ENDIF
+
+     C                   IF        DDBLRT = 'Y'
+
+      ** Value must be 'Y' or 'N'
+     C                   IF        DDOPSH <> 'Y' and
+     C                             DDOPSH <> 'N'
+     C                   EVAL      DDOPSHOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
+     C                   EVAL      MsgIdXAr(Idx) = '5049410'
+     C                   ELSE
+
+      ** Cannot be 'Y' if Calculation Method is Simple ARR
+     C                   IF        VCALM = 'SARR' and
+     C                             DDOPSH = 'Y'
+     C                   EVAL      DDOPSHOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
+     C                   EVAL      MsgIdXAr(Idx) = '5049412'
+     C                   ENDIF
+
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDOPSH <> *BLANKS
+     C                   EVAL      DDOPSHOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
+     C                   EVAL      MsgIdXAr(Idx) = '5049417'
+     C                   ENDIF
+
+     C                   IF        DDOPSHOK <> 'N'
+     C                   MOVE      DDOPSH        VOPSH
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRRDP - Validate Rate Rounding Decimal Places               *
+      *****************************************************************
+     C     SRRRDP        BEGSR
+
+     C                   EVAL      WDAY = 0
+
+      ** Default value depending on where this program is called
+     C                   IF        DDRRDP = *BLANKS
+     C                   SELECT
+
+      ** Default to '05' if blank
+     C                   WHEN      ApiName = 'BSRT'
+     C                   EVAL      WDAY = 05
+
+      ** Default value from base rate code
+     C                   WHEN      ApiName = 'CLIP'
+     C                   EVAL      WDAY = BARRDP
+
+     C                   ENDSL
+     C                   ENDIF
+
+      ** Value must be numeric from 02 to 12
+     C                   IF        DDBLRT = 'Y' and
+     C                             DDRRDP <> *BLANKS
+
+     C                   IF        DDRRDP < '02' or
+     C                             DDRRDP > '12'
+     C                   EVAL      DDRRDPOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
+     C                   EVAL      MsgIdXAr(Idx) = '5049422'
+     C                   ELSE
+     C                   MOVEL     DDRRDP        WDAY
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDRRDP <> *BLANKS and
+     C                             DDRRDP <> '00'
+     C                   EVAL      DDRRDPOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
+     C                   EVAL      MsgIdXAr(Idx) = '5049425'
+     C                   ENDIF
+
+     C                   IF        DDRRDPOK <> 'N'
+     C                   MOVEL     WDAY          DDRRDP
+     C                   Z-ADD     WDAY          VRRDP
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRDBAV - Validate Day Basis for Average Field                *
+      *****************************************************************
+     C     SRDBAV        BEGSR
+
+     C                   EVAL      WDBAV = 0
+     C                   IF        DDDBAV = *BLANKS
+
+      ** Default value from base rate code
+     C                   IF        ApiName = 'CLIP'
+     C                   EVAL      WDBAV = BADBAV
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must exist on ARR Calculator Parameter Details File
+     C                   IF        DDBLRT = 'Y'
+
+     C                   EVAL      KSCRFLD = 'DAYCOUNT'
+     C                   EVAL      KINTVAL = DDDBAV
+     C     KLIBR         CHAIN     SDLIBRTD
+     C                   IF        NOT %FOUND(SDLIBRTD)
+     C                   EVAL      DDDBAVOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'
+     C                   EVAL      MsgIdXAr(Idx) = '5049453'
+     C                   ELSE
+     C                   MOVEL     DDDBAV        WDBAV
+     C                   ENDIF
+
+      ** If value from the base rate code is zero,
+      ** default from the Interest Calculation Basis (ICBS)
+      ** Map ICBS 3 & 5 to Act/360, 4 to Act/365
+     C                   IF        DDDBAVOK <> 'N'
+     C                   IF        ApiName = 'CLIP' and
+     C                             WDBAV = 0
+
+     C                   SELECT
+     C                   WHEN      TransICBS = 3 or
+     C                             TransICBS = 5
+     C                   Z-ADD     2             WDBAV
+     C                   WHEN      TransICBS = 4
+     C                   Z-ADD     3             WDBAV
+     C                   OTHER
+     C                   Z-ADD     TransICBS     WDBAV
+     C                   ENDSL
+
+     C                   ENDIF
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
+     C                   IF        DDBLRT = 'N' and
+     C                             DDDBAV <> *BLANKS
+     C                   EVAL      DDDBAVOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'
+     C                   EVAL      MsgIdXAr(Idx) = '5049455'
+     C                   ENDIF
+
+     C                   IF        DDDBAVOK <> 'N'
+     C                   MOVEL     WDBAV         DDDBAV
+     C                   Z-ADD     WDBAV         VDBAV
+     C                   ENDIF
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRTKN - Populate Rates Known Field                          *
+      *****************************************************************
+     C     SRRTKN        BEGSR
+
+      ** Default value to 'N' when transaction is created
+     C                   IF        ApiName = 'CLIP' and
+     C                             TransCHTP = 'I'
+     C                   EVAL      DDRTKN = 'N'
+     C                   EVAL      VRTKN = 'N'
+     C                   ENDIF
+
+     C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -354,538 +929,69 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-      *
+
      C     *ENTRY        PLIST
-     C                   PARM                    ApiName                        In Param
-     C                   PARM                    WFCYCD                         In param
-     C                   PARM                    WFBSRC                         In param
-     C                   PARM                    WFLNRF                         In param
-     C                   PARM                    InpScrfld                      In/Out param
-     C                   PARM                    Idx                            In/Out param
-     C                   PARM                    FldNamXAr                      In/Out param
-     C                   PARM                    MsgIdXAr                       In/Out param
-     C                   PARM                    OutValfld                      Out param
-     C                   PARM                    RetCodeOut                     Out param
-      *
-      ** Access Dealing Details
-      *
+     C                   PARM                    ApiName
+     C                   PARM                    TransRef
+     C                   PARM                    TransType
+     C                   PARM                    TransCCY
+     C                   PARM                    TransBSRC
+     C                   PARM                    TransICBS
+     C                   PARM                    TransCHTP
+     C                   PARM                    InpScrfld
+     C                   PARM                    Idx
+     C                   PARM                    FldNamXAr
+     C                   PARM                    MsgIdXAr
+     C                   PARM                    OutValfld
+     C                   PARM                    RetCodeOut
+
+     C     KLIBR         KLIST
+     C                   KFLD                    KSCRFLD
+     C                   KFLD                    KINTVAL
+
+      ** Access Dealing details to get the Decimal Separator setting
      C                   CALL      'AODEALR1'
-     C                   PARM      *BLANKS       PRTCD
-     C                   PARM      '*FIRST '     POPTN
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST '     @OPTN
      C     SDDEAL        PARM      SDDEAL        DSSDY
-      *
-     C     PRTCD         IFNE      *BLANK
-     C                   EVAL      DLBNDCSP =  '.'
+
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      BNDCSP =  '.'
      C                   ENDIF
-      *
+
      C                   ENDSR
-      *
       *****************************************************************
       /EJECT
       *****************************************************************
-      *  RSTFLDS  - Subroutine for resetting work fields              *
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-     C     RSTFLDS       BEGSR
-      *
-     C                   MOVE      *BLANKS       ArrayInp
-     C                   Z-ADD     Idx           Ix                             Store index
-     C                   SETOFF                                       30
-      *
-     C     WFCYCD        IFEQ      *BLANKS
-     C     WFBSRC        OREQ      *BLANKS
-     C                   SETON                                        30
-     C                   ENDIF
-      *
-     C     ApiName       IFEQ      'BSRT'
-     C                   EVAL      DLBNDCSP =  '.'
-     C                   ENDIF
-      *
-      ** Reset OK Fields
-      *
-     C                   EVAL      DDBLRTOK = *BLANK
-     C                   EVAL      DDRFRROK = *BLANK
-     C                   EVAL      DDCALMOK = *BLANK
-     C                   EVAL      DDBADJOK = *BLANK
-     C                   EVAL      DDFLOROK = *BLANK
-     C                   EVAL      DDLBDYOK = *BLANK
-     C                   EVAL      DDLODYOK = *BLANK
-     C                   EVAL      DDOPSHOK = *BLANK
-     C                   EVAL      DDRRDPOK = *BLANK
-     C                   EVAL      DDDBAVOK = *BLANK
-     C                   EVAL      DDRTKNOK = *BLANK
-      *
-     C                   ENDSR
-      *
-
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDBLRT - Default backward-looking rate                       *
-      *****************************************************************
-     C     SDBLRT        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRBLRT - Validate backward-looking rate                      *
-      *****************************************************************
-     C     SRBLRT        BEGSR
-      *
-     C     DDBLRTOK      IFNE      'N'
-     C                   MOVE      DDBLRT        VBLRT
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDRFRR - Default Risk Free Rate                              *
-      *****************************************************************
-     C     SDRFRR        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRRFRR - Validate Risk Free Rate                             *
-      *****************************************************************
-     C     SRRFRR        BEGSR
-      *
-     C     DDRFRROK      IFNE      'N'
-     C                   MOVE      DDRFRR        VRFRR
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDCALM - Default Calculation Method                          *
-      *****************************************************************
-     C     SDCALM        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRCALM - Validate Calculation Method                         *
-      *****************************************************************
-     C     SRCALM        BEGSR
-      *
-     C     DDCALMOK      IFNE      'N'
-     C                   MOVE      DDCALM        VCALM
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDBADJ - Default benchmark adjustment                        *
-      *****************************************************************
-     C     SDBADJ        BEGSR
-      *
-     C                   Z-ADD     0             WNumBadj                       Reset WNumBadj
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRBADJ - Validate benchmark adjustment                       *
-      *****************************************************************
-     C     SRBADJ        BEGSR
-      *
-     C     DDBADJ        IFNE      *BLANKS                                      Not blanks
-     C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDBADJ        @@ALPH
-     C                   CALLB     'ZA0841'
-     C                   PARM      *BLANK        RetCodeOut
-     C                   PARM                    @@ALPH                         Display field
-     C                   PARM      8             @@IDP                          no.of dec.plcs
-     C                   PARM      5             @@IINT                         no.of integers
-     C                   PARM      'N'           @@MTID                         Mil/Thou
-     C                   PARM      *ZERO         @@ERCD                         Error code
-     C                   PARM      *ZERO         @@AMT                          File field
-     C                   PARM                    DLBNDCSP
-      *
-     C     @@ERCD        IFNE      0                                             Not numeric
-      *
-      ** Benchmark Adjustment is not numeric
-      *
-     C                   MOVE      'N'           DDBADJOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
-     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If numeric
-      *
-     C                   MOVE      *BLANK        WSign
-     C     @@AMT         IFLT      0
-     C                   Z-SUB     @@AMT         @@AMT
-     C                   MOVE      '-'           WSign
-     C                   ENDIF
-     C                   MOVE      @@AMT         @@ALPH
-     C                   MOVE      @@ALPH        WNumBadj
-     C     WSign         IFEQ      '-'
-     C                   Z-SUB     WNumBadj      WNumBadj
-     C                   ENDIF
-     C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END blanks
-      *
-     C     VBLRT         IFNE      'Y'
-     C     WNumBadj      ANDNE     *ZEROS
-      *
-      ** Backward-Looking Rate is N and Benchmark Adjustment is not 0
-      *
-     C                   MOVE      'N'           DDBADJOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDBADJ'      FldNamXAr(Idx)
-     C                   MOVEL     '5049401'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C     DDBADJOK      IFNE      'N'
-     C                   Z-ADD     WNumBadj      VBADJ
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDFLOR - Default Floor                                       *
-      *****************************************************************
-     C     SDFLOR        BEGSR
-      *
-     C                   Z-ADD     0             WNumFlor                       Reset WNumFlor
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRFLOR - Validate Floor                                      *
-      *****************************************************************
-     C     SRFLOR        BEGSR
-      *
-     C     DDFLOR        IFNE      *BLANKS                                      Not blanks
-     C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDFLOR        @@ALPH
-     C                   CALLB     'ZA0841'
-     C                   PARM      *BLANK        RetCodeOut
-     C                   PARM                    @@ALPH                         Display field
-     C                   PARM      8             @@IDP                          no.of dec.plcs
-     C                   PARM      5             @@IINT                         no.of integers
-     C                   PARM      'N'           @@MTID                         Mil/Thou
-     C                   PARM      *ZERO         @@ERCD                         Error code
-     C                   PARM      *ZERO         @@AMT                          File field
-     C                   PARM                    DLBNDCSP
-      *
-     C     @@ERCD        IFNE      0                                             Not numeric
-      *
-      ** Floor is not numeric
-      *
-     C                   MOVE      'N'           DDFLOROK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDFLOR'      FldNamXAr(Idx)
-     C                   MOVEL     '5049426'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If numeric
-      *
-     C                   MOVE      *BLANK        WSign
-     C     @@AMT         IFLT      0
-     C                   Z-SUB     @@AMT         @@AMT
-     C                   MOVE      '-'           WSign
-     C                   ENDIF
-     C                   MOVE      @@AMT         @@ALPH
-     C                   MOVE      @@ALPH        WNumFlor
-     C     WSign         IFEQ      '-'
-     C                   Z-SUB     WNumFlor      WNumFlor
-     C                   ENDIF
-     C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END blanks
-      *
-     C     VBLRT         IFNE      'Y'
-     C     WNumFlor      ANDNE     *ZEROS
-      *
-      ** Backward-Looking Rate is N and Floor is not 0
-      *
-     C                   MOVE      'N'           DDFLOROK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDFLOR'      FldNamXAr(Idx)
-     C                   MOVEL     '5049401'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C     DDFLOROK      IFNE      'N'
-     C                   Z-ADD     WNumFlor      VFLOR
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      *  SDLBDY - Default lookback days                               *
-      *****************************************************************
-     C     SDLBDY        BEGSR
-      *
-     C                   Z-ADD     0             WDAY                           Reset WDAY
-      *
-     C                   MOVE      DDLBDY        WDAY
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRLBDY - Validate lookback days for settlement               *
-      *****************************************************************
-     C     SRLBDY        BEGSR
-      *
-     C     DDLBDY        IFNE      *BLANKS                                      Not blank
-     C     WDAY          ANDEQ     0                                            And not def.
-     C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDLBDY        @@ALPH
-     C                   CALLB     'ZA0841'
-     C                   PARM      *BLANK        RetCodeOut
-     C                   PARM                    @@ALPH                         Display field
-     C                   PARM      0             @@IDP                          no.of dec.plcs
-     C                   PARM      2             @@IINT                         no.of integers
-     C                   PARM      'N'           @@MTID                         Mil/Thou
-     C                   PARM      *ZERO         @@ERCD                         Error code
-     C                   PARM      *ZERO         @@AMT                          File field
-     C                   PARM                    DLBNDCSP
-      *
-     C     @@ERCD        IFNE      0                                             Not numeric
-     C     @@AMT         ORLT      0
-      *
-      ** Lookback Days is not numeric
-      *
-     C                   MOVE      'N'           DDLBDYOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
-     C                   MOVEL     '5049423'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If numeric
-     C                   MOVE      @@AMT         WDAY
-      *
-     C     VBLRT         IFNE      'Y'
-     C     WDAY          ANDNE     0
-      *
-      ** Backward-Looking Rate is N and Lookback Days is not 0
-      *
-     C                   MOVE      'N'           DDLBDYOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDLBDY'      FldNamXAr(Idx)
-     C                   MOVEL     '5049420'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END not blank
-      *
-     C     DDLBDYOK      IFNE      'N'
-     C                   MOVE      WDAY          DDLBDY
-     C                   Z-ADD     WDAY          VLBDY
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDLODY - Default lockout days                                *
-      *****************************************************************
-     C     SDLODY        BEGSR
-      *
-     C                   Z-ADD     0             WDAY                           Reset WDAY
-      *
-     C                   MOVE      DDLODY        WDAY
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRLODY - Validate lockout days                               *
-      *****************************************************************
-     C     SRLODY        BEGSR
-      *
-     C     DDLODY        IFNE      *BLANKS                                      Not blank
-     C     WDAY          ANDEQ     0                                            And not def.
-     C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDLODY        @@ALPH
-     C                   CALLB     'ZA0841'
-     C                   PARM      *BLANK        RetCodeOut
-     C                   PARM                    @@ALPH                         Display field
-     C                   PARM      0             @@IDP                          no.of dec.plcs
-     C                   PARM      2             @@IINT                         no.of integers
-     C                   PARM      'N'           @@MTID                         Mil/Thou
-     C                   PARM      *ZERO         @@ERCD                         Error code
-     C                   PARM      *ZERO         @@AMT                          File field
-     C                   PARM                    DLBNDCSP
-      *
-     C     @@ERCD        IFNE      0                                             Not numeric
-     C     @@AMT         ORLT      0
-      *
-      ** Lockout Days is not numeric
-      *
-     C                   MOVE      'N'           DDLODYOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
-     C                   MOVEL     '5049424'     MsgIdXAr(Idx)
-     C                   ELSE                                                    If numeric
-     C                   MOVE      @@AMT         WDAY
-      *
-     C     VBLRT         IFNE      'Y'
-     C     WDAY          ANDNE     *ZEROS
-      *
-      ** Backward-Looking Rate is N and Lockout Days is not 0
-      *
-     C                   MOVE      'N'           DDLODYOK
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDLODY'      FldNamXAr(Idx)
-     C                   MOVEL     '5049421'     MsgIdXAr(Idx)
-     C                   ENDIF
-      *
-     C                   ENDIF                                                   END numeric
-     C                   ENDIF                                                  END not blank
-      *
-     C     DDLODYOK      IFNE      'N'
-     C                   MOVE      WDAY          DDLODY
-     C                   Z-ADD     WDAY          VLODY
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDOPSH - Default Observation Period Shift                    *
-      *****************************************************************
-     C     SDOPSH        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SROPSH - Validate Observation Period Shift                   *
-      *****************************************************************
-     C     SROPSH        BEGSR
-      *
-     C     DDOPSHOK      IFNE      'N'
-     C                   MOVE      DDOPSH        VOPSH
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDRRDP - Rate Rounding Decimal Places                        *
-      *****************************************************************
-     C     SDRRDP        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRRRDP - Rate Rounding Decimal Places                        *
-      *****************************************************************
-     C     SRRRDP        BEGSR
-      *
-     C     DDRRDPOK      IFNE      'N'
-     C                   MOVE      DDRRDP        VRRDP
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDDBAV - Day Basis for Average                               *
-      *****************************************************************
-     C     SDDBAV        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRDBAV - Day Basis for Average                               *
-      *****************************************************************
-     C     SRDBAV        BEGSR
-      *
-     C     DDDBAVOK      IFNE      'N'
-     C                   MOVE      DDDBAV        VDBAV
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SDRTKN - Rates Known                                         *
-      *****************************************************************
-     C     SDRTKN        BEGSR
-      *
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *  SRRTKN - Rates Known                                         *
-      *****************************************************************
-     C     SRRTKN        BEGSR
-      *
-     C     DDRTKNOK      IFNE      'N'
-     C                   MOVE      DDRTKN        VRTKN
-     C                   ENDIF
-      *
-     C                   ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *********************************************************************
-      *                                                                   *
-      * *PSSR  - Program exception error routine                          *
-      *          Called automatically if a program error occurs,          *
-      *          or directly by the program code using EXSR.              *
-      *          This subroutine DUMPs the program just once.             *
-      *                                                                   *
-      * Called by: (**calling routines**)                                 *
-      *                                                                   *
-      * Calls: None                                                       *
-      *                                                                   *
-      *********************************************************************
-      *
      C     *PSSR         BEGSR
-      *
-     C                   DUMP
-      *
+
      C                   IF        @RUN = *BLANK
+     C                   DUMP
      C                   EVAL      @RUN = 'Y'
-      *
      C                   CALLB     'DBERRCTL'
-      *
      C                   ENDIF
-      *
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-      *
+
      C                   ENDSR
-      *
+      ********************************************************************
+      /EJECT
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2020
+** WLPtyp ** Array for allowed processing type for loan
+616264666869707172

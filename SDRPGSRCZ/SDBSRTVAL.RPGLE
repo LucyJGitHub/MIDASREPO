@@ -430,12 +430,17 @@
      C                   ENDIF                                                                CSD006
       *                                                                                       CSD103
      C     CSD103        IFEQ      'Y'                                                        CSD103
+     C     DDBSRCOK      ANDNE     'N'                                                        CSD103
+     C     DDCYCD        ANDNE     *BLANKS                                                    CSD103
       *                                                                                       CSD103
      C                   CALLB     'ZAVBLRTE'                                                 CSD103
      C                   PARM      'BSRT'        ApiName           4                          CSD103
+     C                   PARM      *BLANKS       TransRef          6                          CSD103
+     C                   PARM      *BLANKS       TransType         2                          CSD103
      C                   PARM                    DDCYCD                                       CSD103
      C                   PARM                    DDBSRC                                       CSD103
-     C                   PARM      *BLANKS       XLNRF             6                          CSD103
+     C                   PARM      *ZERO         TransICBS         1 0                        CSD103
+     C                   PARM      *BLANKS       TransCHTP         1                          CSD103
      C                   PARM      LiborFlds     TempInpDS       200                          CSD103
      C                   PARM                    Idx                                          CSD103
      C                   PARM                    FldNamXAr                                    CSD103

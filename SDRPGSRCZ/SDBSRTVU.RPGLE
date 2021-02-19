@@ -334,7 +334,7 @@
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
      C                                                    + AAuth                             CSD103
-     C                                                    + BasRBckfld                        CSD103
+     C                                                    + LiborFlds                         CSD103
 
      C                   RETURN
 

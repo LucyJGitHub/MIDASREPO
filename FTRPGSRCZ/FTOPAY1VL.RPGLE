@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057498           Date 26Jan21               *
-      *  Prev Amend No. 254841B            Date 14May20               *
+      *  Last Amend No. MD057597           Date 19Feb21               *
+      *  Prev Amend No. MD057498           Date 26Jan21               *
+      *                 254841B            Date 14May20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
@@ -106,6 +107,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057597 - Move re-execution of VSETCA after DFTCHG to       *
+      *             validate settle amount defaulted from pay amount. *
       *  MD057498 - Unable to complete OPAY transaction due error     *
       *             MMA0932 in SWIFT MT202 indicator field. Change    *
       *             error displayed to be a warning if sender's       *
@@ -862,9 +865,9 @@
      C                   eval      WsmamInd = 0                                              254841B
      C                   Endif                                                               254841B
      C                   Exsr      VEUXCHK
-     c                   If        WsmamInd = 1                                              254841B
-     c                   EXSR      VSETCA                                                    254841B
-     c                   Endif                                                               254841B
+     c**********         If        WsmamInd = 1                                     254841B MD057597
+     c**********         EXSR      VSETCA                                           254841B MD057597
+     c**********         Endif                                                      254841B MD057597
      C                   End
 
       * Validate Book Code
@@ -1032,6 +1035,9 @@
      C                   If        SACTION = 'I'                                              258229
      C                   Eval      NEWPMTSCN4A = *Blanks                                      259767
      C                   EXSR      DFTCHG                                       CFT009
+     C                   IF        WsmamInd = 1                                             MD057597
+     C                   EXSR      VSETCA                                                   MD057597
+     C                   ENDIF                                                              MD057597
      C                   EndIf                                                                258229
       * Check if charges fields were entered or previously defaulted                         BUG6280
       * If so then do not default                                                            BUG6280
@@ -1896,6 +1902,7 @@
       ** VEUXCHK - Validate amounts entered agree
       *****************************************************************
      C     VEUXCHK       BEGSR
+
 
       * Reset variables updated by each module
      C                   Exsr      RESETERRS

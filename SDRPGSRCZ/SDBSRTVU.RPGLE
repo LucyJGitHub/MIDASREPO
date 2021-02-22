@@ -139,13 +139,6 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
-      ** +--------------------------------------+                                             CSD103
-      ** ¦ Named constants                      ¦                                             CSD103
-      ** ¦ ===============                      ¦                                             CSD103
-      ** +--------------------------------------+                                             CSD103
-      ** Alphanumeric Base Rate Code                                                          CSD103
-     D AlphaBSRC       C                   Const('AlphaBaseRateCode')                         CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -204,6 +197,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            49                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -244,7 +240,7 @@
      D CSC022          S              1A   INZ('N')                                           CSC022
      D wSkip           S              1A   INZ('N')                                           CSC022
                                                                                              BUG3124
-     D #1TESTN         S              1A                                                     BUG3124
+     D*#1TESTN**       S              1A                                              BUG3124 CSD103
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -338,6 +334,7 @@
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
      C                                                    + AAuth                             CSD103
+     C                                                    + LiborFlds                         CSD103
 
      C                   RETURN
 
@@ -371,6 +368,8 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -567,35 +566,6 @@
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
                                                                                               CSC022
-      ** Check for Alphanumeric Base Rate Code system value                                   CSD103
-     C                   CALLB     'AOSVALR0'                                                 CSD103
-     C                   PARM      *BLANKS       @RTCD                                        CSD103
-     C                   PARM      AlphaBSRC     SVALK1           20                          CSD103
-     C                   PARM      *BLANKS       SVAL1           200                          CSD103
-     C                   PARM      *BLANKS       SVALK2           20                          CSD103
-     C                   PARM      *BLANKS       SVAL2           200                          CSD103
-     C                   PARM      *BLANKS       SVALK3           20                          CSD103
-     C                   PARM      *BLANKS       SVAL3           200                          CSD103
-     C                   PARM      *BLANKS       SVALK4           20                          CSD103
-     C                   PARM      *BLANKS       SVAL4           200                          CSD103
-     C                   PARM      *BLANKS       SVALK5           20                          CSD103
-     C                   PARM      *BLANKS       SVAL5           200                          CSD103
-     C                   PARM      *BLANKS       SVALK6           20                          CSD103
-     C                   PARM      *BLANKS       SVAL6           200                          CSD103
-     C                   PARM      *BLANKS       SVALK7           20                          CSD103
-     C                   PARM      *BLANKS       SVAL7           200                          CSD103
-     C                   PARM      *BLANKS       SVALK8           20                          CSD103
-     C                   PARM      *BLANKS       SVAL8           200                          CSD103
-     C                   PARM      *BLANKS       SVALK9           20                          CSD103
-     C                   PARM      *BLANKS       SVAL9           200                          CSD103
-     C                   PARM      *BLANKS       SVALK0           20                          CSD103
-     C                   PARM      *BLANKS       SVAL10          200                          CSD103
-      * If the system value is not found then default value to 'N'                            CSD103
-     C     @RTCD         IFNE      *BLANKS                                                    CSD103
-     C                   MOVE      'N'           AlphaCode         1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVEL     SVAL1         AlphaCode         1                          CSD103
-     C                   ENDIF                                                                CSD103
       * Key list
      C     SDBSRT        KLIST
      C                   KFLD                    DDCYCD
@@ -638,19 +608,17 @@
                                                                                              BUG3124
       * Used MOVE to validate Base Rate Code                                                 BUG3124
                                                                                              BUG3124
-     C     AlphaCode     IFNE      'Y'                                                        CSD103
-     C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
-     C     DDBSRC        IFLE      '00'                                                      BUG3124
-     C     DDBSRC        ORGT      '99'                                                      BUG3124
-     C     #1TESTN       ORLT      '0'                                                       BUG3124
-     C     #1TESTN       ORGT      '9'                                                       BUG3124
-     C                   ADD       1             Idx                                         BUG3124
-     C                   EVAL      *IN98 = *ON                                               BUG3124
-     C                   EVAL      *IN33 = *ON                                               BUG3124
-     C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                BUG3124
-     C                   EVAL      MsgIDArr(Idx) = 'USR4572'                                 BUG3124
-     C                   END                                                                 BUG3124
-     C                   ENDIF                                                                CSD103
+     C**********         MOVE      DDBSRC        #1TESTN                              BUG3124 CSD103
+     C*****DDBSRC        IFLE      '00'                                               BUG3124 CSD103
+     C*****DDBSRC        ORGT      '99'                                               BUG3124 CSD103
+     C*****#1TESTN       ORLT      '0'                                                BUG3124 CSD103
+     C*****#1TESTN       ORGT      '9'                                                BUG3124 CSD103
+     C**********         ADD       1             Idx                                  BUG3124 CSD103
+     C**********         EVAL      *IN98 = *ON                                        BUG3124 CSD103
+     C**********         EVAL      *IN33 = *ON                                        BUG3124 CSD103
+     C**********         EVAL      FldNameArr(Idx) = 'DDBSRC'                         BUG3124 CSD103
+     C**********         EVAL      MsgIDArr(Idx) = 'USR4572'                          BUG3124 CSD103
+     C**********         END                                                          BUG3124 CSD103
                                                                                              BUG3124
       *
      C                   ENDSR
@@ -787,6 +755,9 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+                                                                                              CSD103
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
      C                   ENDSR
       *****************************************************************

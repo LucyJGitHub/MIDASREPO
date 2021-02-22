@@ -108,7 +108,10 @@
                                                                                               CSD103
       * SD Extra data in file (D/B) format                                                    CSD103
      D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
-                                                                                              CSD103
+
+      * LIBOR Fields                                                                          CSD103
+     D LiborFlds       DS            49                                                       CSD103
+
      D AAuth           S              1A                                                      CSD103
 
       ** +--- Start of main processing -----------------------------------+
@@ -168,6 +171,7 @@
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103
      C                                      + AAuth                                           CSD103
+     C                                      + LiborFlds                                       CSD103
 
      C                   SETON                                        LR
      C                   RETURN
@@ -387,6 +391,9 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
+                                                                                              CSD103
+      * LIBOR Screen Fields from File                                                         CSD103
+     C                   PARM                    LiborFlds                                    CSD103
 
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the

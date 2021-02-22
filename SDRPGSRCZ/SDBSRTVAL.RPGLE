@@ -218,6 +218,32 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       ** Data Structure for Event Codes Substitution                                        MD000091
+                                                                                              CSD103
+      * LIBOR Screen Fields                                                                   CSD103
+     D LiborFlds       DS            49                                                       CSD103
+     D  DDBLRT                 1      1                                                       CSD103
+     D  DDRFRR                 2     11                                                       CSD103
+     D  DDCALM                12     15                                                       CSD103
+     D  DDBADJ                16     28                                                       CSD103
+     D  DDFLOR                29     41                                                       CSD103
+     D  DDLBDY                42     43                                                       CSD103
+     D  DDLODY                44     45                                                       CSD103
+     D  DDOPSH                46     46                                                       CSD103
+     D  DDRRDP                47     48                                                       CSD103
+     D  DDDBAV                49     49                                                       CSD103
+                                                                                              CSD103
+      * LIBOR Valid Fields                                                                    CSD103
+     D LoanValBlrt     DS                                                                     CSD103
+     D  VBLRT                  1      1A                                                      CSD103
+     D  VRFRR                  2     11A                                                      CSD103
+     D  VCALM                 12     15A                                                      CSD103
+     D  VBADJ                 16     22P 7                                                    CSD103
+     D  VFLOR                 27     37P 7                                                    CSD103
+     D  VLBDY                 42     43S 0                                                    CSD103
+     D  VLODY                 44     45S 0                                                    CSD103
+     D  VOPSH                 46     46A                                                      CSD103
+     D  VRRDP                 47     48S 0                                                    CSD103
+     D  VDBAV                 49     49S 0                                                    CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -402,6 +428,31 @@
       /COPY WNCPYSRC,SDBSRTV023                                                               CSD006
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
+      *                                                                                       CSD103
+     C     CSD103        IFEQ      'Y'                                                        CSD103
+     C     DDBSRCOK      ANDNE     'N'                                                        CSD103
+     C     DDCYCD        ANDNE     *BLANKS                                                    CSD103
+      *                                                                                       CSD103
+     C                   CALLB     'ZAVBLRTE'                                                 CSD103
+     C                   PARM      'BSRT'        ApiName           4                          CSD103
+     C                   PARM      *BLANKS       TransRef          6                          CSD103
+     C                   PARM      *BLANKS       TransType         2                          CSD103
+     C                   PARM                    DDCYCD                                       CSD103
+     C                   PARM                    DDBSRC                                       CSD103
+     C                   PARM      *ZERO         TransICBS         1 0                        CSD103
+     C                   PARM      *BLANKS       TransCHTP         1                          CSD103
+     C                   PARM      LiborFlds     TempInpDS       200                          CSD103
+     C                   PARM                    Idx                                          CSD103
+     C                   PARM                    FldNamXAr                                    CSD103
+     C                   PARM                    MsgIDXAr                                     CSD103
+     C                   PARM                    TempOutDS       200                          CSD103
+     C                   PARM      *BLANKS       RetCodeOut                                   CSD103
+      *                                                                                       CSD103
+     C     RetCodeOut    IFNE      'Error'                                                    CSD103
+     C                   MOVEL     TempOutDS     LoanValBlrt                                  CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -1033,6 +1084,20 @@
      C                   MOVE      DDOMD1        BVOMD1
      C                   MOVE      DDOMD2        BVOMD2
       *
+     C     CSD103        IFEQ      'Y'                                                        CSD103
+      *                                                                                       CSD103
+     C                   MOVE      VBLRT         BVBLRT                                       CSD103
+     C                   MOVE      VRFRR         BVRFRR                                       CSD103
+     C                   MOVE      VCALM         BVCALM                                       CSD103
+     C                   Z-ADD     VBADJ         BVBADJ                                       CSD103
+     C                   Z-ADD     VFLOR         BVFLOR                                       CSD103
+     C                   Z-ADD     VLBDY         BVLBDY                                       CSD103
+     C                   Z-ADD     VLODY         BVLODY                                       CSD103
+     C                   MOVE      VOPSH         BVOPSH                                       CSD103
+     C                   Z-ADD     VRRDP         BVRRDP                                       CSD103
+     C                   Z-ADD     VDBAV         BVDBAV                                       CSD103
+      *
+     C                   ENDIF                                                                CSD103
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS
       *
@@ -1104,6 +1169,8 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * LIBOR Screen Fields                                                                   CSD103
+     C                   PARM                    LiborFlds                                    CSD103
       *
       **  GET ZMUSER to access default branch.
       *

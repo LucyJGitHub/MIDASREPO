@@ -410,6 +410,20 @@
      C                   MOVEL     BVDFTS        BADFTS                                       CSD012
      C                   MOVEL     BVDTFR        BADTFR                                       CSD012
      C                   MOVEL     BVTLEX        BATLEX                                       CSD012
+      *                                                                                       CSD103
+     C                   MOVEL     BVZONE        BAZONE                                       CSD103
+     C                   MOVEL     BVVDTO        BAVDTO                                       CSD103
+     C                   MOVEL     BVCBRT        BACBRT                                       CSD103
+     C                   MOVEL     BVBLRT        BABLRT                                       CSD103
+     C                   MOVEL     BVRFRR        BARFRR                                       CSD103
+     C                   MOVEL     BVCALM        BACALM                                       CSD103
+     C                   MOVEL     BVBADJ        BABADJ                                       CSD103
+     C                   MOVEL     BVFLOR        BAFLOR                                       CSD103
+     C                   MOVEL     BVLBDY        BALBDY                                       CSD103
+     C                   MOVEL     BVLODY        BALODY                                       CSD103
+     C                   MOVEL     BVOPSH        BAOPSH                                       CSD103
+     C                   MOVEL     BVRRDP        BARRDP                                       CSD103
+     C                   MOVEL     BVDBAV        BADBAV                                       CSD103
       *                                                                                       CSD012
      C                   WRITE     SDBRSHD0                                                   CSD012
      C                   ENDIF                                                                CSD012

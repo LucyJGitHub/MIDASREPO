@@ -286,7 +286,8 @@
      C     GENPIC        BEGSR
 
      C                   MOVEL     *BLANKS       SXRIB
-     C     PXRIB         IFNE      '00'
+     C*****PXRIB         IFNE      '00'                                                       CSD103
+     C     PXRIB         IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     PXRIB         SXRIB
      C                   END
      C                   MOVEL     *BLANKS       SXRIS

@@ -204,9 +204,6 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
-      ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -318,7 +315,6 @@
 
       * Processing for deletes
      C                   WHEN         DDACTN = 'D'
-     C                   EXSR      ValidateBr                                                CSD103
      C                   CLEAR                   ValdBasRat
      C                   MOVEL     BasRFilFmt    ValdBasRat
      C                   EVAL      V_BVTYLC = DDACTN
@@ -342,7 +338,6 @@
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
      C                                                    + AAuth                             CSD103
-     C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
 
@@ -376,7 +371,6 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
-     C                   PARM                    BasRBckfld                                   CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -793,8 +787,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   ENDSR
       *****************************************************************

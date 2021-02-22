@@ -24,9 +24,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -45,7 +44,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -213,8 +211,6 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
-      * Backward-Looking Rate Fields                                                          CSD103
-     D BasRBckfld      DS            27                                                       CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -722,8 +718,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -831,7 +825,6 @@
      C                   Z-ADD     *ZERO         BVVDRC
      C                   Z-ADD     *ZERO         BVNBRT
      C                   Z-ADD     *ZERO         BVVDNR
-     C                   Z-ADD     *ZERO         BVBADJ                                       CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -983,8 +976,6 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    BasRFilFmt
      C                   PARM                    CurTrTran
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.

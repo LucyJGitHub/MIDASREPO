@@ -25,9 +25,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057243           Date 10Aug20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -54,10 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057243 - Source not compilable. Adjusted the length of AKEY*
-      *             from 10 to 14.                                    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -192,8 +188,8 @@
      D  PTYP                  12     13
       *
      D                 DS
-     D**AKEY****               1     10                                                     MD057243
-     D  AKEY                   1     14                                                     MD057243
+     D**AKEY****               1     10                                                       CSD103
+     D  AKEY                   1     14                                                       CSD103
      D  AKEY3                  3      3
      D  AKEY9                  9     10
      D  AKEY10                10     10

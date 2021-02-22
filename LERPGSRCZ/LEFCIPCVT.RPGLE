@@ -46,7 +46,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR804792 - Late Payment Penalty Spread was displayed as      *
@@ -736,11 +735,11 @@
      C                   MOVEL(P)  FPLPTP        DDLPTP
 
       * Base rate
-     C                   IF        FPLPBR=*ZERO
-     C                   EVAL      DDLPBR=*BLANKS
-     C                   ELSE
-     C                   MOVEL(P)  FPLPBR        DDLPBR
-     C                   END
+     C**********         IF        FPLPBR=*ZERO                                               CSD103
+     C**********         EVAL      DDLPBR=*BLANKS                                             CSD103
+     C**********         ELSE                                                                 CSD103
+     C                   MOVE      FPLPBR        DDLPBR                                       CSD103
+     C**********         END                                                                  CSD103
 
       *  Late Payment Penalty Amount
       *

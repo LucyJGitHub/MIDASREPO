@@ -15,18 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *                 CSC011  *CREATE    Date 18Sep01               *
+      *  Prev Amend No. CSC011  *CREATE    Date 18Sep01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC011 - 24x7 Midas Availability                             *
       *                                                               *
@@ -81,9 +79,6 @@
 
       ** SD Base Rate Maintenance Extra Data - File (D/B) format
      D BSRTExtDta    E DS                  EXTNAME(SDBSEXPD)
-                                                                                              CSD103
-      ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -136,8 +131,6 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    BSRTFilFmt
      C                   PARM                    BSRTScnFmt
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'

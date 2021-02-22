@@ -733,10 +733,12 @@
       *
       * Base Rate Type
       *
-     C                   IF        AMDRIB=*ZERO
+     C**********         IF        AMDRIB=*ZERO                                               CSD103
+     C                   IF        AMDRIB=*BLANKS                                             CSD103
      C                   EVAL      DDDRIB=*BLANKS
      C                   ELSE
-     C                   MOVEL(P)  AMDRIB        DDDRIB
+     C**********         MOVEL(P)  AMDRIB        DDDRIB                                       CSD103
+     C                   MOVEL     AMDRIB        DDDRIB                                       CSD103
      C                   ENDIF
       *
       * Rate/Spread & Sign
@@ -990,10 +992,12 @@
       *
       * Base Rate Type
       *
-     C                   IF        AMCRIB=*ZERO
+     C**********         IF        AMCRIB=*ZERO                                               CSD103
+     C                   IF        AMCRIB=*BLANKS                                             CSD103
      C                   EVAL      DDCRIB=*BLANKS
      C                   ELSE
-     C                   MOVEL(P)  AMCRIB        DDCRIB
+     C**********         MOVEL(P)  AMCRIB        DDCRIB                                       CSD103
+     C                   MOVEL     AMCRIB        DDCRIB                                       CSD103
      C                   ENDIF
       *
       * Rate/Spread & Sign

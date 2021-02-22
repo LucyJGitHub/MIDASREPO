@@ -1230,7 +1230,8 @@
      C                   EVAL      UNRL = *ZEROS                                              CAP056
      C                   EVAL      UNRLP = *ZEROS                                             CAP056
      C                   EVAL      DDTM = *ZEROS                                              CAP056
-     C                   EVAL      BRSQ = *ZEROS                                              CAP056
+     C**********         EVAL      BRSQ = *ZEROS                                       CAP056 CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
      C                   EVAL      LSWC = *ZEROS                                              CAP056
      C                   EVAL      LSWS = *ZEROS                                              CAP056
      C                   EVAL      ORED = *ZEROS                                              CAP056

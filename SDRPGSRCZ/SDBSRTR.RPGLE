@@ -109,9 +109,6 @@
       * SD Extra data in file (D/B) format                                                    CSD103
      D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
                                                                                               CSD103
-      **  Data Structure for Backward-Looking Rate Fields                                     CSD103
-     D BasRBckfld      DS            27                                                       CSD103
-                                                                                              CSD103
      D AAuth           S              1A                                                      CSD103
 
       ** +--- Start of main processing -----------------------------------+
@@ -171,7 +168,6 @@
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103
      C                                      + AAuth                                           CSD103
-     C                                      + BasRBckfld                                      CSD103
 
      C                   SETON                                        LR
      C                   RETURN
@@ -391,8 +387,6 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the

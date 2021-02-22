@@ -1118,7 +1118,8 @@
      C                   EVAL      CrUNRL = *ZEROS
      C                   EVAL      CrUNRLP = *ZEROS
      C                   EVAL      CrDDTM = *ZEROS
-     C                   EVAL      CrBRSQ = *ZEROS
+     C**********         EVAL      CrBRSQ = *ZEROS                                            CSD103
+     C                   EVAL      CrBRSQ = *BLANKS                                           CSD103
      C                   EVAL      CrLSWC = *ZEROS
      C                   EVAL      CrLSWS = *ZEROS
      C                   EVAL      CrORED = *ZEROS
@@ -1241,7 +1242,8 @@
      C                   EVAL      UNRL = *ZEROS
      C                   EVAL      UNRLP = *ZEROS
      C                   EVAL      DDTM = *ZEROS
-     C                   EVAL      BRSQ = *ZEROS
+     C**********         EVAL      BRSQ = *ZEROS                                              CSD103
+     C                   EVAL      BRSQ = *BLANKS                                             CSD103
      C                   EVAL      LSWC = *ZEROS
      C                   EVAL      LSWS = *ZEROS
      C                   EVAL      ORED = *ZEROS

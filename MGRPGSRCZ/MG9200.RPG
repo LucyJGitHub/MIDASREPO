@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054644           Date 31Oct19               *
-      *  Prev Amend No. MD054663           Date 31Oct19               *
+      *  Last Amend No. MD057450           Date 11Feb21               *
+      *  Prev Amend No. MD054644           Date 31Oct19               *
+      *                 MD054663           Date 31Oct19               *
       *                 MD052254A          Date 19Jul19               *
       *                 MD052254           Date 21Dec18               *
       *                 MD046248           Date 27Oct17               *
@@ -68,6 +69,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057450 - FX: Payment in MMM has not been deleted after     *
+      *             changing FX Netting Settlement details from 08/29 *
+      *             to 01/29.                                         *
       *  MD054644 - MT292 was not generated after reverse of MM deal  *
       *  MD054663 - MT292 was not generated after deletion of FX NETT *
       *  MD052254A - Generate cancellation message for reversed deal  *
@@ -276,6 +280,10 @@
      C           *IN10     ANDEQ'0'
      C           MTRN      ANDEQWMTRN                                                       MD028094
       *                                                                                     MD028094
+      ** Technically, only one record will be created for FX netting                        MD057450
+     C           MODI      OREQ 'NT'                                                        MD057450
+     C           *IN10     ANDEQ'0'                                                         MD057450
+     C           MTRN      ANDEQWTNUM                                                       MD057450
       *
       **  Only do the main processing if not a cancellation message
       **  (ie. '192' or '292')
@@ -330,6 +338,7 @@
       ************************************************************ 157756 169025
      C           PROG      IFEQ 'CE'                                  3
      C           PROG      OREQ 'CA'                                      E29588
+     C           PROG      OREQ 'NT'                                    MD057450
      C***********MTPY      IFNE '100'                              157756 169025
      C***********MTPY      ORNE '103'                              CFT013 169025
      C***********MTPY      ANDNE'200'                              157756 169025
@@ -524,6 +533,7 @@
       *
      C           *IN10     IFEQ '1'                                   1
      C           TNUM      ORNE MTRNN
+     C           MODI      ANDNE'NT'                                    MD057450
       *                                                                   CSW096
       **  For DL module and CE calling program.                           CSW096
       **  If LSWC is not equal to 0 and previous message not found, it    CSW096
@@ -539,9 +549,15 @@
      C                     RETRN
       *                                                                   CDL008
       ** Else CDL008 is on and most recently generated confirmation is    CDL008
+      ** Else CDL008 is on and most recently generated confirmation is    CDL008
       ** found, save CLS Settlement field.                                CDL008
       *                                                                   CDL008
      C                     ELSE                                           CDL008
+      ** Technically, only one record will be created for FX netting                        MD057450
+      ** Assigned the value of previously read MTRN to temp field                           MD057450
+     C           MODI      IFEQ 'NT'                                                        MD057450
+     C                     MOVELMTRN      WTNUM   6                                         MD057450
+     C                     ENDIF                                                            MD057450
      C           CDL008    IFEQ 'Y'                                       CDL008
      C           MTPY      IFEQ '300'                                     CDL008
      C                     MOVE CLSS      WCLSS   1                       CDL008
@@ -868,6 +884,7 @@
      C                     MOVE ' '       DLCANC  1                                         MD054663
       *                                                                                     AR923287
      C           MODI      IFEQ 'DL'                                                          260363
+     C           MODI      OREQ 'NT'                                                        MD057450
      C                     EXSR PAYREC                                                        260363
      C                     ENDIF                                                              260363
       *                                                                                       260363

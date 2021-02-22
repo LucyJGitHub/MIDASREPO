@@ -56,6 +56,8 @@
      D  EndOfFile             45     45
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
+      **
+     D Command         S           2764
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -122,6 +124,16 @@
       *****************************************************************
      C     SRUpdate      BEGSR
       *
+     C                   IF        PMBR <> *BLANKS
+     C                   EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+
+     C                             PFILE+') MBR('+PMBR+')')
+     C                   CALL      'QCMDEXC'
+     C                   PARM                    Command
+     C                   PARM      2764          Length           15 5
+      *
+     C                   EVAL      PFILE = PMBR
+     C                   ENDIF
+      *
      C                   EVAL      UFILE = PFILE
      C                   EVAL      UFIELD = PFIELD
       *
@@ -192,6 +204,13 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+     C                   IF        PMBR <> *BLANKS
+     C                   EVAL      Command = ('DLTOVR '+PMBR+'')
+     C                   CALL      'QCMDEXC'
+     C                   PARM                    Command
+     C                   PARM      2764          Length
+     C                   ENDIF
+      *
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -203,6 +222,16 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate1     BEGSR
+      *
+     C                   IF        PMBR <> *BLANKS
+     C                   EVAL      Command = ('OVRDBF FILE('+PMBR+') TOFILE('+
+     C                             PFILE+') MBR('+PMBR+')')
+     C                   CALL      'QCMDEXC'
+     C                   PARM                    Command
+     C                   PARM      2764          Length
+      *
+     C                   EVAL      PFILE = PMBR
+     C                   ENDIF
       *
      C                   EVAL      UFILE = PFILE
      C                   EVAL      UFIELD = PFIELD
@@ -272,6 +301,13 @@
       *
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   IF        PMBR <> *BLANKS
+     C                   EVAL      Command = ('DLTOVR '+PMBR+'')
+     C                   CALL      'QCMDEXC'
+     C                   PARM                    Command
+     C                   PARM      2764          Length
      C                   ENDIF
       *
      C                   ENDSR

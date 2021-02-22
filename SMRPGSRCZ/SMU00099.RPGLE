@@ -28,7 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *

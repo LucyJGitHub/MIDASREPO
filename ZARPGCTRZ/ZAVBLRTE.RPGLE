@@ -32,6 +32,7 @@
       *  Use of indicators                                            *
       *                                                               *
       *    U7, U8     Database error                                  *
+      *    80         BSRC and CCY are not in SDBSRTPD                *
       *    90         End of File for CLOANCL                         *
       *                                                               *
       *****************************************************************
@@ -239,6 +240,9 @@
      C                   PARM      TransCCY      PKEY1
      C                   PARM      TransBSRC     PKEY2
      C     SDBSRT        PARM      SDBSRT        DSSDY
+     C                   IF        PRTCD = '*NRF   '
+     C                   SETON                                        80
+     C                   ENDIF
 
      C                   ENDIF
 
@@ -256,7 +260,7 @@
       ** Validate Benchmark Adjustment
      C                   EXSR      SRBADJ
 
-      ** Validate Flor
+      ** Validate Floor
      C                   EXSR      SRFLOR
 
       ** Validate Lookback Days
@@ -316,6 +320,7 @@
      C                   EVAL      DDRTKNOK = *BLANK
 
       ** Reset Indicators
+     C                   SETOFF                                       80
      C                   SETOFF                                       90
 
      C                   ENDSR
@@ -364,9 +369,10 @@
      C
      C                   ENDIF
 
-      ** Issue error if the base rate was used in a loan
-      ** and the backward looking rate field is changed
-     C                   IF        ApiName = 'BSRT'
+      ** Issue error if existing base rate is used in a loan
+      ** and its backward looking rate value is changed
+     C                   IF        ApiName = 'BSRT' and
+     C                             *IN80 = *OFF
 
      C     *LOVAL        SETLL     LECLIPL2
      C                   DOW       *IN90 = *OFF
@@ -377,7 +383,7 @@
      C                   EVAL      DDBLRTOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDBLRT'
-     C                   EVAL      MsgIdXAr(Idx) = '504945n'
+     C                   EVAL      MsgIdXAr(Idx) = '5049428'
      C                   LEAVE
      C                   ENDIF
      C                   ENDDO
@@ -765,7 +771,7 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDOPSH <> *BLANKS
+     C                             DDOPSH <> 'N'
      C                   EVAL      DDOPSHOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'

@@ -121,21 +121,32 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
-     D ArrayBadj       S              1A   DIM(13)                                            CSD103
-     D ArrayFlor       S              1A   DIM(13)                                            CSD103
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD103
+                                                                                              CSD103
+      ** Parameters for ZA0920                                                                CSD103
+     D @@RETC          S             10A                                                      CSD103
+     D @@AMTW          S             13P 0                                                    CSD103
+     D @@QECN          S              1P 0                                                    CSD103
+     D @@AMTD          S             14A                                                      CSD103
+                                                                                              CSD103
+     D CSD103          S              1A                                                      CSD103
+     D WWBadj          S             11P 7                                                    CSD103
+     D WWFlor          S             11P 7                                                    CSD103
                                                                                               CSD103
       * LIBOR Fields                                                                          CSD103
-     D LiborFlds       DS            49                                                       CSD103
-     D  DDBLRT                 1      1                                                       CSD103
-     D  DDRFRR                 2     11                                                       CSD103
-     D  DDCALM                12     15                                                       CSD103
-     D  DDBADJ                16     28                                                       CSD103
-     D  DDFLOR                29     41                                                       CSD103
-     D  DDLBDY                42     43                                                       CSD103
-     D  DDLODY                44     45                                                       CSD103
-     D  DDOPSH                46     46                                                       CSD103
-     D  DDRRDP                47     48                                                       CSD103
-     D  DDDBAV                49     49                                                       CSD103
+     D LiborFlds       DS                                                                     CSD103
+     D  DDBLRT                        1A                                                      CSD103
+     D  DDRFRR                       10A                                                      CSD103
+     D  DDCALM                        4A                                                      CSD103
+     D  DDBADJ                       13A                                                      CSD103
+     D  DDFLOR                       13A                                                      CSD103
+     D  DDLBDY                        2A                                                      CSD103
+     D  DDLODY                        2A                                                      CSD103
+     D  DDOPSH                        1A                                                      CSD103
+     D  DDRRDP                        2A                                                      CSD103
+     D  DDDBAV                        1A                                                      CSD103
+                                                                                              CSD103
+     D PSARD           S              6                                                       CSD103
                                                                                               CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -160,14 +171,6 @@
      D WrkRate         S             11  7                                                    240065
      D IntNbrt         S              4A                                                      240065
                                                                                               240065
-     D WNumBadj        S             11P 7                                                    CSD103
-     D IntBadj         S              4A                                                      CSD103
-     D DecBadj         S              7A                                                      CSD103
-                                                                                              CSD103
-     D WNumFlor        S             11P 7                                                    CSD103
-     D IntFlor         S              4A                                                      CSD103
-     D DecFlor         S              7A                                                      CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -365,6 +368,8 @@
      C                   ENDIF                                                                CSD006
                                                                                               CSD006
       *                                                                                       CSD006
+     C                   IF        CSD103 = 'Y'                                               CSD103
+      *                                                                                       CSD103
       * Backward-Looking Rate                                                                 CSD103
       *                                                                                       CSD103
      C                   MOVE      BABLRT        DDBLRT                                       CSD103
@@ -379,69 +384,23 @@
       *                                                                                       CSD103
       * Benchmark Adjustment                                                                  CSD103
       *                                                                                       CSD103
-     C                   Z-ADD     BABADJ        WNumBadj                                     CSD103
-     C     BABADJ        IFLT      0                                                          CSD103
-     C                   Z-SUB     WNumBadj      WNumBadj                                     CSD103
+     C                   IF        BABADJ <> *ZEROS                                           CSD103
+     C                   Z-ADD     BABADJ        WWBadj                                       CSD103
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CSD103
+     C                   MOVE      WWBadj        @@AMTW                                       CSD103
+     C                   EXSR      FMTRATE                                                    CSD103
+     C                   MOVE      @@AMTD        DDBADJ                                       CSD103
      C                   ENDIF                                                                CSD103
-     C                   MOVEL     WNumBadj      IntBadj                                      CSD103
-     C                   MOVE      WNumBadj      DecBadj                                      CSD103
-     C     BABADJ        IFLT      0                                                          CSD103
-     C                   MOVEA     '-'           ArrayBadj(1)                                 CSD103
-     C                   MOVEA     IntBadj       ArrayBadj(2)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayBadj(7)                                 CSD103
-     C                   MOVEA     DecBadj       ArrayBadj(8)                                 CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVEA     IntBadj       ArrayBadj(1)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayBadj(6)                                 CSD103
-     C                   MOVEA     DecBadj       ArrayBadj(7)                                 CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
-     C                   MOVEA     ArrayBadj     @@ALPH                                       CSD103
-     C                   CALLB     'ZA0841'                                                   CSD103
-     C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM                    @@ALPH                         Display field CSD103
-     C                   PARM      7             @@IDP                          no.of dec.plcsCSD103
-     C                   PARM      4             @@IINT                         no.of integersCSD103
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
-     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
-     C                   PARM      *ZERO         @@AMT                          File field    CSD103
-     C                   PARM                    BNDCSP                                       CSD103
-      *                                                                                       CSD103
-     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
       *                                                                                       CSD103
       * Floor                                                                                 CSD103
       *                                                                                       CSD103
-     C                   Z-ADD     BAFLOR        WNumFlor                                     CSD103
-     C     BAFLOR        IFLT      0                                                          CSD103
-     C                   Z-SUB     WNumFlor      WNumFlor                                     CSD103
+     C                   IF        BAFLOR <> *ZEROS                                           CSD103
+     C                   Z-ADD     BAFLOR        WWFlor                                       CSD103
+     C                   Z-ADD     *ZEROS        @@AMTW                                       CSD103
+     C                   MOVE      WWFlor        @@AMTW                                       CSD103
+     C                   EXSR      FMTRATE                                                    CSD103
+     C                   MOVE      @@AMTD        DDFLOR                                       CSD103
      C                   ENDIF                                                                CSD103
-     C                   MOVEL     WNumFlor      IntFlor                                      CSD103
-     C                   MOVE      WNumFlor      DecFlor                                      CSD103
-     C     BAFLOR        IFLT      0                                                          CSD103
-     C                   MOVEA     '-'           ArrayFlor(1)                                 CSD103
-     C                   MOVEA     IntFlor       ArrayFlor(2)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayFlor(7)                                 CSD103
-     C                   MOVEA     DecFlor       ArrayFlor(8)                                 CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVEA     IntFlor       ArrayFlor(1)                                 CSD103
-     C                   MOVEA     BNDCSP        ArrayFlor(6)                                 CSD103
-     C                   MOVEA     DecFlor       ArrayFlor(7)                                 CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
-     C                   MOVEA     ArrayFlor     @@ALPH                                       CSD103
-     C                   CALLB     'ZA0841'                                                   CSD103
-     C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM                    @@ALPH                         Display field CSD103
-     C                   PARM      7             @@IDP                          no.of dec.plcsCSD103
-     C                   PARM      4             @@IINT                         no.of integersCSD103
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
-     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
-     C                   PARM      *ZERO         @@AMT                          File field    CSD103
-     C                   PARM                    BNDCSP                                       CSD103
-      *                                                                                       CSD103
-     C                   MOVE      @@ALPH        DDFLOR                                       CSD103
       *                                                                                       CSD103
       * Lookback Days                                                                         CSD103
       *                                                                                       CSD103
@@ -462,6 +421,8 @@
       * Day Basis for Average                                                                 CSD103
       *                                                                                       CSD103
      C                   MOVE      BADBAV        DDDBAV                                       CSD103
+      *                                                                                       CSD103
+     C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C                   ENDSR
       *****************************************************************
@@ -491,9 +452,27 @@
       *
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     *BLANK        BasRScnFmt
+     C                   MOVEL     *BLANKS       LiborFlds                                    CSD103
      C                   MOVEL     ##ACTN        DDACTN
       *
      C                   ENDSR
+      *****************************************************************                       CSD103
+      /EJECT                                                                                  CSD103
+      *****************************************************************                       CSD103
+      * FMTRATE - Format Rate for Display                             *                       CSD103
+      *****************************************************************                       CSD103
+     C     FMTRATE       BEGSR                                                                CSD103
+                                                                                              CSD103
+      ** Format using 7 decimal places                                                        CSD103
+     C                   Z-ADD     7             @@QECN                                       CSD103
+     C                   CALLB     'ZA0920'                                                   CSD103
+     C                   PARM      *BLANK        @@RETC                                       CSD103
+     C                   PARM                    @@AMTW                                       CSD103
+     C                   PARM                    @@QECN                                       CSD103
+     C                   PARM                    BNDCSP                                       CSD103
+     C                   PARM      *BLANK        @@AMTD                                       CSD103
+                                                                                              CSD103
+     C                   ENDSR                                                                CSD103
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -553,6 +532,19 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
+                                                                                              CSD103
+      ** Check if CLE172 is installed                                                         CSD103
+                                                                                              CSD103
+     C                   EVAL      CSD103 = 'N'                                               CSD103
+     C                   CALLB     'AOSARDR0'                                                 CSD103
+     C                   PARM      *BLANKS       @RTCD                                        CSD103
+     C                   PARM      '*VERIFY'     @OPTN                                        CSD103
+     C                   PARM      'CSD103'      PSARD                                        CSD103
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSD103
+                                                                                              CSD103
+     C                   IF        @RTCD = *Blanks                                            CSD103
+     C                   EVAL      CSD103 = 'Y'                                               CSD103
+     C                   ENDIF                                                                CSD103
       *
      C                   ENDSR
       *****************************************************************

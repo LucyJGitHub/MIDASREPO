@@ -159,7 +159,7 @@
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
       * LIBOR Fields                                                                          CSD103
-     D LiborFlds       DS            50                                                       CSD103
+     D LiborFlds       DS            49                                                       CSD103
                                                                                               CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦

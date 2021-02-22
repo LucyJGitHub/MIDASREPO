@@ -108,10 +108,10 @@
                                                                                               CSD103
       * SD Extra data in file (D/B) format                                                    CSD103
      D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
-                                                                                              CSD103
+
       * LIBOR Fields                                                                          CSD103
-     D LiborFlds       DS            50                                                       CSD103
-                                                                                              CSD103
+     D LiborFlds       DS            49                                                       CSD103
+
      D AAuth           S              1A                                                      CSD103
 
       ** +--- Start of main processing -----------------------------------+

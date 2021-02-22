@@ -181,7 +181,7 @@
      DSVAL11                   1      1                                                       CSD012
                                                                                               CSD103
       * LIBOR Fields                                                                          CSD103
-     D LiborFlds       DS            50                                                       CSD103
+     D LiborFlds       DS            49                                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦

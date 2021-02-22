@@ -83,7 +83,7 @@
      D BSRTExtDta    E DS                  EXTNAME(SDBSEXPD)
                                                                                               CSD103
       * LIBOR Screen Fields                                                                   CSD103
-     D LiborFlds       DS            50                                                       CSD103
+     D LiborFlds       DS            49
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -137,7 +137,7 @@
      C                   PARM                    BSRTFilFmt
      C                   PARM                    BSRTScnFmt
       * LIBOR Screen Fields                                                                   CSD103
-     C                   PARM                    LiborFlds                                    CSD103
+     C                   PARM                    LiborFlds
 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'

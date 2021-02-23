@@ -36,8 +36,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057538 - LEC000711 00001 and LEC000711 00002 failed in     *
-      *             COB run                                           *
+      *  MD057538 - LEC000711 failed in COB due to WCPAM work variable*
+      *             overflow. Loop to LEFCAMLA to read all relevant   *
+      *             loan amendments to prevent WCPAM from being       *
+      *             updated indefinitely.                             *
+      *             Additional fixes done :                           *
+      *             - redefine WIntCalc and WTotalInt to 13,0 to      *
+      *               avoid truncation of calculated interest ZINTR   *
+      *             - setup ZZBEG and ZZEND properly to avoid negative*
+      *                interest days                                  *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
       *             repair queue because the facility exchange rate is*
       *             longer than the defined facility exchange rate in *

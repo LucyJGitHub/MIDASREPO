@@ -17,8 +17,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD057260           Date 23Feb21               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 MD031034           Date 25Nov14               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057260 - RetailInterestSummary Report issue - incorrect    *
+      *             value balances. Amend to use RECAPM Cap Balance.  *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -57,6 +60,9 @@
 
      FACCNTBJ0  IF   E           K DISK
 
+     FRECAPML5  IF   E           K DISK                                                     MD057260
+     F                                     PREFIX(C)                                        MD057260
+                                                                                            MD057260
      FCGCORRL4  IF   E           K DISK
       ** Correspondent file by customer number
 
@@ -2846,7 +2852,15 @@
      C                   MOVE      F6NBDP        ##D(5)
       *
       **  Set up Balance
-     C                   MOVEL     LDBL          ##D(6)
+     C     KCAPML        SETGT     RECAPML5                                                 MD057260
+     C     KCAPML        READPE    RECAPML5                                                 MD057260
+     C                   IF        %FOUND (RECAPML5)                                        MD057260
+     C                   MOVEL     CCHISB        ##D(6)                                     MD057260
+     C                   ELSE                                                               MD057260
+     C                   MOVEL     0             ##D(6)                                     MD057260
+     C                   ENDIF                                                              MD057260
+      *                                                                                     MD057260
+     C**********         MOVEL     LDBL          ##D(6)                                     MD057260
      C                   MOVE      F6NBDP        ##D(6)
       *
      C*=======================================
@@ -2919,7 +2933,15 @@
      C                   MOVEL     WRK15         ##D(8)
      C                   MOVE      A6NBDP        ##D(8)
       *Ledger balance
-     C                   Z-ADD     LDBL          P@FRAM
+     C     KCAPML        SETGT     RECAPML5                                                 MD057260
+     C     KCAPML        READPE    RECAPML5                                                 MD057260
+     C                   IF        %FOUND (RECAPML5)                                        MD057260
+     C                   Z-ADD     CCHISB        P@FRAM                                     MD057260
+     C                   ELSE                                                               MD057260
+     C                   Z-ADD     0             P@FRAM                                     MD057260
+     C                   ENDIF                                                              MD057260
+      *                                                                                     MD057260
+     C**********         Z-ADD     LDBL          P@FRAM                                     MD057260
      C                   MOVE      ##CCY         P@FRCY
      C                   MOVE      EQCY          P@TOCY
      C                   EXSR      R@EURO
@@ -3963,6 +3985,14 @@
      C                   KFLD                    FACOD
      C                   KFLD                    FACSQ
      C                   KFLD                    FKEYS1
+      *                                                                                     MD057260
+      **  Key list for RECAPM file                                                          MD057260
+     C     KCAPML        KLIST                                                              MD057260
+     C                   KFLD                    FBRCA                                      MD057260
+     C                   KFLD                    FCNUM                                      MD057260
+     C                   KFLD                    FCCY                                       MD057260
+     C                   KFLD                    FACOD                                      MD057260
+     C                   KFLD                    FACSQ                                      MD057260
       *
      C/COPY WNCPYSRC,CG7020C05
       *

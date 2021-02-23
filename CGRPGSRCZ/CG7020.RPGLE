@@ -2852,8 +2852,7 @@
      C                   MOVE      F6NBDP        ##D(5)
       *
       **  Set up Balance
-     C     KCAPML        SETGT     RECAPML5                                                 MD057260
-     C     KCAPML        READPE    RECAPML5                                                 MD057260
+     C     KCAPML        CHAIN     RECAPML5                                                 MD057260
      C                   IF        %FOUND (RECAPML5)                                        MD057260
      C                   MOVEL     CCHISB        ##D(6)                                     MD057260
      C                   ELSE                                                               MD057260
@@ -2933,8 +2932,7 @@
      C                   MOVEL     WRK15         ##D(8)
      C                   MOVE      A6NBDP        ##D(8)
       *Ledger balance
-     C     KCAPML        SETGT     RECAPML5                                                 MD057260
-     C     KCAPML        READPE    RECAPML5                                                 MD057260
+     C     KCAPML        CHAIN     RECAPML5                                                 MD057260
      C                   IF        %FOUND (RECAPML5)                                        MD057260
      C                   Z-ADD     CCHISB        P@FRAM                                     MD057260
      C                   ELSE                                                               MD057260

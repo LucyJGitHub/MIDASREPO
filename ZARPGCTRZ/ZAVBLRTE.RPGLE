@@ -284,6 +284,7 @@
      C                   ENDIF
 
      C                   MOVEL     BLRTValFlds   OutValfld
+     C                   MOVEL     TranScnBlrt   InpScrfld
 
       ** If a new error was found, set the return code appropriately
      C                   IF        Idx > Ix
@@ -604,7 +605,7 @@
      C                   MOVE      @@AMT         @@ALPH
      C                   MOVE      @@ALPH        WNumFlor
      C                   IF        WSign = '-'
-     C                   Z-SUB     WNumBadj      WNumFlor
+     C                   Z-SUB     WNumFlor      WNumFlor
      C                   ENDIF
 
      C                   ENDIF
@@ -852,6 +853,7 @@
       ** Default value from base rate code
      C                   IF        ApiName = 'CLIP'
      C                   EVAL      WDBAV = BADBAV
+     C                   MOVEL     BADBAV        DDDBAV
      C                   ENDIF
 
      C                   ENDIF

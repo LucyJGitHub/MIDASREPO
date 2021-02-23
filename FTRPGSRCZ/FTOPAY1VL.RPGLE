@@ -1903,7 +1903,6 @@
       *****************************************************************
      C     VEUXCHK       BEGSR
 
-
       * Reset variables updated by each module
      C                   Exsr      RESETERRS
 

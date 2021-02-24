@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 254361             Date 15Feb21               *
-      *  Prev Amend No. 252696             Date 09Nov20               *
+      *  Last Amend No. MD057525           Date 23Feb21               *
+      *  Prev Amend No. 254361             Date 15Feb21               *
+      *                 252696             Date 09Nov20               *
       *                 257943             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057525 - Remove checking if IPMIR is blank.                *
       *  254361 - Delete only the message which is currently selected *
       *           for routing.                                        *
       *         - Applied for MD-57585                                *
@@ -6905,8 +6907,9 @@
 
      C     UpdateDB      BEGSR
       *                                                                                       252696
-     C                   IF        IPMIR = *Blanks  and                                       252696
-     C                             DDSWFLG  = 'Y'                                             252696
+     C**********         IF        IPMIR = *Blanks  and                              252696 MD057525
+     C**********                   DDSWFLG  = 'Y'                                    252696 MD057525
+     C                   IF        DDSWFLG  = 'Y'                                           MD057525
      C                   MOVEL     DDSWTN        IPMIR                                        252696
      C                   MOVEL     DDSWTN        MIR@             28                          252696
      C     MIR@          CHAIN     INPAYLL                            92                      252696

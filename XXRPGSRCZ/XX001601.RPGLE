@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra  International Limited 2018                     *
       *                                                               *
-      *  Last Amend No. FVT104  *CREATE    Date 11Dec18               *
+      *  Last Amend No. MD057256           Date 24Feb21               *
+      *  Prev Amend No. FVT104  *CREATE    Date 11Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057256 - Spool file number not written to FCSFNOPD.        *
       *  FVT104 - 4-Eyes Principle for Journal Upload Tool.           *
       *                                                               *
       *****************************************************************
@@ -210,7 +212,8 @@
      D PSVal10         S            200A
       *
      D ZSfile          S             10A   INZ(*BLANKS)
-     D ZSnum           S              6B 0 INZ(0)
+     D*ZSnum****       S              6B 0 INZ(0)                                           MD057256
+     D ZSnum           S              6P 0 INZ(0)                                           MD057256
       *
      D KBcno           S                   LIKE(BRBTNB)
       *

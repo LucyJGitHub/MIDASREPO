@@ -797,9 +797,14 @@
      C                   IF        DDRRDP = *BLANKS
      C                   SELECT
 
-      ** Default to '05' if blank
      C                   WHEN      ApiName = 'BSRT'
+      ** Default to '05' if blank and BLRT = 'Y'
+     C                   IF        DDBLRT = 'Y'
      C                   EVAL      WDAY = 05
+      ** Default to '00' if blank and BLRT = 'N'
+     C                   ELSE
+     C                   EVAL      WDAY = 00
+     C                   ENDIF
 
       ** Default value from base rate code
      C                   WHEN      ApiName = 'CLIP'
@@ -897,7 +902,8 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDDBAV <> *BLANKS
+     C                             DDDBAV <> *BLANKS and
+     C                             DDDBAV <> '0'
      C                   EVAL      DDDBAVOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDDBAV'

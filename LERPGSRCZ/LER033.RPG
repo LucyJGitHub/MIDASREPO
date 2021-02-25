@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. AR325915           Date 03Oct18               *
+      *  Last Amend No. 257825             Date 26May14               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 AR325915           Date 03Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
       *                 MD029795           Date 25Nov14               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257825 - Need to check the matured loans file if record is   *
+      *           not in CLOAN before issuing database error.         *
+      *           Applied fix 244811.                                 *
+      *         - Applied for MD026880                                *      
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -136,6 +141,13 @@
       *
       * History Actions
      FHISACT  O   E                    DISK
+      ** Matured loans detail file                                                            257825
+      *                                                                                       257825
+     FMLOAN   IF  E           K        DISK                                                   257825
+     F            CLOANCLF                          KRENAMEMCLONCL                            257825
+     F            CLOANHHF                          KIGNORE                                   257825
+     F            CLOANCKF                          KIGNORE                                   257825
+     F            CLOANZ1F                          KIGNORE                                   257825
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -466,6 +478,15 @@
      C           *IN01     DOWEQ*OFF
       *
      C           LNRFA     CHAINCLOANCL              02
+      *                                                                                       257825
+      ** If the loan is no longer in the live loans file, then check if                       257825
+      ** it's still available in the matured loans file before issuing                        257825
+      ** a database error.                                                                    257825
+      *                                                                                       257825
+     C           *IN02     IFEQ '1'                                                           257825
+     C           LNRFA     CHAINMCLONCL              02                                       257825
+     C                     ENDIF                                                              257825
+      *                                                                                       257825
      C           *IN02     IFEQ '1'
      C           *LOCK     IN   LDA
      C                     MOVEL'CLOANCL 'DBFILE

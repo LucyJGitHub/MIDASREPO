@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. 259120A            Date 23Sep14               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
@@ -225,6 +226,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259120A - Adjust buffer to include DDXRLT, DDXRLS, DDXRLC    *
+      *          - Applied for MD-28282.                              *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -746,6 +749,11 @@
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
      D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
      D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
+                                                                                             259120A
+     DRFiller          DS             8                                                      259120A
+     D DDXRLT                  1      2                                                      259120A
+     D DDXRLS                  3      4                                                      259120A
+     D DDXRLC                  5      8                                                      259120A
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -2744,6 +2752,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
 
+     C     FILLn         SUBST     BUFFER:Bfp    RFiller                                     259120A
+     C                   ADD       FILLn         Bfp                                         259120A
      C     LOEXLn        SUBST     BUFFER:Bfp    ExtData                                      247172
      C                   ADD       LOEXLn        Bfp                                          247172
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
@@ -6134,6 +6144,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CLE106
      C                   Z-ADD     RecordLen     LOA2Ln            4 0                        CLE106
                                                                                               CLE106
+     C                   Z-ADD     8             FILLn             4 0                       259120A
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021699A          Date 19Sep13               *
-      *  Prev Amend No. 259227             Date 16Aug13               *
+      *  Last Amend No. MD042752           Date 08Jan18               *
+      *  Prev Amend No. 227174             Date 08Jan18               *
+      *                 MD021699A          Date 19Sep13               *
+      *                 259227             Date 16Aug13               *
       *                 AR918343           Date 25Apr12               *
       *                 MD027517           Date 08Jul14               *
       *                 AR896408           Date 31Jan1F               *
@@ -74,6 +76,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042752 - Facility currency being picked up to calculate    *
+      *             interest rather than loan currency                *
+      *  227174 - Int. Basis should default to loan ccy during loan   *
+      *           input                                               *
+      *         - Applied for MD042752                                *
       *  MD021699A - Additional changes relating to closing date.     *
       *  259227 - Default closing date to facility start date instead *
       *           of facility expiry date. Applied fix 126246.        *
@@ -1081,16 +1088,20 @@
 
      C     DDACTN        IFEQ      'I'
      C     DDDICB        ANDEQ     *BLANKS
+     C     DDMCCY        ANDEQ     'N'                                                      MD042752
      C                   MOVEL     DDFCCY        WCURR
      C                   EXSR      SRCURR
      C                   MOVE      A6DICB        DDDICB
      C                   ENDIF
 
      C     DDDICB        IFEQ      *BLANKS
-     C                   Move      'N'           DDDICBOK
-     C                   Add       1             Idx
-     C                   Movel     'DDDICB'      FldNamXAr(Idx)
-     C                   Movel     'LEF0071'     MsgIDXAr(Idx)
+      *                                                                                       227174
+      ** If Blank do nothing.  This field is now optional                                     227174
+      *                                                                                       227174
+     C**********         Move      'N'           DDDICBOK                                     227174
+     C**********         Add       1             Idx                                          227174
+     C**********         Movel     'DDDICB'      FldNamXAr(Idx)                               227174
+     C**********         Movel     'LEF0071'     MsgIDXAr(Idx)                                227174
       *
      C                   ELSE
       *

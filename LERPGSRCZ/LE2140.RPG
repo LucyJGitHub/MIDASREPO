@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022731           Date 07Oct13               *
-      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *  Last Amend No. MD021246           Date 25Aug13               *
+      *  Prev Amend No. MD022731           Date 07Oct13               *
+      *                 MD036924           Date 06Nov19               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -94,6 +95,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021246 - LEU0045 displayed in error when inserting MFU     *
+      *             in same ccy as the muti ccy facility.             *
+      *           - Partially remove BUG23133.                        *
       *  MD022731 - During Play Mode continue with the rest of the    *
       *             records in LE2140PD even when one record fails.   *
       *  MD036924 - Allow user to enquire when customer is closed     *
@@ -532,6 +536,7 @@
      I              'CLAuthORED'          C         SVALKK                                    240968
      I              'CLAuthSameORED'      C         SVALKJ                                    244314
      I              'MFUExchRateTolerance'C         SVALKI                                  BUG23133
+     I              '0123456789 '         C         DIGITS                                  MD021246
      I/COPY QWINDSRC,LE2140GDTA
      I/COPY ZSRSRC,ZHOLI
       /EJECT
@@ -5010,29 +5015,35 @@
      C********** SACTN     ANDNE'D'                                              BUG23133A BUG23133B
      C           SACTN     ANDNE'I'                                                        BUG23133B
      C                     MOVELSUXRT     WCRAT  12                                         BUG23133
-     C           '.'       CHECKWCRAT     L       20                                        BUG23133
+     C********** '.'       CHECKWCRAT     L       20                               BUG23133 MD021246
+     C           DIGITS    CHECKWCRAT     L       20                                        MD021246
      C           L         SUBSTWCRAT:1   WDGT1   4                                         BUG23133
-     C                     ADD  2         L                                                 BUG23133
+     C*********            ADD  2         L                                        BUG23133 MD021246
+     C                     ADD  1         L                                                 MD021246
      C                     SUBSTWCRAT:L   WDECS   7                                         BUG23133
      C                     MOVE WDGT1     WDGT2   40                                        BUG23133
      C                     MOVE WDECS     WDEC1   70                                        BUG23133
      C           WDEC1     DIV  10000000  WDEC2  117                                        BUG23133
      C           WDGT2     ADD  WDEC2     WSPR2  117                                        BUG23133
-     C                     CALL 'AOCURRR0'                                                  BUG23133
-     C                     PARM *BLANKS   PRTCD                                             BUG23133
-     C                     PARM '*KEY'    POPTN                                             BUG23133
-     C                     PARM SUCCY     PCURR                                             BUG23133
-     C           SDCURR    PARM SDCURR    DSSDY                                             BUG23133
-     C           PRTCD     IFNE *BLANKS                                                     BUG23133
-     C           *LOCK     IN   LDA                                                         BUG23133
-     C                     MOVEL'SDCURRPD'DBFILE           ************                     BUG23133
-     C                     Z-ADD35        DBASE            * DBERR 35 *                     BUG23133
-     C                     MOVELSUCCY     DBKEY            ************                     BUG23133
-     C                     OUT  LDA                                                         BUG23133
-     C                     EXSR *PSSR                                                       BUG23133
-     C                     ELSE                                                             BUG23133
-     C                     Z-ADDA6SPRT    WSPOT  117                                        BUG23133
-     C                     ENDIF                                                            BUG23133
+      ** Get X-CCY exchange rate                                                            MD021246
+     C                     EXSR SREXCH                                                      MD021246
+     C                     Z-ADDWXRAT     WSPOT  117                                        MD021246
+      *                                                                                     MD021246
+     C**********           CALL 'AOCURRR0'                                         BUG23133 MD021246
+     C**********           PARM *BLANKS   PRTCD                                    BUG23133 MD021246
+     C**********           PARM '*KEY'    POPTN                                    BUG23133 MD021246
+     C**********           PARM SUCCY     PCURR                                    BUG23133 MD021246
+     C********** SDCURR    PARM SDCURR    DSSDY                                    BUG23133 MD021246
+     C********** PRTCD     IFNE *BLANKS                                            BUG23133 MD021246
+     C********** *LOCK     IN   LDA                                                BUG23133 MD021246
+     C**********           MOVEL'SDCURRPD'DBFILE           ************            BUG23133 MD021246
+     C**********           Z-ADD35        DBASE            * DBERR 35 *            BUG23133 MD021246
+     C**********           MOVELSUCCY     DBKEY            ************            BUG23133 MD021246
+     C**********           OUT  LDA                                                BUG23133 MD021246
+     C**********           EXSR *PSSR                                              BUG23133 MD021246
+     C**********           ELSE                                                    BUG23133 MD021246
+     C**********           Z-ADDA6SPRT    WSPOT  117                               BUG23133 MD021246
+     C**********           ENDIF                                                   BUG23133 MD021246
       *                                                                                     BUG23133
       ** Get system value exchange rate tolerance.                                          BUG23133
       *                                                                                     BUG23133

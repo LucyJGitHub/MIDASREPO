@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918333           Date 08Mar12               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Last Amend No. 227174             Date 08Jan18               *
+      *  Prev Amend No. AR918333           Date 08Mar12               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -131,6 +132,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  227174 - Int. Basis should default to loan ccy during loan   *
+      *           input                                               *
+      *         - Applied for MD042752                                *
       *  AR918333 - Warning message LEL0559 is spurious and should not*
       *             be displayed. As a local fix, do not issue warning*
       *             LEL0559. (Child: AR918334)                        *      
@@ -2244,6 +2248,28 @@
      C                   MOVE      DICB          DDCALC
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       227174
+      ** If calculation basis is still blank, default from calculation basis                  227174
+      ** of loan currency.                                                                    227174
+      *                                                                                       227174
+     C     DDCALC        IFEQ      *BLANK                                                     227174
+     C                   MOVE      CCLCCY        @CYCD                                        227174
+     C                   CALLB     'AOCURRR0'                                                 227174
+     C                   PARM      *BLANKS       @RTCD                                        227174
+     C                   PARM      '*KEY   '     @OPTN                                        227174
+     C                   PARM                    @CYCD                                        227174
+     C     SDCURR        PARM      SDCURR        DSSDY                                        227174
+      *                                                                                       227174
+     C     @RTCD         IFNE      *BLANKS                                                    227174
+     C     *LOCK         IN        LDA                                                        227174
+     C                   MOVEL     'SDCURRPD'    DBFILE                         ************* 227174
+     C                   Z-ADD     11            DBASE                          * DBERR 011 * 227174
+     C                   MOVEL     CCLCCY        DBKEY                          ************* 227174
+     C                   OUT       LDA                                                        227174
+     C                   EXSR      *PSSR                                                      227174
+     C                   ENDIF                                                                227174
+     C                   MOVE      A6DICB        DDCALC                                       227174
+     C                   ENDIF                                                                227174
       *
       ***  For parts sold interest calculation defaults from sale of loan
       ***  number.

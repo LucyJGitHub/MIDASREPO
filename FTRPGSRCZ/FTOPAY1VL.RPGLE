@@ -200,7 +200,7 @@
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
       *            move out of *INZSR.                                *
-      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSW037A - Additional Field extended to 40 chars (recompile)  *
       *  BUG6280- Charges entered by user overwritten by defaulted    *
       *  CSD025 - Customer De-Activation                              *
       *  CSW037 - Additional Field Data on MT300/MT320                *

@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD031292           Date 06Nov19               *
-      *  Prev Amend No. MD025836           Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD031292           Date 06Nov19               *
+      *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
@@ -163,6 +165,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
       *  MD025836 - Loan principal increase causing excess. Remove    *
@@ -683,6 +687,7 @@
      D CER020          S              1A                                                      CER020
      D CRE073          S              1A                                                      CRE073
      D CLE141          S              1A                                                      CLE141
+     D CLE172          S              1A                                                      CLE172
 
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
@@ -3250,7 +3255,8 @@
       *
       * Change ind
      C                   MOVE      L_CLCHIN      CHIN
-     C     L_CLBRTT      IFNE      *ZERO
+     C*****L_CLBRTT      IFNE      *ZERO                                                      CSD103
+     C     L_CLBRTT      IFNE      *BLANKS                                                    CSD103
      C     L_CLCHIN      ANDEQ     *BLANK
      C     L_CLPTYP      IFEQ      63
      C     L_CLPTYP      OREQ      65
@@ -3387,8 +3393,10 @@
      C     RLDT_M        ANDNE     *ZERO
      C     NCCY_M        ANDNE     *BLANKS
      C     NCCY_M        ANDNE     CCY_M
-     C     NBRA_M        ANDNE     *ZERO
-     C                   Z-ADD     NBRA_M        NBRA
+     C*****NBRA_M        ANDNE     *ZERO                                                      CSD103
+     C     NBRA_M        ANDNE     *BLANKS                                                    CSD103
+     C**********         Z-ADD     NBRA_M        NBRA                                         CSD103
+     C                   MOVE      NBRA_M        NBRA                                         CSD103
      C                   Z-ADD     NCAS_M        NCAS
      C                   MOVE      NCHI_M        NCHI
      C                   ENDIF
@@ -3937,6 +3945,19 @@
      C                   EVAL      PREM = L_CLPREM                                            CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                   EVAL      BLRT = L_CLBLRT                                            CLE172
+     C                   EVAL      RFRR = L_CLRFRR                                            CLE172
+     C                   EVAL      CALM = L_CLCALM                                            CLE172
+     C                   EVAL      BADJ = L_CLBADJ                                            CLE172
+     C                   EVAL      FLOR = L_CLFLOR                                            CLE172
+     C                   EVAL      LBDY = L_CLLBDY                                            CLE172
+     C                   EVAL      LODY = L_CLLODY                                            CLE172
+     C                   EVAL      OPSH = L_CLOPSH                                            CLE172
+     C                   EVAL      RRDP = L_CLRRDP                                            CLE172
+     C                   EVAL      DBAV = L_CLDBAV                                            CLE172
+     C                   EVAL      RTKN = L_CLRTKN                                            CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************
@@ -7826,7 +7847,8 @@
      C                   MOVE      'B'           WEPAR
      C     WKLON         CHAIN(N)  CLOAN                              99
      C     *IN99         IFEQ      '0'
-     C                   Z-ADD     NBRA          NBRA_M            2 0
+     C**********         Z-ADD     NBRA          NBRA_M            2 0                        CSD103
+     C                   MOVE      NBRA          NBRA_M            2                          CSD103
      C                   Z-ADD     NCAS          NCAS_M            1 0
      C                   MOVE      NCHI          NCHI_M            1
      C                   MOVE      NCCY          NCCY_M            3
@@ -9559,6 +9581,19 @@
      C                   EXSR      *PSSR                                                      CLE141
      C                   ENDIF                                                                CLE141
      C                   ENDIF                                                                CLE141
+                                                                                              CLE172
+      ** Access SAR details to see if CLE172 is switched on                                   CLE172
+                                                                                              CLE172
+     C                   EVAL      CLE172 = 'N'                                               CLE172
+     C                   CALL      'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       PRetCode                                     CLE172
+     C                   PARM      '*VERIFY'     POption                                      CLE172
+     C                   PARM      'CLE172'      PSARD                                        CLE172
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        PRetCode = *BLANKS                                         CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CRE073
      C                   EVAL      SVALK1 = 'AutoEndCalcLoanFee'                            MD046370
      C                   EVAL      SVALK2 = 'PDCLPAMVPayAC'                                 MD050007

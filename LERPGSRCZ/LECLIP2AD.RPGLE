@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
@@ -48,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -149,10 +154,38 @@
      D LoanScnFm2    E DS                  EXTNAME(LECLI2PD)
       ***  (Current) Loan in Screen Format 2
      D                                     PREFIX(@)
+                                                                                              CLE172
+     D CurrScnBlrt     DS                                                                     CLE172
+     D  @DDBLRT                       1A                                                      CLE172
+     D  @DDRFRR                      10A                                                      CLE172
+     D  @DDCALM                       4A                                                      CLE172
+     D  @DDBADJ                      13A                                                      CLE172
+     D  @DDFLOR                      13A                                                      CLE172
+     D  @DDLBDY                       2A                                                      CLE172
+     D  @DDLODY                       2A                                                      CLE172
+     D  @DDOPSH                       1A                                                      CLE172
+     D  @DDRRDP                       2A                                                      CLE172
+     D  @DDDBAV                       1A                                                      CLE172
+     D  @DDRTKN                       1A                                                      CLE172
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CLE172
       *
      D NewLoanScn2   E DS                  EXTNAME(LECLI2PD)
       ***  New Loan in Screen Format 2
       *
+     D TranScnBlrt     DS                                                                     CLE172
+     D  DDBLRT                        1A                                                      CLE172
+     D  DDRFRR                       10A                                                      CLE172
+     D  DDCALM                        4A                                                      CLE172
+     D  DDBADJ                       13A                                                      CLE172
+     D  DDFLOR                       13A                                                      CLE172
+     D  DDLBDY                        2A                                                      CLE172
+     D  DDLODY                        2A                                                      CLE172
+     D  DDOPSH                        1A                                                      CLE172
+     D  DDRRDP                        2A                                                      CLE172
+     D  DDDBAV                        1A                                                      CLE172
+     D  DDRTKN                        1A                                                      CLE172
+      ***  New Backward-Looking Rate Fields Screen Fields                                     CLE172
+      *                                                                                       CLE172
      D LnCLFilFmt    E DS                  EXTNAME(CLOANCL)
       ***  (Current) Loan CL in File Format
      D                                     PREFIX(CL_)
@@ -166,6 +199,9 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
+      *
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)
+      ** External DS for switchable feature details
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, SHORT data structure
@@ -305,7 +341,7 @@
      C                   PARM      DDRTSP        ZCMPAMT1         25
      C                   PARM      @DDRTSP       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDRTSP'
@@ -366,7 +402,7 @@
      C                   PARM      DDIPRD        ZCMPAMT1         25
      C                   PARM      @DDIPRD       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C     CL_PTYP       ANDNE     80                                                        BUG3721
      C                   ADD       1             Idx
@@ -682,7 +718,158 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDPTDI)                  MD000091
      C                   EVAL      DDPTDIok        = 'N'
      C                   END
-      *
+      *                                                                                       CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+      *                                                                                       CLE172
+      ** Backward-Looking Rate                                                                CLE172
+      *                                                                                       CLE172
+     C     DDBLRT        IFNE      @DDBLRT                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDBLRT'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049460'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDBLRT))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDBLRT)                   CLE172
+     C                   EVAL      DDBLRTOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Risk Free Rate                                                                       CLE172
+      *                                                                                       CLE172
+     C     DDRFRR        IFNE      @DDRFRR                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDRFRR'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049459'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDRFRR))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRFRR)                   CLE172
+     C                   EVAL      DDRFRROK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Calculation Method                                                                   CLE172
+      *                                                                                       CLE172
+     C     DDCALM        IFNE      @DDCALM                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDCALM'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049463'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDCALM))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDCALM)                   CLE172
+     C                   EVAL      DDCALMOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+      *                                                                                       CLE172
+     C     DDBADJ        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVEL     '0'           DDBADJ                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C     @DDBADJ       IFEQ      *BLANKS                                                    CLE172
+     C                   MOVEL     '0'           @DDBADJ                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZCMPAMTS'                                                 CLE172
+     C                   PARM      DDBADJ        ZCMPAMT1                                     CLE172
+     C                   PARM      @DDBADJ       ZCMPAMT2                                     CLE172
+     C                   PARM      'N'           ZCMPAMTDif                                   CLE172
+      *                                                                                       CLE172
+     C     ZCMPAMTDif    IFEQ      'Y'                                                        CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDBADJ'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049464'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDBADJ))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBADJ)                    CLE172
+     C                   EVAL      DDBADJOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Floor                                                                                CLE172
+      *                                                                                       CLE172
+     C     DDFLOR        IFEQ      *BLANKS                                                    CLE172
+     C                   MOVEL     '0'           DDFLOR                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C     @DDFLOR       IFEQ      *BLANKS                                                    CLE172
+     C                   MOVEL     '0'           @DDFLOR                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'ZCMPAMTS'                                                 CLE172
+     C                   PARM      DDFLOR        ZCMPAMT1                                     CLE172
+     C                   PARM      @DDFLOR       ZCMPAMT2                                     CLE172
+     C                   PARM      'N'           ZCMPAMTDif                                   CLE172
+      *                                                                                       CLE172
+     C     ZCMPAMTDif    IFEQ      'Y'                                                        CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDFLOR'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049465'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDFLOR))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDFLOR)                    CLE172
+     C                   EVAL      DDFLOROK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Lookback Days                                                                        CLE172
+      *                                                                                       CLE172
+     C     DDLBDY        IFNE      @DDLBDY                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDLBDY'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049461'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDLBDY))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLBDY)                   CLE172
+     C                   EVAL      DDLBDYOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Lockout Days                                                                         CLE172
+      *                                                                                       CLE172
+     C     DDLODY        IFNE      @DDLODY                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDLODY'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049462'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDLODY))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLODY)                   CLE172
+     C                   EVAL      DDLODYOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Observation Period Shift                                                             CLE172
+      *                                                                                       CLE172
+     C     DDOPSH        IFNE      @DDOPSH                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDOPSH'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049466'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDOPSH))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDOPSH)                   CLE172
+     C                   EVAL      DDOPSHOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Rate Rounding Decimal Places                                                         CLE172
+      *                                                                                       CLE172
+     C     DDRRDP        IFNE      @DDRRDP                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDRRDP'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049467'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDRRDP))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRRDP)                   CLE172
+     C                   EVAL      DDRRDPOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Day Basis for Average                                                                CLE172
+      *                                                                                       CLE172
+     C     DDDBAV        IFNE      @DDDBAV                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDDBAV'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049468'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDDBAV))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDDBAV)                   CLE172
+     C                   EVAL      DDDBAVOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Rates Known                                                                          CLE172
+      *                                                                                       CLE172
+     C     DDRTKN        IFNE      @DDRTKN                                                    CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDRTKN'                                 CLE172
+     C                   EVAL      MsgIDArr(Idx)   = '5049469'                                CLE172
+     C                   EVAL      BLen = %Len(%Trim(@DDRTKN))                                CLE172
+     C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRTKN)                   CLE172
+     C                   EVAL      DDRTKNOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -887,6 +1074,72 @@
      C                   MOVEL     @DDPTDI       DDPTDI
      C                   END
       *
+      ** Backward-Looking Rate                                                                CLE172
+      *                                                                                       CLE172
+     C     DDBLRTOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDBLRT       DDBLRT                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Risk Free Rate                                                                       CLE172
+      *                                                                                       CLE172
+     C     DDRFRROK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDRFRR       DDRFRR                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Calculation Method                                                                   CLE172
+      *                                                                                       CLE172
+     C     DDCALMOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDCALM       DDCALM                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+      *                                                                                       CLE172
+     C     DDBADJOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDBADJ       DDBADJ                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Floor                                                                                CLE172
+      *                                                                                       CLE172
+     C     DDFLOROK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDFLOR       DDFLOR                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Lookback Days                                                                        CLE172
+      *                                                                                       CLE172
+     C     DDLBDYOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDLBDY       DDLBDY                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Lockout Days                                                                         CLE172
+      *                                                                                       CLE172
+     C     DDLODYOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDLODY       DDLODY                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Observation Period Shift                                                             CLE172
+      *                                                                                       CLE172
+     C     DDOPSHOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDOPSH       DDOPSH                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Rate Rounding Decimal Places                                                         CLE172
+      *                                                                                       CLE172
+     C     DDRRDPOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDRRDP       DDRRDP                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Day Basis for Average                                                                CLE172
+      *                                                                                       CLE172
+     C     DDDBAVOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDDBAV       DDDBAV                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Rates Known                                                                          CLE172
+      *                                                                                       CLE172
+     C     DDRTKNOK      IFEQ      'N'                                                        CLE172
+     C                   MOVEL     @DDRTKN       DDRTKN                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -894,7 +1147,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  INPUTS
@@ -907,6 +1160,12 @@
       *
       ***  (Current) Customer loan in Screen Format :
      C                   PARM                    LoanScnFm2
+      *                                                                                       CLE172
+      ***  New Backward-Looking Rate fields in Screen Format :                                CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
+      *                                                                                       CLE172
+      ***  (Current) Backward-Looking Rate fields in Screen Format :                          CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       *
       ***  Current Loan in file format
      C                   PARM                    LnCLFilFmt
@@ -1012,6 +1271,19 @@
      C                   MOVEL     'Y'           CLE5A7
      C                   END
       *
+      ** Determine if CLE172 feature is installed                                             CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     'N'           CLE172            1                          CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE172
+     C                   PARM      'CLE172'      @SARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+      *                                                                                       CLE172
+     C     @RTCD         IFEQ      *BLANK                                                     CLE172
+     C                   MOVEL     'Y'           CLE172                                       CLE172
+     C                   END                                                                  CLE172
+      *                                                                                       CLE172
      C                   ENDSR
       *****************************************************************
       /EJECT

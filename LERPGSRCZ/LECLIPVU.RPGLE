@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053956           Date 29Oct19               *
-      *  Prev Amend No. MD036838A          Date 29Oct19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD053956           Date 29Oct19               *
+      *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
       *                 MD054028           Date 05Sep19               *
@@ -143,6 +145,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
@@ -456,6 +460,8 @@
      D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE141
      D TranInExt     E DS                  EXTNAME(LESTMP2PD)                                 CER049
      D                                     PREFIX(Q)                                          CER049
+      ** Incoming Backward-Looking Rate Screen Fields                                         CLE172
+     D TranScnBlrt     DS            50                                                       CLE172
 
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
@@ -512,6 +518,9 @@
      D CurClSeven    E DS                  EXTNAME(LECLI7PD)                                  CLE141
      D                                     PREFIX(@)                                          CLE141
 
+      ** (Current) Backward-Looking Rate Fields in Screen Format                              CLE172
+     D CurrScnBlrt     DS            50                                                       CLE172
+                                                                                              CLE172
      D ClExtFilFmt   E DS                  EXTNAME(BYLOANX0)                                MD044880
      D                                     PREFIX(@)                                        MD044880
 
@@ -741,7 +750,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123
@@ -1056,14 +1066,18 @@
      C                   EXSR      GETRCDLN                                                 MD054028
      C                   ADD       RecordLen     eBfp                                       MD054028
       ** CER050 Fields                                                                      MD054028
-     C                   IF        CER050 = 'Y'                                             MD054028
+     C**********         IF        CER050 = 'Y'                                      MD054028 CLE172
      C                   EVAL      DDAPRC = %SUBST(Extdata500:eBfp:1)                       MD054028
      C                   ADD       1             eBfp                                       MD054028
      C                   EVAL      DDPREM = %SUBST(Extdata500:eBfp:15)                      MD054028
      C                   ADD       15            eBfp                                       MD054028
      C                   EVAL      DDAPRR = %SUBST(Extdata500:eBfp:8)                       MD054028
      C                   ADD       8             eBfp                                       MD054028
-     C                   ENDIF                                                              MD054028
+     C**********         ENDIF                                                       MD054028 CLE172
+      ** CLE172 Fields                                                                        CLE172
+     C                   EVAL      TranScnBlrt = %SUBST(Extdata500:eBfp:50)                   CLE172
+     C                   ADD       50            eBfp                                         CLE172
+                                                                                              CLE172
      C                   MOVEL     RegData500    RegData                                      CER001
 
       * Reset variables gradually updated
@@ -1579,6 +1593,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + TranScnBlrt                            CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1607,6 +1622,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + TranScnBlrt                            CLE172
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -2046,6 +2062,8 @@
      C                   PARM                    OKClPrim
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
+      ** Backward-Looking Rate Fields                                                         CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
 
       * OUTPUTS
 
@@ -2989,6 +3007,8 @@
 
       * Customer loans Details - screen formats 2
      C                   PARM                    CurClSeco
+      ** Backward-Looking Rate Fields from file                                               CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
 
       * For Amends, convert the customer loan to screen format 3
 
@@ -3186,6 +3206,10 @@
      C                   PARM                    TraninSeco
       * (Current) Customer Loans in Screen Format :
      C                   PARM                    CurClSeco
+      ** Incoming Backward-Looking Rate fields in Screen Format :                             CLE172
+     C                   PARM                    TranScnBlrt                                  CLE172
+      ** (Current) Backward-Looking Rate fields in Screen Format :                            CLE172
+     C                   PARM                    CurrScnBlrt                                  CLE172
       * (Current) Loan in file format:
      C                   PARM                    ClilFilFmt
      C                   PARM                    ClikFilFmt
@@ -4066,6 +4090,7 @@
      C                   CLEAR                   CurClFour
      C                   CLEAR                   CurClSix                                     CLE134
      C                   CLEAR                   CurClSeven                                   CLE141
+     C                   CLEAR                   CurrScnBlrt                                  CLE172
 
      C                   MOVE      *ALL'Y'       OKClPrim
      C                   MOVE      *ALL'Y'       OKClSeco

@@ -850,7 +850,7 @@
 
       ** Use ZA0841 on input to allow single digit entry in form
      C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDLBDY        @@ALPH
+     C                   MOVE      DDLODY        @@ALPH
      C                   CALLB     'ZA0841'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    @@ALPH
@@ -1013,13 +1013,9 @@
 
      C                   SELECT
 
-      ** Default to '04' if 'SONIA' otherwise to '05'
+      ** Default to '05'
      C                   WHEN      ApiName = 'BSRT'
-     C                   IF        DDCALM = 'SONIA'
-     C                   MOVE      '04'          WDAY
-     C                   ELSE
      C                   MOVE      '05'          WDAY
-     C                   ENDIF
 
       ** Default value from base rate code                                                    CLE172
      C                   WHEN      ApiName = 'CLIP'                                           CLE172

@@ -55,8 +55,8 @@
       *  SROPSH - Validate Observation Period Shift Field             *
       *  SRRRDP - Validate Rate Rounding Decimal Places               *
       *  SRDBAV - Validate Day Basis for Average Field                *
-      *  SRRTKN - Populate Rates Known Field                          *   						
-      *                                                               *                       CLE172
+      *  SRRTKN - Populate Rates Known Field                          *   	               CLE172				
+      *                                                               *
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
@@ -293,8 +293,8 @@
       ** Validate Day Basis for Average
      C                   EXSR      SRDBAV
 
-      ** Populate Rates Known
-     C                   EXSR      SRRTKN
+      ** Populate Rates Known                                                                 CLE172
+     C                   EXSR      SRRTKN                                                     CLE172
 
      C                   ENDIF
 
@@ -897,7 +897,7 @@
      C                   IF        DDBLRT = 'N' and
      C                             DDLODY <> *BLANKS and
      C                             %TRIMR(DDLODY) <> '0'
-     C                   EVAL      DDLBDYOK = 'N'
+     C                   EVAL      DDLODYOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
      C                   IF        ApiName = 'LERI'                                           CLE172
@@ -1031,7 +1031,7 @@
 
       ** Use ZA0841 on input to allow single digit entry in form
      C                   MOVE      *BLANKS       @@ALPH
-     C                   MOVE      DDLBDY        @@ALPH
+     C                   MOVE      DDRRDP        @@ALPH
      C                   CALLB     'ZA0841'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    @@ALPH

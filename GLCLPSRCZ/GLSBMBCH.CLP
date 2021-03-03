@@ -9,9 +9,10 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD026880           Date 26May14              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260259             Date 14May09              */
+/*                      260259             Date 14May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      245635             Date 13Feb07              */
 /*                      241672A            Date 09Jan07              */
@@ -38,6 +39,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD026880 - Submit job should be done under user *CURRENT.   */
+/*                  Apply fix 202562.                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       260259 - Batch acceptance delay problem. Fix is to          */
 /*                sbmjob GLC445 to MIDASJOBQ and removed MIDASRMV.   */
@@ -168,11 +171,16 @@
 /**********               RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA + */                   /*260259*/
 /**********               *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +   */                   /*260259*/
 /**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                */            /*245631 260259*/
+/**********  SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +                   */ /*MD026880*/
+/**********               OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +                    */ /*MD026880*/
+/**********               RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +                 */ /*MD026880*/
+/**********               *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +                   */ /*MD026880*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                                */ /*MD026880*/
              SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +
-                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                          OUTQ(*JOBD) USER(*CURRENT) RTGDTA(*JOBD) +
                           RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +
                           *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +
-                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                     /*260259*/
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD026880*/
 /*/COPY WNCPYSRC,GLSBMBCH03                                          */
 /*           SBMJOB     JOB(GLC445) JOBD(MBATCH) USER(*JOBD) +        /*E36493*/
 /*                        RTGDTA(*JOBD) RQSDTA('CALL GLC445 PARM(''' +/*E36493*/

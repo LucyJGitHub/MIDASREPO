@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR923246           Date 15Mar12               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *  Last Amend No. MD025459           Date 24Sep14               *
+      *  Prev Amend No. AR923246           Date 15Mar12               *
+      *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
@@ -424,6 +425,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025459 - Interest payment date and frequency missing after *
+      *             loan rollover date. Retain IPFR value 'R' even if *
+      *             RLFQ is blanks. Update NIDT and IBDT with rollover*
+      *             details.                                          *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
       *             when written. (Child: AR923248)                   *
@@ -14265,6 +14270,11 @@ L118 I                             P   72   77 7RTSPL
       *****************************************************************               CLE141 CLE141A
      C**********         ELSE                                                         CLE141 CLE141A
       *****************************************************************               CLE141 CLE141A
+      *                                                                                     MD025459
+      ** Save ZDAYNO because it is changed by ZCNTDY in specific                            MD025459
+      ** situation - WDAYNO is used to update IBDT                                          MD025459
+      *                                                                                     MD025459
+     C                   Z-ADD     ZDAYNO        WDAYNO            5 0                      MD025459
      C                   Z-ADD     *ZERO         ZNRDYS                                        CLE00
      C     ZLOC          IFEQ      *BLANKS                                                  MD023320
      C                   MOVE      SYSL          ZLOC
@@ -14358,6 +14368,11 @@ L118 I                             P   72   77 7RTSPL
      C                   IF        CLE141 = 'Y'                                              CLE141A
                                                                                               CLE141
      C                   EXSR      ZFRQB3                                                     CLE141
+      *                                                                                     MD025459
+      ** Save ZDAYNO because it is changed by ZCNTDY in specific                            MD025459
+      ** situation - WDAYNO is used to update IBDT                                          MD025459
+      *                                                                                     MD025459
+     C                   Z-ADD     ZDAYNO        WDAYNO            5 0                      MD025459
      C                   IF        AMTP = 'IN' or AMTP = 'PD' or                              CLE141
      C                             AMTP = 'RE'                                                CLE141
      C                   MOVEL     CCYPI         PCURR                                        CLE141
@@ -14387,6 +14402,11 @@ L118 I                             P   72   77 7RTSPL
                                                                                               CLE141
      C                   ELSE                                                                 CLE141
      C                   EXSR      ZFREQB                                                      S0119
+      *                                                                                     MD025459
+      ** Save ZDAYNO because it is changed by ZCNTDY in specific                            MD025459
+      ** situation - WDAYNO is used to update IBDT                                          MD025459
+      *                                                                                     MD025459
+     C                   Z-ADD     ZDAYNO        WDAYNO            5 0                      MD025459
 0707 C                   Z-ADD     *ZERO         ZNRDYS                                        S0119
 1867 C                   EXSR      ZFWDT                                                       S0119
      C                   ENDIF                                                                CLE141
@@ -14409,6 +14429,7 @@ C    C                   ENDIF                                                  
 1872 C**
 1873 C   89              Z-ADD     0             ZDYNBR
 1874 C   89              Z-ADD     0             ZDAYNO
+     C   89              Z-ADD     0             WDAYNO                                     MD025459
 1875 C   89              Z-ADD     0             AMOUNT           13 0
 1876 C   89              Z-ADD     0             ZMDAY
 1877 C   89              MOVE      ' '           ZFREQ
@@ -14454,7 +14475,8 @@ C    C                   ENDIF                                                  
      C                   ENDIF                                                                 16348
       *                                                                   163483
      C/COPY WNCPYSRC,LE0450C017
-1898 C                   Z-ADD     ZDAYNO        IBDT
+1898 C**********         Z-ADD     ZDAYNO        IBDT                                       MD025459
+     C                   Z-ADD     WDAYNO        IBDT                                       MD025459
      C*                                                                   S01465
      C**  Changes for rollover of next interest payment date only if      S01465
      C**  switchable feature S01465 is switched ON                        S01465
@@ -14506,11 +14528,21 @@ C    C                   ENDIF                                                  
 1900 C                   Z-ADD     ZMDAY         IFDY
      C                   ENDIF                                                                 08357
      C/COPY WNCPYSRC,LE0450C071
+     C                   MOVE      IPFR          WIPFR             1                        MD025459
       *                                                                                       216832
      C     IPFR          IFNE      'R'
      C     *IN89         OREQ      '1'
 1901 C                   MOVE      ZFREQ         IPFR
      C                   ENDIF
+      *                                                                                     MD025459
+     C     WIPFR         IFEQ      'R'                                                      MD025459
+     C     IPFR          ANDEQ     ' '                                                      MD025459
+     C     RLFQ          ANDEQ     ' '                                                      MD025459
+     C     NROD          ANDGT     *ZERO                                                    MD025459
+     C                   MOVE      WIPFR         IPFR                                       MD025459
+     C                   Z-ADD     NROD          NIDT                                       MD025459
+     C                   Z-ADD     NROD          IBDT                                       MD025459
+     C                   ENDIF                                                              MD025459
 1902 C**
 1903 C**   RESET BIT SETTINGS
 1904 C** - ONLY IF BITS WERE ON FOR THIS PAYMENT I.E. RUND LE VDAT

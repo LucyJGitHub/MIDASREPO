@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD000091           Date 09May13               *
@@ -47,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -370,7 +375,7 @@
      C                   PARM      DDBCXR        ZCMPAMT1         25
      C                   PARM      @DDBCXR       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDBCXR'
@@ -403,7 +408,7 @@
      C                   PARM      DDFCXR        ZCMPAMT1         25
      C                   PARM      @DDFCXR       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFCXR'
@@ -569,7 +574,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  INPUTS

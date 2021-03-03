@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR868380           Date 11Jun13               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -36,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
@@ -694,7 +699,7 @@ E004 C                   ENDIF
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVEL     BGMBIN        MBIN              1
       *
       ***  Access General Ledger
@@ -720,7 +725,7 @@ E004 C                   ENDIF
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C                   endif
       *
       ***  Determine if Customer Lending Enhancements - Authorization
@@ -859,7 +864,7 @@ E004 C                   ENDIF
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE023
      C                   END
- 
+
       *  Check if an existing DBU_CLIP job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589

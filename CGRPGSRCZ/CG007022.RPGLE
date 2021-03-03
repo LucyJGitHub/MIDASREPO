@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD031764           Date 09Jan15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -25,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD031764 - Correct KEY as DRDCOR must be added.              *
@@ -69,13 +74,13 @@
      F                                     Ignore(CLOANCKF)
      F                                     Rename(CLOANCLF:MLOANCLF)
      FCGISDXPD  O    E             DISK
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Declared variables
      D S1              S              2  0
      D E1              S              2  0
@@ -84,7 +89,7 @@
      D WHdrTag         S             33
      D CFT004          S              1
      D @Run            S              1
- 
+
      D PRtcd           S              7
      D POptn           S              7
      D PRetl           S             10
@@ -98,14 +103,14 @@
      D PINobl          S             34
      D PSard           S              6
      D Wnum            S              6  0
- 
+
      D KItem           S              8  0
      D KStat           S              1
      D*KLNRF****       S              6  0                                                    CLE148
      D KLNRF           S              6                                                       CLE148
      D KRCDT           S              1
      D KCORR           S             10                                                     MD031764
- 
+
       **  BFMidas Account ID
      D                 DS
      D  WCNUM                  1      6
@@ -117,36 +122,36 @@
      D                 DS
      D  WRef                   1     15
      D  WNumA                  1      6
- 
+
       **  External DS for Account details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  LCDSCS       E                     EXTFLD(LCD)
- 
+
       **  First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *****************************************************************
- 
+
       ** Extraction for Current Data
      C                   EVAL      KStat = 'C'
      C                   EXSR      SrExtract
- 
+
       ** Extraction for Archive Data
      C                   EVAL      KStat = 'A'
      C                   EXSR      SrExtract
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       *                                                               *
       *  SrExtract - Extract Header and Details                       *
       *                                                               *
       *****************************************************************
      C     SrExtract     BEGSR
- 
+
      C                   IF        KStat = 'C'
      C     *LOVAL        SETLL     CGUDCRLB
      C                   READ      CGUDCRLB
@@ -157,7 +162,7 @@
      C                   EXSR      SrWrtCurCGxml
      C                   READ      CGUDCRLB
      C                   ENDDO
- 
+
      C                   ELSE
      C     *LOVAL        SETLL     CGXDCRLB
      C                   READ      CGXDCRLB
@@ -169,16 +174,16 @@
      C                   READ      CGXDCRLB
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SrWrtHdr - Write to Interest Scale Header File               *
       *                                                               *
       *****************************************************************
      C     SrWrtHdr      BEGSR
- 
+
      C*****KITEM         CHAIN     CGISHXD0                           90                    MD031764
      C     KKEY          CHAIN     CGISHXD0                           90                    MD031764
      C                   IF        *IN90 = *ON
@@ -197,7 +202,7 @@
      C                   EVAL      HXDLST = ' '
      C**********         EVAL      HXDLNO = 0                                                 CLE148
      C                   EVAL      HXDLNO = *BLANKS                                           CLE148
- 
+
      C                   WHEN      DRMODI = 'DL'
      C                   EVAL      WRef = DRMTRN
      C                   TESTN                   WNumA                9394
@@ -212,7 +217,7 @@
      C                   EVAL      HXDLNO = WNumA                                             CLE148
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   WHEN      DRMODI = 'LE'
      C                   EVAL      WRef = DRMTRN
      C**********         TESTN                   WNumA                9394                    CLE148
@@ -239,14 +244,14 @@
      C                   ENDIF
      C**********         ENDIF                                                                CLE148
      C                   ENDSL
- 
+
      C                   IF        CFT004 = 'Y'
      C                   EXSR      SrRetrIBAN
      C                   ENDIF
      C                   EVAL      HXSTAT = KStat
      C                   WRITE     CGISHXD0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -254,13 +259,13 @@
       *                                                               *
       *****************************************************************
      C     SrRetrIBAN    BEGSR
- 
+
      C                   MOVEL     WCNUM         PCNUM
      C                   MOVEL     WCCY          PCCY
      C                   MOVEL     WACOD         PACOD
      C                   MOVEL     WACSQ         PACSQ
      C                   MOVEL     WBRCA         PBRCA
- 
+
       **  Access account details
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRtcd
@@ -272,7 +277,7 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRtcd = *BLANKS And IBAN <> *BLANKS
      C                   MOVE      *BLANKS       PIWITH
      C                   CALL      'AOIBANR3'
@@ -280,10 +285,10 @@
      C                   PARM      IBAN          PIBAN
      C                   PARM                    PIWith
      C                   PARM      *BLANKS       PINobl
- 
+
      C                   MOVEL     PIWITH        HXIBAN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -292,25 +297,25 @@
       *                                                               *
       *****************************************************************
      C     SrWrtCurCGxml BEGSR
- 
+
      C     KItem         SETLL     CGUXMLL0
      C     KItem         READE     CGUXMLL0
      C                   DOW       NOT %EOF(CGUXMLL0)
- 
+
      C                   EVAL      DXITEM = XMITEM
      C                   MOVEL     XMTAGN        SrchStrng
      C     '</'          SCAN      SrchStrng:1
      C                   IF        %FOUND
      C                   GOTO      SKIP
      C                   ENDIF
- 
+
      C     '<'           SCAN      SrchStrng     S1
      C     '>'           SCAN      SrchStrng     E1
      C                   EVAL      WFldTag = %SUBST(SrchStrng:S1+1:E1-S1-1)
      C                   IF        WFldTag = 'InterestScale'
      C                   GOTO      SKIP
      C                   ENDIF
- 
+
      C                   IF        XMENDT = *BLANKS
      C                   EVAL      WHdrTag = WFldTag
      C                   ENDIF
@@ -319,10 +324,10 @@
      C                   EVAL      DXTAGV = XMTAGV
      C                   WRITE     CGISDXD0
      C     SKIP          TAG
- 
+
      C     KItem         READE     CGUXMLL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -331,26 +336,26 @@
       *                                                               *
       *****************************************************************
      C     SrWrtArcCGxml BEGSR
- 
+
      C     KItem         SETLL     CGXXMLL0
      C     KItem         READE     CGXXMLL0
- 
+
      C                   DOW       NOT %EOF(CGXXMLL0)
- 
+
      C                   EVAL      DXITEM = XMITEM
      C                   MOVEL     XMTAGN        SrchStrng
      C     '</'          SCAN      SrchStrng:1
      C                   IF        %FOUND
      C                   GOTO      SKIP2
      C                   ENDIF
- 
+
      C     '<'           SCAN      SrchStrng     S1
      C     '>'           SCAN      SrchStrng     E1
      C                   EVAL      WFldTag = %SUBST(SrchStrng:S1+1:E1-S1-1)
      C                   IF        WFldTag = 'InterestScale'
      C                   GOTO      SKIP2
      C                   ENDIF
- 
+
      C                   IF        XMENDT = *BLANKS
      C                   EVAL      WHdrTag = WFldTag
      C                   ENDIF
@@ -359,7 +364,7 @@
      C                   EVAL      DXTAGV = XMTAGV
      C                   WRITE     CGISDXD0
      C     SKIP2         TAG
- 
+
      C     KItem         READE     CGXXMLL0
      C                   ENDDO
      C                   ENDSR
@@ -369,7 +374,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     LoanKy        KLIST
      C                   KFLD                    KLNRF
      C                   KFLD                    KRCDT
@@ -380,13 +385,13 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT004'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     PRtcd         IFEQ      *BLANKS
      C                   MOVE      'Y'           CFT004
      C                   ELSE
      C                   MOVE      'N'           CFT004
      C                   ENDIF
- 
+
      C     KKEY          KLIST                                                              MD031764
      C                   KFLD                    KITEM                                      MD031764
      C                   KFLD                    KCORR                                      MD031764
@@ -401,16 +406,16 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   IF        @Run = *BLANK
      C                   EVAL      @Run = 'Y'
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR

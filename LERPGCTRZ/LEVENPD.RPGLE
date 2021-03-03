@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -37,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -64,7 +69,7 @@
       *  CAS019 - Upgrade of CAS016 to Midas Plus                     *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -76,71 +81,71 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
       * Customer Loans record CL in file Format
      D                                     PREFIX(CL_)
- 
+
      D TranInPrim    E DS                  EXTNAME(LEFEEMPD)
       * Incoming Transaction
- 
+
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
       ** External DS for Fee Details
- 
+
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
       ** External DS for Fee Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -155,14 +160,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   RESET                   ErrorFound
      C                   MOVE      *BLANKS       RetCodeIn
- 
+
      C                   EXSR      VAMEN
- 
+
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -170,7 +175,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -203,19 +208,19 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       * VAMEN - Validate Amortisation End  Date                       *
       *****************************************************************
      C     VAMEN         BEGSR
- 
+
       *
       ** Entry is allowed only when fee code is adjustment to yield
       ** and loan is flagged to do amortised cost acctg                                    BUG16539A
- 
+
      C**********         IF        (AUADJY <> 'Y')  AND (DDENPD <> *BLANKS)                BUG16539A
      C                   IF        NOT(AUADJY = 'Y' AND AYACAI = 'Y') AND                  BUG16539A
      C                             (DDENPD <> *BLANKS)                                     BUG16539A
@@ -224,7 +229,7 @@
      C                   EVAL      RetCodeIn      = 'Error'
      C                   LeaveSR
      C                   ENDIF
- 
+
       ** Convert to Midas date format
      C**********         IF        (AUADJY = 'Y' AND DDENPD <> *BLANKS)                     BUG16539
      C**********         IF        (AUADJY = 'Y')                                 BUG16539 BUG16539A
@@ -237,7 +242,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       ** Invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -250,10 +255,10 @@
      C                   EVAL      WAEndDat = ZDAYNO
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** Entry is mandatory for one off fees and amortise over period is 'Y'
- 
+
      C                   IF        (DDEPON = ' ' AND DDAMRI = 'Y') AND
      C                             (DDENPD = *BLANKS)
      C                   EVAL      #MsgID         = 'LER1209'
@@ -261,7 +266,7 @@
      C                   EVAL      RetCodeIn      = 'Error'
      C                   LeaveSR
      C                   ENDIF
- 
+
       **********                                                                     BUG16539 262581
       ***Entry*is not allowed if Amortised Over Period is "N"                        BUG16539 262581
       ***Defaulting to maturity date of the loan                                     BUG16539 262581
@@ -288,7 +293,7 @@
                                                                                             BUG16539
       *
       ** Entry must not be beyond maturity date of the loan
- 
+
      C**********         IF        (WAEndDat > CL_MDAT)                                     BUG16539
      C                   IF        (WAEndDat > CL_MDAT) AND (DDENPD <> *BLANKS)             BUG16539
      C                   EVAL      #MsgID         = 'LER1211'
@@ -308,7 +313,7 @@
      C                   EVAL      RetCodeIn      = 'Error  '                                 262581
      C                   LeaveSR                                                              262581
      C                   ENDIF                                                                262581
- 
+
      C                   IF        (DDENPD = *BLANKS)                                       BUG16539
       *
       ** Defaulting
@@ -317,7 +322,7 @@
       ***Entry*is*not*allowed*if*Amortised*Over*Period*is*"N"                               BUG16539
       ** If Amortised Over Period is "N"                                                    BUG16539
       ** Defaulting to maturity date of the loan
- 
+
      C                   IF        (DDAMRI = 'N')
      C                             AND (CL_MDAT <> 0)                                         262581
      C**********         EVAL      #MsgID         = 'LER1215'                               BUG16539
@@ -333,17 +338,17 @@
      C                   PARM                    BJDFIN
      C                   PARM      *ZEROS        ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   MOVEL     ZDATE         DDENPD
      C                   EVAL      WAEndDat       = CL_MDAT
- 
+
      C                   LeaveSR
      C                   ENDIF
- 
+
       *
       ** For accruing and amortising fees and amortise period is 'Y'
       ** this field will be defaulted to end date of the fee
- 
+
      C                   IF        (DDAMRI = 'Y' AND DDEPON = 'S') OR
      C                             (DDAMRI = 'Y' AND DDEPON = 'E') OR
      C**********                   (DDAMRI = 'Y' AND DDEPON = 'N')                            262581
@@ -352,7 +357,7 @@
      C                   EVAL      #MsgID         = 'LER1216'
      C                   EVAL      ErrorFound     = 'Y'
      C                   EVAL      RetCodeIn      = 'Warning'
- 
+
      C                   EVAL      DDENPD         = DDEPED
      C                   EVAL      WAEndDat       = WPEND
      C                   LeaveSR
@@ -370,7 +375,7 @@
      C                   EVAL      RetCodeIn      = 'Error'                                 BUG16539
      C                   ENDIF                                                              BUG16539
      C                   ENDIF                                                              BUG16539
- 
+
      C                   ENDSR
       *
       *****************************************************************

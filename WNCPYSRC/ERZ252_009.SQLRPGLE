@@ -48,11 +48,11 @@
                                                                                             //ERZ252
                    if ExtBalFound = 'Y';                                                    //ERZ252
                                                                                             //ERZ252
-                      //                                                                    //ERZ252
-                      // Report Amounts                                                     //ERZ252
-                      //                                                                    //ERZ252
+       //                                                                                   //ERZ252
+       // Report Amounts                                                                    //ERZ252
+       //                                                                                   //ERZ252
                                                                                             //ERZ252
-                      // Get Currency                                                       //ERZ252
+       // Get Currency                                                                      //ERZ252
                       CURLKUP = %Lookup( CustomerDS(i).SEACCY                               //ERZ252
                                         :Currencies);                                       //ERZ252
                       if CURLKUP > 0;                                                       //ERZ252
@@ -71,12 +71,12 @@
                          ZDECS    = A6NBDP;                                                 //ERZ252
                       endif;                                                                //ERZ252
                                                                                             //ERZ252
-                      // Opening Balance                                                    //ERZ252
+       // Opening Balance                                                                   //ERZ252
                       ZFLD15 = CustomerDS(i).SEAAMT;                                        //ERZ252
                       exsr FormatAmt;                                                       //ERZ252
                       W@OPEN = ZOUT22;                                                      //ERZ252
                                                                                             //ERZ252
-                      // Held Items                                                         //ERZ252
+       // Held Items                                                                        //ERZ252
                       wZField = CustomerDS(i).SEHELD;                                       //ERZ252
                       wzDec = A6NBDP;                                                       //ERZ252
                       WZeCode = 'J';                                                        //ERZ252
@@ -87,7 +87,7 @@
                                        :wZout21);                                           //ERZ252
                       W@HELD = wZout21;                                                     //ERZ252
                                                                                             //ERZ252
-                      // Overdraft Amount                                                   //ERZ252
+       // Overdraft Amount                                                                  //ERZ252
                       wZField = CustomerDS(i).SEOAMT *-1;                                   //ERZ252
                       wzDec = A6NBDP;                                                       //ERZ252
                       wZout21 = *blanks;                                                    //ERZ252
@@ -97,21 +97,21 @@
                                        :wZout21);                                           //ERZ252
                       W@OVLN = wZout21;                                                     //ERZ252
                                                                                             //ERZ252
-                      // External Balance                                                   //ERZ252
+       // External Balance                                                                  //ERZ252
                       ZFLD15 = XAVBL;                                                       //ERZ252
                       exsr FormatAmt;                                                       //ERZ252
                       W@EXTR = ZOUT22;                                                      //ERZ252
                                                                                             //ERZ252
-                      //                                                                    //ERZ252
-                      // Override amounts                                                   //ERZ252
-                      //                                                                    //ERZ252
+       //                                                                                   //ERZ252
+       // Override amounts                                                                  //ERZ252
+       //                                                                                   //ERZ252
                                                                                             //ERZ252
                       CustomerDS(i).SEAAMT = XAVBL;                                         //ERZ252
                       CustomerDS(i).SECLBL = XAVBL;                                         //ERZ252
                                                                                             //ERZ252
-                      //                                                                    //ERZ252
-                      // Write data to report                                               //ERZ252
-                      //                                                                    //ERZ252
+       //                                                                                   //ERZ252
+       // Write data to report                                                              //ERZ252
+       //                                                                                   //ERZ252
                                                                                             //ERZ252
                       if PrtLn1 > 60;                                                       //ERZ252
                          exsr printHeaderReport;                                            //ERZ252

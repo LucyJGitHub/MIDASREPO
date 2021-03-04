@@ -55,7 +55,7 @@
       *  SROPSH - Validate Observation Period Shift Field             *
       *  SRRRDP - Validate Rate Rounding Decimal Places               *
       *  SRDBAV - Validate Day Basis for Average Field                *
-      *  SRRTKN - Populate Rates Known Field                          *   	               CLE172				
+      *  SRRTKN - Populate Rates Known Field                          *                       CLE172
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+

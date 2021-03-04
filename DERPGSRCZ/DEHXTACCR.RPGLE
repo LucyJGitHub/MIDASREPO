@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -85,33 +88,33 @@
       *  CDE002 - Data Export - CCRM Revenue Analysis.                *
       *                                                               *
       *****************************************************************
- 
+
       ** RE Debit Margin history by Account and Date
      FREHMRGL1  IF   E           K DISK
      F                                     RENAME(REHMRGD0:REHMRGD1)
- 
+
       ** RE Credit Margin History by Account and Date
      FREHMRGL2  IF   E           K DISK
      F                                     RENAME(REHMRGD0:REHMRGD2)
- 
+
       ** RE Retail History Debit Rate Change Records
      FREHRDJ    IF   E           K DISK
- 
+
       ** RE Retail History Credit Rate Change Records
      FREHRCJ    IF   E           K DISK
- 
+
       ** RE Retail Postings History File
      FREHPOPL   IF   E           K DISK
      F                                     PREFIX(PT_)
- 
+
       ** RE Full Retail History File
      FREHISL0   IF   E           K DISK
- 
+
       ** Accounts by Reference
      FACCBR     IF   E           K DISK
      F                                     PREFIX(PN_)
      F                                     RENAME(ACCNTABF:ACCNTAB0)
- 
+
       ** Accounts by Retail Account No.
      FACCNTL1   IF   E           K DISK
      F                                     PREFIX(PR_)
@@ -120,7 +123,7 @@
      FDEHPOSNPD O    E           K DISK
      FDEHEVNTPD O    E           K DISK
      FDEHCASHPD O    E           K DISK
- 
+
       *********************************************************************
       * E X T R A C T   P E R I O D   D E F I N I T I O N
       /COPY DECPYSRC,DEXTPERDD
@@ -159,62 +162,62 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D RELIVEX       E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC_)
- 
+
      D REHISBLX      E DS                  EXTNAME(REHISPD)
      D                                     PREFIX(BL_)
- 
+
       * E X T R A C T   F I L E S
       /COPY DECPYSRC,DEXTFILS
- 
+
      D**  Long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D**  Short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for GENERAL LEDGER details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(RT_)
- 
+
       ** External DS for Narrative Details
      D SDNARR        E DS                  EXTNAME(SDNARRPD)
       *
       ** External DS for Retail Details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for Midas Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Midas Cusomer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Switchable Features details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External DS for Posting narraive Details
      D CGPNAR        E DS                  EXTNAME(CGPNARPD)
- 
+
      D I#PRM1          DS
       **  Data Structure for Customer and Branch
       *
      D ##CUST                  1      6
      D ##BRCA                  7      9
- 
+
      D*W#ACID***       DS            20                                                       CGL029
      D W#ACID          DS            26                                                       CGL029
      D*W#CNUM***               1      6  0                                                    CSD027
@@ -226,7 +229,7 @@
      D*W#ACOD***              10     13  0                                                    CGL029
      D*W#ACSQ***              14     15  0                                                    CGL029
      D*W#BRCA***              16     18                                                       CGL029
- 
+
      D*W#ACPO***       DS                                                                     CGL029
      D W#ACPO          DS            24                                                       CGL029
      D*W#ACCN***               1      6  0                                                    CSD027
@@ -236,7 +239,7 @@
      D W#ACAS                 20     21  0                                                    CGL029
      D*W#ACCD***              10     13  0                                                    CGL029
      D*W#ACAS***              14     15  0                                                    CGL029
- 
+
      D*
      D** Debit Rates
      D WDRAT           DS
@@ -331,7 +334,7 @@
      D W#DINR          S             30A
      D W#HMNR          S             30A
      D W#NANR          S             30A
- 
+
      D Ix              S              3P 0
      D MovIx           S              3P 0
      D W#BCOM          S             13P 0
@@ -350,11 +353,11 @@
       ********************************************************************
       * MAIN PROCESSING
       ********************************************************************
- 
+
      C                   EXSR      XTINIT
- 
+
      C                   EXSR      XTMAIN
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
      C/SPACE 5
@@ -362,8 +365,8 @@
       * INITIAL PROCESSING
       ********************************************************************
      C     XTINIT        BEGSR
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -460,11 +463,11 @@
      C                   EVAL      I#ERMS = 'AOSARDR0'
      C                   END
      C                   END
- 
+
      C                   ELSE
      C                   MOVEL     'N'           W#UDCN            1
      C                   END
- 
+
       *
       **  Access Currency Details
       *
@@ -540,7 +543,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#HONR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#HONR = 'Dr H/O COM'
      C                   ELSE
@@ -548,7 +551,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Inactive commission
@@ -562,7 +565,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#INNR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#INNR = 'INACT.COM'
      C                   ELSE
@@ -570,7 +573,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Minimum balance commission
@@ -584,7 +587,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#MBNR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#MBNR = 'MIN BAL COM'
      C                   ELSE
@@ -592,7 +595,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Statement commission
@@ -606,7 +609,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#EXNR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#EXNR = 'EXTRA STMT COM.'
      C                   ELSE
@@ -614,7 +617,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Fixed commission
@@ -628,7 +631,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#FCNR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#FCNR = 'FIXED COM.'
      C                   ELSE
@@ -636,7 +639,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Account commission
@@ -650,7 +653,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#DTNR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#DTNR = 'A/C COM'
      C                   ELSE
@@ -658,7 +661,7 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Access narrative details for Dr Interest commission
@@ -672,7 +675,7 @@
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      W#DINR = ALDON
      C                   ELSE
- 
+
      C                   IF        @RTCD = '*NRF   '
      C                   EVAL      W#DINR = 'DR INT. COM'
      C                   ELSE
@@ -680,14 +683,14 @@
      C                   EVAL      I#ERMS = 'AONARRR0'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      W#HMNR = 'Charge for Hold Mail'
      C                   EVAL      W#NANR = 'Charge for Numbered Acc'
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
      C/SPACE 5
       ********************************************************************
@@ -716,9 +719,9 @@
       ** Perform Commitment as per /COPY DEXTCOMMO
       *
      C                   EXSR      COMIT
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
      C/SPACE 5
       ********************************************************************
@@ -1600,10 +1603,10 @@
       *
       ** Convert Charges to Base Currency
      C                   IF        W#ACPO <> *BLANKS
- 
+
      C                   EVAL      Ix = 1
      C                   DOW       FeeCodeAr(Ix) <> *BLANKS
- 
+
      C                   IF        W#CHCCY <> AC_CCY
       *
       ** Check if charges Currency = Base Currency
@@ -1614,7 +1617,7 @@
       ** Set Base Currency Charges and Commmissions
      C                   EVAL      W#BCOM  = ChgCcyComAr(Ix)
      C                   EVAL      W#BCHGs = ChgCcyChgAr(Ix)
- 
+
      C                   ENDIF
       *
       ** Check if Account Currency = Base Currency
@@ -1625,17 +1628,17 @@
       ** Set Work Charges and Commmissions
      C                   EVAL      CommAr(Ix) = W#BCOM
      C                   EVAL      ChrgAr(Ix) = W#BCHGS
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      CommAr(Ix) = ChgCcyComAr(Ix)
      C                   EVAL      ChrgAr(Ix) = ChgCcyChgAr(Ix)
- 
+
      C                   ENDIF
      C                   EVAL      Ix = Ix + 1
- 
+
      C                   ENDDO
       *
      C                   ELSE
@@ -1646,7 +1649,7 @@
      C                   ENDIF
       *
      C                   IF        W#COMM <> 0 or W#CHGS <> 0
- 
+
      C                   EVAL      Ix = 1
      C                   DOW       FeeCodeAr(Ix) <> *BLANKS
       *
@@ -1698,7 +1701,7 @@
       * Import Commissions and Charges Event
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
      C                   EVAL      Ix = Ix + 1
      C                   ENDDO
       *
@@ -1792,21 +1795,21 @@
      C                             and CH_ACSQ = AC_ACSQ
      C*
      C                   IF        PT_TRAT = 91050
- 
+
      C                   EXSR      SrFeeCode
      C                   EVAL      Ix = 1
      C     WFeeCode      LOOKUP    FeeCodeAr(Ix)                          89
- 
+
      C                   IF        *IN89 = *Off
      C                   EVAL      Ix = Ix + 1
      C                   EVAL      FeeCodeAr(Ix) = WFeeCode
      C                   ENDIF
- 
+
      C                   EVAL      MovIx = MovIx + 1
      C                   IF        WFeeCode = 'HO' OR WFeeCode = 'DT' OR
      C                             WFeeCode = 'FC' OR WFeeCode = 'EX' OR
      C                             WFeeCode = 'DI' OR WFeeCode = 'MB'
- 
+
      C                   IF        PT_DRCR = 0
      C                   EVAL      CommAr(Ix) = CommAr(Ix) + PT_PSTA
      C                   EVAL      W#COMM = PT_PSTA + W#COMM
@@ -1814,9 +1817,9 @@
      C                   EVAL      CommAr(Ix) = CommAr(Ix) - PT_PSTA
      C                   EVAL      W#COMM = W#COMM - PT_PSTA
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        PT_DRCR = 0
      C                   EVAL      ChrgAr(Ix) = ChrgAr(Ix) + PT_PSTA
      C                   EVAL      W#CHGS = PT_PSTA + W#CHGS
@@ -1824,20 +1827,20 @@
      C                   EVAL      ChrgAr(Ix) = ChrgAr(Ix) - PT_PSTA
      C                   EVAL      W#CHGS = W#CHGS - PT_PSTA
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SrFeeCode
      C                   EVAL      Ix = 1
      C     WFeeCode      LOOKUP    FeeCodeAr(Ix)                          89
- 
+
      C                   IF        *IN89 = *Off
      C                   EVAL      Ix = Ix + 1
      C                   EVAL      FeeCodeAr(Ix) = WFeeCode
      C                   ENDIF
- 
+
      C                   EVAL      MovIx = MovIx + 1
      C                   IF        PT_DRCR = 0
      C                   EVAL      ChrgAr(Ix) = ChrgAr(Ix) + PT_PSTA
@@ -1846,7 +1849,7 @@
      C                   EVAL      ChrgAr(Ix) = ChrgAr(Ix) - PT_PSTA
      C                   EVAL      W#CHGS = W#CHGS - PT_PSTA
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C
@@ -1862,21 +1865,21 @@
      C                             and CH_ACSQ = AC_ACSQ
      C*
      C                   IF        PT_TRAT = 91050
- 
+
      C                   EXSR      SrFeeCode
      C                   EVAL      Ix = 1
      C     WFeeCode      LOOKUP    FeeCodeAr(Ix)                          89
- 
+
      C                   IF        *IN89 = *Off
      C                   EVAL      Ix = Ix + 1
      C                   EVAL      FeeCodeAr(Ix) = WFeeCode
      C                   ENDIF
- 
+
      C                   EVAL      MovIx = MovIx + 1
      C                   IF        WFeeCode = 'HO' OR WFeeCode = 'DT' OR
      C                             WFeeCode = 'FC' OR WFeeCode = 'EX' OR
      C                             WFeeCode = 'DI' OR WFeeCode = 'MB'
- 
+
      C                   IF        PT_DRCR = 0
      C                   EVAL      ChgCcyComAr(Ix) = ChgCcyComAr(Ix) + PT_PSTA
      C                   EVAL      W#CCOM = PT_PSTA + W#CCOM
@@ -1884,9 +1887,9 @@
      C                   EVAL      ChgCcyComAr(Ix) = ChgCcyComAr(Ix) - PT_PSTA
      C                   EVAL      W#CCOM = W#CCOM - PT_PSTA
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        PT_DRCR = 0
      C                   EVAL      ChgCcyChgAr(Ix) = ChgCcyChgAr(Ix) + PT_PSTA
      C                   EVAL      W#CCHGS = PT_PSTA + W#CCHGS
@@ -1894,20 +1897,20 @@
      C                   EVAL      ChgCcyChgAr(Ix) = ChgCcyChgAr(Ix) - PT_PSTA
      C                   EVAL      W#CCHGS = W#CCHGS - PT_PSTA
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SrFeeCode
      C                   EVAL      Ix = 1
      C     WFeeCode      LOOKUP    FeeCodeAr(Ix)                          89
- 
+
      C                   IF        *IN89 = *Off
      C                   EVAL      Ix = Ix + 1
      C                   EVAL      FeeCodeAr(Ix) = WFeeCode
      C                   ENDIF
- 
+
      C                   EVAL      MovIx = MovIx + 1
      C                   IF        PT_DRCR = 0
      c                   EVAL      ChgCcyChgAr(Ix) = ChgCcyChgAr(Ix) + PT_PSTA
@@ -1916,7 +1919,7 @@
      c                   EVAL      ChgCcyChgAr(Ix) = ChgCcyChgAr(Ix) - PT_PSTA
      C                   EVAL      W#CCHGS = W#CCHGS - PT_PSTA
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C*
@@ -2875,7 +2878,7 @@
      C                   PARM      W#CHCCY       FrCurrency        3
      C                   PARM      BJCYCD        ToCurrency        3
      C                   PARM      W#CHDP        FrDecPlace        1 0
-     C                   PARM      W#BCDP        ToDecPlace        1 0
+     C                   PARM      W#BCDP        ToDecPlace        1 0   
      C                   PARM      *Zero         OutputAmnt       15 0
       *
       ** Set Base Currency Commissions to Output Amount
@@ -2921,7 +2924,7 @@
      C                   PARM                    MultDivInd        1
      C                   PARM      BJCYCD        FrCurrency        3
      C                   PARM      AC_CCY        ToCurrency        3
-     C                   PARM      W#BCDP        FrDecPlace        1 0
+     C                   PARM      W#BCDP        FrDecPlace        1 0     
      C                   PARM      W#ACDP        ToDecPlace        1 0
      C                   PARM      *Zero         OutputAmnt       15 0
       *
@@ -2935,7 +2938,7 @@
      C                   PARM                    MultDivInd        1
      C                   PARM      BJCYCD        FrCurrency        3
      C                   PARM      AC_CCY        ToCurrency        3
-     C                   PARM      W#BCDP        FrDecPlace        1 0
+     C                   PARM      W#BCDP        FrDecPlace        1 0    
      C                   PARM      W#ACDP        ToDecPlace        1 0
      C                   PARM      *Zero         OutputAmnt       15 0
       *
@@ -2965,7 +2968,7 @@
       *                                                               *
       *****************************************************************
      C     SrFeeCode     BEGSR
- 
+
      C                   IF        PT_TRAT = 91050
       *
       ** Fee commission
@@ -3012,11 +3015,11 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   IF        PT_TRAT = 94052
      C                   EVAL      WFeeCode = 'SF'
      C                   ENDIF
- 
+
      C                   IF        PT_TRAT = 94053
       *
       ** Charge for hold mail
@@ -3029,11 +3032,11 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   IF        PT_TRAT = 94055
      C                   EVAL      WFeeCode = 'FA'
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -163,7 +166,7 @@
      C                   IF        OKLTMI = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKLTMI <> 'N'
      C                   IF        DDLTMI <> *BLANK
      C                   EVAL      S1LTMI = DDLTMI
@@ -171,7 +174,7 @@
      C                   EVAL      S1LTMI = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -182,7 +185,7 @@
       *                                                               *
       *****************************************************************
      C     SRValLMatInd  BEGSR
- 
+
      C                   IF        DDLTMI = 'Y' AND
      C                             DDMATY2 = '999999'
      C                   MOVE      'N'           OKLTMI
@@ -190,7 +193,7 @@
      C                   MOVEL     'DDLTMI'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0164'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   IF        DDLTMI <> 'Y' AND
      C                             DDLTMI <> 'N' AND
      C                             DDLTMI <> *BLANK
@@ -199,7 +202,7 @@
      C                   MOVEL     'DDLTMI'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0165'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

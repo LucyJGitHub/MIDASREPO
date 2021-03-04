@@ -16,11 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040963           Date 206seP16              *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040963           Date 206seP16              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040963 - CLE106 initialisation program ended in error      *
       *                                                               *
@@ -36,7 +39,7 @@
       * *PSSR - Error processing                                      *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas LE Aggregate Facilities Trailer File
      FLEAGFTQD  UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(LEFCLTD0:LEAGFTD0)
@@ -45,7 +48,7 @@
      F                                     IGNORE(FCLTYHHF:FCLTYFNF:FCLTYZZF)
      F                                     RENAME(FCLTYFMF:AGLTYFMF)
      F                                     PREFIX(A)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -66,60 +69,60 @@
       *
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
- 
+
+
      C     1             SETLL     LEAGFTQD
      C                   READ      LEAGFTQD                               01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   MOVEL     FCXFCU        KCNUM             6
      C                   MOVEL     FCXFTP        KFACT             3 0
      C                   MOVEL     FCXFNO        KFCNO             2 0
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     LEAGFCL0
- 
+
      C                   IF        NOT %FOUND(LEAGFCL0)
      C                   DELETE    LEAGFTQD
      C                   ENDIF
- 
+
      C                   READ      LEAGFTQD                               01
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   Return
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -133,19 +136,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -160,4 +163,4 @@
      C                   KFLD                    KFCNO
      C                   KFLD                    KRCTP             1
      C                   ENDSR
- 
+

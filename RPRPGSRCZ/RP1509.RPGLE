@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -588,7 +590,8 @@
      C                             ArrPos(X)+W_PosDebut:ArrLen(X))                            CPB008
                                                                                               CPB008
      C                   Movel     *Zeros        W_BaseValue                                  CPB008
-     C     W_BaseCode    Ifne      '00'                                                       CPB008
+     C*****W_BaseCode    Ifne      '00'                                                CPB008 CSD103
+     C     W_BaseCode    Ifne      *BLANKS                                                    CSD103
       **--------- Start of  Get Base rate Value Date --                                       CPB008
                                                                                               CPB008
      C     K_SDBSRTPD    Klist                                                                CPB008

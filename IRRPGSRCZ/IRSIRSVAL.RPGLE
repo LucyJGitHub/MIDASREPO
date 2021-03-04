@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053400           Date 03Jul19               *
-      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD053400           Date 03Jul19               *
+      *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030847           Date 03Dec14               *
       *                 CIR018             Date 25Nov14               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
@@ -1637,7 +1639,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        SUBRTT = *BLANKS OR SUBRTT = '00'                          CAS005
+     C**********         IF        SUBRTT = *BLANKS OR SUBRTT = '00'                   CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS                                           CSD103
      C                   IF        WkSOFYC = *BLANKS                                          CAS005
      C                   EVAL      SOFYC = *BLANKS                                            CAS005
      C                   EVAL      RSOFYC = *BLANKS                                           225997
@@ -1663,7 +1666,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND                    CAS005
+     C**********         IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND             CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS AND                                       CSD103
      C                             SOFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005
@@ -1810,7 +1814,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        STBRTT = *BLANKS OR STBRTT = '00'                          CAS005
+     C**********         IF        STBRTT = *BLANKS OR STBRTT = '00'                   CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS                                           CSD103
      C                   IF        WkSTFYC = *BLANKS                                          CAS005
      C                   EVAL      STFYC = *BLANKS                                            CAS005
      C                   EVAL      RSTFYC = *BLANKS                                           225997
@@ -1836,7 +1841,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (STBRTT = *BLANKS OR STBRTT = '00') AND                    CAS005
+     C**********         IF        (STBRTT = *BLANKS OR STBRTT = '00') AND             CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS AND                                       CSD103
      C                             STFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005
@@ -4739,9 +4745,11 @@
      C                   PARM                    ZDATE                                      MD053400
      C                   PARM                    ZDATFM                                     MD053400
      C                   PARM                    ZDAYNO                                     MD053400
-     C                   Z-ADD     ZDAYNO        RSTS2B                                     MD053400
+     C**********         Z-ADD     ZDAYNO        RSTS2B                              MD053400 CSD103
+     C                   MOVEL     ZDAYNO        RSTS2B                                       CSD103
      C                   ElSE                                                               MD053400
-     C                   Z-ADD     0             RSTS2B                                     MD053400
+     C**********         Z-ADD     0             RSTS2B                              MD053400 CSD103
+     C                   MOVEL     *BLANKS       RSTS2B                                       CSD103
      C                   ENDIF                                                              MD053400
       *                                                                                     MD053400
       ** 2nd Term End Date                                                                  MD053400
@@ -4784,9 +4792,11 @@
      C                   PARM                    ZDATE                                      MD053400
      C                   PARM                    ZDATFM                                     MD053400
      C                   PARM                    ZDAYNO                                     MD053400
-     C                   Z-ADD     ZDAYNO        RSTE1B                                     MD053400
+     C**********         Z-ADD     ZDAYNO        RSTE1B                              MD053400 CSD103
+     C                   MOVEL     ZDAYNO        RSTE1B                                       CSD103
      C                   ElSE                                                               MD053400
-     C                   Z-ADD     0             RSTE1B                                     MD053400
+     C**********         Z-ADD     0             RSTE1B                              MD053400 CSD103
+     C                   MOVEL     *BLANKS       RSTE1B                                       CSD103
      C                   ENDIF                                                              MD053400
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400
@@ -4814,9 +4824,11 @@
      C                   PARM                    ZDATE                                      MD053400
      C                   PARM                    ZDATFM                                     MD053400
      C                   PARM                    ZDAYNO                                     MD053400
-     C                   Z-ADD     ZDAYNO        RSTE2B                                     MD053400
+     C**********         Z-ADD     ZDAYNO        RSTE2B                              MD053400 CSD103
+     C                   MOVEL     ZDAYNO        RSTE2B                                       CSD103
      C                   ElSE                                                               MD053400
-     C                   Z-ADD     0             RSTE2B                                     MD053400
+     C**********         Z-ADD     0             RSTE2B                              MD053400 CSD103
+     C                   MOVEL     *BLANKS       RSTE2B                                       CSD103
      C                   ENDIF                                                              MD053400
       *                                                                                     MD053400
       ** 1st Term End Date                                                                  MD053400

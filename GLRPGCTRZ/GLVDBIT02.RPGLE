@@ -3,7 +3,7 @@
       *****************************************************************
 /*OVRF*: OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)              : *                    MD054211A
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GL Validate debit interest calc. type/subtyp')
+/*EXI *  TEXT('Midas GL Validate debit interest calc. type/subtyp')   *
       *****************************************************************
       *                                                               *
       *  Midas - General Ledger Module                                *
@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054211A          Date 02Oct19               *
-      *  Prev Amend No. MD053611           Date 19Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054211A          Date 02Oct19               *
+      *                 MD053611           Date 19Oct19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054211A - Use OVRDBF for REIAC in GLVDBIT02.               *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *
@@ -294,7 +296,8 @@
      C                   Z-ADD     VDTC          WWVDRC
      C                   END
       *
-     C     BRT           IFNE      0
+     C*****BRT**         IFNE      0                                                          CSD103
+     C     BRT           IFNE      *BLANKS                                                    CSD103
      C                   MOVE      BRT           WWRIB             2
       *
       ** Get Base Rate Codes

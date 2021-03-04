@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER016A - German Interest Calculation: Upgarde of FGE059     *
@@ -336,7 +338,8 @@
       ** Convert the received Base Rate Code parameter into a
       ** numeric field.
       *
-     C                   MOVE      PCODE         WCODE             2 0
+     C**********         MOVE      PCODE         WCODE             2 0                        CSD103
+     C                   MOVE      PCODE         WCODE             2                          CSD103
       *
       ** Move the received branch code parameter into working field.
       *
@@ -540,8 +543,10 @@
      C     VDAT          ANDLE     BJRDNB
      C     USLIP         ANDLT     WDATE
       *
-     C     WCODE         IFEQ      *ZERO
-     C     WCODE         ORNE      *ZERO
+     C*****WCODE         IFEQ      *ZERO                                                      CSD103
+     C*****WCODE         ORNE      *ZERO                                                      CSD103
+     C     WCODE         IFEQ      *BLANKS                                                    CSD103
+     C     WCODE         ORNE      *BLANKS                                                    CSD103
      C     WCODE         ANDEQ     UBRTT
       *
      C                   MOVE      'O'           L1OTCD
@@ -554,8 +559,10 @@
      C     VDAT          ANDLE     BJRDNB
      C     TSLIP         ANDLT     WDATE
       *
-     C     WCODE         IFEQ      *ZERO
-     C     WCODE         ORNE      *ZERO
+     C*****WCODE         IFEQ      *ZERO                                                      CSD103
+     C*****WCODE         ORNE      *ZERO                                                      CSD103
+     C     WCODE         IFEQ      *BLANKS                                                    CSD103
+     C     WCODE         ORNE      *BLANKS                                                    CSD103
      C     WCODE         ANDEQ     TBRTT
       *
      C                   MOVE      'T'           L1OTCD

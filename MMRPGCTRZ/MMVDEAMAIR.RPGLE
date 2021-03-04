@@ -23,16 +23,18 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG3620            Date 12Jul04               *
+      *                 BUG3620            Date 12Jul04               *
       *                 CDL020  *CREATE    Date 03Feb04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG3620- Apply Base Rate at Value Date for Spread Changes    *
       *  CDL020 - Apply Base Rate at Value Date                       *
@@ -261,14 +263,16 @@
  
       ** Access Historic Base Rates
      C                   ELSE
-     C                   Z-ADD     0             @BSRT             2 0
+     C**********         Z-ADD     0             @BSRT             2 0                        CSD103
+     C                   MOVE      *BLANKS       @BSRT             2                          CSD103
      C                   MOVE      DDBSRT        @BSRT
  
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
      C                   PARM      DDCCY         @CURRCY
-     C                   PARM      @BSRT         @DEFFNDRT         2 0
+     C**********         PARM      @BSRT         @DEFFNDRT         2 0                        CSD103
+     C                   PARM      @BSRT         @DEFFNDRT         2                          CSD103
      C                   PARM      ValDate       @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
  

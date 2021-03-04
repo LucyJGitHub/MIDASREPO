@@ -1075,6 +1075,21 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
      C                   ENDIF                                                                CLE172
      C                   EVAL      MsgIdXAr(Idx) = '5049422'
+     C                   ELSE
+
+     C                   IF        WDAY > 6 and
+     C                             DDCALM = 'SARR'
+     C                   EVAL      DDRRDPOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+      ** Use BLRT Next Fields if LERI                                                         CLE172
+     C                   IF        ApiName = 'LERI'                                           CLE172
+     C                   EVAL      FldNamXAr(Idx) = 'DDNRRDP'                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
+     C                   ENDIF                                                                CLE172
+     C                   EVAL      MsgIdXAr(Idx) = '5049454'
+     C                   ENDIF
+
      C                   ENDIF
 
      C                   ENDIF

@@ -184,7 +184,7 @@
      D  DDRRDP                        2A                                                      CLE172
      D  DDDBAV                        1A                                                      CLE172
      D  DDRTKN                        1A                                                      CLE172
-      ***  New Backward-Looking Rate Fields Screen Fields                                     CLE172
+      ** New Backward-Looking Rate Fields Screen Format                                       CLE172
       *                                                                                       CLE172
      D LnCLFilFmt    E DS                  EXTNAME(CLOANCL)
       ***  (Current) Loan CL in File Format

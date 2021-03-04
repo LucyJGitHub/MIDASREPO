@@ -1145,9 +1145,7 @@
       *                                                                                       CLE172
       ** Validate backward-looking rate fields if CLE172 is ON                                CLE172
       *                                                                                       CLE172
-     C                   EVAL      CCLBLRT = 'N'                                              CLE172
      C                   IF        CLE172 = 'Y' and                                           CLE172
-     C                             DDBRTT <> *BLANKS and                                      CLE172
      C                             DDBRTTOK <> 'N' and                                        CLE172
      C                             DDCALCOK <> 'N'                                            CLE172
      C                   EXSR      SRBLRTE                                                    CLE172
@@ -1419,6 +1417,28 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
+      ** Initialise Backward-Looking Rate field to N                                          CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     'N'           CCLBLRT                                      CLE172
+      *                                                                                       CLE172
+      ** For Loans Input via SOAP/MQ, ensure that BLRT cannot be 'Y'                          CLE172
+      ** if loan is not using a backward-looking base rate code                               CLE172
+      *                                                                                       CLE172
+     C     DDBLRT        IFEQ      'Y'                                                        CLE172
+     C     DDBRTT        IFEQ      *BLANKS                                                    CLE172
+     C     CCLBRTT       ORNE      *BLANKS                                                    CLE172
+     C     BABLRT        ANDNE     'Y'                                                        CLE172
+     C                   MOVEL     'N'           DDBLRTOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   MOVEL     'DDBLRT'      FldNamXAr(Idx)                               CLE172
+     C                   MOVEL     '5049485'     MsgIDXAr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Call program to validate Backward Looking Rate Fields                                CLE172
+      *                                                                                       CLE172
+     C     CCLBRTT       IFNE      *BLANKS                                                    CLE172
+     C     DDBLRTOK      ANDNE     'N'                                                        CLE172
      C                   MOVEL     CCLPTYP       TransType                                    CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'CLIP'        ApiName           4                          CLE172
@@ -1458,6 +1478,8 @@
      C                   MOVEL     'DDCHIN'      FldNamXAr(Idx)                               CLE172
      C                   MOVEL     '5049458'     MsgIDXAr(Idx)                                CLE172
      C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172
@@ -2458,7 +2480,7 @@
      C     CLE172        IFEQ      'Y'                                                        CLE172
      C     CCLBLRT       ANDEQ     'Y'                                                        CLE172
      C                   MOVEL     'Y'           SkipCINT                                     CLE172
-     C                   MOVEL     *BLANKS       DDIPRD                                       CLE172
+     C                   MOVE      *ZERO         DDIPRD                                       CLE172
      C                   ENDIF                                                                CLE172
      C     SkipCINT      IFNE      'Y'                                                        CLE172
      C                   EXSR      SRCINT

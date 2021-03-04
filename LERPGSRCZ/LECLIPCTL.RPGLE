@@ -3008,7 +3008,7 @@
      C                   CLEAR                   CurClSeco
      C                   CLEAR                   CurClThir
      C                   CLEAR                   CurClFour
-     C                   CLEAR                   CurrScnBlrt
+     C                   CLEAR                   CurrScnBlrt                                  CLE172
 
      C                   MOVE      *ALL'Y'       OKClPrim
      C                   MOVE      *ALL'Y'       OKClSeco

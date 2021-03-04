@@ -3232,6 +3232,13 @@
      C     L_CLSPIN      WHENEQ    *Blank                                                     CLE106
      C                   Z-ADD     L_CLRTSP      INTR                                         CLE106
      C                   ENDSL
+      *                                                                                       CLE172
+      ** If CLE172 is ON, add/subtract the Benchmark Adjustment                               CLE172
+      *                                                                                       CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+     C     L_CLBADJ      ANDNE     *ZEROS                                                     CLE172
+     C                   ADD       L_CLBADJ      INTR                                         CLE172
+     C                   ENDIF                                                                CLE172
       *
       * Base rate code
      C                   MOVE      L_CLBRTT      BRTT

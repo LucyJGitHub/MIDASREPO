@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend no. 251946             Date 16Sep13               *
-      *  Prev Amend No. AR918361           Date 02Apr12               *
+      *  Last Amend No. 257657             Date 16Aug13               *
+      *  Prev Amend no. 251946             Date 16Sep13               *
+      *                 AR918361           Date 02Apr12               *
       *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
@@ -172,6 +173,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257657 - Syndicated Loan input error LEL0401 when invalid    *
+      *           participant.                                        *
+      *         - Allow value for DDLNRF if CLE106 is on.  Validation *
+      *           is already done in LECLIP1VL.                       *
+      *         - Applied for MD021676.                               *
       *  251946 - Consider rollover warning message only if CLE030    *
       *           is switched on. Patterned fix after 248041.         *
       *         - Applied for MD022245.                               *
@@ -1934,6 +1940,11 @@
      C     CLE134        OREQ      'Y'                                                      MD031225
      C     MPHAS         ANDNE     'C'                                                      MD031225
      C     WFOTRID       ANDNE     'LE000473'                                               MD032052
+     C                   If        Not (CLE106 = 'Y' And                                      257657
+     C                             SYINF='Y' And                                              257657
+     C                             DDPTFC = *Blanks  And                                      257657
+     C                             DDPTFT = *Blanks  And                                      257657
+     C                             DDPTFN = *Blanks)                                          257657
      C                   Eval      Idx = Idx + 1                                             BUG6108
      C                   Eval      DDLNRFOK = 'N'                                            BUG6108
      C                   Eval      FldNamXAr(Idx) = 'DDLNRF'                                 BUG6108
@@ -1943,6 +1954,7 @@
      C                   Else                                                            X03 BUG6108
      C                   Eval      MsgIDXAr(Idx) = 'LEL0541'                                 BUG6108
      C                   EndIf                                                           E03 BUG6108
+     C                   EndIf                                                                257657
      C                   ENDIF                                                              MD031225
                                                                                              BUG8436
      C                   ENDIF                                                               BUG8436

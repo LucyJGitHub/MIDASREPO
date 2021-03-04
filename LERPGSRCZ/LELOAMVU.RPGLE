@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024811           Date 24Jan20               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *  Last Amend No. 259120             Date 23Sep14               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 MD024811           Date 24Jan20               *
+      *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
@@ -100,6 +102,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259120A- Adjust buffer to include DDXRLT, DDXRLS, DDXRLC     *
+      *         - Applied for MD-28282.                               *
+      *  MD026384 - Added generation by assignment processing.        *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -494,6 +499,11 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
      D SCA_LCD       E                     EXTFLD(LCD)
+                                                                                             259120A
+     DFiller           DS             8                                                      259120A
+     D DDXRLT                  1      2                                                      259120A
+     D DDXRLS                  3      4                                                      259120A
+     D DDXRLC                  5      8                                                      259120A
 
       ** PCA ICD Details
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
@@ -771,6 +781,7 @@
      C                                           + S_Rec + S_Pay                              CLE106
      C                                           + InfData                                   BUG9493
      C                                           + ExtData                                    247172
+     C                                           + Filler                                    259120A
 
      C                   RETURN
 
@@ -978,7 +989,7 @@
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
      C                   ENDIF                                                              MD029046
-     C                   ENDIF                                                              MD029046      
+     C                   ENDIF                                                              MD029046
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066
@@ -1438,6 +1449,10 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    TranInLOAM
+      *                                                                                     MD026384
+      ** Secondary transaction information                                                  MD026384
+      *                                                                                     MD026384
+     C                   PARM                    TranInLOA2                                 MD026384
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

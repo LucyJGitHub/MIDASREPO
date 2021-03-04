@@ -9,8 +9,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. AR1095186          Date 17Apr13               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 10Aug12               *
       *                 CLE141             Date 08Feb16               *
@@ -58,7 +59,12 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
-      *  CER050 - Annualised Percentage Rate                             *
+      *  AR1095186 - Do not drop loans which are still defined as     *
+      *              OLNO for Participation Sold. Pattern after fix   *
+      *              258431. (Child: AR1095187)                       *
+      *            - Upgrade: use existing PSOLD2 instead of          *
+      *              new PSOLD3                                       *
+      *  CER050 - Annualised Percentage Rate                          *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -149,6 +155,8 @@
      FLEPDUELBUF  E           K        DISK         KINFSR *PSSR                            AR574425
      F            LEPDUED0                          KRENAMELEPDUED2                           CLE134
       *                                                                                       193112
+     FPSOLD2  IF  E           K        DISK                                                AR1095186
+     F            CLOANCLF                          KRENAMEPSOLD2F                         AR1095186
       * Midas LE Loan APR History file                                                        CER050
      FLEAPRHI0UF  E           K        DISK                                                   CER050
       *                                                                                       CER050
@@ -232,6 +240,17 @@
      I              LNRF                            LNRFL
      I              CNUM                            CNUML
      I*
+     IPSOLD2F                                                                              AR1095186
+     I              RECI                            RECI2                                  AR1095186
+     I              OLNO                            OLNO2                                  AR1095186
+     I              PTYP                            PTYP2                                  AR1095186
+     I              MDAT                            MDAT2                                  AR1095186
+     I              PTFR                            PTFR2                                  AR1095186
+     I              LNRF                            LNRF2                                  AR1095186
+     I              BRCA                            BRCA2                                  AR1095186
+     I              CNUM                            CNUM2                                  AR1095186
+     I              RCDT                            RCDT2                                  AR1095186
+      *                                                                                    AR1095186
      I** DATASTRUCTURE FOR HANDLING THE RETENTION PERIOD CALCS
      I*
      I            DS
@@ -362,6 +381,14 @@
      C           LOANT     ANDNE'Y'                                                        AR546409A
      C           LOANT     ANDNE'Z'                                                        AR546409A
      C*
+      ** Do not drop loan which are Originating Loans of Participations Sold               AR1095186
+      *                                                                                    AR1095186
+     C                     MOVELLNRFL     WLNRF   6                                        AR1095186
+     C                     SETOF                     97                                    AR1095186
+      *                                                                                    AR1095186
+     C           WLNRF     CHAINPSOLD2F              97                                    AR1095186
+     C           *IN97     IFEQ *ON                                                        AR1095186
+      *                                                                                    AR1095186
      C** PROCESS COUNTS ACCORDING TO THE RETENTION PERIOD
      C*
      C           BPHRPR    IFLT 99
@@ -544,6 +571,7 @@
      C                     ELSE
      C                     SETON                         07
      C                     END
+     C                     ENDIF                                                           AR1095186
      C                     ENDIF                                                           AR546409A
      C                     READ MLOAN                    99
      C                     END

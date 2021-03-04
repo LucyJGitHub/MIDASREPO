@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR218328 *CREATE   Date 24Mar10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR218328 *CREATE   Date 24Mar10               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR DEREGULATION - COMMON LAYER/STANDING DATA     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR218328 - Populate DLDTSCPD COHO if date is a holiday.      *
       *                                                               *
@@ -27,7 +30,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDLDTSCPD  UF   E           K DISK    PREFIX(@)
       ** Date Schedule
       *
@@ -35,7 +38,7 @@
       ** IRS Master File
       *
      FUT218328P1O    E             PRINTER OFLIND(*IN20)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -47,34 +50,34 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -85,19 +88,19 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       ** Array for Business Day Convention currencies
      DBDCCcyArr                       3A   DIM(10)
- 
+
      DCcyArr         E DS                  EXTNAME(DLDLDGLE)
      DUPayCcy               2063   2092A
      DURatCcy               2097   2126A
@@ -107,29 +110,29 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialize work variable and set indicators
       *
@@ -331,14 +334,14 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       * Mode
      C                   PARM                    WMODE             1
- 
+
       *
       ** Access Bank Details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -386,9 +389,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

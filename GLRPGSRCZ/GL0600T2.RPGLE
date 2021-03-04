@@ -17,13 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1097218          Date 05Apr13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1097218          Date 05Apr13               *
       *                 CGL142             Date 06Aug12               *
       *                 CGL120  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1097218 - GLC0720 seq 10001 failed Out of Balance          *
       *  CGL142 - Tactical COB changes GL                             *
@@ -166,7 +169,7 @@
      I**********                      561  573 2NOMINL                                        CGL142
      I**********                      574  589  FDTRID                                        CGL142
      I**********NS  07                                                                        CGL142
- 
+
       *****************************************************************
       /SPACE 3
       *****************************************************************

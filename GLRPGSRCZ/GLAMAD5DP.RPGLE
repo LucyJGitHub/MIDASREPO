@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *

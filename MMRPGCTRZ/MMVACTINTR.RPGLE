@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031119           Date 18Feb15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031119           Date 18Feb15               *
       *                 MD023416           Date 16Nov13               *
       *                 MD023121           Date 05Nov13               *
       *                 AR891660           Date 12Jan12               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031119 - Interest History Enquiry shows a wrong plus sign  *
       *             for accrued interest even the rate is negative.   *
@@ -298,14 +300,16 @@
  
       ** Access Historic Base Rates
      C                   ELSE
-     C                   Z-ADD     0             @BSRT             2 0
+     C**********         Z-ADD     0             @BSRT             2 0                        CSD103
+     C                   MOVE      *BLANKS       @BSRT             2                          CSD103
      C                   MOVE      DDBSRC        @BSRT
  
      C                   CALL      'AOBSHSR0'
      C                   PARM      *BLANKS       @RETURN
      C                   PARM      '*KEY   '     @OPTION
      C                   PARM      DDCCY         @CURRCY
-     C                   PARM      @BSRT         @DEFFNDRT         2 0
+     C**********         PARM      @BSRT         @DEFFNDRT         2 0                        CSD103
+     C                   PARM      @BSRT         @DEFFNDRT         2                          CSD103
      C                   PARM      ValDate       @HISTDATE         5 0
      C     SDBSHS        PARM      SDBSHS        DSFDY
  

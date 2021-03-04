@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
@@ -62,18 +65,18 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTYX    UF A E           K DISK    INFSR(*PSSR) IGNORE(FCLTYFNF)
      F                                     USROPN
      F                                     COMMIT
      FFCLTYXFN  UF A E           K DISK    INFSR(*PSSR) PREFIX(F@)
      F                                     IGNORE(FCLTYFMF:FCLTYHHF:FCLTYZZF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -85,110 +88,110 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D OVRDBF          C                   'OVRDBF FILE(FCLTYX)-
      D                                       TOFILE(FCLTY) SHARE(*NO)'
      D OVRDBFB         C                   'OVRDBF FILE(FCLTYXFN)-
      D                                       TOFILE(FCLTY) SHARE(*NO)'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Funding Participant Details in file format
      D FCLTYFM       E DS                  EXTNAME(FCLTYFM)
- 
+
       ** Funding Participant Details in file format
      D FCLTYFN       E DS                  EXTNAME(FCLTYFN) PREFIX(F@)
- 
+
       ** Valid Funding Participant Details in file format record 'A'
      D LEVFCLMPD     E DS                  EXTNAME(LEVFCLMPD)
- 
+
       ** Valid Funding Participant Details in file format record 'B'
      D LEVFCLNPD     E DS                  EXTNAME(LEVFCLNPD)
- 
+
       * File Receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
- 
+
       * File Payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
- 
+
       ** Funding Participant Details OK indicator
      D FPRT_OK       E DS                  EXTNAME(LEEFPRTPD)
- 
- 
+
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D                                     PREFIX(SC_)
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D TRANSDTL        S           5800A
      D WTimestamp      S             26A
@@ -198,29 +201,29 @@
      D POPTN           S              7A
      D PSARD           S              6A
      D WDealNo         S              6A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Clear output fields
       *
@@ -232,49 +235,49 @@
      C                   MOVE      *BLANK        WMsgIDArr
      C                   MOVE      *BLANK        WMsgDtaArr
      C                   Z-ADD     0             Wx
- 
+
      C                   MOVEL     *BLANK        A_FCNO
- 
+
      C                   SELECT
- 
+
       **  Write facility record
       **  =====================
- 
+
      C     S#ACTN        WHENEQ    'I'
      C                   EXSR      WRITER
- 
+
       **  Update facility record
       **  ======================
- 
+
      C     S#ACTN        WHENEQ    'A'
      C                   EXSR      AMENDR
- 
+
       **  Reverse facility record
       **  =======================
- 
+
      C     S#ACTN        WHENEQ    'R'
      C                   EXSR      REVERR
       *
      C                   ENDSL
- 
+
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
       ** Setup Funding Participant support log
- 
+
      C                   CALLB     'LEFPRTLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    S#ACTN
      C                   PARM                    FCLTYFM
      C                   PARM                    TRANSDTL
- 
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'LEFPRT'
      C                   EVAL      APUSERID = PSUser
      C                   MOVEL     FPFRNT        APFOTRANID
@@ -285,7 +288,7 @@
      C                   EVAL      PDealNo = W@FPCNUM + W@FPFACT +
      C                                       W@FPFCNO
      C                   EVAL      PADealNo = *BLANKS
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -293,22 +296,22 @@
      C                   PARM      *BLANKS       WTimestamp
      C                   PARM                    PDealNo
      C                   PARM                    PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occured,
- 
+
      C                   IF        RetCodeOut <> *BLANKS
- 
+
      C                   EVAL      RetCodeIn = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Update the trailer if no errors
       **  Else report an error
- 
+
      C     Ix            IFEQ      0
      C                   EXSR      UPDTRL
      C                   ELSE
@@ -318,32 +321,32 @@
      C                   ENDIF
       *
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       * WRITER   : Write a record to facility file                    *
       *****************************************************************
      C     WRITER        BEGSR
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       **  Write facility record type 'A'
      C                   MOVEL     LEVFCLMPD     FCLTYFM
      C                   EVAL      STMP  = TimeStamp
      C                   Z-ADD     0             REXR                                         CAP084
      C                   Z-ADD     0             PEXR                                         CAP084
- 
+
      C                   WRITE     FCLTYFMF
- 
+
       **  Write facility record type 'B'
      C                   MOVEL     LEVFCLNPD     FCLTYFN
      C                   Z-ADD     0             F@CEXP                                      BUG3112
- 
+
      C                   WRITE     FCLTYFNF
- 
+
       * Return assigned facility number
      C                   MOVE      FPFCNO        A_FCNO
       *
@@ -354,15 +357,15 @@
       * AMENDR   : Update Facility File                               *
       *****************************************************************
      C     AMENDR        BEGSR
- 
+
       ** Set up the key to the facility file
- 
+
      C                   MOVE      FPCNUM        K#CNUM
      C                   MOVE      FPFACT        K#FACT
      C                   MOVE      FPFCNO        K#FCNO
- 
+
       ** Access facility record type 'A'
- 
+
      C                   MOVE      'A'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFMF                           70
       *
@@ -377,26 +380,26 @@
      C                   MOVEL     '*RECUPD   '  RetCodeIn
      C                   GOTO      EAMENDR
      C                   ENDIF
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
       ** Update facility record type 'A'
- 
+
      C                   MOVEL     LEVFCLMPD     FCLTYFM
      C                   EVAL      STMP = TimeStamp
- 
+
      C                   UPDATE    FCLTYFMF
- 
+
       ** Access facility record type 'B'
- 
+
      C                   MOVE      'B'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFNF                           70
- 
+
       ** Update facility record type 'B'
- 
+
      C                   MOVEL     LEVFCLNPD     FCLTYFN
- 
+
      C                   UPDATE    FCLTYFNF
       *
      C     EAMENDR       ENDSR
@@ -406,15 +409,15 @@
       * REVERR   : Reverse a record                                   *
       *****************************************************************
      C     REVERR        BEGSR
- 
+
       ** Set up the key to the facility file
- 
+
      C                   MOVE      FPCNUM        K#CNUM
      C                   MOVE      FPFACT        K#FACT
      C                   MOVE      FPFCNO        K#FCNO
- 
+
       ** Access facility record type 'A'
- 
+
      C                   MOVE      'A'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFMF                           70
       *
@@ -429,29 +432,29 @@
      C                   MOVEL     '*RECUPD   '  RetCodeIn
      C                   GOTO      EREVERR
      C                   ENDIF
- 
+
       ** Update facility record type 'A'
- 
+
      C                   Z-ADD     FAMT          W#SFAMT
      C                   MOVE      'R'           RECI
      C                   Z-ADD     NATN          TNLU
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      S#ACTN        CHTP
- 
+
      C                   UPDATE    FCLTYFMF
- 
+
       ** Access facility record type 'B'
- 
+
      C                   MOVE      'B'           K#RCTP
      C     K#FCTY        CHAIN     FCLTYFNF                           70
- 
+
       ** Update facility record type 'B'
- 
+
      C                   MOVE      'R'           RECI
      C                   Z-ADD     NATN          TNLU
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      S#ACTN        CHTP
- 
+
      C                   UPDATE    FCLTYFNF
       *
      C     EREVERR       ENDSR
@@ -469,9 +472,9 @@
      C                   Z-ADD     999           K#FACT
      C                   Z-ADD     99            K#FCNO
      C                   MOVE      'Z'           K#RCTP
- 
+
      C     K#FCTY        CHAIN     FCLTYZZF                           70
- 
+
      C     *IN70         IFEQ      '1'
      C     *IN70         OREQ      '0'
      C     RECI          ANDNE     'T'
@@ -485,7 +488,7 @@
       *
       **  Inserts
      C     S#ACTN        WHENEQ    'I'
- 
+
      C                   ADD       2             NORE
      C                   ADD       2             NINS
      C                   ADD       2             NLRA
@@ -781,11 +784,11 @@
      C/SPACE 5
       *****************************************************************
      C     ZTNLU1        BEGSR
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM                    RetCodeOut
      C                   PARM                    NATN              5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -793,23 +796,23 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN            1
- 
+
       * TNLU of funding participant record on FCLTYFM/FN
      C                   PARM                    H#TNLU            5 0
- 
+
       * Funding Participant Details in file format record 'A'
      C                   PARM                    LEVFCLMPD
       * Funding Participant Details in file format record 'B'
@@ -833,26 +836,26 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
       * Facility sequence assigned
- 
+
      C                   PARM                    A_FCNO            2
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
- 
+
      C     *LIKE         DEFINE    FCNO          K4FCNO
      C     *LIKE         DEFINE    RCTP          K#RCTP
- 
+
      C     *LIKE         DEFINE    FAMT          W#SFAMT
- 
+
       * Key lists
- 
+
      C     K#FCTY        KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
      C                   KFLD                    K#RCTP
- 
+
       *
       ** Access Bank Detailes
       *  ~~~~~~~~~~~~~~~~~~~~
@@ -867,48 +870,48 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** OVRDBF FCLTYX to FCLTY then OPEN FCLTYX
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBF)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBF        QCMD             70
      C                   PARM                    LENGTH           15 5
      C                   OPEN      FCLTYX
- 
+
       ** OVRDBF FCLTYXFN to FCLTY
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBFB)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBFB       QCMD             70
      C                   PARM                    LENGTH           15 5
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ELSE
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> '*NRF'
      C                   EVAL      DBKEY = 'CSC011'
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   EVAL      DBASE = 905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       *
@@ -916,9 +919,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

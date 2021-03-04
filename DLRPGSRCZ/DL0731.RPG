@@ -11,12 +11,13 @@
 0007 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
@@ -38,6 +39,7 @@
 0011 F*                                                                  *
 0011 F*----------------------------------------------------------------  *
      F*                                                                  *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -497,13 +499,15 @@
      C*                                                                   S01119
      C           *IN11     IFEQ '1'                                       S01119
      C*                                                                   S01119
-     C           UBRTT     IFNE 0                                         S01119
+     C********** UBRTT     IFNE 0                                                      S01119 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C                     TESTB'0'       UDNSI          35               S01119
      C                     ELSE                                           S01119
      C                     SETON                         35               S01119
      C                     END                                            S01119
      C*                                                                   S01119
-     C           TBRTT     IFNE 0                                         S01119
+     C********** TBRTT     IFNE 0                                                      S01119 CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C                     TESTB'0'       TDNSI          36               S01119
      C                     ELSE                                           S01119
      C                     SETON                         36               S01119
@@ -525,14 +529,18 @@
 0291 C**   (UBRTT) IS NOT EQUAL TO ZERO - OTHERWISE UNDER SALES.          S01157
 0290 C*                                                                   S01157
 0292 C           DTYP      IFEQ 'FR'                       DEAL IS FRA    S01157
-0293 C           UBRTT     ANDNE0                          AND SOLD.      S01157
+0293 C********** UBRTT     ANDNE0                          AND SOLD.                   S01157 CSD103
+0293 C           UBRTT     ANDNE*BLANKS                    AND SOLD.                          CSD103
 0292 C           DTYP      OREQ 'RP'                       DEAL IS CAP    S01157
-0293 C           UBRTT     ANDNE0                          AND SOLD       S01157
+0293 C********** UBRTT     ANDNE0                          AND SOLD                    S01157 CSD103
+0293 C           UBRTT     ANDNE*BLANKS                    AND SOLD                           CSD103
 0292 C           DTYP      OREQ 'RR'                       DEAL IS COLLAR S01157
-0293 C           UBRTT     ANDNE0                          AND SOLD       S01157
+0293 C********** UBRTT     ANDNE0                          AND SOLD                    S01157 CSD103
+0293 C           UBRTT     ANDNE*BLANKS                    AND SOLD                           CSD103
 0290 C*                                                                   S01157
 0292 C           DTYP      OREQ 'RF'                       DEAL IS FLOOR  S01157
-0293 C           UBRTT     ANDEQ0                          AND FLOOR SOLD S01157
+0293 C********** UBRTT     ANDEQ0                          AND FLOOR SOLD              S01157 CSD103
+0293 C           UBRTT     ANDEQ*BLANKS                    AND FLOOR SOLD                     CSD103
 0294 C                     SETON                     56    OUTPUT IND.    S01157
      C*                                                                   S01157
      C* PREVENT OUR FEDS FUND INDICATOR BEING DISPLAYED                   S01157
@@ -549,14 +557,18 @@
      C* SET UP BUY/SELL INDICATOR FOR BOUGHT                              S01157
      C*                                                                   S01157
 0292 C           DTYP      IFEQ 'FR'                       DEAL IS FRA,   S01157
-0293 C           TBRTT     ANDNE0                          BOUGHT         S01157
+0293 C********** TBRTT     ANDNE0                          BOUGHT                      S01157 CSD103
+0293 C           TBRTT     ANDNE*BLANKS                    BOUGHT                             CSD103
 0292 C           DTYP      OREQ 'RP'                       CAP OR COLLAR  S01157
-0293 C           TBRTT     ANDNE0                          BOUGHT         S01157
+0293 C********** TBRTT     ANDNE0                          BOUGHT                      S01157 CSD103
+0293 C           TBRTT     ANDNE*BLANKS                    BOUGHT                             CSD103
 0292 C           DTYP      OREQ 'RR'                                      S01157
-0293 C           TBRTT     ANDNE0                          BOUGHT         S01157
+0293 C********** TBRTT     ANDNE0                          BOUGHT                      S01157 CSD103
+0293 C           TBRTT     ANDNE*BLANKS                    BOUGHT                             CSD103
 0290 C*                                                                   S01157
 0292 C           DTYP      OREQ 'RF'                       DEAL IS A FLOORS01157
-0293 C           TBRTT     ANDEQ0                          FLOOR BOUGHT   S01157
+0293 C********** TBRTT     ANDEQ0                          FLOOR BOUGHT                S01157 CSD103
+0293 C           TBRTT     ANDEQ*BLANKS                    FLOOR BOUGHT                       CSD103
      C*                                                                   S01157
      C* PREVENT THEIR FEDS FUND INDICATOR BEING DISPLAYED                 S01157
      C*                                                                   S01157
@@ -569,8 +581,10 @@
      C****IF*'RL'*EVENT*CHECK*IF*OURS*OR*THEIR*DETAILS*TO*BE*USED   S01119S01157
      C**  IF RP, RF, RR EVENT CHECK IF OURS OR THEIR DETAILS TO BE USED   S01157
      C*                                                                   S01119
-     C           UBRTT     COMP 0                    1212                 S01119
-     C           TBRTT     COMP 0                    1515                 S01119
+     C********** UBRTT     COMP 0                    1212                              S01119 CSD103
+     C           UBRTT     COMP *BLANKS              1212                                     CSD103
+     C********** TBRTT     COMP 0                    1515                              S01119 CSD103
+     C           TBRTT     COMP *BLANKS              1515                                     CSD103
      C*                                                                   S01119
      C           *IN55     IFEQ '1'                                       S01119
      C*                                                                   S01119

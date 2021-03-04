@@ -254,6 +254,11 @@
 
      C                   ENDIF
 
+     C                   IF        ApiName = 'CLIP' or                                        CLE172
+     C                             ApiName = 'LERI'                                           CLE172
+     C                   EVAL      BNDCSP = '.'                                               CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
       ** If transaction is LERI, default from CLOANCL                                         CLE172
      C                   IF        ApiName = 'LERI'                                           CLE172
                                                                                               CLE172
@@ -1275,7 +1280,7 @@
      C     SDDEAL        PARM      SDDEAL        DSSDY
 
      C                   IF        @RTCD <> *BLANKS
-     C                   EVAL      BNDCSP =  '.'
+     C                   EVAL      BNDCSP = '.'
      C                   ENDIF
 
      C                   ENDSR

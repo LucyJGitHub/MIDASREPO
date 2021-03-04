@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD049445           Date 05Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD049445           Date 05Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -24,8 +25,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD049445 - Listview not displaying correct available amount. *
-      *             Added SFAMT and SAVAILAMT computation.            *      
+      *             Added SFAMT and SAVAILAMT computation.            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -36,7 +39,7 @@
       *  257576 - Performance: Facilities Input                       *
       *                                                               *
       *****************************************************************
- 
+
      FGZFCLTLVL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
      F                                     USROPN
      FGZFCLTLVPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -50,10 +53,10 @@
      F                                     RENAME(FCLTLVD0    :FCLTLVD02      )             MD049445
      FGZFCLTYML1IF   E           K DISK    INFSR(*PSSR) PREFIX(G4_)                         MD049445
      FGZSDBANKL1IF   E           K DISK    INFSR(*PSSR)                                     MD049445
- 
+
      D Z_FCLTYFN     E DS                  EXTNAME(GZFCLTYFN )
      D G_FCLTYFN     E DS                  EXTNAME(GZFCLTYFN ) PREFIX(G_)
- 
+
      D RPAYAMT         S             15  0                                                  MD049445
      D WFCBAL          S             15  0                                                  MD049445
      D KBRCA           S              3                                                     MD049445
@@ -66,7 +69,7 @@
      D KCAFN           S              2                                                     MD049445
                                                                                             MD049445
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -75,30 +78,30 @@
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
- 
+
       * Global File Updates
- 
+
      C     I#BFAF        IFEQ      'B'
      C                   MOVEL     I#BIMG        Z_FCLTYFN
      C                   ELSE
      C                   MOVEL     I#AIMG        Z_FCLTYFN
      C                   ENDIF
- 
+
      C                   Eval      G_CUSTZONE = I#ZONE
      C                   Move      CNUM          G_PADCNUM
      C                   Move      FACT          G_PADFACT
      C                   Move      FCNO          G_PADFCNO
- 
+
      C     K_GZFCLTLVL1  CHAIN     FCLTLVD0                           99
- 
+
       * 'Before'
- 
+
      C     I#BFAF        IFEQ      'B'
      C  N99              DELETE    FCLTLVD0
      C                   ELSE
- 
+
       * 'After'
- 
+
      C                   CLEAR                   G_FCLTYFN
      C                   MOVEL     Z_FCLTYFN     G_FCLTYFN
       * Fix Data
@@ -107,7 +110,7 @@
      C                   PARM      'GZFCLTYFN '  I#FILE           10
      C                   PARM      G_FCLTYFN     IO#BUFFER      4000
      C                   MOVEL     IO#BUFFER     G_FCLTYFN
- 
+
      C                   EXSR      MOVEDATA
       * Update
      C     *IN99         IFEQ      *OFF
@@ -123,79 +126,79 @@
      C                   WRITE     W_FCLTLVD0
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * MOVEDATA - Load field values for Global File GZFCLTLVPD
       ********************************************************************
      C     MOVEDATA      BEGSR
- 
+
      C                   Move      G_CNUM        G_PADCNUM
      C                   Move      G_FACT        G_PADFACT
      C                   Move      G_FCNO        G_PADFCNO
- 
+
      C                   If        G_RUN0 <> *Zero
      C                   Eval      ZDAYNO = G_RUN0
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN00 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN1 <> *Zero
      C                   Eval      ZDAYNO = G_RUN1
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN01 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN2 <> *Zero
      C                   Eval      ZDAYNO = G_RUN2
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN02 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN3 <> *Zero
      C                   Eval      ZDAYNO = G_RUN3
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN03 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN4 <> *Zero
      C                   Eval      ZDAYNO = G_RUN4
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN04 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN5 <> *Zero
      C                   Eval      ZDAYNO = G_RUN5
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN05 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN6 <> *Zero
      C                   Eval      ZDAYNO = G_RUN6
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN06 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN7 <> *Zero
      C                   Eval      ZDAYNO = G_RUN7
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN07 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN8 <> *Zero
      C                   Eval      ZDAYNO = G_RUN8
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN08 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   If        G_RUN9 <> *Zero
      C                   Eval      ZDAYNO = G_RUN9
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN09 = %Date(ZDATE :*DMY)
      C                   EndIf
- 
+
      C                   Eval      G_SCAMD  = G_CAMD                                        BUG27993
      C                   Eval      G_SOAM01 = G_OAM1
      C                   Eval      G_SOAM02 = G_OAM2
@@ -223,7 +226,7 @@
      C                   EXSR      SRFAMT                                                   MD049445
      C                   ENDIF                                                              MD049445
      C                   ENDIF                                                              MD049445
-     
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -333,32 +336,32 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Open for commit?
- 
+
      C                   CALL      'GPCOPN4COM'
      C                   PARM                    D_COM             1
      C                   OPEN      GZFCLTLVL1
      C                   OPEN      GZFCLTLVPD
- 
+
       * Key lists
- 
+
      C     K_GZFCLTLVL1  KLIST
      C                   KFLD                    G_CUSTZONE
      C                   KFLD                    G_PADCNUM
      C                   KFLD                    G_PADFACT
      C                   KFLD                    G_PADFCNO
- 
+
      C     KEY_GLCUSLL1  KList
      C                   KFld                    G_BRCA
      C                   KFld                    G_CNUM
- 
+
      C     K_GZCLOANL    KLIST                                                              MD049445
      C                   KFLD                    KBRCA                                      MD049445
      C                   KFLD                    KCNUM                                      MD049445
      C                   KFLD                    KFACT                                      MD049445
      C                   KFLD                    KFCNO                                      MD049445
-                                                                                            MD049445 
+                                                                                            MD049445
      C     K_GZFCLTLVL2  KLIST                                                              MD049445
      C                   KFLD                    KZONE                                      MD049445
      C                   KFLD                    KCANM                                      MD049445
@@ -368,7 +371,7 @@
      C     K_GZLOAMS     KLIST                                                              MD049445
      C                   KFLD                    G2_BRCA                                    MD049445
      C                   KFLD                    G2_LNRF                                    MD049445
-                                                                                            MD049445 
+                                                                                            MD049445
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -376,13 +379,13 @@
       * SR_ZDATE2  - Convert Midas date to *DMY format
       *****************************************************************
      C     ZDATE2        BegSr
- 
+
      C                   Call      'ZDATE2'
      C                   Parm                    ZDAYNO            5 0
      C                   Parm      'D'           ZDATFM            1
      C                   Parm      *zero         ZDATE             6 0
      C                   Parm      *blank        ZADATE            7
- 
+
      C                   EndSr
       ********************************************************************
       /SPACE 5
@@ -390,15 +393,15 @@
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -413,10 +416,10 @@
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

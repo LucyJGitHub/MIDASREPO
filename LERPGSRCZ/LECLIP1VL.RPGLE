@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD029863           Date 18Jan18               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -170,6 +171,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *
       *           - Applied for MD049247.                             *
@@ -925,7 +927,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123
@@ -3222,7 +3225,8 @@ B003 C     CLE006        IFEQ      'Y'
      C                   MOVE      'B'           WEPAR
      C     WKLON         CHAIN(N)  CLOAN                              99
 B004 C     *IN99         IFEQ      '0'
-     C                   Z-ADD     NBRA          NBRAM             2 0
+     C**********         Z-ADD     NBRA          NBRAM             2 0                        CSD103
+     C                   MOVE      NBRA          NBRAM             2                          CSD103
      C                   Z-ADD     NCAS          NCASM             1 0
      C                   MOVE      NCHI          NCHIM             1
      C                   MOVE      NCCY          NCCYM             3
@@ -4092,7 +4096,8 @@ E001 C                   ENDIF
      C     DDACTN        OREQ      'A'                                                      AR826996
      C     AYPPLT        IFNE      *BLANKS                                                  AR826996
      C     AYPPLS        ANDNE     *BLANKS                                                  AR826996
-     C     AYPBSR        ANDNE     0                                                        AR826996
+     C*****AYPBSR        ANDNE     0                                                 AR826996 CSD103
+     C     AYPBSR        ANDNE     *BLANKS                                                    CSD103
       *                                                                                     AR826996
      C     KCYBR         KLIST                                                              AR826996
      C                   KFLD                    DDCURR                                     AR826996
@@ -4119,7 +4124,8 @@ E001 C                   ENDIF
      C     AYIPLT        IFNE      *BLANKS                                                  AR826996
      C     AYIPLS        ANDNE     *BLANKS                                                  AR826996
      C     AYCAPI        ANDNE     'Y'                                                      AR826996
-     C     AYIBSR        ANDNE     0                                                        AR826996
+     C*****AYIBSR        ANDNE     0                                                 AR826996 CSD103
+     C     AYIBSR        ANDNE     *BLANKS                                                    CSD103
       *                                                                                     AR826996
       ** Validate Base rate code + Currency for PDCL Interest                               AR826996
       *                                                                                     AR826996
@@ -8546,7 +8552,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     DDFMDT        WNUM7                                      MD029863
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
-     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714
@@ -9161,8 +9167,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD <> *BLANKS                                           CLE134
-     C                             AND AYPBSR <> *ZEROS                                       CLE134
-     C                             OR  AYPBSR = *ZEROS                                        CLE134
+     C**********                   AND AYPBSR <> *ZEROS                                CLE134 CSD103
+     C                             AND AYPBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYPBSR = *ZEROS                                 CLE134 CSD103
+     C                             OR  AYPBSR = *BLANKS                                       CSD103
      C                             AND AYPRSP = *ZEROS                                        CLE134
      C                             AND AYPCS1 = *ZEROS                                      MD019830
      C                   MOVE      'N'           PBRFLG            1                        MD019830
@@ -9197,8 +9205,10 @@ B001 C     ZERR          IFNE      *BLANKS
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE134
                                                                                               CLE134
      C                   IF        @RTCD <> *BLANKS                                           CLE134
-     C                             AND AYIBSR <> *ZEROS                                       CLE134
-     C                             OR  AYIBSR = *ZEROS                                        CLE134
+     C**********                   AND AYIBSR <> *ZEROS                                CLE134 CSD103
+     C                             AND AYIBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYIBSR = *ZEROS                                 CLE134 CSD103
+     C                             OR  AYIBSR = *BLANKS                                       CSD103
      C                             AND AYIRSP = *ZEROS                                        CLE134
      C                             AND AIPCS1 = *ZEROS                                      MD019830
      C                   MOVE      'N'           IBRFLG            1                        MD019830

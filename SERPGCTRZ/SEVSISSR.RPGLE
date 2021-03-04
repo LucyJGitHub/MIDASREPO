@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 15May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -46,7 +47,9 @@
       *                 CAP137  *CREATE    Date 07Feb00               *
       *                                                               *
       *---------------------------------------------------------------*
- 
+
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -205,7 +208,7 @@
      C                   IF        OKISSR = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKISSR <> 'N'
      C                   IF        DDISSR <> *BLANKS
      C                   MOVEL     BBCUST        S1ISSR
@@ -214,7 +217,7 @@
      C                   EVAL      S1ISSR = *BLANKS                                           CSD027
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -233,9 +236,9 @@
       ** Question mark is valid only on repair and i/c screens input.
       *
      C     '?'           SCAN      DDISSR                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKISSR
      C                   ADD       1             IDx
@@ -246,19 +249,19 @@
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDISSR)                   MD000091
      C                   GOTO      EValISSR
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDISSR        PKEYC
      C                   PARM      *BLANKS       PKYST
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRTCD <> *BLANKS OR BBPAIN = 'P'
- 
+
      C                   IF        PRTCD = '*NOSEL '
      C                   EVAL      DDISSR = *BLANKS
      C                   ELSE
@@ -267,30 +270,30 @@
      C                   MOVEL     'DDISSR'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0123'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        *IN01 = *ON
      C                   EVAL      DDISSR = BBCUST
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Issuer is mandatory only if status is 'C'.
       *
      C                   IF        DDISSR = *BLANKS
- 
+
      C                   IF        DDINCS = 'C'
      C                   MOVE      'N'           OKISSR
      C                   ADD       1             IDx
      C                   MOVEL     'DDISSR'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0124'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValISSR      ENDSR
       *
       *****************************************************************

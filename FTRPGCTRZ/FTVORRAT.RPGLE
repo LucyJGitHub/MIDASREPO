@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD057558           Date 18Feb21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -40,7 +42,7 @@
       *  CDL049 - Addition of Reference Rate. API processing.         *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -72,95 +74,95 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
                                                                                               255711
       ** Payment Extension Details layout                                                     255711
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)                                 255711
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZADIG           S              2  0
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -169,7 +171,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -177,7 +179,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
@@ -188,11 +190,11 @@
      C                   Eval      WMsgDtaXAr= *Blanks
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0
- 
+
       ** *------------------------------*
       ** * Validate Reference Rate      *
       ** *------------------------------*
- 
+
      C                   Eval      FT#REF = 0
       *
       **  Check it is a valid figure with 8 decimal places max.
@@ -209,9 +211,9 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
       **  Set error code if invalid
- 
+
      C                   If        ZalignOK = 'N'
       * Send error to screen
      C                   Add       1             Idx
@@ -228,7 +230,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      8             ZADEC
- 
+
      C                   MOVE      ZFIELD        SRRAT
       *
       **  Check tolerance
@@ -274,9 +276,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -303,19 +305,21 @@
       *
       * Record not found
      C     *IN90         IFEQ      '1'
-     C                   MOVEL     'SDRRATPD'    DBFILE                         ***************
-     C                   MOVEL     '001'         DBASE                          * DB ERROR 001*
-     C                   MOVEL     '*FIRST '     DBKEY                          ***************
-     C                   EXSR      *PSSR
+     C                   Z-ADD     0             IRATET                                     MD057558
+     C                   Z-ADD     0             IINRRT                                     MD057558
+     C**********         MOVEL     'SDRRATPD'    DBFILE                         ************MD057558
+     C**********         MOVEL     '001'         DBASE                          * DBERR 001 MD057558
+     C**********         MOVEL     '*FIRST '     DBKEY                          ************MD057558
+     C**********         EXSR      *PSSR                                                    MD057558
      C                   ENDIF
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

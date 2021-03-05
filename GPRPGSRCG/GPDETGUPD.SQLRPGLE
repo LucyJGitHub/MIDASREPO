@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056556           Date 13Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057689           Date 04Mar21               *
+      *  Prev Amend No. MD056556           Date 13Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057689 - Amending branch of batch header creates a new     *
+      *             record in GZ file. Correct access to GPGLFJW0.    *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP001 - Global Processing                                   *
@@ -159,7 +162,8 @@
      C+ SELECT *                                                                            MD056556
      C+ into :GPGLOBF                                                                       MD056556
      C+ from GPGLFJW0                                                                       MD056556
-     C+ where GFGPF = :I#FILE                                                               MD056556
+     C**where*GFGPF = :I#FILE                                                      MD056556 MD057689
+     C+ where GFZPF = :I#FILE                                                               MD057689
      C/END-EXEC                                                                             MD056556
      C******IN99         IFEQ      *OFF                                                     MD056556
      C                   IF        SQLCODE = 0                                              MD056556

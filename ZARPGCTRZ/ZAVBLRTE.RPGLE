@@ -55,7 +55,7 @@
       *  SROPSH - Validate Observation Period Shift Field             *
       *  SRRRDP - Validate Rate Rounding Decimal Places               *
       *  SRDBAV - Validate Day Basis for Average Field                *
-      *  SRRTKN - Populate Rates Known Field                          *   	               CLE172				
+      *  SRRTKN - Populate Rates Known Field                          *                       CLE172
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
@@ -1075,6 +1075,21 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
      C                   ENDIF                                                                CLE172
      C                   EVAL      MsgIdXAr(Idx) = '5049422'
+     C                   ELSE
+
+     C                   IF        WDAY > 6 and
+     C                             DDCALM = 'SARR'
+     C                   EVAL      DDRRDPOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+      ** Use BLRT Next Fields if LERI                                                         CLE172
+     C                   IF        ApiName = 'LERI'                                           CLE172
+     C                   EVAL      FldNamXAr(Idx) = 'DDNRRDP'                                 CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
+     C                   ENDIF                                                                CLE172
+     C                   EVAL      MsgIdXAr(Idx) = '5049454'
+     C                   ENDIF
+
      C                   ENDIF
 
      C                   ENDIF

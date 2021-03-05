@@ -1,7 +1,7 @@
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas EU Map 'In' currency to Euro - batch update')
+/*EXI *  TEXT('Midas EU Map  In  currency to Euro - batch update')
       *****************************************************************
       *                                                               *
       *  Midas - EMU Retail Utilities                                 *
@@ -16,7 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR853283           Date 15Nov11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,12 @@
       *                                                               *
       *================================================================
       *                                                               *
+      *  AR853283 - Apply 235493. Introduce new report EU0110P1 to    *
+      *             show accounts not mapped because they are still   *
+      *             linked to Cash Management. Partially apply 245507.*
+      *             Account are allowed to be closed if remove from   *
+      *             ZS hierarchy but still present in GA hierarchy.   *
+      *             (Child: AR860489)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -120,6 +127,9 @@
       *                                                                   150198
      FACCNTL0 IF  E           K        DISK         KINFSR *PSSR          150198
      F            ACCNTABF                          KRENAMEACCNTF         150198
+     FREZSMXL1IF  E           K        DISK         KINFSR *PSSR      UC                    AR853283
+     FREGAMXL1IF  E           K        DISK         KINFSR *PSSR      UC                    AR853283
+     FREACCML1IF  E           K        DISK         KINFSR *PSSR      UC                    AR853283
       *
       ** EMU Mapping Details Header
      FEUMDHDL0O   E                    DISK         KINFSR *PSSR
@@ -137,6 +147,7 @@
       *                                                                   153298
      FEUACMLL6IF  E           K        DISK         KINFSR *PSSR          153298
      F            EUACMLPF                          KRENAMEACMLL6         153298
+     FEU0110P1O   E                    PRINTER      KINFDS PRDS                             AR853283
       *-----------------------------------------------------------------
       *E-Specifications
       *-----------------------------------------------------------------
@@ -200,6 +211,8 @@
       *
       ** General Ledger Details
      ISDGELR    E DSSDGELRPD
+      ** Midas SD Bank Details                                                              AR853283
+     ISDBANK    E DSSDBANKPD                                                                AR853283
       *
       *  First DS for access program, short Data Structure
      IDSFDY     E DSDSFDY
@@ -219,6 +232,11 @@
       *                                                                   158089
      IINFDS1      DS                                                      158089
      I                                     *STATUS  STAT1                 158089
+     IPRDS        DS                                                                        AR853283
+     I                                       83  90 SFILE                                   AR853283
+     I                                    B 123 1240SFNUM                                   AR853283
+     I                                    B 188 1890OFLLN1                                  AR853283
+     I                                    B 367 3680PRTLN1                                  AR853283
      I/COPY WNCPYSRC,EU0110I002
       *
       *================================================================-
@@ -241,6 +259,7 @@
      C                     PARM           P#EMUM  1        EMU MAPPING Y/NCRE008
      C                     PARM           P#PRM1
      C                     PARM           P#PRM2  1        RETURN CODE
+     C                     PARM           P#PRM3  1                                         AR853283
      C/COPY WNCPYSRC,EU0110C001
       *
       ** Define Key Lists
@@ -272,6 +291,15 @@
      C           *LIKE     DEFN EUMAPN    W#MAPN
      C           *LIKE     DEFN EUESQN    W#ESQN
      C           *LIKE     DEFN EURNCD    W##RCD
+      *                                                                                     AR853283
+      ** Key list for Cash Management Hierarchy Links                                       AR853283
+      *                                                                                     AR853283
+     C           CSHMAN    KLIST                                                            AR853283
+     C                     KFLD           WWCNUM                                            AR853283
+     C                     KFLD           WWCCY                                             AR853283
+     C                     KFLD           WWACOD                                            AR853283
+     C                     KFLD           WWASEQ                                            AR853283
+     C                     KFLD           WWBRCA                                            AR853283
       *
       *================================================================-
       *                   P R O G R A M
@@ -290,6 +318,24 @@
      C           INITPR    BEGSR
       *                                                                   153298
      C                     MOVE *BLANKS   P#PRM2                          153298
+     C                     MOVE *BLANKS   P#PRM3                                            AR853283
+      *                                                                                     AR853283
+      ** Use access program to read bank details file.                                      AR853283
+      *                                                                                     AR853283
+     C                     CALL 'AOBANKR0'                                                  AR853283
+     C                     PARM '*MSG   ' @RTCD   7                                         AR853283
+     C                     PARM '*FIRST ' @OPTN   7                                         AR853283
+     C           SDBANK    PARM SDBANK    DSFDY                                             AR853283
+      *                                                                                     AR853283
+     C           @RTCD     IFNE *BLANK                                                      AR853283
+     C           *LOCK     IN   LDA                                                         AR853283
+     C                     MOVEL@OPTN     DBKEY                                             AR853283
+     C                     MOVEL'EU0110  'DBPGM                                             AR853283
+     C                     MOVE '  '      DBPGM                                             AR853283
+     C                     MOVEL'SDBANKPD'DBFILE                                            AR853283
+     C                     MOVE '02'      DBASE                                             AR853283
+     C                     EXSR *PSSR                                                       AR853283
+     C                     ENDIF                                                            AR853283
       *
       ** Access General Ledger Details
      C**********           CALL 'AOGELRR0'                                                    CGL029
@@ -312,6 +358,24 @@
      C                     MOVE 'Y'       W#FLAG  1
       *
      C                     Z-ADD0         COUNT
+      *                                                                                     AR853283
+      ** Check if enhancement CRE008 is on.                                                 AR853283
+      *                                                                                     AR853283
+     C                     CALL 'AOSARDR0'                                                  AR853283
+     C                     PARM *BLANKS   WRTCD   7                                         AR853283
+     C                     PARM '*VERIFY' WOPTN   7                                         AR853283
+     C                     PARM 'CRE008'  WSARD   6                                         AR853283
+     C                     PARM *BLANKS   DSSDY                                             AR853283
+     C           WRTCD     IFEQ *BLANKS                                                     AR853283
+     C                     MOVE 'Y'       CRE008  1                                         AR853283
+     C                     OPEN REZSMXL1                                                    AR853283
+     C                     OPEN REGAMXL1                                                    AR853283
+     C                     OPEN REACCML1                                                    AR853283
+     C                     ELSE                                                             AR853283
+     C                     MOVE 'N'       CRE008                                            AR853283
+     C                     ENDIF                                                            AR853283
+     C                     Z-ADD43        CNTR1   20                                        AR853283
+      *                                                                                     AR853283
      C/COPY WNCPYSRC,EU0110C006
       *
      C                     ENDSR
@@ -336,12 +400,18 @@
      C           K#KY01    CHAINEUACMLL2             80
      C           *IN80     IFEQ *ON
       *
+     C           CRE008    IFEQ 'Y'                                                         AR853283
+     C                     EXSR CHKCAS                                                      AR853283
+     C                     ENDIF                                                            AR853283
+      *                                                                                     AR853283
+     C           *IN63     IFEQ '0'                                                         AR853283
      C           W#FLAG    IFEQ 'Y'
      C                     EXSR WRTDH
      C                     ENDIF
       *
      C                     EXSR WRTCM
       *
+     C                     ENDIF                                                            AR853283
      C                     ENDIF
      C/COPY WNCPYSRC,EU0110C008
       *
@@ -785,9 +855,104 @@
       *================================================================-
      C           EXITPR    BEGSR
      C/COPY WNCPYSRC,EU0110C003
+     C           *IN61     IFEQ '1'                                                         AR853283
+     C           CNTR1     IFGE 43                                                          AR853283
+     C                     WRITEHEADP1                                                      AR853283
+     C                     ENDIF                                                            AR853283
+     C                     WRITETRAILP1                                                     AR853283
+     C                     ENDIF                                                            AR853283
+     C           CRE008    IFEQ 'Y'                                                         AR853283
+     C                     CLOSEREZSMXL1                                                    AR853283
+     C                     CLOSEREGAMXL1                                                    AR853283
+     C                     CLOSEREACCML1                                                    AR853283
+     C                     ENDIF                                                            AR853283
      C                     SETON                     LR
      C                     ENDSR
       *
+      *================================================================                     AR853283
+      *SUBROUTINE-CHKCAS                                                                    AR853283
+      *================================================================                     AR853283
+     C           CHKCAS    BEGSR                                                            AR853283
+     C                     MOVE BRCA      WWBRCA  3                                         AR853283
+     C                     MOVELCNUM      WWCNUM  6                                         AR853283
+     C                     MOVE CCY       WWCCY   3                                         AR853283
+     C                     Z-ADDACOD      WWACOD 100                                        AR853283
+     C                     Z-ADDACSQ      WWASEQ  20                                        AR853283
+     C                     MOVE '0'       *IN63                                             AR853283
+     C                     MOVE '1'       *IN45                                             AR853283
+     C                     MOVE '0'       *IN46                                             AR853283
+      *                                                                                     AR853283
+      ** Check if account found in zero sweeping member                                     AR853283
+      *                                                                                     AR853283
+     C           CSHMAN    SETLLREZSMXL1                                                    AR853283
+     C           *IN46     DOWEQ'0'                                                         AR853283
+     C           *IN45     ANDEQ'1'                                                         AR853283
+     C           CSHMAN    READEREZSMXL1                 46                                 AR853283
+     C           *IN46     IFEQ '0'                                                         AR853283
+      * Check if member id 'live' in hierachy members                                       AR853283
+     C           ZMMEID    CHAINREACCML1             45                                     AR853283
+     C                     ENDIF                                                            AR853283
+     C                     ENDDO                                                            AR853283
+      *                                                                                     AR853283
+     C           *IN45     IFEQ '1'                                                         AR853283
+     C                     MOVE '0'       *IN46                                             AR853283
+      *                                                                                     AR853283
+      ** Check if account found in group account members                                    AR853283
+      *                                                                                     AR853283
+     C           CSHMAN    SETLLREGAMXL1                                                    AR853283
+     C           *IN46     DOWEQ'0'                                                         AR853283
+     C           *IN45     ANDEQ'1'                                                         AR853283
+     C           CSHMAN    READEREGAMXL1                 46                                 AR853283
+     C           *IN46     IFEQ '0'                                                         AR853283
+      *                                                                                     AR853283
+      ** Check if member id 'live' in hierachy members                                      AR853283
+      *                                                                                     AR853283
+     C           GMEID     CHAINREACCML1             45                                     AR853283
+     C                     ENDIF                                                            AR853283
+     C                     ENDDO                                                            AR853283
+     C                     ENDIF                                                            AR853283
+      *                                                                                     AR853283
+     C           *IN45     IFEQ '0'                                                         AR853283
+     C                     MOVE '1'       *IN61                                             AR853283
+     C                     MOVE '1'       *IN63                                             AR853283
+     C                     MOVE '1'       P#PRM3                                            AR853283
+     C                     EXSR REPCAS                                                      AR853283
+     C                     ENDIF                                                            AR853283
+     C                     ENDSR                                                            AR853283
+      *                                                                                     AR853283
+      *================================================================                     AR853283
+      *SUBROUTINE-REPCAS                                                                    AR853283
+      *================================================================                     AR853283
+     C           REPCAS    BEGSR                                                            AR853283
+      *                                                                                     AR853283
+     C           *IN62     IFEQ '0'                                                         AR853283
+     C                     Z-ADDSFNUM     ZSNUM   60                                        AR853283
+     C                     CALL 'ZSFILE'                                                    AR853283
+     C                     PARM           SEQ     5                                         AR853283
+     C                     PARM *BLANKS   SENTY   3                                         AR853283
+     C                     PARM           SFILE                                             AR853283
+     C                     PARM           ZSNUM                                             AR853283
+     C                     PARM           ZSERR   1                                         AR853283
+     C           ZSERR     IFEQ 'Y'                                                         AR853283
+     C                     SETON                     U7U8LR                                 AR853283
+     C                     RETRN                                                            AR853283
+     C                     ENDIF                                                            AR853283
+     C                     MOVE '1'       *IN62                                             AR853283
+     C                     ENDIF                                                            AR853283
+     C                     MOVE BRCA      RBRCA                                             AR853283
+     C                     MOVELCNUM      RCNUM                                             AR853283
+     C                     MOVE CCY       RCCY                                              AR853283
+     C                     Z-ADDACOD      RACOD                                             AR853283
+     C                     Z-ADDACSQ      RACSQ                                             AR853283
+     C                     MOVE ANAM      RANAM                                             AR853283
+     C           CNTR1     IFGE 43                                                          AR853283
+     C                     WRITEHEADP1                                                      AR853283
+     C                     Z-ADD1         CNTR1                                             AR853283
+     C                     ENDIF                                                            AR853283
+     C                     WRITEDETAILP1                                                    AR853283
+     C                     ADD  1         CNTR1                                             AR853283
+     C                     ENDSR                                                            AR853283
+      *                                                                                     AR853283
       *****************************************************************
       * *PSSR  - Program exception error routine                      *
       *****************************************************************

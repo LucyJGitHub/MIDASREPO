@@ -17,6 +17,7 @@
       *                                                               *
       *  Last Amend No. AR733040           Date 17Oct11               *
       *  Prev Amend No. 251312A            Date 29Oct10               *
+      *                 251312             Date 27Jan09               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -45,6 +46,8 @@
       *            facility amounts. Enhance the DOW loop to correctly*
       *            read all transactions. Added different processing  *
       *            for internal participant facility.                 *
+      *  251312 - Incorrect fee amount due to incorrect available     *
+      *           amount of facility.                                 *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -320,6 +323,7 @@
      D WHisFlg         S              1A
      D WFwdFlg         S              1A
      D CIR004          S              1A
+     D CLE004          S              1A                                                      251312
      D ZIAMT           S             15  0
      D ZIRATE          S             11  7
      D ZINTR           S             30  9
@@ -1322,17 +1326,60 @@
      C                   Z-ADD     ZAMTCO        WFWAM
      C                   ENDIF
      C
-     C                   IF        PTYP = 66 or PTYP = 67 or
-     C                             PTYP = 70 or PTYP = 71
-     C                   EVAL      WDAmount = WDAmount + WFWAM
-     C                   EVAL      WUAmount = WUAmount - WFWAM
-     C                   ELSE
-     C                   EVAL      WDAmount = WDAmount - WFWAM
-     C                   EVAL      WUAmount = WUAmount + WFWAM
-     C                   ENDIF
- 
-     C                   WHEN      FREC = 'LOAMSDKF'
- 
+     C**********         IF        PTYP = 66 or PTYP = 67 or                                  251312
+     C**********                   PTYP = 70 or PTYP = 71                                     251312
+     C**********         EVAL      WDAmount = WDAmount + WFWAM                                251312
+     C**********         EVAL      WUAmount = WUAmount - WFWAM                                251312
+     C**********         ELSE                                                                 251312
+     C**********         EVAL      WDAmount = WDAmount - WFWAM                                251312
+     C**********         EVAL      WUAmount = WUAmount + WFWAM                                251312
+     C**********         ENDIF                                                                251312
+      *                                                                                       251312
+      ** Get loan details                                                                     251312
+      *                                                                                       251312
+     C     LNRF          CHAIN     CLOAN                              06                      251312
+     C                   IF        %FOUND(CLOAN) = '0'                                        251312
+     C     *LOCK         IN        LDA                                                        251312
+     C                   EVAL      DBase  = 004                                               251312
+     C                   EVAL      DBFile = 'CLOAN'                                           251312
+     C                   MOVE      LNRF          DBKEY                                        251312
+     C                   OUT       LDA                                                        251312
+     C                   EXSR      *PSSR                                                      251312
+     C                   ENDIF                                                                251312
+                                                                                              251312
+     C**********         IF        FYPRTR = CLLPFI                                    251312 251312A
+     C                   IF        CLLPFI = ' '   or                                         251312A
+     C                             CLLPFI <> ' ' and CLPTFC = FYCNUM  and                    251312A
+     C                             CLPTFT = FYFACT and CLPTFN = FYFCNO                       251312A
+                                                                                              251312
+     C**********         IF        CLE004 = 'N'                                       251312 251312A
+     C**********         EVAL      WDAmount = WDAmount + WFWAM                        251312 251312A
+     C**********         EVAL      WUAmount = WUAmount - WFWAM                        251312 251312A
+     C**********         ELSE                                                         251312 251312A
+                                                                                              251312
+     C**********         IF        CLGASS  <> 'P'                                     251312 251312A
+     C**********         EVAL      WDAmount = WDAmount + WFWAM                        251312 251312A
+     C**********         EVAL      WUAmount = WUAmount - WFWAM                        251312 251312A
+     C**********         ELSE                                                         251312 251312A
+                                                                                              251312
+     C                   IF        PTYP <> 66 and PTYP <> 67 and                              251312
+     C                             PTYP <> 69 and PTYP <> 72                                  251312
+     C                   EVAL      WDAmount = WDAmount + WFWAM                                251312
+     C                   EVAL      WUAmount = WUAmount - WFWAM                                251312
+     C                   ELSE                                                                 251312
+                                                                                              251312
+     C                   IF        CLLNKS <> *blank                                           251312
+     C                   EVAL      WDAmount = WDAmount + WFWAM                                251312
+     C                   EVAL      WUAmount = WUAmount - WFWAM                                251312
+     C                   ENDIF                                                                251312
+                                                                                              251312
+     C                   ENDIF                                                                251312
+     C                   ENDIF                                                                251312
+     C**********         ENDIF                                                        251312 251312A
+     C**********         ENDIF                                                        251312 251312A
+
+     C**********         WHEN      FREC = 'LOAMSDKF'                                          251312
+     C                   WHEN      FREC = 'LOAMSDKF' or FREC = 'LOAMSDK2'                     251312
      C                   IF        AMTP = 'RE' and REPT = 3
      C                   EVAL      WPRAM = TAMT
      C                   EXSR      SRCALINT
@@ -1360,15 +1407,32 @@
      C                   Z-ADD     ZAMTCO        WFWAM
      C                   ENDIF
      C
-     C                   IF        PTYP = 66 or PTYP = 67 or
-     C                             PTYP = 70 or PTYP = 71
+     C**********         IF        PTYP = 66 or PTYP = 67 or                                  251312
+     C**********                   PTYP = 70 or PTYP = 71                                     251312
+      *                                                                                       251312
+      ** Get loan details                                                                     251312
+      *                                                                                       251312
+     C     LNRF          CHAIN     CLOAN                              06                      251312
+     C                   IF        %FOUND(CLOAN) = '0'                                        251312
+     C     *LOCK         IN        LDA                                                        251312
+     C                   EVAL      DBase  = 004                                               251312
+     C                   EVAL      DBFile = 'CLOAN'                                           251312
+     C                   MOVE      LNRF          DBKEY                                        251312
+     C                   OUT       LDA                                                        251312
+     C                   EXSR      *PSSR                                                      251312
+     C                   ENDIF                                                                251312
+                                                                                              251312
+     C                   IF        CLLNKS = *BLANK or                                         251312
+     C                             CLLNKS <> *BLANK and FECNUM = CLPTFC                       251312
+                                                                                              251312
+     C                   IF        AMTP <> 'PI'                                               251312
      C                   EVAL      WDAmount = WDAmount - WFWAM
      C                   EVAL      WUAmount = WUAmount + WFWAM
      C                   ELSE
      C                   EVAL      WDAmount = WDAmount + WFWAM
      C                   EVAL      WUAmount = WUAmount - WFWAM
      C                   ENDIF
- 
+     C                   ENDIF                                                                251312
      C                   WHEN      FREC = 'LEMNFUPE'
  
      C                   EVAL      WDAmount = WDAmount + FWAM
@@ -2033,7 +2097,29 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+                                                                                              251312
+     C                   EVAL      CLE004 = 'N'                                               251312
+     C                   CALL      'AOSARDR0'                                                 251312
+     C                   PARM      *BLANKS       PRtCd                                        251312
+     C                   PARM      '*VERIFY'     POptn                                        251312
+     C                   PARM      'CLE004'      PSard                                        251312
+     C     SCSARD        PARM      SCSARD        DSFDY                                        251312
+                                                                                              251312
+     C                   IF        PRtCd = *Blanks                                            251312
+     C                   EVAL      CLE004 = 'Y'                                               251312
+     C                   ELSE                                                                 251312
+                                                                                              251312
+      ** Database error                                                                       251312
+                                                                                              251312
+     C                   IF        PRtcd <> '*NRF   '                                         251312
+     C     *LOCK         IN        LDA                                                        251312
+     C                   EVAL      DBase  = 007                                               251312
+     C                   EVAL      DBFile = 'SCSARDPD'                                        251312
+     C                   EVAL      DBKey = 'CLE004'                                           251312
+     C                   OUT       LDA                                                        251312
+     C                   EXSR      *PSSR                                                      251312
+     C                   ENDIF                                                                251312
+     C                   ENDIF                                                                251312
      C                   ENDSR
       *****************************************************************
       /EJECT

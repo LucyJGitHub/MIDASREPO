@@ -17,12 +17,16 @@
       *                                                               *
       *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CAP735             Date 12May20               *
-      *  Prev Amend No. CAP734             Date 12May20               *
+      *  Last Amend No. CAP774             Date 21Jan21               *
+      *  Prev Amend No. CAP773             Date 21Jan21               *
+      *                 CAP735             Date 12May20               *
+      *                 CAP734             Date 12May20               *
       *                 CAP702  *CREATE    Date 12May20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP774 - 24x7 APIs - Loan API                                *
+      *  CAP773 - 24x7 APIs - Facility API                            *
       *  CAP735 - 24x7 APIs - GL Accounts API                         *
       *  CAP734 - 24x7 APIs - SD Customer details API                 *
       *  CAP702 - 24x7 APIs - Common Processing                       *
@@ -240,6 +244,32 @@
      C                   Movel     'N'           CAP735                         CAP735
      C                   EndIf                                                  CAP735
       *
+      ** Check for switchable feature CAP773                                    CAP773
+     C                   Call      'AOSARDR0'                                   CAP773
+     C                   Parm      *Blanks       @RTCD             7            CAP773
+     C                   Parm      '*VERIFY'     @OPTN             7            CAP773
+     C                   Parm      'CAP773'      @SARD             6            CAP773
+     C     SCSARD        Parm      SCSARD        DSFDY                          CAP773
+                                                                                CAP773
+     C                   If        @RTCD = *Blanks                              CAP773
+     C                   Movel     'Y'           CAP773            1            CAP773
+     C                   Else                                                   CAP773
+     C                   Movel     'N'           CAP773                         CAP773
+     C                   EndIf                                                  CAP773
+      *
+      ** Check for switchable feature CAP774                                    CAP774
+     C                   Call      'AOSARDR0'                                   CAP774
+     C                   Parm      *Blanks       @RTCD             7            CAP774
+     C                   Parm      '*VERIFY'     @OPTN             7            CAP774
+     C                   Parm      'CAP774'      @SARD             6            CAP774
+     C     SCSARD        Parm      SCSARD        DSFDY                          CAP774
+                                                                                CAP774
+     C                   If        @RTCD = *Blanks                              CAP774
+     C                   Movel     'Y'           CAP774            1            CAP774
+     C                   Else                                                   CAP774
+     C                   Movel     'N'           CAP774                         CAP774
+     C                   EndIf                                                  CAP774
+      *
      C                   EVAL      PRequest = '*OPEN_PUT'
      C                   EXSR      SRPutMQIO
       *
@@ -369,11 +399,13 @@
       *
      C     *LOVAL        SETLL     API24X7SL2
      C                   READ      API24X7SL2                             70
+      *
      C     *IN70         DOWEQ     *OFF
      C     APMQST        IFEQ      *BLANK
      C     APSTAT        ANDNE     'E'
      C     APSTAT        ANDNE     'P'
      C     APMSGL        CHAIN     ZATRNLOGL9                         71
+      *
      C     *IN71         IFEQ      *OFF
       *
       ** If Customer being processed                                            CAP734
@@ -396,10 +428,34 @@
       *                                                                         CAP735
      C                   ENDIF                                                  CAP735
       *
+      ** If Facility being processed                                            CAP773
+      *                                                                         CAP773
+     C     APMAPI        IFEQ      '3FCIP'                                      CAP773
+     C     CAP773        ANDEQ     'Y'                                          CAP773
+      *                                                                         CAP773
+      ** Customer details                                                       CAP773
+     C                   EXSR      callFCIP                                     CAP773
+      *                                                                         CAP773
+     C                   ENDIF                                                  CAP773
+      *
+      ** If Loan being processed                                                CAP774
+      *                                                                         CAP774
+     C     APMAPI        IFEQ      '4CLIP'                                      CAP774
+     C     CAP774        ANDEQ     'Y'                                          CAP774
+      *                                                                         CAP774
+      ** Customer details                                                       CAP774
+     C                   EXSR      callCLIP                                     CAP774
+      *                                                                         CAP774
+     C                   ENDIF                                                  CAP774
+      *
      C     APMAPI        IFEQ      '1CUSD'
      C     CAP734        ANDEQ     'Y'
      C     APMAPI        OReq      '2AMAD'
      C     CAP735        ANDeq     'Y'
+     C     APMAPI        OReq      '3FCIP'                                      CAP773
+     C     CAP773        ANDeq     'Y'                                          CAP773
+     C     APMAPI        OReq      '4CLIP'                                      CAP774
+     C     CAP774        ANDeq     'Y'                                          CAP774
       *
       ** Send message to MQ series queue
       *
@@ -443,7 +499,7 @@
      C                   EVAL      PFldType = *BLANK                            CAP734
      C                   EVAL      PFldAttr = *BLANK                            CAP734
      C                   EVAL      MQSRCS = 'MIDASCOB'                          CAP734
-     C                   EXSR      SRFmtWMsg                                    CAP734
+     C
       *                                                                         CAP734
      C                   EVAL      PFldTag  = 'APRPYQUEUE'                      CAP734
      C                   EVAL      PFldData = WkRespQ                           CAP734
@@ -760,6 +816,344 @@
       *                                                                         CAP735
      C                   ENDSR                                                  CAP735
       *                                                                         CAP735
+      *****************************************************************         CAP773
+      * callFCIP - Setup Message for Facility                         *         CAP773
+      *                                                               *         CAP773
+      *****************************************************************         CAP773
+      *                                                                         CAP773
+     C     callFCIP      BEGSR                                                  CAP773
+      *                                                                         CAP773
+     C                   EVAL      PMode    = '*CLEAR'                          CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+     C                   EVAL      PMode    = '*ENTER'                          CAP773
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.FCIP'CAP773
+     C                   EVAL      PFormat  = 'FCIP'                            CAP773
+      *                                                                         CAP773
+     C                   EVAL      PFldTag  = 'APSRCSYS'                        CAP773
+     C                   EVAL      PFldData = 'MIDASCOB'                        CAP773
+     C                   EVAL      PFldType = *BLANK                            CAP773
+     C                   EVAL      PFldAttr = *BLANK                            CAP773
+     C                   EVAL      MQSRCS = 'MIDASCOB'                          CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+     C                   EVAL      PFldTag  = 'APRPYQUEUE'                      CAP773
+     C                   EVAL      PFldData = WkRespQ                           CAP773
+     C                   EVAL      PFldType = *BLANK                            CAP773
+     C                   EVAL      PFldAttr = *BLANK                            CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+     C                   EVAL      PFldTag  = 'APUSERID'                        CAP773
+     C                   EVAL      PFldData = WkUser                            CAP773
+     C                   EVAL      PFldType = *BLANK                            CAP773
+     C                   EVAL      PFldAttr = *BLANK                            CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+     C                   EVAL      PFldTag  = 'APPASSWORD'                      CAP773
+     C                   EVAL      PFldData = PPassword1                        CAP773
+     C                   EVAL      PFldType = *BLANK                            CAP773
+     C                   EVAL      PFldAttr = *BLANK                            CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+      *                                                                         CAP773
+      ** +--- XML (FCIP details) -----------------------------------------+     CAP773
+      **                                                                  *     CAP773
+      **   Statement below will facilitate building of FCIP-XML           *     CAP773
+      **   transactions to be sent to MQ for processing                   *     CAP773
+      **                                                                  *     CAP773
+      ** +----------------------------------------------------------------+     CAP773
+      *                                                                         CAP773
+     C                   EVAL      PMode    = '*RETURN'                         CAP773
+     C                   EXSR      SRFmtWMsg                                    CAP773
+      *                                                                         CAP773
+      ***** split PMsgBuf                                                       CAP773
+     C                   Z-ADD     0             A                 5 0          CAP773
+     C                   Z-ADD     0             B                 5 0          CAP773
+     C                   Z-ADD     0             C                 5 0          CAP773
+     C                   Z-ADD     0             D                 5 0          CAP773
+     C                   Eval      A = %SCAN('   ':PMsgBuf)                     CAP773
+     C                   MOVEL     *BLANKS       WMSGBF1       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF2       32000            CAP773
+     C                   Z-ADD     24            B                              CAP773
+     C     A             SUB       B             C                              CAP773
+     C     C             SUB       1             D                              CAP773
+     C                   Eval      WMSGBF1 = %TRIM(%Subst(PMsgBuf:C:B))         CAP773
+     C                   Eval      WMSGBF2 = %TRIM(%Subst(PMsgBuf:1:D))         CAP773
+      *                                                                         CAP773
+      ***** split APXML                                                         CAP773
+     C                   Z-ADD     0             E                 5 0          CAP773
+     C                   Z-ADD     0             F                 5 0          CAP773
+     C                   Z-ADD     0             G                 5 0          CAP773
+     C                   Z-ADD     0             H                 5 0          CAP773
+     C                   Eval      F = %SCAN('   ':APXML)                       CAP773
+     C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP773
+     C                   Z-ADD     24            E                 5 0          CAP773
+     C     F             SUB       E             G                 5 0          CAP773
+     C     G             SUB       1             H                 5 0          CAP773
+      *                                                                         CAP773
+      *                                                                         CAP773
+     C                   Eval      WMSGBF3 = %TRIM(%Subst(APXML:G:E))           CAP773
+     C                   Eval      WMSGBF4 = %TRIM(%Subst(APXML:51:H))          CAP773
+      *                                                                         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF5       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF6       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF7       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF8       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF9       32000            CAP773
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
+     C                   Eval      WMSGBF10 = WMSGBF4                           CAP773
+      *                                                                         CAP773
+     C                   Z-ADD     0             Z                 5 0          CAP773
+     C                   Z-ADD     0             Y                 5 0          CAP773
+     C                   Z-ADD     0             X                 5 0          CAP773
+     C                   Eval      Y = %SCAN('<APRPYQUEUE>':WMSGBF4)            CAP773
+     C                   Eval      Z = %SCAN('</APRPYQUEUE>':WMSGBF4)           CAP773
+     C                   Eval      X = %SCAN('<APRPYQUEUE/>':WMSGBF4)           CAP773
+      *                                                                         CAP773
+     C     Y             IFGT      0                                            CAP773
+     C     Z             ANDGT     0                                            CAP773
+     C                   ADD       13            Z                              CAP773
+     C                   SUB       1             Y                              CAP773
+     C                   Z-ADD     0             V                 5 0          CAP773
+     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP773
+     C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP773
+     C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF4:1:Y))+       CAP773
+     C                               %TRIM(%Subst(WMSGBF4:Z:V))                 CAP773
+     C                   ELSE                                                   CAP773
+     C     X             IFGT      0                                            CAP773
+     C     X             ADD       13            Z                              CAP773
+     C     X             SUB       1             Y                              CAP773
+     C                   Z-ADD     0             V                 5 0          CAP773
+     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP773
+     C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP773
+     C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF4:1:Y))+       CAP773
+     C                               %TRIM(%Subst(WMSGBF4:Z:V))                 CAP773
+     C                   ENDIF                                                  CAP773
+     C                   ENDIF                                                  CAP773
+      *                                                                         CAP773
+     C                   Eval      WMSGBF7 = WMSGBF10                           CAP773
+     C                   Z-ADD     0             Z                 5 0          CAP773
+     C                   Z-ADD     0             Y                 5 0          CAP773
+     C                   Z-ADD     0             X                 5 0          CAP773
+     C                   Eval      Y = %SCAN('<APSRCSYS>':WMSGBF7)              CAP773
+     C                   Eval      Z = %SCAN('</APSRCSYS>':WMSGBF7)             CAP773
+     C                   Eval      X = %SCAN('<APSRCSYS/>':WMSGBF7)             CAP773
+      *                                                                         CAP773
+     C     Y             IFGT      0                                            CAP773
+     C     Z             ANDGT     0                                            CAP773
+     C                   ADD       11            Z                              CAP773
+     C                   SUB       1             Y                              CAP773
+     C                   Z-ADD     0             V                 5 0          CAP773
+     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP773
+     C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP773
+     C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF7:1:Y))+       CAP773
+     C                               %TRIM(%Subst(WMSGBF7:Z:V))                 CAP773
+     C                   ELSE                                                   CAP773
+     C     X             IFGT      0                                            CAP773
+     C     X             ADD       11            Z                              CAP773
+     C     X             SUB       1             Y                              CAP773
+     C                   Z-ADD     0             V                 5 0          CAP773
+     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP773
+     C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP773
+     C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP773
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF7:1:Y))+       CAP773
+     C                               %TRIM(%Subst(WMSGBF7:Z:V))                 CAP773
+     C                   ENDIF                                                  CAP773
+     C                   ENDIF                                                  CAP773
+      *                                                                         CAP773
+      *                                                                         CAP773
+     C                   Z-ADD     0             H                 5 0          CAP773
+     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP773
+      *                                                                         CAP773
+     C                   MOVEL     *BLANKS       WMSGBF        32000            CAP773
+     C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP773
+     C                               %TRIM(%Subst(WMSGBF10:1:H))                CAP773
+      *                                                                         CAP773
+     C                   MOVEL     WMSGBF        PMSGBUF                        CAP773
+      *                                                                         CAP773
+      ** Set APMQST as 'S' in PF/API24X7SPD and update file                     CAP773
+     C                   MOVE      'S'           APMQST                         CAP773
+     C                   UPDATE    API24X7SD0                                   CAP773
+      *                                                                         CAP773
+     C                   ENDSR                                                  CAP773
+      *                                                                         CAP773
+      *****************************************************************         CAP774
+      * callCLIP - Setup Message for Loan                             *         CAP774
+      *                                                               *         CAP774
+      *****************************************************************         CAP774
+      *                                                                         CAP774
+     C     callCLIP      BEGSR                                                  CAP774
+      *                                                                         CAP774
+     C                   EVAL      PMode    = '*CLEAR'                          CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+     C                   EVAL      PMode    = '*ENTER'                          CAP774
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.CLIP'CAP774
+     C                   EVAL      PFormat  = 'CLIP'                            CAP774
+      *                                                                         CAP774
+     C                   EVAL      PFldTag  = 'APSRCSYS'                        CAP774
+     C                   EVAL      PFldData = 'MIDASCOB'                        CAP774
+     C                   EVAL      PFldType = *BLANK                            CAP774
+     C                   EVAL      PFldAttr = *BLANK                            CAP774
+     C                   EVAL      MQSRCS = 'MIDASCOB'                          CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+     C                   EVAL      PFldTag  = 'APRPYQUEUE'                      CAP774
+     C                   EVAL      PFldData = WkRespQ                           CAP774
+     C                   EVAL      PFldType = *BLANK                            CAP774
+     C                   EVAL      PFldAttr = *BLANK                            CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+     C                   EVAL      PFldTag  = 'APUSERID'                        CAP774
+     C                   EVAL      PFldData = WkUser                            CAP774
+     C                   EVAL      PFldType = *BLANK                            CAP774
+     C                   EVAL      PFldAttr = *BLANK                            CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+     C                   EVAL      PFldTag  = 'APPASSWORD'                      CAP774
+     C                   EVAL      PFldData = PPassword1                        CAP774
+     C                   EVAL      PFldType = *BLANK                            CAP774
+     C                   EVAL      PFldAttr = *BLANK                            CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+      *                                                                         CAP774
+      ** +--- XML (CLIP details) -----------------------------------------+     CAP774
+      **                                                                  *     CAP774
+      **   Statement below will facilitate building of CLIP-XML           *     CAP774
+      **   transactions to be sent to MQ for processing                   *     CAP774
+      **                                                                  *     CAP774
+      ** +----------------------------------------------------------------+     CAP774
+      *                                                                         CAP774
+     C                   EVAL      PMode    = '*RETURN'                         CAP774
+     C                   EXSR      SRFmtWMsg                                    CAP774
+      *                                                                         CAP774
+      ***** split PMsgBuf                                                       CAP774
+     C                   Z-ADD     0             A                 5 0          CAP774
+     C                   Z-ADD     0             B                 5 0          CAP774
+     C                   Z-ADD     0             C                 5 0          CAP774
+     C                   Z-ADD     0             D                 5 0          CAP774
+     C                   Eval      A = %SCAN('   ':PMsgBuf)                     CAP774
+     C                   MOVEL     *BLANKS       WMSGBF1       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF2       32000            CAP774
+     C                   Z-ADD     24            B                              CAP774
+     C     A             SUB       B             C                              CAP774
+     C     C             SUB       1             D                              CAP774
+     C                   Eval      WMSGBF1 = %TRIM(%Subst(PMsgBuf:C:B))         CAP774
+     C                   Eval      WMSGBF2 = %TRIM(%Subst(PMsgBuf:1:D))         CAP774
+      *                                                                         CAP774
+      ***** split APXML                                                         CAP774
+     C                   Z-ADD     0             E                 5 0          CAP774
+     C                   Z-ADD     0             F                 5 0          CAP774
+     C                   Z-ADD     0             G                 5 0          CAP774
+     C                   Z-ADD     0             H                 5 0          CAP774
+     C                   Eval      F = %SCAN('   ':APXML)                       CAP774
+     C                   MOVEL     *BLANKS       WMSGBF3       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF4       32000            CAP774
+     C                   Z-ADD     24            E                 5 0          CAP774
+     C     F             SUB       E             G                 5 0          CAP774
+     C     G             SUB       1             H                 5 0          CAP774
+      *                                                                         CAP774
+      *                                                                         CAP774
+     C                   Eval      WMSGBF3 = %TRIM(%Subst(APXML:G:E))           CAP774
+     C                   Eval      WMSGBF4 = %TRIM(%Subst(APXML:51:H))          CAP774
+      *                                                                         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF5       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF6       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF7       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF8       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF9       32000            CAP774
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
+     C                   Eval      WMSGBF10 = WMSGBF4                           CAP774
+      *                                                                         CAP774
+     C                   Z-ADD     0             Z                 5 0          CAP774
+     C                   Z-ADD     0             Y                 5 0          CAP774
+     C                   Z-ADD     0             X                 5 0          CAP774
+     C                   Eval      Y = %SCAN('<APRPYQUEUE>':WMSGBF4)            CAP774
+     C                   Eval      Z = %SCAN('</APRPYQUEUE>':WMSGBF4)           CAP774
+     C                   Eval      X = %SCAN('<APRPYQUEUE/>':WMSGBF4)           CAP774
+      *                                                                         CAP774
+     C     Y             IFGT      0                                            CAP774
+     C     Z             ANDGT     0                                            CAP774
+     C                   ADD       13            Z                              CAP774
+     C                   SUB       1             Y                              CAP774
+     C                   Z-ADD     0             V                 5 0          CAP774
+     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP774
+     C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP774
+     C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF4:1:Y))+       CAP774
+     C                               %TRIM(%Subst(WMSGBF4:Z:V))                 CAP774
+     C                   ELSE                                                   CAP774
+     C     X             IFGT      0                                            CAP774
+     C     X             ADD       13            Z                              CAP774
+     C     X             SUB       1             Y                              CAP774
+     C                   Z-ADD     0             V                 5 0          CAP774
+     C                   Eval      V = %SCAN('   ':WMSGBF4)                     CAP774
+     C                   Eval      WMSGBF5 = %TRIM(%Subst(WMSGBF4:1:Y))         CAP774
+     C                   Eval      WMSGBF6 = %TRIM(%Subst(WMSGBF4:Z:V))         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF4:1:Y))+       CAP774
+     C                               %TRIM(%Subst(WMSGBF4:Z:V))                 CAP774
+     C                   ENDIF                                                  CAP774
+     C                   ENDIF                                                  CAP774
+      *                                                                         CAP774
+     C                   Eval      WMSGBF7 = WMSGBF10                           CAP774
+     C                   Z-ADD     0             Z                 5 0          CAP774
+     C                   Z-ADD     0             Y                 5 0          CAP774
+     C                   Z-ADD     0             X                 5 0          CAP774
+     C                   Eval      Y = %SCAN('<APSRCSYS>':WMSGBF7)              CAP774
+     C                   Eval      Z = %SCAN('</APSRCSYS>':WMSGBF7)             CAP774
+     C                   Eval      X = %SCAN('<APSRCSYS/>':WMSGBF7)             CAP774
+      *                                                                         CAP774
+     C     Y             IFGT      0                                            CAP774
+     C     Z             ANDGT     0                                            CAP774
+     C                   ADD       11            Z                              CAP774
+     C                   SUB       1             Y                              CAP774
+     C                   Z-ADD     0             V                 5 0          CAP774
+     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP774
+     C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP774
+     C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF7:1:Y))+       CAP774
+     C                               %TRIM(%Subst(WMSGBF7:Z:V))                 CAP774
+     C                   ELSE                                                   CAP774
+     C     X             IFGT      0                                            CAP774
+     C     X             ADD       11            Z                              CAP774
+     C     X             SUB       1             Y                              CAP774
+     C                   Z-ADD     0             V                 5 0          CAP774
+     C                   Eval      V = %SCAN('   ':WMSGBF7)                     CAP774
+     C                   Eval      WMSGBF8 = %TRIM(%Subst(WMSGBF7:1:Y))         CAP774
+     C                   Eval      WMSGBF9 = %TRIM(%Subst(WMSGBF7:Z:V))         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF10      32000            CAP774
+     C                   Eval      WMSGBF10 = %TRIM(%Subst(WMSGBF7:1:Y))+       CAP774
+     C                               %TRIM(%Subst(WMSGBF7:Z:V))                 CAP774
+     C                   ENDIF                                                  CAP774
+     C                   ENDIF                                                  CAP774
+      *                                                                         CAP774
+      *                                                                         CAP774
+     C                   Z-ADD     0             H                 5 0          CAP774
+     C                   Eval      H = %SCAN('   ':WMSGBF10)                    CAP774
+      *                                                                         CAP774
+     C                   MOVEL     *BLANKS       WMSGBF        32000            CAP774
+     C                   Eval      WMSGBF = %TRIM(%Subst(WMSGBF2:1:D))+         CAP774
+     C                               %TRIM(%Subst(WMSGBF10:1:H))                CAP774
+      *                                                                         CAP774
+     C                   MOVEL     WMSGBF        PMSGBUF                        CAP774
+      *                                                                         CAP774
+      ** Set APMQST as 'S' in PF/API24X7SPD and update file                     CAP774
+     C                   MOVE      'S'           APMQST                         CAP774
+     C                   UPDATE    API24X7SD0                                   CAP774
+      *                                                                         CAP774
+     C                   ENDSR                                                  CAP774
+      *                                                                         CAP774
       *****************************************************************
       * SRPutMQIO - Put Message to MQ Series Queue                    *
       *                                                               *

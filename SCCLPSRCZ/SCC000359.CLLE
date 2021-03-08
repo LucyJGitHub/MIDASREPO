@@ -10,12 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP735             Date 12May20              */
-/*       Prev Amend No. CAP734             Date 12May20              */
+/*       Last Amend No. CAP774             Date 21Jan21              */
+/*       Prev Amend No. CAP773             Date 21Jan21              */
+/*                      CAP735             Date 12May20              */
+/*                      CAP734             Date 12May20              */
 /*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CAP774 - 24x7 APIs - Loan API                               */
+/*       CAP773 - 24x7 APIs - Facility API                           */
 /*       CAP735 - 24x7 APIs - GL Accounts API                        */
 /*       CAP734 - 24x7 APIs - SD Customer Details API                */
 /*       CAP702 - 24x7 APIs - Common Processing                      */
@@ -56,6 +60,8 @@
              DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CAP734) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP734*/
              DCL        VAR(&CAP735) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP735*/
+             DCL        VAR(&CAP773) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP773*/
+             DCL        VAR(&CAP774) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP774*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2020')
@@ -124,6 +130,26 @@
              IF         COND(&RTCD = '       ') THEN(CHGVAR +
                           VAR(&CAP735) VALUE('Y'))   /*CAP735*/
 
+/**   CHECK FOR SWITCHABLE FEATURE CAP773     */     /*CAP773*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP773*/
+             CHGVAR     VAR(&SARD) VALUE('CAP773')   /*CAP773*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP773*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP773) VALUE('Y'))   /*CAP773*/
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP774     */     /*CAP774*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP774*/
+             CHGVAR     VAR(&SARD) VALUE('CAP774')   /*CAP774*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP774*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP774) VALUE('Y'))   /*CAP774*/
+
 /* 12a. Restore SET of PF from zzDMLIB, zzDPLIB and zzDTALIB to zzDZLIB   */
 LOOP9:       RCVF       OPNID(S3C)
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT9))
@@ -133,6 +159,8 @@ LOOP9:       RCVF       OPNID(S3C)
 
              IF COND(((&S3C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
                     ((&S3C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S3C_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&S3C_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
                     ((&S3C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&S3C_SADEPN *EQ 'DM') *AND +
@@ -168,9 +196,11 @@ LOOP10:      RCVF       OPNID(S3B)
                           (&S3B_SADEPN *NE 'DP') *AND (&S3B_SADEPN +
                           *NE 'DT')) THEN(GOTO CMDLBL(LOOP10))
 
-             IF         COND(((&S3B_SASARN = 'CAP734') *AND (&CAP734 +
-                          = 'Y')) *OR ((&S3B_SASARN = 'CAP735') +
-                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+             IF COND(((&S3B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S3B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S3B_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&S3B_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
+                    ((&S3B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&S3B_SADEPN *EQ 'DM') *AND +
                           (&S3B_SATYPE *EQ 'PF')) THEN(DO)
@@ -204,10 +234,11 @@ LOOP11:      RCVF       OPNID(G3C)
                           (&G3C_SADEPN *NE 'GP') *AND (&G3C_SADEPN +
                           *NE 'GT')) THEN(GOTO CMDLBL(LOOP11))
 
-             IF         COND(((&G3C_SASARN = 'CAP734') *AND (&CAP734 +
-                          = 'Y')) *OR ((&G3C_SASARN = 'CAP735') +
-                          *AND (&CAP735 = 'Y')) *OR ((&G3C_SASARN = +
-                          'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+             IF COND(((&G3C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G3C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G3C_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&G3C_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
+                    ((&G3C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&G3C_SADEPN *EQ 'GM') *AND +
                           (&G3C_SATYPE *EQ 'PF')) THEN(DO)
@@ -241,9 +272,11 @@ LOOP12:      RCVF       OPNID(G3B)
                           (&G3B_SADEPN *NE 'GP') *AND (&G3B_SADEPN +
                           *NE 'GT')) THEN(GOTO CMDLBL(LOOP12))
 
-             IF         COND(((&G3B_SASARN = 'CAP734') *AND (&CAP734 +
-                          = 'Y')) *OR ((&G3B_SASARN = 'CAP735') +
-                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+             IF COND(((&G3B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G3B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G3B_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&G3B_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
+                    ((&G3B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&G3B_SADEPN *EQ 'GM') *AND +
                           (&G3B_SATYPE *EQ 'PF')) THEN(DO)

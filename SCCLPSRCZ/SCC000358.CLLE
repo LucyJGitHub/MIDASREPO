@@ -10,12 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP735             Date 12May20              */
-/*       Prev Amend No. CAP734             Date 12May20              */
+/*       Last Amend No. CAP774             Date 21Jan21              */
+/*       Prev Amend No. CAP773             Date 21Jan21              */
+/*                      CAP735             Date 12May20              */
+/*                      CAP734             Date 12May20              */
 /*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CAP774 - 24x7 APIs - Loan API                               */
+/*       CAP773 - 24x7 APIs - Facility API                           */
 /*       CAP735 - 24x7 APIs - GL Accounts API                        */
 /*       CAP734 - 24x7 APIs - SD Customer Details API                */
 /*       CAP702 - 24x7 APIs - Common Processing                      */
@@ -56,6 +60,8 @@
              DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CAP734) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP734*/
              DCL        VAR(&CAP735) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP735*/
+             DCL        VAR(&CAP773) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP773*/
+             DCL        VAR(&CAP774) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP774*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2020')
@@ -113,6 +119,26 @@
              IF         COND(&RTCD = '       ') THEN(CHGVAR +
                           VAR(&CAP735) VALUE('Y'))   /*CAP735*/
 
+/**   CHECK FOR SWITCHABLE FEATURE CAP773     */     /*CAP773*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP773*/
+             CHGVAR     VAR(&SARD) VALUE('CAP773')   /*CAP773*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP773*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP773) VALUE('Y'))   /*CAP773*/
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP774     */     /*CAP774*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP774*/
+             CHGVAR     VAR(&SARD) VALUE('CAP774')   /*CAP774*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP774*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP774) VALUE('Y'))   /*CAP774*/
+
 /* 8a. Move Back SET of LF from zzDMLIB, zzDPLIB and zzDTALIB into zzDVLIB    */
 
 LOOP5:       RCVF       OPNID(S2C)
@@ -121,6 +147,8 @@ LOOP5:       RCVF       OPNID(S2C)
 
              IF COND(((&S2C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
                     ((&S2C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S2C_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&S2C_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
                     ((&S2C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&S2C_SATYPE *EQ 'LF') *AND (&S2C_SADEPN +
@@ -143,6 +171,12 @@ LOOP5:       RCVF       OPNID(S2C)
                              TOLIB(&DVLIB)
                           GOTO LOOP5
              ENDDO
+
+             IF         COND((&S2C_SATYPE *EQ 'LF') *AND +
+                          (&S2C_SADEPN *EQ 'DV')) THEN(DO)   /*CAP773*/
+                          GOTO LOOP5                         /*CAP773*/
+             ENDDO       /*CAP773*/
+
                 ENDDO       /*CAP734*/
 
 EXIT5:
@@ -155,6 +189,8 @@ LOOP6:       RCVF       OPNID(G2C)
 
              IF COND(((&G2C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
                     ((&G2C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G2C_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&G2C_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
                     ((&G2C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&G2C_SATYPE *EQ 'LF') *AND +
@@ -177,6 +213,12 @@ LOOP6:       RCVF       OPNID(G2C)
                              TOLIB(&GVLIB)
                           GOTO LOOP6
              ENDDO
+
+             IF         COND((&G2C_SATYPE *EQ 'LF') *AND +
+                          (&G2C_SADEPN *EQ 'GV')) THEN(DO)   /*CAP773*/
+                          GOTO LOOP6                         /*CAP773*/
+             ENDDO       /*CAP773*/
+
                 ENDDO       /*CAP734*/
 
 EXIT6:
@@ -187,9 +229,11 @@ LOOP7:       RCVF       OPNID(S2B)
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT7))
              IF         COND(&S2B_SATYPE *NE 'LF') THEN(GOTO CMDLBL(LOOP7))
 
-             IF         COND(((&S2B_SASARN = 'CAP734') *AND (&CAP734 +
-                          = 'Y')) *OR ((&S2B_SASARN = 'CAP735') +
-                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+             IF COND(((&S2B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S2B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S2B_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&S2B_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
+                    ((&S2B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&S2B_SATYPE *EQ 'LF') *AND +
                           (&S2B_SADEPN *EQ 'DM')) THEN(DO)
@@ -212,6 +256,12 @@ LOOP7:       RCVF       OPNID(S2B)
                              TOLIB(&DVLIB)
                           GOTO LOOP7
              ENDDO
+
+             IF         COND((&S2B_SATYPE *EQ 'LF') *AND +
+                          (&S2B_SADEPN *EQ 'DV')) THEN(DO)   /*CAP773*/
+                          GOTO LOOP7                         /*CAP773*/
+             ENDDO       /*CAP773*/
+
                 ENDDO       /*CAP734*/
 
 EXIT7:
@@ -222,9 +272,11 @@ LOOP8:       RCVF       OPNID(G2B)
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT8))
              IF         COND(&G2B_SATYPE *NE 'LF') THEN(GOTO CMDLBL(LOOP8))
 
-             IF         COND(((&G2B_SASARN = 'CAP734') *AND (&CAP734 +
-                          = 'Y')) *OR ((&G2B_SASARN = 'CAP735') +
-                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+             IF COND(((&G2B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G2B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G2B_SASARN = 'CAP773') *AND (&CAP773 = 'Y')) *OR +
+                    ((&G2B_SASARN = 'CAP774') *AND (&CAP774 = 'Y')) *OR +
+                    ((&G2B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
              IF         COND((&G2B_SATYPE *EQ 'LF') *AND +
                           (&G2B_SADEPN *EQ 'GM')) THEN(DO)
@@ -246,6 +298,12 @@ LOOP8:       RCVF       OPNID(G2B)
                              TOLIB(&GVLIB)
                           GOTO LOOP8
              ENDDO
+
+             IF         COND((&G2B_SATYPE *EQ 'LF') *AND +
+                          (&G2B_SADEPN *EQ 'GV')) THEN(DO)    /*CAP773*/
+                          GOTO LOOP8                          /*CAP773*/
+             ENDDO       /*CAP773*/
+
                 ENDDO       /*CAP734*/
 EXIT8:
 

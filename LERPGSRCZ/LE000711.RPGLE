@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR733040           Date 17Oct11               *
+      *  Prev Amend No. 251312A            Date 29Oct10               *
+      *                 AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR745803           Date 19Apr11               *
@@ -34,6 +36,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR733040 - Wrong fee period start date shown in Midas, on    *
+      *             both the Commiment Fee Enquiry & the Commitment   *
+      *             Fee Report. Added condition to ensure that        *
+      *             correct transactions details are acquired. Also   *
+      *             fix 251312A was reversed. (Child: AR746964)       *
+      *  251312A - Some trasactions are still not projected on        *
+      *            facility amounts. Enhance the DOW loop to correctly*
+      *            read all transactions. Added different processing  *
+      *            for internal participant facility.                 *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -58,7 +69,10 @@
       *       02  Record not found FACHISH                            *
       *       03  EOF FACHISA                                         *
       *       04  Record not found FCLTY                              *
-      *       05  EOF LEFCAMLB                                        *
+      ********05  EOF LEFCAMLB                                        *                     AR733040
+      *       05  EOF LEFCAMLE                                        *                     AR733040
+      *       08  Record from LEFCAMLE does not match w/ fee details  *                     AR733040
+      *       10  Record not found CLOANLB                            *                     AR733040
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -105,7 +119,8 @@
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
      FFACHISH   IF   E           K DISK    INFSR(*PSSR)
      FFACHSAL1  IF   E           K DISK    INFSR(*PSSR)
-     FLEFCAMLB  IF   E           K DISK    INFSR(*PSSR)
+     F***LEFCAMLB  IF   E           K DISK    INFSR(*PSSR)                                  AR733040
+     FLEFCAMLE  IF   E           K DISK    INFSR(*PSSR)                                     AR733040
      F                                     INFDS(FSDS)
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FY)
@@ -114,6 +129,9 @@
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CL)
      F                                     IGNORE(CLOANHHF:CLOANCKF:CLOANZ1F)
+     FCLOANLB   IF   E           K DISK    INFSR(*PSSR)                                     AR733040
+     F                                     RENAME(CLOANCLF:CLOANLBF)                        AR733040
+     F                                     PREFIX(LN_)                                      AR733040
  
      FLEFCAMLA  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSDKF:LOAMSLAF)
@@ -392,6 +410,10 @@
      C                   KFLD                    K#FACT
      C                   KFLD                    K#FCNO
      C                   KFLD                    K#RTCP
+     C     LOANA         KLIST                                                              AR733040
+     C                   KFLD                    BRCA                                       AR733040
+     C                   KFLD                    LNRF                                       AR733040
+      *                                                                                     AR733040
  
      C                   ENDSR
       *****************************************************************
@@ -690,24 +712,91 @@
      C                   EVAL      WSDate2 = WSDate
      C                   ENDIF
      C                   EVAL      K#DATE = WSDate2
- 
-     C     FACHISAK      SETGT     LEFCAMLB
-     C                   READP     LEFCAMLB                               05
- 
+     C*****FACHISAK      SETGT     LEFCAMLB                                                 AR733040
+     C**********         READP     LEFCAMLB                               05                AR733040
+      *
+     C     FACHISAK      SETGT     LEFCAMLE                                                 AR733040
+     C                   READ      LEFCAMLE                               05                AR733040
+      *                                                                                     AR733040
+     C                   MOVE      '1'           *IN08                                      AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'LEFCAMPF'                                        AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL2'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL4'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL7'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL8'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'LEMNFUPF'                                    AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'LEMNFUPE'                                    AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'LOAMSDK'                                         AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             or FREC = 'LOAMSDKF'                                     AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C     LOANA         CHAIN     CLOANLBF                           10                    AR733040
+     C                   MOVEL     LN_PTFT       LN_FACL           5 0                      AR733040
+     C                   MOVE      LN_PTFN       LN_FACL                                    AR733040
+     C                   IF        LN_PTFC <> *BLANKS                                       AR733040
+     C                             AND LN_FACL <> 0                                         AR733040
+     C                             AND LN_PTFC = K#CNUM                                     AR733040
+     C                             AND LN_FACL = K#FACL                                     AR733040
+     C                             AND *IN10 = '0'                                          AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+     C                   ENDIF                                                              AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'CLOANCL1'                                        AR733040
+     C                             or FREC = 'CLOANCL3'                                     AR733040
+     C                             or FREC = 'CLOANCL5'                                     AR733040
+     C                             or FREC = 'CLOANCL6'                                     AR733040
+     C                   MOVEL     PTFT          PFACL             5 0                      AR733040
+     C                   MOVE      PTFN          PFACL                                      AR733040
+     C                   IF        PTFC <> *BLANKS                                          AR733040
+     C                             AND PFACL <> 0                                           AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND PFACL = K#FACL                                       AR733040
+     C                             OR PTFC = *BLANKS                                        AR733040
+     C                             AND PFACL = 0                                            AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+     C                   ENDIF                                                              AR733040
+      *                                                                                     AR733040
      C                   EXSR      SRChkBalF
  
       ** Read through all forward facility amendments, loan increases, loan
       ** repayments affecting the facility amount of the key facility (LF/LEFCAMLB)
  
-     C                   DOW       %EOF(LEFCAMLB) = '0' and FWDT <= WEDate
+     C**********         DOW       %EOF(LEFCAMLB) = '0' and FWDT <= WEDate                  AR733040
  
-     C     FACHISAK2     READE     LEFCAMLB                               05
+     C*****FACHISAK2     READE     LEFCAMLB                               05                 251312A
  
-     C                   IF        %EOF(LEFCAMLB) = '0' and FWDT <= WEDate
+     C**********         IF        %EOF(LEFCAMLB) = '0' and FWDT <= WEDate                   251312A
+     C                   DOW       %EOF(LEFCAMLE) = '0' and FWDT <= WEDate                  AR733040
+     C                             AND *IN08 = '0'                                          AR733040
  
       ** Compute for the balance as changed by the current forward transaction
  
-     C                   EXSR      SRFWDBAL
+     C**********         EXSR      SRFWDBAL                                                  251312A
+     C                   EXSR      SRFWDBAL                                                 AR733040
  
  
      C                   EVAL      WEDate2 = FWDT
@@ -752,12 +841,77 @@
      C                   EVAL      WSDate2 = WEDate2
  
       ** Retrieve correct balance using SRChkBalF
- 
-     C                   EXSR      SRChkBalF
- 
-     C                   ENDIF
- 
+     C**********         EXSR      SRChkBalF                                                 251312A
+
+     C**********         ENDIF                                                               251312A
+      *                                                                                     AR733040
+     C                   EXSR      SRChkBalF                                                AR733040
+      *                                                                                     AR733040
+     C                   READ      LEFCAMLE                               05                AR733040
+      *                                                                                     AR733040
+     C                   MOVE      '1'           *IN08                                      AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'LEFCAMPF'                                        AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL2'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL4'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL7'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'CLOANCL8'                                    AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'LEMNFUPF'                                    AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             OR  FREC = 'LEMNFUPE'                                    AR733040
+     C                             AND CNUM = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'LOAMSDK'                                         AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                             or FREC = 'LOAMSDKF'                                     AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C     LOANA         CHAIN     CLOANLBF                           10                    AR733040
+     C                   MOVEL     LN_PTFT       LN_FACL           5 0                      AR733040
+     C                   MOVE      LN_PTFN       LN_FACL                                    AR733040
+     C                   IF        LN_PTFC <> *BLANKS                                       AR733040
+     C                             AND LN_FACL <> 0                                         AR733040
+     C                             AND LN_PTFC = K#CNUM                                     AR733040
+     C                             AND LN_FACL = K#FACL                                     AR733040
+     C                             AND *IN10 = '0'                                          AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+     C                   ENDIF                                                              AR733040
+      *                                                                                     AR733040
+     C                   IF        FREC = 'CLOANCL1'                                        AR733040
+     C                             or FREC = 'CLOANCL3'                                     AR733040
+     C                             or FREC = 'CLOANCL5'                                     AR733040
+     C                             or FREC = 'CLOANCL6'                                     AR733040
+     C                   MOVEL     PTFT          PFACL             5 0                      AR733040
+     C                   MOVE      PTFN          PFACL                                      AR733040
+     C                   IF        PTFC <> *BLANKS                                          AR733040
+     C                             AND PFACL <> 0                                           AR733040
+     C                             AND PTFC = K#CNUM                                        AR733040
+     C                             AND PFACL = K#FACL                                       AR733040
+     C                             OR PTFC = *BLANKS                                        AR733040
+     C                             AND PFACL = 0                                            AR733040
+     C                             AND FCUS = K#CNUM                                        AR733040
+     C                             AND FCTY = K#FACL                                        AR733040
+     C                   MOVE      '0'           *IN08                                      AR733040
+     C                   ENDIF                                                              AR733040
+     C                   ENDIF                                                              AR733040
      C                   ENDDO
+
  
      C                   ENDSR
       *****************************************************************
@@ -1226,10 +1380,12 @@
  
      C                   WHEN      FREC = 'CLOANCL4' or FREC = 'CLOANCL5'
      C                             or FREC = 'CLOANCL6'
+     C                             OR FREC = 'CLOANCL8'                                     AR733040
  
      C                   EVAL      WFWAM = FWAM
  
      C                   IF        FREC = 'CLOANCL6' and REPT = 3
+     C                             OR FREC = 'CLOANCL8' and REPT = 3                        AR733040
      C                   EVAL      WPRAM = FWAM
      C                   EXSR      SRCALINT
      C                   EVAL      WFWAM = FWAM - WIntCalc
@@ -1261,6 +1417,7 @@
      C                   ENDIF
  
      C                   WHEN      FREC = 'CLOANCL3'
+     C                             OR FREC = 'CLOANCL7'                                     AR733040
      C                   EVAL      WFWAM = FWAM
      C                   EVAL      WPRAM = FWAM
      C                   EXSR      SRCALINT
@@ -1400,6 +1557,7 @@
      C                   Z-ADD     ZINTR         WIntCalc
  
      C                   IF        FREC = 'CLOANCL3'
+     C                             OR FREC = 'CLOANCL7'                                     AR733040
      C                   EVAL      WTotalInt = WTotalInt + WIntCalc
      C                   ENDIF
      C                   ENDIF
@@ -1418,6 +1576,7 @@
      C                   ENDDO
  
      C                   IF        FREC = 'CLOANCL3'
+     C                             OR FREC = 'CLOANCL7'                                     AR733040
      C                   IF        WSavAmdDate <> 0
      C                   EVAL      StartIntDat = WSavAmdDate
      C                   ELSE

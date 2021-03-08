@@ -22,7 +22,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. 259576             Date 02Apr14               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD027697           Date 24Jun14               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 261791             Date 19Aug14               *
@@ -67,7 +68,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  259576 - Remove warning message for Inactive accounts.       *
-      *           Applied for MD-26109                                *
+      *           Applied for MD-26109
+      *  MD027697 - Program should not report a DB error if RE101901  *
+      *             returns *NOREC as it is just an observation.      *
+      *             Patterned after fix AR855545.                     *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *
@@ -1423,10 +1427,10 @@
      C                   PARM                    POutASeqN                                    CRE008
      C                   PARM                    POutRetNo                                    CRE008
                                                                                               CRE008
-     C                   IF        PRetCode <> *BLANKS and PRetCode <> '*ODLMTX'              CRE008
-     C                   EVAL      DBPGM = 'RE101901'                                         CRE008
-     C                   EXSR      *PSSR                                                      CRE008
-     C                   ENDIF                                                                CRE008
+     C**********         IF        PRetCode <> *BLANKS and PRetCode <> '*ODLMTX'     CRE008 MD027697
+     C**********         EVAL      DBPGM = 'RE101901'                                CRE008 MD027697
+     C**********         EXSR      *PSSR                                             CRE008 MD027697
+     C**********         ENDIF                                                       CRE008 MD027697
                                                                                               CRE008
      C                   IF        PRetCode = '*ODLMTX'                                       CRE008
      C                   EVAL      OKSND1 = 'W'                                               CRE008

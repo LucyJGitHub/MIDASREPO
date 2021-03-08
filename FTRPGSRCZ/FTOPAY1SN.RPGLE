@@ -19,6 +19,8 @@
       *                 MD021318           Date 26Jul13               *
       *                 262474             Date 29Jan13               *
       *                 ERZ123             Date 29Jan13               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
       *                 MD054131           Date 13Sep19               *
       *                 MD054130           Date 28Aug19               *
       *                 MD052529           Date 12Feb19               *
@@ -193,6 +195,11 @@
       *  ERZ123 - FT Select Payment on Beneficiary Line 1             *
       *           Added hooks: FTH00657, FTH00659, FTH00660, FTH00661 *
       *           Amended hooks: FTH00207                             *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD054131 - Ordering Institution work fields values will be   *
       *             passed to Ordering Bank line fields only when     *
       *             action is Insert.                                 *

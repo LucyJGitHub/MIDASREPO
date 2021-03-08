@@ -12,8 +12,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. AR1067967          Date 12Mar20               * 
+      *  Last Amend No. MD055884           Date 28May20               *
+      *  Prev Amend No. BUG25122B          Date 13Oct09               *
+      *                 EFIXJM             Date 16Sep09               *
+      *                 BUG25122A          Date 03Sep09               *
+      *                 BUG25122           Date 12Aug09               *
+      *                 CMG008             Date 20Feb20               *
+      *                 AR1067967          Date 12Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035961           Date 24Jul15               *
       *                 MD041443           Date 19Sep16               *
@@ -64,11 +69,17 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055884 - FM2.1 SP21 ACCNTAB-13 3 TNLU (Transaction Number  *
+      *             of Last Update) different                         *
+      *  BUG25122B - FOKFIX changes                                   *
+      *  EFIXJM    - Amendment to FOKFIX                              *
+      *  BUG25122A - Applied missing FOKFIX functionality             *
+      *  BUG25122 - Applied missing FOKFIX functionality              *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR1067967 -  NOCC is added to NOIS unconditionally causing   *
       *               account to be unexpectedly charged. Check if a  *
       *               non-charge posting exists before incrementing   *
-      *               NOIS based on NOCC. (Child: AR1067968)          *      
+      *               NOIS based on NOCC. (Child: AR1067968)          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035961 - LSTD not updated correctly. removed conditions    *
       *  MD041443 - CBC022001 failed due to invalid character in file *
@@ -158,8 +169,14 @@
      F*                                Branch codes
      FSDCURRL1IF  E           K        DISK
      F*                                Currencies details
-     FGLNW94L8IF  E           K        DISK                                                 BUG24792
+     F***GLNW94L8IF  E           K        DISK                                    BUG24792 BUG25122A
+     FGLNW94L5IF  E           K        DISK                                                BUG25122A
      F*                                Network Transaction                                  BUG24792
+     F****GLNWACL5IF  E           K        DISK                                     BUG25122  EFIXJM
+     FGLNWACJ1IF  E           K        DISK                                                   EFIXJM
+     F*                                Network accounts - Account Number                    BUG25122
+     F***SDNWRKL2IF  E           K        DISK                                    BUG25122A   EFIXJM
+     F*                                Message Network Details                              BUG25122
      FGLACBTL0IF  E           K        DISK                                                   181287
      F/COPY WNCPYSRC,GL2000F001
      F*****************************************************************
@@ -256,6 +273,7 @@
      I              CHTP                            ACHTP
      I              STYP                            ASTYP                 095356
      I              PRFC                            APRFC                                   AR644700
+     I              TNLU                            ATNLU                                   MD055884
       *                                                                                       181287
       ** Rename GLACBTL0 fields                                                               181287
       *                                                                                       181287
@@ -372,6 +390,10 @@
      ISDRETL    E DSSDRETLPD
      I*
      I** Retail details
+     I*                                                                                     BUG25122
+     ISCSARD    E DSSCSARDPD                                                                BUG25122
+     I*                                                                                     BUG25122
+     I** MIDAS Switchable Features Accessed Via Access Program                              BUG25122
      I*
      ISDNWRK    E DSSDNWRKPD                                                                AR864876
      I*                                                                                     AR864876
@@ -488,6 +510,17 @@
      C                     KFLD           ACSQ
      C                     KFLD           KPSTD
      C                     KFLD           KDRCR
+      *                                                                                     BUG25122
+     C           KSDWK1    KLIST                                                            BUG25122
+     C                     KFLD           NANWRK                                            BUG25122
+     C           KNW94     KLIST                                                           BUG25122A
+     C                     KFLD           NANWRK                                           BUG25122A
+     C                     KFLD           NABRCH                                           BUG25122A
+     C                     KFLD           NACNUM                                           BUG25122A
+     C                     KFLD           NACCY                                            BUG25122A
+     C                     KFLD           NAACOD                                           BUG25122A
+     C                     KFLD           NAACSQ                                           BUG25122A
+      *                                                                                    BUG25122A
       *                                                                                       181287
       ** Define KLIST for GLACBTL0                                                            181287
       *                                                                                       181287
@@ -643,16 +676,37 @@
      C           TRAT      IFNE 91050                                                      AR1067967
      C                     MOVE '1'       *IN61                                            AR1067967
      C                     ENDIF                                                           AR1067967
-      *                                                                                    AR1067967     
-     C           CGL013    IFEQ 'Y'                                                         BUG24792
+      *                                                                                    AR1067967
+     C********** CGL013    IFEQ 'Y'                                                BUG24792 BUG25122
+     C           MTFLAG    IFEQ 'Y'                                                         BUG25122
      C           CER030    ANDEQ'Y'                                                         AR864876
      C           ATYP      ANDEQ'R'                                                         BUG24792
+     C*                                                                                     BUG25122
+     C**Check if customers account record is in the Network Details File                    BUG25122
+     C*                                                                                     BUG25122
+     C********** KACNBY    CHAINGLNWACL5             27                           BUG25122 BUG25122A
+     C********** KACNBY    SETLLGLNWACL5                                                   BUG25122A
+     C********** KACNBY    READEGLNWACL5                 27                       BUG25122A   EFIXJM
+     C           KACNBY    SETLLGLNWACJ1                                          BUG25122A   EFIXJM
+     C           KACNBY    READEGLNWACJ1                 27                       BUG25122A   EFIXJM
+     C*                                                                                     BUG25122
+     C**Check if Multicash                                                                  BUG25122
+     C*                                                                                     BUG25122
+     C           *IN27     IFEQ '0'                                               BUG25122 BUG25122A
+     C**         *IN27     DOWEQ'0'                                                        BUG25122A
+     C********** KSDWK1    CHAINSDNWRKL2             28                           BUG25122A   EFIXJM
+     C*                                                                                     BUG25122
+     C********** *IN28     IFEQ '0'                                               BUG25122A   EFIXJM
+     C********** EDMCNW    ANDEQ'Y'                                               BUG25122 BUG25122B
+     C                     MOVEL'Y'       MTCASH  1                                         BUG25122
      C*                                                                                     BUG24792
      C********** KACNBY    CHAINGLNW94L8             86                            BUG24792 AR864876
-     C           KACNBY    CHAINGLNW94L8             87                                     AR864876
+     C********** KACNBY    CHAINGLNW94L8             87                           AR864876 BUG25122A
+     C           KNW94     CHAINGLNW94L5             29                                    BUG25122A
      C*                                                                                     BUG24792
      C********** *IN86     IFEQ '0'                                                BUG24792 AR864876
-     C           *IN87     IFEQ '0'                                                         AR864876
+     C********** *IN87     IFEQ '0'                                               AR864876 BUG25122A
+     C           *IN29     IFEQ '0'                                                        BUG25122A
      C           N40SFR    ANDNE'E'                                                         BUG24792
       *                                                                                     AR864876
      C                     CALL 'AONWRKR1'                                                  AR864876
@@ -692,9 +746,39 @@
       *                                                                                    MD029255B
      C                     UPDATACCNTABF                                                    BUG24792
       *                                                                                     BUG24792
-     C                     ENDIF                                                            AR864876
+     C           RECI      IFNE 'C'                                                         BUG25122
+      *                                                                                     BUG25122
+     C           KCRECO    CHAINRECOM                84                                     BUG25122
+      *                                                                                     BUG25122
+      * DB error if details not found                                                       BUG25122
+      *                                                                                     BUG25122
+     C           *IN84     IFEQ '1'                                                         BUG25122
+      *                                                                                     BUG25122
+      * Execute SR to format KCRECO KLIST                                                   BUG25122
+      *                                                                                     BUG25122
+     C                     EXSR SFKEY                                                       BUG25122
+      *                                                                                     BUG25122
+     C                     MOVEL'RECOM   'DBFILE                        ***************     BUG25122
+     C                     MOVELWWFKEY    DBKEY                         * DB ERROR 05 *     BUG25122
+     C                     Z-ADD5         DBASE                         ***************     BUG25122
+     C                     WRITEERRP1                                                       BUG25122
+     C                     EXSR DBSR                                                        BUG25122
+     C                     ENDIF                                                            BUG25122
+      *                                                                                     BUG25122
+     C                     ADD  NOCC      NOIS                                              BUG25122
+      * Update RECOM                                                                        BUG25122
+     C                     UPDATRECOMDF                                                     BUG25122
+      *                                                                                     BUG25122
+     C                     ENDIF                                                            BUG25122
+      *                                                                                     BUG25122
+     C**********           END                                                      BUG24792  EFIXJM
      C                     END                                                              BUG24792
      C*                                                                                     BUG24792
+     C                     END                                                              BUG25122
+     C*                                                                                     BUG25122
+     C                     END                                                              BUG25122
+     C*                                                                                     BUG25122
+     C*          KACNBY    READEGLNWACL5                 27                                BUG25122A
      C                     END                                                              BUG24792
      C*                                                                                     BUG24792
      C                     END                                                              BUG24792
@@ -1009,12 +1093,15 @@
      C********** CGL013    IFEQ 'Y'                                                BUG24792 MD035961
      C********** ATYP      ANDEQ'R'                                                BUG24792 MD035961
      C********** N40SFR    ANDEQ'E'                                                BUG24792 MD035961
+     C           MTFLAG    IFEQ 'Y'                                                         BUG25122
+     C           MTCASH    ANDEQ'Y'                                                         BUG25122
       *                                                                                     BUG24792
      C                     Z-ADDECFB      CFSB                                              BUG24792
      C                     Z-ADDEPNO      LSTP                                              BUG24792
      C                     Z-ADDLMVD      LSTD                                              BUG24792
      C*                                                                                     BUG24792
      C**********           ENDIF                                                   BUG24792 MD035961
+     C                     ENDIF                                                            BUG25122
       *                                                                                    MD029255B
       ** Update extra carried forward balance with the ledger balance                      MD029255B
       ** amount if statement frequency is 'E' (Turnover)                                   MD029255B
@@ -1481,6 +1568,12 @@
      C                     MOVE 'Y'       CER030                                            AR864876
       *                                                                                     AR864876
      C                     ENDIF                                                            AR864876
+      *                                                                                     BUG25122
+     C           CGL013    IFEQ 'Y'                                                         BUG25122
+     C           CER030    OREQ 'Y'                                                         BUG25122
+     C                     MOVEL'Y'       MTFLAG  1                                         BUG25122
+     C                     ENDIF                                                            BUG25122
+      *                                                                                     BUG25122
      C** OUTPUT AUDIT HEADER
      C*
      C                     WRITEHEADAU

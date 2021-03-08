@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR994776           Date 04Apr19               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -48,6 +49,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR994776 - Fees remains unauthorised after rejection of      *
+      *             amendment. Details are not reverted correctly.    *
+      *             Add a flag if action is reject to revert back the *
+      *             details of fees. (Child: AR994777)                *
+      *           - Applied for MD052696.                             *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -750,6 +756,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
+     C                   PARM                    DRejFlg                                    AR994776
  
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages

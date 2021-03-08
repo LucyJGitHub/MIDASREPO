@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051532           Date 13Jul18               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Added DDIUSR and DDAUSR fields in the buffer.     *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -333,7 +336,8 @@
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                         MD044880 MD054028
      D***illerBufEx2    S           5914A                                          MD054028 MD055446
-     D FillerBufEx2    S           5904A                                                    MD055446
+     D***FillerBufEx2    S           5904A                                         MD055446 MD055373
+     D FillerBufEx2    S           5884A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -347,6 +351,8 @@
                                                                                               CER049
      D PCrsdF          S            219A   DIM(30)                                          MD051299
                                                                                             MD051299
+     D NewPROFUser     S             20A                                                    MD055373
+                                                                                            MD055373
       **--------------------------------------------------------------------------------------------
 
      C                   CLEAR                   CrCuFilFmt
@@ -468,6 +474,7 @@
      C                                       + CrsdDets                                     MD051299
      C                                       + DDAPRC                                       MD054028
      C                                       + NewCuBrtCent                                 MD055446
+     C                                       + NewPROFUser                                  MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213

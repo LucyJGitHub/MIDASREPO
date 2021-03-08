@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Deliverable Data Split migration of WIP')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000707 - Migration of GPWIPCTD                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD056103           Date 17Jun20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD056103 - Deliverable Data Split migration                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
+
+             DCL        VAR(&DDSNWF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+
+/* Parameters passed to UP008010. */
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE('UPC000707')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CLRPFM     FILE(GPWIPBTD)
+             RESETMAXID FILE(GPWIPBTD) RSTOPT(1)
+             CLRPFM     FILE(GPWIPXTD)
+
+/*           DLTF       FILE(QTEMP/T_WIPCF) */
+/*           MONMSG     MSGID(CPF0000) */
+/*           CPYF       FROMFILE(&OLDLIB/T_WIPCF) +
+                          TOFILE(QTEMP/T_WIPCF) CRTFILE(*YES) */
+
+/*           CALL       PGM(UP000700) PARM(&ERROR &DDSNWF &OLDLIB) */
+/*           IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)  */
+
+/* Run synchronization program. */
+             CALL       PGM(UP000701) PARM(&ERROR &DDSNWF &NEWLIB)
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)
+
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:
+             ENDPGM

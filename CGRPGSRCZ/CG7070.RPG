@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1031825          Date 27Dec12               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1031825 - Audit Letters are showing future-valued Customer *
+      *              Loans. Use VDAT as start date, which should be   *
+      *              LE Rundate. (Child: AR1031826)                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -148,6 +152,7 @@
       *   95 -  Chain & READE FFTRNSL0                                *
       *                                                               *
       *****************************************************************
+      /COPY CGCPYSRC,SRERRE                                                                AR1031825
      E/EJECT
      E                    CPY@    1   1 80
       *
@@ -161,6 +166,15 @@
       *                                                                                     BUG24194
       ** DS for access programs, long data structure                                        BUG24194
      IDSLDY     E DSDSLDY                                                                   BUG24194
+      *                                                                                    AR1031825
+      ** DS for access programs                                                            AR1031825
+      *                                                                                    AR1031825
+     IDSFDY     E DSDSFDY                                                                  AR1031825
+      *                                                                                    AR1031825
+      ** External DS for bank details                                                      AR1031825
+      *                                                                                    AR1031825
+     ISDBANK    E DSSDBANKPD                                                               AR1031825
+      /COPY CGCPYSRC,SRERRI                                                                AR1031825
       *
       ** Required Keylists
       *
@@ -173,6 +187,8 @@
      C**********           KFLD           W2CNUM  60                                          CER059
      C                     KFLD           W2CNUM  6                                           CER059
      C                     KFLD           W2BRCH  3
+      *                                                                                    AR1031825
+     C                     EXSR SRINIT                                                     AR1031825
       *
       ** Main Processing
       *
@@ -214,6 +230,7 @@
      C           CNUM      ANDLECNTON
      C           BRCA      ANDEQBRCHNR
      C           RECI      ANDEQ'D'
+     C           VDAT      ANDLEBJRDNB                                                     AR1031825
       *
       ** Or if customer No. from LELOANLD within range and
       ** Branch code 'ALL' chosen
@@ -222,6 +239,7 @@
      C           CNUM      ANDLECNTON
      C           BRCHNR    ANDEQ'ALL'
      C           RECI      ANDEQ'D'
+     C           VDAT      ANDLEBJRDNB                                                     AR1031825
       *
      C                     MOVEL'LO'      ID      2
       *
@@ -905,6 +923,44 @@
       *
      C                     MOVE *ON       *INLR
       *
+      /EJECT                                                                               AR1031825
+      *****************************************************************                    AR1031825
+      *                                                               *                    AR1031825
+      * SRINIT - Access Bank Details                                  *                    AR1031825
+      *                                                               *                    AR1031825
+      * Called by: MAIN PROCEDURE                                     *                    AR1031825
+      * Calls    : *NONE                                              *                    AR1031825
+      *                                                               *                    AR1031825
+      *****************************************************************                    AR1031825
+     C           SRINIT    BEGSR                                                           AR1031825
+      *                                                                                    AR1031825
+      **  Call access program for Bank details (get rundate)                               AR1031825
+      *                                                                                    AR1031825
+     C                     CALL 'AOBANKR0'             70                                  AR1031825
+     C                     PARM *BLANKS   ##RTCD  7                                        AR1031825
+     C                     PARM '*FIRST  '##OPTN  7                                        AR1031825
+     C           SDBANK    PARM SDBANK    DSFDY                                            AR1031825
+      *                                                                                    AR1031825
+      **  Database error                                                                   AR1031825
+      *                                                                                    AR1031825
+     C           ##RTCD    IFNE *BLANK                                                     AR1031825
+     C           *IN70     OREQ *ON                                                        AR1031825
+      *                                                                                    AR1031825
+     C                     MOVEL'AOBANKR0'W0FILE                                           AR1031825
+     C                     MOVEL'*CALL'   W0KEY                                            AR1031825
+     C                     Z-ADD05        W0ERNB                                           AR1031825
+     C                     MOVEL'MEM5003' W0MSGD                                           AR1031825
+     C                     MOVEL'MIDAS  ' W0MSGF                                           AR1031825
+     C                     EXSR SRERR                                                      AR1031825
+     C                     ENDIF                                                           AR1031825
+      *                                                                                    AR1031825
+     C                     ENDSR                                                           AR1031825
+      /EJECT                                                                               AR1031825
+      *                                                                                    AR1031825
+      ** Standard Error Processing                                                         AR1031825
+      *                                                                                    AR1031825
+      /COPY CGCPYSRC,SRERRPSSR                                                             AR1031825
+      /COPY CGCPYSRC,SRERRC                                                                AR1031825
       /EJECT
       *****************************************************************
       *                                                               *
@@ -929,6 +985,7 @@
      C           *IN82     DOWEQ*OFF
       *
      C           RECI      IFEQ 'D'
+     C           VDAT      ANDLEBJRDNB                                                     AR1031825
      C                     MOVEL'Y'       WFOUND
      C                     MOVE '1'       *IN82
      C                     ENDIF
@@ -951,6 +1008,7 @@
      C           *IN82     DOWEQ*OFF
       *
      C           RECI      IFEQ 'D'
+     C           VDAT      ANDLEBJRDNB                                                     AR1031825
      C                     MOVEL'Y'       WFOUND
      C                     MOVE '1'       *IN82
      C                     ENDIF

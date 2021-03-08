@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR316373           Date 03Jun15              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR316373           Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
 /*                  MLCOVROVR.                                       */
@@ -207,13 +209,13 @@
 /**/
              IF         COND(&STSMSG *NE '     ') THEN(DO)
  LOOP2:      CHGVAR     VAR(&RPY) VALUE('N')
- 
+
              RTVMSG     MSGID(SCM0069) MSGF(MIDASMSG) MSG(&MESSAGE)
              CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
              RTVMSG     MSGID(SCM0070) MSGF(MIDASMSG) MSG(&MESSAGE)
              CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE(&MESSAGE)
              CALL       PGM(SCC0010) PARM('SCC3010M' 'RETRY' &RPY)
- 
+
              IF         COND((&RPY *EQ 'Y') *OR (&RPY *EQ 'y')) +
                           THEN(GOTO CMDLBL(LOOP1))
              IF         COND((&RPY *EQ 'N') *OR (&RPY *EQ 'n')) +
@@ -227,8 +229,13 @@
 /**/
 /* Journal files before calling maintenance program */
 /**/
-             STRJRNPF   FILE(SCSARDPD) JRN(ICJRN) IMAGES(*BOTH)
+/**********  STRJRNPF   FILE(SCSARDPD) JRN(ICJRN) IMAGES(*BOTH) */                      /*MD055681*/
+             STRJRNPF   FILE(SCSRDCTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD055681*/
              MONMSG     MSGID(CPF7030)
+             STRJRNPF   FILE(SCSRDBTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD055681*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD055681*/
+             STRJRNPF   FILE(SCSRDXTD) JRN(ICJRN) IMAGES(*BOTH)                         /*MD055681*/
+             MONMSG     MSGID(CPF7030)                                                  /*MD055681*/
              STRJRNPF   FILE(SCSARCPD) JRN(ICJRN) IMAGES(*BOTH)
              MONMSG     MSGID(CPF7030)
              STRJRNPF   FILE(SCSARIPD) JRN(ICJRN) IMAGES(*BOTH)
@@ -249,8 +256,13 @@
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
              IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
-             ENDJRNPF   FILE(SCSARDPD)
+/**********  ENDJRNPF   FILE(SCSARDPD) */                                               /*MD055681*/
+             ENDJRNPF   FILE(SCSRDCTD)                                                  /*MD055681*/
              MONMSG     MSGID(CPF0000)
+             ENDJRNPF   FILE(SCSRDBTD)                                                  /*MD055681*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055681*/
+             ENDJRNPF   FILE(SCSRDXTD)                                                  /*MD055681*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055681*/
              ENDJRNPF   FILE(SCSARCPD)
              MONMSG     MSGID(CPF0000)
              ENDJRNPF   FILE(SCSARIPD)

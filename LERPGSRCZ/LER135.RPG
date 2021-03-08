@@ -22,8 +22,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056223           Date 15Jul20               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. MD057078           Date 03Mar21               *      
+      *  Prev Amend No. MD053375           Date 11Oct19               *
+      *                 MD055481           Date 04Sep20               *
+      *                 AR820690           Date 12Oct12               *
+      *                 AR956619           Date 28Jun12               *
+      *                 AR911591           Date 03May12               *
+      *                 MD055733           Date 03Jul20               * 
+      *                 MD056223           Date 15Jul20               *
       *                 MD054240           Date 22Apr20               *
       *                 MD055069           Date 26Feb20               *
       *                 AR674226           Date 04Dec19               *
@@ -295,6 +301,34 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057078 - Fee settlement amount not converted to settlement *
+      *             currency and there are missing postings for the   *
+      *             cross-currency keys. Use settlement currency      *
+      *             instead of fee currency.                          *      
+      *  MD053375 - Incorrect fee settlement amount in LER170 report. *
+      *             Write copy of fee record in LEFECPPD when fee has *
+      *             manual and auto settlement.                       *
+      *  MD055481 - Show the original borrower on the report for loan *
+      *             fees attached to a participation purchased if the *
+      *             system value 'LoanCustOriginPurch' is equal to 'O'*
+      *  AR820690 - Missing LEFHST record. Ensure that when payment   *
+      *             falls on a holiday and ANWD=2, LEFHST record will *
+      *             be generated on next working day. Applied fix     *
+      *             242283A.                                          *
+      *           - Applied for AR1007302. (Child: AR1007303)         *
+      *  AR956619 - No accrual posting was generated for fees with    *
+      *             FECALT is 01/02/03/11/12/13/21. Applied part of   *
+      *             fix 263473 to ensure that accrual postings would  *
+      *             be generated. Also, part of 261129 was applied.   *
+      *             (Child: AR956620)                                 *
+      *  AR911591 - No Debit advice generated due to field FEPBTI not *
+      *             initialised to blank when settlement date falls on*
+      *             a holiday. Amended program wherein field FEPBTI   *
+      *             will be set to blank when FELPDT LE BJRDNB.       *
+      *             (Child: AR911592)                                 *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *  
       *  MD056223 - CLE031: Incorrect Posting narratives in           *
       *             Fee postings with conversion                      *
       *           - The amount and currency of the posting narratives *
@@ -302,9 +336,6 @@
       *             whose narrative codes defined as 03 are now       *
       *             formatted based on the format string defined in   *
       *             Narrative Codes File SDNARRPD.                    *
-      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
-      *             components.                                       *
-      *           - Redeliver of MD050139.                            *
       *  MD054240 - Lending fees incorrect calculation of accruals    *
       *             when GL accrual indicator is changed. Reverse     *
       *             part of fixes 245081 and MD052410.                *
@@ -989,6 +1020,8 @@
      F/COPY WNCPYSRC,LEH01203
      FPSTTOM  O   E                    DISK         KINFSR *PSSR          BH3479
      F**********  LKEYFEDF                          KRENAMEPSTTOMF        E45504
+     FLEFECPPDO   E                    DISK         KINFSR *PSSR                            MD053375
+     F            LEFEEDF                           KRENAMELEFECPD0                         MD053375
       *                                                                                       CLE073
      FLELOANLGIF  E           K        DISK                                                   CLE073
      F            CLOANCLF                          KRENAMECLONCLF                            CLE073
@@ -2162,6 +2195,10 @@
       ** File information data structures                                                   MD026969
      I                                       83  92 SFILE3                                  MD026969
      I                                    B 123 1240SFNUM3                                  MD026969
+      *                                                                                     AR820690
+     IJNSTAT      DS                            200                                         AR820690
+     I                                    P 103 1050PRUN                                    AR820690
+      ** DATA AREA TO READ PREVIOUS RUNDATE                                                 AR820690
       *
      ISPOOL1      DS
       ** File information data structures
@@ -2409,6 +2446,7 @@
      I              'LER135002'           C         SECTN2                                    CFC006
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I              'AutoEndCalcLoanFee'  C         WPARM1                                  MD046370
+     I              'LoanCustOriginPurch' C         WPARM                                   MD055481
       *
      IWVCATC      DS                                                                          CLE164
      I                                        1   50PFCLTY                                    CLE164
@@ -2455,6 +2493,19 @@
      C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
+      *                                                                                     MD055481
+     C                     SETOF                     36                                     MD055481
+     C           FELOAN    IFNE *BLANKS                                                     MD055481
+     C           PPCUST    ANDEQ'O'                                                         MD055481
+      *                                                                                     MD055481
+     C           WLNKEY    CHAINCLOAN                88                                     MD055481
+     C           *IN88     IFEQ '0'                                                         MD055481
+     C                     MOVE TPOLNO    WOLNO   6                                         MD055481
+     C                     MOVE TPPTYP    WPTYP   20                                        MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
      C/COPY WNCPYSRC,LER135CCP2                                           S01408
       *
      C                     MOVE *BLANKS   LKSCCY                          179741
@@ -2878,6 +2929,8 @@
      C           *IN15     IFEQ '0'
      C********** FARECI    ANDNE'*'                                                         MD047522
      C           FARECC    ANDNE'*'                                                         MD047522
+      *                                                                                     MD053375
+     C                     WRITELEFECPD0                                                    MD053375
      C                     MOVE 'ADJ'     WSTYPE                                            AR699396
       *                                                                                     MD026969
       ** Check if record exist in LEFZASPD                                                  MD026969
@@ -3679,6 +3732,9 @@
      C***********          MOVE 'B'       FEDIND                   056073 100428
      C                     MOVE ' '       FEDIND                          100428
      C                     Z-ADD0         FEDDAT                          E45504
+      *                                                                                     MD053375
+     C                     WRITELEFECPD0                                                    MD053375
+      *                                                                                     MD053375
      C                     END                                            E45504
       *                                                                   155912
      C           FELPDT    IFGT CODT                                      155912
@@ -3737,7 +3793,8 @@
      C           FEPEND    ANDLEBJRDNB                                                        248440
      C           FEPEND    ANDNEFELADT                                                        248440
       *
-     C           FELPDT    IFEQ BJRDNB
+     C********** FELPDT    IFEQ BJRDNB                                                      AR911591
+     C           FELPDT    IFLE BJRDNB                                                      AR911591
      C                     MOVE *BLANK    FEPPTI
      C                     MOVE *BLANK    FEPBTI
      C                     END
@@ -3946,6 +4003,9 @@
      C***********          MOVE 'B'       FEDIND                   056073 100428
      C                     MOVE ' '       FEDIND                          100428
      C                     Z-ADD0         FEDDAT                          E45504
+      *                                                                                     MD053375
+     C                     WRITELEFECPD0                                                    MD053375
+      *                                                                                     MD053375
      C**********           END                                      E45504E52119
      C                     ELSE                                           100428
      C           @NPYD     IFEQ BJDNWD                                    100428
@@ -4090,6 +4150,9 @@
      C                     Z-ADD0         FEAMTO                                              204866
      C                     MOVE ' '       FEDIND                                              204866
      C                     Z-ADD0         FEDDAT                                              204866
+      *                                                                                     MD053375
+     C                     WRITELEFECPD0                                                    MD053375
+      *                                                                                     MD053375
      C                     ELSE                                                               204866
      C           @NPYD     IFEQ BJDNWD                                                        204866
      C           FEPEND    OREQ BJDNWD                                                        204866
@@ -4217,6 +4280,12 @@
      C                     EXSR GENKEY
      C                     MOVE '0'       *IN61
      C                     MOVE *BLANKS   WSTYPE                                            AR810483
+      *                                                                                     MD057078
+     C           CLE031    IFEQ 'Y'                                                         MD057078
+     C           WRKAMT    ANDEQWFASAD                                                      MD057078
+     C           WRKPRC    ANDEQ'Y'                                                         MD057078
+     C                     Z-ADDWRKAMT    LKEAMT                                            MD057078
+     C                     ENDIF                                                            MD057078
       *                                                                                       250628
       * If fee due date processing taking place and full settlement also, this                250628
       * will have been for the previous period so skip updates to new past due                250628
@@ -4460,6 +4529,9 @@
      C           @PAYTD    IFEQ CODT                                                        MD052216
      C           @PAYTD    ORLE CODT                                                        MD052216
      C           @PAYTD    ANDGEBJRDNB                                                      MD052216
+     C           BKANWD    OREQ '2'                                                         AR820690
+     C           FELPDT    ANDLTCODT                                                        AR820690
+     C           FELPDT    ANDGTPRUN                                                        AR820690
       *                                                                                      BUG8762
       ** If CLE005 or CDE002 is on, setup details for writing a                              BUG8762
       ** record in LEFHST.                                                                   BUG8762
@@ -6568,8 +6640,17 @@
      C                     Z-ADD0         FELPAM                          BH3481
      C                     ELSE                                                               218648
      C**********           Z-ADDFEADAT    FELPAM                                       218648 261129
+     C           CALT      IFGE 4                                                           AR956619
+     C           CALT      ANDLE6                                                           AR956619
+     C           CALT      ORGE 14                                                          AR956619
+     C           CALT      ANDLE16                                                          AR956619
+     C           CALT      OREQ 22                                                          AR956619
+     C           FECALT    OREQ '97'                                                        AR956619
+     C           FECALT    OREQ '98'                                                        AR956619
+     C           FECALT    OREQ '99'                                                        AR956619
      C                     Z-ADD0         LKEAMT                                              261129
      C           FEADBP    SUB  WFEE      FELPAM                                              261129
+     C                     ENDIF                                                            AR956619
      C                     ENDIF                                                              261129
      C                     ENDIF                                                              218648
      C/COPY WNCPYSRC,LER135C008
@@ -7199,6 +7280,9 @@
      C********** @NPAYD    ORLT CODT                                                 250628 MD052216
      C           @PAYTD    ORLE CODT                                                        MD052216
      C           ATYP      ANDEQ'H'                                                           250628
+     C           BKANWD    OREQ '2'                                                         AR820690
+     C           FELPDT    ANDLTCODT                                                        AR820690
+     C           FELPDT    ANDGTPRUN                                                        AR820690
      C********** FELPDT    ORLT BJRDNB                                                BUG8762 250628
      C********** FELPDT    ANDGTCODT                                                  BUG8762 250628
      C********** FELCHD    OREQ CODT                                                  BUG8762 250628
@@ -7989,8 +8073,14 @@
       *                                                                                     AR217562
      C           WACCNT    IFEQ 'Y'                                                         AR217562
      C                     Z-ADDWRKAMT    LKOTHA                                            MD051242
+     C                     Z-ADDWRKEXR    LKEXRT                                            MD057078
+     C                     MOVELWRKEXI    LKOTHC                                            MD057078
+     C                     MOVELWRKCCY    LKSCCY                                            MD057078
      C                     WRITELKEYF2DF                                                      CLE134
      C                     CLEARLKOTHA                                                      MD051242
+     C                     CLEARLKEXRT                                                      MD057078
+     C                     CLEARLKOTHC                                                      MD057078
+     C                     CLEARLKSCCY                                                      MD057078
      C                     ELSE                                                             AR217562
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,4     ANDEQ'R'                                                         MD051883
@@ -9400,6 +9490,11 @@
       ** Lock in dataarea RUNDAT
      C           *NAMVAR   DEFN           RUNDAT
      C                     IN   RUNDAT
+      *                                                                                     AR820690
+      ** Read JNSTAT data area for previous run date                                        AR820690
+      *                                                                                     AR820690
+     C           *NAMVAR   DEFN           JNSTAT                                            AR820690
+     C                     IN   JNSTAT                                                      AR820690
       *
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
       *
@@ -10123,6 +10218,45 @@
      C                     ELSE                                                             MD046370
      C                     MOVELP@VL01    AUENFE  1                                         MD046370
      C                     ENDIF                                                            MD046370
+      *                                                                                     MD055481
+      ** Check System Value: Use Original Borrower or Purchased From?                       MD055481
+      ** Set up parameter so access object checks LoanCustOriginPurch                       MD055481
+      *                                                                                     MD055481
+     C                     MOVELWPARM     SVALK1                                            MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOSVALR0'                                                  MD055481
+     C                     PARM           RTNCDE  7                                         MD055481
+     C                     PARM           SVALK1 20                                         MD055481
+     C                     PARM           SVAL1 200                                         MD055481
+     C                     PARM           SVALK2 20                                         MD055481
+     C                     PARM           SVAL2 200                                         MD055481
+     C                     PARM           SVALK3 20                                         MD055481
+     C                     PARM           SVAL3 200                                         MD055481
+     C                     PARM           SVALK4 20                                         MD055481
+     C                     PARM           SVAL4 200                                         MD055481
+     C                     PARM           SVALK5 20                                         MD055481
+     C                     PARM           SVAL5 200                                         MD055481
+     C                     PARM           SVALK6 20                                         MD055481
+     C                     PARM           SVAL6 200                                         MD055481
+     C                     PARM           SVALK7 20                                         MD055481
+     C                     PARM           SVAL7 200                                         MD055481
+     C                     PARM           SVALK8 20                                         MD055481
+     C                     PARM           SVAL8 200                                         MD055481
+     C                     PARM           SVALK9 20                                         MD055481
+     C                     PARM           SVAL9 200                                         MD055481
+     C                     PARM           SVALK0 20                                         MD055481
+     C                     PARM           SVAL10200                                         MD055481
+      *                                                                                     MD055481
+      ** If the system value is not found then default value to 'P'                         MD055481
+      *                                                                                     MD055481
+     C           RTNCDE    IFNE *BLANKS                                                     MD055481
+     C                     MOVE 'P'       PPCUST                                            MD055481
+     C                     ELSE                                                             MD055481
+      *                                                                                     MD055481
+      ** Isolate the first character of SVAL1 which = 'P' or 'O'.                           MD055481
+      *                                                                                     MD055481
+     C                     MOVELSVAL1     PPCUST  1                                         MD055481
+     C                     ENDIF                                                            MD055481
       *
       ** Calculate the start of month date by converting the date of
       ** next working day to date format and inserting the start of
@@ -11549,6 +11683,18 @@
      C                     Z-ADDFEPEXR    WRKEXR                                              CLE031
      C                     MOVE FEPEXI    WRKEXI                                              CLE031
      C                     ENDIF                                                              CLE031
+      *                                                                                     MD057078
+     C           WSTYPE    IFEQ 'ADJ'                                                       MD057078
+     C           PTFI      IFEQ ' '                                                         MD057058
+     C                     MOVE FASCCY    WRKCCY                                            MD057078
+     C                     Z-ADDFAREXR    WRKEXR                                            MD057078
+     C                     MOVE FAREXI    WRKEXI                                            MD057078
+     C                     ELSE                                                             MD057078
+     C                     MOVE FAPSCY    WRKCCY                                            MD057078
+     C                     Z-ADDFAPEXR    WRKEXR                                            MD057078
+     C                     MOVE FAPEXI    WRKEXI                                            MD057078
+     C                     ENDIF                                                            MD057078
+     C                     ENDIF                                                            MD057078
       *                                                                                       CLE031
      C           PTFI      IFEQ 'I'                                                           CLE031
      C                     MOVE *BLANKS   WRKCCY                                              CLE031
@@ -13533,8 +13679,14 @@
       *                                                                                     AR217562
      C           WACCNT    IFEQ 'Y'                                                         AR217562
      C                     Z-ADDWRKAMT    LKOTHA                                            MD051242
+     C                     Z-ADDWRKEXR    LKEXRT                                            MD057078
+     C                     MOVELWRKEXI    LKOTHC                                            MD057078
+     C                     MOVELWRKCCY    LKSCCY                                            MD057078
      C                     WRITELKEYF2DF                                                      CLE134
      C                     CLEARLKOTHA                                                      MD051242
+     C                     CLEARLKEXRT                                                      MD057078
+     C                     CLEARLKOTHC                                                      MD057078
+     C                     CLEARLKSCCY                                                      MD057078
      C                     ELSE                                                             AR217562
      C           WRKPRC    IFEQ 'Y'                                                         MD051883
      C           AKY,3     ANDEQ'R'                                                         MD051883
@@ -14809,6 +14961,52 @@
       *                                                                                       CLE164
      C                     ENDSR                                                              CLE164
       *****************************************************************                       CLE164
+      *  ORIGB - Display Original Borrower on report                  *                     MD055481
+      *                                                               *                     MD055481
+      *  Called by: Main Processing                                   *                     MD055481
+      *  Calls: None                                                  *                     MD055481
+      *****************************************************************                     MD055481
+     C           ORIGB     BEGSR                                                            MD055481
+      *                                                                                     MD055481
+      ** If participation purchased and system value is using Original                      MD055481
+      ** Borrower.                                                                          MD055481
+      *                                                                                     MD055481
+     C                     MOVE *BLANKS   POLNO                                             MD055481
+     C                     MOVEL*BLANKS   KEYC   10                                         MD055481
+     C                     MOVELBBCRNM    WBCRNM 20                                         MD055481
+     C           WPTYP     IFEQ 64                                                          MD055481
+     C           WPTYP     OREQ 65                                                          MD055481
+     C           WPTYP     OREQ 68                                                          MD055481
+     C           WPTYP     OREQ 71                                                          MD055481
+     C                     MOVE '1'       *IN36                                             MD055481
+     C                     MOVE WOLNO     POLNO                                             MD055481
+     C                     MOVELPOLNO     KEYC                                              MD055481
+      *                                                                                     MD055481
+      ** Get original borrower customer name.                                               MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOCUSTR0'                                                  MD055481
+     C                     PARM '*BLANKS' WRTCD                                             MD055481
+     C                     PARM '*KEY   ' WOPTN                                             MD055481
+     C                     PARM           KEYC                                              MD055481
+     C                     PARM           KEYSTS  7                                         MD055481
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD055481
+     C           WRTCD     IFEQ *BLANKS                                                     MD055481
+     C           WRTCD     OREQ '*CUSCLS'                                                   MD055481
+     C                     MOVE BBCRNM    OLNORN                                            MD055481
+     C                     ELSE                                                             MD055481
+     C           *LOCK     IN   LDA                                                         MD055481
+     C                     MOVEL'LER135'  DBPGM                                             MD055481
+     C                     MOVELPOLNO     DBKEY            ************                     MD055481
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 39 *                     MD055481
+     C                     Z-ADD039       DBASE            ************                     MD055481
+     C                     OUT  LDA                                                         MD055481
+     C                     EXSR *PSSR                                                       MD055481
+     C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+     C                     MOVELWBCRNM    BBCRNM                                            MD055481
+      *                                                                                     MD055481
+     C                     ENDSR                                                            MD055481
+      ********************************************************************                  MD055481
       *
       /TITLE SR/ZINTDY                                                    CLE013
      C/COPY ZSRSRC,ZINTDYZ2                                               CLE013

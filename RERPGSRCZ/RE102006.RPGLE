@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1048221          Date 12Mar13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 212995             Date 07Jan03               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1048221 - "+" sign appears even when there are no more     *
+      *              records to display when rolling up. Amend to     *
+      *              disable roll up properly. (Child: AR1053511)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -528,6 +532,10 @@
      C                   EVAL      PZMsgFile = 'GBREUSRMSG'
      C                   EXSR      SRSndMsg
      C                   ENDIF
+      *                                                                                    AR1048221
+     C                   IF        %EOF(REICSDL4)                                          AR1048221
+     C                   EVAL      *IN82 = *ON                                             AR1048221
+     C                   ENDIF                                                             AR1048221
  
       ** Save highest SFL record
  
@@ -656,6 +664,10 @@
      C                   EVAL      PZMsgFile = 'GBREUSRMSG'
      C                   EXSR      SRSndMsg
      C                   ENDIF
+      *                                                                                    AR1048221
+     C                   IF        %EOF(REICSDL4)                                          AR1048221
+     C                   EVAL      *IN82 = *ON                                             AR1048221
+     C                   ENDIF                                                             AR1048221
  
       ** Save highest SFL record
  
@@ -784,6 +796,10 @@
      C                   EVAL      PZMsgFile = 'GBREUSRMSG'
      C                   EXSR      SRSndMsg
      C                   ENDIF
+      *                                                                                    AR1048221
+     C                   IF        %EOF(REICSDL4)                                          AR1048221
+     C                   EVAL      *IN82 = *ON                                             AR1048221
+     C                   ENDIF                                                             AR1048221
  
       ** Save highest SFL record
  

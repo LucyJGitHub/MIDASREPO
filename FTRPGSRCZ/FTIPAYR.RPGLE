@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052870           Date 27Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056823           Date 29Sep20               *
+      *  Prev Amend No. MD052870           Date 27Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044395           Date 08Mar17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *
+      *             Amendment in WIP                                  *
       *  MD052870 - Recompiled due to changes made by MD-50928 in     *
       *             FTIPY5PD.                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -330,6 +333,8 @@
      D W@CCY           S              3                                                       CSF011
      D W@BRC           S              3                                                       CSF011
      D AAuth           S              1                                                     MD039986
+     D InputUser       S             10                                                     MD056823
+     D StopUser        S             10                                                     MD056823
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -420,6 +425,11 @@
       ** Populate Account Details                                                             CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
+      *                                                                                     MD056823
+      ** Populate Input User and Stop User                                                  MD056823
+      *                                                                                     MD056823
+     C                   EVAL      InputUser = INUSR1                                       MD056823
+     C                   EVAL      StopUser = SUSR                                          MD056823
 
       ** Build buffer with required output
      C                   MOVE      TMST          @TimeStamp       26                         BUG4196
@@ -436,8 +446,12 @@
      C                                      CurTrIPY9  +                                      CER049
      C                                      AAuth +                                         MD039986
      C                                      BtnPressed +                                    MD039986
-     C                                      RegData    +                                      CER001
-     C                                      ExtData
+     C**********                            RegData    +                             CER001 MD056823
+     C**********                            ExtData                                         MD056823
+     C                                      ExtData    +                                    MD056823
+     C                                      InputUser  +                                    MD056823
+     C                                      StopUser   +                                    MD056823
+     C                                      RegData                                         MD056823
 
      C                   EVAL      *INLR = *ON
      C                   RETURN

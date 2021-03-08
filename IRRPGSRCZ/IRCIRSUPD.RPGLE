@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 235567             Date 12Mar20               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD056655A          Date 09Oct20               *
+      *  Prev Amend No. MD056655           Date 21Sep20               *
+      *                 MD031031           Date 24Sep15               *
+      *                 235567             Date 12Mar20               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -120,10 +123,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056655A - Deal no already exists is encountered when NASP  *
+      *              transaction is entered; error in SOAP exists     *
+      *  MD056655 - Deal no already exists is encountered when NASP   *
+      *             transaction is entered                            *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  235567 - Ensure pay/rcv msgs are generated during I/C when   *
       *           VDEI is 'Y' and value date SSIs are amended.        *
       *           Initialise BefRecVal and AftRecVal on 'Authorise'.  *
-      *         - Applied for AR1041215. (Child: AR1041216)           *      
+      *         - Applied for AR1041215. (Child: AR1041216)           *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
@@ -306,6 +316,8 @@
      FREADVCL1  UF   E           K DISK    COMMIT                                             CRE020
      F                                     USROPN                                             CRE020
                                                                                               CRE020
+     FDLDLDGLM  IF   E           K DISK    PREFIX(WF)                                       MD056655
+     F                                     RENAME(DLDLDGD0:DLDLDGD1)                        MD056655
      FDLDLDGLN  UF A E           K DISK                                                       CLE025
      F                                     COMMIT                                             CLE025
       ** Deals Extension file                                                                 CLE025
@@ -1470,13 +1482,20 @@
                                                                                               CLE025
       ** Set up deal extension file if Credit Lines is installed                              CLE025
                                                                                               CLE025
-     C                   IF        CLE025 = 'Y'                                               CLE025
+     C**********         IF        CLE025 = 'Y'                                      CLE025 MD031031
+     C     PSJobName     IFNE      'QZDASOINIT'                                            MD056655A
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            MD056655A
+     C                   MOVEL     RXDLNO        PDLNO                                      MD056655
+     C     PDLNO         CHAIN     DLDLDGD1                           75                    MD056655
+     C                   IF        *IN75 = *ON                                              MD056655
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   MOVEL     IRVXSIR       DEALEXT                                      CLE025
      C                   MOVEL     RXDLNO        F1DLNO                                       CDL038
      C                   MOVEL     RXBRCA        F1BRCA                                       248452
      C                   WRITE     DLDLDGD0                                                   CLE025
-     C                   ENDIF                                                                CLE025
+     C                   ENDIF                                                              MD056655
+     C                   ENDIF                                                             MD056655A
+     C**********         ENDIF                                                       CLE025 MD031031
       *
      C                   ENDSR
      C****************************************************************
@@ -6367,6 +6386,20 @@
      C                   EXSR      SRErr                                                    MD054117
                                                                                             MD054117
      C                   ENDIF                                                              MD054117
+      *                                                                                    MD056655A
+     C                   CALLB     'ZACRTVJOBA'                         90                 MD056655A
+     C                   PARM                    PSJobName                                 MD056655A
+     C                   PARM                    PSUser                                    MD056655A
+     C                   PARM                    PSJobNo                                   MD056655A
+     C                   PARM                    JobType           5                       MD056655A
+      *                                                                                    MD056655A
+     C     *IN90         IFEQ      '1'                                                     MD056655A
+     C                   EVAL      DBFile = 'ZACRTVJOBA'                                   MD056655A
+     C                   EVAL      DBase = 918                                             MD056655A
+     C                   EVAL      DBKey = '*CALL'                                         MD056655A
+     C                   EXSR      SRERR                                                   MD056655A
+     C                   ENDIF                                                             MD056655A
+      *                                                                                    MD056655A
      C                   ENDSR
      C****************************************************************
       /EJECT

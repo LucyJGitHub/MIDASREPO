@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023876A          Date 30Apr14               *
+      *  Last Amend No. MD056327           Date 05Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023876A          Date 30Apr14               *
       *                 MD023876           Date 30Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,10 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD056327 - Facility cannot be closed                         *
+      *           - Prevent record deletion in GPWTRAPPD if the       *
+      *             T_ACTN field (Action Code) is equal to 'D' and    *
+      *             record is stil found in GPTRAPPD.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023876A - Wrong location of task split objects             *
       *  MD023876 - GOC210000 Performance Issues                      *
@@ -44,12 +49,14 @@
      F***GPWTRPDPD IF   E             DISK       USROPN                           MD023876 MD023876A
      FGOWTRPDPD IF   E             DISK       USROPN                                       MD023876A
      F                                        INFSR(*PSSR)                                  MD023876
- 
+
      D RetainRecentRec...                                                                   MD023876
      D                 S               N   INZ                                              MD023876
      D PrevCTID        S                   INZ LIKE(CT_ID)                                  MD023876
      D TCCID           S                   INZ(*ALL'9')                                     MD023876
      D                                     LIKE(CT_CCID)                                    MD023876
+     D FoundCurrID     S                   INZ(0)                                           MD056327
+     D                                     LIKE(CT_ID)                                      MD056327
      D True            C                   CONST(*ON)                                       MD023876
      D False           C                   CONST(*OFF)                                      MD023876
                                                                                             MD023876
@@ -62,12 +69,12 @@
      I**********NS  **                                                                      MD023876
      I**********                      103  117 0NT_ID                                       MD023876
      I***GPTRAPL0  NS                                                                       MD023876
- 
+
       * Delete records from GPWTRAPPD if:
       * (i) There is no equivalent record on GPTRAPPD
       * (ii) There is more than one record on GPWTRAPPD for the transaction id
       *      (but keep the most recent one)
- 
+
      C*****CT_ID         CHAIN     GPTRAPL0                           99                    MD023876
      C******IN99         IFEQ      *ON                                                      MD023876
      C**********         Z-SUB     666           CT_CCID                                    MD023876
@@ -79,6 +86,7 @@
      C**********         ENDIF                                                              MD023876
                                                                                             MD023876
      C                   RESET                   PrevCTID                                   MD023876
+     C                   RESET                   FoundCurrID                                MD056327
                                                                                             MD023876
       ** Get last record key for this batch                                                 MD023876
                                                                                             MD023876
@@ -110,6 +118,16 @@
      C                             AND CT_ID <= ECTID                                       MD023876
                                                                                             MD023876
      C                   EVAL      RetainRecentRec = False                                  MD023876
+      *                                                                                     MD056327
+      ** Do not delete record in GPWTRAPPD with Action code 'D' if record                   MD056327
+      ** is still found in GPTRAPPD.                                                        MD056327
+      *                                                                                     MD056327
+     C                   IF        FoundCurrID = CT_ID                                      MD056327
+     C                             AND CT_ACTN = 'D'                                        MD056327
+     C                   EVAL      RetainRecentRec = True                                   MD056327
+     C                   RESET                   FoundCurrID                                MD056327
+     C                   ENDIF                                                              MD056327
+      *                                                                                     MD056327
                                                                                             MD023876
       ** Check if all records for this key will be deleted (i)                              MD023876
       ** or recent record of the group should be retained (ii)                              MD023876
@@ -119,6 +137,7 @@
      C     CT_ID         CHAIN     GPTRAPL0                                                 MD023876
      C                   IF        %FOUND(GPTRAPL0)                                         MD023876
      C                   EVAL      RetainRecentRec = True                                   MD023876
+     C                   EVAL      FoundCurrID = CT_ID                                      MD056327
      C                   ENDIF                                                              MD023876
                                                                                             MD023876
      C                   EVAL      PrevCTID = CT_ID                                         MD023876
@@ -151,7 +170,7 @@
      C**********         ENDSR                                                              MD023876
       ************************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -159,7 +178,7 @@
      C     GPWTRAPK      KLIST                                                              MD023876
      C                   KFLD                    ECTID                                      MD023876
      C                   KFLD                    TCCID                                      MD023876
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

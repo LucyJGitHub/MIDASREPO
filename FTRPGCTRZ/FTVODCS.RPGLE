@@ -17,12 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055570           Date 15May20               *
-      *  Prev Amend No. MD056318           Date 23Jul20               *
-      *                 259576             Date 02Apr14               *
+      *  Last Amend No. MD056318           Date 23Jul20               *
+      *  Prev Amend No. 259576             Date 02Apr14               *
       *                 MD021318A          Date 08Aug13               *
       *                 MD021318           Date 26Jul13               *
       *                 AR884141           Date 19Jun13               *
+      *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -122,8 +122,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055570 - Payment with account blocked (CR/DR) can be       *
-      *             inserted.                                         *
       *  MD056318 - Missed out compatibility patch objects in RBRU    *
       *             SP22 Upgrade Delivery (RZBDK0001)                 *
       *  259576 - Remove warning message for Inactive accounts.       *
@@ -134,7 +132,9 @@
       *           - Fix is to condition CSD089 overridable error      *
       *             changes when input is from HATS screen            *
       *  AR884141 - Remove MMA1411 and MMA1410 validation.            *
-      *             (Child: AR884142)                                 *      
+      *             (Child: AR884142)                                 *
+      *  MD055570 - Payment with account blocked (CR/DR) can be       *
+      *             inserted.                                         *
       *  MD051978 - ':' should not be present in first character of   *
       *             address lines (except the first address line)     *
       *  MD039547 - Referred account is not properly validated.       *
@@ -1062,7 +1062,7 @@ E4   C**********         End                                                    
      C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                              MD055570
      C                   ENDIF                                                              MD055570
       *                                                                                     MD055570
-     C                   ENDIF                                                              MD021318      
+     C                   ENDIF                                                              MD021318
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689

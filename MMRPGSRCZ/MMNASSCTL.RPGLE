@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031031           Date 27Feb15               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CSF011A            Date 28Nov11               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -176,6 +180,9 @@
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
 
+     FDLDEALNA  UF A E           K DISK    PREFIX(DX_)                                      MD031031
+     F                                     INFSR(*pssr)                                     MD031031
+     F                                     COMMIT                                           MD031031
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMNASSC019
 
@@ -1517,6 +1524,15 @@
      C                   EXSR      SetupValid
      C                   WRITE     MMVNASSD0
      C                   EXSR      CallMsgHdl
+     ** Insert DLDLDEQD record
+     C                   IF        DDACTN = 'I'                                             MD031031
+     C     DDDLNO        CHAIN     DLDLDED0                           12                    MD031031
+     C     *IN12         IFEQ      *ON                                                      MD031031
+     C                   EVAL      DX_F1DLNO = DDDLNO                                       MD031031
+     C                   EVAL      DX_F1BRCA = DDORBR                                       MD031031
+     C                   WRITE     DLDLDED0                                                 MD031031
+     C                   ENDIF                                                              MD031031
+     C                   ENDIF                                                              MD031031
      C                   ENDIF
 
      C                   ENDIF

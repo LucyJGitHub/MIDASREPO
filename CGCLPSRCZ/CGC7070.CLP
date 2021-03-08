@@ -8,8 +8,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR737553           Date 06Apr11              */
+/*       Last Amend No. MD020796           Date 12Jul13              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR737553           Date 06Apr11              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG26660           Date 09Nov09              */
 /*                      BUG26178           Date 29Sep09              */
@@ -17,6 +18,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD020796 - Empty extracts after COB. Add OVRDBF to avoid    */
+/*                  DBASE004 in CG3615. Patterned fix after 227781.  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR737553 - CGC7070 00001 (Child: AR737554)                  */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -153,8 +156,17 @@
              ENDDO
  
 /* Call Custom-Defined Data Extract pgm (CCG015)                     */
+            RCLRSC                                                                      /*MD020796*/
+            OVRDBF     FILE(CGUDCRL0) TOFILE(EXCGUDCRPD) +
+                         MBR(AUDITLTR1) SHARE(*YES)                                     /*MD020796*/
+            OPNQRYF    FILE((EXCGUDCRPD AUDITLTR1)) +
+                         FORMAT(CGUDCRL0) KEYFLD((DRITEM))                              /*MD020796*/
+/* */                                                                                   /*MD020796*/
  
             CALL       PGM(CGC3604)
+/* */                                                                                   /*MD020796*/
+            CLOF       OPNID(EXCGUDCRPD)                                                /*MD020796*/
+            DLTOVR     FILE(CGUDCRL0)                                                   /*MD020796*/
  
             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)

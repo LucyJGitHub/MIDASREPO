@@ -35,8 +35,9 @@
       * Standard RPG Creation PAR - standard functions  *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -70,6 +71,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -205,7 +207,8 @@
      D* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                LN0842
      D*                                                                   LN0842
      D FCREPT        E DS                  EXTNAME(FCREPJW1)                                MD055265
-     D NullInds        s              5i 0 dim(19)                                          MD055265
+     D*NullInds*       s              5i 0 dim(19)                                 MD055265 MD055681
+     D NullInds        s              5i 0 dim(20)                                          MD055681
      D RUNDAT          DS
      D  RUNA                   1      7
      D  RUND                   8     10P 0

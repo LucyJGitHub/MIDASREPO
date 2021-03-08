@@ -1366,7 +1366,7 @@
      C                   EXSR      SrFAMT
      C                   ENDIF
      C                   IF        WOCcy = *BLANKS
-     C**********         EVAL      WOCcy = WICcy                                           MD055939
+     C**********         EVAL      WOCcy = WICcy                                            MD055939
      C                   EVAL      WOCcy = WIMCcy                                           MD055939
      C                   ENDIF
      C                   EVAL      WTag79L4Val = '//' + WOCcy + WOAmnt

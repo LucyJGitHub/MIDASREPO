@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054035           Date 03Sep19               *
+      *  Last Amend No. AR887295           Date 15Aug12               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *      
       *                 MD047554           Date 11Oct17               *      
       *                 CLE071             Date 18Jul18               *
@@ -85,6 +86,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR887295 - Reversal shadow posting is equal to full repay-   *
+      *             ment amount instead of outstanding principal.     *
+      *             Calculate total repayment amount for shadow       *
+      *             posting on reverse or amend. (Child: AR887296)    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *            
@@ -194,6 +199,10 @@
      F                                     IGNORE(LOAMSDHF)
      F                                     IGNORE(LOAMSZ1F)
       *
+     FLOAMSOM3  IF   E           K DISK    RENAME(LOAMSDKF:LOAMRP)                          AR887295
+     F                                     PREFIX(RS)                                       AR887295
+      ** Loan Amendment for Shadow Posting                                                  AR887295
+      *                                                                                     AR887295
      FLOAMS     UF A E           K DISK    INFSR(*PSSR)
       ***  Loan Amendments for Updating
      F                                     COMMIT
@@ -1977,6 +1986,12 @@ B001 C     RPCHTP        IFEQ      'I'
       *
      C                   MOVE      OSBR          SHOSBR
      C                   MOVE      CHTP          SHCHTP
+      *                                                                                     AR887295
+     C     RPCHTP        IFNE      'I'                                                      AR887295
+     C     VDAT          ANDGT     ORED                                                     AR887295
+     C     ORED          ANDLT     BJRDNB                                                   AR887295
+     C                   EXSR      SRCALREP                                                 AR887295
+     C                   ENDIF                                                              AR887295
       *                                                                                     MD047554
       ** If Autosettle indicator has been changed from Y to N, treat                        MD047554
       ** as reversal for shadow posting.                                                    MD047554
@@ -2006,6 +2021,102 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     AR887295
+      * SRCALREP - Calculate Repayment Posting on Reverse or Amend    *                     AR887295
+      *****************************************************************                     AR887295
+     C     SRCALREP      BEGSR                                                              AR887295
+      *                                                                                     AR887295
+     C     RPSHP         KLIST                                                              AR887295
+     C                   KFLD                    LNRF                                       AR887295
+     C                   KFLD                    BJRDNB                                     AR887295
+      *                                                                                     AR887295
+     C                   Z-ADD     0             WTCPAM           13 0                      AR887295
+      *                                                                                     AR887295
+     C     RPSHP         SETLL     LOAMSOM3                                                 AR887295
+     C                   READ      LOAMSOM3                               46                AR887295
+      *                                                                                     AR887295
+     C     *IN46         DOWEQ     '0'                                                      AR887295
+     C     RSLNRF        ANDEQ     LNRF                                                     AR887295
+     C     RSVDAT        ANDGT     RSORED                                                   AR887295
+     C     RSORED        ANDLT     BJRDNB                                                   AR887295
+     C     RSVDAT        ANDLE     VDAT                                                     AR887295
+      *                                                                                     AR887295
+      ** Consider loan amendment only when value date is less than or                       AR887295
+      ** when value date is equal and LASN is less than 'RE' which                          AR887295
+      ** will be process first 'RE' by the system.                                          AR887295
+      *                                                                                     AR887295
+     C     RSVDAT        IFLT      VDAT                                                     AR887295
+     C     RSVDAT        OREQ      VDAT                                                     AR887295
+     C     RSLASN        ANDLT     LASN                                                     AR887295
+      *                                                                                     AR887295
+      ** Calculate total principal amount to be less with CPAM.                             AR887295
+      ** Add amount of 'MR', PF ,'RE' and RAMT to WTCPAM.                                   AR887295
+      ** Subtract 'PI and 'PT' from WTCPAM.                                                 AR887295
+      *                                                                                     AR887295
+     C     RSAMTP        IFEQ      'MR'                                                     AR887295
+     C                   ADD       RSPRAM        WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     RSAMTP        IFEQ      'PI'                                                     AR887295
+     C                   SUB       RSPRAM        WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     RSAMTP        IFEQ      'PF'                                                     AR887295
+     C                   ADD       RSPRAM        WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     RSAMTP        IFEQ      'PT'                                                     AR887295
+     C                   SUB       RSPRAM        WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     RSAMTP        IFEQ      'RE'                                                     AR887295
+     C     RSREPT        IFNE      3                                                        AR887295
+     C                   ADD       RSPRAM        WTCPAM                                     AR887295
+     C                   ELSE                                                               AR887295
+     C                   ADD       RSTAMT        WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C                   READ      LOAMSOM3                               46                AR887295
+     C                   ENDDO                                                              AR887295
+      *                                                                                     AR887295
+      ** Add rebate amount when value date after next repayment date                        AR887295
+      *                                                                                     AR887295
+     C     NRPD          IFNE      0                                                        AR887295
+     C     NRPD          ANDLT     VDAT                                                     AR887295
+     C                   ADD       RAMT          WTCPAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     CPAM          SUB       WTCPAM        WTCPAM                                     AR887295
+      *                                                                                     AR887295
+     C     WTCPAM        IFLT      PRAM                                                     AR887295
+     C     REPT          ANDNE     3                                                        AR887295
+     C     WTCPAM        ORLT      TAMT                                                     AR887295
+     C     REPT          ANDEQ     3                                                        AR887295
+      *                                                                                     AR887295
+     C     WTCPAM        IFGT      0                                                        AR887295
+      *                                                                                     AR887295
+     C     REPT          IFNE      3                                                        AR887295
+     C                   Z-ADD     WTCPAM        SHPRAM                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C     REPT          IFNE      1                                                        AR887295
+     C                   Z-ADD     WTCPAM        SHTAMT                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C                   ELSE                                                               AR887295
+      *                                                                                     AR887295
+     C                   Z-ADD     0             SHPRAM                                     AR887295
+     C                   Z-ADD     0             SHTAMT                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C                   ENDIF                                                              AR887295
+      *                                                                                     AR887295
+     C                   ENDSR                                                              AR887295
+      *****************************************************************                     AR887295
+      /EJECT                                                                                AR887295
       *****************************************************************
       * SRUSHD - Update Shadow Record                                 *
       *****************************************************************

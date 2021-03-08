@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054707           Date 06Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD054876           Date 26Aug20               *
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 MD054707           Date 06Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE051             Date 02Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -68,6 +70,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054876 - Negative funding rate is not allowed in Lending.  *
+      *             Enhance fix MD034915, populate WFSRP after call   *
+      *             to VALAMT.                                        *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *             Use ZA0841 for validation instead of ZALIGN.      *
+      *           - Applied for MD054876                              *
       *  MD054707 - CER050 Comp LEC06A 00010 failed during COB Run    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -301,6 +310,10 @@
      D  FYLDC        E                     EXTFLD(FSYLDC)                                     225959
       ***  Yield Curve                                                                        225959
       *
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034915
+     D                                     PREFIX(DL_)                                      MD034915
+      ** External DS for Dealing Details                                                    MD034915
+      *                                                                                     MD034915
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -557,6 +570,21 @@
      D CLE106          S              1                                                       CLE106
      D CLE036          S              1                                                    BUG10391R
                                                                                               CLE106
+     D PERCD           S              1P 0                                                  MD034915
+     D PAMT            S             15P 0                                                  MD034915
+      ** Alpha field for numeric validation                                                 MD034915
+     D @@ALPH          S             16A                                                    MD034915
+      ** Millions/Thousands id (Y=function on)                                              MD034915
+     D @@MTID          S              1A                                                    MD034915
+      ** Amount calculation field                                                           MD034915
+     D @@AMT           S             15  0                                                  MD034915
+      ** Error code                                                                         MD034915
+     D @@ERCD          S              1  0                                                  MD034915
+      ** Number of decimal places                                                           MD034915
+     D @@IDP           S              3  0                                                  MD034915
+      ** Number of integers                                                                 MD034915
+     D @@IINT          S              3  0                                                  MD034915
+                                                                                            MD034915
       ***  Index for arrays of of warning message ids etc
       *
       ** +--------------------------------------+
@@ -2018,18 +2046,27 @@
      C                   EVAL      MsgIDXAr(Idx) = 'LEL0804'                               BUG10391R
      C                   ENDIF                                                             BUG10391R
                                                                                            BUG10391R
-     C                   MOVE      *BLANKS       @SCRF
-     C                   MOVE      DDFRSP        @SCRF
-     C                   Z-ADD     4             @NDIG
-     C                   Z-ADD     7             @NDEC
-     C                   CALL      'ZALIGN'
-     C                   PARM      *BLANKS       @RTCD
-     C                   PARM                    @SCRF
-     C                   PARM                    @NDEC
-     C                   PARM                    @NDIG
-     C                   PARM      *BLANKS       @RVAL
-     C                   MOVE      @RVAL         WFSRP
-     C     @RTCD         IFNE      *BLANKS
+     C**********         MOVE      *BLANKS       @SCRF                                      MD034915
+     C**********         MOVE      DDFRSP        @SCRF                                      MD034915
+     C**********         Z-ADD     4             @NDIG                                      MD034915
+     C**********         Z-ADD     7             @NDEC                                      MD034915
+     C**********         CALL      'ZALIGN'                                                 MD034915
+     C**********         PARM      *BLANKS       @RTCD                                      MD034915
+     C**********         PARM                    @SCRF                                      MD034915
+     C**********         PARM                    @NDEC                                      MD034915
+     C**********         PARM                    @NDIG                                      MD034915
+     C**********         PARM      *BLANKS       @RVAL                                      MD034915
+     C**********         MOVE      @RVAL         WFSRP                                      MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      DDFRSP        @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID            1                        MD034915
+     C                   EXSR      VALAMT                                                   MD034915
+     C                   MOVE      @@AMT         WFSRP                                      MD054876
+      *                                                                                     MD034915
+     C*****@RTCD         IFNE      *BLANKS                                                  MD034915
+     C     @@ERCD        IFNE      0                                                        MD034915
      C                   MOVE      'N'           DDFRSPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDFRSP'      FldNamXAr(Idx)
@@ -2269,6 +2306,7 @@
      C                   ELSE                                                              BUG10391R
      C                   MOVE      DDFRSP        @SCRF                                       BUG6258
      C                   ENDIF                                                             BUG10391R
+     C                   IF        CLE036 = 'Y' AND DDFUND <> *BLANKS                       MD034915
      C                   Z-ADD     4             @NDIG                                       BUG6258
      C                   Z-ADD     7             @NDEC                                       BUG6258
      C                   CALL      'ZALIGN'                                                  BUG6258
@@ -2278,6 +2316,15 @@
      C                   PARM                    @NDIG                                       BUG6258
      C                   PARM      *BLANKS       @RVAL                                       BUG6258
      C                   MOVE      @RVAL         WCLFSRP          11 7                       BUG6258
+     C                   ELSE                                                               MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      @SCRF         @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID                                     MD034915
+     C                   EXSR      VALAMT                                                   MD034915
+     C                   MOVE      @@AMT         WCLFSRP                                    MD034915
+     C                   ENDIF                                                              MD034915
                                                                                              BUG6258
      C/COPY WNCPYSRC,LEH01453
      C     WCLFSRP       IFNE      CCLFSRP                                                   BUG6258
@@ -2324,6 +2371,7 @@
      C                   ELSE                                                              BUG10391R
      C                   MOVE      DDFRSP        @SCRF
      C                   ENDIF                                                             BUG10391R
+     C                   IF        CLE036 = 'Y' AND DDFUND <> *BLANKS                       MD034915
      C                   Z-ADD     4             @NDIG
      C                   Z-ADD     7             @NDEC
      C                   CALL      'ZALIGN'
@@ -2333,6 +2381,15 @@
      C                   PARM                    @NDIG
      C                   PARM      *BLANKS       @RVAL
      C                   MOVE      @RVAL         CCLFSRP
+     C                   ELSE                                                               MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      @SCRF         @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID                                     MD034915
+     C                   EXSR      VALAMT                                                   MD034915
+     C                   MOVE      @@AMT         CCLFSRP                                    MD034915
+     C                   ENDIF                                                              MD034915
      C                   ENDIF
       *
      C     DDFSGNOK      IFNE      'N'
@@ -2776,6 +2833,26 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD034915
+      * VALAMT - Validate/reformat amount                             *                     MD034915
+      *****************************************************************                     MD034915
+      *                                                                                     MD034915
+     C     VALAMT        BEGSR                                                              MD034915
+      *                                                                                     MD034915
+     C                   CALLB     'ZA0841'                                                 MD034915
+      *                                                                                     MD034915
+     C                   PARM      *BLANK        RetCodeOut                                 MD034915
+     C                   PARM                    @@ALPH                                     MD034915
+     C                   PARM                    @@IDP                                      MD034915
+     C                   PARM                    @@IINT                                     MD034915
+     C                   PARM      'N'           @@MTID                                     MD034915
+     C                   PARM      *ZERO         @@ERCD                                     MD034915
+     C                   PARM      *ZERO         @@AMT                                      MD034915
+     C                   PARM                    DL_BNDCSP                                  MD034915
+      *                                                                                     MD034915
+     C                   ENDSR                                                              MD034915
+      *****************************************************************                     MD034915
+      /EJECT                                                                                MD034915
       *****************************************************************
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
@@ -3055,6 +3132,19 @@ E004 C                   ENDIF
      C                   EVAL      CLE036 = 'Y'                                            BUG10391R
      C                   ENDIF                                                             BUG10391R
      C/COPY WNCPYSRC,LEH01455
+      *                                                                                     MD034915
+      ** Access Dealing Details                                                             MD034915
+      *                                                                                     MD034915
+     C                   CALL      'AODEALR1'                                               MD034915
+     C                   PARM      *BLANKS       @RTCD                                      MD034915
+     C                   PARM      '*FIRST '     @OPTN                                      MD034915
+     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034915
+      *                                                                                     MD034915
+      ** Database Error                                                                     MD034915
+      *                                                                                     MD034915
+     C     @RTCD         IFNE      *BLANK                                                   MD034915
+     C                   EVAL      DL_BNDCSP =  '.'                                         MD034915
+     C                   ENDIF                                                              MD034915
       *                                                                                       CLE051
       ** Determine if CLE051 is installed                                                     CLE051
      C                   MOVEL     'N'           CLE051            1                          CLE051

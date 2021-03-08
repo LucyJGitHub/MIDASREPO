@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CUP040             Date 06Mar14               *
-      *  Prev Amend No. MD024412           Date 04Feb14               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. CUP040             Date 06Mar14               *
+      *                 MD024412           Date 04Feb14               *
       *                 AR1090366          Date 21Feb13               *
       *                 CCB022A *REWRITE   Date 06Aug12               *
       *                 CCB022  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - Restructure of deliverable data files.              *
       *  MD024412 - Additional changes for COM processing             *
       *  AR1090366 - Deliverable data for SCCOMMTD and SCCOMXTD       *
@@ -190,10 +192,16 @@
       ** If file is SCSARDPD and action is update.
       ** TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
 
-     C                   IF        PFLNAME  = 'SCSARDPD' AND
-     C                             (TRGEVENT = '1' OR TRGEVENT = '2')
+     C**********         IF        PFLNAME  = 'SCSARDPD' AND                                MD055681
+     C*********                    (TRGEVENT = '1' OR TRGEVENT = '2')                       MD055681
+     C                   IF        (PFLNAME  = 'SCSRDCTD' OR                                MD055681
+     C                             PFLNAME  = 'SCSRDBTD') AND                               MD055681
+     C                             (TRGEVENT = '1' OR TRGEVENT = '2')                       MD055681
+     C                             OR (PFLNAME  = 'SCSRDXTD' AND                            MD055681
+     C                             TRGEVENT = '3')                                          MD055681
 
      C                   IF        TRGEVENT = '1'
+     C                             or TRGEVENT = '3'                                        MD055681
      C                   EVAL      SCSARD = I#AIMG
      C                   ELSE
      C                   EVAL      SCSARD = I#BIMG

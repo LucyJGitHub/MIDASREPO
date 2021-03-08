@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031031           Date 23Feb15               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -101,6 +102,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
@@ -1717,7 +1721,8 @@
      C                   WRITE     FXVFXDLD0
 
       ** Insert DLDLDBQD record for CLE025 processing                                         247888
-     C                   IF        DDACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        DDACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
      C     DDDLNO        CHAIN     DLDLDBD0                           12                      247888
      C     *IN12         IFEQ      *ON                                                        247888
      C                   EVAL      DX_F1DLNO = DDDLNO                                         247888

@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056223           Date 15Jul20               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. MD055322           Date 15May20               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD056223           Date 15Jul20               *
       *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
@@ -425,6 +427,14 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
+      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
+      *             ABLN on first COB                                 *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD056223 - CLE031: Incorrect Posting narratives in           *
       *             Fee postings with conversion                      *
       *           - The amount and currency of the posting narratives *
@@ -432,9 +442,6 @@
       *             whose narrative codes defined as 03 are now       *
       *             formatted based on the format string defined in   *
       *             Narrative Codes File SDNARRPD.                    *
-      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
-      *             components.                                       *
-      *           - Redeliver of MD050139.                            *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
@@ -16240,9 +16247,17 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C     COFD          ADD       CFCD          WK13NA                                        CAC00
      C                   ADD       FWOD          WK13NA                                        CAC00
+      *                                                                                     MD034915
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
       *                                                                   CAC001
      C                   SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
@@ -17477,7 +17492,8 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C     RECI          ANDEQ     'M'                                                      MD054008
+     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
+     C     RECIL         ANDEQ     'M'                                                      MD055322
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152
@@ -18228,10 +18244,18 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
       ** Subtract Accrued COF Posted to Date from the greater amount      CAC001
       *                                                                   CAC001
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   Z-ADD     FCTD          ACDATE                                        CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
+      *                                                                                     MD034915
      C     WK13N         SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
       *                                                                                     AR927395

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035941           Date 27Jul16               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035941           Date 27Jul16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG21289           Date 02Oct08               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035941 - Unable to insert record in Time zone Maintenance  *
       *             at Branch Level                                   *
@@ -190,7 +192,7 @@
       *****************************************************************
       ** Time Zone Update File
      FSDTIZOL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Time Zone Retrieval File
      FSDTIZOL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     Rename(SDTIZOD0 : SDTIZOD1)
@@ -218,12 +220,12 @@
       ** Time Zone Maintenance History File keyed by time zone code + Year + Eff. Date
      FSDTIZHL4  UF A E           K DISK    INFSR(*PSSR)
      F                                     Rename(SDTIZHD0 : RSDTIZ_L4)
- 
+
       *  Midas SD Branch File
      F***SDBRCHL0  UF   E        K DISK    INFSR(*PSSR)                                     MD035941
      FSDBRCHLZ  UF   E           K DISK    INFSR(*PSSR)                                     MD035941
      F                                     COMMIT                                           BUG21226
- 
+
       *  Midas SD Market Identification code File                                           BUG19523
      FSDMICCL1  IF   E           K DISK    INFSR(*PSSR)                                     BUG19523
       * UPD : Midas SD Branch codes update                                                  BUG19910
@@ -312,7 +314,8 @@
      D SavSDTZLV     E DS                  EXTNAME(SDTZLVPD) Prefix(S:0)                    BUG19780
       *
       ** File information data structure for external file SCSARSPD
-     D SCSARS        E DS                  EXTNAME(SCSARSPD)
+     D*SCSARS***     E DS                  EXTNAME(SCSARSPD)                                MD055681
+     D SCSARS        E DS                  EXTNAME(SCSRSJW0)                                MD055681
       *
       ** DS For Indicators
      D Indicators      DS                  BASED(IndPointer)
@@ -335,7 +338,7 @@
      D  SflEnd                36     36
      D  NoData                80     80
      D  Rollup                98     98
- 
+
      d Infds           ds
      d KeyPressed            369    369
      d Cmd_Enter       C                   Const(x'F1')
@@ -383,7 +386,7 @@
      D PZDate          S              6A
      D PZDayNo         S              5P 0
      D PErrorFlag      S              1A
- 
+
       * Parameters for SDMFIDTIM
      D POpType         S              2A
      D PDate1          S              6A
@@ -397,7 +400,7 @@
      D PBranch         S              3A
      D pDateFormatInd  S              1A
      D PMicCode        S              4A
- 
+
       **
      D PTimeStamp      S               Z
      D PBrCd           S                   Like(PBranch)
@@ -433,7 +436,7 @@
      D PVl09           S            200A                                                    BUG20731
      D POp10           S             20A                                                    BUG20731
      D PVl10           S            200A                                                    BUG20731
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -483,7 +486,7 @@
      D WCYear          S                   LIKE(H@TZYR)
      D WLocCode        S                   LIKE(A8LCCD)
      D WCurrentLevel   S                   LIKE(TLTZLC) Inz('T')
- 
+
      D S1TZTZLC        S                   LIKE(TLTZLC)
      D S1TZZONE        S                   LIKE(TLZONE)
      D D@TZTZLC        S                   LIKE(TLTZLC)
@@ -582,7 +585,7 @@
       ** Check the Return Parameter
       *
      C                   IF        PRtcd <> *BLANKS
- 
+
      C                   EVAL      DBKEY = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 001
@@ -656,7 +659,7 @@
      C     KSdtizoL1     KLIST
      C                   KFLD                    S1TZCOD
      C                   KFLD                    S1TZYR
- 
+
      C     KSdtizoL1A    KLIST
      C                   KFLD                    D@TZCOD
      C                   KFLD                    D@TZYR
@@ -918,16 +921,16 @@
      C                   ELSE
      C                   EXSR      SRTLoadSfl
      C                   ENDIF
- 
+
      C                   WHEN      (H@TZCOD <> *BLANKS) OR
      C                             (H@TZYR  <> *BLANKS) OR
      C                             (H@SDES  <> *BLANKS) OR
      C                             (H@GMT   <> *BLANKS) OR
      C                             (H@GMTS  <> *BLANKS) OR                                  BUG19523
      C                             (H@DSTC  <> *BLANKS)
- 
+
      C                   EXSR      SRPrSfl
- 
+
      C                   IF        WError = 'N'
      C                   EVAL      WCCod  = H@TZCOD
      C                   EVAL      WCYear = H@TZYR
@@ -935,9 +938,9 @@
       ** Build the Subfile With the Selection Criteria
       *
      C                   EXSR      SRBldSfl
- 
+
      C                   ENDIF
- 
+
      C                   OTHER
       *
       ** Process the Subfile
@@ -991,7 +994,7 @@
       ** When F5 Is Pressed
       *
      C                   WHEN      Refresh = True
- 
+
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
       *
@@ -1033,7 +1036,7 @@
      C                   EVAL      *IN86 = True
      C                   EVAL      Exit  = True
      C                   LEAVESR
- 
+
       ** When Page Down Is Pressed
      C                   WHEN      Rollup = True
       *
@@ -1062,11 +1065,11 @@
      C                   EXSR      SRPrSfl
       *
      C                   ENDSL
- 
+
      C                   IF        Rollup = False And EndPGMFlag = False                    BUG20043
      C                   EXSR      SRBldSfl
      C                   ENDIF                                                              BUG20043
- 
+
      C                   ENDSR
       *                                                                                     BUG19523
       *****************************************************************                     BUG19523
@@ -1156,18 +1159,18 @@
       *****************************************************************
       *
      C     SRBranchLevel Begsr
- 
+
      C                   EVAL      WCurrentLevel = 'B'
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
      C                   Dow       Exit = False
- 
+
      C                   EXSR      SRDspSfl
- 
+
      C                   EXSR      SRToggleReq
- 
+
      C                   ENDDO
- 
+
      C                   IF        EndPGMFlag = False
      C                   EVAL      *IN89 = WSavModeInd
      C                   EVAL      Exit = False
@@ -1190,26 +1193,26 @@
       *****************************************************************
       *
      C     SRSystemLevel BegSR
- 
+
      C                   EVAL      WCurrentLevel = 'S'
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
- 
+
      C                   Dow       Exit = False
- 
+
      C                   EXSR      SRDspSfl
- 
+
      C                   EXSR      SRToggleReq
- 
+
      C                   ENDDO
- 
+
      C                   If        EndPGMFlag = False
      C                   EVAL      *IN89 = WSavModeInd
      C                   EVAL      Exit = False
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1224,27 +1227,27 @@
       *****************************************************************
       *
      C     SRTZoneLevel  BegSR
- 
+
      C                   EVAL      WCurrentLevel = 'T'
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
- 
+
      C                   Dow       Exit = False
- 
+
      C                   EXSR      SRDspSfl
- 
+
      C**                 EXSR      SRProcess
      C                   EXSR      SRToggleReq
- 
+
      C                   ENDDO
- 
+
      C                   If        EndPGMFlag = False
      C                   EVAL      *IN89 = WSavModeInd
      C                   EVAL      Exit = False
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1259,26 +1262,26 @@
       *****************************************************************
       *
      C     SRZoneLevel   BegSR
- 
+
      C                   EVAL      WCurrentLevel = 'Z'
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
- 
+
      C                   Dow       Exit = False
- 
+
      C                   EXSR      SRDspSfl
- 
+
      C                   EXSR      SRToggleReq
- 
+
      C                   ENDDO
- 
+
      C                   If        EndPGMFlag = False
      C                   EVAL      *IN89 = WSavModeInd
      C                   EVAL      Exit = False
      C                   EXSR      SRReset
      C                   EXSR      SRBldSfl
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1310,7 +1313,7 @@
      C                   EVAL      WCYear  = *Blanks
       *
      C                   ENDIF
- 
+
      C                   EVAL      *IN50 = False
      C                   EVAL      *IN51 = False
      C                   EVAL      *IN52 = False
@@ -1331,7 +1334,7 @@
       *
      C                   CALL      'ZA0250'
       *
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1364,13 +1367,13 @@
      C                   EVAL      NoData = False
      C                   EVAL      ActnErr = False
      C                   EVAL      SflClr = True
- 
+
      C                   WRITE     SDM01005C2
- 
+
      C                   EVAL      SflClr = False
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1426,7 +1429,7 @@
      C                   EVAL      D@GMTS   = TZGMTS
      C                   EVAL      D@DSTCD  = TZDSTC
      C                   ENDIF
- 
+
      C                   SELECT
      C                   WHEN      WCurrentLevel = 'B'
      C                   EVAL      D@ZONE1 = TLBRCA
@@ -1513,7 +1516,7 @@
      C                             NOT %EOF(SDTIZOL0)
      C     H@TZCOD       SetLL     SDTIZOL0
      C                   ENDIF
- 
+
      C                   IF        %EOF(SDTIZOL0)
      C     *LOVAL        SETLL     SDTIZOL0
      C                   ENDIF
@@ -1533,7 +1536,7 @@
      C                   ENDIF
       *
      C                   IF        Not %Eof(SDTIZOL0)
- 
+
      C                   EVAL      D@TZLCD  = *BLANKS
      C                   EVAL      D@TZCOD  = TZTZCD
      C                   EVAL      D@TZYR   = TZYEAR
@@ -1631,11 +1634,11 @@
      C                   ELSEIF    (D0OPT <> Enquire) AND
      C                             (D0OPT <> *BLANKS) AND
      C                             (PMode = 'E')
- 
+
      C                   EVAL      PMsgId = 'SDA0005'
      C                   EVAL      WIdx = WIdx + 1
      C                   EXSR      SRErrDta
- 
+
      C                   ENDIF
       *
       ** If User doesn't have required authority
@@ -1648,7 +1651,7 @@
      C                   EVAL      ActnErr = False
      C                   EVAL      WError = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      *IN34 = True
      C                   UPDATE    SDM01005S2
       *
@@ -1675,7 +1678,7 @@
      C                   IF        D0OPT <> *BLANKS
      C                   EVAL      Cancel = False
      C                   EVAL      POpt = D0OPT
- 
+
      C                   IF        WCurrentLevel = 'T'
      C*****KSdtizol1A    CHAIN     SDTIZOL1                                                 BUG19141
      C     KSdtizol1A    CHAIN(N)  SDTIZOL1                                                 BUG19141
@@ -1685,7 +1688,7 @@
      C                   ENDIF
      C
      C                   IF        %Found(SDTZLVL0) Or %Found(SDTIZOL1)
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   EVAL      S1TZYR  =  TZYEAR
      C                   EVAL      S1TZCOD =  TZTZCD
@@ -1699,19 +1702,19 @@
      C                   EVAL      S1TZYR  =  TLYEAR
      C                   EVAL      S1TZCOD =  TLTZCD
      C                   ENDIF
- 
+
      C                   EXSR      SRPopScrVal
      C                   EXSR      SRValDetails
      C                   IF        Widx = 0                                                 BUG19523
      C                   EXSR      SRGetLocalTime
      C                   ENDIF                                                              BUG19523
- 
+
      C                   IF        D0OPT = Amend or D0OPT = Delete
      C                   MOVE      SDTIZODS      SDTIZODS2
      C                   MOVE      SDTZLVDS      SavSDTZLV                                  BUG19780
      C                   EXSR      SRPopHistDS
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate action code selected
@@ -1724,24 +1727,24 @@
      C                   EVAL      Exit = True
      C                   Leave
      C                   ENDIF
- 
+
      C                   EVAL      D0OPT = *BLANKS
- 
+
      C                   UPDATE    SDM01005S2
- 
+
      C                   ENDIF
      C                   READC     SDM01005S2
- 
+
      C                   ENDDO
- 
+
      C                   IF        Cancel = True And WCurrentLevel = 'T'
      C                   EVAL      Cancel = False
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1755,12 +1758,12 @@
       *                                                               *
       *****************************************************************
      C     SRErrDta      BEGSR
- 
+
      C                   CALL      'ZA0350'
      C                   PARM                    PMsgFile
      C                   PARM                    PMsgId
      C                   PARM      *BLANKS       PMsgData
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1776,7 +1779,7 @@
       *****************************************************************
       *
      C     SRFldVal      Begsr
- 
+
      C                   EVAL      WIDX = 0
      C                   CALL      'ZA0250'
      C   88              IF        S1BRCH = *Blanks
@@ -1787,13 +1790,13 @@
      C                   EVAL      *IN56 = True
      C                   EVAL      Widx = WIdx + 1
      C                   EXSR      SRErrDta
- 
+
      C                   Else
       *
       ** Check if valid branch code.
       *
      C                   EXSR      SRValBranch
- 
+
      C                   ENDIF
      C                   IF        S1TZCOD = *Blanks
       *
@@ -1925,7 +1928,7 @@
       *****************************************************************
       *
      C     SRAmend       BEGSR
- 
+
      C                   Reset                   WSaveRecord                                BUG19361
      C                   SELECT
      C                   WHEN      WcurrentLevel = 'B'
@@ -1935,9 +1938,9 @@
      C                   WHEN      WcurrentLevel = 'Z'
      C                   EVAL      *In83 = True
      C                   ENDSL
- 
+
      C                   IF        WcurrentLevel <> 'T'
- 
+
      C                   WRITE     SDM01005F0
      C                   DOW       Exit = False And Cancel = False
      C                   WRITE     SDM01005C1
@@ -1970,14 +1973,14 @@
      C
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   Dow       Exit = False And Cancel = False
- 
+
      C                   WRITE     SDM01005F0
      C                   WRITE     SDM01005C1
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WCurrentLevel = 'B' OR WCurrentLevel = 'Z' Or
      C                             WCurrentLevel = 'S'
      C                   EVAL      *In82 = True
@@ -1985,15 +1988,15 @@
      C                   EXFMT     SDM01005D3
      C                   EVAL      DDDDES  = DDDES1
      C                   Eval      *In82 = False
- 
+
      C                   WHEN      WCurrentLevel = 'T'
      C                   Exfmt     SDM01005D2
      C                   EXSR      SRReset
      C                   EXSR      SRFldVal
      C                   EXSR      SRValDetails
- 
+
      C                   ENDSL
- 
+
      C                   IF        WIdx = 0  And KeyPressed = Cmd_Enter
       *
       * Populate Table fields
@@ -2013,11 +2016,11 @@
       ** Updateto Time Zone Code File only if transaction was accepted.
       *
      C                   IF        WSaveRecord = 'Y'
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   EXSR      SRChkChange
      C                   MOVE      SDTIZODS3     SDTIZODS
- 
+
      C                   IF        HistUpdFlag = True
      C                   EXSR      SRPopHistDS
      C                   EXSR      SRValHistRec
@@ -2030,9 +2033,9 @@
      C                   UPDATE    SDTIZOD1
      C                   EXSR      SRTimeZoneUPD
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     KSdtzlvL0     CHAIN     SDTZLVL1                                                 BUG19141
      C                   IF        NOT %FOUND(SDTZLVL1)                                     BUG19141
      C     *LOVAL        SETLL     SDTZLVL1                                                 BUG19141
@@ -2042,13 +2045,13 @@
      C                   EVAL      TLDESC  = DDDES1                                         BUG19141
      C                   UPDATE    RSDTZ_LVL1
      C                   MOVE      SDTZLVDS      TmpSDTZLV
- 
+
      C                   IF        RecUpdFlag = True
      C**********         EXSR      SRCurrBrchUPD                                            BUG21226
      C                   EXSR      SRPopHistDS
      C                   EXSR      SRValHistRec
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   MOVE      TLBRCA        SaveBranch        3
       *
@@ -2064,13 +2067,13 @@
      C                   EXSR      SRCurrBrchUPD                                            BUG21226
      C                   EXSR      SRBrchRecUpd
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                     BUG21226
       ** Update database records.                                                           BUG21226
       *                                                                                     BUG21226
      C                   EXSR      SRUpdRecords                                             BUG21226
- 
+
      C                   IF        WSaveRecord = 'N' And Cancel = True And                  BUG21226
      C                             cUpdBrchFlag = 'N'                                       BUG21226
      C                   EVAL      Cancel = False                                           BUG21226
@@ -2081,7 +2084,7 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C                   IF        Exit = True
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
@@ -2101,7 +2104,7 @@
       *
      C     SRDelete      BEGSR
      C                   EXSR      SRValDelete
- 
+
      C                   EVAL      *IN75 = True                                             BUG19910
      C                   EVAL      *IN76 = False                                            BUG20043
      C                   IF        Widx = 0
@@ -2119,7 +2122,7 @@
      C                   WRITE     SDM01005F0
      C                   WRITE     SDM01005C1
      C                   Exfmt     SDM01005D3
- 
+
      C                   IF        DltRecord = True  And Widx = 0
       *                                                                                     BUG19141
      C                   CALLB     'ZAGENTMSTM'                                             BUG19141
@@ -2153,10 +2156,10 @@
       ** Update database records.                                                           BUG21226
       *                                                                                     BUG21226
      C                   EXSR      SRUpdRecords                                             BUG21226
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Clear Program Message Queue
      C                   CALL      'ZA0250'
       *
@@ -2238,7 +2241,7 @@
      C                   EVAL      Widx = WIdx + 1                                          BUG19523
      C                   EXSR      SRErrDta                                                 BUG19523
      C                   ENDIF                                                              BUG19523
- 
+
      C                   ENDIF
      C
      C                   ENDSR
@@ -2259,7 +2262,7 @@
       *
      C                   Reset                   SDM01005D1
      C                   Reset                   WSaveRecord                                BUG19361
- 
+
      C**********         EVAL      S1ZONE  = *Blanks                                        BUG20731
      C                   EVAL      S1ZONE  = ZoneName                                       BUG20731
      C                   EVAL      S1TZCOD = *Blanks
@@ -2272,7 +2275,7 @@
      C                   EVAL      *IN85  = *Off                                            BUG20043
      C                   Clear                   SDTIZODS
      C                   EXSR      SRPopScrVal
- 
+
      C                   EXSR      SRReset
      C                   EVAL      *IN89 = True
      C                   EVAL      *IN65 = False                                            BUG19780
@@ -2285,9 +2288,9 @@
      C                   EVAL      *In83 = True
      C                   ENDSL
      C                   WRITE     SDM01005F0
- 
+
      C                   Dow       Exit = False And Cancel = False
- 
+
      C                   Reset                   WSaveRecord                                BUG21226
      C                   WRITE     SDM01005C1
      C                   Exfmt     SDM01005D1
@@ -2334,7 +2337,7 @@
      C                   EVAL      S2ZONE  = S1ZONE
      C                   EVAL      S2TZYR  = S1TZYR
      C                   EVAL      S2BRCH  = S1BRCH
- 
+
      C                   IF        Exit <> True Or Cancel <> True                           BUG21001
      C                   EXSR      SRInsertLevel
      C                   IF        Cancel = True  AND                                       BUG21001
@@ -2343,13 +2346,13 @@
      C                   EXSR      SRReset                                                  BUG21001
      C                   ENDIF                                                              BUG21001
      C                   ENDIF                                                              BUG21001
- 
+
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *IN89 = WSavModeInd
      C                   IF        Cancel = True
      C                   EVAL      Cancel = False
@@ -2363,7 +2366,7 @@
      C                   CALL      'ZA0250'
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2381,11 +2384,11 @@
       ** Display Screen Details for Insert.
       *
      C                   Dow       Exit = False And Cancel = False
- 
+
      C                   MOVE      'N'           SaveKey           1                        BUG21001
      C                   WRITE     SDM01005F0
      C                   WRITE     SDM01005C1
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   EXFMT     SDM01005D2
       *                                                                                     BUG19136
@@ -2412,7 +2415,7 @@
      C                   EVAL      TLRECI = 'D'
      C                   EVAL      TLCHTP = 'I'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Initialize screen fields if F5 was pressed.
@@ -2423,7 +2426,7 @@
      C                   EVAL      Refresh = False
      C                   ITER
      C                   ENDIF
- 
+
      C                   IF        WIdx = 0 And KeyPressed = Cmd_Enter
      C                   MOVE      'Y'           SaveKey                                    BUG21001
      C                   Reset                   WSaveRecord                                BUG21226
@@ -2456,7 +2459,7 @@
       ** WRITE to Time Zone Code File only if transaction was accepted.
       *
      C                   IF        WSaveRecord = 'Y'
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   MOVE      SDTIZODS3     SDTIZODS
      C                   WRITE     SDTIZOD1
@@ -2466,7 +2469,7 @@
      C**********         IF        WCurrentLevel = 'B'                                      BUG21226
      C**********         EXSR      SRCurrBrchUPD                                            BUG21226
      C**********         ENDIF                                                              BUG21226
- 
+
      C                   ENDIF
       *
       ** Cascade changes based on Time zone level code
@@ -2496,24 +2499,24 @@
      C                   EVAL      Cancel = False                                           BUG21226
      C                   ITER                                                               BUG21226
      C                   ENDIF                                                              BUG21226
- 
+
      C                   ENDIF
       *
       ** Build the Subfile Along With the New Records Added
       *
      C                   EVAL      Cancel = True
- 
+
      C                   ENDIF
      C                   ENDIF                                                              BUG21001
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *IN65 = False                                            BUG19780
      C                   IF        Exit = True
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2527,18 +2530,18 @@
       *****************************************************************
       *
      C     SRAppLevelChg BEGSR
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WCurrentLevel = 'S' OR
      C                             WCurrentLevel = 'Z'
- 
+
      C                   EVAL      ConfirmUpdate = False
      C                   Dow       Exit = False And Cancel = False
- 
+
      C                   WRITE     SDM01005F2
      C                   Exfmt     SDM01005D5
- 
+
      C                   IF        (ConfirmUpdate = True  AND
      C                              WCurrentLevel = 'Z')  OR
      C                             (WCurrentLevel = 'S'   AND
@@ -2555,29 +2558,29 @@
      C                   ENDIF
      C                   EVAL      Cancel = True
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        ConfirmUpdate = False
      C                             AND KeyPressed <> Cmd_Enter
      C                   EVAL      WSaveRecord = 'N'
      C                   ENDIF
- 
+
      C                   IF        Exit = True
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
- 
+
      C                   WHEN      WCurrentLevel = 'B'
      C                   EXSR      SRBrchLvlUpd
- 
+
      C                   ENDSL
- 
+
      C                   IF        Exit = True
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2619,9 +2622,9 @@
      C**********         READ      SDBRCHL0                                                 MD035941
      C                   READ      SDBRCHLZ                                                 MD035941
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2635,15 +2638,15 @@
       *****************************************************************
       *
      C     SRBrchLvlUpd  BegSR
- 
+
       *
       ** Get Current DST Offset
       *
      C**********         EXSR      SRChkDSTOffSet                                           BUG19624
      C                   EVAL      wChgtype = WCurrentLevel
- 
+
      C                   Dow       Exit = False And Cancel = False
- 
+
      C                   WRITE     SDM01005F2
      C                   Exfmt     SDM01005D3
       *
@@ -2664,17 +2667,17 @@
      C                   ELSE                                                               BUG21226
      C                   MOVE      'N'           cUpdBrchFlag                               BUG21226
      C                   ENDIF                                                              BUG19950
- 
+
      C******LOVAL        SETLL     SDBRCHL0                                        BUG19361 MD035941
      C     *LOVAL        SETLL     SDBRCHLZ                                                 MD035941
      C                   Select
- 
+
      C                   When      AllBrchUPDATE = True
      C**********         READ      SDBRCHL0                                                 MD035941
      C**********         Dow       Not %Eof(SDBRCHL0)                                       MD035941
      C                   READ      SDBRCHLZ                                                 MD035941
      C                   Dow       Not %Eof(SDBRCHLZ)                                       MD035941
- 
+
      C                   IF        A8BRCD <> SaveBranch
      C                   EVAL      D@BRCA = A8BRCD
      C                   EXSR      SRChkLevelRec
@@ -2706,7 +2709,7 @@
      C                   READ      SDBRCHLZ                                                 MD035941
      C                   ENDDO
      C                   EVAL      Cancel = True
- 
+
      C                   When      LocBrchUPDATE = True
      C**********         READ      SDBRCHL0                                                 MD035941
      C**********         DOW       Not %Eof(SDBRCHL0)                                       MD035941
@@ -2738,22 +2741,22 @@
      C                   READ      SDBRCHLZ                                                 MD035941
      C                   ENDDO
      C                   EVAL      Cancel = True
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   IF        LocBrchUPDATE = False And
      C                             AllBrchUPDATE = False
      C                   EVAL      WSaveRecord = 'N'
      C                   ENDIF
- 
+
      C                   IF        Exit = True
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2767,7 +2770,7 @@
       *****************************************************************
       *
      C     SRCurrBrchUPD BEGSR
- 
+
      C*****S2BRCH        CHAIN     SDBRCHL0                                                 MD035941
      C**********         IF        %Found(SDBRCHL0)                                         MD035941
      C     S2BRCH        CHAIN     SDBRCHLZ                                                 MD035941
@@ -2781,9 +2784,9 @@
      C                   UPDATE    @A8REB1
      C                   EXSR      SRUpdBrchLog                                             BUG19910
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2797,12 +2800,12 @@
       *****************************************************************
       *
      C     SRTimeZoneUPD BEGSR
- 
+
      C     *Loval        SETLL     SDTZLVL5
      C     NTZTZCD       SETLL     SDTZLVL5
      C     NTZTZCD       READE(N)  SDTZLVL5
      C                   DOW       NOT %EOF(SDTZLVL5)
- 
+
      C                   IF        TLYEAR = *BLANKS OR
      C                             TLYEAR = cCurrYear
      C                   IF        TLTZLC = 'S'
@@ -2812,7 +2815,7 @@
      C*****TLBRCA        CHAIN     SDBRCHL0                                                 MD035941
      C     *LOVAL        SETLL     SDBRCHLZ                                                 MD035941
      C     TLBRCA        CHAIN     SDBRCHLZ                                                 MD035941
- 
+
      C**********         IF        %FOUND(SDBRCHL0)                                         MD035941
      C                   IF        %FOUND(SDBRCHLZ)                                         MD035941
      C                   EVAL      A8TMOF = NewEffOffset
@@ -2822,10 +2825,10 @@
      C                   UPDATE    @A8REB1
      C                   EXSR      SRUpdBrchLog                                             BUG19910
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     NTZTZCD       READE(N)  SDTZLVL5
      C                   ENDDO
      C                   ENDSR
@@ -2842,7 +2845,7 @@
       *****************************************************************
       *
      C     SRBrchRecUpd  BEGSR
- 
+
      C                   EVAL      wChgType = WCurrentLevel
      C******LOVAL        SETLL     SDBRCHL0                                                 MD035941
      C**********         READ(N)   SDBRCHL0                                                 MD035941
@@ -2851,7 +2854,7 @@
      C                   IF        AllBrchUpdate = True
      C**********         DOW       Not %Eof(SDBRCHL0)                                       MD035941
      C                   DOW       Not %Eof(SDBRCHLZ)                                       MD035941
- 
+
      C                   IF        A8BRCD <> SaveBranch
      C                   EVAL      D@TZLCD  = WCurrentLevel
      C                   EVAL      D@BRCA   = A8BRCD
@@ -2885,12 +2888,12 @@
      C                   READ(N)   SDBRCHLZ                                                 MD035941
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   IF        LocBrchUpdate = True
- 
+
      C**********         DOW       Not %Eof(SDBRCHL0)                                       MD035941
      C                   DOW       Not %Eof(SDBRCHLZ)                                       MD035941
- 
+
      C                   IF        A8BRCD <> SaveBranch AND
      C                             WLocCode = A8LCCD
      C                   EVAL      D@TZLCD  = WCurrentLevel
@@ -2915,11 +2918,11 @@
      C**********         READ(N)   SDBRCHL0                                                 MD035941
      C                   READ(N)   SDBRCHLZ                                                 MD035941
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2952,7 +2955,7 @@
      C                   EVAL      HistUpdFlag = False
      C                   ENDSL
      C                   EVAL      wChgType = hTHTYLC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2967,12 +2970,12 @@
       *****************************************************************
       *
      C     SRChkLevelRec BEGSR
- 
+
      C                   IF        S2TZYR <> *BLANKS
      C                   MOVE      *ZEROS        nS2Year           4 0
      C                   EVAL      nS2Year = %DEC(S2TZYR:4:0)
      C                   ENDIF
- 
+
      C                   IF        S2TZYR = *BLANKS OR
      C                             nCurrYear = nS2Year
      C                   MOVE      'Y'           cUPDFlag          1
@@ -3027,7 +3030,7 @@
      C**********         EVAL      *In52 = True                                             BUG19136
      C**********         EXSR      SRErrDta                                                 BUG19136
      C**********         ENDIF                                                              BUG19136
- 
+
      C                   IF        NOT(DDGMT >= 0  AND DDGMT <= 2359)
      C                   EVAL      PMsgId = 'SWF0026'
      C                   EVAL      WIdx = WIdx + 1
@@ -3080,7 +3083,7 @@
      C                   EVAL      *In54 = True
      C                   EXSR      SRErrDta
      C                   ENDIF
- 
+
      C                   IF        DDDSTF = 'N'
      C                             OR DDDSTF = ' '                                          BUG19780
      C                   EVAL      *In65 = False
@@ -3141,7 +3144,7 @@
      C                   Z-Add     DSDSDT        MidasDayNo
      C                   EXSR      SRCvtDt2
      C                   Move      PDateOut      DDDSTS
- 
+
      C                   Z-Add     DSDSED        MidasDayNo
      C                   EXSR      SRCvtDt2
      C                   Move      PDateOut      DDDSTE
@@ -3153,13 +3156,13 @@
      C                   ELSE
      C                   EVAL      *IN84 = False                                DST Off
      C                   ENDIF
- 
+
      C                   Else
      C                   EVAL      DDDSTO = *Blanks
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   Else
      C                   EVAL      DDDSTC  = *Blanks
      C                   EVAL      DDDSTD  = *Blanks
@@ -3169,7 +3172,7 @@
      C                   EVAL      DDDSDH = *Zeros                                          BUG19849
      C                   EVAL      DDDENH = *Zeros                                          BUG19849
      C                   EVAL      *IN85  = *Off                                            BUG19849
- 
+
      C                   ENDIF
      C                   IF        Widx = 0                                                 BUG19523
      C                   EXSR      SRGetLocalTime                                           BUG19523
@@ -3188,7 +3191,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopTabVal   BEGSR
- 
+
      C                   IF        WCurrentLevel <> 'T'
      C                   EVAL      TLTZLC = WCurrentLevel
      C                   EVAL      TLZONE = S1ZONE
@@ -3225,10 +3228,10 @@
      C                   PARM                    TimeStamp                                  BUG20731
      C                   EVAL      TZTMST = TimeStamp                                       BUG20731
      C                   ENDIF
- 
+
      C**********         EXSR      SRChkDSTOffSet                                           BUG19624
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3242,7 +3245,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopScrVal   BEGSR
- 
+
      C     KTZoneYear    CHAIN(N)  SDTIZOL0
      C                   IF        NOT %FOUND(SDTIZOL0)
      C     S1TZCOD       CHAIN(N)  SDTIZOL0
@@ -3283,11 +3286,11 @@
      C                   EVAL      DDDSTS  = *Blanks
      C                   EVAL      DDDSTE  = *Blanks
      C                   ENDIF
- 
+
      C**********         EXSR      SRChkDSTOffSet                                           BUG19624
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3300,7 +3303,7 @@
       *                                                               *
       *****************************************************************
      C     SRInitScrVal  BEGSR
- 
+
      C                   EVAL      DDTIBM  =  *BLANKS
      C                   EVAL      DDDESC  =  *BLANKS
      C                   EVAL      DDDDES  =  *BLANKS
@@ -3312,7 +3315,7 @@
      C                   EVAL      DDDSTO  = *BLANKS
      C                   EVAL      DDDSTS  = *BLANKS
      C                   EVAL      DDDSTE  = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3326,7 +3329,7 @@
       *                                                               *
       *****************************************************************
      C     SRPopHistDS   BEGSR
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   CLEAR                   SDHISTDS
      C                   EVAL      hTHRECI  =  'D'
@@ -3341,21 +3344,21 @@
      C                   MOVE      TZGMT         hTHGMTO
      C                   EVAL      hTHGMTS  =  TZGMTS
      C                   EVAL      hTHEFFS  =  TZGMTS
- 
+
      C                   IF        hTHDSTF <> 'Y' AND TZDSTC <> *BLANKS
      C                   EVAL      hTHDSTC  =  *BLANKS
      C                   ENDIF
- 
+
      C                   IF        DDDSTO <> *Blanks
- 
+
      C                   EVAL      hTHDSTS  =  DSDSDT
      C                   EVAL      hTHDSTE  =  DSDSED
      C                   EVAL      hTHDSTO  =  DSOFFS
      C                   EVAL      hTHSTIM  =  DSDSDH
      C                   EVAL      hTHETIM  =  DSDENH
- 
+
      C**********         EXSR      SRChkDSTOffSet                                           BUG19624
- 
+
      C                   ELSE
      C                   EVAL      hTHDSTS  =  *ZEROS
      C                   EVAL      hTHDSTE  =  *ZEROS
@@ -3364,12 +3367,12 @@
      C                   EVAL      hTHETIM  =  *ZEROS
      C                   ENDIF
      C                   EVAL      hTHEFFO =   NewEffOffset
- 
+
      C                   EVAL      hTHEFFD  =  BJRDNB
      C                   EVAL      hTHTYLC  =  wChgType
- 
+
      C                   ELSE
- 
+
      C                   IF        TLYEAR = *BLANKS
      C                   EVAL      TVYEAR =  %Char(nCurrYear)
      C                   ELSE
@@ -3387,11 +3390,11 @@
      C                   PARM                    TimeStamp
       *
      C                   EVAL      TVTMST = TimeStamp
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3410,19 +3413,19 @@
      C                   IF        SDTIZODS <> SDTIZODS2 And
      C                             WcurrentLevel = 'T'
      C                   CLEAR                   SDHIST
- 
+
      C                   EXSR      SRChkChange
- 
+
      C                   IF        HistUpdFlag = True
      C                   EXSR      SRValHistRec
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3436,7 +3439,7 @@
       *                                                               *
       *****************************************************************
      C     SRValHistRec  BEGSR
- 
+
      C                   IF        WCurrentLevel = 'T'
      C                   EVAL      D@TZYR = hTHYEAR
      C     KTZHist_T     CHAIN     SDTIZHL4
@@ -3451,11 +3454,11 @@
      C                   EVAL      THTMST = TimeStamp
      C                   EVAL      THRECI = 'D'
      C                   EVAL      THTYLC = wChgType
- 
+
      C                   WRITE     RSDTIZ_L4
- 
+
      C                   ELSE
- 
+
      C                   EVAL      D@TZYR = hTHYEAR
      C     KTLHist_L     CHAIN     SDTZLHL3
      C                   IF        %FOUND(SDTZLHL3)
@@ -3468,12 +3471,12 @@
       *
      C                   EVAL      TVTMST = TimeStamp
      C                   EVAL      TVRECI = 'D'
- 
+
      C                   WRITE     RSDTLH_H3
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3494,14 +3497,14 @@
      C                   IF        DSOFFS > 0
      C                   IF        BJRDNB >= DSDSDT AND
      C                             BJRDNB <= DSDSED
- 
+
      C                   EVAL      WOfSt = DSOFFS
      C                   EXSR      SRCalcOff
      C                   MOVEL     WTime1        NewEffOffset      4 0
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3551,13 +3554,13 @@
       *                                                               *
       *****************************************************************
      C     SRProcAction  Begsr
- 
+
      C   89              SetOn                                        8931
- 
+
      C                   SELECT
      C                   WHEN      POpt = Amend
      C                   EXSR      SRAmend
- 
+
      C                   WHEN      POpt = Enquire
      C                   EVAL      *IN79 = True
      C                   SETOFF                                       8931                  BUG19910
@@ -3571,17 +3574,17 @@
      C                   EVAL      EndPGMFlag = True
      C                   ENDIF
      C                   EVAL      Cancel = True
- 
+
      C                   WHEN      POpt = Delete
      C                   EXSR      SRDelete
- 
+
      C                   WHEN      POpt = Copy                                              BUG19523
      C                   IF        WCurrentLevel = 'T'                                      BUG19523
      C                   EXSR      SRCopyRecord                                             BUG19523
      C                   ENDIF                                                              BUG19523
                                                                                             BUG19523
      C                   ENDSL
- 
+
      C                   EVAL      *In31 = False
      C**********         EVAL      WSavModeInd = *In89                                      BUG19910
      C                   EVAL      *In89 = WSavModeInd                                      BUG19910
@@ -3595,9 +3598,9 @@
       ** Clear Program Message Queue
       *
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3619,7 +3622,7 @@
      C                   PARM                    PErrorFlag
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3640,7 +3643,7 @@
      C                   PARM      *BLANKS       PADateOut         7
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3653,14 +3656,14 @@
       *                                                               *
       *****************************************************************
      C     SRGetLocalTimeBegsr
- 
+
      C                   IF        PDate1 = *Blanks
      C                   CALL      'ZDATE2'
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN
      C                   PARM      *ZEROS        PDateOut          6 0
      C                   PARM      *BLANKS       PADateOut         7
- 
+
      C                   Move      PDateOut      PDate1
      C                   ENDIF
      C**********         IF        AddRecord = True                                BUG20043 BUG21017
@@ -3732,7 +3735,7 @@
      C                   PARM                    POffset2
      C                   PARM                    PBrc
      C                   PARM      *Blanks       PMicCode
- 
+
      C                   IF        WCurrentLevel = 'S'                                      BUG19143
      C                   EVAL      WSwTime = %TIME()                                        BUG19143
      C                   EVAL      WCwTime = %CHAR(WSwTime:*ISO0)                           BUG19143
@@ -3816,9 +3819,9 @@
      C                   EVAL      S2OFFSET = GMTSign + %Subst(Poffset1:1:2)                BUG19426
      C                              + ':' + %Subst(Poffset1:3:2)                            BUG19426
      C                   ENDIF                                                              BUG19780
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3832,13 +3835,13 @@
       *****************************************************************
       *
      C     SRValBranch   BEGSR
- 
+
      C                   Call      'AOBRCHR1'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      S1BRCH        PBrCd
      C                   PARM                    DSSDY
- 
+
      C                   IF        (PRtcd  <> *Blanks)
      C                   EVAL      PMsgId = 'ASM0006'
      C                   EVAL      *IN56 = True
@@ -4016,7 +4019,7 @@
       *                                                               *
       *****************************************************************
      C     SRRecFilter   Begsr
- 
+
       *
       ** Time Zone Code filter is not Blank
       *
@@ -4044,7 +4047,7 @@
      C                   ELSE
      C                   EVAL      WSelectYN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Year Filter Is Not Blanks
@@ -4076,7 +4079,7 @@
      C                   ELSE
      C                   EVAL      WSelectYN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Short Desc Filter Is Not Blanks
@@ -4105,7 +4108,7 @@
      C                   ELSE
      C                   EVAL      WSelectYN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Delta Time Filter Is Not Blanks
@@ -4139,7 +4142,7 @@
      C                   ELSE
      C                   EVAL      WSelectYN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                     BUG19523
       ** GMT Sign Filter Is Not Blanks                                                      BUG19523
@@ -4203,11 +4206,11 @@
      C                   ELSE
      C                   EVAL      WSelectYN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

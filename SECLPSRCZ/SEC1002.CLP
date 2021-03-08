@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056722           Date 24Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 095907             Date 14Jun04              */
+/*                      095907             Date 14Jun04              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -33,6 +34,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD056722 - Trade Files are not journalled after COB.        */
+/*                  Fix is to ensure that ENDJRNPF only when CCB009  */
+/*                  is switched off.                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       095907 - CHANGE SE DROP PROCEDURE IF S01513 IS ON :        */
 /*                ----------------------------------------------    */
@@ -71,21 +75,21 @@
 /********************************************************************/
 /************PGM                                                     * *S01189*/
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
 /**/                                                                  /*S01117*/
 /* S01179                                                              *S01179*/
 /*********   DCLDTAARA  DTAARA(LDA)                          ********  *S01179*/
- 
+
 /* S01179                                                              *S01179*/
 /*********   DCLDTAARA  DTAARA(SESTAT)                       ********  *S01179*/
 /* S01179                                                              *S01179*/
 /*********   DCLDTAARA  DTAARA(SDSTAT)                       ********  *S01179*/
 /*/COPY WNCPYSRC,SEC1002009                                          */
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)             /*S01179*/
- 
+
 /************DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               * *S01117*/
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                /*S01117*/
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*S01189*/
@@ -131,16 +135,16 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SEC1002MPS                                          */
                                                                       /*S01408*/
- 
+
 /* SETUP AND SEND PGM MESSAGE                                    */
- 
+
              CHGVAR     VAR(&MEM) VALUE('SEC1002  - Drop off +
                         Historic Trades')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
 /*/COPY WNCPYSRC,SEC1002008                                          */
- 
+
 /** Check IF SWITCHABLE FEATURE S01513 IS SWITCHED ON                 /*S01513*/
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*S01513*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*S01513*/
              CHGVAR     VAR(&SAR) VALUE('S01513')                     /*S01513*/
@@ -148,7 +152,7 @@
              IF         COND(&RTCD *EQ '      ') THEN(CHGVAR +
                           VAR(&S01513) VALUE('Y'))                    /*S01513*/
 /** Check IF SWITCHABLE FEATURE S01401 IS SWITCHED ON                 /*095907*/
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*095907*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*095907*/
              CHGVAR     VAR(&SAR) VALUE('S01401')                     /*095907*/
@@ -157,7 +161,7 @@
                           VAR(&S01401) VALUE('Y'))                    /*095907*/
 /*/COPY WNCPYSRC,SEC1002005                                          */
 /* CLEAR SWITCHES                                                */
- 
+
              CHGJOB SWS(00000000)
                                                                       /*086486*/
              IF COND(&S01513 *EQ 'Y') THEN(DO)                        /*086486*/
@@ -171,28 +175,30 @@
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SEC1002010                                          */
              ENDDO                                                    /*086486*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)                            /*MD056722*/
              ENDJRNPF   FILE(TRADSD) JRN(ICJRN)                       /*095907*/
              MONMSG     MSGID(CPF0000)                                /*095907*/
              IF COND(&S01401 *EQ 'Y') THEN(DO)
              ENDJRNPF   FILE(TRADSDX1 TRADSDX2) JRN(ICJRN)            /*095907*/
              MONMSG     MSGID(CPF0000)                                /*095907*/
                    ENDDO                                              /*095907*/
- 
+             ENDDO                                                                      /*MD056722*/
+
 /*  CHECK FOR COMPONENT RESTART                                     */
- 
+
 /************RTVDTAARA  DTAARA(SESTAT (1 3)) RTNVAR(&BUSY)            /*S01189*/
              IF COND(&S01513 *NE 'Y') THEN(DO)                        /*095907*/
 /*/COPY WNCPYSRC,SEC1002011                                          */
              CHGVAR     VAR(&BUSY) VALUE(' ')                         /*S01189*/
              CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)                /*S01189*/
- 
+
 /*  IF RESTART, DISABLE ACCESS PATHS                                */
- 
+
 /************IF         COND(&BUSY = 'NEW') THEN(DO)                  /*S01189*/
              IF         COND(&BUSY = 'Y') THEN(DO)                    /*S01189*/
- 
+
 /*  OVERRIDE TO SEQONLY(*YES 100)                                   */
- 
+
                 OVRDBF     FILE(XHSTTRD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XHSTTRA) SEQONLY(*YES 100)
                 OVRDBF     FILE(XSETLED) SEQONLY(*YES 100)
@@ -202,9 +208,9 @@
                 OVRDBF     FILE(XHSTAUD) SEQONLY(*YES 100)            /*S01269*/
                 OVRDBF     FILE(XTRADSD) SEQONLY(*YES 100)            /*095907*/
 /*/COPY WNCPYSRC,SEC1002012                                          */
- 
+
 /*  AND COPY FILES                                                  */
- 
+
                 CPYF       FROMFILE(XHSTTRD) TOFILE(HSTTRD) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -248,27 +254,27 @@
                         MBROPT(*REPLACE) FMTOPT(*NONE)                /*095907*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(TRADSD))                               /*095907*/
- 
- 
+
+
 /*  CHANGE DATA AREA TO 'OLD'                                      */
- 
+
 /***************CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('OLD')          /*S01189*/
                 CHGVAR     VAR(&BUSY) VALUE('N')                      /*S01189*/
                 CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)             /*S01189*/
- 
+
              ENDDO
              ENDDO                                                    /*095907*/
- 
+
 /*/COPY WNCPYSRC,SEC1002014                                          */
 /*  ELSE BACKUP FILES                                               */
- 
+
 /*/COPY WNCPYSRC,SEC1002015                                          */
 /**********  ELSE       CMD(DO)                                       /*095907*/
              IF         COND(&BUSY *NE 'Y') THEN(DO)                  /*095907*/
 /*/COPY WNCPYSRC,SEC1002016                                          */
- 
+
 /*  OVERRIDE TO SEQONLY(*YES 100)                                   */
- 
+
                 OVRDBF     FILE(XHSTTRD) SEQONLY(*YES 100)
                 OVRDBF     FILE(XHSTTRA) SEQONLY(*YES 100)
                 OVRDBF     FILE(XSETLED) SEQONLY(*YES 100)
@@ -308,9 +314,9 @@
                       MONMSG MSGID(CPF0000)                           /*095907*/
                 ENDDO                                                 /*095907*/
 /*/COPY WNCPYSRC,SEC1002018                                          */
- 
+
 /*  AND COPY FILES                                                 */
- 
+
 /*              CPYF       FROMFILE(HSTTRD) TOFILE(XHSTTRD) +      */ /*S01129*/
 /*                          MBROPT(*REPLACE) FMTOPT(*NONE)         */ /*S01129*/
 /*              MONMSG     (CPF2817) CMPDTA(CPF2869) +             */ /*S01129*/
@@ -360,7 +366,7 @@
                          MBROPT(*REPLACE) FMTOPT(*NONE) CRTFILE(*YES) /*095907*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM XTRADSD)                      /*095907*/
- 
+
                 IF         COND(&S01401 = 'Y') THEN(DO)               /*095907*/
                    CPYF       FROMFILE(TRADSDX1) TOFILE(&TOLIB/+
                               XTRADSDX1) MBROPT(*REPLACE) +
@@ -373,11 +379,11 @@
                    MONMSG     (CPF2817) CMPDTA(CPF2869) +
                               EXEC(CLRPFM XTRADSDX2)                  /*095907*/
                 ENDDO                                                 /*095907*/
- 
+
              ENDDO
- 
+
 /*  CHANGE DATA AREA TO 'NEW'                                       */
- 
+
              IF COND(&S01513 *NE 'Y') THEN(DO)                        /*095907*/
 /*/COPY WNCPYSRC,SEC1002020                                          */
 /************CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('NEW')             /*S01189*/
@@ -385,17 +391,17 @@
              CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)                /*S01189*/
              ENDDO                                                    /*095907*/
 /*/COPY WNCPYSRC,SEC1002021                                          */
- 
+
 /* CALL PROGRAM                                                  */
- 
+
              CALL       PGM(SE2520)
 /*/COPY WNCPYSRC,SEC1002007                                          */
              IF COND(&S01513 *EQ 'Y') THEN(DO)                        /*095907*/
                  CALL PGM(SE2515)                                     /*095907*/
              ENDDO                                                    /*095907*/
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA                     */
- 
+
  ERROR:      IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /***************RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)         * *S01117*/
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)          /*S01117*/
@@ -513,9 +519,9 @@
                 ENDDO                                                 /*S01513*/
                 GOTO ENDPGM
              ENDDO
- 
+
 /* FOR FILE CONTROLS OUT OF BALANCE ERROR                        */
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 CHGVAR  VAR(&MEM) VALUE('SEC1002  - File Controls Out +
                         Of Balance')
@@ -626,11 +632,11 @@
                 ENDDO                                                 /*S01513*/
                 GOTO ENDPGM
              ENDDO
- 
+
 /*  IF U7 AND U8 OFF, CHANGE SESTAT TO "OLD"                       */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /**************CHGDTAARA  DTAARA(SESTAT (1 3)) VALUE('OLD')          * *S01189*/
              IF COND(&S01513 *NE 'Y') THEN(DO)                        /*095907*/
 /*/COPY WNCPYSRC,SEC1002033                                          */
@@ -638,7 +644,7 @@
                CALL       CB0150 PARM(&CNAM &CSEQ &BUSY)              /*S01189*/
                ENDDO                                                  /*095907*/
 /*/COPY WNCPYSRC,SEC1002034                                          */
- 
+
 /*        CLEAR FILES                                              */
 /*                                                                 */ /*S01129*/
 /**********    CLRPFM     FILE(XHSTTRD)                                *095907*/
@@ -723,7 +729,7 @@
 /**********     CPYF       FROMFILE(XHSTAUD) TOFILE(HSTAUD) +          *095907*/
 /**********                 MBROPT(*REPLACE) FMTOPT(*NONE)    *S01269* *095907*/
 /**********     MONMSG     (CPF2817) CMPDTA(CPF2869)          *S01269* *095907*/
- 
+
 /*******  CLEAR WORK FILES                                         */ /*S01129*/
 /*                                                                 */ /*S01129*/
 /*             CLRPFM     FILE(XHSTTRD)                            */ /*S01129*/
@@ -778,9 +784,9 @@
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SEC1002037                                          */
                 ENDDO                                                 /*086486*/
- 
+
              ENDDO
- 
+
 /*ENDPGM:******ENDPGM                                                * *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

@@ -29,8 +29,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD048231           Date 17Jan18               *
+      *  Last Amend No. MD041126           Date 05Oct20               *      
+      *  Prev Amend No. MD051624           Date 23Sep20               *
+      *                 AR989496           Date 13Jun12               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD048231           Date 17Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR214111           Date 26Jun15               *
       *                 250527             Date 19Aug14               *
@@ -80,6 +83,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD056616.                             *      
+      *  MD051624 - MT940's msgs found in the Outstanding Message     *
+      *             Details Enquiry Screen are dated incorrectly.     *
+      *           - Introduced system value 'MachineDateforTRAN' to   *
+      *             retrieved the machine time.                       *
+      *  AR989496 - Remove redundant code related to dtaara/MEDTA     *
+      *           - Causes DBase Error in MS_MED2MID job              *
+      *           - (Child:AR989497)                                  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD048231 - Removed/Changed fix 251373 in order to process    *
       *             PAPER network messages using MQ queue             *
@@ -195,6 +207,7 @@
       *                                                                                       245310
       * Constant to hold input parameter for AOSVALR0.                                        245310
      D MQManager       C                   Const('MQQueueManagerMMM')                         245310
+     D MachineDate     C                   Const('MachineDateforTRAN')                      MD051624
      D cpy@            S             80    dim(1) ctdata perrcd(1)
       ** Array containing Copyright statement
       *
@@ -362,23 +375,28 @@
 
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
 
       ** Get message options
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
 
       ** Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
 
 
       ** The include below brings in the return code structure that
@@ -403,6 +421,14 @@
      D BJDNWD5S                       5S 0                                      CSW025
      D BJDNWD5A                       5A   OVERLAY(BJDNWD5S)                    CSW025
                                                                                 CSW025
+     D DSTimeStamp     DS                                                                   MD051624
+     D  DSYYYY                 1      4                                                     MD051624
+     D  DSMM                   6      7                                                     MD051624
+     D  DSDD                   9     10                                                     MD051624
+     D  DSHH                  12     13                                                     MD051624
+     D  DSMN                  15     16                                                     MD051624
+     D  DSSC                  18     19                                                     MD051624
+     D  DSMS                  21     26                                                     MD051624
       ** Declared variables for enhancement CTI004                                            CTI004
                                                                                               CTI004
      D PMSGBUF         S           9999                                                       CTI004
@@ -435,6 +461,27 @@
                                                                                               CTI004
       ** Declared variable for system value setting                                         MD048231
      D MMMPaper        S              1A                                                    MD048231
+      *                                                                                     MD051624
+     D WMACFLAG        S              1                                                     MD051624
+     D WLATM           S              6                                                     MD051624
+     D PTimeStamp      S               Z                                                    MD051624
+     D PDateIn         S              8                                                     MD051624
+     D PMDNO           S              5P 0                                                  MD051624
+     D PDATE6          S              6  0                                                  MD051624
+     D PDATE7          S              7                                                     MD051624
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D P@MsgLen        S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D QMNAME          S             48A                                                    MD041126
+                                                                                            MD041126
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -678,17 +725,21 @@
      C/COPY WNCPYSRC,MS6110MC03
 
       ** Send message
-     C                   Z-ADD     MQPUT         CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    p@msglen          9 0
-     C                   PARM                    p@msgbuf
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQPUT         CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQPMO                                      MD041126
+     C**********         PARM                    p@msglen          9 0                      MD041126
+     C**********         PARM                    p@msgbuf                                   MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
+     C                                    CCODE : REASON )                                  MD041126
       *
       ** Trace
      C                   movel     '*PUT   '     PR@FN
@@ -745,8 +796,38 @@
      C                   movel     '3'           MGSG
      C                   movel     'TRAN'        MGST
      C                   endif
+      *                                                                                     MD051624
+      ** If 'MachineDateforTRAN' system value is ON, get machine time                       MD051624
+      *                                                                                     MD051624
+     C                   IF        WMACFLAG = 'Y'                                           MD051624
+     C                   CALLB     'ZAGENTMSTM'                                             MD051624
+     C                   PARM                    PTimeStamp                                 MD051624
+     C                   MOVE      PTimeStamp    DSTimeStamp                                MD051624
+      *                                                                                     MD051624
+      ** Convert from YYYYY to 99999                                                        MD051624
+      *                                                                                     MD051624
+     C                   EVAL      PDATEIN = DSYYYY + DSMM + DSDD                           MD051624
+     C                   CALLB     'ZDATE10'                                                MD051624
+     C                   PARM                    PDateIN                                    MD051624
+     C                   PARM                    PMDNO                                      MD051624
+      *                                                                                     MD051624
+      ** Convert from 99999 to DDMMMYY                                                      MD051624
+      *                                                                                     MD051624
+     C                   CALL      'ZDATE2'                                                 MD051624
+     C                   PARM                    PMDNO                                      MD051624
+     C                   PARM                    BJDFIN                                     MD051624
+     C                   PARM      *ZERO         PDATE6                                     MD051624
+     C                   PARM      *BLANKS       PDATE7                                     MD051624
+     C                   MOVEL     PDATE7        LADT                                       MD051624
+      *                                                                                     MD051624
+      ** Move DS time to numeric                                                            MD051624
+      *                                                                                     MD051624
+     C                   EVAL      WLATM = DSHH + DSMN + DSSC                               MD051624
+     C                   MOVE      WLATM         LATM                                       MD051624
+     C                   ELSE                                                               MD051624
      C                   movel     BJMRDT        LADT
      C                   TIME                    LATM
+     C                   ENDIF                                                              MD051624
      C                   update    mgorefd0
      C                   commit
       *
@@ -820,17 +901,21 @@
      C                   EVAL      MDFMT = FMSTR                                              CSW038
                                                                                               CSW038
       ** Send message                                                                         CSW038
-     C                   Z-ADD     MQPUT         CID                                          CSW038
-     C                   CALL      'QMQM'                                                     CSW038
-     C                   PARM                    CID               9 0                        CSW038
-     C                   PARM                    HCONN             9 0                        CSW038
-     C                   PARM                    HIN               9 0                        CSW038
-     C                   PARM                    MQMD                                         CSW038
-     C                   PARM                    MQPMO                                        CSW038
-     C                   PARM                    p@msglen          9 0                        CSW038
-     C                   PARM                    p@msgbuf                                     CSW038
-     C                   PARM                    CCODE             9 0                        CSW038
-     C                   PARM                    REASON            9 0                        CSW038
+     C**********         Z-ADD     MQPUT         CID                                 CSW038 MD041126
+     C**********         CALL      'QMQM'                                            CSW038 MD041126
+     C**********         PARM                    CID               9 0               CSW038 MD041126
+     C**********         PARM                    HCONN             9 0               CSW038 MD041126
+     C**********         PARM                    HIN               9 0               CSW038 MD041126
+     C**********         PARM                    MQMD                                CSW038 MD041126
+     C**********         PARM                    MQPMO                               CSW038 MD041126
+     C**********         PARM                    p@msglen          9 0               CSW038 MD041126
+     C**********         PARM                    p@msgbuf                            CSW038 MD041126
+     C**********         PARM                    CCODE             9 0               CSW038 MD041126
+     C**********         PARM                    REASON            9 0               CSW038 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
+     C                                    CCODE : REASON )                                  MD041126
       *                                                                                       CSW038
       ** Trace                                                                                CSW038
      C                   movel     '*PUT   '     PR@FN                                        CSW038
@@ -1135,18 +1220,23 @@
      C                   clear                   q@msgbuf
 
       ** Get message
-     C                   Z-ADD     MQGET         CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C                   PARM      12000         p@msglen          9 0
-     C                   PARM                    q@msgbuf
-     C                   PARM                    MESLEN            9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQGET         CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM      12000         p@msglen          9 0                      MD041126
+     C**********         PARM                    q@msgbuf                                   MD041126
+     C**********         PARM                    MESLEN            9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   Z-ADD     12000         P@MsgLen                                   MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    P@MsgLen : %ADDR(Q@MsgBuf) :                      MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
 
       ** Message starts after the API header block
 
@@ -1435,12 +1525,12 @@
      C                   callb     'MEC1024M'                           9090
      C                   parm      *blanks       p@rtcd            7
       *
-      ** Update received network information
-     C     *dtaara       define                  medta
-     C     *lock         in        medta
-     C                   movel     MOR           DAMOR
-     C                   movel     MIR           DAMIR
-     C                   out       medta
+      ***Update*received*network*information                                                AR989496
+     C******dtaara       define                  medta                                      AR989496
+     C******lock         in        medta                                                    AR989496
+     C**********         movel     MOR           DAMOR                                      AR989496
+     C**********         movel     MIR           DAMIR                                      AR989496
+     C**********         out       medta
       *
      C                   endif
       *
@@ -2380,6 +2470,35 @@
       ** Use default connection handle, and implicit connection
      C                   Z-ADD     HCDEFH        HCONN
 
+      *                                                                                     MD051624
+      ** Get Machine Date for TRAN value                                                    MD051624
+      *                                                                                     MD051624
+     C                   CALLB     'AOSVALR0'                                               MD051624
+     C                   PARM      *BLANKS       PRTCD                                      MD051624
+     C                   PARM      MachineDate   PSysVal01                                  MD051624
+     C                   PARM                    PCurSet01                                  MD051624
+     C                   PARM                    PSysVal02                                  MD051624
+     C                   PARM                    PCurSet02                                  MD051624
+     C                   PARM                    PSysVal03                                  MD051624
+     C                   PARM                    PCurSet03                                  MD051624
+     C                   PARM                    PSysVal04                                  MD051624
+     C                   PARM                    PCurSet04                                  MD051624
+     C                   PARM                    PSysVal05                                  MD051624
+     C                   PARM                    PCurSet05                                  MD051624
+     C                   PARM                    PSysVal06                                  MD051624
+     C                   PARM                    PCurSet06                                  MD051624
+     C                   PARM                    PSysVal07                                  MD051624
+     C                   PARM                    PCurSet07                                  MD051624
+     C                   PARM                    PSysVal08                                  MD051624
+     C                   PARM                    PCurSet08                                  MD051624
+     C                   PARM                    PSysVal09                                  MD051624
+     C                   PARM                    PCurSet09                                  MD051624
+     C                   PARM                    PSysVal10                                  MD051624
+     C                   PARM                    PCurSet10                                  MD051624
+      *                                                                                     MD051624
+     C     PRTCD         IFEQ      *BLANKS                                                  MD051624
+     C                   MOVEL     PCurSet01     WMACFLAG                                   MD051624
+     C                   ENDIF                                                              MD051624
       ** Open MQ series queue
       **  only if the Data Queue export feature is not present.                 CSW025
      C                   if        CSW025 = 'N'                                 CSW025
@@ -2514,12 +2633,19 @@
                                                                                               245310
       ** Connect to queue manager                                                             245310
                                                                                               245310
-     C                   CALL      'QMQM'                                                     245310
-     C                   PARM      MQCONN        CID               9 0                        245310
-     C                   PARM      QMGR          QMNAME           48                          245310
-     C                   PARM      *ZERO         HANDLE            9 0                        245310
-     C                   PARM      *ZERO         OCODE             9 0                        245310
-     C                   PARM      *ZERO         REASON            9 0                        245310
+     C**********         CALL      'QMQM'                                            245310 MD041126
+     C**********         PARM      MQCONN        CID               9 0               245310 MD041126
+     C**********         PARM      QMGR          QMNAME           48                 245310 MD041126
+     C**********         PARM      *ZERO         HANDLE            9 0               245310 MD041126
+     C**********         PARM      *ZERO         OCODE             9 0               245310 MD041126
+     C**********         PARM      *ZERO         REASON            9 0               245310 MD041126
+                                                                                            MD041126
+     C                   EVAL      QMNAME = QMGR                                            MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
+     C                                     OCODE : REASON )                                 MD041126
       *                                                                                       245310
       ** Trace                                                                                245310
      C                   movel     '*CONN  '     PR@FN                                        245310
@@ -2573,13 +2699,16 @@
                                                                                 CSW038
       ** Connect to the queue manager; we have to do this explicitly            CSW038
       ** now, in order to support non-default queue managers.                   CSW038
-     C                   Z-ADD     MQCONN        CID                            CSW038
-     C                   CALL      'QMQM'                                       CSW038
-     C                   PARM                    CID               9 0          CSW038
-     C                   PARM                    MCMQMN                         CSW038
-     C                   PARM                    HCONN             9 0          CSW038
-     C                   PARM                    OCODE             9 0          CSW038
-     C                   PARM                    REASON            9 0          CSW038
+     C**********         Z-ADD     MQCONN        CID                                 CSW038 MD041126
+     C**********         CALL      'QMQM'                                            CSW038 MD041126
+     C**********         PARM                    CID               9 0               CSW038 MD041126
+     C**********         PARM                    MCMQMN                              CSW038 MD041126
+     C**********         PARM                    HCONN             9 0               CSW038 MD041126
+     C**********         PARM                    OCODE             9 0               CSW038 MD041126
+     C**********         PARM                    REASON            9 0               CSW038 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCONN( MCMQMN : HCONN :                                 MD041126
+     C                                     OCODE : REASON )                                 MD041126
                                                                                 CSW038
       ** If connect failed, indicate abnormal end                               CSW038
                                                                                 CSW038
@@ -2617,15 +2746,18 @@
      C                   MOVE      *BLANKS       ODMN                                         242607
 
       ** Open queue
-     C                   Z-ADD     MQOPEN        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
       *
       ** Trace
      C                   movel     '*OPEN  '     PR@FN
@@ -2675,14 +2807,17 @@
      C                   Z-ADD     CONONE        OPTS
 
       ** Close queue
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
       *
       ** Trace
      C                   movel     '*CLOSE '     PR@FN
@@ -2724,11 +2859,15 @@
                                                                                               245310
       ** Disconnect from Queue Manager                                                        245310
                                                                                               245310
-     C                   CALL      'QMQM'                                                     245310
-     C                   PARM      MQDISC        CID               9 0                        245310
-     C                   PARM                    HCONN             9 0                        245310
-     C                   PARM      *ZERO         OCODE             9 0                        245310
-     C                   PARM      *ZERO         REASON            9 0                        245310
+     C**********         CALL      'QMQM'                                            245310 MD041126
+     C**********         PARM      MQDISC        CID               9 0               245310 MD041126
+     C**********         PARM                    HCONN             9 0               245310 MD041126
+     C**********         PARM      *ZERO         OCODE             9 0               245310 MD041126
+     C**********         PARM      *ZERO         REASON            9 0               245310 MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
       *                                                                                       245310
       ** Trace                                                                                245310
      C                   movel     '*DISC  '     PR@FN                                        245310

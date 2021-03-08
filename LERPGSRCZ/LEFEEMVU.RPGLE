@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD031692           Date 12Mar20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. MD052696           Date 04Apr19               *
+      *  Prev Amend No. MD031692           Date 12Mar20               *
+      *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
+      *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
       *             LEFEEMAMD.                                        *      
@@ -849,6 +852,8 @@
 
       ** Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
+                                                                                            MD052696
+     C                   PARM                    DRejFlg                                    MD052696
 
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A
                                                                                              CSF011A

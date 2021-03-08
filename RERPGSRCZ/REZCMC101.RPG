@@ -30,8 +30,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR1004252          Date 06Aug12               *
+      *  Prev Amend No. AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -50,6 +53,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1004252 - Check functions fail to recognise account as CM  *
+      *              and hence payment is not STP'd. Change REZCMTOPA *
+      *              and REZCMTPAN to also check Account name and     *
+      *              Alternative address "X". (Child: AR1004253)      *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -93,6 +105,7 @@
      IACCT      E DSACCNTAB
      I              LCD                             CLCD
      IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY                                                                  AR1004252
      ISCSARD    E DSSCSARDPD
       *
      I            DS
@@ -111,6 +124,14 @@
      I            DS                                                       211499
      I                                        1 175 @59                    211499
      I                                       71 175 @59X                   211499
+     I            DS                                                                       AR1004252
+     I                                        1 175 @59RET                                 AR1004252
+     I                                        2  34 @59REA                                 AR1004252
+     I                                       71 175 @59REX                                 AR1004252
+     I            DS                                                                       AR1004252
+     I                                        1 175 @59IBN                                 AR1004252
+     I                                        2  34 @59IBA                                 AR1004252
+     I                                       71 175 @59IBX                                 AR1004252
      I            DS                                                       211499
      I                                        1 175 W59                    211499
      I                                       71 175 W59X                   211499
@@ -222,6 +243,24 @@
      C                     MOVELP59       DSTRAN                           211499
      C                     MOVELTMLIN     @59   175                        211499
      C                     MOVE TMLIN1    @591                             211499
+      *                                                                                    AR1004252
+     C                     MOVEL*BLANKS   W#IBAN                                           AR1004252
+     C                     MOVEL*BLANKS   @59RET                                           AR1004252
+     C                     MOVEL*BLANKS   @59IBN                                           AR1004252
+     C                     CALL 'AOIBANR4'             90                                  AR1004252
+     C                     PARM           P@RTCD                                           AR1004252
+     C                     PARM '*KEY   ' P@OPTN                                           AR1004252
+     C                     PARM           @IBAN                                            AR1004252
+     C           ACCT      PARM ACCT      DSSDY                                            AR1004252
+      *                                                                                    AR1004252
+     C           P@RTCD    IFEQ *BLANK                                                     AR1004252
+     C           RECI      ANDEQ'D'                                                        AR1004252
+     C                     MOVELTMLIN     @59RET                                           AR1004252
+     C                     MOVEL*BLANKS   @59REA                                           AR1004252
+     C                     MOVELACNO      @59REA    P                                      AR1004252
+     C                     MOVEL*BLANKS   @59REX                                           AR1004252
+     C                     MOVEL'Y'       W#IBAN  1                                        AR1004252
+     C                     ENDIF                                                           AR1004252
       *                                                                    211499
      C                     SELEC                                           211499
      C           @BL24     WHEQ *BLANK                                     211499
@@ -245,9 +284,17 @@
      C                     MOVELCCY       KCCY                             211499
      C                     MOVELACOD      KACCD                            211499
      C                     MOVELACSQ      KACSQ                            211499
+      *                                                                                    AR1004252
+      ** Set Up IBan equivalent                                                            AR1004252
+      *                                                                                    AR1004252
+     C                     MOVELTMLIN     @59IBN                                           AR1004252
+     C                     MOVEL*BLANKS   @59IBA                                           AR1004252
+     C                     MOVELIBAN      @59IBA    P                                      AR1004252
+     C                     MOVEL*BLANKS   @59IBX                                           AR1004252
      C                     ENDIF                                           211499
      C*                                                                    211499
      C           @BL16     WHEQ *BLANK                                     211499
+     C           W#IBAN    ANDNE'Y'                                                        AR1004252
      C                     MOVELBRCA      KBRCA                            211499
      C                     MOVELCNUM      KCNUM                            211499
      C                     MOVELCCY       KCCY                             211499
@@ -260,7 +307,8 @@
      C                     PARM           P@RTCD                           211499
      C                     PARM '*VERIFY' P@OPTN                           211499
      C                     PARM           @IBAN                            211499
-     C           ACCT      PARM ACCT      DSFDY                            211499
+     C********** ACCT      PARM ACCT      DSFDY                            211499          AR1004252
+     C           ACCT      PARM ACCT      DSSDY                                            AR1004252
      C*                                                                    211499
      C           P@RTCD    IFEQ *BLANK                                     211499
      C           RECI      ANDEQ'D'                                        211499
@@ -517,6 +565,8 @@
      C*
      C*  Compare MT103  vs MT101
      C           @59       IFEQ W59
+     C           @59RET    OREQ W59                                                        AR1004252
+     C           @59IBN    OREQ W59                                                        AR1004252
      C                     MOVEL'T'       RTNCDE    P
      C                     ELSE
      C                     MOVEL'F'       RTNCDE    P

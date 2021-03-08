@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR796650           Date 27Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD054605 - Deliverable Data Split                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR796650 - Use of data area Y2MGFLA is redundant             *

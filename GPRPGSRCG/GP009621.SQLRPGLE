@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054209 *CREATE   Date 31Aug19               *
+      *  Last Amend No. MD054733           Date 02Dec19               *
+      *  Prev Amend No. MD054209 *CREATE   Date 31Aug19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *MD054733 - Merge GPWPBCTD to GPWIPCTD.
       *  MD054209 - Deliverable Data Split                            *
       *                                                               *
       *****************************************************************

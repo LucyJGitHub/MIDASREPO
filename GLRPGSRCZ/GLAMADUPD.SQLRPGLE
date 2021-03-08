@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR891357A          Date 12Mar20               *
-      *  Prev Amend No. AR891357           Date 12Mar20               *
+      *  Last Amend No. 262263             Date 18Dec09               *
+      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
       *                 MD053978           Date 25Jul19               *
@@ -137,6 +138,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
+      *           Initialised the fields to zero for ATYP <> R.       *
       *  AR891357A - RUNDT field is not existing on the module.       *
       *              Change LACD (Last Activity date) should be set to*
       *              rundate (BJRDNB field not RUNDT).                *
@@ -2133,7 +2136,11 @@
      C                   EVAL      AC_DRIB=AMDRIB
      C                   EVAL      AC_DRIS=AMDRIS
      C**********         EVAL      AC_OLDR=AMOLDR                                             194431
+     C     AMATYP        IFEQ      'R'                                                        262263
      C                   EVAL      AC_OLDR=AMDACO                                             194431
+     C                   ELSE                                                                 262263
+     C                   EVAL      AC_OLDR=*ZEROS                                             262263
+     C                   ENDIF                                                                262263
      C                   EVAL      AC_DRIC=AMDRIC
      C                   EVAL      AC_DRIF=AMDRIF
      C                   EVAL      AC_DRDY=AMDRDY
@@ -2172,7 +2179,11 @@
      C                   EVAL      AC_CDIS=AMCDIS
      C                   EVAL      AC_DCIA=AMDACO
      C**********         EVAL      AC_OLCR=AMOLCR                                             194431
+     C     AMATYP        IFEQ      'R'                                                        262263
      C                   EVAL      AC_OLCR=AMDACO                                             194431
+     C                   ELSE                                                                 262263
+     C                   EVAL      AC_OLCR=*ZEROS                                             262263
+     C                   ENDIF                                                                262263
      C                   EVAL      AC_OLCB=AMOLCB
      C                   EVAL      AC_OLCS=AMOLCS
      C                   EVAL      AC_LCD=BJRDNB

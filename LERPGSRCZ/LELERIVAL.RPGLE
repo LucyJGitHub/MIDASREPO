@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024812A          Date 06Nov19               *
-      *  Prev Amend No. MD024812           Date 06Nov19               *
+      *  Last Amend No. MD034915A          Date 26Aug20               *
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 MD024812A          Date 06Nov19               *
+      *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
-      *                 AR988460           Date 24Jan19               *      
-      *                 AR325915           Date 03Oct18               *      
+      *                 AR988460           Date 24Jan19               *
+      *                 AR325915           Date 03Oct18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
@@ -117,6 +119,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034915A - New funding rate disappears after input. Change  *
+      *              from Z-ADD to MOVE when passing value of @@AMT   *
+      *              to VNFRS.                                        *
+      *            - Applied for MD054876                             *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *             Use ZA0841 for validation instead of ZALIGN.      *
+      *           - Applied for MD054876                              *
       *  MD024812A - Consider new maturity date if non-blanks and     *
       *              rollover date = current maturity date.           *
       *  MD024812 - Use system value to determine if interest payment *
@@ -133,7 +143,7 @@
       *           - Applied for MD052515                              *
       *  AR325915 - Fclty amounts on tranche did not reflect in CA.   *
       *             Upgraded Gems fix 248611 to M+ for rollover input.*
-      *           - Applied for MD051963.                             *      
+      *           - Applied for MD051963.                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
@@ -294,37 +304,37 @@
       **   =======                               
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FLEHISTL1  IF   E           K DISK
      F                                     PREFIX(H_)
- 
+
      FLELOAML0  IF   E           K DISK
      F                                     PREFIX(A_)
- 
+
      FFCLTY     IF   E           K DISK
      F                                     PREFIX(F_)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
- 
+
      FCLOAN     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF:CLOANZ1F)
      F                                     PREFIX(LO_)
- 
+
      FPSOLD     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:PSOLDFF)
      F                                     PREFIX(P_)
- 
+
      FLELOANL2  IF   E           K DISK
      F                                     RENAME(CLOANCKF:LOANL2F)
      F                                     PREFIX(L2_)
- 
+
       ** Midas LE Fee Details                                                                 CAS019
      FLEFEEDLH  IF   E           K DISK    INFSR(*PSSR)                                       CAS019
      F                                     IGNORE(LEFHSTF)                                    262581
       *                                                                                       CAS019
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LELERIV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -345,96 +355,96 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
      D ArrayRtSp       S              1A   DIM(12)                                          MD034449
       * Incoming Spread Rate in screen format                                               MD034449
                                                                                             MD034449
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
      D                                     PREFIX(DL_)                                      MD034449
       ** External DS for Dealing Details                                                    MD034449
                                                                                             MD034449
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       ** EXTERNAL DS FOR CUSTOMER LENDING ICD
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** EXTERNAL DS FOR BASE RATE CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       ** Profit centre accounting ICD
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
      D  SCLCD        E                     EXTFLD(LCD)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External data structure for customer details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** External data structure for branch details
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
      D**   Historic Base Rates
- 
+
      DSDLOAN         E DS                  EXTNAME(SDLOANPD)                                  BUG827
       ** Loan Types/Subtypes                                                                  BUG827
                                                                                               BUG827
@@ -443,23 +453,23 @@
                                                                                               BUG827
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D TranIn        E DS                  EXTNAME(LELERIPD)
       * Incoming Transaction Screen format
- 
+
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE Rollover Extra Data - File (D/B) format
- 
+
      D CrLnFilFmtCL  E DS                  EXTNAME(CLOANCL)
       ***  Current Loan in File Format CL
      D  @LFSYLDC     E                     EXTFLD(FSYLDC)                                     BUG827
@@ -503,7 +513,7 @@
       *
      D LELERI2       E DS                  EXTNAME(LELERI2PD)
       ** Rollover Instructions Work fields
- 
+
       *
      D SC24X7        E DS                  EXTNAME(SC24X7)
       * 24X7 Data Structure
@@ -518,7 +528,7 @@
       **  Front Office (2 First characters determine System Front Office)
      D FrontOffice     DS            20
      D  W_System               1      2
- 
+
      D FCTREC          DS            12                                                       CLE031
      D**WFCUS***               1      6  0                                            CLE031 CSD027A
      D  WFCUS                  1      6                                                      CSD027A
@@ -552,22 +562,22 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(LEELERIPD)
- 
+
       ** A code to indicate the calling function to the lower level modules
      D LERI            S              4A   INZ('LERI')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       *
       ** Parameters for ZALIGN
      D ZFIELD          S             16A
@@ -696,14 +706,14 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
       /COPY WNCPYSRC,LELERIV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -713,7 +723,7 @@
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       *                                                                                      BUG8550
       **  GET ZMUSER to access default branch.                                               BUG8550
       *                                                                                      BUG8550
@@ -722,7 +732,7 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
       /COPY WNCPYSRC,LELERIV003
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -752,36 +762,36 @@
       *  *------------------------------------------------------*
       *
      C                   EXSR      SRWARN
- 
+
       /COPY WNCPYSRC,LELERIV004
- 
+
       *
       * VALIDATE FIELDS IN SEQUENCE
       *
- 
+
       *  *-------------------------------*
       *  * Validate Customer             *
       *  *-------------------------------*
       *
- 
+
       /COPY WNCPYSRC,LELERIV005
- 
+
      C                   EXSR      SRCUST
- 
+
       /COPY WNCPYSRC,LELERIV006
- 
+
       *
       *  *------------------------------------------------------*
       *  *  Define the first charater of removable fields       *
       *  *------------------------------------------------------*
       *
- 
+
       /COPY WNCPYSRC,LELERIV007
- 
+
      C                   EXSR      SRRVFD
- 
+
       /COPY WNCPYSRC,LELERIV008
- 
+
       *
       *  *------------------------------------------------------*
       *  * Access history to pick up the last rollover date     *
@@ -794,9 +804,9 @@
      C                   ELSE
      C                   Z-ADD     1             WIN89
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,LELERIV009
- 
+
       *
       *  *------------------------------------------------------*
       *  * Access Facility file                                 *
@@ -808,9 +818,9 @@
      C                   MOVE      'A'           WRCTP
       *
      C     K#FCLT        CHAIN     FCLTY                              85
- 
+
       /COPY WNCPYSRC,LELERIV010
- 
+
       *
       *  *------------------------------------------------------*
       *  * Validate Rollover Timing Details (Group A amendment) *
@@ -818,33 +828,33 @@
       *
       ** Validate Rollover Date
       *
- 
+
       /COPY WNCPYSRC,LELERIV011
- 
+
      C                   EXSR      SRRLDT
- 
+
       /COPY WNCPYSRC,LELERIV012
- 
+
       *
       ** Validate Rollover Frequency
       *
- 
+
       /COPY WNCPYSRC,LELERIV013
- 
+
      C                   EXSR      SRRLFQ
- 
+
       /COPY WNCPYSRC,LELERIV014
- 
+
       *
       ** Validate Rollover Day Number
       *
- 
+
       /COPY WNCPYSRC,LELERIV015
- 
+
      C                   EXSR      SRRLDY
- 
+
       /COPY WNCPYSRC,LELERIV016
- 
+
       *
       *  *------------------------------------------------------*
       *  * Validate  Rollover Details (Group B amendment)       *
@@ -852,9 +862,9 @@
       *
       ** Validate New Base Rate Code
       *
- 
+
       /COPY WNCPYSRC,LELERIV017
- 
+
      C**********         IF        CLE035 = 'Y'                                       CLE035 BUG9655
      C                   IF        CLE036 = 'Y'                                              BUG9655
       *                                                                                       CLE035
@@ -865,20 +875,20 @@
      C                   ELSE                                                                 CLE035
                                                                                               CLE035
      C                   EXSR      SRNBRA
- 
+
       /COPY WNCPYSRC,LELERIV018
- 
+
       *
       ** Validate New Spread Rate
       *
- 
+
       /COPY WNCPYSRC,LELERIV019
- 
+
      C                   EXSR      SRNRTS
      C                   ENDIF                                                                CLE035
- 
+
       /COPY WNCPYSRC,LELERIV020
- 
+
      C                   IF        CRE073 = 'Y'                                               CRE073
      C                   IF        WCNS2 <> '*'                                               CRE073
                                                                                               CRE073
@@ -927,33 +937,33 @@
       *
       ** Validate New Spread Indicator
       *
- 
+
       /COPY WNCPYSRC,LELERIV021
- 
+
      C                   EXSR      SRNSIN
- 
+
       /COPY WNCPYSRC,LELERIV022
- 
+
       *
       ** Validate New Interest Calculation Basis
       *
- 
+
       /COPY WNCPYSRC,LELERIV023
- 
+
      C                   EXSR      SRNCAS
- 
+
       /COPY WNCPYSRC,LELERIV024
- 
+
       *
       ** Validate New Change Indicator
       *
- 
+
       /COPY WNCPYSRC,LELERIV025
- 
+
      C                   EXSR      SRNCHI
- 
+
       /COPY WNCPYSRC,LELERIV026
- 
+
       ** Validate Forward Yield Curve                                                         BUG827
                                                                                               BUG827
      C     @FYIELD       IFEQ      'Y'                                                        BUG827
@@ -990,44 +1000,44 @@
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        WNMDT             5 0
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,LELERIV027
- 
+
       *
       ** Validate New Interest Payment Date
       *
- 
+
       /COPY WNCPYSRC,LELERIV028
- 
+
      C                   EXSR      SRNIPD
- 
+
       /COPY WNCPYSRC,LELERIV029
- 
+
       *
       ** Validate New Maturity Date
       *
- 
+
       /COPY WNCPYSRC,LELERIV030
- 
+
      C                   EXSR      SRNMDT
- 
+
       /COPY WNCPYSRC,LELERIV031
- 
+
       *
      C                   ENDIF                                                  End of BLI Lend Enh
- 
+
       /COPY WNCPYSRC,LELERIV032
- 
+
       *
       ** Validate Next Rollover Date
       *
- 
+
       /COPY WNCPYSRC,LELERIV033
- 
+
      C                   EXSR      SRNROD
- 
+
       /COPY WNCPYSRC,LELERIV034
- 
+
       ** If CLE031 is available New Principal and Discount validation                         CLE031
       ** is done after New Exchange Rate validation.                                          CLE031
                                                                                               CLE031
@@ -1035,25 +1045,25 @@
       *
       ** Validate New Principal
       *
- 
+
       /COPY WNCPYSRC,LELERIV035
- 
+
      C                   EXSR      SRNPRA
- 
+
       /COPY WNCPYSRC,LELERIV036
- 
+
       *
       ** Validate New Discount Amount
       *
- 
+
       /COPY WNCPYSRC,LELERIV037
- 
+
      C                   EXSR      SRNDAM
                                                                                               CLE031
      C                   ENDIF                                                                CLE031
- 
+
       /COPY WNCPYSRC,LELERIV038
- 
+
       *
       *     *------------------------------------------------------*
       *     * For Mutli - Ccy Rollovers                            *
@@ -1317,48 +1327,48 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,LELERIV039
- 
+
       *
       ** Validate New Currency
       *
- 
+
       /COPY WNCPYSRC,LELERIV040
- 
+
      C                   EXSR      SRNCCY
- 
+
       /COPY WNCPYSRC,LELERIV041
- 
+
       *
       ** Validate New Currency Amount
       *
- 
+
       /COPY WNCPYSRC,LELERIV042
- 
+
      C                   EXSR      SRNCPA
      C                   ENDIF                                                               BUG2579
- 
+
       /COPY WNCPYSRC,LELERIV043
- 
+
       *
       ** Validate Exchange rate
       *
- 
+
       /COPY WNCPYSRC,LELERIV044
- 
+
      C                   EXSR      SRNFCE
- 
+
       /COPY WNCPYSRC,LELERIV045
- 
+
       *
       ** Validate Exchange rate Indicator
       *
- 
+
       /COPY WNCPYSRC,LELERIV046
- 
+
      C                   EXSR      SRNFMD
- 
+
       ** Validate FX Rate Change Only Indicator                                             MD028338
                                                                                             MD028338
      C                   EXSR      SRFRCO                                                   MD028338
@@ -1376,39 +1386,39 @@
      C                   ENDIF                                                                CLE031
                                                                                               CLE031
      C     *IN61         IFEQ      *ON                                                       BUG2579
- 
+
       /COPY WNCPYSRC,LELERIV047
- 
+
       *
       ** Validate Base Ccy Exchange rate
       *
- 
+
       /COPY WNCPYSRC,LELERIV048
- 
+
      C                   EXSR      SRNBCE
- 
+
       /COPY WNCPYSRC,LELERIV049
- 
+
       *
       ** Validate Base Ccy Exchange rate Indicator
       *
- 
+
       /COPY WNCPYSRC,LELERIV050
- 
+
      C                   EXSR      SRNBMD
- 
+
       /COPY WNCPYSRC,LELERIV051
- 
+
       *
       ** Validate Next Loan Ccy Repayment Amount
       *
- 
+
       /COPY WNCPYSRC,LELERIV052
- 
+
      C                   EXSR      SRNLRA
- 
+
       /COPY WNCPYSRC,LELERIV053
- 
+
       *
      C                   ENDIF                                                  End of Multi Ccy
       *
@@ -1417,46 +1427,46 @@
       *
       ** Validate Funding Spread Sign
       *
- 
+
       /COPY WNCPYSRC,LELERIV055
- 
+
      C                   EXSR      SRNFSN
- 
+
       /COPY WNCPYSRC,LELERIV056
- 
+
       *
       ** Validate Funding Spread Rate
       *
- 
+
       /COPY WNCPYSRC,LELERIV057
- 
+
      C                   EXSR      SRNFRS
- 
+
       /COPY WNCPYSRC,LELERIV058
- 
+
       *
       *  *------------------------------------------------------*
       *  *  Check if warning messages                           *
       *  *------------------------------------------------------*
       *
      C                   EXSR      SRWDET
- 
+
       /COPY WNCPYSRC,LELERIV059
- 
+
       *
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LELERIV060
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1465,13 +1475,13 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
- 
+
+
       ** If called from CTU and action is Authorise, need to perform
       ** update for Amend and Authorisation
- 
+
      C     @@CTU         IFEQ      'Y'
      C     DDACTN        ANDEQ     'X'
      C     DDACTN        OREQ      'Q'                                                        CLE030
@@ -1484,9 +1494,9 @@
      C     DDACTN        CASEQ     'Q'           SRUAUT                                       CLE030
      C                   ENDCS
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,LELERIV061
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1810,9 +1820,9 @@
      C                   EXSR      SRUAUT
      C                   ENDIF
       *
- 
+
       /COPY WNCPYSRC,LELERIV062
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1824,7 +1834,7 @@
       *
       **  Update fields for CLOANCK
       *
- 
+
       *                                                                                       CLE030
       **  If release authorisation feature is on set K_CLRSTS to                              CLE030
       **  the work warning fiels.                                                             CLE030
@@ -1846,9 +1856,9 @@
      C                   Z-ADD     VLCD          K_CLLCD
      C                   MOVEL     VCHTP         K_CLCHTP
       *
- 
+
       /COPY WNCPYSRC,LELERIV063
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -1858,7 +1868,7 @@
       * SRCUST - Validate Customer                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUST        BEGSR
       *
       **  Must not be blank.
@@ -1921,9 +1931,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1931,7 +1941,7 @@
       * SRRLDT - Validate Rollover Date                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRLDT        BEGSR
       *
      C     WRLDT1        IFNE      '*'
@@ -2463,7 +2473,7 @@
      C                   ENDIF                                                               BUG2579
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2471,7 +2481,7 @@
       * SRRLFQ - Validate Rollover Frequency                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRLFQ        BEGSR
       *
      C     WRLFQ1        IFNE      '*'
@@ -2573,7 +2583,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2581,7 +2591,7 @@
       * SRRLDY - Validate Rollover Day Number                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRLDY        BEGSR
       *
      C     WRLDY1        IFNE      '*'
@@ -2763,7 +2773,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2771,7 +2781,7 @@
       * SRNBRA - Validate New Base Rate Code                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNBRA        BEGSR
       *
      C                   IF        CRE073 = 'Y'                                               CRE073
@@ -3108,9 +3118,9 @@
                                                                                              BUG3352
      C                   ENDIF                                                               BUG3352
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       CLE035
@@ -3328,7 +3338,7 @@
       * SRNRTS - Validate New Spread Rate                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNRTS        BEGSR
       *
      C     WNRTS1        IFNE      '*'
@@ -3407,7 +3417,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       CLE035
@@ -3460,7 +3470,7 @@
       * SRNSIN - Validate New Spread Indicator                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNSIN        BEGSR
       *
      C     WNSIN1        IFNE      '*'
@@ -3678,7 +3688,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3686,7 +3696,7 @@
       * SRNCAS - Validate New Interest Calculation Basis              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNCAS        BEGSR
       *
      C     WNCAS1        IFNE      '*'
@@ -3728,7 +3738,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3736,7 +3746,7 @@
       * SRNCHI - Validate New Change Indicator                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNCHI        BEGSR
       *
      C     WNCHI1        IFNE      '*'
@@ -4038,9 +4048,9 @@
      C                   ENDIF
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       BUG827
@@ -4213,7 +4223,7 @@
       * SRNIPD - Validate New Interest Payment Date                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNIPD        BEGSR
       *
       **  Validate if not blank and not to be removed.
@@ -4346,9 +4356,9 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4356,7 +4366,7 @@
       * SRNMDT - Validate New Maturity Payment Date                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNMDT        BEGSR
       *
       **  Validate if not blank and not to be removed.
@@ -4657,7 +4667,7 @@
       * SRNROD - Validate Next Rollover Date                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNROD        BEGSR
       *
      C     WNROD1        IFEQ      '*'
@@ -4892,9 +4902,9 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4902,7 +4912,7 @@
       * SRNPRA - Validate New Principal                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNPRA        BEGSR
       *
      C     WNPRA1        IFNE      '*'
@@ -5240,9 +5250,9 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       CLE031
@@ -5309,7 +5319,7 @@
       * SRNDAM - Validate New Discount Amount                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNDAM        BEGSR
       *
      C                   MOVE      *BLANKS       WNDA13           13                        AR988460
@@ -5740,7 +5750,7 @@
       * SRNCCY - Validate New Currency                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNCCY        BEGSR
       *
      C     WNCCY1        IFNE      '*'
@@ -6081,9 +6091,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'LEV2000'
      C                   MOVE      'N'           DDNccyOK
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6091,7 +6101,7 @@
       * SRNCPA - Validate New Currency Amount                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNCPA        BEGSR
       *
      C     WNCPA1        IFNE      '*'
@@ -6198,9 +6208,9 @@
      C                   ENDIF
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6208,7 +6218,7 @@
       * SRNFCE - Validate New Exchange Rate                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNFCE        BEGSR
       *
      C     WNFCE1        IFNE      '*'
@@ -6305,9 +6315,9 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6315,7 +6325,7 @@
       * SRNFMD - Validate Exchange Rate Indicator                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNFMD        BEGSR
       *
      C     WNFMD1        IFNE      '*'
@@ -6514,7 +6524,7 @@
      C     CLE023        OREQ      'Y'                                                       BUG2579
      C     WINCYL        ANDEQ     'Y'                                                       BUG2579
      C     WINCYF        ANDEQ     'Y'                                                       BUG2579
- 
+
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDNFMDB'
      C                   EVAL      MsgIDArr(Idx) = 'LEV0023'
@@ -6523,9 +6533,9 @@
      C                   ENDIF
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6533,7 +6543,7 @@
       * SRNBCE - Validate Base Ccy Exchange Rate                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNBCE        BEGSR
       *
      C     WNBCE1        IFNE      '*'
@@ -6575,9 +6585,9 @@
      C                   ENDIF
      C                   ENDIF
       *
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6585,7 +6595,7 @@
       * SRNBMD - Validate Base Ccy Exchange Rate Indicator            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNBMD        BEGSR
       *
      C     WNBMD1        IFNE      '*'
@@ -6695,7 +6705,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6703,7 +6713,7 @@
       * SRNLRA - Validate Next Loan Ccy Repayment Amount              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNLRA        BEGSR
       *
      C     WNLRA1        IFNE      '*'
@@ -6821,7 +6831,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6829,7 +6839,7 @@
       * SRNFSN - Validate Funding Spread Sign                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNFSN        BEGSR
       *
       *
@@ -6860,9 +6870,9 @@
      C                   MOVE      DDNFSNB       VNFSN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6870,20 +6880,27 @@
       * SRNFRS - Validate Funding Spread Rate                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNFRS        BEGSR
       *
      C     *IN62         IFEQ      *ON
      C     DDNFRSB       ANDNE     *BLANKS
-     C                   MOVE      *BLANKS       ZFIELD
-     C                   MOVE      DDNFRSB       ZFIELD
-     C                   Z-ADD     4             ZADIG
-     C                   Z-ADD     7             ZADEC
-     C                   EXSR      ZALIGN
-     C                   MOVE      ZFIELD        WNFRS            11 7
+     C**********         MOVE      *BLANKS       ZFIELD                                     MD034915
+     C**********         MOVE      DDNFRSB       ZFIELD                                     MD034915
+     C**********         Z-ADD     4             ZADIG                                      MD034915
+     C**********         Z-ADD     7             ZADEC                                      MD034915
+     C**********         EXSR      ZALIGN                                                   MD034915
+     C**********         MOVE      ZFIELD        WNFRS            11 7                      MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      DDNFRSB       @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID            1                        MD034915
+     C                   EXSR      VALAMT                                                   MD034915
       *
       **  Must be a valid rate amount.
-     C     ZALIGNok      IFEQ      'N'
+     C*****ZALIGNok      IFEQ      'N'                                                      MD034915
+     C     @@ERCD        IFNE      0                                                        MD034915
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDNFRSB'
      C                   EVAL      MsgIDArr(Idx) = 'LEV1021'
@@ -6893,12 +6910,14 @@
       * If no errors
       *
      C     DDNfrsOK      IFNE      'N'
-     C                   Z-ADD     WNFRS         VNFRS
+     C**********         Z-ADD     WNFRS         VNFRS                                      MD034915
+     C**********         Z-ADD     @@AMT         VNFRS                            MD034915 MD034915A
+     C                   MOVE      @@AMT         VNFRS                                     MD034915A
      C                   ENDIF
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6998,9 +7017,9 @@
      C                   MOVEL     DDRDM2B       WRDM2             1                          CRE073
      C                   MOVEL     DDRDF2B       WRDF2             1                          CRE073
      C                   ENDIF                                                                CRE073
- 
+
       /COPY WNCPYSRC,LELERIV064
- 
+
       *
      C                   ENDSR
       /EJECT
@@ -7026,11 +7045,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7040,13 +7059,13 @@
       *                                                               *
       *****************************************************************
      C     ZALIGN        BEGSR
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM      *BLANK        ZALIGNok
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -7057,7 +7076,7 @@
       *                                                               *
       *****************************************************************
      C     ZFREQB        BEGSR
- 
+
      C                   CallB     'ZFREQB'
      C                   Parm      *blanks       RetCodeIn
      C                   Parm                    ZFREQ             1
@@ -7067,7 +7086,7 @@
      C                   Parm                    ZMDAY             2 0
      C                   Parm                    BJDFIN
      C                   Parm      SDGELR        SDGELR
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -7077,14 +7096,14 @@
       *                                                               *
       *****************************************************************
      C     ZFWDT         BEGSR
- 
+
      C                   CALLB     'ZFWDT'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZNRDYS            2 0
      C                   PARM      *ZERO         ZDYNBR            5 0
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -7181,9 +7200,9 @@
      C                   Z-ADD     *ZERO         WEUERL                                      BUG2579
      C                   MOVE      *BLANK        VFRCO             1                        MD028338
      C                   EVAL      DDFRCOOK = 'Y'                                           MD028338
- 
+
       /COPY WNCPYSRC,LELERIV065
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -7194,7 +7213,7 @@
       *                                                               *
       *****************************************************************
      C     ZCPD          BEGSR
- 
+
      C                   CALLB     'ZCPD'
      C                   PARM                    ZINDT                          Input date
      C                   PARM                    ZNYR                           Number of years
@@ -7203,7 +7222,7 @@
      C                   PARM                    BJDFIN            1            Date Format Indic.
      C                   PARM                    ZPDNO             5 0          Period date
      C                   PARM                    ZPDTE             8            Period date
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7213,13 +7232,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATEN            6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -7446,7 +7465,7 @@
      C                   ENDIF                                                               BUG3531
                                                                                              BUG3531
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'A'                                                       BUG3531
      C     WMCCY         IFEQ      'Y'                                                       BUG3531
      C                   Z-ADD     PRATEX        WZRATE           13 8
@@ -7574,9 +7593,9 @@
      C                   ENDIF                                                               BUG2579
      C                   ENDIF
       *
- 
+
       /COPY WNCPYSRC,LELERIV066
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7639,7 +7658,7 @@
       *                                                               *
       *****************************************************************
      C     ZXRATE        BEGSR
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    PRATE1
      C                   PARM                    PMDI1
@@ -7647,7 +7666,7 @@
      C                   PARM                    PMDI2
      C                   PARM      *ZEROS        PRATEX
      C                   PARM      *BLANKS       PMDIX
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -7657,14 +7676,14 @@
       *                                                               *
       *****************************************************************
      C     ZFRPED        BEGSR
- 
+
      C                   CALLB     'ZFRPED'
      C                   PARM                    ZFLD15           15 0
      C                   PARM                    ZDECS             1 0
      C                   PARM                    ZECODE            1
      C                   PARM      *BLANKS       ZOUT22
      C                   PARM      *BLANKS       ZOUT25
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -7674,7 +7693,7 @@
       *                                                               *
       *****************************************************************
      C     ZCONV         BEGSR
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM                    ZAMTCI           15 0
      C                   PARM                    ZEXCH            13 8
@@ -7684,7 +7703,7 @@
      C                   PARM                    ZCDPI             1 0
      C                   PARM                    ZCDPO             1 0
      C                   PARM                    ZAMTCO           15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7694,7 +7713,7 @@
       *                                                               *
       *****************************************************************
      C     GLINTC        BEGSR
- 
+
      C                   CALLB     'GLINTC'
      C                   PARM                    ZIBEG             5 0       STARTING DATE
      C                   PARM                    ZIEND             5 0       FINISHING DATE
@@ -7702,7 +7721,7 @@
      C                   PARM                    ZIAMT            15 0       PRINCIPAL
      C                   PARM                    ZIRATE           11 7       RATE OF INTRST
      C                   PARM                    ZINTR            30 9       INTEREST
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -7794,9 +7813,9 @@
       *
      C                   ENDIF
       *
- 
+
       /COPY WNCPYSRC,LELERIV067
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -8067,7 +8086,7 @@
       *
      C     MULTIC        IFEQ      *ON
      C     *IN67         OREQ      *ON                                                       BUG2579
- 
+
      C     DDNFCEB       IFNE      *BLANKS
      C     WNFCE1        ANDNE     '*'
      C     DDNfceOK      ANDNE     'N'
@@ -8075,7 +8094,7 @@
      C     DDNccyOK      ANDNE     'N'
      C     DDACTN        ANDEQ     'A'
      C     MULTIC        ANDEQ     *ON                                                       BUG2579
- 
+
      C     NCCY          ORNE      *BLANKS
      C     NCPA          ANDNE     *ZEROS
      C     NFCE          ANDNE     *ZEROS
@@ -8083,7 +8102,7 @@
      C     WNFCE1        ANDNE     '*'                                               if from CTU
      C     DDACTN        ANDEQ     'X'
      C     MULTIC        ANDEQ     *ON                                                       BUG2579
- 
+
      C     NCCY          ORNE      *BLANKS                                                    CLE030
      C     NCPA          ANDNE     *ZEROS                                                     CLE030
      C     NFCE          ANDNE     *ZEROS                                                     CLE030
@@ -8600,9 +8619,9 @@
      C                   MOVE      'W'           DDnfceOK                                    BUG4493
      C                   ENDIF                                                               BUG2579
       *
- 
+
       /COPY WNCPYSRC,LELERIV068
- 
+
      C                   ENDSR
       *****************************************************************                     AR702532
       /EJECT                                                                                AR702532
@@ -8881,7 +8900,7 @@
       *                                                               *
       *****************************************************************
      C     ZCHKH         BEGSR
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    PDateIn
      C                   PARM                    PCurrency
@@ -9180,9 +9199,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -9299,7 +9318,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       *
       **  Retrieve profit centre accounting ICD.
       *
@@ -9309,9 +9328,9 @@
      C                   PARM      '*FIRST '     POPTN
      C     SDPCAC        PARM      SDPCAC        DSFDY
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CDE002 is switched on
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       PRTCD             7
      C                   Parm      '*VERIFY'     POPTN             7
@@ -9665,7 +9684,7 @@
       **  Initialise work fields
       *
      C**************     EXSR      SRINIW                                                     WA0022
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -9673,10 +9692,10 @@
      C                   PARM                    @Return           6
      C                   PARM                    @type             1
      C*
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LELERIV069
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

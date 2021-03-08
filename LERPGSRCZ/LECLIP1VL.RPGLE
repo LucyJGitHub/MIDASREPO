@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD029863           Date 18Jan18               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. AR918361           Date 02Apr12               *
+      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -170,6 +171,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918361 - No error message for rollover frequency when not  *
+      *             defined in facility rollover types. Validate the  *
+      *             rollover frequency properly against the facility  *
+      *             to which the loan is linked. (Child: AR918362)    *
+      *           - Applied for MD-16939                              *
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *
       *           - Applied for MD049247.                             *
@@ -5859,19 +5865,21 @@ B001 C     ZERR          IFNE      *BLANKS
       ***  Moreover, it must be a valid frequency for the facility to
       ***  which the loan is being linked
       *
+     C     DDRLFQ        LOOKUP    WFREQ                                  97                AR918361
      C     DDRLFQ        IFNE      *BLANK
+     C     *IN97         ANDEQ     '0'                                                      AR918361
      C*****DDRLFQ        ANDNE     'M'                                                        CLE064
      C*****DDRLFQ        ANDNE     'T'                                               BUG21898 CLE064
      C*****DDRLFQ        ANDNE     'Q'                                                        CLE064
      C*****DDRLFQ        ANDNE     'X'                                                        CLE064
      C*****DDRLFQ        ANDNE     'Y'                                                        CLE064
-     C     DDRLFQ        LOOKUP    WFREQ                                  97                  CLE064
-     C     *IN97         IFEQ      '0'                                                        CLE064
+     C*****DDRLFQ        LOOKUP    WFREQ                                  97         CLE064 AR918361
+     C******IN97         IFEQ      '0'                                               CLE064 AR918361
      C                   MOVE      'N'           DDRLFQOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDRLFQ'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0055'     MsgIDXAr(Idx)
-     C                   ENDIF                                                                CLE064
+     C**********         ENDIF                                                       CLE064 AR918361
      C                   ELSE
      C     *IN83         IFEQ      '0'
      C     DDRLFQ        ANDNE     *BLANK

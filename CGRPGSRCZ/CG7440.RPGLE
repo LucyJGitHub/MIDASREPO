@@ -1,4 +1,5 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG NAHO Tax Advice - Extract')                   *
@@ -15,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
@@ -27,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
+      *             to readable unicode equivalent.                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *

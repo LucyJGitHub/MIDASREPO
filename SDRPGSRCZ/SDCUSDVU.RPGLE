@@ -32,8 +32,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *  Last Amend No. AR970389B          Date 16Sep20               *
+      *  Prev Amend No. AR970389A          Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
+      *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
@@ -153,6 +156,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR970389B - Reopen AR970389A due to the field also being     *
+      *              defaulted to 'N' when some features are switched *
+      *              ON. (Child: AR970392B)                           *
+      *            - Applied for MD-56719.                            *
+      *  AR970389A - Reopen AR970389 due to error still occurs in     *
+      *              validation if transaction is coming from external*
+      *              systems. (Child: AR970392A)                      *
+      *            - Applied for MD-56719.                            *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from APTRANVU.                                    *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
@@ -947,6 +961,7 @@
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
      D  TransCent                    10A                                                    MD055446
+     D  TransUser                    20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1159,7 +1174,8 @@
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
      D***FillerBufEx2    S           5591A                                           CGL157 MD054028
      D***FillerBufEx2    S           5590A                                         MD054028 MD055446
-     D FillerBufEx2    S           5580A                                                    MD055446
+     D***FillerBufEx2    S           5580A                                         MD055446 MD055373
+     D FillerBufEx2    S           5560A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1581,6 +1597,7 @@
      C                                       + TranInCRSS                                     CGL157
      C                                       + DDAPRC                                       MD054028
      C                                       + TranInBRTCent                                MD055446
+     C                                       + TransUser                                    MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -2222,29 +2239,40 @@
      C     PMDDCSBY      ORNE      *BLANKS                                                    CSD079
      C*****PMDDSAFI      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDSAFI      ORNE      'N'                                                      AR970389
+     C     PMDDSAFI      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDCMS      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLFQ      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLDM      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLND      ORNE      *BLANKS                                                    CSD079
      C*****PMDDS1VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS1VR      ORNE      'N'                                                      AR970389
+     C     PMDDS1VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS2VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS2VR      ORNE      'N'                                                      AR970389
+     C     PMDDS2VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS3VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS3VR      ORNE      'N'                                                      AR970389
+     C     PMDDS3VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS4VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS4VR      ORNE      'N'                                                      AR970389
+     C     PMDDS4VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS5VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS5VR      ORNE      'N'                                                      AR970389
+     C     PMDDS5VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS6VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS6VR      ORNE      'N'                                                      AR970389
+     C     PMDDS6VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS7VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS7VR      ORNE      'N'                                                      AR970389
+     C     PMDDS7VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS8VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS8VR      ORNE      'N'                                                      AR970389
+     C     PMDDS8VR      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDAPBC      ORNE      *BLANKS                                                    CSD079
+     C     PMDDAPBC      ANDNE     'N'                                                     AR970389B
      C*****PMDDPPCS      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDPPCS      ORNE      'N'                                                      AR970389
+     C     PMDDPPCS      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDFPO      ORNE      *BLANKS                                                    CSD079
      C     PMDDINSU      ORNE      *BLANKS                                                    CSD079
      C     PMDDCYSU      ORNE      *BLANKS                                                    CSD079
@@ -4535,6 +4563,8 @@
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
      C                   PARM                    ValidCuBrCent                              MD055446
+     C                   PARM                    TransUser                                  MD055373
+     C                   PARM                    AAUTH                                      MD055373
                                                                                               CER059
      C**********         IF        @RTCD = *BLANKS                                   CER059 MD053634
      C**********                   AND (DDACTN <> 'D'                              AR741363 MD053634

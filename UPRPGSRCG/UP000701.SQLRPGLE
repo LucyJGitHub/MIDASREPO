@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD056020             Date 18Jun20             *
-      *  Prev Amend No. MD054955             Date 16Dec19             *
+      *  Last Amend No. MD054733             Date 02Dec19             *
+      *  Prev Amend No. MD056020             Date 18Jun20             *
+      *                 MD054955             Date 16Dec19             *
       *                 MD055832             Date 14May20             *
       *                 MD055829             Date 12May20             *
       *                 MD055469             Date 13Mar20             *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054733 - Merge GPWPBCTD to GPWIPCTD.                       *
       *  MD056020 - Dumps generated in PRCA because of SQL error      *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD055832 - Avoid deletion of bespoke records in extension    *
@@ -61,6 +63,7 @@
      D OFMbr           S             10A
      D OFMbrOpt        S              8A
      D First           S              1A
+     D xxBSTP          S             20A                                                    MD054733
      D FldData       E DS                  EXTNAME(UPFFDSTPD)
        /EJECT
       *****************************************************************
@@ -372,7 +375,9 @@
      C+ WC_BOACAM, WC_BOACAU, WC_BOACCL, WC_BOACDE, WC_BOACRE,
      C+ WC_BOACCH, WC_AUTOA, WC_AUTLVL, ZOZONE as WC_ZONE,
      C+ WC_SYSTEM, WC_BOFLD1, WC_BOFLD2, WC_BOFLD3, WC_BOFLD4,
-     C+ WC_BOFLD5, 'B' FROM GPWIPCTD A, GPZONEPD
+     C**WC_BOFLD5,*'B'*FROM*GPWIPCTD*A,*GPZONEPD                                            MD054733
+     C+ WC_BOFLD5, 'B' , WCAN, WCAC, WCAT, WCBSTP                                           MD054733
+     C+ FROM GPWIPCTD A, GPZONEPD                                                           MD054733
      C+ where A.WC_ZONE = '*REFZONE' and not exists
      C+ (select * from GPWIPBTD B where A.WC_API = B.WC_API))
      C/end-exec
@@ -425,6 +430,30 @@
      C                   EVAL      ERROR = '*Error'
      C                   ENDIF
 
+      * if CFT157 fields are left blank, then initialize them with values from CTD          MD054733
+     C/exec SQL                                                                             MD054733
+     C+ select WCBSTP into :xxBSTP from GPWIPBTD                                            MD054733
+     C+ where WC_API = 'OPAY'                                                               MD054733
+     C+ fetch first 1 row only                                                              MD054733
+     C/end-exec                                                                             MD054733
+     C                   If        xxBSTP = *blanks                                         MD054733
+     C/exec SQL                                                                             MD054733
+     C+ update GPWIPBTD b                                                                   MD054733
+     C+ set (b.WCAN, b.WCAC, b.WCAT, b.WCBSTP)  =                                           MD054733
+     C+ (select c.WCAN, c.WCAC, c.WCAT, c.WCBSTP                                            MD054733
+     C+ from GPWIPCTD c where c.WC_API = b.WC_API                                           MD054733
+     C+ and c.WC_ZONE = '*REFZONE')                                                         MD054733
+     C+ where exists (select * from GPWIPCTD c where c.WC_API = b.WC_API                    MD054733
+     C+ and c.WC_ZONE = '*REFZONE') and (b.WC_API = 'IPAY' or b.WC_API = 'OPAY')            MD054733
+     C/end-exec                                                                             MD054733
+                                                                                            MD054733
+     C                   IF        SQLCODE <> 0                                             MD054733
+     C                             and SQLCode <> 100                                       MD054733
+     C                   EVAL      ERROR = '*Error'                                         MD054733
+     C                   ENDIF                                                              MD054733
+     C                                                                                      MD054733
+     C                   ENDIF                                                              MD054733
+                                                                                            MD054733
      C                   ENDIF
      C                   ENDSR
 

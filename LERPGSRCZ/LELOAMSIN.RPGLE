@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 16Sep14               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers. (Recompile)                        *
       *  MD026384 - Added generation by assignment processing.        *
       *  MD029046 - Default Principal Increase settlement from        *
       *             SSI (standard settlement instructions) before     *
@@ -96,7 +99,7 @@
      F                                     RENAME(LOAMSDKF:LOAMSD)
      F                                     IGNORE(LOAMSDHF)
      F                                     IGNORE(LOAMSZ1F)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -108,53 +111,53 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **----------------------------------------------------------------
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Current loan amendment in file format
      D C_LOAM_F      E DS                  EXTNAME(LOAMSDK)
      D                                     PREFIX(C_)
- 
+
       * Current loan amendment in screen format
      D C_LOAM_S      E DS                  EXTNAME(LELOAMPD)
      D                                     PREFIX(@)
@@ -163,7 +166,7 @@
       *                                                                                     MD026384
      D C_LOAM_2      E DS                  EXTNAME(LELOA2PD)                                MD026384
      D                                     PREFIX(@)                                        MD026384
- 
+
       * New loan amendment in file format
      D N_LOAM_F      E DS                  EXTNAME(LEVLOAMPD)
      D***CLREC**              321    389                                                      CGL029
@@ -176,11 +179,11 @@
      D  LAPAY                404    948                                                       TDA066
      D  LARECEx             1195   1212                                                       TDA066
      D  LAPAYEx             1213   1230                                                       TDA066
- 
+
       * Previous loan amendment in screen format
      D P_LOAM_S      E DS                  EXTNAME(LELOAMPD)
      D                                     PREFIX(@P)
- 
+
       * Error indicators
      D OKAmndScn     E DS                  EXTNAME(LEELOAMPD)
       *
@@ -228,78 +231,78 @@
      D FB_AFRT       E                     EXTFLD(AFRT)
      D FB_REPA       E                     EXTFLD(REPA)
      D FB_STMP       E                     EXTFLD(STMP)
- 
+
       * File receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
       * File payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
       * File FRA/IRS instructions (needed as a parameter for call
       * to ZASETINSIN etc)
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
- 
+
       * Screen receive instructions
      D S_REC         E DS                  EXTNAME(SDESSRPD)
- 
+
       * Screen payment instructions
      D S_PAY         E DS                  EXTNAME(SDESSPPD)
       *
       ***  Screen FRA/IRS Instructions
      D S_FRI         E DS                  EXTNAME(SDESSFPD)
- 
+
       * Curent screen receive instructions
      D C_REC         E DS                  EXTNAME(SDESSRPD) PREFIX(@_)
- 
+
       * Current screen payment instructions
      D C_PAY         E DS                  EXTNAME(SDESSPPD) PREFIX(@_)
- 
+
       ** Flags to indicate whether pay settlement instruction fields
       **  are valid
      D OKPayInsDS    E DS                  EXTNAME(SDESEPPD)
- 
+
       ** Flags to indicate whether receive settlement instruction fields
       **  are valid
      D OKRecInsDS    E DS                  EXTNAME(SDESERPD)
- 
+
       ***  External DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Customer lending ICD
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *
       ***  Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** PCA ICD Details
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
- 
+
       ** External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * 24X7 Data Area Structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       *
       * SDSTAT Data Area Structure
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Data structure for data area commitment control                                      CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  ComitJobs              4    103A                                                      CSC022
@@ -310,29 +313,29 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Action code
      D DDACTN          S              1A
- 
+
       ** Loan number
      D DDLOAN          S              6A
- 
+
       ** Display 'Unauthorised Only?'
      D @Unaut          S              1A   inz('N')
- 
+
       ** Build subfile
      D @BDSFL          S              1A
- 
+
       ** Loan / value date / sequence / type selected
      D @LNSel          S              6A
      D @VDSel          S              6A
      D @SQSel          S              3A
      D @ATSel          S              2A
- 
+
       ** Condition availability of function keys:
       * KG - F7 - Roll Backwards
       * KH - F8 - Roll Forwards
@@ -348,13 +351,13 @@
      D @EINKN          S              1A
      D @EINKP          S              1A
      D @EINKQ          S              1A
- 
+
       ** Condition availability of field "Funding Spread/Rate"
      D @Funding        S              1A
- 
+
       ** Condition availability of message "Record Reversed"
      D @Reversed       S              1A
- 
+
       ** F3 Exit
       ** F7 Roll backwards
       ** F8 Roll forwards
@@ -372,44 +375,44 @@
      D @INKN           S              1A
      D @INKP           S              1A
      D @INKQ           S              1A
- 
+
       ** Option selected
      D @OPSEL          S              1A
- 
+
       ** Read backwards in roll
      D @RDBCK          S              1A
- 
+
       ** Read forwards in roll
      D @RDFWD          S              1A
- 
+
       ** Read next browse
      D @RDNB           S              1A
- 
+
       ** Read subfile
      D @RDSFL          S              1A
- 
+
       ** Screen / function
      D @SCRN           S              1A
- 
+
       ** Control return to key screen after F7/F8 rolls
- 
+
       ** Mode of operation
      D ModeOfOp        S              6A
- 
+
       ** Whether to clear LOAM on inserts
      D ResetLOAM       S             10A
- 
+
       ** Indices of errors/warnings
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** Fields (on key screen only) in error
      D DDRAUTOK        S              1A
      D DDRLONOK        S              1A
- 
+
       ** Timestamp for the amendment
      D TimeStamp       S               Z
- 
+
       ** Define workfields for Commitment Control Changes for Midas Plus                      CSC022
      D CSC022          S              1A                                                      CSC022
      D WSkpCom         S              1A                                                      CSC022
@@ -439,7 +442,7 @@
      D PSysVal10       S            200A                                                      CLE148
       *                                                                                       CLE148
      D wLoanAlpha      S              1A                                                      CLE148
- 
+
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
                                                                                              CSF011A
@@ -450,14 +453,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,LELOAMS001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -514,7 +517,7 @@
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   ENDDO
- 
+
       /COPY WNCPYSRC,LELOAMS008
       *
       ** Update files
@@ -528,20 +531,20 @@
      C                   IF        @SCRN = 'T'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LELOAMS010
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SCRN@D - Process detail screen
       *****************************************************************
      C     SCRN@D        BEGSR
- 
+
       * Set function key status on screen
      C                   EXSR      SFKEYS
- 
+
       * Setup default values
       *
       **  Default in details for amend type LS
@@ -550,7 +553,7 @@
      C                   EVAL      @DDSTYP = LO_SUTP                                          TDA074
      C                   EVAL      @DDCLAS = LO_CLAS                                          CLE042
      C                   EndIf
- 
+
       **  Enable 'Funding Spread/Rate' field if:
       **   - Analytical Accounting is on and the loan amendment type is
       **     a spread change,  and the loan was directly funded,  or
@@ -565,31 +568,31 @@
      C     DDATYP        ANDEQ     'SC'                                         ING194
      C                   MOVE      'Y'           @Funding
      C                   ENDIF
- 
+
       **  Enable 'Record reversed' message if true
      C                   MOVE      'N'           @Reversed
      C     LO_RECI       IFEQ      'R'
      C                   MOVE      'Y'           @Reversed
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Write/read detail screen
      C     Dsp           TAG
      C                   If        ResetLOAM = 'DontBlank'
      C                   Eval      RetCodeIn = 'DontBlank'
      C                   EndIf
- 
+
       ** Make sure  'Unauthorised Only?' has a default value
      C                   If        DDRAUT = ' '
      C                   Eval      DDRAUT = 'N'
      C                   EndIf
- 
+
      C                   CALLB     'LELOAMDSP'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Input parameters :
       * Return code
      C                   PARM                    RetCodeIn
- 
+
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
       *
@@ -597,15 +600,15 @@
      C                   PARM                    DDLTYP            2
      C                   PARM                    DDSTAT
      C                   PARM                    WLSNA
- 
+
       ** Loan amendment OK indicators
      C                   PARM                    OKAmndScn
- 
+
       * Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warnings
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
@@ -646,7 +649,7 @@
       *
       * Write screen with no read indicator
      C                   PARM                    WriteOnly
- 
+
       * Output parameters :
       * Function keys
      C                   PARM      '0'           @INKC
@@ -657,11 +660,11 @@
      C                   PARM      '0'           @INKN
      C                   PARM      '0'           @INKP
      C                   PARM      '0'           @INKQ
- 
+
      C     @INKP         IFEQ      '1'
      C                   EVAL      @SCRN = 'B'
      C                   ENDIF
- 
+
       ** For inserts, we want to clear the screen first time in.
       ** Set flag to prevent details being blanked on subsequent
       ** calls.
@@ -692,9 +695,9 @@
       *
       * Validate input to details screen
      C                   CAS                     VAL@D
- 
+
      C                   ENDCS
- 
+
      C     EndScrn@D     ENDSR
       *****************************************************************
       /EJECT
@@ -735,7 +738,7 @@
      C                   ENDIF
      C                   GOTO      EndVAL@D
      C                   ENDIF
- 
+
      C                   IF        @EKYFD = 'Y' AND DDACTN = 'I'
       ** Send appropriate calling module code
      C                   Eval      CallModCod = 'KDP'
@@ -744,13 +747,13 @@
      C                   IF        Idx = 0                                      ING195
      C                   EVAL      @EKYFD = 'N'
      C                   EVAL      @EDTFD = 'Y'
- 
+
      C                   IF        DDATYP = 'PI'                                ING192
      C                   EVAL      @ESPIC = 'Y'                                 ING190
      C                   ELSE                                                   ING192
      C                   EVAL      @ESPIC = 'N'                                 ING192
      C                   ENDIF                                                  ING192
- 
+
      C                   ENDIF
      C                   GOTO      EndVAL@D                                     ING195
      C                   ENDIF
@@ -785,10 +788,10 @@
      C                   IF        Idx <> 0
      C                   GOTO      EndVAL@D
      C                   ENDIF
- 
+
      C                   MOVEL     'U'           @SCRN
      C                   ENDIF
- 
+
      C                   IF        @SCRN = 'U'
      C                   GOTO      EndVAL@D
      C                   ENDIF
@@ -809,14 +812,14 @@
      C                   ELSE
      C                   EXSR      CVTLOAM
      C                   ENDIF
- 
+
      C                   GOTO      EndVAL@D
      C                   ENDIF
       *
       * If Insert or Amend
      C                   IF        DDACTN = 'I' OR
      C                             DDACTN = 'A'
- 
+
       * Validate loan amendment, and convert to file format
       * Store image of input screen and current number of warnings
      C                   EVAL      P_LOAM_S = C_LOAM_S
@@ -864,7 +867,7 @@
      C                   MOVE      'U'           @SCRN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     EndVAL@D      ENDSR
       *****************************************************************
       /EJECT
@@ -872,78 +875,78 @@
       * CallVal - Perform call to validation module
       *****************************************************************
      C     CallVal       BEGSR
- 
+
      C                   MOVE      FTTFRT        WFTTFRT           3            213496
- 
+
      C                   CALLB     'LELOAMVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * Inputs
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
      C                   PARM                    C_LOAM_2                                   MD026384
- 
+
       ** Current loan amendment in file format
      C                   PARM                    C_LOAM_F
- 
+
       * File receive instructions
       * File payment instructions
      C                   PARM                    F_REC
      C                   PARM                    F_PAY
- 
+
       ** Loan 'A' & 'B' formats
      C                   PARM                    LoanDetsA
      C                   PARM                    LoanDetsB
- 
+
       ** Facility 'A' & 'B' formats
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
- 
+
       ** Front office transaction Id., associated Front office transaction Id.
       ** Repair location
      C                   PARM                    C_FRNT
      C                   PARM                    C_AFRT
      C                   PARM                    C_REPA
- 
+
       ** Date format indicator / local currency / run day
      C                   PARM                    BJDFIN
      C                   PARM                    BJLCCY
      C                   PARM                    WRNDAY
- 
+
       ** Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       * Authorise amends / authorise principal tfr / base rate change
      C                   PARM                    BPLMAU
      C                   PARM                    BPTPAU
      C                   PARM                    BPBRCF
- 
+
       * Tolerance for funding rate
      C***************    PARM                    FTTFRT                         213496
      C                   PARM                    WFTTFRT           3            213496
- 
+
       * Outputs
       ** Loan amendment OK inds
      C                   PARM                    OKAmndScn
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Calling module code
      C                   PARM                    CallModCod        3
- 
+
       ** Features
      C                   PARM                    CDE002
      C                   PARM                    CLE002
@@ -954,10 +957,10 @@
      C                   PARM                    CLE030                                       CLE030
      C                   PARM                    CEU004
      C                   PARM                    CEU020
- 
+
       * Valid loan amendments layout (DS) from/to caller
      C                   PARM                    N_LOAM_F
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -993,26 +996,26 @@
      C                   CALLB     'LELOAMRED'
       *
       * Input parameters :
- 
+
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       * Action code
      C                   PARM                    DDACTN
- 
+
       * Read forwards/backwards
      C                   PARM                    @RDFWD
      C                   PARM                    @RDBCK
- 
+
       * Loan number / value date / sequence / amendment type
      C                   PARM                    DDLOAN
      C                   PARM                    DDVDAT
      C                   PARM                    DDSEQN
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
- 
+
       * Output parameters :
       * Error message
       * Loan number / value date / sequence
@@ -1025,21 +1028,21 @@
      C                   EXSR      SndM@S
      C                   GOTO      EROLL
      C                   ENDIF
- 
+
       * If amendment read
      C                   IF        @LNSel <> *BLANK
      C                   EVAL      DDLOAN = @LNSEL
      C                   EVAL      DDVDAT = @VDSEL
      C                   EVAL      DDSEQN = @SQSEL
- 
+
       * Retrieve loan amendment
      C                   EXSR      RTVLOAM
- 
+
       * Return to previous screen if there is an error on amendment/action
       * (the loan amendment will not have been retrieved)
      C                   IF        Idx <>0
- 
- 
+
+
      C                   GOTO      EROLL
      C                   ENDIF
       *
@@ -1074,14 +1077,14 @@
       *
       * Build browse subfile
      C                   CALLB     'LELOAMBRW'
- 
+
       * Input parameters :
       * Return code
      C                   PARM                    RetCodeIn
- 
+
       * Action code
      C                   PARM                    DDACTN
- 
+
       * Loan amendment / value date / sequence / type pointers
      C                   PARM                    DDLOAN
      C                   PARM                    DDVDAT            6
@@ -1098,13 +1101,13 @@
       *
       * Authorisation required
      C                   PARM                    @Unaut
- 
+
       * Build subfile
      C                   PARM      'Y'           @BDSFL
- 
+
       * Read subfile record
      C                   PARM      *BLANKS       @RDSFL
- 
+
       * Requiring authorisation
      C                   PARM                    DDRAUT            1
       *                                                                                       CLE030
@@ -1128,13 +1131,13 @@
       * Output parameters :
       * Option selected
      C                   PARM                    @OPSEL
- 
+
       * Loan number / value date / sequence / type selected
      C                   PARM                    @LNSel
      C                   PARM                    @VDSel
      C                   PARM                    @SQSel
      C                   PARM                    @ATSel
- 
+
       * Command keys
      C                   PARM                    @INKC
      C                   PARM                    @INKL
@@ -1160,7 +1163,7 @@
      C                   EVAL      @SCRN = 'D'
      C                   GOTO      EndBLDBRW
      C                   ENDIF
- 
+
       * If Insert (F9) selected from browse, go to key screen
      C                   IF        @OPSEL = 'I'
       *
@@ -1213,11 +1216,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        @INKL = '0'
      C                   EVAL      @RDNB = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
       *
       * Reset positioning fields
@@ -1239,14 +1242,14 @@
      C                   EVAL      P_LOAM_S = C_LOAM_S
       *
      C                   CALLB     'LELOAMBRW'
- 
+
       * Input parameters :
       * Return code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       * Action code
      C                   PARM      *BLANKS       DDACTN
- 
+
       * Loan amendment / value date / sequence / type pointers
      C                   PARM      *BLANKS       DDLOAN
      C                   PARM      *BLANKS       DDVDAT
@@ -1263,10 +1266,10 @@
       *
       * Display 'Unauthorised only?'
      C                   PARM                    @Unaut
- 
+
       * Build subfile
      C                   PARM      *BLANKS       @BDSFL
- 
+
       * Read subfile record
      C                   PARM      'Y'           @RDSFL
       *
@@ -1287,16 +1290,16 @@
      C                   PARM                    WMsgDtaArr
       *
       * Output parameters :
- 
+
       * Option selected
      C                   PARM                    @OPSEL
- 
+
       * Loan number / value date / sequence / type selected
      C                   PARM                    @LNSel
      C                   PARM                    @VDSel
      C                   PARM                    @SQSel
      C                   PARM                    @ATSel
- 
+
       * Command keys
      C                   PARM                    @INKC
      C                   PARM                    @INKL
@@ -1373,14 +1376,14 @@
      C                   PARM                    DDVDAT
      C                   PARM                    DDSEQN
      C                   PARM                    DDATYP
- 
+
       * Where called from
      C                   PARM                    CallModCod
       *
       * Features
      C                   PARM                    CEU020
      C                   PARM                    CLE030                                       CLE030
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
@@ -1395,7 +1398,7 @@
       *
       * Error Indicators
      C                   PARM                    OKAmndScn
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1404,7 +1407,7 @@
       * Array index (3P0) from/to caller
      C                   PARM      0             Idx
      C                   PARM                    N_LOAM_F                                     CRE073
- 
+
      C     EndRTVLOAM    ENDSR
       *****************************************************************
       /EJECT
@@ -1425,7 +1428,7 @@
       *
       * Date format indicator
      C                   PARM                    BJDFIN
- 
+
       ** Output parameters
       ** Loan amendment in screen format
      C                   PARM                    C_LOAM_S
@@ -1436,13 +1439,13 @@
       *
       ** Add the action code
      C                   MOVE      DDACTN        @DDACTN
- 
+
       ** If no amendment type was entered, update screen field, else
       ** move screen field to file to be validated
      C                   If        DDATYP = *Blank
      C                   MOVE      @DDATYP       DDATYP
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1451,7 +1454,7 @@
       * SFKEYS - Set function key status on screen
       *****************************************************************
      C     SFKEYS        BEGSR
- 
+
       * Enable/disable function keys
       * KJ = F10 = Confirm delete
      C                   IF        DDACTN = 'R' and
@@ -1460,7 +1463,7 @@
      C                   ELSE
      C                   EVAL      @EINKJ = 'N'
      C                   ENDIF
- 
+
       * KQ = F16 = Confirm authorisation
      C                   IF        DDACTN = 'X' and
      C                             Idx    = 0   or                                            CLE030
@@ -1471,14 +1474,14 @@
      C                   ELSE
      C                   EVAL      @EINKQ = 'N'
      C                   ENDIF
- 
+
       * KN = F14 = Settlements
      C                   IF        @DDATYP = 'PI'
      C                   EVAL      @EINKN = 'Y'
      C                   ELSE
      C                   EVAL      @EINKN = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1516,7 +1519,7 @@
      C                   EVAL      @EDTFD = 'N'                                 ING191
      C                   EVAL      @ESPIC = 'N'                                 ING191
      C                   ENDIF
- 
+
      C                   IF        @EKYFD = 'N'
      C                   EVAL      @EKYFD = 'Y'
      C                   ENDIF
@@ -1541,17 +1544,17 @@
       * Loan amendment updates
      C                   CALLB     'LELOAMUPD'
      C                   PARM      *BLANKS       @RTCD
- 
+
       ** Action requested and amendment details
      C                   PARM                    DDACTN
      C                   PARM                    N_LOAM_F
- 
+
       * Calling module code
      C                   PARM                    CallModCod
- 
+
       ** Reservation ID (input from VU only)
      C                   PARM                    ResrvId          10
- 
+
       * Features
      C                   PARM                    CDE001
      C                   PARM                    CDE005
@@ -1563,20 +1566,20 @@
      C                   PARM                    CLE014
      C                   PARM                    CLE023
      C                   PARM                    CLE030                                       CLE030
- 
+
       * Authorise amends / authorise principal tfr / consolidated conf.
      C                   PARM                    BPLMAU
      C                   PARM                    BPTPAU
      C                   PARM                    BPCONR
- 
+
       ** Date format indicator, local currency & run day number
      C                   PARM                    BJDFIN
      C                   PARM                    BJLCCY
      C                   PARM                    WRNDAY
- 
+
       ** Multi-branching
      C                   PARM                    BGMBIN
- 
+
       * Which system is active (24x7)
      C                   PARM                    System
       *
@@ -1589,18 +1592,18 @@
      C                             Or (CSC022 = 'Y' and WSkpCom = 'N')                        CSC022
      C                   COMMIT
      C                   Endif                                                                CSC022
- 
+
       ** If insert successful, make sure that the settlement details
       ** wil be reset.
      C                   Eval      D#LOAN = *Blanks
      C                   Eval      D#VDAT = *Blanks
      C                   Eval      D#SEQN = *Blanks
- 
+
       ** For inserts, we want to clear the screen first time in.
       ** Clear flag to force details to be blanked on first call.
      C                   Eval      ResetLOAM = *Blanks
      C                   ENDIF
- 
+
       ** If update not done due to record being updated by another
       ** workstation send message to screen.
      C
@@ -1642,7 +1645,7 @@
       * ResetErr - Reset errors
       *****************************************************************
      C     ResetErr      BEGSR
- 
+
       * Reset errors
      C                   MOVE      *ALL'Y'       OKAmndScn
      C                   EVAL      DDRAUTOK   = *BLANK
@@ -1655,7 +1658,7 @@
      C                   EVAL      WMsgDtaArr = *BLANK
      C                   EVAL      Idx        = *ZERO
      C                   EVAL      WIdx       = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2178,7 +2181,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CDE001'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CDE001            1
      C                   ELSE
@@ -2191,13 +2194,13 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CDE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CDE002            1
      C                   ELSE
      C                   MOVEL     'Y'           CDE002
      C                   ENDIF
- 
+
       ** Determine if CDE005 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2209,7 +2212,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CDE005
      C                   ENDIF
- 
+
       ** Determine if CEU004 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2221,7 +2224,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU004
      C                   END
- 
+
       ** Determine if CEU020 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2233,7 +2236,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU020
      C                   END
- 
+
       ** Determine if CLE002 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2245,7 +2248,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE002
      C                   END
- 
+
       ** Determine if CLE003 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2257,7 +2260,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE003
      C                   END
- 
+
       ** Determine if CLE005 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2269,7 +2272,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE005
      C                   ENDIF
- 
+
       ** Determine if CLE009 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2281,7 +2284,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE009
      C                   ENDIF
- 
+
       ** Determine if CLE014 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2293,7 +2296,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLE014
      C                   END
- 
+
       ** Determine if CLE023 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2317,7 +2320,7 @@
      C                   ELSE                                                                 CLE030
      C                   MOVEL     'N'           CLE030                                       CLE030
      C                   END                                                                  CLE030
- 
+
       ** Determine if CSC011 is switched on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
@@ -2348,7 +2351,7 @@
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM                    DSFDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE                         *************
      C                   Z-ADD     1             DBASE                          * DBERR 001 *
@@ -2374,7 +2377,7 @@
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM                    DSFDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE                         *************
      C                   Z-ADD     3             DBASE                          * DBERR 003 *
@@ -2398,7 +2401,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Determine if enhancement CSC022 is switched on                                       CSC022
                                                                                               CSC022
      C                   CALLB     'AOSARDR0'                                                 CSC022
@@ -2453,7 +2456,7 @@
      C                   Z-ADD     S1DATE        WRNDAY            5 0
      C                   MOVEL     ZADATE        WRUNDT            7
      C                   MOVE      'S'           System            1
- 
+
      C                   ELSE
      C                   MOVE      BJRDNB        WRNDAY
      C                   MOVE      BJMRDT        WRUNDT
@@ -2530,7 +2533,7 @@
       *
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LELOAMS011
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

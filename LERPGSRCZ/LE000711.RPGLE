@@ -42,6 +42,9 @@
       *             Fee Report. Added condition to ensure that        *
       *             correct transactions details are acquired. Also   *
       *             fix 251312A was reversed. (Child: AR746964)       *
+      *           - Upgrade: replace LEFCAMLD with LEFCAMLE           *
+      *           - Upgrade: Reversed codes of 251312A were no        *
+      *             longer included in the source.                    *
       *  251312A - Some trasactions are still not projected on        *
       *            facility amounts. Enhance the DOW loop to correctly*
       *            read all transactions. Added different processing  *
@@ -791,17 +794,15 @@
  
      C**********         DOW       %EOF(LEFCAMLB) = '0' and FWDT <= WEDate                  AR733040
  
-     C*****FACHISAK2     READE     LEFCAMLB                               05                 251312A
+     C*****FACHISAK2     READE     LEFCAMLB                               05                AR733040
  
-     C**********         IF        %EOF(LEFCAMLB) = '0' and FWDT <= WEDate                   251312A
+     C**********         IF        %EOF(LEFCAMLB) = '0' and FWDT <= WEDate                  AR733040
      C                   DOW       %EOF(LEFCAMLE) = '0' and FWDT <= WEDate                  AR733040
      C                             AND *IN08 = '0'                                          AR733040
  
       ** Compute for the balance as changed by the current forward transaction
  
-     C**********         EXSR      SRFWDBAL                                                  251312A
-     C                   EXSR      SRFWDBAL                                                 AR733040
- 
+     C                   EXSR      SRFWDBAL                                             
  
      C                   EVAL      WEDate2 = FWDT
  
@@ -845,11 +846,8 @@
      C                   EVAL      WSDate2 = WEDate2
  
       ** Retrieve correct balance using SRChkBalF
-     C**********         EXSR      SRChkBalF                                                 251312A
-
-     C**********         ENDIF                                                               251312A
-      *                                                                                     AR733040
-     C                   EXSR      SRChkBalF                                                AR733040
+     C                   EXSR      SRChkBalF                                                        
+     C**********         ENDIF                                                              AR733040
       *                                                                                     AR733040
      C                   READ      LEFCAMLE                               05                AR733040
       *                                                                                     AR733040
@@ -1347,20 +1345,10 @@
      C                   EXSR      *PSSR                                                      251312
      C                   ENDIF                                                                251312
                                                                                               251312
-     C**********         IF        FYPRTR = CLLPFI                                    251312 251312A
      C                   IF        CLLPFI = ' '   or                                         251312A
      C                             CLLPFI <> ' ' and CLPTFC = FYCNUM  and                    251312A
      C                             CLPTFT = FYFACT and CLPTFN = FYFCNO                       251312A
                                                                                               251312
-     C**********         IF        CLE004 = 'N'                                       251312 251312A
-     C**********         EVAL      WDAmount = WDAmount + WFWAM                        251312 251312A
-     C**********         EVAL      WUAmount = WUAmount - WFWAM                        251312 251312A
-     C**********         ELSE                                                         251312 251312A
-                                                                                              251312
-     C**********         IF        CLGASS  <> 'P'                                     251312 251312A
-     C**********         EVAL      WDAmount = WDAmount + WFWAM                        251312 251312A
-     C**********         EVAL      WUAmount = WUAmount - WFWAM                        251312 251312A
-     C**********         ELSE                                                         251312 251312A
                                                                                               251312
      C                   IF        PTYP <> 66 and PTYP <> 67 and                              251312
      C                             PTYP <> 69 and PTYP <> 72                                  251312
@@ -1375,8 +1363,6 @@
                                                                                               251312
      C                   ENDIF                                                                251312
      C                   ENDIF                                                                251312
-     C**********         ENDIF                                                        251312 251312A
-     C**********         ENDIF                                                        251312 251312A
 
      C**********         WHEN      FREC = 'LOAMSDKF'                                          251312
      C                   WHEN      FREC = 'LOAMSDKF' or FREC = 'LOAMSDK2'                     251312

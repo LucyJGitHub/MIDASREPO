@@ -2,12 +2,12 @@
 000101210302     H COPYRIGHT('(c) Finastra International Limited 2020')
 000102210302      *****************************************************************
 000103210305/*STD *  RPGSQLMOD                                                    *
-000104210308/*EXI *  TEXT('Midas LE Daily Rate Caluculation Report')              *
+000104210309/*EXI *  TEXT('Midas LE Daily Rate Calculation Report')               *
 000105210302      *****************************************************************
 000106210302      *                                                               *
 000107210302      *  Midas - Lending Module                                       *
 000108210302      *                                                               *
-000109210308      *  LE001110  - Midas LE Daily Rate Caluculation Report          *
+000109210309      *  LE001110  - Midas LE Daily Rate Calculation Report           *
 000110210302      *                                                               *
 000111210302      *  (c) Finastra International Limited 2020                      *
 000112210302      *                                                               *

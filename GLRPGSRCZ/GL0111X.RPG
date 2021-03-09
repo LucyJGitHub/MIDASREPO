@@ -27,8 +27,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
-      *  Last Amend No. EML102             Date 28Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057614           Date 05Mar21               *
+      *  Prev Amend No. EML102             Date 28Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027587           Date 19Jun14               *
       *                 AR1093096          Date 30Sep13               *
       *                 CRE041             Date 28Sep12               *
@@ -65,6 +66,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD057614 - Not possible to add a retail account to template  *
+      *             Standing journal. Add delete to T_GZBITHEX and    *
+      *             T_GZBITPEX when Batch is deleted.                 *
       *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
       *           UNL007 - Extended Narratives                        *
       *           Used GL0111XCPG, GL0111XDBU, GL0111XFPG             *
@@ -155,6 +159,13 @@
       *                                                                                      BUG2488
      FSDTELDL1IF  E           K        DISK         KINFSR *PSSR                             BUG2488
       ** Teller Identification file                                                          BUG2488
+     FTGZBTHX1UF  E           K        DISK         KINFSR *PSSR                            MD057614
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD057614
+     FTGZBTPX1UF  E           K        DISK         KINFSR *PSSR                            MD057614
+     F            T_GZBITPEX                        KRENAMETGZBTPD0                         MD057614
+      ** UDF Table for Journal Entry                                                        MD057614
+     FGLJENQL0UF  E           K        DISK         KINFSR *PSSR                            MD057614
+      ** Journal Entry Header Extension File - QD                                           MD057614
      F*                                                                   S01408
      F/COPY WNCPYSRC,GL0111XFP1                                           S01408
      F*                                                                   S01408
@@ -250,6 +261,9 @@
      I*                                                                   CGL016
      I* 200 Byte Data Structure for Incoming Data from Access Program     CGL016
      I*                                                                   CGL016
+     IUUSDY     E DSDSSDY                                                                   MD057614
+     I*                                                                                     MD057614
+     I* 800 Byte Data Structure for Incoming Data from Access Program                       MD057614
      ID@SARD    E DSSCSARDPD                                              CGL016
      I*                                                                   CGL016
      I*  Switchable Features DS                                           CGL016
@@ -261,6 +275,9 @@
      ILDA       E DSLDA                         256                                           CGL013
       ** Local Data Area for Database Error Details                                           CGL013
       *                                                                                       CGL013
+     ISDBRCH    E DSSDBRCHPD                                                                MD057614
+      ** External DS for Branch details                                                     MD057614
+      *                                                                                     MD057614
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -539,6 +556,47 @@ E1   C                     ENDIF                                          CGL016
      C                     DELETGLJENPDL               91                                     CER001
      C                     ENDIF                                                              CER001
      C                     ENDIF                                                              CER001
+      *                                                                                     MD057614
+      ** Delete extension tables                                                            MD057614
+      *                                                                                     MD057614
+     C                     CALL 'AOBRCHR1'                                                  MD057614
+     C                     PARM *BLANKS   PRTCD                                             MD057614
+     C                     PARM '*KEY   ' POPTN                                             MD057614
+     C                     PARM BTIBCA    PKIBCA  3                                         MD057614
+     C           SDBRCH    PARM SDBRCH    UUSDY                                             MD057614
+      *                                                                                     MD057614
+     C           KTBTNB    KLIST                                                            MD057614
+     C                     KFLD           BTBTNB                                            MD057614
+     C                     KFLD           BJRDNB                                            MD057614
+     C                     KFLD           A8ZONE                                            MD057614
+      *                                                                                     MD057614
+     C           KTBTNB    SETLLTGZBTHX1                                                    MD057614
+      *                                                                                     MD057614
+     C           KTBTNB    READETGZBTHX1                 30                                 MD057614
+     C           *IN30     DOWEQ*OFF                                                        MD057614
+     C                     DELETTGZBTHD0                                                    MD057614
+     C           KTBTNB    READETGZBTHX1                 30                                 MD057614
+     C                     ENDDO                                                            MD057614
+      *                                                                                     MD057614
+     C           KTBTNB    SETLLTGZBTPX1                                                    MD057614
+      *                                                                                     MD057614
+     C           KTBTNB    READETGZBTPX1                 30                                 MD057614
+     C           *IN30     DOWEQ*OFF                                                        MD057614
+     C                     DELETTGZBTPD0                                                    MD057614
+     C           KTBTNB    READETGZBTPX1                 30                                 MD057614
+     C                     ENDDO                                                            MD057614
+      *                                                                                     MD057614
+     C           KHBTNB    KLIST                                                            MD057614
+     C                     KFLD           BTBTNB                                            MD057614
+      *                                                                                     MD057614
+     C           KHBTNB    SETLLGLJENQL0                                                    MD057614
+      *                                                                                     MD057614
+     C           KHBTNB    READEGLJENQL0                 30                                 MD057614
+     C           *IN30     DOWEQ*OFF                                                        MD057614
+     C                     DELETGLJEHQD0                                                    MD057614
+     C           KHBTNB    READEGLJENQL0                 30                                 MD057614
+     C                     ENDDO                                                            MD057614
+      *                                                                                     MD057614
       *                                                                                     BUG26093
       ** If CER030 is installed, delete Multicash Narratives if                             BUG26093
       ** present in PF/GLMNARPD.                                                            BUG26093

@@ -499,7 +499,7 @@
      C                   EVAL      PFldType = *BLANK                            CAP734
      C                   EVAL      PFldAttr = *BLANK                            CAP734
      C                   EVAL      MQSRCS = 'MIDASCOB'                          CAP734
-     C
+     C                   EXSR      SRFmtWMsg                                    CAP734
       *                                                                         CAP734
      C                   EVAL      PFldTag  = 'APRPYQUEUE'                      CAP734
      C                   EVAL      PFldData = WkRespQ                           CAP734

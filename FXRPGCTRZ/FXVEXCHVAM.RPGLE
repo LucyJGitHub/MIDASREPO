@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR703547           Date 25May16               *
+      *  Last Amend No. MD057656           Date 09Mar21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR703547           Date 25May16               *
       *                 AR808714           Date 04Jun15               *
       *                 258321             Date 19Aug14               *
       *                 256537             Date 15Mar13               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057657 - Wrong multiply / divide for FX deal accepted      *
+      *           - Relocated 175229                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR703547 - Different validation when Buy/Sell=Deal ccy and if*
       *             buy/sell<>deal ccy. @Round ind. is being checked  *
@@ -875,7 +878,40 @@
      C                   MOVE      'Y'           AMTOK
      C                   END
      C                   END
+      *
+     C     AMTOK         IFNE      'Y'                                                      MD057657
+     C     @@MDF1        ANDNE     @@MDF2                                                   MD057657
+     C     @SPOT1        MULT      @SPOT2        @WKSPT                                     MD057657
+     C     BNEXRT        DIV       100           @WKEXR           13 8                      MD057657
+     C     1             ADD       @WKEXR        @WKCHP           13 8                      MD057657
+     C     1             SUB       @WKEXR        @WKCHM           13 8                      MD057657
+     C     @WKSPT        IFLE      @WKCHP                                                   MD057657
+     C     @WKSPT        ANDGE     @WKCHM                                                   MD057657
+     C                   MOVE      'Y'           AMTOK                                      MD057657
+     C                   END                                                                MD057657
+     C                   END                                                                MD057657
       *                                                                                     AR808714
+
+     C     AMTOK         IFNE      'Y'                                                      MD057657
+     C     @@MDF1        IFEQ      @@MDF2                                                   MD057657
+     C     @SPOT1        SUB       @SPOT2        #SPOTD           13 8                      MD057657
+     C                   ELSE                                                               MD057657
+     C     @@MDF1        IFEQ      'D'                                                      MD057657
+     C     @SPOT1        MULT      -1            #SPOT1           13 8                      MD057657
+     C                   ELSE                                                               MD057657
+     C                   EVAL      #SPOT1 = @SPOT1                                          MD057657
+     C                   END                                                                MD057657
+     C     @@MDF2        IFEQ      'D'                                                      MD057657
+     C     @SPOT2        MULT      -1            #SPOT2           13 8                      MD057657
+     C                   ELSE                                                               MD057657
+     C                   EVAL      #SPOT2 = @SPOT2                                          MD057657
+     C                   END                                                                MD057657
+     C                   EVAL      #SPOTD = #SPOT1 - #SPOT2                                 MD057657
+     C                   ENDIF                                                              MD057657
+     C                   ENDIF                                                              MD057657
+     C
+     C     #SPOTD        IFLE      1                                                        MD057657
+     C     #SPOTD        ANDGE     -1                                                       MD057657
      C     AMTOK         IFNE      'Y'                                                      AR808714
      C     @AMT7         MULT(H)   @RRATE        @WPROD           15 0                      AR808714
      C     @AMT7         DIV(H)    @RRATE        @WQUOT           15 0                      AR808714
@@ -893,20 +929,22 @@
      C                   MOVE      'Y'           AMTOK                                      AR808714
      C                   ENDIF                                                              AR808714
      C                   ENDIF                                                              AR808714
+
+     C                   ENDIF                                                              MD057657
       *                                                                         175229
-     C     AMTOK         IFNE      'Y'                                          175229
-     C     @@MDF1        ANDNE     @@MDF2                                       175229
-     C     @SPOT1        MULT      @SPOT2        @WKSPT                         175229
-     C     BNEXRT        DIV       100           @WKEXR           13 8          175229
-     C**********         ADD       @WKEXR        @WKCHP           13 8                 175229 207744
-     C**********         SUB       @WKEXR        @WKCHM           13 8                 175229 207744
-     C     1             ADD       @WKEXR        @WKCHP           13 8                        207744
-     C     1             SUB       @WKEXR        @WKCHM           13 8                        207744
-     C     @WKSPT        IFLE      @WKCHP                                       175229
-     C     @WKSPT        ANDGE     @WKCHM                                       175229
-     C                   MOVE      'Y'           AMTOK                          175229
-     C                   END                                                    175229
-     C                   END                                                    175229
+     C*****AMTOK*        IFNE      'Y'                                          175229      MD057657
+     C*****@@MDF1        ANDNE     @@MDF2                                       175229      MD057657
+     C*****@SPOT1        MULT      @SPOT2        @WKSPT                         175229      MD057657
+     C*****BNEXRT        DIV       100           @WKEXR           13 8          175229      MD057657
+     C***********        ADD       @WKEXR        @WKCHP           13 8                 175229 207744
+     C***********        SUB       @WKEXR        @WKCHM           13 8                 175229 207744
+     C*****1*****        ADD       @WKEXR        @WKCHP           13 8               207744 MD057657
+     C*****1*****        SUB       @WKEXR        @WKCHM           13 8               207744 MD057657
+     C*****@WKSPT        IFLE      @WKCHP                                       175229      MD057657
+     C*****@WKSPT        ANDGE     @WKCHM                                       175229      MD057657
+     C***********        MOVE      'Y'           AMTOK                          175229      MD057657
+     C***********        END                                                    175229      MD057657
+     C***********        END                                                    175229      MD057657
       *
       * SEND MESSAGE:
       * "** WARNING ** THE RATE IS NOT WITHIN THE SPECIFIED TOLERANCE"

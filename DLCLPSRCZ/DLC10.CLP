@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. EMP106             Date 28Jan21              */
-/*       Prev Amend No. MD048795           Date 15Jan18              */
+/*       Last Amend No. MD057367           Date 24Feb21              */
+/*       Prev Amend No. EMP106             Date 28Jan21              */
+/*                      MD048795           Date 15Jan18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      BUG23732           Date 23Apr09              */
 /*                      BUG23123           Date 09Mar09              */
@@ -42,6 +43,10 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD057367 - Projected amount (MVAM) for Maturity interest is */
+/*                  different.                                       */
+/*                - Use LF/SDCSINL10 for the tax information during  */
+/*                  OVRDBF operation prior to calling DL0280.        */
 /*       EMP106   - Introduced EMP106_005 to add ovrdbf by NADC03    */
 /*       MD048795 - Added FX0960 call for FX Netting Projections     */
 /*                  generation when settlement is retail             */
@@ -231,7 +236,8 @@
 /************** OVRDBF     FILE(TABLED) TOFILE(TABDLEI) SHARE(*NO)    /*S01194*/
                 OVRDBF     FILE(DLUPD) TOFILE(DEALS)
                 OVRDBF     FILE(SDCSINPD) TOFILE(XSDCSINPD)                               /*234650*/
-                OVRDBF     FILE(SDCSINL6) TOFILE(XSDCSINL6)                               /*234650*/
+/**********     OVRDBF     FILE(SDCSINL6) TOFILE(XSDCSINL6)                      /*234650 MD057367*/
+                OVRDBF     FILE(SDCSINL10) TOFILE(XSDCSINL10)                           /*MD057367*/
                 CPYF       FROMFILE(SDINPHPD) TOFILE(XSDINPHPD) +
                              MBROPT(*REPLACE) FMTOPT(*NONE)                             /*BUG23008*/
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +

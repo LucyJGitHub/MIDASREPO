@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052014           Date 05Oct18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057657           Date 09Mar21               *
+      *  Prev Amend No. MD052014           Date 05Oct18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD039203           Date 14Jun16               *
       *                 CDL094             Date 01Sep14               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057657 - Recompiled due to changes in FXVEXCHVAM           *
       *  MD052014 - Sale Value Date not defaulting correctly for Swap *
       *             Deals. Should be defaulted with the Core Value    *
       *             Date entered (CDL099).                            *

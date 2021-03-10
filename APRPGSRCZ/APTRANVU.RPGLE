@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. CLE172             Date 03Feb21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -226,6 +227,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
@@ -6089,6 +6091,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LEEXLn            4 0
+      *                                                                                       CLE172
+     C                   Z-ADD     98            LEBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************

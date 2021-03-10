@@ -399,9 +399,13 @@
      C**********                       ##RECS + ##PAYS +                             CSF011 AR702532
      C**********                           InfData + ExtData                         246574 AR702532
      C                                 NwRoScnFmt3 + @ACTRV + ##RECS +                      AR702532
+<<<<<<< HEAD
      C*                                ##PAYS + InfData + ExtData                    AR702532 CLE172
      C                                 ##PAYS + InfData + ExtData +                           CLE172
      C                                 LeriScnBlrt                                            CLE172
+=======
+     C                                 ##PAYS + InfData + ExtData                           AR702532
+>>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
 
      C                   MOVE      '1'           *INLR
      C                   RETURN
@@ -553,10 +557,13 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
+<<<<<<< HEAD
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
      C                   PARM                    LeriScnBlrt                                  CLE172
+=======
+>>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
 
       ** Update 'Current' Loan with Loan in Screen Format
 

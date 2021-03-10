@@ -29,7 +29,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CLE172             Date 03Feb21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amned No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
@@ -75,6 +76,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -339,11 +342,14 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE Rollover Instructions Extra Data - File (D/B) format
 
+<<<<<<< HEAD
       *                                                                                       CLE172
       ** LERI Backward-Looking Rate Fields                                                    CLE172
       *                                                                                       CLE172
      D LeriScnBlrt     DS            98                                                       CLE172
       *                                                                                       CLE172
+=======
+>>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions - Input
 

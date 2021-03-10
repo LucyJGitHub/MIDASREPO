@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -210,21 +213,21 @@
       ***  File receive instructions
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** File payment instructions
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ***  File FRA/IRS instructions
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ***  Screen receive instructions
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ***  Screen payment instructions
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ***  Screen FRA/IRS instructions
       *
@@ -753,7 +756,7 @@
      C                   END
      C                   END
      C                   Endif
- 
+
      C                   END
       *
       ***  If action code, or loan number, or value date, or sequence were NOT OK
@@ -790,7 +793,7 @@
       * SNDM@M - Send a message to first screen
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ***  If there are fundamental errors in this transaction
@@ -2202,7 +2205,7 @@
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVEL     BGMBIN        MBIN              1
       *
       ***  Access General Ledger

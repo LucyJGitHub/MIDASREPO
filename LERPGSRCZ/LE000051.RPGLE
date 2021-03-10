@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE064             Date 06Dec10               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -52,20 +55,20 @@
      FLE000051AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
       ** Aggregated Facility Reductions for Repayments - Audit
- 
+
      FLE000051P1O    E             PRINTER USROPN
      F                                     INFDS(SPOOL1)
       ** Aggregated Facility Reductions for Repayments - Report
- 
+
      FLEAGRDL1  IF   E           K DISK    INFSR(*PSSR)
       ** Aggregated Facility Reduction by Branch, Aggregate Facility/Value Date
- 
+
      FLEAGHSL0  UF A E           K DISK    INFSR(*PSSR)
       ** Aggregated Facility History by Facility/Value Date/Sequence
- 
+
      FLEAGACPD  UF A E           K DISK    INFSR(*PSSR)
       ** Aggregated Facilities with Actions
- 
+
      FLEAGFYL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(AA)
       ** Aggregate Facilities detail A record
@@ -74,13 +77,13 @@
      F                                     IGNORE(FCLTYFMF)
      F                                     IGNORE(FCLTYFNF)
       ** Aggregate Facilities File
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array containing Copyright statement
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -94,28 +97,28 @@
       *
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundate data area
- 
+
      D LERSTS        E DS                  EXTNAME(LERSTS) DTAARA(LERSTS)
       ** Status data area for Fees & Profitabilities
- 
+
      D PSDS           SDS
       ** Program Status Data Structure
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D SPOOL1          DS
       ** File Information Data Structure for LE000051P1
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
      D SPOOLU          DS
       ***  File Information Data Structure for LE000051AU
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D                 DS
      D WkFclty                 1     14
      D AHAGBR                  1      3
@@ -124,39 +127,39 @@
      D AHAGFX                 10     14  0
      D AHAGFT                 10     12  0
      D AHAGFN                 13     14  0
- 
+
      D                 DS
      D R1FCLT                  1      6
      D WkSlash                 4      4
- 
+
       ***  Dummy Data Structures used by Access Programs.
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External data structures for Bank Details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ***  External data structures for General Ledger ICD
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ***  External data structures for Branch Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External data structures for Currency Details
- 
+
      D SDCUHS        E DS                  EXTNAME(SDCUHSPD)
       ***  External data structures for Historic Spot Rates Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  Short data structures for Access Objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long data structure for access objects
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WkOpen          S              1
      D PSeq            S              5
      D PEnty           S              3
@@ -190,7 +193,7 @@
      D ACT@            S             80
      D RQDLN1          S              3  0
      D DIFLN1          S              3  0
- 
+
       ** Parameters for ZXRATE module
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
@@ -198,7 +201,7 @@
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       ** Parameters for ZCONVZ1 module
      D ZAMTCI          S             15  0
      D ZEXCH           S             13P 8
@@ -208,12 +211,12 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 3
       *****************************************************************
@@ -221,13 +224,13 @@
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Perform Initialisation.
      C                   EXSR      SRInit
- 
+
       ** Perform Detail Processing.
      C                   EXSR      SRProcess
- 
+
       ** Output Audit Report and End Program.
      C                   EXSR      SRAudit
       *
@@ -241,10 +244,10 @@
       *                                                               *
       *****************************************************************
      C     SRInit        BEGSR
- 
+
       ** Set up copyright parameter
      C                   MOVEA     CPY@          ACT@
- 
+
       ** Initialise LDA field.
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
@@ -254,24 +257,24 @@
      C                   EVAL      DBMOD = 'LE000051'
      C                   EVAL      DBPGM = 'LE000051'
      C                   OUT       LDA
- 
+
       ** Access LE Status dtaara for Fees & Profitability
      C                   IN        LERSTS
- 
+
       ** Access RUNDAT for multibranching indicator
      C                   IN        RUNDAT
- 
+
      C                   IF        AGMBIN = 'Y'
      C                   MOVE      *ON           *IN37
      C                   ENDIF
- 
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -281,19 +284,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System Date Format, DDMMYY (*IN98 off)
       **                           MMDDYY (*IN98 on).
      C                   IF        BJDFIN = 'M'
      C                   MOVE      *ON           *IN98
      C                   ENDIF
- 
+
       ** Call Access Program for General Ledger Details
      C                   CALL      'AOGELRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -303,34 +306,34 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     KLFclt1       KLIST
      C                   KFLD                    AHAGBR
      C                   KFLD                    AHAGNM
      C                   KFLD                    AHAGFT
      C                   KFLD                    AHAGFN
- 
+
      C     KLFclt2       KLIST
      C                   KFLD                    AHAGBR
      C                   KFLD                    AHAGNM
      C                   KFLD                    AHAGFX
      C                   KFLD                    AHVDAT
- 
+
      C     KLFclt3       KLIST
      C                   KFLD                    AHAGBR
      C                   KFLD                    AHAGNM
      C                   KFLD                    AHAGFX
- 
+
       ** Ensure Audit Spool File recorded by RCF.
      C                   MOVEL     SFILEU        PSFile
      C                   Z-ADD     SFNUMU        PZSNum
- 
+
      C                   EXSR      SRRCFProc
- 
+
       ** Report Work fields.
      C                   EVAL      RQDLN1 = 0
      C                   EVAL      DIFLN1 = 0
- 
+
      C                   EVAL      WFAMT = 0
      C                   EVAL      TFAMT = 0
      C                   EVAL      WkPrvBrc = *BLANKS
@@ -338,10 +341,10 @@
      C                   EVAL      WkPrvCNo = *BLANKS                                         CSD027
      C                   EVAL      WkPrvFcT = 0
      C                   EVAL      WkPrvFcN = 0
- 
+
       ** Initialise report fields
      C                   EXSR      SRInitRFld
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -351,21 +354,21 @@
       *                                                               *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Read first record from File.
      C     *LOVAL        SETLL     LEAGRDL1
      C                   READ      LEAGRDL1                               89
- 
+
       ** Do While not End of File
      C                   DOW       *IN89 = *OFF
- 
+
       ** If aggregate facility changed, access corresponding record from
       ** aggregate facilities detail A table
      C                   IF        WkPrvBrc <> AHAGBR OR
      C                             WkPrvCNo <> AHAGNM OR
      C                             WkPrvFcT <> AHAGFT OR
      C                             WkPrvFcN <> AHAGFN
- 
+
      C     KLFclt1       CHAIN     LEAGFYL1                           90
      C                   IF        *IN90 = *ON
      C     *LOCK         IN        LDA
@@ -375,21 +378,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WFAMT = 0
      C                   ENDIF
- 
+
       ** Process Loan Actions
      C                   EXSR      SRProcLAct
- 
+
      C                   EVAL      WkPrvBrc = AHAGBR
      C                   EVAL      WkPrvCNo = AHAGNM
      C                   EVAL      WkPrvFcT = AHAGFT
      C                   EVAL      WkPrvFcN = AHAGFN
- 
+
       ** Read next record.
      C                   READ      LEAGRDL1                               89
- 
+
       ** If aggregate facility changed or end of file, update aggregated
       ** facility amount
      C                   IF        WkPrvBrc <> AHAGBR OR
@@ -399,25 +402,25 @@
      C                             *IN89 = *ON
      C                   IF        WFAMT <> 0
      C                   EXSR      SRUpdAggFac
- 
+
       ** Process Report Lines.
      C                   EXSR      SRReport
- 
+
       ** Count records read.
      C                   ADD       1             RCOUNT
      C                   ENDIF
      C                   ENDIF
- 
+
       ** End of Do Until End of Valid Records.
      C                   ENDDO
- 
+
       ** Write End of Report.
      C                   IF        WkOpen = *ON
      C                   EXSR      SRWriteEnd
      C                   ENDIF
- 
+
      C                   EXSR      SRUpdAggTrl
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -428,18 +431,18 @@
       *                                                               *
       *****************************************************************
      C     SRUpdAggFac   BEGSR
- 
+
      C                   EVAL      WkOFAMT = AAFAMT
      C                   EVAL      AAFAMT = AAFAMT - WFAMT
- 
+
      C                   IF        AAFAMT < 0
      C                   EVAL      AAFAMT = 0
      C                   ENDIF
- 
+
      C                   EVAL      TFAMT = TFAMT + WkOFAMT - AAFAMT
- 
+
      C                   UPDATE    FCLTYFMF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -449,11 +452,11 @@
       *                                                               *
       *****************************************************************
      C     SRUpdAggTrl   BEGSR
- 
+
      C                   IF        RCOUNT <> *ZEROS
      C     *LOVAL        SETLL     LEAGFCL0
      C                   READ      FCLTYZZF                               93
- 
+
      C                   IF        *IN93 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 4
@@ -462,7 +465,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Adjust both the value before and the values after for the
       ** the total amount reduced.
      C     VLBF          MULT      1000          WRKTOT
@@ -478,9 +481,9 @@
      C                   EVAL      LCD = BJRDNB
      C                   EVAL      CHTP = 'A'
      C                   UPDATE    FCLTYZZF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -490,24 +493,24 @@
       *                                                               *
       *****************************************************************
      C     SRProcLAct    BEGSR
- 
+
      C                   EVAL      WRVCR = AARVCR
      C                   EVAL      WAFAM = AAFAMT
- 
+
      C                   IF        AHVDAT < BJRDNB OR
      C                             AHVDAT <= BKAPDT AND BKAPFQ = 'D'
      C                   IF        AHVDAT < FACHISD
      C                   EVAL      AHVDAT = FACHISD
      C                   ENDIF
      C                   ENDIF
- 
+
      C     KLFclt2       SETGT     LEAGHSL0
      C     KLFclt3       READPE    LEAGHSL0                               91
      C                   IF        *IN91 = *OFF
      C                   EVAL      WRVCR = AIRCIN
      C                   EVAL      WAFAM = AIAFAM
      C                   ENDIF
- 
+
       ** If revolving credit indicator is 'T', inherit its tranche's revolving
       ** credit indicator
      C                   IF        WRVCR = 'T'
@@ -515,17 +518,17 @@
      C                   ELSE
      C                   EVAL      WEFRC = WRVCR
      C                   ENDIF
- 
+
      C                   EXSR      SRSetFFld
- 
+
      C                   WRITE     LEAGHSD0
- 
+
       ** Check if the aggregate facility exists in the Aggregated Facilities
       ** with Actions table. If it does, update its value date with that of
       ** aggregate facility reduction value date, otherwise, write this as a
       ** new record
      C     KLFclt3       CHAIN     LEAGACPD                           92
- 
+
      C                   IF        *IN92 = *OFF
      C                   IF        AIDATE < AJDATE
      C                   EVAL      AJDATE = AIDATE
@@ -538,11 +541,11 @@
      C                   EVAL      AJDATE = AIDATE
      C                   WRITE     LEAGACD0
      C                   ENDIF
- 
+
      C                   IF        WEFRC <> 'Y'
      C                   EVAL      WFAMT = WFAMT + AIAAMT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -552,7 +555,7 @@
       *                                                               *
       *****************************************************************
      C     SRSetFFld     BEGSR
- 
+
      C                   EVAL      AIRECI = 'D'
      C                   EVAL      AIBRCA = AHAGBR
      C                   EVAL      AICNUM = AHAGNM
@@ -561,31 +564,31 @@
      C                   EVAL      AIDATE = AHVDAT
      C                   EVAL      AISEQ = 98
      C                   EVAL      AIACTN = AHAMTP
- 
+
      C                   EVAL      AIAAMT = 0
      C                   EVAL      ZEXCH = 0
      C                   EVAL      ZMD = *BLANKS
- 
+
       ** If non-revolving credit, set action amount as reduction amount
      C                   IF        WEFRC <> 'Y'
- 
+
       ** If tranche facility currency is not equal to aggregate facility ccy,
       ** perform conversions
      C                   IF        AAFCCY <> AHTRCY
- 
+
       ** Get the cross rate between the tranche ccy & aggregate facility ccy
      C                   EVAL      ZCCYI = AHTRCY
      C                   EVAL      ZCCYO = AAFCCY
      C                   EXSR      SRGetXRate
      C                   EVAL      ZEXCH = ZRATEX
      C                   EVAL      ZMD = ZMDIX
- 
+
       ** Convert reduction amount from tranche ccy to aggregate facility ccy
      C                   EVAL      ZAMTCI = AHRAMT
      C                   EXSR      SRCvtAmount
      C                   EVAL      AIAAMT = ZAMTCO
      C                   ELSE
- 
+
       ** Get Details of the Facility Currency
      C                   EVAL      I#LFD1 = AAFCCY
      C                   EXSR      SRGetCurDet
@@ -594,9 +597,9 @@
      C                   EVAL      ZMD = 'M'
      C                   EVAL      AIAAMT = AHRAMT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      AIRCIN = WRVCR
      C                   EVAL      AITSEQ = 98
      C                   EVAL      AITRBR = AHTRBR
@@ -613,14 +616,14 @@
      C                   EVAL      AIUSEQ = AHUSEQ
      C                   EVAL      AIMTID = AHMTID
      C                   EVAL      AIFCAM = WAFAM - AIAAMT
- 
+
      C                   IF        AIFCAM < 0
      C                   EVAL      AIFCAM = 0
      C                   ENDIF
- 
+
      C                   EVAL      AIAFAM = WAFAM - AIAAMT
      C                   EVAL      AIORED = BJRDNB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -631,10 +634,10 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurDet   BEGSR
- 
+
      C                   CALLB     'MXACSCURR'
       /COPY MXCPYSRC,MXACSPRME
- 
+
      C                   IF        ACS_RTCD = '*ERROR '
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 5
@@ -643,9 +646,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SDCURR = InData
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -656,7 +659,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtAmount   BEGSR
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM                    ZAMTCI
      C                   PARM                    ZEXCH
@@ -667,7 +670,7 @@
      C                   PARM                    ZCDPO
       ** Output
      C                   PARM      *ZEROS        ZAMTCO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -678,11 +681,11 @@
       *                                                               *
       *****************************************************************
      C     SRGetXRate    BEGSR
- 
+
       ** Get Details of the 'From' Ccy
      C                   EVAL      I#LFD1 = ZCCYI
      C                   EXSR      SRGetCurDet
- 
+
       ** If Value Date of the action is less than rundate, use historic
       ** spot rate. Else, use current spot rate for the currency
      C                   IF        AHVDAT < BJRDNB
@@ -695,15 +698,15 @@
      C                   EVAL      ZRATE1 = A6SPRT
      C                   EVAL      ZMDI1 = A6MDIN
      C                   ENDIF
- 
+
      C                   EVAL      ZCDPI = A6NBDP
- 
+
       ** Get Details of the 'To' Ccy
      C                   EVAL      I#LFD1 = ZCCYO
      C                   EXSR      SRGetCurDet
- 
+
      C                   EVAL      ZCDPO = A6NBDP
- 
+
       ** If Value Date of the action is less than rundate, use historic
       ** spot rate. Else, use current spot rate for the currency
      C                   IF        AHVDAT < BJRDNB
@@ -716,7 +719,7 @@
      C                   EVAL      ZRATE2 = A6SPRT
      C                   EVAL      ZMDI2 = A6MDIN
      C                   ENDIF
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -725,7 +728,7 @@
       ** Outputs
      C                   PARM      *ZEROS        ZRATEX
      C                   PARM      *BLANKS       ZMDIX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -735,7 +738,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetHisSpot  BEGSR
- 
+
       ** Call Access Program for Historic Spot Rates
      C                   CALL      'AOCUHSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -743,7 +746,7 @@
      C                   PARM                    PDate
      C                   PARM                    PCcy
      C     SDCUHS        PARM      SDCUHS        DSSDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -753,10 +756,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WkSPRT = G2SPRT
      C                   EVAL      WkMDIN = G2MDIN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -766,12 +769,12 @@
       *                                                               *
       *****************************************************************
      C     SRReport      BEGSR
- 
+
       ** Branch Level Break
      C                   IF        AHAGBR <> A8BRCD
- 
+
      C                   IF        WkOpen = *ON
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     5             RQDLN1
@@ -779,40 +782,40 @@
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     TRAILP1
      C                   CLOSE     LE000051P1
- 
+
      C                   ENDIF
- 
+
       ** Open LE000051P1 and register in RCF
      C                   OPEN      LE000051P1
      C                   MOVE      *ON           WkOpen
- 
+
       ** Ensure Report Spool File recorded by RCF.
      C                   MOVE      SFILE1        PSFile
      C                   Z-ADD     SFNUM1        PZSNum
- 
+
      C                   EXSR      SRRCFProc
- 
+
      C                   MOVEL     AHAGBR        A8BRCD
      C                   EVAL      PBrca = AHAGBR
      C                   EXSR      SRGetBrchD
- 
+
       ** Write out the Header
      C                   WRITE     HEADP1
- 
+
      C                   ENDIF
- 
+
       ** Set report detail fields
      C                   EXSR      SRSetRFld
- 
+
       ** Write out the record.
      C                   EXSR      SRWriteDet
- 
+
       ** Initialize Report Fields
      C                   EXSR      SRInitRFld
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -822,7 +825,7 @@
       *                                                               *
       *****************************************************************
      C     SRInitRFld    BEGSR
- 
+
      C                   EVAL      R1CUST = *BLANKS
      C                   EVAL      R1FCLT = *BLANKS
      C                   EVAL      WkSlash = '/'
@@ -830,7 +833,7 @@
      C                   EVAL      R1OAMT = *BLANKS
      C                   EVAL      R1RAMT = *BLANKS
      C                   EVAL      R1DIFF = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -840,30 +843,30 @@
       *                                                               *
       *****************************************************************
      C     SRSetRFld     BEGSR
- 
+
      C                   MOVEL     AACNUM        R1CUST
      C                   MOVEL     AAFACT        R1FCLT
      C                   MOVE      AAFCNO        R1FCLT
      C                   EVAL      R1CURR = AAFCCY
      C                   EVAL      R1RAMT = *BLANKS
      C                   EVAL      R1DIFF = *BLANKS
- 
+
       ** Format Old Facility Amount
      C                   EVAL      PDecs = ZCDPO
      C                   EVAL      PFld15 = WkOFAMT
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1OAMT = ZOut21
- 
+
       ** Format Reduced Facility Amount
      C                   EVAL      PFld15 = AAFAMT
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1RAMT = ZOut21
- 
+
       ** Format the amount difference
      C                   EVAL      PFld15 = WkOFAMT - AAFAMT
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1DIFF = ZOut21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -873,13 +876,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmt      BEGSR
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    PFld15
      C                   PARM                    PDecs
      C                   PARM      'J'           PECode
      C                   PARM      *BLANKS       Zout21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -889,14 +892,14 @@
       *                                                               *
       *****************************************************************
      C     SRGetBrchD    BEGSR
- 
+
       ** Call Access Program for Branch Details.
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PBrca
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -906,7 +909,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -916,7 +919,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteDet    BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     1             RQDLN1
@@ -924,10 +927,10 @@
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Detail Record.
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -937,7 +940,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteEnd    BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     4             RQDLN1
@@ -945,10 +948,10 @@
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Total Format.
      C                   WRITE     TRAILP1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -958,28 +961,28 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Output Report Header and File Controls.
      C                   WRITE     HEADAU
      C                   WRITE     CONTROL
- 
+
       ** If there is a DB Error, Output the DB Error Information.
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
      C     RCOUNT        IFEQ      0
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** End Program and Return.
      C                   MOVE      *ON           *INLR
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -989,7 +992,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
@@ -999,13 +1002,13 @@
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here.
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1015,14 +1018,14 @@
       *                                                               *
       *****************************************************************
      C     SRRCFProc     BEGSR
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM                    PEnty
      C                   PARM                    PSFile
      C                   PARM                    PZSNum
      C                   PARM      *BLANKS       PZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
      C                   IF        PZSErr = 'Y'
@@ -1031,7 +1034,7 @@
      C                   MOVE      *ON           *INLR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

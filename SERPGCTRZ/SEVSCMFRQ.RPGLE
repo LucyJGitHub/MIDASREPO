@@ -22,8 +22,9 @@
       *    applied to this source.                                    *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -176,7 +179,7 @@
       ** Initialise work variables.
      C                   EVAL      IDx = 0
      C                   EVAL      WCmFq = 0
- 
+
      C                   MOVE      DDCD01        SCD(1)
      C                   MOVE      DDCD02        SCD(2)
      C                   MOVE      DDCD03        SCD(3)
@@ -200,11 +203,11 @@
      C                   IF        OKCMFQ = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKCMFQ <> 'N'
      C                   Z-ADD     WCmFq         S1CMFQ
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -225,40 +228,40 @@
       *
      C                   IF        DDCMFQ = *BLANKS
      C                   Z-ADD     0             Wx
- 
+
      C     Wx            DOWLT     12
      C                   ADD       1             Wx
- 
+
      C                   IF        SCD(Wx) = *BLANKS
      C     Wx            SUB       1             WCmFq
      C                   MOVE      WCmFq         DDCMFQ
      C                   Z-ADD     13            Wx
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        Wx = 12 AND
      C                             SCD(Wx) <> *BLANKS
      C                   MOVE      12            DDCMFQ
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZField
      C                   MOVE      DDCMFQ        ZField
      C                   Z-ADD     2             ZADig
      C                   Z-ADD     0             ZADec
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZAlignOK
      C                   PARM                    ZField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZAlignOk = 'Y'
      C                   MOVE      ZField        WCmFq
      C                   ENDIF
- 
+
      C                   IF        ZAlignOk <> 'Y' OR
      C                             WCmFq < 1 OR WCmFq > 12
      C**********         MOVE      'N'           OKSYBS                                       206957
@@ -267,9 +270,9 @@
      C                   MOVEL     'DDSYBS'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0219'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

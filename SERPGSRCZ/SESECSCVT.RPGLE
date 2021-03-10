@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding                              *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -712,7 +714,8 @@
      C                   MOVE      ZOut21        DDCPNR
       *
       ** Base rate code.
-     C                   IF        BASC <> *ZEROS
+     C**********         IF        BASC <> *ZEROS                                             CSD103
+     C                   IF        BASC <> *BLANKS                                            CSD103
      C                   MOVEL     BASC          DDBASC
      C                   ENDIF
       *
@@ -1437,7 +1440,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 1                                                                     CSE031
-     C                   IF        BR01 <> *ZEROS                                             CSE031
+     C**********         IF        BR01 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR01 <> *BLANKS                                            CSD103
      C                   MOVE      BR01          DDBR01                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1463,7 +1467,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 2                                                                     CSE031
-     C                   IF        BR02 <> *ZEROS                                             CSE031
+     C**********         IF        BR02 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR02 <> *BLANKS                                            CSD103
      C                   MOVE      BR02          DDBR02                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1489,7 +1494,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 3                                                                     CSE031
-     C                   IF        BR03 <> *ZEROS                                             CSE031
+     C**********         IF        BR03 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR03 <> *BLANKS                                            CSD103
      C                   MOVE      BR03          DDBR03                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1515,7 +1521,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 4                                                                     CSE031
-     C                   IF        BR04 <> *ZEROS                                             CSE031
+     C**********         IF        BR04 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR04 <> *BLANKS                                            CSD103
      C                   MOVE      BR04          DDBR04                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1541,7 +1548,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 5                                                                     CSE031
-     C                   IF        BR05 <> *ZEROS                                             CSE031
+     C**********         IF        BR05 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR05 <> *BLANKS                                            CSD103
      C                   MOVE      BR05          DDBR05                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1567,7 +1575,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 6                                                                     CSE031
-     C                   IF        BR06 <> *ZEROS                                             CSE031
+     C**********         IF        BR06 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR06 <> *BLANKS                                            CSD103
      C                   MOVE      BR06          DDBR06                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1593,7 +1602,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 7                                                                     CSE031
-     C                   IF        BR07 <> *ZEROS                                             CSE031
+     C**********         IF        BR07 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR07 <> *BLANKS                                            CSD103
      C                   MOVE      BR07          DDBR07                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1619,7 +1629,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 8                                                                     CSE031
-     C                   IF        BR08 <> *ZEROS                                             CSE031
+     C**********         IF        BR08 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR08 <> *BLANKS                                            CSD103
      C                   MOVE      BR08          DDBR08                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1645,7 +1656,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 9                                                                     CSE031
-     C                   IF        BR09 <> *ZEROS                                             CSE031
+     C**********         IF        BR09 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR09 <> *BLANKS                                            CSD103
      C                   MOVE      BR09          DDBR09                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -1671,7 +1683,8 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
       ** Base Rate Code 10                                                                    CSE031
-     C                   IF        BR10 <> *ZEROS                                             CSE031
+     C**********         IF        BR10 <> *ZEROS                                      CSE031 CSD103
+     C                   IF        BR10 <> *BLANKS                                            CSD103
      C                   MOVE      BR10          DDBR10                                       CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
@@ -2074,7 +2087,8 @@
      C                   Z-ADD     0             NEXD
      C                   Z-ADD     0             LCPN
      C                   Z-ADD     0             CPNR
-     C                   Z-ADD     0             BASC
+     C**********         Z-ADD     0             BASC                                         CSD103
+     C                   MOVE      *BLANKS       BASC                                         CSD103
      C                   Z-ADD     0             BASS
      C                   Z-ADD     0             MCPN
      C                   Z-ADD     0             MATY

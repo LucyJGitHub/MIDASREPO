@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 MD024133           Date 30Apr14               *
       *                 MD023534           Date 30Apr14               *
       *                 MD023031           Date 22Apr14               *
@@ -73,6 +74,7 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD024133 - LEC06A failed due to FOOB in BoM CoB              *
@@ -473,7 +475,8 @@
 0113 I                             P   41   47 0IWOD
 0114 I                             P   48   53 7BRTEM
 0115 I                             P   54   59 7RTSPM
-0116 I                                 60   61 0BRTTM
+0116 I**********                       60   61 0BRTTM                                         CSD103
+0116 I                                 60   61  BRTTM                                         CSD103
 0117 I                                 62   62  SPINM
 0118 I                             P   63   69 0YPLCM
 0119 I**********                   P   70   76 0YILC                                        MD023031

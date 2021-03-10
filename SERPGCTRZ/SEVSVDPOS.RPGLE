@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -153,7 +156,7 @@
       *
       ** Index for arrays of warning error message ids, etc.
      D WIx             S              3P 0
- 
+
      D WWSCD           S             48A
      D WWSCR           S             12A
      D WWOCD           S             48A
@@ -194,9 +197,9 @@
      C                   IF        WIx <> 0
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -204,7 +207,7 @@
       *  SRGetArr - Get coupon rate/day indicators                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGetArr      BEGSR
       *
      C                   MOVE      DDCD01        WSCD(1)
@@ -219,7 +222,7 @@
      C                   MOVE      DDCD10        WSCD(10)
      C                   MOVE      DDCD11        WSCD(11)
      C                   MOVE      DDCD12        WSCD(12)
- 
+
      C                   MOVE      DDCR01        WSCR(1)
      C                   MOVE      DDCR02        WSCR(2)
      C                   MOVE      DDCR03        WSCR(3)
@@ -245,7 +248,7 @@
      C                   MOVE      ODDCD10       WOCD(10)
      C                   MOVE      ODDCD11       WOCD(11)
      C                   MOVE      ODDCD12       WOCD(12)
- 
+
      C                   MOVE      ODDCR01       WOCR(1)
      C                   MOVE      ODDCR02       WOCR(2)
      C                   MOVE      ODDCR03       WOCR(3)
@@ -258,15 +261,15 @@
      C                   MOVE      ODDCR10       WOCR(10)
      C                   MOVE      ODDCR11       WOCR(11)
      C                   MOVE      ODDCR12       WOCR(12)
- 
+
      C                   MOVEA     WSCD          WWSCD
      C                   MOVEA     WSCR          WWSCR
- 
+
      C                   MOVEA     WOCD          WWOCD
      C                   MOVEA     WOCR          WWOCR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -274,36 +277,36 @@
       *  SRChkPos - Check for Value Date Positions                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkPos      BEGSR
- 
+
      C     S1SESN        SETLL     BKPHDDF
      C                   EVAL      *IN01 = *OFF
- 
+
      C                   DOW       *IN01 = *OFF
      C     S1SESN        READE     BKPHDDF                                01
- 
+
      C                   IF        *IN01 = *OFF AND
      C                             RECI = 'D'
      C     KBPKY         CHAIN     BKPOS                              01
- 
+
      C                   IF        *IN01 = *OFF AND
      C                             RECI = 'D'
- 
+
      C                   IF        ECNP <> *ZEROS OR
      C                             NPSN <> *ZEROS
      C                   ADD       1             WIx
      C                   MOVE      'SEA0154'     WMsgIDXAr(WIx)
      C                   EVAL      *IN01 = *ON
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

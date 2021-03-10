@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055219           Date 27May20               *
-      *  Prev Amend No. MD055059           Date 21May20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055219           Date 27May20               *
+      *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
       *                 MD055714           Date 06May20               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
       *  MD055059 - Allow negative fixed rate                         *
@@ -618,7 +620,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123
@@ -1275,9 +1278,9 @@
      C     SRBRTT        BEGSR
       *
      C                   Z-ADD     *ZEROS        BASER
-     C     DDBRTT        IFEQ      '00'
-     C                   MOVE      *BLANKS       DDBRTT
-     C                   ENDIF
+     C*****DDBRTT        IFEQ      '00'                                                       CSD103
+     C**********         MOVE      *BLANKS       DDBRTT                                       CSD103
+     C**********         ENDIF                                                                CSD103
       *
      C     DDBRTT        IFNE      *BLANKS
      C                   MOVE      CCLCCY        @KEY1
@@ -1346,7 +1349,8 @@
      C                   PARM      *BLANKS       @RTCD                                        246516
      C                   PARM      '*KEY   '     @OPTN                                        246516
      C                   PARM                    @KEY1             3                          246516
-     C                   PARM                    @KEY2N            2 0                        246516
+     C**********         PARM                    @KEY2N            2 0                 246516 CSD103
+     C                   PARM                    @KEY2N            2                          CSD103
      C                   PARM                    @KEY3             5 0                        246516
      C     SDBSHS        PARM      SDBSHS        DSFDY                                        246516
      C     @RTCD         IFEQ      *BLANKS                                                    246516

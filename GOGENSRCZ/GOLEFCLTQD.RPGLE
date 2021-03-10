@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       *                 263108             Date 23Nov12               *
       *                 CLE134             Date 01Aug12               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *

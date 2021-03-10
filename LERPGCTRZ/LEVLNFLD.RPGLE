@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1075853          Date 08Jan13               *
       *                 AR1073112          Date 27Dec12               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -44,43 +46,43 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes (among others)
       ** the LDA layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields
       ** in the  Program Status Data Structures.
       ** They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant
       ** giving the size of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -113,7 +115,7 @@
       *
       ** Short data structure for access objects                                              CLE134
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CLE134
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -144,7 +146,7 @@
      D@FECD            S              2
      D@KEY1            S              3
      D@KEY2            S              2
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -152,7 +154,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -327,7 +329,8 @@
       ** Check main PDCL (principal) for a loan
       *
      C                   IF        AYPBRT = 0                                                 CLE134
-     C                   IF        AYPBSR <> 0                                             AR1073112
+     C**********         IF        AYPBSR <> 0                                      AR1073112 CSD103
+     C                   IF        AYPBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AYPBSR        @KEY2
       *
@@ -339,7 +342,8 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AYPBSR <> *ZEROS                                       262691
+     C**********                   AND AYPBSR <> *ZEROS                                262691 CSD103
+     C                             AND AYPBSR <> *BLANKS                                      CSD103
      C                             OR  AYPBSR = *ZEROS                                        262691
      C                             AND AYPRSP = *ZEROS                                        262691
      C                   EVAL      DDORLNOK = 'N'
@@ -348,7 +352,8 @@
      C                   EVAL      MsgIdXAr(Idx) = '5045663'
      C                   ENDIF
      C                   ELSE                                                                 CLE134
-     C                   IF        AYPBSR <> 0                                                CLE134
+     C**********         IF        AYPBSR <> 0                                         CLE134 CSD103
+     C                   IF        AYPBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDORLNOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDORLN'                                  CLE134
@@ -362,7 +367,8 @@
      C                   IF        NSEIN = 'Y'
       *
      C                   IF        AYIBRT = 0                                                 CLE134
-     C                   IF        AYIBSR <> 0                                             AR1073112
+     C**********         IF        AYIBSR <> 0                                      AR1073112 CSD103
+     C                   IF        AYIBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AYIBSR        @KEY2
       *
@@ -374,8 +380,10 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AYIBSR <> *ZEROS                                       262691
-     C                             OR  AYIBSR = *ZEROS                                        262691
+     C**********                   AND AYIBSR <> *ZEROS                                262691 CSD103
+     C                             AND AYIBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AYIBSR = *ZEROS                                 262691 CSD103
+     C                             OR  AYIBSR = *BLANKS                                       CSD103
      C                             AND AYIRSP = *ZEROS                                        262691
      C                   EVAL      DDORLNOK = 'N'
      C                   EVAL      Idx += 1
@@ -384,7 +392,8 @@
      C                   ENDIF
      C                   ENDIF                                                             AR1073112
      C                   ELSE                                                                 CLE134
-     C                   IF        AYIBSR <> 0                                                CLE134
+     C**********         IF        AYIBSR <> 0                                         CLE134 CSD103
+     C                   IF        AYIBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDORLNOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDORLN'                                  CLE134
@@ -397,7 +406,8 @@
      C                   ELSE
       *
      C                   IF        AUCBRT = 0                                                 CLE134
-     C                   IF        AUCBSR <> 0                                             AR1075853
+     C**********         IF        AUCBSR <> 0                                      AR1075853 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   EVAL      @KEY1 = DDCCY
      C                   MOVE      AUCBSR        @KEY2
       *
@@ -409,8 +419,10 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
       *
      C                   IF        @RTCD <> *BLANKS
-     C                             AND AUCBSR <> *ZEROS                                       262691
-     C                             OR  AUCBSR = *ZEROS                                        262691
+     C**********                   AND AUCBSR <> *ZEROS                                262691 CSD103
+     C                             AND AUCBSR <> *BLANKS                                      CSD103
+     C**********                   OR  AUCBSR = *ZEROS                                 262691 CSD103
+     C                             OR  AUCBSR = *BLANKS                                       CSD103
      C                             AND AUCRSP = *ZEROS                                        262691
      C                   EVAL      DDFECUOK = 'N'
      C                   EVAL      Idx += 1
@@ -418,7 +430,8 @@
      C                   EVAL      MsgIdXAr(Idx) = '5045789'
      C                   ENDIF
      C                   ELSE                                                                 CLE134
-     C                   IF        AUCBSR <> 0                                                CLE134
+     C**********         IF        AUCBSR <> 0                                         CLE134 CSD103
+     C                   IF        AUCBSR <> *BLANKS                                          CSD103
      C                   EVAL      DDFECUOK = 'N'                                             CLE134
      C                   EVAL      Idx += 1                                                   CLE134
      C                   EVAL      FldNamXAr(Idx) = 'DDFECU'                                  CLE134

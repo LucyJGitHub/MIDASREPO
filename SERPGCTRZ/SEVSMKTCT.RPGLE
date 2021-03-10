@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -177,11 +180,11 @@
      C                   IF        OKSMCC = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSMCC <> 'N'
      C                   MOVE      DDSMCC        S1SMCC
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -192,13 +195,13 @@
       *                                                               *
       *****************************************************************
      C     SRValMktCtr   BEGSR
- 
+
      C                   IF        DDSMCC <> *BLANKS
      C                             OR        DDSMCC =  *BLANKS                  183604
      C                             AND       BGN4ST =  'Y'                      183604
- 
+
      C     DDSMCC        CHAIN     SEMKCDF                            01
- 
+
      C                   IF        *IN01 = *ON
      C                   MOVE      'N'           OKSMCC
      C                   ADD       1             IDx
@@ -208,23 +211,23 @@
      C                   ELSE                                                   183604
      C                   MOVEL     'SEA0211'     MsgIdXAr(IDx)                  183604
      C                   ENDIF                                                  183604
- 
+
      C                   ELSE
- 
+
      C                   IF        RECI = '*'
      C                   MOVE      'N'           OKSMCC
      C                   ADD       1             IDx
      C                   MOVEL     'DDSMCC'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0211'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   EVAL      PMKTN = MKTN
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      PMKTN = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

@@ -137,7 +137,7 @@
                           ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              GOTO       CMDLBL(ENDCL)                                          /*EMP107*/
 /**/                                                                           /*EMP107*/
 /* Abnormal termination processing                       */                    /*EMP107*/

@@ -319,13 +319,10 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE (LERI) Extra Data - File (D/B) format
 
-<<<<<<< HEAD
       *                                                                                       CLE172
       ** LERI Backward-Looking Rate Fields                                                    CLE172
       *                                                                                       CLE172
      D LeriScnBlrt     DS            98                                                       CLE172
-=======
->>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
       *
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition

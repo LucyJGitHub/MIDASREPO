@@ -338,6 +338,11 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE Rollover Instructions Extra Data - File (D/B) format
 
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            98                                                       CLE172
+      *                                                                                       CLE172
       *                                                                                     AR702532
       ** LE Extra Data - Classe 1 Data - File (D/B) format                                  AR702532
       *                                                                                     AR702532
@@ -737,13 +742,10 @@
      C                   PARM                    C_LERI
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
-<<<<<<< HEAD
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
      C                   PARM                    LeriScnBlrt                                  CLE172
-=======
->>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
 
       *  If action is X, the VAL module validates the current file fields
       *  instead of the screen fields and move these fields into V fields

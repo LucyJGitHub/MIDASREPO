@@ -342,14 +342,11 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE Rollover Instructions Extra Data - File (D/B) format
 
-<<<<<<< HEAD
       *                                                                                       CLE172
       ** LERI Backward-Looking Rate Fields                                                    CLE172
       *                                                                                       CLE172
      D LeriScnBlrt     DS            98                                                       CLE172
       *                                                                                       CLE172
-=======
->>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions - Input
 

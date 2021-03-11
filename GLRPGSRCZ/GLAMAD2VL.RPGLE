@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053611           Date 19Aug19               *
+      *  Last Amend No. MD057639           Date 10Mar21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047680           Date 08Sep17               *
       *                 MD046635           Date 10Aug17               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057639 - Error messages for Alternate Credit/Debit Interest*
+      *             Account are inconsistent                          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053611 - Add validation when changing the interest         *
       *             calculation type.                                 *
@@ -935,9 +938,10 @@
      C     ERR           OREQ      2                                                        MD046635
      C                   MOVE      'N'           DDDRBROk                                   MD046635
      C                   ENDIF                                                              MD046635
+     C                   EXSR      UPDATERRS                                                MD057639
      C                   ENDIF                                                              MD046635
       *                                                                                     MD046635
-     C                   EXSR      UPDATERRS                                                MD046635
+     C**********         EXSR      UPDATERRS                                       MD046635 MD057639
       *                                                                                     MD020938
      C*****DDDRBR        IFEQ      *Blanks                                         MD020938 MD046635
      C*****BRIND         ANDEQ     'Y'                                             MD020938 MD046635

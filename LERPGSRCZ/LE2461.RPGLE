@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052819           Date 17Apr19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052819           Date 17Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052819 - Use correct datatype for rate fixing days.        *
       *  MD046248 - Finastra Rebranding                               *
@@ -225,7 +227,8 @@
       ** - have Rate Change Indicator = 'R'
       ** - have not already processed Value Date
       *
-     C                   IF        (L0BRTT <> *ZEROS)
+     C**********         IF        (L0BRTT <> *ZEROS)                                         CSD103
+     C                   IF        (L0BRTT <> *BLANKS)                                        CSD103
      C                             AND (L0CHIN = 'R')
      C                   TESTB     '1'           L0ACEI                   01
      C                   IF        *IN01 = *OFF
@@ -310,7 +313,8 @@
      C                   PARM      *BLANKS       PRtnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      L0CCY         PCYCD
-     C                   PARM      L0BRTT        PBaseP            2 0
+     C**********         PARM      L0BRTT        PBaseP            2 0                        CSD103
+     C                   PARM      L0BRTT        PBaseP            2                          CSD103
      C                   PARM      PDayNbr       PDayNo            5 0
      C     SDBSHS        PARM                    SDBSHS
       *

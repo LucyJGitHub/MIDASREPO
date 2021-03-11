@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD054997           Date 08Apr20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD054997           Date 08Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -2061,7 +2063,8 @@
      C     DDACTN        OREQ      'I'
       ** Reset updated file field for validation in detail 2
      C     DDACTN        IFEQ      'I'
-     C                   Z-ADD     *ZERO         AMDRIB
+     C**********         Z-ADD     *ZERO         AMDRIB                                       CSD103
+     C                   MOVE      *BLANKS       AMDRIB                                       CSD103
      C                   Z-ADD     *ZERO         AMDRIS
      C                   Z-ADD     *ZERO         B_RIDICT
      C                   Z-ADD     *ZERO         B_RIDCST
@@ -2073,7 +2076,8 @@
      C                   Z-ADD     *ZERO         A_BXAODR
      C                   ENDIF
      C     DDACTN        IFEQ      'A'
-     C                   Z-ADD     C_DRIB        AMDRIB
+     C**********         Z-ADD     C_DRIB        AMDRIB                                       CSD103
+     C                   MOVE      C_DRIB        AMDRIB                                       CSD103
      C                   Z-ADD     C_DRIS        AMDRIS
      C                   Z-ADD     CB_DICT       B_RIDICT
      C                   Z-ADD     CB_DCST       B_RIDCST
@@ -2431,14 +2435,16 @@
      C     DDACTN        OREQ      'I'
       ** Reset updated file field for validation in detail 3
      C     DDACTN        IFEQ      'I'
-     C                   Z-ADD     *ZERO         AMCRIB
+     C**********         Z-ADD     *ZERO         AMCRIB                                       CSD103
+     C                   MOVE      *BLANKS       AMCRIB                                       CSD103
      C                   Z-ADD     *ZERO         AMCRIS
      C                   Z-ADD     *ZERO         B_RICICT
      C                   Z-ADD     *ZERO         B_RICCST
      C                   Z-ADD     *ZERO         AMCRCD
      C                   ENDIF
      C     DDACTN        IFEQ      'A'
-     C                   Z-ADD     C_CRIB        AMCRIB
+     C**********         Z-ADD     C_CRIB        AMCRIB                                       CSD103
+     C                   MOVE      C_CRIB        AMCRIB                                       CSD103
      C                   Z-ADD     C_CRIS        AMCRIS
      C                   Z-ADD     CB_CICT       B_RICICT
      C                   Z-ADD     CB_CCST       B_RICCST
@@ -2772,14 +2778,16 @@
      C                   ELSE
       ** Reset updated file field for validation in screen 3
      C     DDACTN        IFEQ      'I'
-     C                   Z-ADD     *ZERO         AMCRIB
+     C**********         Z-ADD     *ZERO         AMCRIB                                       CSD103
+     C                   MOVE      *BLANKS       AMCRIB                                       CSD103
      C                   Z-ADD     *ZERO         AMCRIS
      C                   Z-ADD     *ZERO         B_RICICT
      C                   Z-ADD     *ZERO         B_RICCST
      C                   Z-ADD     *ZERO         AMCRCD
      C                   ENDIF
      C     DDACTN        IFEQ      'A'
-     C                   Z-ADD     C_CRIB        AMCRIB
+     C**********         Z-ADD     C_CRIB        AMCRIB                                       CSD103
+     C                   MOVE      C_CRIB        AMCRIB                                       CSD103
      C                   Z-ADD     C_CRIS        AMCRIS
      C                   Z-ADD     CB_CICT       B_RICICT
      C                   Z-ADD     CB_CCST       B_RICCST
@@ -3399,7 +3407,8 @@
      C                   ENDIF                                                                CRE030
       *                                                                         180721
      C     X_RCCY        IFEQ      DDCCY                                        180721
-     C     DRIB          IFEQ      *ZEROS                                       180721
+     C*****DRIB*         IFEQ      *ZEROS                                              180721 CSD103
+     C     DRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDDRIB                         180721
      C                   ELSE                                                   180721
      C                   MOVE      DRIB          DDDRIB                         180721
@@ -3407,7 +3416,8 @@
       *                                                                         180721
       ** If not the same Ccy - Check Base Type is valid for other Ccy           180721
      C                   ELSE                                                   180721
-     C     DRIB          IFNE      *ZEROS                                       180721
+     C*****DRIB*         IFNE      *ZEROS                                              180721 CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      DRIB          WWRIB             2            180721
       *                                                                         180721
       ** Get Base Rate Codes                                                    180721
@@ -3445,7 +3455,8 @@
      C                   ENDIF                                                  180721
       *                                                                         180721
      C     X_RCCY        IFEQ      DDCCY                                        180721
-     C     CRIB          IFEQ      *ZEROS                                       180721
+     C*****CRIB*         IFEQ      *ZEROS                                              180721 CSD103
+     C     CRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDCRIB                         180721
      C                   ELSE                                                   180721
      C                   MOVE      CRIB          DDCRIB                         180721
@@ -3453,7 +3464,8 @@
       *                                                                         180721
       ** If not the same Ccy - Check Base Type is valid for other Ccy           180721
      C                   ELSE                                                   180721
-     C     CRIB          IFNE      *ZEROS                                       180721
+     C*****CRIB*         IFNE      *ZEROS                                              180721 CSD103
+     C     CRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      CRIB          WWRIB                          180721
       *                                                                         180721
       ** Get Base Rate Codes                                                    180721

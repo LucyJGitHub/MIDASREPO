@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD031692           Date 12Mar20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD031692           Date 12Mar20               *
+      *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
@@ -85,9 +86,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
-      *             LEFEEMAMD.                                        *      
+      *             LEFEEMAMD.                                        *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1588,7 +1591,7 @@
       ** Array index (3P0) from/to caller                                                   MD031692
                                                                                             MD031692
      C                   PARM                    WIdx                                       MD031692
-                                                                                            MD031692     
+                                                                                            MD031692
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

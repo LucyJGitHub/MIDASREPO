@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -194,13 +197,13 @@
      C                   IF        OKGUAR = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKGUAR <> 'N'
      C                   MOVEL     DDGUAR        S1GUAR
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,7 +211,7 @@
       *  SRValGrntr - Validation for Guarantor                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValGrntr    BEGSR
       *
       ** Guarantor is mandatory.
@@ -223,11 +226,11 @@
       *
       ** Question mark is valid only on repair and i/c screens input.
       *
- 
+
      C     '?'           SCAN      DDGUAR                                 01
- 
+
      C                   IF        *IN01 = *ON
- 
+
      C                   IF        PMode = '*FRONT'
      C                   MOVE      'N'           OKGUAR
      C                   ADD       1             IDx
@@ -235,36 +238,36 @@
      C                   MOVEL     'SEA0241'     MsgIdXAr(IDx)
      C                   GOTO      EValGrntr
      C                   ENDIF
- 
+
      C                   EVAL      PReDsp = 'Y'
      C                   ENDIF
       *
       ** Guarantor must be a valid customer.
       *
      C                   EVAL      PKeyC = *BLANKS
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      DDGUAR        PKeyC
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtCd <> *BLANKS
- 
+
      C                   IF        PRtCd = '*NOSEL '
      C                   MOVE      *BLANKS       DDGUAR
      C                   ENDIF
- 
+
      C                   MOVE      'N'           OKGUAR
      C                   ADD       1             IDx
      C                   MOVEL     'DDGUAR'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0241'     MsgIdXAr(IDx)
      C                   ELSE
- 
+
      C                   MOVEL     BBCUST        DDGUAR
      C                   ENDIF
- 
+
      C     EValGrntr     ENDSR
       *
       *****************************************************************
@@ -319,9 +322,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -330,7 +333,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

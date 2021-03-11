@@ -19,12 +19,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 208221             Date 11Dec02               *
+      *                 208221             Date 11Dec02               *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CDE002             Date 05Dec00               *
       * Midas DBA 3.05 -----------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  208221 - Changes identified during alpha site                *
       *  CDE002 - Revenue Analysis                                    *
@@ -42,7 +45,7 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -60,16 +63,16 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  188050
       ** External DS for SAR Details                                                          188050
                                                                                               188050
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     188050
       ** Second DS for Access Programs, Long Data Structure                                   188050
                                                                                               188050
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -96,7 +99,7 @@
       * settlement amount (adjusted & not adjusted)
      C                   PARM                    O#RDS            13 0
      C                   PARM                    O#DSA            15 0
- 
+
       ** Access Switchable Features File                                                      188050
                                                                                               188050
      C                   CALLB     'AOSARDR0'                                                 188050
@@ -111,12 +114,12 @@
      C                   ENDIF                                                                188050
                                                                                               188050
       * initialize output fields
- 
+
      C                   Z-ADD     0             O#RDS
      C                   Z-ADD     0             O#DSA
- 
+
       * initialize work fields
- 
+
      C                   Z-ADD     0             SZICVL            3 0
      C                   Z-ADD     0             SZSDAT            5 0
      C                   Z-ADD     0             SZEDAT            5 0
@@ -134,7 +137,7 @@
      C                   Z-ADD     0             SZRDF            11 7
      C                   Z-ADD     0             SZRSA            15 0
      C                   Z-ADD     0             SZDISC           11 7
- 
+
      C                   Z-ADD     0             Start_CYr         4 0
      C                   Z-ADD     0             Start_Date        6 0
      C                   Z-ADD     0             Start_LpYr        5 0
@@ -142,7 +145,7 @@
      C                   Z-ADD     0             Start_Day         2 0
      C                   Z-ADD     0             Start_Mth         2 0
      C                   Z-ADD     0             Start_REM         1 0
- 
+
      C                   Z-ADD     0             End_CYr           4 0
      C                   Z-ADD     0             End_Date          6 0
      C                   Z-ADD     0             End_LpYr          5 0
@@ -150,38 +153,38 @@
      C                   Z-ADD     0             End_Day           2 0
      C                   Z-ADD     0             End_Mth           2 0
      C                   Z-ADD     0             End_REM           1 0
- 
+
      C                   Z-ADD     0             Num_Mths          4 0
      C                   Z-ADD     0             W#04              4 0
- 
+
      C                   SELECT
- 
+
       **  IF AUSTRALIA FORMULA REQUIRED
- 
+
      C     I#SETF        WHENEQ    'A'
- 
+
      C                   EXSR      FORMULA_A
- 
+
       **  IF U.S.A FORMULA REQUIRED
- 
+
      C     I#SETF        WHENEQ    'U'
- 
+
      C                   EXSR      FORMULA_U
- 
+
      C                   OTHER
- 
+
       **  IF U.K. FORMULA REQUIRED
- 
+
      C                   EXSR      FORMULA_G
       *
      C                   ENDSL
- 
+
       **  ADD THE NET ACCRUED INTEREST ADJUSTMENTS NOT POSTED TO THE
       **  RUNNING DISCOUNTED SETTLEMENT TOTAL TO GIVE THE DISCOUNTED
       **  SETTLEMENT AMOUNT TOTAL
- 
+
      C     I#IANP        ADD       O#RDS         O#DSA
- 
+
       **  SIGN A NET SETTLEMENT PROFIT AS + AND A NET SETTLEMENT LOSS AS -
       **
       **  FRA BUY/SELL      FIX RATE /FLT RATE       PROFIT/LOSS
@@ -189,7 +192,7 @@
       **     BUY                 FIX>FLT                 -
       **     SELL                FIX<FLT                 -
       **     SELL                FIX>FLT                 +
- 
+
      C     I#BYSL        IFEQ      'B'
      C     I#FIX         ANDGT     I#FLT
      C     I#BYSL        OREQ      'S'
@@ -197,9 +200,9 @@
      C                   Z-SUB     O#RDS         O#RDS
      C                   Z-SUB     O#DSA         O#DSA
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /SPACE 5
       ********************************************************************
@@ -242,7 +245,7 @@
      C                   ELSE
      C     SZWRK8        SUB       SZRSA         O#RDS
      C                   END
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -283,7 +286,7 @@
      C                   ELSE
      C                   Z-ADD     *ZEROS        O#RDS
      C                   END
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -447,24 +450,24 @@
      C     CIR004        ANDEQ     'Y'                                                        188050
       *
      C                   Z-ADD     0             SZPER
- 
+
       * Start date, year, month, day
- 
+
      C                   Z-ADD     SZSDAT        ZDAYNO
      C                   EXSR      ZDATE2
      C                   Z-ADD     ZDATE         Start_Date
- 
+
      C                   MOVE      Start_Date    Start_Year
      C                   MOVE      Start_Date    W#04
      C                   MOVEL     W#04          Start_Mth
      C                   MOVEL     Start_Date    Start_Day
- 
+
       * End date, year, month, day
- 
+
      C                   Z-ADD     SZEDAT        ZDAYNO
      C                   EXSR      ZDATE2
      C                   Z-ADD     ZDATE         End_Date
- 
+
      C                   MOVE      End_Date      End_Year
      C                   MOVE      End_Date      W#04
      C                   MOVEL     W#04          End_Mth
@@ -640,9 +643,9 @@
       **  SET THE START DATE TO THE END DATE
       *
      C                   Z-ADD     SZEDAT        SZSDAT
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -668,12 +671,12 @@
      C                   PARM      'D'           ZDATFM            1            Date format ind
      C                   PARM      *ZERO         ZDATE             6 0          Value date
      C                   PARM      *BLANK        ZADATE            7            Run-date in DDM
- 
+
      C                   MOVE      ZDATE         ZYEAR             2 0
      C                   MOVE      ZDATE         W#04
      C                   MOVEL     W#04          ZMTH              2 0
      C                   MOVEL     ZDATE         ZDAY              2 0
- 
+
      C                   ENDSR
       **********************************************************************
       /SPACE 5

@@ -10,13 +10,16 @@
      F*     AOLOANR1 - READ ACCESS TO LOAN TYPES/SUB-TYPES FILE       *
      F*                                                               *
       *  (c) Finastra International Limited 2013                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD019830A *CREATE  Date 15Apr13               *
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *      
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *

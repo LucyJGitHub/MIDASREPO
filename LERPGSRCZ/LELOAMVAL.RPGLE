@@ -251,10 +251,6 @@
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(CLOANCLF)
 
-     FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)                         CLE172
-     F                                     IGNORE(CLOANCKF)                     CLE172
-     F                                     RENAME(CLOANCLF:CLOANL0)             CLE172
-     FSDBSRTL1  IF   E           K DISK    INFSR(*PSSR)                         CLE172
       ** Facility amendments file - live
      FLEFCAML6  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FAM_)
@@ -430,13 +426,11 @@
      D  FB_OA10               64     70P 0
      D  FB_OAM                 1     70P 0 DIM(10)
 
+     D LECLOAN       E DS                  EXTNAME(LECLIPL2:*INPUT)                           CLE172
+     D                                     PREFIX(H)                                          CLE172
       ** Powers of 10 for currency conversions
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
 
-     D LECLOAN       E DS                  EXTNAME(LECLIPL2:*INPUT)             CLE172
-     D                                     PREFIX(H)                            CLE172
-     D SDBSRTD       E DS                  EXTNAME(SDBSRTL1:*INPUT)             CLE172
-     D                                     PREFIX(L)                            CLE172
       ** Customer Details Record Layout
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
 
@@ -862,7 +856,7 @@
       *
       ** Loan base rate code change processing
      C     DDATYP        IFEQ      'BC'
-     C                   EXSR      SRBRAT                                       CLE172
+     C                   EXSR      SRBRAT                                                     CLE172
      C                   EXSR      SRBCPR
      C                   ENDIF
      C                   ENDIF
@@ -5210,50 +5204,56 @@
      C                   ENDIF
       *
      C     EXBCPR        ENDSR
-      *****************************************************************         CLE172
-      /EJECT                                                                    CLE172
-      *****************************************************************         CLE172
-      *  SRBRAT - Base Rate Code extra validation                     *         CLE172
-      *****************************************************************         CLE172
-     C     SRBRAT        BEGSR                                                  CLE172
-     C                   SETOFF                                       20        CLE172
-     C                   SETOFF                                       21        CLE172
-      *                                                                         CLE172
-     C     DDLOAN        CHAIN(N)  LECLIPL2      LECLOAN              20        CLE172
-      *                                                                         CLE172
-     C     *LIKE         DEFINE    HBRTT         BRTTD                          CLE172
-     C     *LIKE         DEFINE    HCCY          BCCYF                          CLE172
-     C                   MOVEL     HBRTT         BRTTD                          CLE172
-     C                   MOVEL     HCCY          BCCYF                          CLE172
-      *                                                                         CLE172
-     C     BAKEY1        CHAIN(N)  SDBSRTL1      SDBSRTD              21        CLE172
-      *                                                                         CLE172
-     C     *IN21         IFEQ      '0'                                          CLE172
-     C                   MOVE      LBABLRT       BLRT1             1            CLE172
-     C                   ENDIF                                                  CLE172
-      *                                                                         CLE172
-     C     *LIKE         DEFINE    HBRTT         BRTTE                          CLE172
-     C     *LIKE         DEFINE    HCCY          BCCYD                          CLE172
-     C                   MOVEL     DDBRAT        BRTTE                          CLE172
-     C                   MOVEL     DDCURR        BCCYD                          CLE172
-      *                                                                         CLE172
-     c                   SETOFF                                       21        CLE172
-     C     DDCURR        IFNE      *BLANKS                                      CLE172
-     C     DDBRAT        ANDNE     *BLANKS                                      CLE172
-     C     BAKEY         CHAIN(N)  SDBSRTL1      SDBSRTD              21        CLE172
-      *                                                                         CLE172
-     C     *IN21         IFEQ      '0'                                          CLE172
-     C                   MOVE      LBABLRT       BLRT2             1            CLE172
-     C                   ENDIF                                                  CLE172
-     C                   ENDIF                                                  CLE172
-      *                                                                         CLE172
-     C     BLRT1         IFNE      BLRT2                                        CLE172
-     C                   MOVE      'N'           DDBRATOK                       CLE172
-     C                   ADD       1             Idx                            CLE172
-     C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                   CLE172
-     C                   MOVEL     '5049430'     MsgIdArr(Idx)                  CLE172
-     C                   ENDIF                                                  CLE172
-     C                   ENDSR                                                  CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBRAT - Base Rate Code extra validation                     *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBRAT        BEGSR                                                                CLE172
+     C                   MOVEL     LoanCRead     LECLOAN                                      CLE172
+      *                                                                                       CLE172
+      ** Loan should be forward-looking or backward-looking but                               CLE172
+      ** calculation method should be 'MANL'.                                                 CLE172
+      *                                                                                       CLE172
+     C                   IF        HBLRT = 'N'                                                CLE172
+     C                             OR                                                         CLE172
+     C                             (HBLRT = 'Y' AND HCALM = 'MANL')                           CLE172
+      *                                                                                       CLE172
+     C                   MOVE      HBLRT         BLRT1             1                          CLE172
+      *                                                                                       CLE172
+     C     DDCURR        IFNE      *BLANKS                                                    CLE172
+     C     DDBRAT        ANDNE     *BLANKS                                                    CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'AOBSRTR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RtCd                                        CLE172
+     C                   PARM      '*KEY   '     @Optn                                        CLE172
+     C                   PARM      DDCURR        @Curr             3                          CLE172
+     C                   PARM      DDBRAT        @BRat             2                          CLE172
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
+      *                                                                                       CLE172
+     C                   MOVE      BABLRT        BLRT2             1                          CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** Cannot amend base rate code from and to a backward-looking rate                      CLE172
+      *                                                                                       CLE172
+     C     BLRT1         IFNE      BLRT2                                                      CLE172
+     C                   MOVE      'N'           DDBRATOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                                 CLE172
+     C                   MOVEL     '5049430'     MsgIdArr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** If loan is not forward-looking or not backward-looking with                          CLE172
+      ** calculation method equal to 'MANL' then error.                                       CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVE      'N'           DDBRATOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDLOAN'                                 CLE172
+     C                   MOVEL     '5049431'     MsgIdArr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6145,14 +6145,6 @@
      C     BCKEY         KLIST
      C                   KFLD                    CRCY
      C                   KFLD                    BCCOD
-      *                                                                                       CLE172
-     C     BAKEY         KLIST                                                                CLE172
-     C                   KFLD                    BCCYD                                        CLE172
-     C                   KFLD                    BRTTE                                        CLE172
-      *                                                                                       CLE172
-     C     BAKEY1        KLIST                                                                CLE172
-     C                   KFLD                    BCCYF                                        CLE172
-     C                   KFLD                    BRTTD                                        CLE172
       *                                                                                       243251
      C     BCKEY1        KLIST                                                                243251
      C                   KFLD                    CRCY                                         243251

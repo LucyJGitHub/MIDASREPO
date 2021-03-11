@@ -553,13 +553,10 @@
       ** Rollover Work Fields
      C                   PARM                    NwRoScnFmt
      C                   PARM                    NwRoScnFmt2
-<<<<<<< HEAD
       *                                                                                       CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
       *                                                                                       CLE172
      C                   PARM                    LeriScnBlrt                                  CLE172
-=======
->>>>>>> refs/remotes/origin/feature/MD-54373-NewApproach-LE
 
       ** Update 'Current' Loan with Loan in Screen Format
 

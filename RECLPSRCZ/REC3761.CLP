@@ -7,9 +7,10 @@
 /*                                                                   */
 /*       REC3761 - INTEREST STATEMENT PRINT - STANDARD               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Last Amend No. EMP108             Date 09Feb21              */
+/*       Prev Amend No. MD046248           DATE 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*********************************************************************/
 /*                                                                   */
 /*       EMP108 - Retail Interest Capitalisation Statement via CM    */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
 /*********************************************************************/
@@ -31,20 +33,19 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
-                          2001')
+                          Finastra International Limited 2001')
 /**/
-             DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(8)           /*EMP108*/
-             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*EMP108*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ') /*EMP108*/
-             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)                 /*EMP108*/
-             DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*EMP108*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')      /*EMP108*/
-             DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')   /*EMP108*/
-             DCL        VAR(&BOTH) TYPE(*CHAR) LEN(1)                 /*EMP108*/
-             DCL        VAR(&EMP108) TYPE(*CHAR) LEN(1) VALUE('N')    /*EMP108*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                 /*EMP108*/
-             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*EMP108*/
+             DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(8)                    /*EMP108*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                         /*EMP108*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')         /*EMP108*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)                          /*EMP108*/
+             DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                         /*EMP108*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')               /*EMP108*/
+             DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')            /*EMP108*/
+             DCL        VAR(&BOTH) TYPE(*CHAR) LEN(1)                          /*EMP108*/
+             DCL        VAR(&EMP108) TYPE(*CHAR) LEN(1) VALUE('N')             /*EMP108*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                          /*EMP108*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                      /*EMP108*/
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
 /**/
 /* declare &BJLANG as a program field as this hasn't been incorp to */
@@ -65,17 +66,17 @@
 /**/
              OVRMSGF    MSGF(QUSERMSG) TOMSGF(&MSGF)
 /**/
-/**   CHECK FOR SWITCHABLE FEATURE EMP108     */                      /*EMP108*/
-                                                                      /*EMP108*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*EMP108*/
-             CHGVAR     VAR(&SARD) VALUE('EMP108')                    /*EMP108*/
-                                                                      /*EMP108*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD) /*EMP108*/
-                                                                      /*EMP108*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*EMP108*/
-             CHGVAR     VAR(&EMP108) VALUE('Y')                       /*EMP108*/
-             ENDDO                                                    /*EMP108*/
-             CHGVAR     VAR(&OPTN) VALUE('*FIRST ')                   /*EMP108*/
+/**   CHECK FOR SWITCHABLE FEATURE EMP108     */                               /*EMP108*/
+                                                                               /*EMP108*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                            /*EMP108*/
+             CHGVAR     VAR(&SARD) VALUE('EMP108')                             /*EMP108*/
+                                                                               /*EMP108*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)          /*EMP108*/
+                                                                               /*EMP108*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                     /*EMP108*/
+             CHGVAR     VAR(&EMP108) VALUE('Y')                                /*EMP108*/
+             ENDDO                                                             /*EMP108*/
+             CHGVAR     VAR(&OPTN) VALUE('*FIRST ')                            /*EMP108*/
 /**/
 /*---------------------------------------------------------------*/            /*EMP108*/
 /* Access PF/SDMMODPD to determine whether UDC module is on      */            /*EMP108*/
@@ -155,22 +156,22 @@
 /*---------------------------------------------------------------*/           /*EMP108*/
 /* Abnormal termination                                          */           /*EMP108*/
 /*---------------------------------------------------------------*/           /*EMP108*/
-ERROR:                                                                /*EMP108*/
-             CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                /*EMP108*/
-             CALL       PGM(CGC3605) PARM(&ACTION)                    /*EMP108*/
-             ROLLBACK                                                 /*EMP108*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*EMP108*/
-             CHGJOB     SWS(XXXXXX11)                                 /*EMP108*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*EMP108*/
-             DMPCLPGM                                                 /*EMP108*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*EMP108*/
-/**/                                                                  /*EMP108*/
+ERROR:                                                                        /*EMP108*/
+             CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                        /*EMP108*/
+             CALL       PGM(CGC3605) PARM(&ACTION)                            /*EMP108*/
+             ROLLBACK                                                         /*EMP108*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                        /*EMP108*/
+             CHGJOB     SWS(XXXXXX11)                                         /*EMP108*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                        /*EMP108*/
+             DMPCLPGM                                                         /*EMP108*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                        /*EMP108*/
+/**/                                                                          /*EMP108*/
              SNDPGMMSG  MSG('Program REC3761 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*EMP108*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                        /*EMP108*/
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
-                          REC3764 ended abnormally') MSGTYPE(*ESCAPE) /*EMP108*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*EMP108*/
+                          REC3764 ended abnormally') MSGTYPE(*ESCAPE)         /*EMP108*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                        /*EMP108*/
 
-/*---------------------------------------------------------------*/ /*EMP108*/
+/*---------------------------------------------------------------*/           /*EMP108*/
 ENDCL:       ENDPGM

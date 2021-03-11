@@ -214,11 +214,6 @@
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for General Ledger Details
-      *                                                                                       CLE172
-      ** External DS for Dealing details                                                      CLE172
-      *                                                                                       CLE172
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CLE172
-     D                                     PREFIX(DL)                                         CLE172
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
@@ -690,17 +685,17 @@
       *                                                                                       CLE172
       ** Next Observation Period Shift                                                        CLE172
       *                                                                                       CLE172
-     C                   MOVEL     NOPSH         DDNOPSH                                      CLE172
+     C                   MOVE      NOPSH         DDNOPSH                                      CLE172
      C                   MOVE      NOPSH         DDNOPSHB                                     CLE172
       *                                                                                       CLE172
       ** Next Rate Rounding Decimal Places                                                    CLE172
       *                                                                                       CLE172
-     C                   MOVEL     NRRDP         DDNRRDP                                      CLE172
+     C                   MOVE      NRRDP         DDNRRDP                                      CLE172
      C                   MOVE      NRRDP         DDNRRDPB                                     CLE172
       *                                                                                       CLE172
       ** Next Day Basis for Average                                                           CLE172
       *                                                                                       CLE172
-     C                   MOVEL     NDBAV         DDNDBAV                                      CLE172
+     C                   MOVE      NDBAV         DDNDBAV                                      CLE172
      C                   MOVE      NDBAV         DDNDBAVB                                     CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
@@ -849,7 +844,7 @@
      C                   PARM      *BLANK        @@RETC                                       CLE172
      C                   PARM                    @@AMTW                                       CLE172
      C                   PARM                    @@QECN                                       CLE172
-     C                   PARM                    DLBNDCSP                                     CLE172
+     C                   PARM      '.'           DLBNDCSP          1                          CLE172
      C                   PARM      *BLANK        @@AMTD                                       CLE172
                                                                                               CLE172
      C                   ENDSR                                                                CLE172
@@ -1078,17 +1073,6 @@
      C                   PARM                    @Return           6
      C                   PARM                    @type             1
      C*
-      ** Access Dealing Details                                                               CLE172
-      *                                                                                       CLE172
-     C                   CALL      'AODEALR1'                                                 CLE172
-     C                   PARM      *BLANKS       PRTCD                                        CLE172
-     C                   PARM      '*FIRST '     POPTN                                        CLE172
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                        CLE172
-      *                                                                                       CLE172
-     C     PRTCD         IFNE      *BLANK                                                     CLE172
-     C                   EVAL      DLBNDCSP =  '.'                                            CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
       ** Check if CLE172 is installed                                                         CLE172
       *                                                                                       CLE172
      C                   MOVE      'N'           CLE172                                       CLE172

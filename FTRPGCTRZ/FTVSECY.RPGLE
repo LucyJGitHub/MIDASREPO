@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. AR855522           Date 14Nov11               *
+      *  Prev Amend No. AR855507           Date 14Nov11               *            
+      *                 AR855545           Date 14Nov11               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -48,6 +51,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR855522 - Decimal Data error.  POutACode should be 10,0 not *
+      *             14,0.  (Child: AR855523)                          *
+      *  AR855507 - Apply 246686. Array Index error. (Child: AR855508)*            
+      *  AR855545 - Apply 227230.  Program should not report a DB     *
+      *             error if RE101901 returns *NOREC as it is just an *
+      *             observation.  (Child: AR855546)                   *      
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -229,7 +238,8 @@
      D POutCust        S              6                                                       CSD027
      D POutCurr        S              3                                                       CRE008
      D***POutACode       S              4  0                                           CRE008 CGL029
-     D POutACode       S             14  0                                                    CGL029
+     D***POutACode       S             14  0                                         CGL029 AR855522
+     D POutACode       S             10  0                                                  AR855522
      D POutASeqN       S              2  0                                                    CRE008
      D POutRetNo       S             10  0                                                    CRE008
                                                                                               CRE008
@@ -263,6 +273,10 @@
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
+     C                   Eval      WIdx = 0                                                 AR855507
+     C                   Eval      WMsgIDXAr  = *BlankS                                     AR855507
+     C                   Eval      WFldNmXAr  = *BlankS                                     AR855507
+     C                   Eval      WMsgDtXAr  = *BlankS                                     AR855507
  
       * Settle currency validation
       *
@@ -539,10 +553,10 @@
      C                   PARM                    POutASeqN                                    CRE008
      C                   PARM                    POutRetNo                                    CRE008
                                                                                               CRE008
-     C                   IF        PRetCode <> *BLANKS and PRetCode <> '*ODLMTX'              CRE008
-     C                   EVAL      DBPGM = 'RE101901'                                         CRE008
-     C                   EXSR      *PSSR                                                      CRE008
-     C                   ENDIF                                                                CRE008
+     C**********         IF        PRetCode <> *BLANKS and PRetCode <> '*ODLMTX'     CRE008 AR855545
+     C**********         EVAL      DBPGM = 'RE101901'                                CRE008 AR855545
+     C**********         EXSR      *PSSR                                             CRE008 AR855545
+     C**********         ENDIF                                                       CRE008 AR855545
                                                                                               CRE008
      C                   IF        PRetCode = '*ODLMTX'                                       CRE008
      C                   EVAL      OKORC1 = 'W'                                               CRE008

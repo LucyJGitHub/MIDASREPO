@@ -14,18 +14,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR856864           Date 14Nov11               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CFT009  *CREATE    Date 05Jun00               *
+      *                 CFT009  *CREATE    Date 05Jun00               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR856864 - Patterned after 261932 (ME1540).  Mismatch #1GNCR *
+      *             and SGncr.  (Child: AR856865)                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  CFT009 - FT Fees and Charges                                 *
       *                                                               *
@@ -116,7 +119,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
  
-     D SGncr           DS           268
+     D***SGncr**         DS           268                                                   AR856864
+     D SGncr           DS           316                                                     AR856864
       *
       * Stored master file format fields
       *

@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*       Last Amend No. LUC110             Date 21Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
@@ -47,6 +48,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)   */
+/*                Use of core hook GLC01MPS                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */

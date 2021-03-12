@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CFT162             Date 11Sep17               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CER071             Date 01Aug16               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *

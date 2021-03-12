@@ -1,0 +1,355 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0181W0- Country Codes Maintenance Window                  *
+      *                                                               *
+      ***(C)*Copyright*Midas-Kapiti*International*Ltd.*1998              *                    LUC109
+      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *                                                               *
+      *  Last Amend No. LUC109            Date: 23Aug16               *
+      *  Prev Amend No. 205749            Date: 20May02               *
+      *                 205750            DATE: 16May02               *
+      *                 MMI043  *CREATE   DATE: 26Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *  205749 - F12 in the window after this one will force the pgm *
+      *           to crash                                            *
+      *  205750 - Commit control is missing for the extension file.   *
+      *  MMI043 - Interface to Head Office Reporting                  *
+      *                                                               *
+      *****************************************************************
+     F*SD0181#0CF  E                    WORKSTN                                               LUC109
+     FXX0181#0CF  E                    WORKSTN                                                LUC109
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Country Codes Maintenance Window
+      *
+     F*SDCTRYY0UF  E           K        DISK                      A       205750
+     FSDCTRYY0UF  E           K        DISK         KCOMIT       A        205750
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Country Codes extension File
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      **   Defines:                         134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISCSARD    E DSSCSARDPD
+      ** External data structure for switchable features
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      ****************************************************************
+     I/COPY QWINDSRC,SD0180GDTA                                           S01229
+     I*
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      /EJECT
+      *****************************************************************
+      * Standard parameter list for window manager
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE1256
+      *****************************************************************
+      *
+      * Main Processing
+      *
+      *****************************************************************
+      * Initialize
+     C                     EXSR #EINIT
+      * Continue to redisplay the screen if *IN30 remains off
+     C           *IN30     DOWEQ*OFF
+      * If error, write messages
+     C           *IN31     IFEQ *ON
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      * Main format of the display file
+     C***********          EXFMTSD0181F0                                                      LUC109
+     C                     EXFMTXX0181F0                                                      LUC109
+     C                     MOVEA'00000'   *IN,41
+      * Clear messages
+     C                     EXSR #ECLR
+      * If F3 pressed, exit to main menu
+     C           *IN03     CASEQ'1'       #EEXIT
+      * If F12 pressed, exit window
+     C           *IN12     CASEQ'1'       #EPREV
+      * Validate
+     C                     CAS            #EVALD
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      * Exit program
+     C                     EXSR #EEND
+      *
+      ****************************************************************
+      *
+      * #EDELT - Delete record
+      *
+      ****************************************************************
+      *
+     C           #EDELT    BEGSR
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #ECLR  - Clear Message
+      *
+      ****************************************************************
+      *
+     C           #ECLR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EEXIT - Exit Program
+      *
+      ****************************************************************
+      *
+     C           #EEXIT    BEGSR
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR #EEND
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EINIT - Initial Processing
+      *
+      ****************************************************************
+      *
+     C           #EINIT    BEGSR
+      * Initialise data
+     C                     MOVE *BLANKS   SGEOA
+     C                     MOVE *BLANKS   SRCAT
+      * Define the data areas
+     C           *NAMVAR   DEFN           LDA
+      * Check if Interface to Bank of Italy Reporting is switched on
+     C                     CALL 'AOSARDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C***********          PARM 'MMI043'  @SARD   6                                           LUC109
+     C                     PARM 'LUC109'  @SARD   6                                           LUC109
+     C           SCSARD    PARM SCSARD    DSFDY
+      * If switched off, exit program
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR #EEND
+     C                     ENDIF
+      * If Action is Delete, delete record here, dont display window.
+     C           ACTN      IFEQ 'D'
+     C                     EXSR #EDELT
+     C                     EXSR #EEND
+     C                     ENDIF
+      * Define window position
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      * Retrieve title for window
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      * Access SDCTRYY0
+     C           #1CNCD    CHAINSDCTRYY0             87
+      * Protect input fields if Enquiry or Delete
+     C           ACTN      IFEQ 'E'
+     C           ACTN      OREQ 'D'
+     C                     MOVE *ON       *IN39
+     C                     ENDIF
+      **If*Insert*and*record*exists,*perform*standard*database************205749
+      **error*processing**************************************************205749
+     C********** ACTN      IFEQ 'I'                                       205749
+     C********** *IN87     IFEQ *OFF                                      205749
+     C********** *LOCK     IN   LDA                                       205749
+     C**********           MOVEL##PGM     DBPGM                           205749
+     C**********           MOVEL#1CNCD    DBKEY                           205749
+     C**********           MOVE 'SDTRYY0 'DBFILE                          205749
+     C**********           Z-ADD1         DBASE                           205749
+     C**********           OUT  LDA                                       205749
+     C**********           EXSR *PSSR                                     205749
+     C**********           ENDIF                                          205749
+     C**********           ENDIF                                          205749
+      * If record found, set up screen fields
+     C           *IN87     IFEQ *ON
+     C                     MOVE *BLANK    SGEOA
+     C                     MOVE *BLANK    SRCAT
+     C                     ELSE
+     C                     MOVE MGEOA     SGEOA
+     C                     MOVE MRCAT     SRCAT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EPREV - Go to previous screen
+      *
+      ****************************************************************
+      *
+     C           #EPREV    BEGSR
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR #EEND
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EUPDT - Update File
+      *
+      ****************************************************************
+      *
+     C           #EUPDT    BEGSR
+      *
+     C           #1CNCD    CHAINSDCTRYY0             87
+      * set up fields from screen
+     C                     MOVE SGEOA     MGEOA
+     C                     MOVE SRCAT     MRCAT
+      * update record
+     C           *IN87     IFEQ *OFF
+     C                     UPDATSDCTRYF0
+     C                     ELSE
+     C                     MOVE #1CNCD    MCNCD
+     C                     WRITESDCTRYF0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EVALD - Validate Screen
+      *
+      ****************************************************************
+      *
+     C           #EVALD    BEGSR
+      * if action code is enquire then exit from program
+     C           ACTN      IFEQ 'E'
+     C                     EXSR #EEND
+     C                     ELSE
+      * if *IN30 is switched off, an error has occurred
+     C                     MOVE *ON       *IN30
+      * if *IN31 is switched on, an error message has been sent
+     C                     MOVE *OFF      *IN31
+      * Validate H.O.Geographical Area
+     C           SGEOA     IFNE '1'
+     C           SGEOA     ANDNE'2'
+     C           SGEOA     ANDNE'3'
+     C           SGEOA     ANDNE'4'
+     C                     MOVE 'XXX0074' ZAMSID
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN41
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      * Validate Italy Driven Flag
+     C           SRCAT     IFNE '1'
+     C           SRCAT     ANDNE'2'
+     C           SRCAT     ANDNE'3'
+     C           SRCAT     ANDNE'4'
+     C           SRCAT     ANDNE'5'
+     C           SRCAT     ANDNE'X'
+     C                     MOVE 'XXX0075' ZAMSID
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN42
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      * No errors, then update file
+     C           *IN31     IFNE *ON
+     C                     EXSR #EUPDT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * #EEND  - End Program
+      *
+      ****************************************************************
+      *
+     C           #EEND     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * ZASNMS - Send message to programs message queue
+      *
+      ****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message File
+     C                     PARM           ZAMSDA132        Message Data
+     C                     PARM           ZAMSTP  7        Message Type
+      *
+     C                     ENDSR
+      ****************************************************************
+      *
+      * *PSSR  - Program exception error routine
+      *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR
+      * Send return code to control program
+     C                     MOVE 'Y2U0004' W0RTN
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************

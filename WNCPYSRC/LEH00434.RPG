@@ -1,0 +1,56 @@
+      *****************************************************************                             
+      *                                                               *                             
+      *  Midas - Customer Lending Module                              *                             
+      *                                                               *                             
+      *  LEH00434   - Update extension file (Max. Risk end date)      *                             
+      *                                                               *                             
+      *  (c) Finastra International Banking Systems Ltd. 2016         *                             
+      *                                                               *                             
+      *  Last Amend No. LUC109             Date 19Sep16               *                             
+      *                                                               *                             
+      *---------------------------------------------------------------*                             
+      *                                                               *                             
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *                             
+      *                                                               *                             
+      *****************************************************************                             
+      *                                                                                             
+      * If LUC109 is active, recalculate the Maximum End Date of Risk on the                        
+      * Unicredito extension file based on the new Facility Expiry Date.                            
+      *                                                                                             
+     C           LUC109    IFEQ 'Y'                                                                 
+      *                                                                                             
+     C           KFACH     CHAINFCLTYFX0             81                                             
+     C           *IN81     IFEQ *OFF                                                                
+      *                                                                                             
+      * If the Type of Facility field is set to 'C', then the Maximum                               
+      * End Date of Risk will be calculated as Facility Expiry Date + a                             
+      * number of days. The number of days is found from the Maximum                                
+      * Tenor field. If Max. Tenor is in the form 'nnM', then days =                                
+      * nn x 31. If in the form 'nnY', then days = nn x 366.                                        
+      *                                                                                             
+     C                     MOVELLMAXT     WRK02   2                                                 
+     C                     MOVE WRK02     WMAX12  20                                                
+     C                     MOVE LMAXT     WMAX3   1                                                 
+      *                                                                                             
+     C           LFACT     IFEQ 'C'                                                                 
+     C           WMAX3     IFEQ 'M'                                                                 
+     C           WMAX12    MULT 31        LMEDR                                                     
+     C                     ADD  DTEX      LMEDR                                                     
+     C                     ENDIF                                                                    
+     C           WMAX3     IFEQ 'Y'                                                                 
+     C           WMAX12    MULT 366       LMEDR                                                     
+     C                     ADD  DTEX      LMEDR                                                     
+     C                     ENDIF                                                                    
+     C                     ENDIF                                                                    
+      *                                                                                             
+     C           LFACT     IFEQ 'T'                                                                 
+     C                     Z-ADDDTEX      LMEDR                                                     
+     C                     ENDIF                                                                    
+      *                                                                                             
+     C                     UPDATFCLTYFX0                                                            
+      *                                                                                             
+     C                     ENDIF                                                                    
+     C                     ENDIF                                                                    
+      *****************************************************************                             
+      ** End of hook LEH00434                                                                       
+      *****************************************************************                             

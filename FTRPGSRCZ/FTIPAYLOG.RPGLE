@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *

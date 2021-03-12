@@ -1,0 +1,800 @@
+      *****************************************************************
+      *  Start of /COPY DL0295CCP6                                    *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. LUC110  *CREATE    Date 18Jan19               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  PH0001 - Adjust formatting of Extended Narratives for        *
+      *           Accounts Movements Enquiry.                         *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *                                                               *
+      *****************************************************************
+     C**   SR. Determine if Extended Narratives should be formatted.
+     C**
+     C           EXNARR    BEGSR
+     C****************************************************************
+      *
+     C                     MOVEL*BLANK    W@UNQK
+     C                     MOVELAKEY      KDTYP   2      91
+     C*********            MOVE AKEY      W@DTYP  2
+     C*********            MOVELW@DTYP    KKTYP   1
+     C                     MOVE AKPOS9    KKTYP   1
+      *
+      ** SAVE INDICATORS 07, 08, 16, 59, 80, 87
+     C                     MOVE *IN07     W@IN07  1
+     C                     MOVE *IN08     W@IN08  1
+     C                     MOVE *IN16     W@IN16  1
+     C                     MOVE *IN59     W@IN59  1
+     C                     MOVE *IN80     W@IN80  1
+     C                     MOVE *IN87     W@IN87  1
+      *
+     C                     MOVE *OFF      Y@IN07  1
+     C                     MOVE *OFF      Y@IN08  1
+     C                     MOVE *OFF      Y@IN16  1
+     C                     MOVE *OFF      Y@IN59  1
+     C                     MOVE *OFF      Y@IN80  1
+     C                     MOVE *OFF      Y@IN87  1
+      *
+      **  CLEAR RETAIL NARRATIVE TYPE INDICATORS
+     C                     SETOF                     070809
+     C                     SETOF                     141659
+     C                     SETOF                     808790
+      **  IF POSTING TO A RETAIL ACCOUNT, SET UP EXTENDED NARRATIVES
+     C                     Z-ADD1         T       10
+     C           KDTYP     LOKUPRDT,T                    91
+     C           REVI      IFEQ 1                          B001
+     C                     SETOF                     91       1
+     C                     END                             E001
+     C           ATYPA     IFEQ 'R'                        B001
+     C           *IN91     ANDEQ'1'                           1
+     C                     EXSR PNL123                        1
+      **  IF KEY DOESN'T MATCH AN EXTENDED NARRATIVE CASE, SETOF *IN91
+     C  N07N08N09                                             1
+     CANN14N16N59                                             1
+     CANN80N87N90          MOVE '0'       *IN91               1
+      *                                                       1
+     C                     ELSE                            X001
+     C                     MOVE '0'       *IN91               1
+     C                     END                             E001
+      *
+      *
+      * RESTORE SAVED INDICATORS
+     C                     MOVE W@IN07    *IN07
+     C                     MOVE W@IN08    *IN08
+     C                     MOVE W@IN16    *IN16
+     C                     MOVE W@IN59    *IN59
+     C                     MOVE W@IN80    *IN80
+     C                     MOVE W@IN87    *IN87
+     C                     MOVE *IN91     W@IN91  1
+      *
+     C                     ENDSR
+      *
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. Format Extended Narratives according to deal type.
+     C**
+     C           PNL123    BEGSR
+     C****************************************************************
+      **
+     C           ATYPA     IFEQ 'R'
+      **
+     C           UNQK      IFEQ *BLANK
+      **
+     C           *INU3     IFEQ '0'
+     C                     Z-ADD2000000   UNQK#   90
+     C                     ELSE
+     C                     Z-ADD5000000   UNQK#   90
+     C                     END
+     C                     ELSE
+     C                     ADD  1         UNQK#
+     C                     END
+      **
+     C                     MOVELUNQK#     UNQK    9
+     C                     MOVELUNQK#     W@UNQK  9
+      *
+      *
+     C           DLNO      CHAINXXDEALL0             30
+     C           *IN30     IFEQ '1'                        B001
+     C                     SETON                     37       1
+     C                     MOVELDLNO      DBKEY               1
+     C                     MOVEL'XXDEALL0'DBFILE              1
+     C                     MOVEL'930'     DBASE             **DBERR930*
+     C                     GOTO PNLEND                        1
+     C                     END                             E001
+      *
+     C           DTYPD     IFEQ 'SW'                       B001
+      **  IF ORIGINAL DEAL TYPE WAS NOT SW, REPLACE DTYPD WITH ORDT
+     C           ORDT      IFNE DTYPD                      B002
+     C           ORDT      ANDNE*BLANKS                    B002
+     C                     MOVE ORDT      DTYPD               2
+      **  OTHERWISE, ASSEMBLE SWAP NARRATIVES                 2
+     C                     ELSE                            X002
+     C                     SETON                     09       2
+     C                     MOVE PN1,7     PNL1A  35           2
+     C                     Z-ADDSODND     PNSODN  60          2
+     C                     MOVE SLCYD     PNCCY1  3           2
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS
+     C                     EXSR PNDPIS                        2
+      **                                                      2
+     C                     EXSR PNL2BS                        2
+     C                     Z-ADDDDATD     ZDAYNO              2
+     C                     EXSR ZDATE2                        2
+     C                     MOVE ZADATE    PNDAT1  7           2
+     C                     END                             E002
+     C                     END                             E001
+      **  DEAL TYPE FP
+     C           DTYPD     IFEQ 'FP'                       B001
+     C                     SETON                     07       1
+     C                     MOVE *ON       Y@IN07              1
+     C                     EXSR PNFWD                         1
+     C                     MOVE PUCYD     PNCCY1              1
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS
+     C                     EXSR PNDPIS                        1
+      **                                                      1
+     C                     EXSR PNL2BS                        1
+     C                     Z-ADDDDATD     ZDAYNO              1
+     C                     EXSR ZDATE2                        1
+     C                     MOVE ZADATE    PNDAT1              1
+     C                     END                             E001
+      **  DEAL TYPE FS
+     C           DTYPD     IFEQ 'FS'                       B001
+     C                     SETON                     07       1
+     C                     MOVE *ON       Y@IN07              1
+     C                     EXSR PNFWD                         1
+     C                     MOVE SLCYD     PNCCY1              1
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS
+     C                     EXSR PNDPIS                        1
+      **                                                      1
+     C                     EXSR PNL2BS                        1
+     C                     Z-ADDDDATD     ZDAYNO              1
+     C                     EXSR ZDATE2                        1
+     C                     MOVE ZADATE    PNDAT1              1
+     C                     END                             E001
+      **  DEAL TYPE CX
+     C           DTYPD     IFEQ 'CX'                       B001
+     C                     SETON                     08       1
+     C                     MOVE *ON       Y@IN08              1
+     C                     EXSR PNFWD                         1
+     C                     MOVE SLCYD     PNCCY1              1
+     C                     MOVE PUCYD     PNCCY2  3           1
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS
+     C                     EXSR PNDPIS                        1
+      **                                                      1
+     C                     EXSR PNL2BS                        1
+     C                     Z-ADDDDATD     ZDAYNO              1
+     C                     EXSR ZDATE2                        1
+     C                     MOVE ZADATE    PNDAT1              1
+     C                     END                             E001
+      **  DEAL TYPES IT,TD,IP,CI
+     C           DTYPD     IFEQ 'IT'                       B001
+     C           DTYPD     OREQ 'TD'                          1
+     C           DTYPD     OREQ 'IP'                          1
+     C           DTYPD     OREQ 'CI'                          1
+      **  DEAL/VALUE DATE KEYS                                1
+     C           EVCOD     IFEQ 'D'                        B002
+     C           EVCOD     OREQ 'V'                           2
+      ***                  SETON                     54       2
+     C                     SETON                     14       2
+      **  ASSEMBLE NARRATIVE LINE 1                           2
+     C           DTYPD     IFEQ 'CI'                       B003
+     C                     MOVE PN1,10    PNL1A               3
+     C                     ELSE                            X003
+     C           DTYPD     IFEQ 'IP'                       B004
+     C                     MOVE PN1,9     PNL1A               4
+     C                     ELSE                            X004
+      **  OTHERWISE, MUST BE 'IT' OR 'TD'                     4
+     C                     MOVE PN1,8     PNL1A               4
+     C                     END                             E004
+     C                     END                             E003
+      **  ASSEMBLE NARRATIVE LINE 2                           2
+     C                     EXSR PNL2CS                        2
+      **  ASSEMBLE NARRATIVE LINE 3                           2
+      **  CHECK WHETHER FIRST TWO DIGITS OF TOTAL INTEREST ARE ZERO.
+     C                     Z-ADDTOTID     PNAML               2
+     C           PNAF2     COMP 0                    9292     2
+     C                     ELSE                            X002
+      **  MATURITY DATE KEYS                                  2
+     C           EVCOD     IFEQ 'M'                        B003
+     C                     SETON                     16       3
+     C                     MOVE *ON       Y@IN16              1
+     C           DTYPD     IFEQ 'CI'                       B004
+     C                     MOVE PN1,14    PNL1A               4
+     C                     ELSE                            X004
+     C                     MOVE PN1,11    PNL1A               4
+     C                     END                             E004
+     C                     Z-ADDVDAT      ZDAYNO              3
+     C                     EXSR ZDATE2                        3
+     C                     MOVE ZADATE    PNDAT1              3
+     C           PNL1A     CAT  PNDAT1:1  PNL1A
+     C           EVSUB     IFEQ 'A'                        B004
+     C                     MOVE PN2,1     PNL2A  35           4
+     C                     ELSE                            X004
+     C           EVSUB     IFEQ 'B'                        B005
+     C                     MOVE PN2,7     PNL2A               5
+     C                     ELSE                            X005
+     C                     MOVE PN2,2     PNL2A               4
+     C                     ENDIF                           E005
+     C                     END                             E004
+      **                                                      3
+     C                     END                             E003
+     C                     END                             E002
+     C                     END                             E001
+      **  DEAL TYPE CD
+     C           DTYPD     IFEQ 'CD'                       B001
+      **  DEAL/VALUE DATE KEYS                                1
+     C           EVCOD     IFEQ 'D'                        B002
+     C                     GOTO PNTAG1                        2
+     C                     END                             E002
+     C           EVCOD     IFNE 'V'                        B002
+     C           KKTYP     ORNE ' '                           2
+     C                     GOTO PNTAG2                        2
+     C                     END                             E002
+     C           PNTAG1    TAG                                1
+     C                     SETON                     59       1
+     C                     MOVE *ON       Y@IN59              1
+     C                     MOVE PN1,12    PNL1A               1
+     C                     MOVE PN2,6     PNL2A               1
+      **  MOVE EFFECTIVE INTEREST RATE INTO DATA STRUCTURE    1
+      **  AND CALL SUBROUTINE TO DETECT TRAILING ZEROES       1
+     C           INTRD     MULT 10000000  PNRATE              1
+     C                     SETOF                     93       1
+     C                     EXSR PNRATS                        1
+      **                                                      1
+     C           PNTAG2    TAG                                1
+      **  BALANCE CHANGE AMENDMENT KEYS                       1
+     C           EVCOD     IFEQ 'V'                        B002
+     C           KKTYP     ANDEQ'I'                           2
+     C                     MOVE PN2,3     PNL2A               2
+     C                     GOTO PNTAG3                        2
+     C                     END                             E002
+     C           EVCOD     IFNE 'M'                        B002
+     C           KKTYP     ORNE 'D'                           2
+     C                     GOTO PNTAG4                        2
+     C                     END                             E002
+     C                     MOVE PN2,4     PNL2A               1
+     C           PNTAG3    TAG                                1
+     C***                  SETON                     66       1
+     C                     SETON                     80       1
+     C                     MOVE *ON       Y@IN80              1
+     C                     MOVE PN1,13    PNL1A               1
+     C           PNTAG4    TAG                                1
+      **  INTEREST PAYMENT DATE KEYS                          1
+     C           EVCOD     IFEQ 'I'                        B002
+     C           EVSUB     IFEQ 'I'                        B003
+     C           EVSUB     OREQ 'C'                           3
+     C***                  SETON                     71       3
+     C                     SETON                     87       3
+     C                     MOVE *ON       Y@IN87              1
+     C                     MOVE PN1,13    PNL1A               3
+     C                     MOVE PN2,5     PNL2A               3
+     C                     Z-ADDSLID      ZDAYNO              3
+     C                     EXSR ZDATE2                        3
+     C                     MOVE ZADATE    PNDAT2  7           3
+     C                     Z-ADDSLIDD     ZDAYNO              3
+     C                     EXSR ZDATE2                        3
+     C                     MOVE ZADATE    PNDAT3  7           3
+     C                     END                             E003
+     C                     END                             E002
+      **  MATURITY DATE KEYS                                  1
+     C           EVCOD     IFEQ 'M'                        B002
+      **  PRINCIPAL AT MATURITY                               2
+     C           EVSUB     IFEQ 'A'                        B003
+     C           KKTYP     ANDEQ' '                           3
+     C                     SETON                     90       3
+     C                     MOVE PN1,13    PNL1A               3
+     C                     MOVE PN2,1     PNL2A               3
+     C                     ELSE                            X003
+      **  INTEREST AT MATURITY                                3
+     C           EVSUB     IFEQ 'I'                        B004
+     C                     SETON                     87       4
+     C                     MOVE *ON       Y@IN87              4
+     C                     MOVE PN1,13    PNL1A               4
+     C                     MOVE PN2,5     PNL2A               4
+     C                     Z-ADDSLID      ZDAYNO              4
+     C                     EXSR ZDATE2                        4
+     C                     MOVE ZADATE    PNDAT2              4
+     C                     Z-ADDMDAT      ZDAYNO              4
+     C                     EXSR ZDATE2                        4
+     C                     MOVE ZADATE    PNDAT3              4
+     C                     END                             E004
+     C                     END                             E003
+     C                     END                             E002
+     C                     END                             E001
+      **
+      **
+     C                     END                             E001
+      **
+     C           PNLEND    ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO DETERMINE WHETHER FX DEAL IS SPOT OR FORWARD
+     C**                                                   **PNFWD**
+     C           PNFWD     BEGSR
+     C****************************************************************
+      **
+      **  CLEAR FORWARD DEAL INDICATOR
+     C                     SETOF                     72
+      **  CALCULATE TWO WORKING DAYS FORWARD FROM DEAL DATE
+     C                     Z-ADDDDATD     ZDAYNO
+     C                     MOVE A8LCCD    ZLOC
+     C                     MOVE BJLCCY    ZCCY
+     C                     Z-ADD2         ZNRDYS
+     C                     EXSR ZFWDTA
+      **  APPLY APPROPRIATE NARRATIVE
+     C           VDATD     IFLE ZDYNBR                     B001
+      **  FP SPOT                                             1
+     C           DTYPD     IFEQ 'FP'                       B002
+     C                     MOVE PN1,1     PNL1A               2
+     C                     ELSE                            X002
+      **  FS SPOT                                             2
+     C           DTYPD     IFEQ 'FS'                       B003
+     C                     MOVE PN1,3     PNL1A               3
+     C                     ELSE                            X003
+      **  CX SPOT                                             3
+     C                     MOVE PN1,5     PNL1A               3
+     C                     END                             E003
+     C                     END                             E002
+     C                     ELSE                            X001
+      **  FORWARD DEAL - SET ON INDICATOR                     1
+     C                     SETON                     72       1
+      **  FP FORWARD                                          1
+     C           DTYPD     IFEQ 'FP'                       B002
+     C                     MOVE PN1,2     PNL1A               2
+     C                     ELSE                            X002
+      **  FS FORWARD                                          2
+     C           DTYPD     IFEQ 'FS'                       B003
+     C                     MOVE PN1,4     PNL1A               3
+     C                     ELSE                            X003
+      **  CX FORWARD                                          3
+     C                     MOVE PN1,6     PNL1A               3
+     C                     END                             E003
+     C                     END                             E002
+     C                     END                             E001
+      **
+     C                     ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO SET UP PNL2 FOR FX DEAL RETAIL ENTRIES
+     C**                                                   **PNL2BS**
+     C           PNL2BS    BEGSR
+     C****************************************************************
+      **
+     C                     SETOF                     9293
+      **
+      **  CHECK WHETHER FIRST TWO DIGITS OF AMOUNT ARE ZERO
+     C           PNAF2     IFNE 0                          B001
+     C                     SETON                     92       1
+     C                     END                             E001
+      **  MOVE EXCHANGE RATE INTO DATA STRUCTURE- TRUNCATE IF NECESSARY
+     C                     MOVELEXRT      PNFST2  20
+     C           PNFST2    IFGT 0                          B001
+     C           *IN92     ANDEQ'1'                           1
+     C           EXRT      MULT 100000    PNRAT9    H         1
+     C                     SETON                     93       1
+     C                     Z-ADD0         PNRL2D              1
+     C                     ELSE                            X001
+     C           EXRT      MULT 10000000  PNRATE    H         1
+     C                     END                             E001
+      **  CALL SUBROUTINE TO IDENTIFY TRAILING ZEROES IN RATE
+     C                     EXSR PNRATS
+      **
+     C                     ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO SET UP PNL2 FOR IT,TD,IP,CI DEAL/VALUE DATE ENTRIES
+     C**                                                   **PNL2CS**
+     C           PNL2CS    BEGSR
+     C****************************************************************
+      **
+      **  CHECK FOR LEADING ZEROES IN INTEREST RATE
+      **  IF FIRST 2 INT POSITIONS NOT BOTH 0, DROP LAST 2 DEC POSITIONS
+     C                     MOVELINTRD     PNFST2     93
+     C           *IN93     IFEQ '1'                        B001
+     C           INTRD     MULT 100000    PNRAT9    H         1
+     C                     Z-ADD0         PNRL2D              1
+     C                     ELSE                            X001
+      **  OTHERWISE, READ FULL RATE INTO DATA STRUCTURE       1
+     C           INTRD     MULT 10000000  PNRATE    H         1
+     C                     END                             E001
+      **  CALL SUBROUTINE TO IDENTIFY TRAILING ZEROES IN RATE
+     C                     EXSR PNRATS
+      **  SET UP FROM AND TO DATES
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PNDAT1
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PNDAT3
+      **
+     C                     ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO IDENTIFY TRAILING ZEROS IN RATES
+     C**                                                   **PNRATS*
+     C           PNRATS    BEGSR
+     C****************************************************************
+      **
+     C                     MOVE '0'       IND58   1
+     C                     MOVE '0'       IND66   1
+     C                     MOVE '0'       IND67   1
+     C                     MOVE '0'       IND68   1
+     C                     MOVE '0'       IND69   1
+      **
+      **  EDIT THIRD DEC PLACE ONLY ON EXCH RATES, NOT INTEREST RATES
+     C***        *IN54     IFEQ '0'                        B001
+     C           *IN14     IFEQ '0'                        B001
+     C           *IN59     ANDEQ'0'                           1
+     C           PNRL5D    ANDEQ0                             1
+     C           *IN93     IFEQ '0'                        B002
+     C                     MOVE '1'       IND58               2
+     C                     ELSE                            X002
+     C                     MOVE '1'       IND67               2
+     C                     END                             E002
+     C                     ELSE                            X001
+      **  EDIT FOURTH DECIMAL PLACE                           1
+     C           PNRL4D    IFEQ 0                          B002
+     C           *IN93     IFEQ '0'                        B003
+     C                     MOVE '1'       IND66               3
+     C                     ELSE                            X003
+     C                     MOVE '1'       IND68               3
+     C                     END                             E003
+     C                     ELSE                            X002
+      **  EDIT THIRD DECIMAL PLACE                            2
+     C           PNRL3D    IFEQ 0                          B003
+     C           *IN93     IFEQ '0'                        B004
+     C                     MOVE '1'       IND67               4
+     C                     ELSE                            X004
+     C                     MOVE '1'       IND69               4
+     C                     END                             E004
+     C                     ELSE                            X003
+     C           PNRL2D    IFEQ 0                          B004
+     C           *IN93     ANDEQ'0'                           4
+     C                     MOVE '1'       IND68               4
+     C                     ELSE                            X004
+     C           PNRL1D    IFEQ 0                          B005
+     C           *IN93     ANDEQ'0'                           5
+     C                     MOVE '1'       IND69               5
+     C                     END                             E005
+     C                     END                             E004
+     C                     END                             E003
+     C                     END                             E002
+     C                     END                             E001
+      *
+      ** TO REMOVE TRAILING ZEROS FOR PRINTING PURPOSES.
+     C                     MOVE *BLANKS   GDS01
+     C                     MOVELPNR7D     GDS01
+     C           IND58     IFEQ '1'                        B001
+     C                     MOVE '     '   PNR7DA              1
+     C                     ENDIF                           E001
+     C           IND66     IFEQ '1'                        B001
+     C   14                                                   1
+     COR 59                MOVE '%   '    PNR7DA              1
+     C   07                                                   1
+     COR 08                                                   1
+     COR 09                MOVE '    '    PNR7DA              1
+     C                     ENDIF                           E001
+     C           IND67     IFEQ '1'                        B001
+     C   14                                                   1
+     COR 59                MOVE '%  '     PNR7DA              1
+     C   07                                                   1
+     COR 08                                                   1
+     COR 09                MOVE '   '     PNR7DA              1
+     C                     ENDIF                           E001
+     C           IND68     IFEQ '1'                        B001
+     C   14                                                   1
+     COR 59                MOVE '% '      PNR7DA              1
+     C   07                                                   1
+     COR 08                                                   1
+     COR 09                MOVE '  '      PNR7DA              1
+     C                     ENDIF                           E001
+     C           IND69     IFEQ '1'                        B001
+     C   14                                                   1
+     COR 59                MOVE '%'       PNR7DA              1
+     C   07                                                   1
+     COR 08                                                   1
+     COR 09                MOVE ' '       PNR7DA              1
+     C                     ENDIF                           E001
+     C                     MOVELPNR7DA    GPNR7D  7
+     C                     MOVELPNR7DA    GPNR8D  8
+      **
+     C                     ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO SET UP AMT. AND DEC. PLACE INDICS FOR RETAIL NARRS
+     C**                                                   **PNDPIS**
+     C           PNDPIS    BEGSR
+     C****************************************************************
+      **
+      **  SET UP NARRATIVE AMOUNT
+     C           OTHC      IFEQ PNCCY1                     B001
+     C                     Z-ADDOTHA      PNAML               1
+     C                     ELSE                            X001
+     C                     Z-ADDEAMT      PNAML               1
+     C                     END                             E001
+      **  GET NUMBER OF DECIMAL PLACES FOR NARRATIVE CURRENCY:1
+     C                     Z-ADD1         X
+     C           PNCCY1    LOKUPCCYA,X                   40
+     C           DPA,X     COMP 1                      9596
+     C           DPA,X     COMP 2                    97  94
+      **
+     C                     ENDSR
+      **
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**   SR. TO SET UP CONSTANTS FOR RETAIL NARRATIVES
+     C**                                                   **PNCNST**
+     C           PNCNST    BEGSR
+     C****************************************************************
+      **
+     C                     MOVE 'AT'      ATX     2
+     C                     MOVE 'FROM'    FROMX   4
+     C                     MOVE 'ON'      ONX     2
+     C                     MOVE 'TO'      TOX     2
+     C                     MOVE 'REF'     REFX    3
+     C                     MOVE 'INT'     MTYX3   3
+     C                     MOVE 'IT'      MTYX2   2
+     C                     MOVE '/'       SLASHX  1
+      **
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZFWDTA - Calculate Working Days Forward.                     *
+      *                                                               *
+      *****************************************************************
+     C           ZFWDTA    BEGSR
+      *
+      ** Standard sub-routine to calculate up to 99 working days forward
+      ** from a given start date.
+      ** NB. Must be used in conjunction with ZACCH.
+      **
+      ** NB: If required no. of working days forward is zero, then:-
+      **       if input date is a working day, then result is input date
+      **       else result is first working day after input date.
+      **
+      **     If required no. of working days forward is one, then:-
+      **       if input date is a working day, then result is next
+      **       working day
+      **       else result is first working day after input date.
+      **
+      ** Thus, if input date is a holiday, then zero and one working day
+      ** forward will return the same result.
+      *
+      *
+      ** Define input parameters
+      *
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZLOC      ZLOC    3
+     C                     Z-ADDZNRDYS    ZNRDYS  30
+      *
+      ** Define Output parameters
+      *
+     C                     Z-ADD0         ZDYNBR  50
+      *
+      ** Move input date to output date
+      *
+     C                     Z-ADDZDAYNO    ZDYNBR
+      *
+      ** Save original value of ZDAYNO
+      *
+     C                     Z-ADDZDAYNO    ZDAYNT  50
+      *
+      ** Access holiday record
+      *
+     C                     MOVE '*SETGT ' ZOPTN
+     C                     EXSR ZACCH
+      *
+      ** If no record was found, then just add no. of days forward
+      ** required to input date to give output.
+      *
+     C           RTNCD     IFEQ '*NRF   '                  IF 1
+      *
+     C           ZDAYNO    ADD  ZNRDYS    ZDYNBR
+      *
+     C                     ELSE                            ELSE 1
+      *
+      ** Otherwise, a holiday record was found and so need to count days
+      ** forward to get required result.
+      **
+      ** Subtract 1st. Jan date from given date and add 1 to give the
+      ** nth day in the year (ZINDX).
+      *
+     C           ZDAYNO    SUB  DGJDNB    ZINDX
+     C                     ADD  1         ZINDX
+      *
+      ** If no. of working days forward wanted is zero, then check first
+      ** that given date is not a holiday. If it is, then change no. of
+      ** days forward wanted to one to get next working day.
+      *
+     C           ZNRDYS    IFEQ 0                           IF 2
+     C           ZHL,ZINDX ANDEQ'X'
+     C                     ADD  1         ZNRDYS
+     C                     END                              FI 2
+      *
+      ** While no. of working days left to find is greater than zero
+      *
+     C           ZNRDYS    DOWGT0                           DOW 1
+      *
+      ** Add one to day in year index and to output date
+      *
+     C                     ADD  1         ZINDX
+     C                     ADD  1         ZDYNBR
+      *
+      ** If output date is beyond stored 31st. Dec date, then need to
+      ** get next holiday record with new parameters: output date is new
+      ** input date; no. of days forward is current no. of days left to
+      ** find.
+      *
+     C           ZDYNBR    IFGT DGDDNB                       IF 1
+      *
+     C                     Z-ADDZDYNBR    ZDAYNO
+      *
+     C                     MOVE '*SETGT ' ZOPTN
+     C                     EXSR ZACCH
+      *
+      ** If no record was found, then add no. of days left to find to
+      ** output date and subtract 1 to give required result and change
+      ** no. left to find to zero to terminate loop.
+      *
+     C           RTNCD     IFEQ '*NRF   '                     IF 2
+      *
+     C                     ADD  ZNRDYS    ZDYNBR
+     C                     SUB  1         ZDYNBR
+     C                     Z-ADD0         ZNRDYS
+      *
+     C                     ELSE                               ELSE 2
+      *
+      ** Otherwise, reset day in year value to one.
+      *
+     C                     Z-ADD1         ZINDX
+      *
+     C                     END                                FI 2
+      *
+     C                     END                               FI 1
+      *
+      ** If working day then no. left to find is one less
+      *
+     C           ZNRDYS    IFNE 0                            IF 1
+     C           ZHL,ZINDX ANDEQ' '                          AND1
+     C                     SUB  1         ZNRDYS
+     C                     END                               FI 1
+      *
+     C                     END                              ENW 1
+      *
+      ** Move back original value of ZDAYNO
+      *
+     C                     Z-ADDZDAYNT    ZDAYNO
+      *
+     C                     END                             FI 1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+     C           ZACCH     BEGSR
+      *
+      * This standard sub-routine is to be used in conjunction with
+      * the holiday standard sub-routines. Its function is to
+      * determine if the access program AOHOLS0 needs to be called and
+      * sets up the holiday record appropriately. It is common to all
+      * the new holiday sub-routines, but should only be included in
+      * a program once, using /COPY.
+      *
+      *
+      * If stored parameters from last call are not within the same
+      * bounds - ie. same ccy/location and date is within 1st. Jan &
+      * 31st. Dec of current holiday record - continue processing.
+      *
+      **
+      *Define input parameters
+      **
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZLOC      ZLOC    3
+     C                     MOVE ZOPTN     ZOPTN   7
+      *
+     C           ZOPTN     IFEQ '*FREE  '                    IF 2
+      *
+     C                     CALL 'AOHOLS0'
+     C                     PARM *BLANK    RTNCD
+     C                     PARM           ZOPTN
+     C                     PARM ZCCY      ZZCCY
+     C                     PARM ZLOC      ZZLOC
+     C                     PARM ZDAYNO    ZZDYNO
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B
+      *
+     C                     ELSE
+      *
+     C           ZCCY      IFNE ZSCCY                      IF 1
+     C           ZLOC      ORNE ZSLOC                       OR
+     C           ZDAYNO    ORLT ZSJAN                       OR
+     C           ZDAYNO    ORGT ZSDCM                       OR
+      *
+      * Get appropriate holiday record
+      *
+     C                     CALL 'AOHOLS0'
+     C                     PARM *BLANK    RTNCD
+     C                     PARM           ZOPTN
+     C                     PARM ZCCY      ZZCCY
+     C                     PARM ZLOC      ZZLOC
+     C                     PARM ZDAYNO    ZZDYNO  50
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B
+      *
+      * If no record was found, assume all days in year are working
+      * days.
+      *
+     C           RTNCD     IFEQ '*NRF   '                    IF 2
+      *
+     C                     MOVE *ALL' '   ZHL
+      *
+      * Save 1st. Jan/31st. Dec dates as input date as we cannot say
+      * anything about this year in future calls.
+      *
+     C                     Z-ADDZDAYNO    ZSJAN
+     C                     Z-ADDZDAYNO    ZSDCM
+      *
+     C                     ELSE                              ELSE 2
+      *
+      * Save 1st. Jan/31st. Dec for future calls
+      *
+     C                     Z-ADDDGJDNB    ZSJAN
+     C                     Z-ADDDGDDNB    ZSDCM
+      *
+      * Left adjust the holiday array over FEB 29th if the
+      * holiday record is not for a leap year.
+      *
+     C                     MOVE DGYRNB    Z@YR    40
+     C           Z@YR      DIV  4         Z@WK1   40
+     C                     MVR            Z@WK2   40
+      *
+     C           Z@WK2     IFNE 0
+      *
+     C                     MOVEAZHL       ZHL1
+     C                     MOVEAZHL1,61   ZHL,60
+      *
+     C                     END
+      *
+     C                     END                               FI 2
+      *
+      * Save currency and location for future calls. Need to save
+      * return code as well.
+      *
+     C                     MOVE ZCCY      ZSCCY
+     C                     MOVE ZLOC      ZSLOC
+     C                     MOVE RTNCD     ZSRTN
+      *
+     C                     ELSE                            ELSE 1
+      *
+      * Move saved return code back again as there may have been no
+      * record found last time.
+      *
+     C                     MOVE ZSRTN     RTNCD
+      *
+     C                     END                             FI 1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  End of /COPY DL0295CCP6                                      *
+      *****************************************************************

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. AR566732           Date 12Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CFT162             Date 25Sep17              */
+/*       Prev Amend No. AR566732           Date 12Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR925993           Date 13Jul16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG21873           Date 08Jan09              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CFT162 - MT900 and MT910 Message Generation                 */
 /*       AR566732 - Confirmation for Lending transaction not produce.*/
 /*                  Change condition to also check LE Module is      */
 /*                  switched on, then produce confo on job LEC0212A. */
@@ -86,7 +88,11 @@
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)
              DCL        VAR(&OPIN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)                   /*BUG2692*/
- 
+             DCL        VAR(&OPTN2) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                   /*CFT162*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CFT162*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CFT162*/
+             DCL        VAR(&CFT162) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFT162*/
+
              DCLF       FILE(SDMGMEPD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
@@ -137,7 +143,16 @@
  
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&WAIT) VALUE(&VAL))
- 
+
+                                                                                          /*CFT162*/
+/* Check if enhancement CFT162 in installed */                                            /*CFT162*/
+                                                                                          /*CFT162*/
+             CHGVAR     VAR(&SARD) VALUE('CFT162')                                        /*CFT162*/
+             CALL       PGM(AOSARDR0) PARM(&RETURN &OPTN2 &SARD &FMT)                     /*CFT162*/
+             IF         COND(&RETURN *EQ '       ') THEN(CHGVAR +
+                          VAR(&CFT162) VALUE('Y'))                                        /*CFT162*/
+                                                                                          /*CFT162*/
+
 /* Set up call to QRCVDTAQ */
  
              CHGVAR     VAR(&DTAQ) VALUE('APCONFDTQ   ')
@@ -387,7 +402,17 @@
                           INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                        /*BUG2692*/
              ENDDO       /*BUG2692*/
                                                                                          /*BUG2692*/
- FTEND:      ENDDO       /*BUG2692*/
+/**/                                                                                      /*CFT162*/
+             IF         COND(&CFT162 = 'Y') THEN(DO)                                      /*CFT162*/
+                SBMJOB     JOB(FTC162001) JOBD(MBATCH) USER(*JOBD) +
+                             RTGDTA(*JOBD) RQSDTA('CALL +
+                             PGM(FTC162001) PARM('''' '''' '''' )') +
+                             INLLIBL(*JOBD) /*CFT162*/
+             SBMJOB     JOB(MIDASMRV) JOBD(MBATCH) USER(*JOBD) +
+                          RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)                        /*CFT162*/
+             ENDDO       /*CFT162*/
+ FTEND:      ENDDO                                                                       /*BUG2692*/
                                                                                          /*BUG2692*/
 /* SECURITIES MODULE */                                                                  /*BUG2791*/
  

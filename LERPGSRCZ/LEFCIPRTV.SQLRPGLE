@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *  Last Amend No. LUC123             Date 18Jun18               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 MD036924           Date 06Nov19               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -70,6 +71,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC123 - Extend Customer De-Activation (CSD025) to GL and LE *
+      *           Use of core hook GLH00266                           *
+      *           Addition of hook LUC123_007                         *
+      *           Addition of hook LUC123_008                         *
+      *           Addition of hook LUC123_009                         *
+      *           Addition of hook LUC123_010                         *
+      *           Addition of hook LUC123_011                         *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591                              *
@@ -328,7 +336,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
  
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+     D/COPY WNCPYSRC,LUC123_011                                                               LUC123
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FC_)
       ** Facility FM in File Format
@@ -682,13 +690,14 @@
      C                   ELSE
  
       ** Customer number must refer to a valid customer
- 
+     C/COPY WNCPYSRC,LUC123_009                                                               LUC123
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY    '    @OPTN             7
      C                   PARM      DDCSSN        @KEY1            10
      C                   PARM                    @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,LUC123_010                                                               LUC123
       *
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*CUSCLS'                                                MD036924
@@ -700,9 +709,10 @@
      C                   MOVEL     'DDCSSN    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0214'     MsgIdArr(Ix)
      C                   ELSE
- 
+     C/COPY WNCPYSRC,LUC123_007                                                               LUC123
      C                   MOVEL     *BLANK        DDCSSN
      C                   MOVEL     BBCUST        DDCSSN
+     C/COPY WNCPYSRC,LUC123_008                                                               LUC123
      C                   ENDIF
  
      C                   ENDIF

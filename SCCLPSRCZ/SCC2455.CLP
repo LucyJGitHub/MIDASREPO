@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSC060             Date 29Aug18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. CSC060             Date 29Aug18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      259085             Date 27Jul12              */
 /*                      246515             Date 19Mar07              */
 /*                      CSC033             Date 21May07              */
@@ -48,6 +49,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Amendment of core hook SCC2455008                  */
+/*                Amendment of core hook SCC2455009                  */
+/*                Amendment of core hook SCC2455010                  */
 /*       CSC060 - Unload DBDAY tape upon Save                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       259085 - COB Performance Improvement in M+.                 */

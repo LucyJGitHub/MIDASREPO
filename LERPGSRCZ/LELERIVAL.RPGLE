@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD057323           Date 09Dec20               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD057323           Date 09Dec20               *
       *                 MD045482           Date 23Oct20               *
       *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -122,6 +123,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Issue error message if facility is blocked.         *
+      *           Amendment of core hook LELERIV001                   *
+      *           Amendment of core hook LELERIV002                   *
+      *           Amendment of core hook LELERIV010                   *
+      *           Amendment of core hook LELERIV058                   *
+      *           Amendment of core hook LELERIV069                   *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*

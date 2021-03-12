@@ -92,7 +92,6 @@
 000197210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
 000198210301      **--** SARR - Simple Average
 000199210301      **--** SAVG - Simple Average
-000200210301      **--** MANU - Manual
 000201210224     D  intPrdStartDt                10a
 000202210224      ** Interest Period Start Date
 000203210224     D  intPrdEndDt                  10a
@@ -119,80 +118,83 @@
 000224210224      ** Calculate Till Date
 000225210310     D  benchMarkAdj                 20a
 000226210305      ** Benchmark Adjustment
-000227210222
-000228210222     D Main            pi
-000229210301      **-----------------------------------------------------**
-000230210301     D  moduleID                      2a
-000231210301      ** Module ID
-000232210301      **--** LE - Lending
-000233210301      **--** DL - Dealing
-000234210301      **--** FR - FRA/IRS
-000235210301     D  transactREF                   6a
-000236210301      ** Transaction Reference
-000237210226     D  calcMethod                    4a
-000238210226      ** Calculation Method
-000239210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
-000240210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
-000241210301      **--** SARR - Simple Average
-000242210301      **--** SAVG - Simple Average
-000243210301      **--** MANU - Manual
-000244210226     D  intPrdStartDt                10a
-000245210226      ** Interest Period Start Date
-000246210226     D  intPrdEndDt                  10a
-000247210226      ** Interest Period End Date
-000248210310     D  riskFreeRate                  5a
-000249210226      ** Risk Free Rate
-000250210226     D  riskFreeRatFl                20a
-000251210226      ** Risk Free Rate Floor
-000252210226     D  lookBackDays                  2a
-000253210226      ** Lookback Days
-000254210301     D  obserPrdShift                 5a
-000255210226      ** Observation Period Shift
-000256210301      ** True/False
-000257210226     D  RateRndDecPts                 3a
-000258210226      ** Rate Rounding Decimal Points
-000259210303     D  dayCntConvent                 7a
-000260210226      ** Day Count Convention
-000261210226     D  lockOutDays                   2a
-000262210226      ** Lockout Days
-000263210301     D  showDailyDeta                 5a
-000264210226      ** Show Dailty Details
-000265210301      ** True/False
-000266210226     D  callTillDate                 10a
-000267210226      ** Calculate Till Date
-000268210310     D  benchMarkAdj                 20a
-000269210305      ** Benchmark Adjustment
-000270210224
-000271210222      ** +--------------------------------------+
-000272210222      ** ¦ Manually included D-specs            ¦
-000273210222      ** ¦ =========================            ¦
-000274210222      ** +--------------------------------------+
-000275210310      ** +--------------------------------------+
-000276210303
-000277210301      ** Extract File
-000278210301     D LELIBEDS      e ds                  extname(LELIBEPD)
-000279210301     D ExtractFLDS     ds                  likeds(LELIBEDS)
+000227210312     D  returnCD                     20a
+000228210312      ** Return Code
+000229210222
+000230210222     D Main            pi
+000231210301      **-----------------------------------------------------**
+000232210301     D  moduleID                      2a
+000233210301      ** Module ID
+000234210301      **--** LE - Lending
+000235210301      **--** DL - Dealing
+000236210301      **--** FR - FRA/IRS
+000237210301     D  transactREF                   6a
+000238210301      ** Transaction Reference
+000239210226     D  calcMethod                    4a
+000240210226      ** Calculation Method
+000241210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
+000242210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
+000243210301      **--** SARR - Simple Average
+000244210301      **--** SAVG - Simple Average
+000246210226     D  intPrdStartDt                10a
+000247210226      ** Interest Period Start Date
+000248210226     D  intPrdEndDt                  10a
+000249210226      ** Interest Period End Date
+000250210310     D  riskFreeRate                  5a
+000251210226      ** Risk Free Rate
+000252210226     D  riskFreeRatFl                20a
+000253210226      ** Risk Free Rate Floor
+000254210226     D  lookBackDays                  2a
+000255210226      ** Lookback Days
+000256210301     D  obserPrdShift                 5a
+000257210226      ** Observation Period Shift
+000258210301      ** True/False
+000259210226     D  RateRndDecPts                 3a
+000260210226      ** Rate Rounding Decimal Points
+000261210303     D  dayCntConvent                 7a
+000262210226      ** Day Count Convention
+000263210226     D  lockOutDays                   2a
+000264210226      ** Lockout Days
+000265210301     D  showDailyDeta                 5a
+000266210226      ** Show Dailty Details
+000267210301      ** True/False
+000268210226     D  callTillDate                 10a
+000269210226      ** Calculate Till Date
+000270210310     D  benchMarkAdj                 20a
+000271210305      ** Benchmark Adjustment
+000272210312     D  returnCD                     20a
+000273210312      ** Return Code
+000274210224
+000275210222      ** +--------------------------------------+
+000276210222      ** ¦ Manually included D-specs            ¦
+000277210222      ** ¦ =========================            ¦
+000278210222      ** +--------------------------------------+
+000279210310      ** +--------------------------------------+
 000280210303
-000281210303      ** Audit Log
-000282210303     D SDARRLDS      e ds                  extname(SDARRLOGTD)
-000283210303     D AuditLogDS      ds                  likeds(SDARRLDS)
+000281210301      ** Extract File
+000282210301     D LELIBEDS      e ds                  extname(LELIBEPD)
+000283210301     D ExtractFLDS     ds                  likeds(LELIBEDS)
 000284210303
-000285210303      ** ARR Daily Rates History File
-000286210303     D ARRDLYDS      e ds                  extname(SDHSDRTD)
-000287210303     D DailyHistDS     ds                  likeds(ARRDLYDS)
+000285210303      ** Audit Log
+000286210303     D SDARRLDS      e ds                  extname(SDARRLOGTD)
+000287210312     D AuditLogDS      ds                  likeds(SDARRLDS)
 000288210303
-000289210304      ** Core DS
-000290210222     D dssdy         e ds                  extname(DSSDY)
-000291210222     D dsfdy         e ds                  extname(DSFDY)
-000292210222
-000293210222      ** +--------------------------------------+
-000294210222      ** ¦ Constants declaration                ¦
-000295210222      ** ¦ =====================                ¦
-000296210222      ** +--------------------------------------+
-000297210304
-000298210304     D AMP             c                   const('&')
-000301210304     D INSERT          c                   const(0)
-000302210304     D LELIBEPD        c                   const(1)
+000289210303      ** ARR Daily Rates History File
+000290210303     D ARRDLYDS      e ds                  extname(SDHSDRTD)
+000291210303     D DailyHistDS     ds                  likeds(ARRDLYDS)
+000292210303
+000293210304      ** Core DS
+000294210222     D dssdy         e ds                  extname(DSSDY)
+000295210222     D dsfdy         e ds                  extname(DSFDY)
+000296210222
+000297210222      ** +--------------------------------------+
+000298210222      ** ¦ Constants declaration                ¦
+000299210222      ** ¦ =====================                ¦
+000300210222      ** +--------------------------------------+
+000301210304
+000302210304     D AMP             c                   const('&')
+000303210304     D INSERT          c                   const(0)
+000304210304     D LELIBEPD        c                   const(1)
 000305210301     D NO_ERROR        c                   const(0)
 000306210301     D NO_RECORD       c                   const(100)
 000309210301     D QUO             c                   const('''')
@@ -233,7 +235,6 @@
 000347210224     D err             s             10i 0
 000348210222     D msg             s             52a
 000350210304     D jsonData        s         999999a   varying
-000351210305     D LogData         s          10000a   varying
 000352210304     D RestAPIParm     s          65535a   varying inz(*blanks)
 000353210226     D CalcMetURL      s            500a   varying inz(*blanks)
 000354210301     D wSqlStr         S           2000A   INZ(*BLANKS)
@@ -250,102 +251,105 @@
 000370210305     D errorMessage    s            100a
 000371210305     D includeRecord   s              1a   inz('N')
 000372210310     D compAveRate     s             30p 9 inz(0)
-000373210226
-000374210226      *---------------*
-000375210226      ** JSON Details *
-000376210226      *---------------*
-000377210226
-000378210226     D summary_t       ds                  qualified
-000379210226     D                                     template
-000380210226     D   intPrdDate                  10a
-000381210226      ** Interest Period Date
-000382210303      ** NCCR, CCR, SAVG, SARR
-000383210301     D   intPDMidas                   5p 0
-000384210301      ** Interest Period Date in Midas Format
-000385210303     D   intPrdYMD                    6a
-000386210303      ** Interest Period Date YYMMDD
-000387210226     D   intPrdDays                   2s 0
-000388210226      ** Interest Period Days
-000389210303      ** NCCR, CCR, SAVG, SARR
-000390210226     D   obsPrdDate                  10a
-000391210226      ** Observation Period Date
-000392210303      ** NCCR
-000393210303     D   intOPMidas                   5p 0
-000394210303      ** Observation Period Date in Midas Format
-000395210303     D   intObsYMD                    6a
-000396210303      ** Observation Period Date YYMMDD
-000397210226     D   obsPrdDays                   2s 0
-000398210226      ** Observation Period Days
-000399210303      ** NCCR
-000400210305     D   pubRskFrRt                  30p 9
-000401210226      ** Published Risk Free Rate
-000402210303      ** NCCR, CCR, SAVG, SARR
-000403210226     D   rateApplied                 30p 9
-000404210226      ** Rate Applied
+000373210312     D logData         s          25000a   varying
+000374210312     D isError         s               n   inz(false)
+000375210312     D isException     s               n   inz(false)
+000376210226
+000377210226      *---------------*
+000378210226      ** JSON Details *
+000379210226      *---------------*
+000380210226
+000381210226     D summary_t       ds                  qualified
+000382210226     D                                     template
+000383210226     D   intPrdDate                  10a
+000384210226      ** Interest Period Date
+000385210303      ** NCCR, CCR, SAVG, SARR
+000386210301     D   intPDMidas                   5p 0
+000387210301      ** Interest Period Date in Midas Format
+000388210303     D   intPrdYMD                    6a
+000389210303      ** Interest Period Date YYMMDD
+000390210226     D   intPrdDays                   2s 0
+000391210226      ** Interest Period Days
+000392210303      ** NCCR, CCR, SAVG, SARR
+000393210226     D   obsPrdDate                  10a
+000394210226      ** Observation Period Date
+000395210303      ** NCCR
+000396210303     D   intOPMidas                   5p 0
+000397210303      ** Observation Period Date in Midas Format
+000398210303     D   intObsYMD                    6a
+000399210303      ** Observation Period Date YYMMDD
+000400210226     D   obsPrdDays                   2s 0
+000401210226      ** Observation Period Days
+000402210303      ** NCCR
+000403210305     D   pubRskFrRt                  30p 9
+000404210226      ** Published Risk Free Rate
 000405210303      ** NCCR, CCR, SAVG, SARR
-000406210226     D   rskFrRtFlAp                  5a
-000407210226      ** Risk Free Rate Floor Applied
+000406210226     D   rateApplied                 30p 9
+000407210226      ** Rate Applied
 000408210303      ** NCCR, CCR, SAVG, SARR
-000409210304     D   compFactor                  10a
-000410210226      ** Compounding Factor
-000411210303      ** NCCR
-000412210301     D   dlyCompRate                 10a
-000413210226      ** Daily Compunded Rate
+000409210226     D   rskFrRtFlAp                  5a
+000410210226      ** Risk Free Rate Floor Applied
+000411210303      ** NCCR, CCR, SAVG, SARR
+000412210304     D   compFactor                  10a
+000413210226      ** Compounding Factor
 000414210303      ** NCCR
-000415210303     D   aveCompRate                 10a
-000416210303      ** Average Compunded Rate
-000417210303      ** CCR
-000418210303     D   simpleAve                   10a
-000419210303      ** Simple Average
-000420210303      ** SAVG
-000421210226
-000422210226     D request_t       ds                  qualified
-000423210226     D                                     template
-000424210226     D   intPrdStart                 10a
-000425210226      ** Interest Period Start
-000426210226     D   intPrdEnd                   10a
-000427210226      ** Interest Period End
-000428210226     D   rskFreeRate                  4a
-000429210226      ** Risk Free Rate
-000430210226     D   rskFreeRtFl                 15s 6
-000431210226      ** Risk Free Rate Floor
-000432210226     D   obsPrdShift                  8s 0
-000433210226      ** Observation Period Shift
-000434210226     D   ratRndDecPts                 8s 0
-000435210226      ** Rate Rounding Decimal Points
-000436210226     D   showDailyDet                 8s 0
-000437210226      ** Show Daily Details
-000438210226
-000439210226     D result          ds                  qualified
-000440210226     D   success                      1n
-000441210226      ** Success
-000442210226     D   errmsg                     500a   varying
-000443210226      ** Error Message
-000444210226     D   statusCode                   4a   varying
-000445210226      ** Status Code
-000446210226     D   message                     10a   varying
-000447210226      ** Message
-000448210226     D   comment                    500a   varying
-000449210226      ** Comment
-000450210226     D   lastUpdFrSrc               200a   varying
-000451210226      ** Last Updated From Source
-000452210226     D   legalDisc                  200a   varying
-000453210226      ** Legal Disclaimer
-000454210311     D   reqParms                          likeds(request_t)
-000455210311      ** Request Parameters
-000456210226     D   list                              likeds(summary_t) dim(999)
-000457210226      ** Daily Rate Summary
-000458210311     D   errors                            likeds(exception_t)
-000459210311      ** Exception Parameters
-000460210311
-000461210311     D exception_t     ds                  qualified
-000462210311     D                                     template
-000463210311     D   title                       50a
-000464210311      ** Title
-000465210311     D   exceptionMsg               100a
-000466210311      ** Exception Message
-000467210311     D   status                       4a
-000468210311      ** Status
+000415210301     D   dlyCompRate                 10a
+000416210226      ** Daily Compunded Rate
+000417210303      ** NCCR
+000418210303     D   aveCompRate                 10a
+000419210303      ** Average Compunded Rate
+000420210303      ** CCR
+000421210303     D   simpleAve                   10a
+000422210303      ** Simple Average
+000423210303      ** SAVG
+000424210226
+000425210226     D request_t       ds                  qualified
+000426210226     D                                     template
+000427210226     D   intPrdStart                 10a
+000428210226      ** Interest Period Start
+000429210226     D   intPrdEnd                   10a
+000430210226      ** Interest Period End
+000431210226     D   rskFreeRate                  4a
+000432210226      ** Risk Free Rate
+000433210226     D   rskFreeRtFl                 15s 6
+000434210226      ** Risk Free Rate Floor
+000435210226     D   obsPrdShift                  8s 0
+000436210226      ** Observation Period Shift
+000437210226     D   ratRndDecPts                 8s 0
+000438210226      ** Rate Rounding Decimal Points
+000439210226     D   showDailyDet                 8s 0
+000440210226      ** Show Daily Details
+000441210226
+000442210226     D result          ds                  qualified
+000443210226     D   success                      1n
+000444210226      ** Success
+000445210226     D   errmsg                     500a   varying
+000446210226      ** Error Message
+000447210226     D   statusCode                   4a   varying
+000448210226      ** Status Code
+000449210226     D   message                     10a   varying
+000450210226      ** Message
+000451210226     D   comment                    500a   varying
+000452210226      ** Comment
+000453210226     D   lastUpdFrSrc               200a   varying
+000454210226      ** Last Updated From Source
+000455210226     D   legalDisc                  200a   varying
+000456210226      ** Legal Disclaimer
+000457210311     D   reqParms                          likeds(request_t)
+000458210311      ** Request Parameters
+000459210226     D   list                              likeds(summary_t) dim(999)
+000460210226      ** Daily Rate Summary
+000461210311     D   errors                            likeds(exception_t)
+000462210311      ** Exception Parameters
+000463210311
+000464210311     D exception_t     ds                  qualified
+000465210311     D                                     template
+000466210311     D   title                       50a
+000467210311      ** Title
+000468210311     D   exceptionMsg               100a
+000469210311      ** Exception Message
+000470210311     D   status                       4a
+000471210311      ** Status
 000475210301
 000476210301     D SDBANK        e ds                  extname(SDBANKPD)
 000477210301     D                 DS
@@ -385,852 +389,877 @@
 000511210222      ** +--------------------------------------+
 000512210309
 000513210309     D arrCalLoc       s            100a   dim(4) ctdata perrcd(1)
-000514210222
-000515210222      /free
-000516210222
-000517210222       // ** +--- Start of Main processing -----------------------------------+
-000518210222       // ** ¦                                                                ¦
-000519210222       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-000520210222       // ** ¦ executed at program activation.                                ¦
-000521210222       // ** ¦                                                                ¦
-000522210222       // ** +----------------------------------------------------------------+
-000523210304
-000524210224                   exsr processTransaction;
-000525210222
-000526210222                   *Inlr = *On;
-000527210222                   return;
-000528210310
-000529210310       //*************************************************************
-000530210310       /EJECT
+000516210312
+000517210222      /free
+000518210222
+000519210222       // ** +--- Start of Main processing -----------------------------------+
+000520210222       // ** ¦                                                                ¦
+000521210222       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+000522210222       // ** ¦ executed at program activation.                                ¦
+000523210222       // ** ¦                                                                ¦
+000524210222       // ** +----------------------------------------------------------------+
+000525210304
+000526210224                   exsr processTransaction;
+000527210222
+000528210222                   *Inlr = *On;
+000529210222                   return;
+000530210310
 000531210310       //*************************************************************
-000532210310       //                                                            *
-000533210310       // inzsr - Program Initialisation routine                     *
+000532210310       /EJECT
+000533210310       //*************************************************************
 000534210310       //                                                            *
-000535210310       // Called by: Main processing                                 *
+000535210310       // inzsr - Program Initialisation routine                     *
 000536210310       //                                                            *
-000537210310       //  Calls: None                                               *
+000537210310       // Called by: Main processing                                 *
 000538210310       //                                                            *
-000539210310       //*************************************************************
-000540210310
-000541210310       begsr *inzsr;
+000539210310       //  Calls: None                                               *
+000540210310       //                                                            *
+000541210310       //*************************************************************
 000542210310
-000543210310                   //Initialise audit log DS
-000544210310                   clear AuditLogDS;
-000545210310
-000546210310                   AuditLogds.SJMODI = moduleID;
-000547210310                   AuditLogds.SJTREF = transactREF;
-000548210310                   AuditLogds.SJSTAT = 'C';
-000549210310
-000550210310                   pOption = '*FIRST';
-000551210310                   pReturnCode = *Blanks;
+000543210310       begsr *inzsr;
+000544210310
+000545210310                   //Initialise audit log DS
+000546210312                   clear AuditLogDS;
+000547210312                   isError = false;
+000548210310
+000549210312                   AuditLogDS.SJMODI = moduleID;
+000550210312                   AuditLogDS.SJTREF = transactREF;
+000551210312                   AuditLogDS.SJSTAT = 'C';
 000552210310
-000553210310                   callp ACCESS_SDBANK(
-000554210310                                  pReturnCode
-000555210310                                : pOption
-000556210310                                : dsfdy
-000557210310                               );
-000558210310                   SDBANK = dsfdy;
-000559210310
-000560210310                   if pReturnCode <> *blanks;
-000561210310                      Dbase    = 001;
-000562210310                      DbFile   = 'SDBANKPD';
-000563210310                      DbKey    = *BLANKS;
-000564210310                      DbPgm    = 'ZAGETCALRT';
-000565210310                      Exsr *Pssr;
-000566210310                   endif;
-000567210310
-000568210310                   pOP01 = 'ARRAdapterURL';
-000569210310
-000570210310                   CallP ACCESS_SVAL(
-000571210310                                       pRetCode
-000572210310                                     : pOP01
-000573210310                                     : pVL01
-000574210310                                     : pOP02
-000575210310                                     : pVL02
-000576210310                                     : pOP03
-000577210310                                     : pVL03
-000578210310                                     : pOP04
-000579210310                                     : pVL04
-000580210310                                     : pOP05
-000581210310                                     : pVL05
-000582210310                                     : pOP06
-000583210310                                     : pVL06
-000584210310                                     : pOP07
-000585210310                                     : pVL07
-000586210310                                     : pOP08
-000587210310                                     : pVL08
-000588210310                                     : pOP09
-000589210310                                     : pVL09
-000590210310                                     : pOP10
-000591210310                                     : pVL10
-000592210310                                       );
-000593210310
-000594210310                   If pRetCode <> *Blanks;
-000595210310                      DbFile = 'SDSVALPD';
-000596210310                      Dbase  = 002;
-000597210310                      DbKey  = pOP01;
-000598210310                      DbPgm  = 'ZAGETCALRT';
-000599210310                      Exsr *Pssr;
-000600210310                   Endif;
-000601210310
-000602210310                   If pVL01 <> *Blanks;
-000603210310                         CalcMetURL     = HTTP_HEAD  + %trim(pVL01);
-000604210310                   Else;
-000605210310                      DbFile = 'SDSVALPD';
-000606210310                      Dbase  = 003;
-000607210310                      DbKey  = pOP01;
-000608210310                      DbPgm  = 'ZAGETCALRT';
-000609210310                      Exsr *Pssr;
-000610210310                   Endif;
-000611210310
-000612210310                   select;
-000613210310
-000614210310                       when calcMethod = 'NCCR';
-000615210310                            calcMetURL =  %trim(calcMetURL) +
-000616210310                              %trim(arrCalLoc(1));
-000617210310
-000618210310                       when calcMethod = 'CCR';
-000619210310                            calcMetURL =  %trim(calcMetURL) +
-000620210310                              %trim(arrCalLoc(2));
-000621210310
-000622210310                       when calcMethod = 'SARR';
-000623210310                            calcMetURL =  %trim(calcMetURL) +
-000624210310                              %trim(arrCalLoc(3));
-000625210310
-000626210310                       when calcMethod = 'SAVG';
-000627210310                            calcMetURL =  %trim(calcMetURL) +
-000628210310                              %trim(arrCalLoc(4));
-000629210310
-000630210310                   endsl;
-000631210310
-000632210310                   // Get the highest date in the Daily History file
-000633210310                   wSQLStr = 'select * from SDHSDRTD ' +
-000634210310                             ' where CMODID = ' + QUO + moduleID + QUO +
-000635210310                             ' and CTRNID = ' +  QUO + transactREF + QUO +
-000636210310                             'order by CMINPD DESC';
-000637210310
-000638210310                   exec sql prepare P1 from :wSQLStr;
-000639210310                   exec sql declare P1 cursor for P1;
-000640210310                   exec sql open P1;
-000641210310                   exec sql fetch next From P1 into :DailyHistDS;
-000642210310
-000643210310                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-000644210310                      dBkey = *Blanks;
-000645210310                      dBfile = 'SDHSDRTD';
-000646210310                      dBase = 004;
-000647210310                      dBpgm  = 'ZAGETCALRT';
-000648210310                      exsr *pssr;
-000649210310                   endif;
-000650210310
-000651210310                   if sqlCod = NO_RECORD;
-000652210310                      transactDate = 0;
-000653210310                   else;
-000654210310                      transactDate = DailyHistDS.CMINPD;
-000655210310                   endif;
-000656210310
-000657210310                   exec sql close P1;
-000658210310       endsr;
-000659210222
-000660210222       //*************************************************************
-000661210222       /EJECT
-000662210222       //*************************************************************
-000663210222       //                                                            *
-000664210224       // processTransaction - Process a Loan Transaction            *
-000665210224       // ==================                                         *
-000666210222       //                                                            *
-000667210222       // Called by: Main Processing                                 *
-000668210222       //                                                            *
-000669210222       // Calls: None                                                *
-000670210222       //                                                            *
-000671210222       //*************************************************************
-000672210222
-000673210224       begsr processTransaction;
-000674210305
-000675210306                   //** This will build the URL parameter for the Rest API Call
-000676210305
-000677210304                   exsr buildParameter;
-000678210224
-000679210306                   //** This will call the http_string function from LIBHTTP123
-000680210305                   //** to consume the Rest API
-000681210305
-000682210304                   exsr consumeRESTAPI;
-000683210305
-000684210305                   if msg = *blanks;
-000685210305
-000686210305                      //** This will parse the JSON data returned from ARR Calculator
-000687210306                      //** and store it to an array of Data Structure
-000688210305
-000689210305                      exsr parseJSONData;
-000690210305
-000691210305                      //** This will handle the output of the array DS to the
-000692210305                      //** history and extract files
-000693210306
-000694210305                      exsr outputFiles;
-000695210305
-000696210305                   endif;
-000697210224
-000698210305                   //** log details to audit file
-000699210305                   exsr writeToAuditLog;
-000700210224
-000701210222       endsr;
-000702210222
-000703210224       //*************************************************************
-000704210224       /EJECT
-000705210224       //*************************************************************
-000706210224       //                                                            *
-000707210224       // buildParameter - Build REST API Parameter                  *
-000708210224       // ==============                                             *
-000709210224       //                                                            *
-000710210224       // Called by: processTransaction                              *
-000711210224       //                                                            *
-000712210224       // Calls: None                                                *
-000713210224       //                                                            *
-000714210224       //*************************************************************
-000715210224
-000716210224       begsr buildParameter;
-000717210304
-000718210305                   RestAPIParm = %trim(CalcMetURL) +
-000719210305                                 QUE + 'interestPeriodStartDate=' +
-000720210305                                       %trim(intPrdStartDt) +
-000721210304                                 AMP + 'interestPeriodEndDate=' +
-000722210305                                    %trim(intPrdEndDt) +
-000723210305                                 AMP + 'riskFreeRate=' +
-000724210305                                    %trim(riskFreeRate) +
-000725210305                                 AMP + 'lookBackDays=' +
-000726210305                                    %trim(lookBackDays)  +
-000727210226                                 AMP + 'rateRoundingDecimalPoints=' +
-000728210305                                    %trim(RateRndDecPts) +
-000729210226                                 AMP + 'observationPeriodShift=' +
-000730210305                                    %trim(obserPrdShift) +
-000731210305                                 AMP + 'lockoutDays=' +
-000732210305                                    %trim(lockOutDays) +
-000733210304                                 AMP + 'showDailyDetails=' +
-000734210305                                    %trim(showDailyDeta) +
-000735210304                                 AMP + 'calculateTillDate=' +
-000736210305                                    %trim(callTillDate) +
-000737210304                                 AMP + 'riskFreeRateFloor=' +
-000738210305                                    %trim(riskFreeRatFl);
-000739210305
-000740210224       endsr;
-000741210224
-000742210224       //*************************************************************
-000743210224       /EJECT
-000744210224       //*************************************************************
+000553210310                   pOption = '*FIRST';
+000554210310                   pReturnCode = *Blanks;
+000555210310
+000556210310                   callp ACCESS_SDBANK(
+000557210310                                  pReturnCode
+000558210310                                : pOption
+000559210310                                : dsfdy
+000560210310                               );
+000561210310                   SDBANK = dsfdy;
+000562210310
+000563210310                   if pReturnCode <> *blanks;
+000564210312                      AuditLogDS.SJTMST = %timestamp();
+000565210312                      AuditLogDS.SJTITL = 'SDBANKPD';
+000566210312                      AuditLogDS.SJEXMS = 'Error in access SDBANKPD';
+000567210312                      AuditLogDS.SJCODE = '001';
+000568210312                      isError = True;
+000571210312                      Exsr errorHandler;
+000572210310                   endif;
+000573210310
+000574210310                   pOP01 = 'ARRAdapterURL';
+000575210310
+000576210310                   CallP ACCESS_SVAL(
+000577210310                                       pRetCode
+000578210310                                     : pOP01
+000579210310                                     : pVL01
+000580210310                                     : pOP02
+000581210310                                     : pVL02
+000582210310                                     : pOP03
+000583210310                                     : pVL03
+000584210310                                     : pOP04
+000585210310                                     : pVL04
+000586210310                                     : pOP05
+000587210310                                     : pVL05
+000588210310                                     : pOP06
+000589210310                                     : pVL06
+000590210310                                     : pOP07
+000591210310                                     : pVL07
+000592210310                                     : pOP08
+000593210310                                     : pVL08
+000594210310                                     : pOP09
+000595210310                                     : pVL09
+000596210310                                     : pOP10
+000597210310                                     : pVL10
+000598210310                                       );
+000599210310
+000600210310                   If pRetCode <> *Blanks;
+000601210312                        AuditLogDS.SJTMST = %timestamp();
+000602210312                        AuditLogDS.SJTITL = 'SDSVALPD';
+000603210312                        AuditLogDS.SJEXMS = 'Error in access SDSVALPD ' +
+000604210312                          %trim(Pvl01);
+000605210312                        AuditLogDS.SJCODE = '002';
+000607210312                        isError = True;
+000608210312                        Exsr errorHandler;
+000614210310                   Endif;
+000615210310
+000616210310                   If pVL01 <> *Blanks;
+000617210310                         CalcMetURL     = HTTP_HEAD  + %trim(pVL01);
+000618210310                   Else;
+000619210312                        AuditLogDS.SJTMST = %timestamp();
+000620210312                        AuditLogDS.SJTITL = 'SDSVALPD';
+000621210312                        AuditLogDS.SJEXMS = 'Error in access SDSVALPD ' +
+000622210312                          %trim(calcMetURL);
+000624210312                        AuditLogDS.SJCODE = '003';
+000625210312                        isError = True;
+000626210312                        Exsr errorHandler;
+000632210310                   Endif;
+000633210310
+000634210310                   select;
+000635210310
+000636210310                       when calcMethod = 'NCCR';
+000637210310                            calcMetURL =  %trim(calcMetURL) +
+000638210310                              %trim(arrCalLoc(1));
+000639210310
+000640210310                       when calcMethod = 'CCR';
+000641210310                            calcMetURL =  %trim(calcMetURL) +
+000642210310                              %trim(arrCalLoc(2));
+000643210310
+000644210310                       when calcMethod = 'SARR';
+000645210310                            calcMetURL =  %trim(calcMetURL) +
+000646210310                              %trim(arrCalLoc(3));
+000647210310
+000648210310                       when calcMethod = 'SAVG';
+000649210310                            calcMetURL =  %trim(calcMetURL) +
+000650210310                              %trim(arrCalLoc(4));
+000651210310
+000652210310                   endsl;
+000653210310
+000654210310                   // Get the highest date in the Daily History file
+000655210310                   wSQLStr = 'select * from SDHSDRTD ' +
+000656210310                             ' where CMODID = ' + QUO + moduleID + QUO +
+000657210310                             ' and CTRNID = ' +  QUO + transactREF + QUO +
+000658210310                             'order by CMINPD DESC';
+000659210310
+000660210310                   exec sql prepare P1 from :wSQLStr;
+000661210310                   exec sql declare P1 cursor for P1;
+000662210310                   exec sql open P1;
+000663210310                   exec sql fetch next From P1 into :DailyHistDS;
+000664210310
+000665210310                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+000666210312                        AuditLogDS.SJTMST = %timestamp();
+000667210312                        AuditLogDS.SJTITL = 'SDHSDRTD';
+000668210312                        AuditLogDS.SJEXMS = 'Error in access SDHSDRTD ' +
+000669210312                          %trim(wSQLSTR);
+000670210312                        AuditLogDS.SJCODE = '004';
+000671210312                        isError = True;
+000677210312                        exsr errorHandler;
+000678210310                   endif;
+000679210310
+000680210310                   if sqlCod = NO_RECORD;
+000681210310                      transactDate = 0;
+000682210310                   else;
+000683210310                      transactDate = DailyHistDS.CMINPD;
+000684210310                   endif;
+000685210310
+000686210310                   exec sql close P1;
+000687210310       endsr;
+000688210222
+000689210222       //*************************************************************
+000690210222       /EJECT
+000691210222       //*************************************************************
+000692210222       //                                                            *
+000693210224       // processTransaction - Process a Loan Transaction            *
+000694210224       // ==================                                         *
+000695210222       //                                                            *
+000696210222       // Called by: Main Processing                                 *
+000697210222       //                                                            *
+000698210222       // Calls: None                                                *
+000699210222       //                                                            *
+000700210222       //*************************************************************
+000701210222
+000702210224       begsr processTransaction;
+000703210305
+000704210306                   //** This will build the URL parameter for the Rest API Call
+000705210305
+000706210304                   exsr buildParameter;
+000707210224
+000708210306                   //** This will call the http_string function from LIBHTTP123
+000709210305                   //** to consume the Rest API
+000710210305
+000711210304                   exsr consumeRESTAPI;
+000712210305
+000713210312                   if not(isError);
+000714210305
+000715210305                      //** This will parse the JSON data returned from ARR Calculator
+000716210306                      //** and store it to an array of Data Structure
+000717210305
+000718210305                      exsr parseJSONData;
+000719210305
+000720210305                      //** This will handle the output of the array DS to the
+000721210305                      //** history and extract files
+000722210306
+000723210305                      exsr outputFiles;
+000724210312
+000725210312                      //** log details to audit file
+000726210312                      exsr writeToAuditLog;
+000731210305
+000732210305                   endif;
+000733210224
+000736210224
+000737210222       endsr;
+000738210222
+000739210224       //*************************************************************
+000740210224       /EJECT
+000741210224       //*************************************************************
+000742210224       //                                                            *
+000743210224       // buildParameter - Build REST API Parameter                  *
+000744210224       // ==============                                             *
 000745210224       //                                                            *
-000746210224       // consumeRESTAPI - Consume REST API                          *
-000747210224       // ==============                                             *
-000748210224       //                                                            *
-000749210224       // Called by: processTransaction                              *
-000750210224       //                                                            *
-000751210306       // Calls: LIBHTTP123 http_string                              *
-000752210224       //                                                            *
-000753210224       //*************************************************************
-000754210224
-000755210224       begsr consumeRestAPI;
-000756210224
-000757210304              monitor;
-000758210310
-000759210304                 clear jsonData;
-000760210305                 jsonData = http_string( 'GET' : %trim(RestAPIParm));
-000761210304                 msg = *blanks;
-000762210304                 err = 0;
-000763210310
-000764210304              on-error;
-000765210310
-000766210305                 msg = http_error(err);
-000767210311                 errorMessage = %trim(msg) + ' ' + %trim(RestAPIParm);
-000768210305                 exsr errorHandler;
-000769210310
-000770210304              endmon;
-000771210224
-000772210224       endsr;
-000773210224
-000774210224       //*************************************************************
-000775210224       /EJECT
-000776210224       //*************************************************************
-000777210224       //                                                            *
-000778210224       // parseJSONData - Parse JSON Data                            *
-000779210224       // =============                                              *
-000780210224       //                                                            *
-000781210224       // Called by: processTransaction                              *
-000782210224       //                                                            *
-000783210224       // Calls: None                                                *
+000746210224       // Called by: processTransaction                              *
+000747210224       //                                                            *
+000748210224       // Calls: None                                                *
+000749210224       //                                                            *
+000750210224       //*************************************************************
+000751210224
+000752210224       begsr buildParameter;
+000753210304
+000754210305                   RestAPIParm = %trim(CalcMetURL) +
+000755210305                                 QUE + 'interestPeriodStartDate=' +
+000756210305                                       %trim(intPrdStartDt) +
+000757210304                                 AMP + 'interestPeriodEndDate=' +
+000758210305                                    %trim(intPrdEndDt) +
+000759210305                                 AMP + 'riskFreeRate=' +
+000760210305                                    %trim(riskFreeRate) +
+000761210305                                 AMP + 'lookBackDays=' +
+000762210305                                    %trim(lookBackDays)  +
+000763210226                                 AMP + 'rateRoundingDecimalPoints=' +
+000764210305                                    %trim(RateRndDecPts) +
+000765210226                                 AMP + 'observationPeriodShift=' +
+000766210305                                    %trim(obserPrdShift) +
+000767210305                                 AMP + 'lockoutDays=' +
+000768210305                                    %trim(lockOutDays) +
+000769210304                                 AMP + 'showDailyDetails=' +
+000770210305                                    %trim(showDailyDeta) +
+000771210304                                 AMP + 'calculateTillDate=' +
+000772210305                                    %trim(callTillDate) +
+000773210304                                 AMP + 'riskFreeRateFloor=' +
+000774210305                                    %trim(riskFreeRatFl);
+000775210305
+000776210224       endsr;
+000777210224
+000778210224       //*************************************************************
+000779210224       /EJECT
+000780210224       //*************************************************************
+000781210224       //                                                            *
+000782210224       // consumeRESTAPI - Consume REST API                          *
+000783210224       // ==============                                             *
 000784210224       //                                                            *
-000785210224       //*************************************************************
-000786210224
-000787210224       begsr parseJSONData;
-000788210304
-000789210306                   // Load JSON data variable into a tree like structure
-000790210306
-000791210304                   docNode = yajl_buf_load_tree( %addr(jsonData:*data)
-000792210304                             : %len(jsonData)
-000793210304                             : ErrMsg );
-000794210304
-000795210304                   if errMsg <> '';
-000796210305                      errorMessage = errMsg;
-000797210305                      exsr errorHandler;
-000798210304                   endif;
-000799210304
-000800210304                   node = YAJL_object_find(docNode: 'comment');
-000801210304                   result.comment = YAJL_get_string(node);
-000802210226
-000803210311                   node = YAJL_object_find(docNode: 'errmsg');
-000806210311                   result.errmsg  = yajl_get_string(val);
-000820210311
-000821210311                   // Error Messages
-000822210311                   node = YAJL_object_find(docNode: 'exception');
-000823210311                   if node <> *null;
-000824210311                       val = YAJL_object_find(node: 'title');
-000825210311                       result.errors.title = yajl_get_string(val);
-000826210311
-000827210311                       val = YAJL_object_find(node: 'exceptionMessage');
-000828210311                       result.errors.exceptionMsg = yajl_get_string(val);
-000829210311
-000830210311                       val = YAJL_object_find(node: 'status');
-000831210311                       result.errors.status = yajl_get_string(val);
-000833210311                   endif;
-000834210311                   // Error Messages
-000835210311
-000836210311
-000837210304                   list = YAJL_object_find(docNode: 'dailyRateSummary');
-000838210306
-000839210305                   clear result.list;
-000840210306
-000841210304                   i = 0;
-000842210304                   dow YAJL_ARRAY_LOOP( list: i: node );
-000843210226
-000844210226                       lastElem = i;
-000845210226
-000846210303                       // All calculation methods
-000847210226                       val = YAJL_object_find(node: 'interestPeriodDate');
-000848210226                       result.list(i).intPrdDate = yajl_get_string(val);
-000849210301
-000850210301                       ISODate =  result.list(i).intPrdDate;
-000851210303
-000852210310                       monitor;
-000853210310                           WKY = %editc(wkYear:'X');
-000854210310                           WKM = %editc(wkMonth:'X');
-000855210310                           WKD = %editc(wkDay:'X');
-000856210303
-000857210310                           result.list(i).intPrdYMD  = YYMMDD;
-000858210301
-000859210310                           if BJDFIN = 'D';
-000860210310                              DD1D = wkDay;
-000861210310                              DD1M = wkMonth;
-000862210310                              DD1Y = wkYear;
-000863210310                              DateIn = DateIn_D;
-000864210310                           else;
-000865210310                              DD2D = wkDay;
-000866210310                              DD2M = wkMonth;
-000867210310                              DD2Y = wkYear;
-000868210310                              DateIn = DateIn_M;
-000869210310                           endif;
-000870210310
-000871210310                           pOption = '*FIRST';
-000872210310                           pReturnCode = *Blanks;
-000873210310                           callp CONVERT_DATE(
-000874210310                                      ErrorFlag
-000875210310                                    : DateIN
-000876210310                                    : BJDFIN
-000877210310                                    : DateOUT
-000878210310                                   );
-000879210301
-000880210310                           if ErrorFlag   <> *blanks;
-000881210310                               Dbase    = 005;
-000882210310                               DbFile   = *Blanks;
-000883210310                               DbKey    = *BLANKS;
-000884210310                               DbPgm    = 'ZAGETCALRT';
-000885210310                               Exsr *Pssr;
-000886210310                           endif;
+000785210224       // Called by: processTransaction                              *
+000786210224       //                                                            *
+000787210306       // Calls: LIBHTTP123 http_string                              *
+000788210224       //                                                            *
+000789210224       //*************************************************************
+000790210224
+000791210224       begsr consumeRestAPI;
+000792210224
+000793210304              monitor;
+000794210310
+000795210304                 clear jsonData;
+000796210305                 jsonData = http_string( 'GET' : %trim(RestAPIParm));
+000797210304                 msg = *blanks;
+000798210304                 err = 0;
+000799210310
+000800210304              on-error;
+000801210310
+000802210305                 msg = http_error(err);
+000803210312                 errorMessage = %trim(msg);
+000804210312                 returnCD = 'CONNECTION_ERROR';
+000805210312
+000806210312                 exsr errorHandler;
+000807210310
+000808210304              endmon;
+000809210224
+000810210224       endsr;
+000811210224
+000812210224       //*************************************************************
+000813210224       /EJECT
+000814210224       //*************************************************************
+000815210224       //                                                            *
+000816210224       // parseJSONData - Parse JSON Data                            *
+000817210224       // =============                                              *
+000818210224       //                                                            *
+000819210224       // Called by: processTransaction                              *
+000820210224       //                                                            *
+000821210224       // Calls: None                                                *
+000822210224       //                                                            *
+000823210224       //*************************************************************
+000824210224
+000825210224       begsr parseJSONData;
+000826210304
+000827210306                   // Load JSON data variable into a tree like structure
+000828210306
+000829210304                   docNode = yajl_buf_load_tree( %addr(jsonData:*data)
+000830210304                             : %len(jsonData)
+000831210304                             : ErrMsg );
+000832210304
+000833210304                   if errMsg <> '';
+000834210305                      errorMessage = errMsg;
+000835210312                      isError = true;
+000836210312                      exsr errorHandler;
+000837210304                   endif;
+000838210304
+000839210304                   node = YAJL_object_find(docNode: 'comment');
+000840210304                   result.comment = YAJL_get_string(node);
+000841210226
+000842210311                   node = YAJL_object_find(docNode: 'errmsg');
+000843210311                   result.errmsg  = yajl_get_string(val);
+000844210311
+000845210312                   // Exception messages
+000846210311                   node = YAJL_object_find(docNode: 'exception');
+000847210311                   if node <> *null;
+000848210312                       isException = true;
+000849210311                       val = YAJL_object_find(node: 'title');
+000850210311                       result.errors.title = yajl_get_string(val);
+000851210311
+000852210311                       val = YAJL_object_find(node: 'exceptionMessage');
+000853210311                       result.errors.exceptionMsg = yajl_get_string(val);
+000854210311
+000855210311                       val = YAJL_object_find(node: 'status');
+000856210311                       result.errors.status = yajl_get_string(val);
+000857210312
+000858210312                       // free up memory used by YAJL
+000859210312                       yajl_tree_free(docNode);
+000860210312
+000861210312                       exsr errorHandler;
+000862210312
+000863210311                   endif;
+000864210311
+000865210311
+000866210304                   list = YAJL_object_find(docNode: 'dailyRateSummary');
+000867210306
+000868210305                   clear result.list;
+000869210306
+000870210304                   i = 0;
+000871210304                   dow YAJL_ARRAY_LOOP( list: i: node );
+000872210226
+000873210226                       lastElem = i;
+000874210226
+000875210303                       // All calculation methods
+000876210226                       val = YAJL_object_find(node: 'interestPeriodDate');
+000877210226                       result.list(i).intPrdDate = yajl_get_string(val);
+000878210301
+000879210301                       ISODate =  result.list(i).intPrdDate;
+000880210303
+000881210310                       monitor;
+000882210310                           WKY = %editc(wkYear:'X');
+000883210310                           WKM = %editc(wkMonth:'X');
+000884210310                           WKD = %editc(wkDay:'X');
+000885210303
+000886210310                           result.list(i).intPrdYMD  = YYMMDD;
 000887210301
-000888210310                           result.list(i).intPDMidas = DateOUT;
-000889210310                       on-error;
-000890210310                       endmon;
-000891210310
-000892210303                       // All calculation methods
-000893210226                       val = YAJL_object_find(node: 'interestPeriodDays');
-000894210305                       cStr      =  yajl_get_string(val);
-000895210305                       result.list(i).intPrdDays =  %dec(%trim(cStr):2:0);
-000896210226
-000897210310                       val =
-000898210310                          YAJL_object_find(node: 'observationPeriodDate');
-000899210310                       result.list(i).obsPrdDate =
-000900210310                          yajl_get_string(val);
-000901210303
-000902210310                       ISODate =  result.list(i).obsPrdDate;
-000903210310
-000904210310                       monitor;
-000905210303                            WKY = %editc(wkYear:'X');
-000906210303                            WKM = %editc(wkMonth:'X');
-000907210303                            WKD = %editc(wkDay:'X');
-000908210303
-000909210303                            result.list(i).intObsYMD  = YYMMDD;
-000910210303
-000911210303                            if BJDFIN = 'D';
-000912210303                                 DD1D = wkDay;
-000913210303                                 DD1M = wkMonth;
-000914210303                                 DD1Y = wkYear;
-000915210303                                 DateIn = DateIn_D;
-000916210303                            else;
-000917210303                                 DD2D = wkDay;
-000918210303                                 DD2M = wkMonth;
-000919210303                                 DD2Y = wkYear;
-000920210303                                 DateIn = DateIn_M;
-000921210303                             endif;
-000922210303
-000923210303                             pOption = '*FIRST';
-000924210303                             pReturnCode = *Blanks;
-000925210303                             callp CONVERT_DATE(
-000926210303                                  ErrorFlag
-000927210303                                : DateIN
-000928210303                                : BJDFIN
-000929210303                                : DateOUT
-000930210303                               );
+000888210310                           if BJDFIN = 'D';
+000889210310                              DD1D = wkDay;
+000890210310                              DD1M = wkMonth;
+000891210310                              DD1Y = wkYear;
+000892210310                              DateIn = DateIn_D;
+000893210310                           else;
+000894210310                              DD2D = wkDay;
+000895210310                              DD2M = wkMonth;
+000896210310                              DD2Y = wkYear;
+000897210310                              DateIn = DateIn_M;
+000898210310                           endif;
+000899210310
+000900210310                           pOption = '*FIRST';
+000901210310                           pReturnCode = *Blanks;
+000902210310                           callp CONVERT_DATE(
+000903210310                                      ErrorFlag
+000904210310                                    : DateIN
+000905210310                                    : BJDFIN
+000906210310                                    : DateOUT
+000907210310                                   );
+000908210301
+000909210310                           if ErrorFlag   <> *blanks;
+000910210312                                AuditLogDS.SJTMST = %timestamp();
+000911210312                                AuditLogDS.SJTITL = 'ZDATE1';
+000912210312                                AuditLogDS.SJEXMS = 'Error in date conversion';
+000913210312                                AuditLogDS.SJCODE = '005';
+000914210312                                isError = True;
+000915210312                                exsr errorHandler;
+000916210310                           endif;
+000917210310                           result.list(i).intPDMidas = DateOUT;
+000918210312
+000919210310                       on-error;
+000920210310                       endmon;
+000921210310
+000922210303                       // All calculation methods
+000923210226                       val = YAJL_object_find(node: 'interestPeriodDays');
+000924210305                       cStr      =  yajl_get_string(val);
+000925210305                       result.list(i).intPrdDays =  %dec(%trim(cStr):2:0);
+000926210226
+000927210310                       val =
+000928210310                          YAJL_object_find(node: 'observationPeriodDate');
+000929210310                       result.list(i).obsPrdDate =
+000930210310                          yajl_get_string(val);
 000931210303
-000932210303                             if ErrorFlag   <> *blanks;
-000933210310                                  Dbase    = 006;
-000934210303                                  DbFile   = *Blanks;
-000935210303                                  DbKey    = *BLANKS;
-000936210303                                  DbPgm    = 'ZAGETCALRT';
-000937210303                                 Exsr *Pssr;
-000938210303                             endif;
-000939210303
-000940210303                             result.list(i).intOPMidas = DateOUT;
-000941210310                       on-error;
-000942210310                       endmon;
-000943210310
-000944210310                       val =
-000945210310                           YAJL_object_find(node: 'observationPeriodDays');
-000946210310
-000947210310                       monitor;
-000948210310                           cStr      =  yajl_get_string(val);
-000949210310                              result.list(i).obsPrdDays =
-000950210310                              %dec(%trim(cStr):2:0);
-000951210310                       on-error;
-000952210310                       endmon;
-000953210303
-000954210303                       // All calculation methods
-000955210303                       val = YAJL_object_find(node: 'publishedRiskFreeRate');
-000956210305
-000957210305                       cStr  =  yajl_get_string(val);
-000958210305                       result.list(i).pubRskFrRt =  %dec(%trim(cStr):30:9  );
-000959210303
-000960210303                       // All calculation methods
-000961210303                       val = YAJL_object_find(node: 'rateApplied');
-000962210305                       cStr  =  yajl_get_string(val);
-000963210305                       result.list(i).rateApplied =  %dec(%trim(cStr):30:9  );
-000964210226
-000965210303                       // All calculation methods
-000966210226                       val = YAJL_object_find(node: 'riskFreeRateFloorApplied');
-000967210226                       if YAJL_is_true(node);
-000968210226                           result.list(i).rskFrRtFlAp=  'True';
-000969210226                       else;
-000970210226                           result.list(i).rskFrRtFlAp=  'False';
-000971210226                       endif;
-000972210226
-000973210310                       if calcMethod = 'NCCR';
-000974210310                            val = YAJL_object_find(node: 'compoundingFactor');
-000975210310                            result.list(i).compFactor=  yajl_get_string(val);
-000976210226
-000977210310                            val =
-000978210310                              YAJL_object_find(node: 'dailyCompoundedRate');
-000979210310                            result.list(i).dlyCompRate =
-000980210310                              yajl_get_string(val);
-000981210310                       endif;
-000982210303
-000983210310                       if calcMethod = 'CCR';
-000984210310                            val =
-000985210310                              YAJL_object_find(node: 'averageCompoundedRate');
-000986210310                            result.list(i).aveCompRate =  yajl_get_string(val);
+000932210310                       ISODate =  result.list(i).obsPrdDate;
+000933210310
+000934210310                       monitor;
+000935210303                            WKY = %editc(wkYear:'X');
+000936210303                            WKM = %editc(wkMonth:'X');
+000937210303                            WKD = %editc(wkDay:'X');
+000938210303
+000939210303                            result.list(i).intObsYMD  = YYMMDD;
+000940210303
+000941210303                            if BJDFIN = 'D';
+000942210303                                 DD1D = wkDay;
+000943210303                                 DD1M = wkMonth;
+000944210303                                 DD1Y = wkYear;
+000945210303                                 DateIn = DateIn_D;
+000946210303                            else;
+000947210303                                 DD2D = wkDay;
+000948210303                                 DD2M = wkMonth;
+000949210303                                 DD2Y = wkYear;
+000950210303                                 DateIn = DateIn_M;
+000951210303                             endif;
+000952210303
+000953210303                             pOption = '*FIRST';
+000954210303                             pReturnCode = *Blanks;
+000955210303                             callp CONVERT_DATE(
+000956210303                                  ErrorFlag
+000957210303                                : DateIN
+000958210303                                : BJDFIN
+000959210303                                : DateOUT
+000960210303                               );
+000961210303
+000962210303                             if ErrorFlag   <> *blanks;
+000963210312                                AuditLogDS.SJTMST = %timestamp();
+000964210312                                AuditLogDS.SJTITL = 'ZDATE1';
+000965210312                                AuditLogDS.SJEXMS = 'Error in date conversion';
+000966210312                                AuditLogDS.SJCODE = '005';
+000967210312                                isError = True;
+000968210312                                exsr errorHandler;
+000972210303                             endif;
+000973210303
+000974210303                             result.list(i).intOPMidas = DateOUT;
+000975210310                       on-error;
+000976210310                       endmon;
+000977210310
+000978210310                       val =
+000979210310                           YAJL_object_find(node: 'observationPeriodDays');
+000980210310
+000981210310                       monitor;
+000982210310                           cStr      =  yajl_get_string(val);
+000983210310                              result.list(i).obsPrdDays =
+000984210310                              %dec(%trim(cStr):2:0);
+000985210310                       on-error;
+000986210310                       endmon;
 000987210303
-000988210310                       endif;
-000989210303
-000990210310                       if calcMethod = 'SAVG';
-000991210310                            val =
-000992210310                              YAJL_object_find(node: 'simpleAverageRate');
-000993210310                            result.list(i).simpleAve =  yajl_get_string(val);
-000994210303
-000995210310                       endif;
-000996210303
-000997210304                   enddo;
-001004210226
-001005210304                   // free up memory used by YAJL
-001006210304                   yajl_tree_free(docNode);
-001007210224
-001008210224       endsr;
-001009210224
-001010210224       //*************************************************************
-001011210224       /EJECT
-001012210224       //*************************************************************
-001013210224       //                                                            *
-001014210301       // outputFile - Output Files                                  *
-001015210301       // ==========                                                 *
-001016210224       //                                                            *
-001017210224       // Called by: processTransaction                              *
-001018210224       //                                                            *
-001019210224       // Calls: None                                                *
-001020210224       //                                                            *
-001021210224       //*************************************************************
-001022210224
-001023210301       begsr outputFiles;
-001024210305
-001025210226                   i = 1;
-001026210306
-001027210226                   dow i <= lastElem;
-001028210306
-001029210306                       // Output information to SDARRLOGTD
-001030210303                       exsr writeToARRDailyHistory;
-001031210306
-001032210306                       //Output information to LELIBEPD
-001033210301                       exsr writeToExtractFile;
-001034210306
-001035210301                       i = i + 1;
-001036210306
-001037210226                   enddo;
-001038210224
-001039210224       endsr;
-001040210303       //*************************************************************
-001041210303       /EJECT
-001042210303       //*************************************************************
-001043210303       //                                                            *
-001044210303       // writeToARRDailyHistory - Write to ARR Daily Rates History  *
-001045210303       // ======================                                     *
-001046210303       //                                                            *
-001047210303       // Called by: Output File                                     *
-001048210303       //                                                            *
-001049210303       // Calls: None                                                *
-001050210303       //                                                            *
-001051210303       //*************************************************************
-001052210303
-001053210303       begsr writeToARRDailyHistory;
-001054210303
-001055210305                   includeRecord = 'N';
-001056210305
-001057210305                   if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
-001058210305                   and  result.list(i).intPDMidas > transactDate;
-001059210305                        includeRecord = 'Y';
-001060210306
-001061210305                   elseif  (calcMethod = 'CCR' or calcMethod  = 'SAVG');
-001062210305                        includeRecord = 'Y';
-001063210306
-001064210305                   endif;
-001065210305
-001066210305                   fileToCheck = SDHSDRTD;
-001067210305                   if includeRecord = 'Y';
-001068210305                      exsr checkExist;
-001069210305                      if action = INSERT;
-001070210305                          exsr insertHistoryFile;
-001071210305                      elseif action = UPDATE;
-001072210305                          exsr updateHistoryFile;
-001073210305                      endif;
-001074210305                   endif;
-001075210303
-001076210303       endsr;
-001077210303       //*************************************************************
-001078210303       /EJECT
+000988210303                       // All calculation methods
+000989210303                       val = YAJL_object_find(node: 'publishedRiskFreeRate');
+000990210305
+000991210305                       cStr  =  yajl_get_string(val);
+000992210305                       result.list(i).pubRskFrRt =  %dec(%trim(cStr):30:9  );
+000993210303
+000994210303                       // All calculation methods
+000995210303                       val = YAJL_object_find(node: 'rateApplied');
+000996210305                       cStr  =  yajl_get_string(val);
+000997210305                       result.list(i).rateApplied =  %dec(%trim(cStr):30:9  );
+000998210226
+000999210303                       // All calculation methods
+001000210226                       val = YAJL_object_find(node: 'riskFreeRateFloorApplied');
+001001210226                       if YAJL_is_true(node);
+001002210226                           result.list(i).rskFrRtFlAp=  'True';
+001003210226                       else;
+001004210226                           result.list(i).rskFrRtFlAp=  'False';
+001005210226                       endif;
+001006210226
+001007210310                       if calcMethod = 'NCCR';
+001008210310                            val = YAJL_object_find(node: 'compoundingFactor');
+001009210310                            result.list(i).compFactor=  yajl_get_string(val);
+001010210226
+001011210310                            val =
+001012210310                              YAJL_object_find(node: 'dailyCompoundedRate');
+001013210310                            result.list(i).dlyCompRate =
+001014210310                              yajl_get_string(val);
+001015210310                       endif;
+001016210303
+001017210310                       if calcMethod = 'CCR';
+001018210310                            val =
+001019210310                              YAJL_object_find(node: 'averageCompoundedRate');
+001020210310                            result.list(i).aveCompRate =  yajl_get_string(val);
+001021210303
+001022210310                       endif;
+001023210303
+001024210310                       if calcMethod = 'SAVG';
+001025210310                            val =
+001026210310                              YAJL_object_find(node: 'simpleAverageRate');
+001027210310                            result.list(i).simpleAve =  yajl_get_string(val);
+001028210303
+001029210310                       endif;
+001030210303
+001031210304                   enddo;
+001032210226
+001033210304                   // free up memory used by YAJL
+001034210304                   yajl_tree_free(docNode);
+001035210224
+001036210224       endsr;
+001037210224
+001038210224       //*************************************************************
+001039210224       /EJECT
+001040210224       //*************************************************************
+001041210224       //                                                            *
+001042210301       // outputFile - Output Files                                  *
+001043210301       // ==========                                                 *
+001044210224       //                                                            *
+001045210224       // Called by: processTransaction                              *
+001046210224       //                                                            *
+001047210224       // Calls: None                                                *
+001048210224       //                                                            *
+001049210224       //*************************************************************
+001050210224
+001051210301       begsr outputFiles;
+001052210305
+001053210226                   i = 1;
+001054210306
+001055210226                   dow i <= lastElem;
+001056210306
+001057210306                       // Output information to SDARRLOGTD
+001058210303                       exsr writeToARRDailyHistory;
+001059210306
+001060210306                       //Output information to LELIBEPD
+001061210301                       exsr writeToExtractFile;
+001062210306
+001063210301                       i = i + 1;
+001064210306
+001065210226                   enddo;
+001066210224
+001067210224       endsr;
+001068210303       //*************************************************************
+001069210303       /EJECT
+001070210303       //*************************************************************
+001071210303       //                                                            *
+001072210303       // writeToARRDailyHistory - Write to ARR Daily Rates History  *
+001073210303       // ======================                                     *
+001074210303       //                                                            *
+001075210303       // Called by: Output File                                     *
+001076210303       //                                                            *
+001077210303       // Calls: None                                                *
+001078210303       //                                                            *
 001079210303       //*************************************************************
-001080210303       //                                                            *
-001081210306       // checkExist - Check if a record exist on a given file       *
-001082210303       // ==========                                                 *
-001083210303       //                                                            *
-001084210303       // Called by: Output File                                     *
-001085210303       //                                                            *
-001086210303       // Calls: None                                                *
-001087210303       //                                                            *
-001088210303       //*************************************************************
-001089210303
-001090210303       begsr checkExist;
-001091210303
-001092210303                   if fileToCheck = SDHSDRTD;
-001093210303                        wSQLStr = 'select * from SDHSDRTD ' +
-001094210303                                  'where CMODID = '  + QUO + moduleID + QUO +
-001095210303                                  ' and CTRNID = ' + QUO + transactREF + QUO +
-001096210303                                  ' and CMINPD = ' +
-001097210303                                    %char(result.list(i).intPDMidas);
-001098210303                   elseif fileToCheck = LELIBEPD;
-001099210303                        wSQLStr = 'select * from LELIBEPD ' +
-001100210303                                  'where LDLNRF = ' + QUO + transactREF + QUO +
-001101210303                                  ' and LDVDAT = ' +
-001102210303                                    %char(result.list(i).intPDMidas);
-001103210303                   endif;
-001104210303
-001105210303                   exec sql prepare P1 from :wSQLStr;
-001106210303                   exec sql open P1;
-001107210303
-001108210303                   if fileToCheck = SDHSDRTD;
-001109210303                        exec sql fetch next From P1 into :DailyHistDS;
-001110210303                   elseif fileToCheck = LELIBEPD;
-001111210303                        exec sql fetch next From P1 into :ExtractFLDS;
-001112210303                   endif;
-001113210303
-001114210303                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001115210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
-001116210305                      exsr errorHandler;
-001117210303                   endif;
-001118210303
-001119210303                   if sqlCod = NO_RECORD;
-001120210303                      action = INSERT;
-001121210303                   else;
-001122210303                      action = UPDATE;
-001123210303                   endif;
-001124210303                   exec sql close P1;
-001125210303
-001126210303       endsr;
-001127210303       //*************************************************************
-001128210303       /EJECT
-001129210303       //*************************************************************
-001130210303       //                                                            *
-001131210303       // insertHistoryFile                                          *
-001132210303       // =================                                          *
-001133210303       //                                                            *
-001134210303       // Called by: writeToARRDailyHistory                           *
-001135210303       //                                                            *
-001136210303       // Calls: None                                                *
-001137210303       //                                                            *
-001138210303       //*************************************************************
-001139210303
-001140210303       begsr insertHistoryFile;
+001080210303
+001081210303       begsr writeToARRDailyHistory;
+001082210303
+001083210305                   includeRecord = 'N';
+001084210305
+001085210305                   if (calcMethod = 'NCCR' or calcMethod  = 'SARR')
+001086210305                   and  result.list(i).intPDMidas > transactDate;
+001087210305                        includeRecord = 'Y';
+001088210306
+001089210305                   elseif  (calcMethod = 'CCR' or calcMethod  = 'SAVG');
+001090210305                        includeRecord = 'Y';
+001091210306
+001092210305                   endif;
+001093210305
+001094210305                   fileToCheck = SDHSDRTD;
+001095210305                   if includeRecord = 'Y';
+001096210305                      exsr checkExist;
+001097210305                      if action = INSERT;
+001098210305                          exsr insertHistoryFile;
+001099210305                      elseif action = UPDATE;
+001100210305                          exsr updateHistoryFile;
+001101210305                      endif;
+001102210305                   endif;
+001103210303
+001104210303       endsr;
+001105210303       //*************************************************************
+001106210303       /EJECT
+001107210303       //*************************************************************
+001108210303       //                                                            *
+001109210306       // checkExist - Check if a record exist on a given file       *
+001110210303       // ==========                                                 *
+001111210303       //                                                            *
+001112210303       // Called by: Output File                                     *
+001113210303       //                                                            *
+001114210303       // Calls: None                                                *
+001115210303       //                                                            *
+001116210303       //*************************************************************
+001117210303
+001118210303       begsr checkExist;
+001119210303
+001120210303                   if fileToCheck = SDHSDRTD;
+001121210303                        wSQLStr = 'select * from SDHSDRTD ' +
+001122210303                                  'where CMODID = '  + QUO + moduleID + QUO +
+001123210303                                  ' and CTRNID = ' + QUO + transactREF + QUO +
+001124210303                                  ' and CMINPD = ' +
+001125210303                                    %char(result.list(i).intPDMidas);
+001126210303                   elseif fileToCheck = LELIBEPD;
+001127210303                        wSQLStr = 'select * from LELIBEPD ' +
+001128210303                                  'where LDLNRF = ' + QUO + transactREF + QUO +
+001129210303                                  ' and LDVDAT = ' +
+001130210303                                    %char(result.list(i).intPDMidas);
+001131210303                   endif;
+001132210303
+001133210303                   exec sql prepare P1 from :wSQLStr;
+001134210303                   exec sql open P1;
+001135210303
+001136210303                   if fileToCheck = SDHSDRTD;
+001137210303                        exec sql fetch next From P1 into :DailyHistDS;
+001138210303                   elseif fileToCheck = LELIBEPD;
+001139210303                        exec sql fetch next From P1 into :ExtractFLDS;
+001140210303                   endif;
 001141210303
-001142210303                   clear DailyHistDS;
-001143210303                   DailyHistDS.CMODID = moduleID;
-001144210303                   DailyHistDS.CTRNID = transactREF;
-001145210304                   DailyHistDS.CCALCM = calcMethod;
-001146210303                   DailyHistDS.CMINPD = result.list(i).intPDMidas;
-001147210303                   DailyHistDS.CINPDT = result.list(i).intPrdYMD;
-001148210303                   DailyHistDS.CINPDY = result.list(i).intPrdDays;
-001149210303                   DailyHistDS.CMOBPD = result.list(i).intOPMidas;
-001150210303                   DailyHistDS.COBPDT = result.list(i).intObsYMD;
-001151210303                   DailyHistDS.CPBRFR = result.list(i).pubRskFrRt;
-001152210305                   DailyHistDS.COBPDY = result.list(i).obsPrdDays;
-001153210303                   DailyHistDS.CRTEAP = result.list(i).rateApplied;
-001154210305                   if result.list(i).rskFrRtFlAp = 'true';
-001155210305                     DailyHistDS.CRFRAP = 'Y';
-001156210305                   else;
-001157210305                     DailyHistDS.CRFRAP = 'N';
-001158210305                   endif;
-001159210303                   DailyHistDS.CTIMST = %timestamp();
-001160210304
-001161210303                   select;
-001162210303                        when calcMethod = 'NCCR';
-001163210304                             DailyHistDS.CDCMRT =
-001164210303                               %Dec(Result.List(i).dlyCompRate:30:9);
-001165210304                             DailyHistDS.CCMFAC =
-001166210304                               %Dec(Result.List(i).compFactor:30:9);
-001167210303                        when calcMethod = 'CCR';
-001168210303                             DailyHistDS.CAVCRT =
-001169210303                               %Dec(Result.List(i).aveCompRate:30:9);
-001170210304                        when calcMethod = 'SAVG';
-001171210304                             DailyHistDS.CSMPAV =
-001172210304                               %Dec(Result.List(i).simpleAve:30:9);
-001173210303                   endsl;
-001174210303
-001175210303                   exec sql insert into SDHSDRTD
-001176210303                   values (:DailyHistDS);
-001177210303
-001178210304                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001179210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
-001180210305                      exsr errorHandler;
-001181210303                   endif;
-001182210303
-001183210303       endsr;
-001184210310
-001185210303       //*************************************************************
-001186210303       /EJECT
-001187210303       //*************************************************************
-001188210303       //                                                            *
-001189210303       // insertExtractFile                                          *
-001190210303       // =================                                          *
-001191210303       //                                                            *
-001192210303       // Called by: writeToHistoryFile                               *
-001193210303       //                                                            *
-001194210303       // Calls: None                                                *
-001195210303       //                                                            *
-001196210303       //*************************************************************
-001197210303
-001198210303       begsr insertExtractFile;
-001199210303
-001200210303                   clear ExtractFLDS;
-001201210310                   clear compAveRate;
-001202210303                   ExtractFLDS.LDLNRF = transactREF;
-001203210303                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
-001204210303
-001205210303                   select;
-001206210303                        when calcMethod = 'NCCR';
-001207210310                             compAveRate =
-001208210303                               %Dec(Result.List(i).dlyCompRate:30:9);
-001209210303                        when calcMethod = 'CCR';
-001210210310                             compAveRate =
-001211210303                               %Dec(Result.List(i).aveCompRate:30:9);
-001212210310                        when calcMethod = 'SARR';
-001213210310                             compAveRate =
-001214210310                               %Dec(Result.List(i).rateApplied:30:9);
-001215210310                        when calcMethod = 'SAVG';
-001216210310                             compAveRate =
-001217210310                               %Dec(Result.List(i).simpleAve:30:9);
-001218210303                   endsl;
-001219210303
-001220210310                   compAveRate += %dech(benchMarkAdj:13:9);
-001221210310                   ExtractFLDS.LDCART =
-001222210310                     %dech(compAveRate  :13 :8);
-001223210310
-001224210303                   exec sql insert into LELIBEPD
-001225210303                   values (:ExtractFLDS);
-001226210303
-001227210304                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001228210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
-001229210305                      exsr errorHandler;
-001230210303                   endif;
-001231210303
-001232210303       endsr;
-001233210303       //*************************************************************
-001234210303       /EJECT
-001235210303       //*************************************************************
-001236210303       //                                                            *
-001237210303       // updateExtractFile                                          *
-001238210303       // =================                                          *
-001239210303       //                                                            *
-001240210303       // Called by: writeToExtractFile                               *
-001241210303       //                                                            *
-001242210303       // Calls: None                                                *
-001243210303       //                                                            *
-001244210303       //*************************************************************
-001245210303
-001246210303       begsr updateExtractFile;
-001247210304
-001248210303                   clear ExtractFLDS;
-001249210310                   clear compAveRate;
-001250210303                   ExtractFLDS.LDLNRF = transactREF;
-001251210303                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
-001252210303
-001253210310                   select;
-001254210310                        when calcMethod = 'NCCR';
-001255210310                             compAveRate =
-001256210310                               %Dec(Result.List(i).dlyCompRate:30:9);
-001257210310                        when calcMethod = 'CCR';
-001258210310                             compAveRate =
-001259210310                               %Dec(Result.List(i).aveCompRate:30:9);
-001260210310                        when calcMethod = 'SARR';
-001261210310                             compAveRate =
-001262210310                               %Dec(Result.List(i).rateApplied:30:9);
-001263210310                        when calcMethod = 'SAVG';
-001264210310                             compAveRate =
-001265210310                               %Dec(Result.List(i).simpleAve:30:9);
-001266210310                   endsl;
-001267210310
-001268210310                   compAveRate += %dech(benchMarkAdj:13:9);
-001269210310                   ExtractFLDS.LDCART =
-001270210310                     %dech(compAveRate  :13 :8);
-001271210303
-001272210303                   wSqlStr = 'update LELIBEPD A '  +
-001273210303                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
-001274210303                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
-001275210303                                 + QUO +
-001276210303                              ' and   A.LDVDAT = ' +  %Char(ExtractFLDS.LDVDAT);
-001277210303
-001278210303                   exec sql
-001279210303                   execute immediate :wSqlStr;
-001280210303
-001281210303                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001282210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
-001283210305                      exsr errorHandler;
-001284210303                   endif;
-001285210303
-001286210303       endsr;
-001287210303
-001288210301       //*************************************************************
-001289210301       /EJECT
-001290210301       //*************************************************************
-001291210301       //                                                            *
-001292210301       // writeToExtractFile - Write to Extract File                 *
-001293210301       // ==================                                         *
-001294210301       //                                                            *
-001295210301       // Called by: Output File                                     *
-001296210301       //                                                            *
-001297210301       // Calls: None                                                *
-001298210301       //                                                            *
-001299210301       //*************************************************************
-001300210301
-001301210301
-001302210301       begsr writeToExtractFile;
-001303210304
-001304210303                   fileToCheck = LELIBEPD;
-001305210303                   exsr checkExist;
-001306210304
-001307210303                   if action = INSERT;
-001308210303                        exsr insertExtractFile;
-001309210306
-001310210303                   elseif action = UPDATE;
-001311210303                        exsr updateExtractFile;
-001312210306
-001313210303                   endif;
-001314210301
-001315210304
-001316210301       endsr;
-001317210303       //*************************************************************
-001318210303       /EJECT
-001319210303       //*************************************************************
-001320210303       //                                                            *
-001321210303       // writeToAuditLog - Write to Audit Log                       *
-001322210303       // ===============                                            *
-001323210303       //                                                            *
-001324210303       // Called by: Output File                                     *
-001325210303       //                                                            *
-001326210303       // Calls: None                                                *
-001327210303       //                                                            *
-001328210303       //*************************************************************
-001329210303
-001330210303
-001331210303       begsr writeToAuditLog;
-001332210303
-001333210305                   AuditLogds.SJTMST = %timestamp();
-001334210311                   AuditLogds.SJTITL = result.errors.title;
-001335210311                   AuditLogds.SJEXMS = result.errors.exceptionMsg;
-001336210311                   AuditLogds.SJCODE = result.errors.status;
-001337210311
-001338210311                   if AuditLogds.SJTITL <> *blanks;
-001339210311                       AuditLogds.SJSTAT = 'F';
-001340210311                   endif;
-001341210311
-001342210305                   logData = %Trim(jsonData);
-001343210305                   exec sql insert into SDARRLOGTD
-001344210305                   values (
-001345210305                            : AuditLogds.SJMODI,
-001346210305                            : AuditLogds.SJTREF,
-001347210305                            : AuditLogds.SJSTAT,
-001348210305                            : AuditLogds.SJTMST,
-001349210311                            : AuditLogds.SJTITL,
-001350210311                            : AuditLogds.SJEXMS,
-001351210311                            : AuditLogds.SJcode,
-001352210305                            : logData
-001353210305                          );
-001354210305
-001355210305                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001356210310                        dBase    = 007;
-001357210305                        dBfile   = 'SDARRLOGTD';
-001358210305                        dBKey    = *BLANKS;
-001359210305                        dBPgm    = 'ZAGETCALRT';
-001360210305                        exsr *pssr;
-001361210305                   endif;
+001142210303                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001143210312                         errorMessage = 'SQL ERROR ' + %char(sqlCod);
+001144210312                         isError = true;
+001145210312                         exsr errorHandler;
+001146210303                   endif;
+001147210303
+001148210303                   if sqlCod = NO_RECORD;
+001149210303                      action = INSERT;
+001150210303                   else;
+001151210303                      action = UPDATE;
+001152210303                   endif;
+001153210303                   exec sql close P1;
+001154210303
+001155210303       endsr;
+001156210303       //*************************************************************
+001157210303       /EJECT
+001158210303       //*************************************************************
+001159210303       //                                                            *
+001160210303       // insertHistoryFile                                          *
+001161210303       // =================                                          *
+001162210303       //                                                            *
+001163210303       // Called by: writeToARRDailyHistory                           *
+001164210303       //                                                            *
+001165210303       // Calls: None                                                *
+001166210303       //                                                            *
+001167210303       //*************************************************************
+001168210303
+001169210303       begsr insertHistoryFile;
+001170210303
+001171210303                   clear DailyHistDS;
+001172210303                   DailyHistDS.CMODID = moduleID;
+001173210303                   DailyHistDS.CTRNID = transactREF;
+001174210304                   DailyHistDS.CCALCM = calcMethod;
+001175210303                   DailyHistDS.CMINPD = result.list(i).intPDMidas;
+001176210303                   DailyHistDS.CINPDT = result.list(i).intPrdYMD;
+001177210303                   DailyHistDS.CINPDY = result.list(i).intPrdDays;
+001178210303                   DailyHistDS.CMOBPD = result.list(i).intOPMidas;
+001179210303                   DailyHistDS.COBPDT = result.list(i).intObsYMD;
+001180210303                   DailyHistDS.CPBRFR = result.list(i).pubRskFrRt;
+001181210305                   DailyHistDS.COBPDY = result.list(i).obsPrdDays;
+001182210303                   DailyHistDS.CRTEAP = result.list(i).rateApplied;
+001183210305                   if result.list(i).rskFrRtFlAp = 'true';
+001184210305                     DailyHistDS.CRFRAP = 'Y';
+001185210305                   else;
+001186210305                     DailyHistDS.CRFRAP = 'N';
+001187210305                   endif;
+001188210303                   DailyHistDS.CTIMST = %timestamp();
+001189210304
+001190210303                   select;
+001191210303                        when calcMethod = 'NCCR';
+001192210304                             DailyHistDS.CDCMRT =
+001193210303                               %Dec(Result.List(i).dlyCompRate:30:9);
+001194210304                             DailyHistDS.CCMFAC =
+001195210304                               %Dec(Result.List(i).compFactor:30:9);
+001196210303                        when calcMethod = 'CCR';
+001197210303                             DailyHistDS.CAVCRT =
+001198210303                               %Dec(Result.List(i).aveCompRate:30:9);
+001199210304                        when calcMethod = 'SAVG';
+001200210304                             DailyHistDS.CSMPAV =
+001201210304                               %Dec(Result.List(i).simpleAve:30:9);
+001202210303                   endsl;
+001203210303
+001204210303                   exec sql insert into SDHSDRTD
+001205210303                   values (:DailyHistDS);
+001206210303
+001207210304                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001208210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
+001209210312                      isError = true;
+001210210312                      exsr errorHandler;
+001211210303                   endif;
+001212210303
+001213210303       endsr;
+001214210310
+001215210303       //*************************************************************
+001216210303       /EJECT
+001217210303       //*************************************************************
+001218210303       //                                                            *
+001219210303       // insertExtractFile                                          *
+001220210303       // =================                                          *
+001221210303       //                                                            *
+001222210303       // Called by: writeToHistoryFile                               *
+001223210303       //                                                            *
+001224210303       // Calls: None                                                *
+001225210303       //                                                            *
+001226210303       //*************************************************************
+001227210303
+001228210303       begsr insertExtractFile;
+001229210303
+001230210303                   clear ExtractFLDS;
+001231210310                   clear compAveRate;
+001232210303                   ExtractFLDS.LDLNRF = transactREF;
+001233210303                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+001234210303
+001235210303                   select;
+001236210303                        when calcMethod = 'NCCR';
+001237210310                             compAveRate =
+001238210303                               %Dec(Result.List(i).dlyCompRate:30:9);
+001239210303                        when calcMethod = 'CCR';
+001240210310                             compAveRate =
+001241210303                               %Dec(Result.List(i).aveCompRate:30:9);
+001242210310                        when calcMethod = 'SARR';
+001243210310                             compAveRate =
+001244210310                               %Dec(Result.List(i).rateApplied:30:9);
+001245210310                        when calcMethod = 'SAVG';
+001246210310                             compAveRate =
+001247210310                               %Dec(Result.List(i).simpleAve:30:9);
+001248210303                   endsl;
+001249210303
+001250210310                   compAveRate += %dech(benchMarkAdj:13:9);
+001251210310                   ExtractFLDS.LDCART =
+001252210310                     %dech(compAveRate  :13 :8);
+001253210310
+001254210303                   exec sql insert into LELIBEPD
+001255210303                   values (:ExtractFLDS);
+001256210303
+001257210304                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001258210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
+001259210312                      isError = true;
+001260210312                      exsr errorHandler;
+001261210303                   endif;
+001262210303
+001263210303       endsr;
+001264210303       //*************************************************************
+001265210303       /EJECT
+001266210303       //*************************************************************
+001267210303       //                                                            *
+001268210303       // updateExtractFile                                          *
+001269210303       // =================                                          *
+001270210303       //                                                            *
+001271210303       // Called by: writeToExtractFile                               *
+001272210303       //                                                            *
+001273210303       // Calls: None                                                *
+001274210303       //                                                            *
+001275210303       //*************************************************************
+001276210303
+001277210303       begsr updateExtractFile;
+001278210304
+001279210303                   clear ExtractFLDS;
+001280210310                   clear compAveRate;
+001281210303                   ExtractFLDS.LDLNRF = transactREF;
+001282210303                   ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+001283210303
+001284210310                   select;
+001285210310                        when calcMethod = 'NCCR';
+001286210310                             compAveRate =
+001287210310                               %Dec(Result.List(i).dlyCompRate:30:9);
+001288210310                        when calcMethod = 'CCR';
+001289210310                             compAveRate =
+001290210310                               %Dec(Result.List(i).aveCompRate:30:9);
+001291210310                        when calcMethod = 'SARR';
+001292210310                             compAveRate =
+001293210310                               %Dec(Result.List(i).rateApplied:30:9);
+001294210310                        when calcMethod = 'SAVG';
+001295210310                             compAveRate =
+001296210310                               %Dec(Result.List(i).simpleAve:30:9);
+001297210310                   endsl;
+001298210310
+001299210310                   compAveRate += %dech(benchMarkAdj:13:9);
+001300210310                   ExtractFLDS.LDCART =
+001301210310                     %dech(compAveRate  :13 :8);
+001302210303
+001303210303                   wSqlStr = 'update LELIBEPD A '  +
+001304210303                              'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
+001305210303                              ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
+001306210303                                 + QUO +
+001307210303                              ' and   A.LDVDAT = ' +  %Char(ExtractFLDS.LDVDAT);
+001308210303
+001309210303                   exec sql
+001310210303                   execute immediate :wSqlStr;
+001311210303
+001312210303                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001313210305                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
+001314210312                      isError = true;
+001315210312                      exsr errorHandler;
+001316210303                   endif;
+001317210303
+001318210303       endsr;
+001319210303
+001320210301       //*************************************************************
+001321210301       /EJECT
+001322210301       //*************************************************************
+001323210301       //                                                            *
+001324210301       // writeToExtractFile - Write to Extract File                 *
+001325210301       // ==================                                         *
+001326210301       //                                                            *
+001327210301       // Called by: Output File                                     *
+001328210301       //                                                            *
+001329210301       // Calls: None                                                *
+001330210301       //                                                            *
+001331210301       //*************************************************************
+001332210301
+001333210301
+001334210301       begsr writeToExtractFile;
+001335210304
+001336210303                   fileToCheck = LELIBEPD;
+001337210303                   exsr checkExist;
+001338210304
+001339210303                   if action = INSERT;
+001340210303                        exsr insertExtractFile;
+001341210306
+001342210303                   elseif action = UPDATE;
+001343210303                        exsr updateExtractFile;
+001344210306
+001345210303                   endif;
+001346210301
+001347210304
+001348210301       endsr;
+001349210303       //*************************************************************
+001350210303       /EJECT
+001351210303       //*************************************************************
+001352210303       //                                                            *
+001353210303       // writeToAuditLog - Write to Audit Log                       *
+001354210303       // ===============                                            *
+001355210303       //                                                            *
+001356210303       // Called by: Output File                                     *
+001357210303       //                                                            *
+001358210303       // Calls: None                                                *
+001359210303       //                                                            *
+001360210303       //*************************************************************
+001361210303
 001362210303
-001363210303       endsr;
-001364210224
-001390210305       //*************************************************************
-001391210305       /EJECT
-001392210305       //*************************************************************
-001393210305       //                                                            *
-001394210305       //   errorHandler - Generic Error Handler                     *
-001395210305       //                                                            *
-001396210305       //   Called By: Various subroutines                           *
-001397210305       //                                                            *
-001398210305       //*************************************************************
-001399210305
-001400210305       begsr errorHandler;
-001401210306
-001402210305                 AuditLogds.SJSTAT = 'F';
-001403210305                 jsonData = errorMessage;
-001404210306
-001405210305       endsr;
-001406210310
+001363210303       begsr writeToAuditLog;
+001364210312
+001365210312                   if isException;
+001366210312                       AuditLogDS.SJTMST = %timestamp();
+001367210312                       AuditLogDS.SJTITL = result.errors.title;
+001368210312                       AuditLogDS.SJEXMS = result.errors.exceptionMsg;
+001369210312                       AuditLogDS.SJCODE = result.errors.status;
+001370210312                       if AuditLogDS.SJCODE = '400';
+001371210312                          logData = RestAPIParm;
+001372210312                          returnCD = 'EXCEPTION_ERROR';
+001373210312                         AuditLogDS.SJSTAT = 'F';
+001374210312                       endif;
+001376210312                   else;
+001377210312                       if not(isError);
+001378210312                           AuditLogDS.SJTMST = %timestamp();
+001379210312                           AuditLogDS.SJTITL = 'ZAGETCALRT_SUCCESS';
+001380210312                           AuditLogDS.SJEXMS = 'ARR Calculator completed' +
+001381210312                             ' successfully';
+001382210312                           AuditLogDS.SJCODE = '000';
+001383210312                           returnCD = 'SUCCESS';
+001384210312                           AuditLogDS.SJSTAT = 'C';
+001385210312                           logData = %Trim(jsonData);
+001386210312                       else;
+001387210312                           returnCD = 'CONNECTION_ERROR';
+001388210312                           logData = %Trim(errorMessage);
+001389210312                           AuditLogDS.SJSTAT = 'F';
+001390210312                       endif;
+001391210312                   endif;
+001392210312
+001393210305                   exec sql insert into SDARRLOGTD
+001394210305                   values (
+001395210312                            : AuditLogDS.SJMODI,
+001396210312                            : AuditLogDS.SJTREF,
+001397210312                            : AuditLogDS.SJSTAT,
+001398210312                            : AuditLogDS.SJTMST,
+001399210312                            : AuditLogDS.SJTITL,
+001400210312                            : AuditLogDS.SJEXMS,
+001401210312                            : AuditLogDS.SJcode,
+001402210312                            : logData
+001403210305                          );
+001404210305
+001405210305                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001406210312                        AuditLogDS.SJTMST = %timestamp();
+001407210312                        AuditLogDS.SJTITL = 'SDARRLOGTD';
+001408210312                        AuditLogDS.SJEXMS = 'Error in access SDARRLOGTD';
+001409210312                        AuditLogDS.SJCODE = '007';
+001410210312                        isError = True;
+001411210312                        exsr errorHandler;
+001412210305                   endif;
+001413210303
+001414210303       endsr;
+001415210224
 001822210305       //*************************************************************
 001823210305       /EJECT
 001824210305       //*************************************************************
@@ -1320,40 +1349,55 @@
 001929210310
 001930210310                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
 001931210310                      errorMessage = 'SQL ERROR ' + %char(sqlCod);
-001932210310                      exsr errorHandler;
-001933210310                   endif;
-001934210305
-001935210305                  exec sql  update SDHSDRTD
-001936210305                  set CMINPD = DailyHistDS.CMINPD
-001937210305                  where CMODID = moduleID
-001938210305                  and   CTRNID = transactREF;
-001939210305
-001940210306                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-001941210310                        dBase    = 008;
-001942210305                        dBfile   = 'SDHSDRTD';
-001943210305                        dBKey    = *BLANKS;
-001944210305                        dBPgm    = 'ZAGETCALRT';
-001945210305                        exsr *pssr;
-001946210305                   endif;
-001947210305       endsr;
-001948210310
-001949210310       //*************************************************************
-001950210310       /EJECT
+001932210312                      isError = true;
+001933210312                      exsr errorHandler;
+001934210310                   endif;
+001935210305
+001936210305                  exec sql  update SDHSDRTD
+001937210305                  set CMINPD = DailyHistDS.CMINPD
+001938210305                  where CMODID = moduleID
+001939210305                  and   CTRNID = transactREF;
+001940210305
+001941210306                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
+001943210312                        isError = true;
+001947210312                        exsr errorHandler;
+001948210305                   endif;
+001949210305       endsr;
+001950210310
 001951210310       //*************************************************************
-001952210310       //                                                            *
-001953210310       //   *pssr  - Program Error Processing Subroutine.            *
+001952210310       /EJECT
+001953210310       //*************************************************************
 001954210310       //                                                            *
-001955210310       //   Called By: Main Processing, various subroutines          *
+001955210312       //   errorHandler  - Program Error Processing Subroutine.            *
 001956210310       //                                                            *
-001957210310       //*************************************************************
-001958210310
-001959210310       begsr *pssr;
-001960210310                   *inu7 = *on;
-001961210310                   *inu8 = *on;
-001962210310                   *Inlr = *on;
-001963210310                   dump;
-001964210310                   return;
-001965210310       endsr;
+001957210310       //   Called By: Main Processing, various subroutines          *
+001958210310       //                                                            *
+001959210310       //*************************************************************
+001960210310
+001961210312       begsr *pssr;
+001962210312                   *inu7 = *on;
+001963210312                   *inu8 = *on;
+001964210312                   *Inlr = *on;
+001965210312                   dump;
+001969210312                   return;
+001973210310       endsr;
+001974210312
+001975210312       //*************************************************************
+001976210312       /EJECT
+001977210312       //*************************************************************
+001978210312       //                                                            *
+001979210312       //   errorHandler                                             *
+001980210312       //                                                            *
+001981210312       //   Called By: Main Processing, various subroutines          *
+001982210312       //                                                            *
+001983210312       //*************************************************************
+001984210312
+001985210312       begsr errorHandler;
+001986210312
+001987210312                   exsr writeToAuditLog;
+001988210312                   *Inlr = *on;
+001989210312                   return;
+001990210312       endsr;
 002102210305
 002103210305       //*************************************************************
 002104210222

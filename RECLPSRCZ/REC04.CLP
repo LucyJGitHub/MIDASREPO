@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD050374           Date 06Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EML113             Date 01Mar21              */
+/*       Prev Amend No. MD050374           Date 06Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD024663           Date 25Jul16              */
 /*                      253617             Date 25Jul16              */
 /*                      MD031950           Date 17Jun15              */
@@ -26,6 +27,9 @@
 /*                      S01194              Date 09Mar90             */
 /*                                                                  */
 /********************************************************************/
+/*       EML113 - Re-set of Customer Exchange Reference Sequence     */
+/*                Number                                             */
+/*                Added hooks EML113_001, EML113_002, ELM113_003     */
 /*       MD050374 - Condition clear of RECUSXQD                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024663 - Input Document already exist error displays on   */
@@ -55,6 +59,7 @@
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CER001*/
              DCL        VAR(&ULX043) TYPE(*CHAR) LEN(1)                                   /*CER001*/
              DCL        VAR(&CRE041) TYPE(*CHAR) LEN(1)                                   /*CRE041*/
+/*/COPY WNCPYSRC,EML113_001                                          */                   /*EML113*/
 /*/COPY WNCPYSRC,REC04001                                            */
              SNDPGMMSG  MSG('REC04 - Customer Exchanges File +
                           Creation') TOMSGQ(MRUNQ)
@@ -81,8 +86,10 @@
              CLRPFM FILE(CUSEXCE)
              ENDDO                                                                        /*CRE041*/
              CLRPFM FILE(CUSEXZ1)
+/*/COPY WNCPYSRC,EML113_002                                         */                    /*EML113*/
 /* Reset Last used customer exchange number data area                                     /*253617*/
              CHGDTAARA  DTAARA(CEXNO) VALUE('0000')                                       /*253617*/
+/*/COPY WNCPYSRC,EML113_003                                         */                    /*EML113*/
 /* Clear Extension file to prevent input error on next IC                               /*MD024663*/
              IF         COND(&CRE041 *EQ 'N') THEN(DO)                                  /*MD050374*/
              CLRPFM     FILE(RECUSXQD)                                                  /*MD024663*/

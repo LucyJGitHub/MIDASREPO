@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057191           Date 02Dec20               *
-      *  Prev Amend No. MD054876           Date 26Aug20               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
@@ -101,6 +102,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Bypass check for PI date against last availablity   *
+      *           date.                                               *
+      *           Amendment of core hook LELOAMV001                   *
+      *           Amendment of core hook LELOAMV021                   *
+      *           Amendment of core hook LELOAMV027                   *
+      *           Addition of hook LUC109_010                         *
+      *           Addition of hook LUC109_011                         *
       *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
       *             interest rate                                     *
       *           - DL ICD must not be used, removed unnecessary codes*
@@ -1042,8 +1051,10 @@
       * not be later than the Last Available date
      C     DDATYP        IFEQ      'PI'
      C     DDACTN        ANDEQ     'I'
+     C/COPY WNCPYSRC,LUC109_010
      C     DDATYP        OREQ      'PI'                                                       CLE030
      C     DDACTN        ANDEQ     'X'                                                        CLE030
+     C/COPY WNCPYSRC,LUC109_011
      C     CAM_ASTS      ANDNE     'Q'                                                        CLE030
       *                                                                                       245335
       *  Do not validate value date against last availability date if                         245335

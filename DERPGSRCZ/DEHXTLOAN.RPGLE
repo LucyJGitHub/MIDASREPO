@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -52,7 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -814,8 +817,7 @@
       *
      C     H_AMTP        IFEQ      'BC'
      C                   MOVEL     'BC'          E#EVTP
-     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
-     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
+     C                   Z-ADD     H_BRTT        E#BRTT
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   MOVEL     'C'           E#IRTP
       * funding rate                                                                          220981
@@ -848,8 +850,7 @@
       *
      C     H_AMTP        IFEQ      'BR'
      C                   MOVEL     'BC'          E#EVTP
-     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
-     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
+     C                   Z-ADD     H_BRTT        E#BRTT
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   MOVEL     'C'           E#IRTP
      C                   END
@@ -858,8 +859,7 @@
       *
      C     H_AMTP        IFEQ      'RO'
      C                   MOVEL     'RO'          E#EVTP
-     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
-     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
+     C                   Z-ADD     H_BRTT        E#BRTT
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   Z-ADD     H_RTSP        E#RTSP
      C                   MOVE      H_SPIN        E#SPIN
@@ -911,8 +911,7 @@
      C     H_AMTP        IFEQ      'MC'
 
      C                   MOVEL     'RO'          E#EVTP
-     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
-     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
+     C                   Z-ADD     H_BRTT        E#BRTT
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   Z-ADD     H_RTSP        E#RTSP
      C                   MOVE      H_SPIN        E#SPIN

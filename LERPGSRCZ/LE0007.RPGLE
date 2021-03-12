@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -43,7 +44,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -178,11 +181,9 @@
       *
      C                   DOW       EndOfFile = False
       *
-     C**********         IF        NBRA <> 0 AND                                              CSD103
-     C                   IF        NBRA <> *BLANKS AND                                        CSD103
+     C                   IF        NBRA <> 0 AND
      C                             CHIN = 'R' OR
-     C**********                   BRTT <> 0 AND                                              CSD103
-     C                             BRTT <> *BLANKS AND                                        CSD103
+     C                             BRTT <> 0 AND
      C                             CHIN = 'R'
 
      C                   IF        RFDY = *Blanks

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -57,7 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     * 
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -163,33 +166,33 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDHGSTL2  IF   E           K DISK    INFSR(*PSSR)
       ** Hedge Strategy by Branch/Product Type/Short-name Index
- 
+
      FSDHGSTL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDHGSTD0:@HGSTD0)
       ** Hedge Strategy by Branch/Product Type/Short-name
- 
+
      FASHGLKL2  IF   E           K DISK    INFSR(*PSSR)
       ** Hedge Linkage File Retrieval by Hedge Strategy
- 
+
      FASHTRNL0  IF   E           K DISK    INFSR(*PSSR)
       ** Hedge Transactions File Update by Hedge ID/Indicator
- 
+
      FASHTRNL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ASHTRND0:@HTRND0)
       ** Hedge Transaction file RTV by Hedge ID/Indicator
- 
+
      FASFHTRL1  IF   E           K DISK    INFSR(*PSSR)
       ** Forecast Transactions Retrieval Index
- 
+
      FFFNPVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Re-valued FF Positions File
- 
+
      F***SENPVLL0  IF   E           K DISK    INFSR(*PSSR)                                    CAS006
       ***Re-valued*Security*Positions*File****************************                        CAS006
- 
+
      FSEMKVAL0  IF   E           K DISK    INFSR(*PSSR)                                       CAS006
       ** Market Values Using All-In-Rate                                                      CAS006
                                                                                               CAS006
@@ -200,23 +203,23 @@
      F                                     IGNORE(MMDENSP0)
      F                                     IGNORE(FXDEALP0)
       ** Deals File including Historic
- 
+
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
       ** Loans File
- 
+
      FMLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:MLOANCLF)
      F                                     RENAME(CLOANHHF:MATHHF)
      F                                     RENAME(CLOANCKF:MATCKF)
      F                                     RENAME(CLOANZ1F:MATZ1F)
       ** New Matured Loans File
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
       ** Securities File
- 
+
      FTRANS2    IF   E           K DISK    INFSR(*PSSR)                                       CAS003
       ** FF Transaction details                                                               CAS003
                                                                                               CAS003
@@ -236,11 +239,11 @@
      F                                     INFDS(SPOOL1)
      F                                     USROPN                                             224985
       ** Printer file for Today's Expired Hedges Report
- 
+
      FAS001005AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
       ** Printer file for Today's Expired Hedges Report (Audit)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -248,7 +251,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -260,85 +263,85 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** Data Area giving Installation Control Details
- 
+
      D RUNDAT          DS
      D  MBIN                  13     13
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Month sequence
      D MON             S              3    DIM(12) CTDATA PERRCD(12)
      D NUM             S              2  0 DIM(12) ALT(MON)
- 
+
       ** Field renames to prevent compile errors
      D TP              S              2    DIM(3) CTDATA PERRCD(1)
- 
+
       ** File information data structure
      D INFDS           DS           528
      D  RCDFMT                38     45
- 
+
       ** Message data for 'Database Error (ICD)'
      D                 DS
      D  PZAMSDA                1    132
      D  PZA0001                1     10
- 
+
       ** File Information Data Structure for AS001005P1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File Information Data Structure for AS001005AU
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
       ** Work Level indicators
      D WLVLDS          DS
      D  WL3                    1      1
      D  WL2                    2      2
      D  WL1                    3      3
- 
+
       ** Currency Codes Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** DS for SC Switchable Features                                                        CAS003
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS003
                                                                                               CAS003
       ** DS for access programs: Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for access programs: Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External Data Structures for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External Data Structures for General Ledger Details                                  CAS004
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                                  CAS004
                                                                                               CAS004
@@ -354,24 +357,24 @@
      D  FSMKTI                17     17
      D  FSBHTV                18     18
      D  FSKEY                  1     18
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Fields used for standard programs
      D ZDECS           S              1  0
      D ZECODE          S              1A
      D ZFLD15          S             15  0
      D ZOUT22          S             22
- 
+
       ** Key fields
      D KBRCA           S              3
      D KPRTP           S              2
      D KHESN           S             10
- 
+
       ** Work Fields for SDBANKPD fields
      D WRunDay         S              5  0
      D WRunDate        S              7A
@@ -383,20 +386,20 @@
      D INHESN          S              1A
      D INBRCA          S              1A
      D X               S              1  0
- 
+
       ** Work Fields for SDBANKPD fields
      D PSeq            S              5A
      D PSenty          S              3A
      D PSNum           S              6  0
      D PSErr           S              1A
- 
+
       ** Work Fields for SDBRCHPD fields
      D PDSNB           S              3A
- 
+
       ** Work Fields for Standard Access Objects
      D PRtCd           S              7A
      D POption         S              7A
- 
+
       ** Various Work Fields
      D WRKDLN          S             10A
      D WRKBKC          S              2A
@@ -411,17 +414,17 @@
      D WRKPR$          S             13  0
      D WRKINT          S             11  0
      D WRun            S              1A
- 
+
       ** Parameters for ZFRPED
      D ZOUT25          S             25
- 
+
       ** Parameters for SRSNMS
      D PZAPGM          S             10
      D PZAPGRL         S              5
      D PZAMSID         S              7
      D PZAMSGF         S             10
      D PZAMSTP         S              7
- 
+
      ** Parameter for CAS003                                                                  CAS003
      D PSard           S              6                                                       CAS003
      D CAS003          S              1                                                       CAS003
@@ -433,7 +436,7 @@
      D WOPEN           S              1                                                       224985
                                                                                               CAS004
       /EJECT
- 
+
      IMATCKF
      I              NLRA                        CKNLRA
      IMATZ1F
@@ -445,58 +448,58 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C     *LOVAL        SETLL     SDHGSTL2
      C                   READ      SDHGSTL2
- 
+
       ** Audit Report if end of file
- 
+
      C                   IF        %EOF(SDHGSTL2)
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
       ** Do while not End of file
- 
+
      C                   DOW       NOT %EOF(SDHGSTL2)
- 
+
      C                   SELECT
- 
+
      C                   WHEN      KBRCA <> FSBRCA
      C                   EVAL      WLVLDS = 'YYY'
- 
+
      C                   WHEN      KPRTP <> FSPRTP
      C                   EVAL      WLVLDS = 'NYY'
- 
+
      C                   WHEN      KHESN <> FSHESN
      C                   EVAL      WLVLDS = 'NNY'
- 
+
      C                   ENDSL
- 
+
       ** If change in Branch
- 
+
      C                   IF        WL3 = 'Y'
      C                   EVAL      *IN03 = *ON
      C                   EXSR      SRINL3
      C                   EVAL      *IN03 = *OFF
      C                   ENDIF
- 
+
      C                   EXSR      SRProcess
- 
+
      C                   READ      SDHGSTL2
- 
+
       ** At end of Branch print trailer and close printer file if open
- 
+
      C**********         IF        KBRCA <> FSBRCA                                            224985
      C                   IF        %EOF(SDHGSTL2)                                             224985
      C                             AND WOPEN = 'Y'                                            224985
@@ -506,13 +509,13 @@
      C                   ENDIF                                                                224985
      C                   WRITE     AS001005D4
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -524,38 +527,38 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcess     BEGSR
- 
+
       ** If Hedge Linkages exist for Branch's Hedge Strategies
- 
+
      C                   IF        INBRCA = 'Y'
- 
+
       ** If new Hedge Strategy
- 
+
      C                   IF        WL1 = 'Y'
      C                   EVAL      *IN01 = *ON
      C                   EXSR      SRINL1
      C                   EVAL      *IN01 = *OFF
      C                   ENDIF
- 
+
       ** If Hedge Linkages exist for Branch's Hedge Strategies
- 
+
      C                   IF        INHESN = 'Y'
- 
+
       ** Count total number of Hedge Strategy records.
- 
+
      C                   ADD       1             SCOUNT
- 
+
       ** Process Hedge Linkage records for a given Hedge Strategy
       ** record
- 
+
      C                   EXSR      SRLINK
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -567,17 +570,17 @@
       *  Calls: SRVAL1                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINL1        BEGSR
- 
+
       ** Check if at least one Hedge Linkage exists for Hedge Strategy
- 
+
      C                   EVAL      INHESN = *BLANKS
- 
+
      C                   EXSR      SRVAL1
- 
+
       ** If Hedge Linkage records to print -first print new headings
- 
+
      C                   IF        *IN77 = *ON
                                                                                               224985
       ** At end of Branch print trailer and close printer file if open                        224985
@@ -590,33 +593,33 @@
      C                   ENDIF                                                                224985
      C                   WRITE     AS001005D4                                                 224985
      C                   ENDIF                                                                224985
- 
+
      C                   EVAL      INHESN = 'Y'
      C                   EVAL      PBRCD = FSBRCA
      C                   EVAL      PBRNM = A8BRNM
      C                   EVAL      PHESN = FSHESN
      C                   EVAL      PHELD = FSHELD
- 
+
       ** Product Type
- 
+
      C                   EVAL      *IN55 = *OFF
      C                   MOVEA     '000'         *IN(25)
      C                   Z-ADD     1             X
      C     FSPRTP        LOOKUP    TP(X)                                  55
- 
+
      C                   SELECT
- 
+
      C                   WHEN      X = 1
      C                   MOVEA     '100'         *IN(25)
- 
+
      C                   WHEN      X = 2
      C                   MOVEA     '010'         *IN(25)
- 
+
      C                   WHEN      X = 3
      C                   MOVEA     '001'         *IN(25)
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      *IN66 = *ON
                                                                                               224985
      C                   IF        WOPEN <> 'Y'                                               224985
@@ -635,11 +638,11 @@
                                                                                               224985
      C                   WRITE     AS001005D1
      C                   EVAL      *IN66 = *OFF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -651,15 +654,15 @@
       *  Calls: SRVAL1, ZSFILE, AOBRCHR0                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINL3        BEGSR
- 
+
       ** Check if at least one Hedge Linkage exists for Hedge Strategy
- 
+
      C                   EVAL      INBRCA = *BLANKS
- 
+
      C                   EXSR      SRVAL1
- 
+
      C                   IF        *IN77 = *ON
      C                   EVAL      INBRCA = 'Y'
       **********                                                                              224985
@@ -671,9 +674,9 @@
      C**********         PARM                    SFILE1                                       224985
      C**********         PARM      SFNUM1        PSNum                                        224985
      C**********         PARM                    PSErr                                        224985
- 
+
       ** Get Transaction Branch name, only when MBIN = 'Y'
- 
+
      C     MBIN          IFEQ      'Y'
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
@@ -683,11 +686,11 @@
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -699,67 +702,67 @@
       *  Calls: SRVAL2                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVAL1        BEGSR
- 
+
       ** Save Hedge Strategy fields of a currently read record
- 
+
      C                   EVAL      KBRCA = FSBRCA
      C                   EVAL      KPRTP = FSPRTP
      C                   EVAL      KHESN = FSHESN
- 
+
       ** Initialise indicators
- 
+
      C                   EVAL      *IN77 = *OFF
      C                   EVAL      *IN89 = *OFF
- 
+
       ** Position and read Hedge Strategy file based on break
- 
+
      C                   IF        *IN03 = *ON
      C     KBRCA         SETLL     SDHGSTL3
      C                   ENDIF
      C                   IF        *IN01 = *ON
      C     KYHESN        SETLL     SDHGSTL3
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C     KBRCA         READE     SDHGSTL3                               89
      C                   ENDIF
- 
+
      C                   IF        *IN01 = *ON
      C     KYHESN        READE     SDHGSTL3                               89
      C                   ENDIF
- 
+
      C                   DOW       *IN89 =*OFF
- 
+
       ** Read Hedge Linkage records
- 
+
      C                   EXSR      SRVAL2
- 
+
       ** If expired Hedge Linkages exist, then OK to process
- 
+
      C                   IF        *IN77 = *ON
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C     KBRCA         READE     SDHGSTL3                               89
      C                   ENDIF
- 
+
      C                   IF        *IN01 = *ON
      C     KYHESN        READE     SDHGSTL3                               89
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Restore Hedge Strategy fields of a currently read record
- 
+
      C                   EVAL      FSBRCA = KBRCA
      C                   EVAL      FSPRTP = KPRTP
      C                   EVAL      FSHESN = KHESN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -771,33 +774,33 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVAL2        BEGSR
- 
+
       ** Initialise indicators
- 
+
      C                   EVAL      *IN87 = *OFF
- 
+
       ** Read Hedge Strategy's Hedge Linkage records
- 
+
      C     FSHESN        SETLL     ASHGLKL2
      C     FSHESN        READE     ASHGLKL2                               87
- 
+
      C                   DOW       *IN87 = *OFF
- 
+
       ** If expired Hedge Linkage record found
- 
+
      C                   IF        FSRECI = 'E' AND FSCHTP = 'E'
      C                             AND FSLCD = WRunDay
      C                   EVAL      *IN77 = *ON
      C                   LEAVE
      C                   ENDIF
- 
+
      C     FSHESN        READE     ASHGLKL2                               87
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -809,37 +812,37 @@
       *  Calls: SRTRN1                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLINK        BEGSR
- 
+
       ** For each Hedge Strategy -read all Hedge Linkage records
- 
+
      C                   EVAL      *IN89 = *OFF
      C     FSHESN        SETLL     ASHGLKL2
- 
+
      C     FSHESN        READE     ASHGLKL2                               89
- 
+
      C                   DOW       *IN89 = *OFF
- 
+
       ** If Hedge Linkage has expired today
- 
+
      C                   IF        FSRECI = 'E' AND FSCHTP = 'E'
      C                             AND FSLCD = WRunDay
- 
+
       ** Initialise Hedge Transaction count
- 
+
      C                   Z-ADD     *ZEROS        WTCOUNT
- 
+
       ** Check if hedge is for forecast transactions
- 
+
      C                   EVAL      WFore = *BLANKS
      C                   EVAL      WExre = *BLANKS
      C                   EVAL      HGHDIN = 'H'
- 
+
      C     KYTRAN        CHAIN     ASHTRNL0                           87
      C                   IF        *IN87 = *OFF AND
      C                             FSMOD = 'FH'
- 
+
      C*****FSDLNO        CHAIN     ASFHTRL1                           87                      CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     ASFHTRL1                           87                      CLE148
@@ -848,39 +851,39 @@
      C                   EVAL      WExre = FSERIN
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Process and print applicable Derivative Transaction records
- 
+
      C                   EVAL      HGHDIN = 'D'
      C                   EXSR      SRTRN1
- 
+
       ** Process and print applicable Hedged Transaction records
- 
+
      C                   EVAL      HGHDIN = 'H'
      C                   EXSR      SRTRN1
- 
+
       ** If live Hedge Transaction Details exist -print blank line,
       ** increment number of Hedge Linkages processed by 1 and attempt
       ** to flag Hedge Linkage record as expired (if qualifies)
- 
+
      C                   IF        WTCOUNT > *ZEROS
- 
+
      C                   IF        *IN66 = *ON
      C                   WRITE     AS001005D1
      C                   EVAL      *IN66 = *OFF
      C                   ENDIF
- 
+
      C                   WRITE     AS001005D3
      C                   ADD       1             ECOUNT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     FSHESN        READE     ASHGLKL2                               89
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -892,24 +895,24 @@
       *  Calls: SRTRN2                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTRN1        BEGSR
- 
+
      C                   EVAL      *IN97 = *OFF
      C     KYTRAN        SETLL     ASHTRNL0
      C     KYTRAN        READE     ASHTRNL0                               87
- 
+
      C     *IN87         DOWEQ     *OFF
- 
+
       ** Move file fields to printer file fields and print details
- 
+
      C                   EXSR      SRTRN2
- 
+
      C     KYTRAN        READE     ASHTRNL0                               87
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -921,11 +924,11 @@
       *  Calls: SRTRN3                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTRN2        BEGSR
- 
+
       ** Clear workfields
- 
+
      C                   EVAL      WRKDLN = *BLANKS
      C                   EVAL      WRKBKC = *BLANKS
      C                   EVAL      WRKTYP = *BLANKS
@@ -937,51 +940,51 @@
      C                   EVAL      WRKCCY = *BLANKS
      C                   EVAL      WRKPR$ = *ZEROS
      C                   EVAL      WRKINT = *ZEROS
- 
+
       ** Retrieve Transaction details from pertinent files
- 
+
      C                   SELECT
      C                   WHEN      FSMOD = 'DL'
      C                   EXSR      SRDLNO
- 
+
      C                   WHEN      FSMOD = 'LE'
      C                   EXSR      SRLENO
- 
+
      C                   WHEN      FSMOD = 'FH'
      C                   EXSR      SRFHNO
- 
+
      C                   WHEN      FSMOD = 'FF' AND CAS003 = 'Y'                              CAS003
      C                   EXSR      SRFFNO                                                     CAS003
- 
+
      C                   WHEN      FSMOD = 'SE'
      C                   EXSR      SRSENO
      C                   ENDSL
- 
+
       ** If record found in file
- 
+
      C                   IF        *IN55 = *OFF
- 
+
       ** Load printer file fields
- 
+
      C                   EXSR      SRTRN3
- 
+
       ** Print Hedge Transaction details
- 
+
      C                   IF        *IN66 = *ON
      C                   WRITE     AS001005D1
      C                   EVAL      *IN66 = *OFF
      C                   ENDIF
- 
+
      C                   WRITE     AS001005D2
- 
+
       ** Increment count of processed records
- 
+
      C                   ADD       1             WTCOUNT
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -993,12 +996,12 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDLNO        BEGSR
- 
+
      C                   MOVEL     FSDLNO        FSDLNO2           6 0                        CLE148
      C     FSDHIN        IFEQ      'D'
- 
+
      C*****FSDLNO        CHAIN     DEALSDBF                           55                      CLE148
      C***55FSDLNO        CHAIN     DEALSDGF                           55                      CLE148
      C***55FSDLNO        CHAIN     DLBHISD0                           55                      CLE148
@@ -1007,9 +1010,9 @@
      C   55FSDLNO2       CHAIN     DEALSDGF                           55                      CLE148
      C   55FSDLNO2       CHAIN     DLBHISD0                           55                      CLE148
      C   55FSDLNO2       CHAIN     DLGHISD0                           55                      CLE148
- 
+
      C                   ELSE
- 
+
      C     FSDHIN        IFEQ      'H'
      C*****FSDLNO        CHAIN     DEALSDBF                           55                      CLE148
      C***55FSDLNO        CHAIN     DEALSDCF                           55                      CLE148
@@ -1028,11 +1031,11 @@
      C   55FSDLNO2       CHAIN     DLDHISD0                           55                      CLE148
      C   55FSDLNO2       CHAIN     DLEHISD0                           55                      CLE148
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        *IN55 = *OFF
- 
+
      C                   MOVEL     FSDLNO        WRKDLN
      C                   EVAL      WRKBKC = BOKC
      C                   EVAL      WRKTYP = DTYP
@@ -1042,18 +1045,18 @@
      C                   Z-ADD     VDAT          WRKVAL
      C                   Z-ADD     MDAT          WRKMAT
      C                   EVAL      WRKBOV = *ZEROS                                            224116
- 
+
      C                   SELECT
- 
+
       ** Foreign Exchange Deals
- 
+
      C                   WHEN      RCDFMT = 'DEALSDBF' OR
      C                             RCDFMT = 'DLBHISD0'
      C                   EVAL      WRKMAT = *ZEROS
      C                   EVAL      WRKCCY = *BLANKS
      C                   EVAL      WRKPR$ = *ZEROS
      C                   EVAL      WRKINT = *ZEROS
- 
+
      C                   IF        WFore = 'Y'
      C                   IF        WExre = 'R'
      C                   EVAL      WRKCCY = SLCY
@@ -1098,71 +1101,69 @@
      C                   EVAL      WRKPR$ = PUAM                                              212432
      C                   ENDIF                                                                212432
      C                   ENDIF
- 
+
       ** Money Market Deals
- 
+
      C                   WHEN      RCDFMT = 'DEALSDCF' OR
      C                             RCDFMT = 'DLCHISD0'
      C                   EVAL      WRKCCY = CCY
      C                   EVAL      WRKPR$ =PCPL
      C     10000000      MULT(H)   INTR          WRKINT
- 
+
       ** Negotiable Assets
- 
+
      C                   WHEN      RCDFMT = 'DEALSDDF' OR
      C                             RCDFMT = 'DLDHISD0'
      C                   EVAL      WRKCCY = CCY
      C                   EVAL      WRKPR$ =FVAL
      C     10000000      MULT(H)   INTR          WRKINT
- 
+
       ** Negotiable Assets
- 
+
      C                   WHEN      RCDFMT = 'DEALSDEF' OR
      C                             RCDFMT = 'DLEHISD0'
      C                   EVAL      WRKCCY = CCY
      C                   EVAL      WRKPR$ = FVAL
      C     10000000      MULT(H)   INTR          WRKINT
- 
+
       ** FRA/IRS
- 
+
      C                   WHEN      RCDFMT = 'DEALSDGF' OR
      C                             RCDFMT = 'DLGHISD0'
      C                   EVAL      WRKBOV = BOVD                                              224116
      C                   EVAL      WRKCCY = UCUCY
      C                   EVAL      WRKPR$ = UPAMT
- 
+
       ** Fair Value Interest Rate processing
- 
+
      C                   SELECT
- 
+
      C                   WHEN      FSPRTP = 'FV'
- 
-     C*****UBRTT         IFEQ      *ZEROS                                                     CSD103
-     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
+
+     C     UBRTT         IFEQ      *ZEROS
      C     10000000      MULT(H)   UEINR         WRKINT
      C                   ELSE
      C     10000000      MULT(H)   TEINR         WRKINT
      C                   ENDIF
- 
+
       ** Cash Flow Interest Rate processing
- 
+
      C     FSPRTP        WHENEQ    'CF'
- 
-     C*****UBRTT         IFEQ      *ZEROS                                                     CSD103
-     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
+
+     C     UBRTT         IFEQ      *ZEROS
      C     10000000      MULT(H)   TEINR         WRKINT
      C                   ELSE
      C     10000000      MULT(H)   UEINR         WRKINT
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1174,14 +1175,14 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRLENO        BEGSR
- 
+
      C     FSDLNO        CHAIN     CLOANCLF                           55
      C   55FSDLNO        CHAIN     MLOANCLF                           55
- 
+
      C     *IN55         IFEQ      *OFF
- 
+
      C                   MOVEL     FSDLNO        WRKDLN
      C                   MOVEL     BOKC          WRKBKC
      C                   MOVEL     LTYP          WRKTYP
@@ -1192,18 +1193,18 @@
      C                   Z-ADD     MDAT          WRKMAT
      C                   MOVE      CCY           WRKCCY
      C                   Z-ADD     CPAM          WRKPR$
- 
+
       **  CALCULATE THE NET TREASURY RATE
- 
+
      C     MARG          IFNE      *ZERO
      C                   SUB       MARG          INTR
      C                   ENDIF
- 
+
      C     10000000      MULT(H)   INTR          WRKINT
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1215,13 +1216,13 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFHNO        BEGSR
- 
+
      C*****FSDLNO        CHAIN     ASFHTRL1                           55                      CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     ASFHTRL1                           55                      CLE148
- 
+
      C     *IN55         IFEQ      *OFF
      C                   MOVEL     FSDLNO        WRKDLN
      C                   MOVEL     'FH'          WRKTYP
@@ -1230,9 +1231,9 @@
      C                   MOVE      FSCCY         WRKCCY
      C                   Z-ADD     FSAMNT        WRKPR$
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CAS003
       *****************************************************************                       CAS003
@@ -1318,23 +1319,23 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSENO        BEGSR
- 
+
      C     FSFPSE        CHAIN     SECTYDF                            55
- 
+
      C                   IF        *IN55 = *OFF
- 
+
      C     KEYBKP        KLIST
      C                   KFLD                    FSFPSE
      C                   KFLD                    FSBRCA
      C                   KFLD                    FSBKC
      C                   KFLD                    FSMKTI
      C                   KFLD                    FSBHTV
- 
+
      C*****KEYBKP        CHAIN     SENPVLL0                           55                      CAS006
      C     KEYBKP        CHAIN     SEMKVAL0                           55                      CAS006
- 
+
      C                   IF        *IN55 = *OFF
      C                   MOVEL     FSFPSE        WRKDLN
      C                   MOVEL     FSBKC         WRKBKC
@@ -1347,11 +1348,11 @@
      C                   Z-ADD     SANAMT        WRKPR$                                       CAS006
      C     100000000     MULT(H)   SAAVPR        WRKINT                                       CAS006
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1363,63 +1364,63 @@
       *  Calls: ZDATE2, AOCURRR0, ZFRPED                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTRN3        BEGSR
- 
+
       ** Hedge Linkage ID
- 
+
      C                   MOVE      FSHEDI        PHEDI
- 
+
       ** Module
- 
+
      C                   MOVEL     FSMOD         PMOD
- 
+
       ** Deal/Loan/FPO/Sec
- 
+
      C                   MOVEL     WRKDLN        PDLNO
- 
+
       ** Book Code
- 
+
      C                   MOVEL     WRKBKC        PBKC
- 
+
       ** Type
- 
+
      C                   MOVEL     WRKTYP        PDTYP
- 
+
       ** Subtype
- 
+
      C                   MOVEL     WRKSTP        PDLST
- 
+
       ** Dash
- 
+
      C     PDLST         IFNE      *BLANKS
      C                   MOVE      '-'           PDASH
      C                   ENDIF
- 
+
       ** Customer Number
- 
+
      C*****WRKCNU        IFNE      *ZEROS                                                     CSD027
      C     WRKCNU        IFNE      *BLANKS                                                    CSD027
      C                   MOVE      WRKCNU        PCNUM
      C                   ELSE
      C                   MOVE      *BLANKS       PCNUM
      C                   ENDIF
- 
+
       ** Value Date
- 
+
      C     WRKVAL        IFNE      *ZEROS
      C                   CALL      'ZDATE2'                             90
      C                   PARM                    WRKVAL
      C                   PARM      BJDFIN        WQ0002            1
      C                   PARM      *ZEROS        @3VDAT            6 0
      C                   PARM      *BLANKS       PVALD
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       PVALD
      C                   ENDIF
- 
+
       ** Maturity Date
- 
+
      C     WRKMAT        IFNE      *ZEROS
                                                                                               224116
       ** If deal has been bought out, use buy out date as maturity date                       224116
@@ -1433,13 +1434,13 @@
      C                   PARM      BJDFIN        WQ0002            1
      C                   PARM      *ZEROS        @MATD             6 0
      C                   PARM      *BLANKS       PMATD
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       PMATD
      C                   ENDIF
- 
+
       ** Currency
- 
+
      C     WRKCCY        IFNE      *BLANKS
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       W0RTN             7
@@ -1447,53 +1448,53 @@
      C                   PARM      WRKCCY        PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
      C                   ENDIF
- 
+
       ** Principal
- 
+
      C     WRKPR$        IFNE      *ZEROS
      C                   Z-ADD     WRKPR$        ZFLD15
      C                   Z-ADD     A6NBDP        ZDECS
      C                   MOVE      'J'           ZECODE
- 
+
      C                   CALLB     'ZFRPED'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM                    ZECODE
      C                   PARM      *Blanks       ZOUT22
      C                   PARM      *Blanks       ZOUT25
- 
+
       ** Retain negative sign '-' in position 21.
- 
+
      C                   MOVEL     ZOUT22        WRK21            21
      C                   MOVE      WRK21         PPRIN
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       PPRIN
      C                   ENDIF
- 
+
       ** Interest Rate
- 
+
      C     WRKINT        IFNE      *ZEROS
      C                   Z-ADD     WRKINT        ZFLD15
      C                   Z-ADD     7             ZDECS
      C                   MOVE      'L'           ZECODE
- 
+
      C                   CALLB     'ZFRPED'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM                    ZECODE
      C                   PARM      *Blanks       ZOUT22
      C                   PARM      *Blanks       ZOUT25
- 
+
       ** Strip out negative sign
- 
+
      C                   MOVEL     ZOUT22        WRK20            20
      C                   MOVE      WRK20         PINTR
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       PINTR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1506,34 +1507,34 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
- 
+
       ** Output Report Header and File Controls.
- 
+
      C                   MOVE      WRunDate      ORPTDT
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   WRITE     TOTAUD
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C     *INU7         IFEQ      *ON
      C                   WRITE     DBERROR
- 
+
      C                   ELSE
- 
+
       ** Or, if no records written, output "No Details" message.
- 
+
      C     SCOUNT        IFEQ      *ZEROS
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1545,21 +1546,21 @@
       *  Calls: SRVAL1                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSNMS        BEGSR
- 
+
       ** Send message to program's message queue
- 
+
      C     PZAPGM        IFEQ      *BLANK
      C                   MOVEL     DBPGM         PZAPGM
      C                   ENDIF
- 
+
       ** If no message file specified use default.
- 
+
      C     PZAMSGF       IFEQ      *BLANK
      C                   MOVEL     PZADFMF       PZAMSGF
      C                   ENDIF
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    PZAPGM
      C                   PARM                    PZAPGRL
@@ -1567,18 +1568,18 @@
      C                   PARM                    PZAMSGF
      C                   PARM                    PZAMSDA
      C                   PARM                    PZAMSTP
- 
+
       ** Clear all fields for default mechanism next time.
- 
+
      C                   MOVEL     *BLANK        PZAPGM
      C                   MOVEL     *BLANK        PZAPGRL
      C                   MOVEL     *BLANK        PZAMSID
      C                   MOVEL     *BLANK        PZAMSGF
      C                   MOVEL     *BLANK        PZAMSDA
      C                   MOVEL     *BLANK        PZAMSTP
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1590,24 +1591,24 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Strategy Key List.
- 
+
      C     KYHESN        KLIST
      C                   KFLD                    KBRCA
      C                   KFLD                    KPRTP
      C                   KFLD                    KHESN
- 
+
       ** Linkage Key List.
- 
+
      C     KYTRAN        KLIST
      C                   KFLD                    FSHEDI
      C                   KFLD                    HGHDIN            1
- 
+
       ** Access Local data Area (LDA) and retrieve values
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -1616,42 +1617,42 @@
      C                   MOVEL     'AS001005'    DBPGM
      C                   Z-ADD     0             DBASE
      C                   OUT       LDA
- 
+
       ** Obtain default message file.
- 
+
      C     *DTAARA       DEFINE    Y2MGFLA       PZADFMF          10
      C                   IN        PZADFMF
- 
+
       ** Get Rundate
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Check multibranch function
- 
+
      C     MBIN          IFEQ      'Y'
      C                   EVAL      *IN37 = *ON
      C                   ENDIF
- 
+
       ** Ensure Audit Spool File recorded by RCF
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       PSeq
      C                   PARM      *BLANKS       PSenty
      C                   PARM                    SFILEU
      C                   PARM      SFNUMU        PSNum
      C                   PARM      *BLANK        PSErr
- 
+
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error
- 
+
      C     PRtCd         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     '*FIRST '     DBKEY
@@ -1660,7 +1661,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Determine if switchable feature CAS003 is installed                                  CAS003
                                                                                               CAS003
      C                   CALL      'AOSARDR0'                                                 CAS003
@@ -1721,9 +1722,9 @@
      C                   PARM      BJDFIN        WQ0002                                       CAS004
      C                   PARM      *ZEROS        WEVCD                                        CAS004
      C                   PARM      *BLANKS       PEVCD                                        CAS004
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1738,26 +1739,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
- 
+
      C                   IF        WRun <> 'Y'
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here.
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   EXSR      SRAudit
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

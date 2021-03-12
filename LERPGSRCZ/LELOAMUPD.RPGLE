@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054317           Date 09Sep19               *      
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054317           Date 09Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050018           Date 05Nov18               *
@@ -72,12 +73,12 @@
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG10655R          Date 24Feb06               *
-/*    *                 BUG10604           Date 23Feb06               *
-/*    *                 CLE042             Date 06Sep05               *
-/*    *                 BUG9225            Date 16Nov05               *
-/*    *                 BUG8566            Date 02Sep05               *
-/*    *                 BUG8366            Date 30Aug05               *
-/*    *                 CLE106             Date 01Aug04               *
+      *                 BUG10604           Date 23Feb06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9225            Date 16Nov05               *
+      *                 BUG8566            Date 02Sep05               *
+      *                 BUG8366            Date 30Aug05               *
+      *                 CLE106             Date 01Aug04               *
       *                 CLE036             Date 22Sep03               *
       *                 CLE034             Date 05May03               *
       *                 CLE031             Date 03Feb03               *
@@ -104,8 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *  MD054317 - PDCL X not generated for freq based repayment     *      
+      *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *

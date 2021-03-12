@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -54,7 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -95,19 +98,19 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FLOAMS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(LOAMSDHF)
      F                                     IGNORE(LOAMSZ1F)
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(CLOANCLF)
      F                                     PREFIX(SL_)
- 
+
      FDEPTRANPD O    E           K DISK    INFSR(*PSSR)
      FDEPPOSNPD O    E           K DISK    INFSR(*PSSR)
      FDEPEVNTPD O    E           K DISK    INFSR(*PSSR)
      FDEPCASHPD O    E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -125,28 +128,28 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * E X T R A C T   F I L E S
      D/COPY DECPYSRC,DEXTFILS
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXTPERDD
- 
+
       *
       **  Loan types
      D TABSEQ          S              2  0 DIM(12) CTDATA PERRCD(1)
      D TABTYP          S             18    DIM(12) ALT(TABSEQ)
- 
- 
+
+
       * Power array
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10
- 
- 
+
+
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
      D LOANCK        E DS                  EXTNAME(CLOANCK) PREFIX(CK_)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D***W#PAYA*                3     14                                                      CGL029
@@ -172,8 +175,8 @@
      D  W#TYP                  1      1
      D  W#ASLI                 2      2
      D  W#TDES                 3     18
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -184,8 +187,8 @@
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      ILOAMSDKF
      I              RECI                        LARECI
      I              VDAT                        LAVDAT
@@ -996,8 +999,7 @@
      C                   MOVEL     'RO'          E#EVTP
       *
       * (New) Base Rate Code
-     C**********         Z-ADD     CL_NBRA       E#BRTT                                       CSD103
-     C                   MOVE      CL_NBRA       E#BRTT                                       CSD103
+     C                   Z-ADD     CL_NBRA       E#BRTT
       *
       * (New) Rate/Spread
      C                   Z-ADD     CL_NRTS       E#RTSP
@@ -1194,8 +1196,7 @@
       *
      C     LAAMTP        IFEQ      'BC'
      C                   MOVEL     'BC'          E#EVTP
-     C**********         Z-ADD     LABRTT        E#BRTT                                       CSD103
-     C                   MOVE      LABRTT        E#BRTT                                       CSD103
+     C                   Z-ADD     LABRTT        E#BRTT
      C                   END
       *
       * If the loan amendment is a spread change

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE134             Date 01Aug12               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -108,12 +110,12 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Rollover Interest Rate Fixing Prompt screen
      FLE2160DF  CF   E             WORKSTN INFDS(ScrInfo)
       *
@@ -132,12 +134,12 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -155,7 +157,7 @@
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       /COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -187,17 +189,17 @@
       *                                                                                       CLE148
      D wLoanAlpha      S              1A                                                      CLE148
      D @ERRDTA         S              2A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ALAR            S              1    DIM (6)                                            CLE148
       ** Loan master file DS parameter of LE2165
      D PLoanCLDS     E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(L0)
- 
+
       ** Incoming Message parameter of LE2165
      D PIncomingDS     DS            99
      D  PIMsgTyp               1      4
@@ -258,12 +260,12 @@
       *
       ** Externally described DS for Historic Base rate
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRun            S              1A
      D WError          S              1A
      D WWorkAll        S              1A
@@ -491,7 +493,7 @@
      C                   MOVE      POChr016      SFRLN
      C                   ENDIF
      C                   ENDIF                                                                CLE148
- 
+
      C                   ENDSL
       *
       ***************

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -46,7 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -351,8 +354,7 @@
      D WFRART          S             11  7                                                    229414
      D WFWRAT          S             11  7                                                    229414
      D WEINR           S             11  7                                                    229414
-     D*WRKBRTT**       S              2  0                                             229414 CSD103
-     D WRKBRTT         S              2A                                                      CSD103
+     D WRKBRTT         S              2  0                                                    229414
      D WCCY            S              3                                                       229414
      D WRKCBS          S              1  0                                                    229414
      D WRKNCD          S              5  0                                                    229414
@@ -1143,8 +1145,7 @@
 
      C                   WHEN      FSPRTP = 'FV'
 
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C     10000000      MULT(H)   UEINR         WRKINT
      C                   EVAL      OurDetl = 'Y'                                              229414
      C                   ELSE
@@ -1156,8 +1157,7 @@
 
      C                   WHEN      FSPRTP = 'CF'
 
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C     10000000      MULT(H)   TEINR         WRKINT
      C                   EVAL      OurDetl = 'N'                                              229414
      C                   ELSE
@@ -1171,8 +1171,7 @@
      C                   EXSR      SRGETD                                                     229414
                                                                                               229414
       ** Get Market Rate for FRA and Forward Rate for IRS if rate not set                     229414
-     C**********         IF        WRKINT = *ZEROS  AND WRKBRTT <> *ZERO               229414 CSD103
-     C                   IF        WRKINT = *ZEROS  AND WRKBRTT <> *BLANKS                    CSD103
+     C                   IF        WRKINT = *ZEROS  AND WRKBRTT <> *ZERO                      229414
      C                   IF        DTYP = 'FR'                                                229414
      C                   EXSR      SRFRAT                                                     229414
      C     10000000      MULT(H)   WFRART        WRKINT                                       229414
@@ -1368,8 +1367,7 @@
      C     SRGETD        BEGSR                                                                229414
                                                                                               229414
      C                   IF        OurDetl = 'Y'                                              229414
-     C**********         Z-ADD     UBRTT         WRKBRTT                               229414 CSD103
-     C                   MOVE      UBRTT         WRKBRTT                                      CSD103
+     C                   Z-ADD     UBRTT         WRKBRTT                                      229414
      C                   MOVEL     UCUCY         WCCY                                         229414
      C                   Z-ADD     UICBS         WRKCBS                                       229414
      C                   IF        UNICD <> *ZERO                                             229414
@@ -1379,8 +1377,7 @@
      C                   ENDIF                                                                229414
      C                   MOVEL     FSOFYC        WRKYLC                                       229414
      C                   ELSE                                                                 229414
-     C**********         Z-ADD     TBRTT         WRKBRTT                               229414 CSD103
-     C                   MOVE      TBRTT         WRKBRTT                                      CSD103
+     C                   Z-ADD     TBRTT         WRKBRTT                                      229414
      C                   MOVEL     TCUCY         WCCY                                         229414
      C                   Z-ADD     TICBS         WRKCBS                                       229414
      C                   IF        TNICD <> *ZERO                                             229414
@@ -1720,8 +1717,7 @@
 
      C                   WHEN      FSPRTP = 'FV'
 
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C     10000000      MULT(H)   UEINR         WRKINT
      C                   EVAL      OurDetl = 'Y'                                              229414
      C                   ELSE
@@ -1733,8 +1729,7 @@
 
      C                   WHEN      FSPRTP = 'CF'
 
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C     10000000      MULT(H)   TEINR         WRKINT
      C                   EVAL      OurDetl = 'N'                                              229414
      C                   ELSE
@@ -1748,8 +1743,7 @@
      C                   EXSR      SRGETD                                                     229414
                                                                                               229414
       ** Get Market Rate for FRA and Forward Rate for IRS if rate not set                     229414
-     C**********         IF        WRKINT = *ZEROS AND WRKBRTT <> *ZEROS               229414 CSD103
-     C                   IF        WRKINT = *ZEROS AND WRKBRTT <> *BLANKS                     CSD103
+     C                   IF        WRKINT = *ZEROS AND WRKBRTT <> *ZEROS                      229414
      C                   IF        DTYP = 'FR'                                                229414
      C                   EXSR      SRFRAT                                                     229414
      C     10000000      MULT(H)   WFRART        WRKINT                                       229414

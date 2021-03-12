@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -45,7 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -105,66 +108,66 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FASHGLKL4  UF   E           K DISK    INFSR(*PSSR)
      ** Midas AS Hedge linkage file by next collectn date
- 
+
      FSDHGSTL0  IF   E           K DISK    PREFIX(J) INFSR(*PSSR)
      ** Midas SD Hedge Strategy by Shortname Master File
- 
+
      FASHTRNLB  IF   E           K DISK    RENAME(ASHTRND0:ASHTRNDX)
      F                                     PREFIX(X) INFSR(*PSSR)
      ** Midas AS Hedge Transaction File Update by Hedge ID/Indicator
- 
+
      FASHTRNLE  IF   E           K DISK    INFSR(*PSSR)
      ** Midas AS Hedge Transaction File Update by Hedge ID
- 
+
      FPRICM     IF   E           K DISK    INFSR(*PSSR)
      ** Midas SE Market Prices by Security Shortname and Value Date
- 
+
      FCLOAN     IF   E           K DISK    IGNORE(CLOANZ1F) INFSR(*PSSR)
      ** Midas LE Loans File by Loan Number and Record Type
- 
+
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(B2)
       ** Midas SE Book Position Headers
      FDLFRARL4  IF   E           K DISK    INFSR(*PSSR)
       ** Midas DL FRA Rates - Ccy/BRAT/VDAT
- 
+
      FSEMKVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SE Market Values Using Net-Treasury-Prices
- 
+
      FLENPVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Revalued Customer Loans by Loan Number
- 
+
      FIRNPVAL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas IR Revalued SIRS File
- 
+
      FIRNPVBL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(IRNPVAD0:IRNPVBD0)
       ** Midas IR Revalued SIRS Using Base Rate
- 
+
      FRXNPVAL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas IR Revalued CIRS File
- 
+
      FRXNPVBL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(RXNPVAD0:RXNPVBD0)
       ** Midas IR Revalued CIRS Using Base Rate
- 
+
      FFRNPVAL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas IR Revalued FRA File
- 
+
      FFRNPVLL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FRNPVAD0:FRNPVLD0)
       ** Midas IR Revalued FRA Using Net Treasury File
- 
+
      FMMNPVLL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas MM Revalued Deals by Deal Number
- 
+
      FSDYLDRL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas Yield Rates Master File Update Index by Yield Curve
       ** ,Yield Curve Currency and Yield Int Calc Method
- 
+
      FDEALS     IF   E           K DISK    IGNORE(DEALSDFF) INFSR(*PSSR)
       ** Midas DL Deals file
      FDEALSL    IF   E           K DISK    IGNORE(DEALSDFF) INFSR(*PSSR)
@@ -176,31 +179,31 @@
      F                                     RENAME(DEALSDGF:DEALSDGX)
      F                                     PREFIX(Z)
       ** Midas DL Deals file
- 
+
      FASDLHML2  UF   E           K DISK    RENAME(ASDLHMD0:ASDLHMDX)
      F                                     PREFIX(D) INFSR(*PSSR)
       ** Midas AS Dealing Historic Market Data File
       ** by Deal number and Value date - LIVE
- 
+
      FASLEHML2  UF   E           K DISK    RENAME(ASLEHMD0:ASLEHMDX)
      F                                     PREFIX(L) INFSR(*PSSR)
       ** Midas AS Lending Historic Market Data File
       ** by Loan number and value date - LIVE
- 
+
      FASSEHML0  UF   E           K DISK    RENAME(ASSEHMD0:ASSEHMDX)
      F                                     PREFIX(S) INFSR(*PSSR)
       ** Midas AS Securities Historic Market Data File
       ** by Security shortname and Value date - LIVE
- 
+
      FASDLHMPD  UF A E             DISK
       ** Midas AS Dealing Historic Market Data File
- 
+
      FASLEHMPD  UF A E             DISK
       ** Midas AS Lending Historic Market Data File
- 
+
      FASSEHMPD  UF A E             DISK
       ** Midas AS Security Positions Hist Market Data File
- 
+
      ******************************************************************
       /EJECT
       *****************************************************************
@@ -220,26 +223,26 @@
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
       *
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRun            S              1
      D WKBase          S              1
      D KHedgeIn        S              1
@@ -259,11 +262,10 @@
      D PZAmtCo         S             15  0
      D WKCycd          S              3
      D WkEvCtDt        S              5P 0
-     D*WBRTT****       S              2  0                                                    CSD103
-     D WBRTT           S              2A                                                      CSD103
+     D WBRTT           S              2  0
      D WINFD           S              5  0
      D WFXRT           S             11  7
- 
+
       ** Parameters for ZFREQC
      D PRetCodeIn      S             10A
      D PNxtColDay      S              4A
@@ -275,7 +277,7 @@
      D PZMday          S              2  0
      D PBJDFIN         S              1A
      D PBaseDate       S              5  0
- 
+
       ** Parameters for ZCONVZ1
      D PZInAmt         S             15  0
      D PZExchR         S             13  8
@@ -285,7 +287,7 @@
      D PZDecFr         S              1  0
      D PZDecTo         S              1  0
      D P#OutA          S             15  0
- 
+
       ** Parameters for ZAINTPL
      D PZindat         S              5  0
      D PZibdat         S              5  0
@@ -293,12 +295,12 @@
      D PZinrat         S             13  9
      D PZifrat         S             13  9
      D PZibrat         S             13  9
- 
+
       ** Keyflds for Yield rates file
      D KYLDC           S              5
      D KYCCY           S              3
      D KYICM           S              1
- 
+
       ** Fields used to define Key List for Midas SE Revalued Security
       ** Positions File
      D KSEsesn         S             10A
@@ -319,30 +321,30 @@
       *  Calls: SRDLAS, SRSEAS, SRLEAS, SRINIT                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *LOVAL        SETLL     ASHGLKL4
      C                   READ      ASHGLKL4
- 
+
      C                   DOW       NOT %EOF(ASHGLKL4)
       *
      C                   IF        FSNDTA <= WkEvCtDt  AND FSNDTA <> 0
      C     FSHEDI        SETLL     ASHTRNLE
      C     FSHEDI        READE     ASHTRNLE
- 
+
      C                   DOW       NOT %EOF(ASHTRNLE)
- 
+
      C     FSMOD         CASEQ     'DL'          SRDLAS
      C     FSMOD         CASEQ     'LE'          SRLEAS
      C     FSMOD         CASEQ     'SE'          SRSEAS
      C                   ENDCS
- 
+
      C     FSHEDI        READE     ASHTRNLE
      C                   ENDDO
                                                                                               227924
      C                   IF        FSBDAT = 0                                                 227924
      C                   Z-ADD     FSNDTA        FSBDAT                                       227924
      C                   ENDIF                                                                227924
- 
+
      C                   EVAL      PZFreq = FSDFRQ
      C                   EVAL      PZCcy = BJCYCD
      C                   EVAL      PZDayNo = FSBDAT
@@ -370,10 +372,10 @@
      C                   EVAL      FSBDAT = PBASEDATE
      C                   UPDATE    ASHGLKD0
      C                   ENDIF
- 
+
      C                   READ      ASHGLKL4
      C                   ENDDO
- 
+
      C                   RETURN
      ******************************************************************
       /EJECT
@@ -423,9 +425,9 @@
      C     KASHTRN       KLIST
      C                   KFLD                    FSHEDI
      C                   KFLD                    KHedgeIn
- 
+
       ** Key List for Midas SE Revalued Security Positions File
- 
+
      C     KSENPVL       KLIST
      C                   KFLD                    KSEsesn
      C                   KFLD                    KSEbrca
@@ -445,14 +447,14 @@
      C     KFRAR2        KLIST
      C                   KFLD                    UCUCY
      C                   KFLD                    WBRTT
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -467,9 +469,9 @@
      C                   PARM      '*KEY   '     POption
      C                   PARM      BJCYCD        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -483,14 +485,14 @@
      C                   MOVE      A6NBDP        WToNbdp
      C                   MOVE      A6SPRT        WToExcr
      C                   ENDIF
- 
+
      C**********         CALL      'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
      C                   IF        PRetCode <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      *INU7 = '1'
@@ -501,14 +503,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set the event control date
- 
+
      C                   EVAL      WkEvCtDt = BJDNWD - 1
      C                   IF        BKAPDT < WkEvCtDt
      C                   EVAL      WkEvCtDt = BKAPDT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -524,7 +526,7 @@
       *                                                               *
       *****************************************************************
      C     SRDLAS        BEGSR
- 
+
      C                   EVAL      XXBRCA = *BLANKS
      C                   EVAL      XXCCY = *BLANKS
      C                   EVAL      XXBKCD = *BLANKS
@@ -546,7 +548,7 @@
      C                   CAS                     SRMMAS
      C                   ENDCS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -561,9 +563,9 @@
      C*****FSDLNO        CHAIN     MMNPVLL0                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     MMNPVLL0                                                   CLE148
- 
+
      C                   IF        %FOUND(MMNPVLL0)
- 
+
      C                   IF        MMCYCD <> BJCYCD
      C                   Z-ADD     MMURPL        WFrAmnt
      C                   MOVE      MMCYCD        WFrCcy
@@ -571,7 +573,7 @@
      C                   Z-ADD     PZAmtCo       WMMUrpl
      C                   EVAL      MMURPL = WMMUrpl
      C                   ENDIF
- 
+
      C                   Z-ADD     MMURPL        XXMVAL
       *
      C                   IF        FSDTTP = 'R'
@@ -619,9 +621,9 @@
      C                   EVAL      XXVDAT = FSNDTA
      C                   EVAL      XXCHTP = 'I'
      C                   EVAL      XXLCD = BJRDNB
- 
+
      C                   WRITE     ASDLHMD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -639,13 +641,13 @@
      C     SRRSAS        BEGSR
       *
      C                   EXSR      SRCHKHDGI
- 
+
      C                   IF        WkBase ='Y'
- 
+
      C*****FSDLNO        CHAIN     IRNPVBL0                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     IRNPVBL0                                                   CLE148
- 
+
      C                   IF        %FOUND(IRNPVBL0)
       *
      C                   IF        IRCYCD <> BJCYCD
@@ -690,16 +692,14 @@
       *
      C                   SELECT
      C                   WHEN      JFSPRTP = 'FV'
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C                   EVAL      XXMRAT = UEINR
      C                   ELSE
      C                   EVAL      XXMRAT = TEINR
      C                   ENDIF
       *
      C                   WHEN      JFSPRTP = 'CF'
-     C**********         IF        UBRTT = *ZEROS                                             CSD103
-     C                   IF        UBRTT = *BLANKS                                            CSD103
+     C                   IF        UBRTT = *ZEROS
      C                   EVAL      XXMRAT = TEINR
      C                   ELSE
      C                   EVAL      XXMRAT = UEINR
@@ -823,7 +823,7 @@
      C                   PARM                    PIPINC            1
      C                   PARM                    PIPFDT            5 0
      C                   PARM      *ZERO         PIPDF            13 9
- 
+
      C                   EVAL      XXMRAT = PIPDF
       *
      C                   IF        PIRTCD = '*ERROR '
@@ -879,13 +879,11 @@
      C                   Z-ADD     0             WFRART
       *
      C                   IF        BYSL = 'B'
-     C**********         Z-ADD     TBRTT         WBRTT                                        CSD103
-     C                   MOVE      TBRTT         WBRTT                                        CSD103
+     C                   Z-ADD     TBRTT         WBRTT
      C                   Z-ADD     TEINR         WFXRT
      C                   Z-ADD     TINFD         WINFD
      C                   ELSE
-     C**********         Z-ADD     UBRTT         WBRTT                                        CSD103
-     C                   MOVE      UBRTT         WBRTT                                        CSD103
+     C                   Z-ADD     UBRTT         WBRTT
      C                   Z-ADD     UEINR         WFXRT
      C                   Z-ADD     UINFD         WINFD
      C                   ENDIF
@@ -897,7 +895,7 @@
      C*****FSDLNO        CHAIN     FRNPVLL0                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     FRNPVLL0                                                   CLE148
- 
+
      C                   IF        %FOUND(FRNPVLL0)
       *
      C                   IF        IRCYCD <> BJCYCD
@@ -1000,9 +998,9 @@
      C                   EVAL      XXMVAL = 0
      C                   EVAL      XXMVCA = 0
      C                   EVAL      XXMRAT = 0
- 
+
      C     FSDLNO        CHAIN     LENPVLL0
- 
+
      C                   IF        %FOUND(LENPVLL0)
       *
      C                   IF        LECYCD <> BJCYCD
@@ -1094,9 +1092,9 @@
      C                   EVAL      XXMVAL = 0
      C                   EVAL      XXMVCA = 0
      C                   EVAL      XXMRAT = 0
- 
+
      C     SESKEY        CHAIN     SEMKVLL0
- 
+
      C                   IF        %FOUND(SEMKVLL0)
       *
      C                   IF        SECCY <> BJCYCD
@@ -1120,10 +1118,10 @@
       *
      C                   EVAL      XXCCY = SECCY
      C                   ENDIF
- 
+
      C     SEMKEY        SETLL     ASSEHML0
      C     SEMKEY        READE     ASSEHML0
- 
+
      C                   IF        NOT %EOF(ASSEHML0)
      C     XXMVAL        SUB       SXXMVAL       XXMVCA
      C                   ENDIF
@@ -1206,30 +1204,30 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkHdgI     BEGSR
- 
+
      C                   EVAL      KHedgeIn = 'H'
      C                   EVAL      WkBase = 'N'
- 
+
      C     KASHTRN       CHAIN     ASHTRNLB                           26
- 
+
      C                   DOW       *IN26 = *OFF AND WkBase = 'N'
- 
+
      C                   IF        XFSHTID = 'D'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      XFSMOD = 'DL'
       *
      C*****XFSDLNO       CHAIN     DEALSL                                                     CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     DEALSL                                                     CLE148
- 
+
       ** If hedged item is a deal, check spread
- 
+
      C                   IF        %FOUND(DEALS)
- 
+
       ** For Loans and Deposits records, check liquidity premium                              227695
                                                                                               227695
      C                   IF        ZRCDT = 'C'
@@ -1246,10 +1244,10 @@
      C                   EVAL      WkBase = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Store currency code, to be checked later when derivative is a cross
       ** currency swap
- 
+
      C*****XFSDLNO       CHAIN     MMNPVLL0                                                   CLE148
      C                   MOVEL     FSDLNO        FSDLNO2                                      CLE148
      C     FSDLNO2       CHAIN     MMNPVLL0                                                   CLE148
@@ -1258,81 +1256,81 @@
      C                   ELSE
      C                   EVAL      WKCycd = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   WHEN      XFSMOD = 'LE'
- 
+
      C     XFSDLNO       CHAIN     CLOAN
- 
+
       ** If hedged item is a loan, check margin
- 
+
      C                   IF        %FOUND(CLOAN)
- 
+
      C                   IF        MARG <> 0
      C                   EVAL      WkBase = 'Y'
      C                   ENDIF
- 
+
       ** Store currency code, to be checked later when derivative is a cross
       ** currency swap
- 
+
      C     XFSDLNO       CHAIN     LENPVLL0
      C                   IF        %FOUND(LENPVLL0)
      C                   EVAL      WKCycd = LECYCD
      C                   ELSE
      C                   EVAL      WKCycd = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   WHEN      XFSMOD = 'SE'
- 
+
       ** Populate key fields to be used in chaining in the book position file
- 
+
      C                   EVAL      KSEsesn = XFSFPSE
      C                   EVAL      KSEbrca = XFSBRCA
      C                   EVAL      KSEbokc = XFSBKCD
      C                   EVAL      KSEmkti = XFSMKTI
      C                   EVAL      KSEbhtv = XFSBHTV
- 
+
       ** Chain to book position file to get the Latest Average Price and the
       ** Latest Net Treasury Average Price
- 
+
      C     KSENPVL       CHAIN     BKPHD
- 
+
      C                   IF        %FOUND(BKPHD)
- 
+
      C                   DOW       (B2RECI <> 'D') AND (NOT %EOF(BKPHD))
      C     KSENPVL       READE     BKPHD
      C                   ENDDO
- 
+
       ** If the Latest Average Price is not equal to the Latest Net Treasury
       ** Average Price, use base rate file
- 
+
      C                   IF        (NOT %EOF(BKPHD)) AND (B2LAVP <> B2LAVN)
      C                   EVAL      WkBase = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Retrieve details from PF/SEMKVLPD for hedged SE book positions
       ** instead of from PF/SENPVLPD.
- 
+
      C     KSENPVL       CHAIN     SEMKVLL0
      C                   IF        %FOUND(SEMKVLL0)
      C                   EVAL      WKCycd = SECCY
      C                   ELSE
      C                   EVAL      WKCycd = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C     KASHTRN       READE     ASHTRNLB                               26
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1441,16 +1439,16 @@
       *********************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
      C                   EVAL      *INLR = '1'

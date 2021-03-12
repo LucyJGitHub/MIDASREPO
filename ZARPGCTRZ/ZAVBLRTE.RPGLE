@@ -197,7 +197,7 @@
      D WNUMAMT2        S             11P 7
      D WDBAV           S              1S 0
      D WNumBADJ        S             11P 7
-     D WNumFLOR        S             11P 7
+     D WNumFLOR        S              9P 6
      D WSign           S              1A
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)

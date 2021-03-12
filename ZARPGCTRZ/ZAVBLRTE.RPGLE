@@ -531,7 +531,7 @@
 
      C                   EVAL      WNumFLOR = 0
 
-      ** Value must be numeric not exceeding 4 int and 7 decimal places
+      ** Value must be numeric not exceeding 3 int and 6 decimal places
      C                   IF        DDBLRT = 'Y' and
      C                             DDFLOR <> *BLANKS
 
@@ -540,8 +540,8 @@
      C                   CALLB     'ZA0841'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    @@ALPH
-     C                   PARM      7             @@IDP
-     C                   PARM      4             @@IINT
+     C                   PARM      6             @@IDP
+     C                   PARM      3             @@IINT
      C                   PARM      'N'           @@MTID
      C                   PARM      *ZERO         @@ERCD
      C                   PARM      *ZERO         @@AMT
@@ -563,6 +563,19 @@
      C                   MOVE      @@ALPH        WNumFlor
      C                   IF        WSign = '-'
      C                   Z-SUB     WNumFlor      WNumFlor
+     C                   ENDIF
+
+     C                   ENDIF
+
+      ** Value must be numeric from -100 to 100
+     C                   IF        DDFLOROK <> 'N'
+
+     C                   IF        WNumFlor < -100 or
+     C                             WNumFlor >  100
+     C                   EVAL      DDFLOROK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
+     C                   EVAL      MsgIdXAr(Idx) = '5049494'
      C                   ENDIF
 
      C                   ENDIF
@@ -758,6 +771,15 @@
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
      C                   EVAL      MsgIdXAr(Idx) = '5049412'
+     C                   ENDIF
+
+      ** Cannot be 'Y' if Lockout Days is not zero
+     C                   IF        VLODY <> 0 and
+     C                             DDOPSH = 'Y'
+     C                   EVAL      DDOPSHOK = 'N'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNamXAr(Idx) = 'DDOPSH'
+     C                   EVAL      MsgIdXAr(Idx) = '5049495'
      C                   ENDIF
 
      C                   ENDIF

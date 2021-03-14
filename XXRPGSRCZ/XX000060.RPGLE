@@ -15,7 +15,7 @@
       *                                                               *
       *                                                               *
       ***(C)*Copyright*Midas-Kapiti*International*Ltd.*2002************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109C            Date 09Mar17               *
       *  Prev Amend No. LUC109             Date 25Jan17               *
@@ -664,7 +664,7 @@
      C/COPY ZSRSRC,ZDATE2Z4LE                                                                 LUC109
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

@@ -4,7 +4,7 @@
       *                                                               *
       *  FXFXDLV004  - FX Deal Validation                             *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC104  *CREATE    Date 14Apr16               *
       *                                                               *

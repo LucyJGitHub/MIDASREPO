@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420C029 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC108   *CREATE   Date 19Apr16               *
       *                                                               *

@@ -2,7 +2,7 @@
 /*                                                                   */
 /*       LUC109_020 - LUC109 - Declare variable                      */
 /*                                                                   */
-/*       (c) Finastra International Banking Systems Ltd. 2016        */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
 /*       Last Amend No. LUC109             Date 21Sep16              */
 /*                                                                   */
@@ -12,8 +12,8 @@
 /*                                                                   */
 /*********************************************************************/
              DCL        VAR(&LIBI) TYPE(*CHAR) LEN(9) VALUE('  +
-                          INTFLIB')                                   
-             DCL        VAR(&LUC109) TYPE(*CHAR) LEN(1) VALUE(' ')    
+                          INTFLIB')                                   /*LUC109*/
+             DCL        VAR(&LUC109) TYPE(*CHAR) LEN(1) VALUE(' ')    /*LUC109*/
 /*********************************************************************/
 /* End of hook LUC109_020                                            */
 /*********************************************************************/

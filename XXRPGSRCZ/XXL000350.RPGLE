@@ -1,6 +1,6 @@
      H DEBUG
      H*COPYRIGHT('(c)*Misys*International*Banking*Systems*Ltd.*2008')**                       LUC109
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')                         LUC109
+     H COPYRIGHT('(c) Finastra International Limited Ltd. 2016')                              LUC109
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Extract of Version of SDPCACPD to match xxINTFLIB')    *                       LUC109
@@ -18,7 +18,7 @@
       *  Called By: XXLC000350                                        *                       LUC109
       *                                                               *
       ***(c) Misys*International*Banking*Systems*Ltd.*2008*************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109             Date 09Sep16               *
       *  Prev Amend No. LUC013  *CREATE    Date 01May08               *
@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDPCACPD  IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DESDPCACPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(SDPCACD0:DESDPCACD0)                        LUC109
      FXXSDPCACPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(SDPCACD0:XXSDPCACD0)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      ISDPCACD0
      I              FTPFGA                      @FTPFGA
      I              FTFNIC                      @FTFNIC
@@ -103,29 +103,29 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   SDPCACPD
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVEL     @FTPFGA       FTPFGA
      C                   MOVEL     @FTFNIC       FTFNIC
      C                   MOVEL     @FTFNAA       FTFNAA
      C                   MOVEL     @FTFMAC       FTFMAC
- 
+
       * Write to Extract File
      C**********         WRITE     DESDPCACD0                                                 LUC109
      C                   WRITE     XXSDPCACD0                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   SDPCACPD
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -134,15 +134,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

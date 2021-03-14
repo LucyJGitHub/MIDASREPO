@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 259085             Date 12Jul12              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      259085             Date 12Jul12              */
 /*                      CBF002             Date 04Jul11              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -39,6 +40,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Amendment of core hook SCC2454MPS                  */
+/*                Amendment of core hook SCC2454003                  */
+/*                Amendment of core hook SCC2454MP1                  */
+/*                Amendment of core hook SCC2454MP9                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       CBF002 - BF Infrastructure: Backup and Recovery             */

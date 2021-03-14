@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420C078 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC133             Date 01Aug19               *
       *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
@@ -17,7 +17,7 @@
       *****************************************************************
       *
      C     LUC133        IFEQ      'Y'
-     C                   Z-ADD     CFSB          RUNBAL                               
+     C                   Z-ADD     CFSB          RUNBAL                         LUC133
      C                   ENDIF
       *
      C     LUC108        IFEQ      'Y'

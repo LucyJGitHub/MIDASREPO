@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024809           Date 06Nov19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD024809           Date 06Nov19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSC054             Date 23Feb12               *
@@ -54,6 +55,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Allow reactivation of active facilities.            *
+      *           Amendment of core hook LEH00233                     *
+      *           Addition of hook LUC109_004                         *
+      *           Addition of hook LUC109_005                         *
+      *           Addition of hook LUC109_022                         *
       *  MD024809 - Also execute holiday check during authorise.      *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -747,14 +754,17 @@
      C     S#FATP        IFEQ      'FR'
      C     FC_RECI       ANDEQ     'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
+     C/COPY WNCPYSRC,LUC109_004
      C     S#FATP        OREQ      'FR'                                                       CLE041
      C     AGFC_RECI     ANDEQ     'D'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041
+     C/COPY WNCPYSRC,LUC109_005
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
      C                   MOVEL     'LEF0218'     MsgIdArr(Ix)
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC109_022
       *
       * Reactivation of deleted facilities is not allowed
       *

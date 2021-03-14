@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited Ltd. 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas XX LUC109 Migration utility')
@@ -9,7 +9,7 @@
       *                                                               *
       *  Function:  This program initialises DEALSBX0 from T_GZ*      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC109   *Create   Date 19Oct16               *
       *                                                               *
@@ -33,65 +33,65 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry parameter fields
      D FrmLib          S             10
      D FrmLibDft       S             10    INZ('*LIBL')
      D ToLib           S             10
      D ToLibDft        S             10    INZ('*LIBL')
- 
+
       ** Work Variables
      D SQLString       S           5000
      D Quote           S              1    INZ('''')
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
- 
+
+
      C                   EXSR      SRMain
- 
+
       ** Termination
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -100,9 +100,9 @@
       *                                                               *
       *****************************************************************
      C     SRMain        BEGSR
- 
+
       * Build SQL script for T_GZFXDLEX --> DEALSBX0
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'insert into ' +
      C                             %trim(ToLib) +
@@ -119,9 +119,9 @@
      C                             x'7D' + ') from ' + %trim(FrmLib) +
      C                             '/T_GZFXDLEX where zone <> ' + x'7D' +
      C                             ' ' + x'7D'
- 
+
      C                   EXSR      ExecuteSQL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -153,19 +153,19 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    FrmLib
      C                   PARM                    ToLib
- 
+
      C                   IF        ToLib = *BLANKS
      C                   EVAL      ToLib = ToLibDft
      C                   ENDIF
- 
+
      C                   IF        FrmLib = *BLANKS
      C                   EVAL      FrmLib = FrmLibDft
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

@@ -14,27 +14,29 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057558           Date 18Feb21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL049  *CREATE    Date 08May06               *
+      *                 CDL049  *CREATE    Date 08May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL049 - Addition of a Reference Rate field                  *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
       ** ¦ =========================  ¦
       ** +----------------------------+
       **
- 
+
       * SD Reference Rate Tolerance File
      FSDRRATPD  IF   E             DISK    INFSR(*PSSR)
       **
@@ -60,64 +62,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(MMNASPPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZADIG           S              2  0
- 
+
      D RateIn          S             11  7
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -126,7 +128,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -134,20 +136,20 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      MsgId1 = *Blanks
      C                   Eval      PWMsgId1 = *Blanks
- 
+
       ** *------------------------------*
       ** * Validate Reference Rate      *
       ** *------------------------------*
- 
+
      C                   Eval      MM#REF = 0
       *
       **  Check it is a valid figure with 8 decimal places max.
- 
+
      C     DDRRAT        IFNE      *BLANKS
      C                   Z-ADD     8             ZADEC
      C                   Z-ADD     5             ZADIG
@@ -160,9 +162,9 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
       **  Set error code if invalid
- 
+
      C                   If        ZalignOK = 'N'
      C                   Movel     'MMA1337'     MsgId1
      C                   Else
@@ -176,7 +178,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      8             ZADEC
- 
+
      C                   MOVE      ZFIELD        DDRRAT
       *
       **  Check tolerance
@@ -205,7 +207,7 @@
       *
      C                   EndIf                                                  End Valid
      C                   EndIf                                                  End Blank
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -219,9 +221,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       *  Return Code
      C                   Parm                    RetCodeIn
@@ -237,23 +239,25 @@
       * Retrieve Reference Rate Tolerance File
      C     1             SETLL     SDRRATPD
      C                   READ      SDRRATPD                               90
- 
+
       * Record not found
      C     *IN90         IFEQ      '1'
-     C                   MOVEL     'SDRRATPD'    DBFILE                         ***************
-     C                   MOVEL     '001'         DBASE                          * DB ERROR 001*
-     C                   MOVEL     '*FIRST '     DBKEY                          ***************
-     C                   EXSR      *PSSR
+     C                   Z-ADD     0             IRATET                                     MD057558
+     C                   Z-ADD     0             IINRRT                                     MD057558
+     C**********         MOVEL     'SDRRATPD'    DBFILE                         ************MD057558
+     C**********         MOVEL     '001'         DBASE                          * DBERR 001 MD057558
+     C**********         MOVEL     '*FIRST '     DBKEY                          ************MD057558
+     C**********         EXSR      *PSSR                                                    MD057558
      C                   ENDIF
- 
- 
+
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

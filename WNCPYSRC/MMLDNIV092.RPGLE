@@ -4,7 +4,7 @@
       *                                                               *
       *  MMLDNIV092  - MM Loans/Deposits Validation                   *
       *                                                               *
-      *  (C) Copyright Finastra Banking Systems, 2016.                *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC104  *CREATE    Date 14Apr16               *
       *                                                               *

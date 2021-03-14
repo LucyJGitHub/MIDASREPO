@@ -19,7 +19,7 @@
       *             Frequency: Automatically in Close of Business     *
       *                                                               *
       ***(C)*COPYRIGHT*MKI*LIMITED*1993,*1994**************************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109CC1          Date 12Sep19               *
       *  Prev Amend No. LUC109             Date 20Sep16               *
@@ -3169,7 +3169,7 @@
       /EJECT
       ***
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016
 **  @ERR
 XX000041 UNABLE TO CONVERT AMOUNT
 SDACRCL9 RECORD NOT FOUND

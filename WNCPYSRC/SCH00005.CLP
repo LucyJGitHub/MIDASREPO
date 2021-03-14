@@ -2,7 +2,7 @@
 /*                                                                   */
 /*       SCH00005   - LUC109 - Declare variable                      */
 /*                                                                   */
-/*       (c) Finastra International Banking Systems Ltd. 2016        */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
 /*       Last Amend No. LUC109             Date 19Sep16              */
 /*                                                                   */
@@ -11,7 +11,7 @@
 /*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
 /*                                                                   */
 /*********************************************************************/
-             DCL        VAR(&LIB3) TYPE(*CHAR) LEN(10)                                   
+             DCL        VAR(&LIB3) TYPE(*CHAR) LEN(10)                                   /*LUC109*/
 /*********************************************************************/
 /* End of hook SCH00005                                              */
 /*********************************************************************/

@@ -2,7 +2,7 @@
 /*                                                                   */
 /*       SDC1797006 - LUC109 - Declare variable                      */
 /*                                                                   */
-/*       (c) Finastra International Banking Systems Ltd. 2016        */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
 /*       Last Amend No. LUC109             Date 21Sep16              */
 /*                                                                   */
@@ -11,7 +11,7 @@
 /*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
 /*                                                                   */
 /*********************************************************************/
-             DCL        VAR(&LUC109) TYPE(*CHAR) LEN(1)               
+             DCL        VAR(&LUC109) TYPE(*CHAR) LEN(1)               /*LUC109*/
 /*********************************************************************/
 /* End of hook SDC1797006                                            */
 /*********************************************************************/

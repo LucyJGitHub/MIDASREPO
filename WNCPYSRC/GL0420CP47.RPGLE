@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420CP47 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC133             Date 01Aug19               *
       *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *

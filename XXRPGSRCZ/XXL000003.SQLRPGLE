@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas XX LUC109 Migration utility')
@@ -9,7 +9,7 @@
       *                                                               *
       *  Function:  This program initialises XXINCPPD and XXFACTX0    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC109   *Create   Date 10Oct16               *
       *                                                               *
@@ -33,41 +33,41 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry parameter fields
      D FrmLib          S             10
      D ToLib           S             10
- 
+
       ** Work Variables
      D SQLString       S           5000
      D ExcFil          S             10    INZ('T_GZLDNIEX')
@@ -75,22 +75,22 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
- 
+
+
      C                   EXSR      SRMain
- 
+
       ** Termination
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -99,46 +99,46 @@
       *                                                               *
       *****************************************************************
      C     SRMain        BEGSR
- 
+
       * Build SQL script to clear files
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'delete from ' +
      C                             ToLib + '/XXFACTX0'
      C                   EXSR      ExecuteSQL
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'delete from ' +
      C                             ToLib + '/XXINCPPD'
      C                   EXSR      ExecuteSQL
- 
+
       * Build SQL script for SDFACTX0 --> XXFACTX0
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'insert into ' + ToLib +
      C                             '/XXFACTX0 select * from ' +
      C                             FrmLib + '/SDFACTX0'
      C                   EXSR      ExecuteSQL
- 
+
       * Build SQL script for GLINCPPP --> XXINCPPD
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'insert into ' + ToLib +
      C                             '/XXINCPPD select * from ' +
      C                             FrmLib + '/GLINCPPP'
      C                   EXSR      ExecuteSQL
- 
+
       * Build SQL script for Delete from XXINCPPD
- 
+
      C                   Clear                   SQLString
      C                   Eval      SQLString = 'delete from ' + ToLib +
      C                             '/XXINCPPD where IMDFN = ' + Quote +
      C                             ExcFil + Quote
      C                   EXSR      ExecuteSQL
- 
+
      C                   CALL      'XXL000001'
      C                   CALL      'XXL000002'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -170,11 +170,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    FrmLib
      C                   PARM                    ToLib
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

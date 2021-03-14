@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057237           Date 04Dec20               *
-      *  Prev Amend No. MD054702           Date 07Sep20               *
+      *  Last Amend No. MD055854           Date 15Jun20               *
+      *  Prev Amend No. MD057237           Date 04Dec20               *
+      *                 MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055854 - When deleting a batch or batch item from frontend *
+      *             the narratives in XXJENPX0 file is not deleted    *
+      *             Amend to delete corresponding rec in XXJENPX0.    *
       *  MD057237 - Journal Entry via Interface File: Batch Stuck     *
       *             in Upload Status                                  *
       *  MD054702 - Update valid indicator to 'Y' if batch header and *
@@ -282,6 +286,8 @@
      FGLJENPI2  UF   E           K DISK    INFSR(*PSSR)                                     MD042261
      F                                     COMMIT                                           MD042261
       ** Midas GL Journal Entry - Posting Date                                              MD042261
+     F/COPY WNCPYSRC,LUC110_104                                                             MD055854
+      *                                                                                     MD055854
      F/COPY WNCPYSRC,GLH00301
       *****************************************************************
       /EJECT
@@ -751,6 +757,7 @@
      C                   ENDDO                                                               BUG3500
      C                   ENDIF                                                               BUG3500
      C                   SETOFF                                       9899                   BUG3500
+     C/COPY WNCPYSRC,LUC110_105                                                             MD055854
      C/COPY WNCPYSRC,GLBITHDC03
      C                   DELETE    @BRREAG                                                    CAP084
       *                                                                                       CER001
@@ -1792,6 +1799,8 @@
      C                   EVAL      CGL182 = 'Y'                                               CGL182
      C                   ENDIF                                                                CGL182
       *                                                                                       CGL182
+     C/COPY WNCPYSRC,LUC110_106                                                             MD055854
+      *                                                                                     MD055854
      C/COPY WNCPYSRC,GLH00709
       *
      C/COPY OFCPYSRCZ,CGL135_015                                                             CGL135A

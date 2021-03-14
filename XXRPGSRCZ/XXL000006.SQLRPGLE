@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Migration MUREX fields')
@@ -9,7 +9,7 @@
       *                                                               *
       *  XXL000004 - Midas XX Migration Utility LUC109 - Murex NASP   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC109 *Create     Date 14Oct16               *
       *                                                               *

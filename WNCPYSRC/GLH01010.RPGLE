@@ -4,7 +4,7 @@
       *                                                              *
       *  GLH01010 - Validate International Bank Account Number       *
       *                                                              *
-      *   (c) Finastra International Banking Systems Ltd. 2014       *
+      *  (c) Finastra International Limited 2014                     *
       *                                                              *
       *   Last Amend No. LUC103  *CREATE    Date 17Dec14             *
       *                                                              *

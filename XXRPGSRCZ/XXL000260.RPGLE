@@ -1,6 +1,6 @@
      H DEBUG
      H*COPYRIGHT('(c)*Misys*International*Banking*Systems*Ltd.*2008')**                       LUC109
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')                         LUC109
+     H COPYRIGHT('(c) Finastra International Limited Ltd. 2016')                              LUC109
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Extract of Version of MCLONCL to match xxINTFLIB')     *                       LUC109
@@ -18,7 +18,7 @@
       *  Called By: XXLC000260                                        *                       LUC109
       *                                                               *
       ***(c) Misys*International*Banking*Systems*Ltd.*2008*************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109             Date 09Sep16               *
       *  Prev Amend No. LUC013  *CREATE    Date 01May08               *
@@ -53,13 +53,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMCLONCL   IF   E           K DISK    INFSR(*PSSR) COMMIT
      F***DEMCLONLPPO    E           K DISK    INFSR(*PSSR) COMMIT                             LUC109
      F**********                           RENAME(CLOANCLF:DECLOANCLF)                        LUC109
      FXXMCLONLPPO    E           K DISK    INFSR(*PSSR) COMMIT                                LUC109
      F                                     RENAME(CLOANCLF:XXCLOANCLF)                        LUC109
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,17 +78,17 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      ICLOANCLF
      I              OSDA                        @OSDA
      I              OMDA                        @OMDA
@@ -117,10 +117,10 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       * Read first record from MidasPlus File
      C                   READ(E)   MCLONCL
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   IF        %SUBST(@OSDA:18:1) <> ' '
@@ -129,21 +129,21 @@
      C                   ELSE
      C                   MOVEL     @OSDA         OSDA
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@OMDA:18:1) <> ' '
      C                   EVAL      OMDA = %SUBST(@OMDA:1:6) + %SUBST(@OMDA:7:4)
      C                                                      + %SUBST(@OMDA:17:2)
      C                   ELSE
      C                   MOVEL     @OMDA         OMDA
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@RONS:18:1) <> ' '
      C                   EVAL      RONS = %SUBST(@RONS:1:6) + %SUBST(@RONS:7:4)
      C                                                      + %SUBST(@RONS:17:2)
      C                   ELSE
      C                   MOVEL     @RONS         RONS
      C                   ENDIF
- 
+
      C                   IF        %SUBST(@PONS:18:1) <> ' '
      C                   EVAL      PONS = %SUBST(@PONS:1:6) + %SUBST(@PONS:7:4)
      C                                                      + %SUBST(@PONS:17:2)
@@ -164,19 +164,19 @@
      C                   MOVEL     @PTFC         PTFC                                         LUC109
      C                   MOVEL     @TOLN         TOLN                                         LUC109
      C                   MOVEL     @OLNRF        OLNRF                                        LUC109
- 
+
       * Write to Extract File
      C**********         WRITE     DECLOANCLF                                                 LUC109
      C                   WRITE     XXCLOANCLF                                                 LUC109
      C                   COMMIT
- 
+
       * Read next record from MidasPlus File
      C                   READ(E)   MCLONCL
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -185,15 +185,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

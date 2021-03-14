@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited Ltd. 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Match xxINTFLIB for HISTSHP FBM')                      *
@@ -14,7 +14,7 @@
       *                                                               *
       *  Called By: XXLC000420                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC109             Date 12Sep16               *
       *                                                               *
@@ -47,7 +47,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FHISTSHP   IF   E           K DISK    INFSR(*PSSR) COMMIT
      FXXHISTSHP O    E           K DISK    INFSR(*PSSR) COMMIT
      F                                     RENAME(HISTSHPF:XXHISTSHPF)
@@ -69,23 +69,23 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
       *
       ** +-----------------------------------------------------------------+
      D @RUN            S              1
- 
+
      IHISTSHPF
      I              CNUM                        @CNUM
      I              LNRF                        @LNRF
      I              FCUS                        @FCUS
      I              ROLN                        @ROLN
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************
@@ -95,29 +95,29 @@
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
       *
       * Read first record from FBM HISTSHP file
       *                            -------
      C                   READ(E)   HISTSHP
- 
+
      C                   DOW       NOT %EOF
       * Convert Data fields
      C                   MOVE      @CNUM         CNUM
      C                   MOVE      @LNRF         LNRF
      C                   MOVE      @FCUS         FCUS
      C                   MOVE      @ROLN         ROLN
- 
+
       * Write to Extract File
      C                   WRITE     XXHISTSHPF
      C                   COMMIT
- 
+
      C                   READ(E)   HISTSHP
      C                   ENDDO
- 
+
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -126,15 +126,15 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *
       /EJECT
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

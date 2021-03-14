@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420OOP1 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. MD055823           Date 27May20               *
       *  Prev Amend No. MD054505           Date 30Sept19              *
@@ -30,10 +30,10 @@
       * OMITEND
 1624 OGL0420P2  E    60 84                    03                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O         OR    60 84                    03                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O037
 1625 O***********         36   CNA1      35                               S01194
 1625 O***********         36   BCCNA1    35                        S01194 LN0012
@@ -43,10 +43,10 @@
 1627 O********E** 04   61                                       S01091    S01117
 1627 O          E    61 84                    04                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    61 84                    04                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O038
 1628 O***********            36CNA2      35                               S01194
 1628 O***********            36BCCNA2    35                        S01194 LN0012
@@ -55,10 +55,10 @@
 1629 O********E** 05   61                                       S01091    S01117
 1629 O          E    61 84                    05                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    61 84                    05                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O039
 1630 O***********            36CNA3      35                               S01194
 1630 O***********            36BCCNA3    35                        S01194 LN0012
@@ -67,10 +67,10 @@
 1631 O********E** 06   61                                       S01091    S01117
 1631 O          E    61 84                    06                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    61 84                    06                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O040
 1632 O***********            36CNA4      35                               S01194
 1632 O***********            36BCCNA4    35                        S01194 LN0012
@@ -84,10 +84,10 @@
 1635 O********E** 07   60                                       S01091    S01117
 1635 O          E    60 84                    07                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84                    07                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O041
 1636 O* ETC.
 1637 O*****                              49 'OUR REF'                     S01117
@@ -127,10 +127,10 @@
 1648 O********E** 10   60                                       S01091    S01117
 1648 O          E    60 84                    10                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84                    10                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O043
 1649 O                                           10 'ACCOUNT'
 1650 O                       ANAM                33
@@ -146,7 +146,7 @@
 1656 O                       STPA          3    108
      O/COPY WNCPYSRC,GLH00439
      O          E    60 84 05                 11                                CFT004
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       RIBAN               50                             CFT004
 1657 O*       H   13   60                                                 S01091
 1657 O********E** 13   60                                       S01091    S01117
@@ -156,10 +156,10 @@
      O*                                                                   S01408
 1657 O          E    60 84                    13                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84                    13                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O044
 1658 O                                            7 'POSTING'
 1659 O                                           16 'VALUE'
@@ -178,10 +178,10 @@
      O/COPY WNCPYSRC,GL0420O070
 1665 O          E    60 84                    14                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84                    14                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O045
 1666 O                                            6 'DATE'                      E10600
 1667 O                                           16 'DATE'                      E10600
@@ -191,10 +191,10 @@
      O/COPY WNCPYSRC,GL0420O071
 1669 O          E    60 84                    16                                S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84                    16                                           AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O046
 1670 O                                           60 'B/F'
      O*                                                                   S01408
@@ -211,10 +211,10 @@
      O**                                                                  CEU013
      O          E    60 84 10            1                                      CEU013
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    60 84 10            1                                                 AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBF              128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -231,11 +231,11 @@
 1678 O*******AND*      04N12                                    S01110    S01117
 1678 O         AND   04N12 84                                                   S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 51N34            1                                                 AR1014455
      O         AND   04N12 84                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1679 O                       PSTDA                8
 1680 O                     69VALDA               18
 1681 O                                           32 'DR'
@@ -249,11 +249,11 @@
 1687 O*******AND*     N04                                                 S01117
 1687 O         AND  N04 84                                                      S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 51N34            1                                                 AR1014455
      O         AND  N04 84                                                                 AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O048
 1688 O                       PSTDA                8
 1689 O                     69VALDA               18
@@ -277,11 +277,11 @@
      O          E    41 51N34DET         1                                      CEU013
      O         AND  N04 84 78                                                   CEU013
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 51N34            1                                                 AR1014455
      O         AND  N04 84 78                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               33                             CEU013
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '      CEU013
@@ -290,11 +290,11 @@
      O          E    41 51N34DET         1                                      216937
      O         AND  N04 84 53                                                   216937
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 51N34            1                                                 AR1014455
      O         AND  N04 84 53                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              70                             216937
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP13                                           S01408
@@ -306,11 +306,11 @@
 1703 O*******AND*     N52N34                                              S01117
 1703 O         AND  N52N34 84                                                   S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    L1 41 49            0  0                                              AR1014455
      O         AND  N52N34 84                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O049
 1704 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'
 1705 O                     71PSTBAL             127 '  ,   ,   ,   , 0 . CR'
@@ -329,11 +329,11 @@
 1713 O*      OR           41 52
 1714 O*      AND      N34
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 45               1                                                 AR1014455
      O         AND  N34N33 84                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1715 O                                           60 'C/F'
      O/COPY WNCPYSRC,GL0420O157
 1716 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'
@@ -347,11 +347,11 @@
      O         AND  N34 84                                                      CEU013
      O         AND  N33 10                                                      CEU013
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 45 84            1                                                 AR1014455
      O         AND  N34N33 10                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -366,11 +366,11 @@
 1714 O         AND  N34 84                                                      S01117
      O         AND  N33                                                         S01377
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR       41 52            1                                                 AR1014455
      O         AND  N34N33 84                                                              AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O051
 1715 O                                           60 'C/F'                       S01091
 1716 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'     S01091
@@ -383,7 +383,7 @@
      O          E       41 52TOT         1                                      CEU013
      O         AND  N34 84                                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -395,22 +395,22 @@
      O          E       41 52TOT         1                                      216006
      O         AND  N34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND  N34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND  N34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND  N34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O**                                                                  216006
      O/COPY WNCPYSRC,GL0420O036
@@ -422,11 +422,11 @@
 1724 O*******AND*     N34                                                 S01117
 1724 O         AND  N34 84                                                      S01117
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR    41 45               1  1                                              AR1014455
      O         AND  N34 84                                                                 AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O052
 1725 O                                          116 '- CONTD'
      O/COPY WNCPYSRC,GL0420OO12                                           S01408
@@ -434,10 +434,10 @@
      O          E            ERPT2       1                                                    239641
      O         AND  N33                                                         S01377
      O         AND   27                                                         CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O         OR   N33                  1                                                 AR1014455
      O         AND  N27NKL                                                                 AR1014455
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O053
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
@@ -448,38 +448,38 @@
      OGL0420PR  E    60 84                    01                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       FICHE               16                             CGL046
       *                                                                   CGL046
      OGL0420PR  E    60 84                    03                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                  36   @WCNA1              35                             CGL046
      O                  35                       71 'DEMAND STATEMENT'          CGL046
       *       H   04   61                                                 CGL046
      O          E    61 84                    04                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                     36@WCNA2              35                             CGL046
       *       H   05   61                                                 CGL046
      O          E    61 84                    05                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                     36@WCNA3              35                             CGL046
       *       H   06   61                                                 CGL046
      O          E    61 84                    06                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                     36@WCNA4              35                             CGL046
       *                                                                   CGL046
      O          E    60 84                    07                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
       * ETC.                                                              CGL046
      O                                           45 'OUR REF'                   CGL046
      O               58      BRCA                50                             CGL046
@@ -497,13 +497,13 @@
      O          E    60 84                    08                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       PAGE2         3    128                             CGL046
       *                                                                   CGL046
      O          E    60 84                    10                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           10 'ACCOUNT'                   CGL046
      O                       ANAM                33                             CGL046
      O                                           48 'CURRENCY'                  CGL046
@@ -516,7 +516,7 @@
      O          E    60 84                    13                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                            7 'POSTING'                   CGL046
      O                                           16 'VALUE'                     CGL046
      O                                           27 'CHEQUE'                    CGL046
@@ -527,14 +527,14 @@
      O          E    60 84                    14                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                            6 'DATE'                      CGL046
      O                                           16 'DATE'                      CGL046
      O                                           25 'NO'                        CGL046
      O          E    60 84                    16                                CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           60 'B/F'                       CGL046
       *                                                                   CGL046
      O                       LSTDA                8                             CGL046
@@ -547,7 +547,7 @@
      O          E    60 84 10            1                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                          105 '('                         CGL046
      O                     KAEUPBF              128 '   ,   ,   ,   , 0 CR)'    CGL046
      O                     KBEUPBF              128 '  ,   ,   ,   , 0 . CR)'   CGL046
@@ -559,7 +559,7 @@
      O         AND   04N12 84                                                   CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       PSTDA                8                             CGL046
      O                     69VALDA               18                             CGL046
      O                                           32 'DR'                        CGL046
@@ -571,7 +571,7 @@
      O         AND  N04 84                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       PSTDA                8                             CGL046
      O                     69VALDA               18                             CGL046
       *                                                                   CGL046
@@ -590,7 +590,7 @@
      O         AND  N04 84 78                                                   CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               33                             CGL046
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '       CGL046
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '      CGL046
@@ -600,7 +600,7 @@
      O         AND  N04 84 53                                                   CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              70                             CGL046
       *                                                                   CGL046
       **   END OF POSTING DATE ONLY                                       CGL046
@@ -608,7 +608,7 @@
      O         AND  N52N34 84                                                   CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'     CGL046
      O                     71PSTBAL             127 '  ,   ,   ,   , 0 . CR'    CGL046
      O                     72PSTBAL             127 ' ,   ,   ,   , 0 .  CR'    CGL046
@@ -622,7 +622,7 @@
      O         AND  N33                                                         CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           60 'C/F'                       CGL046
      O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'     CGL046
      O                     71PSTBAL             127 '  ,   ,   ,   , 0 . CR'    CGL046
@@ -636,7 +636,7 @@
      O         AND   27                                                         CGL046
       * Can only write if file is OPEN                                                      BG12511A
      O         AND   KL                                                                     BG12511A
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                          105 '('                         CGL046
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CGL046
      O                     KBEUPBAL             128 '  ,   ,   ,   , 0 . CR)'   CGL046
@@ -649,7 +649,7 @@
      O         AND  N33                                                         CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           60 'C/F'                       CGL046
      O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'     CGL046
      O                     71PSTBAL             127 '  ,   ,   ,   , 0 . CR'    CGL046
@@ -662,7 +662,7 @@
      O         AND  N33 10                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                          105 '('                         CGL046
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CGL046
      O                     KBEUPBAL             128 '  ,   ,   ,   , 0 . CR)'   CGL046
@@ -675,28 +675,28 @@
      O         AND  N33 82                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             CGL046
      O          E       41 52TOT         1                                      CGL046
      O         AND  N34 84                                                      CGL046
      O         AND  N33 82                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             CGL046
      O          E       41 52TOT         1                                      CGL046
      O         AND  N34 84                                                      CGL046
      O         AND  N33 82                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             CGL046
      O          E       41 52TOT         1                                      CGL046
      O         AND  N34 84                                                      CGL046
      O         AND  N33 82                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             CGL046
       *                                                                   CGL046
       *    END OF PAGE ONLY                                               CGL046
@@ -705,13 +705,13 @@
      O         AND  N34 84                                                      CGL046
      O*******AND      N27 20                                              CGL046            BG12511A
      O         AND  N27 KL                                                      CGL046            BG
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                          116 '- CONTD'                   CGL046
      O          E            ERPT2       1    03                                CGL046
      O         AND  N33                                                         CGL046
      O*******AND      N27 20                                                          CGL046 BG12511
      O         AND  N27 KL                                                                   BG12511
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           66 '*** END OF REPORT '        CGL046
      O               58                          77 'FOR BRANCH '               CGL046
      O               58      BRCASV              80                             CGL046
@@ -729,11 +729,11 @@
 1624 O*L0420P3E   03   62                                                 S01146
 1624 O*L0420P3E** 01   62                                          S01146 S01117
 1624 OGL0420P3  E    62 84                    01                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       FICHE               16                             S01146
      O********E** 03   62                                          S01146 S01117
      O          E    62 84                    03                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O003
 1730 O***********         36   CNA1      35                               S01194
      O/COPY WNCPYSRC,GL0420O004
@@ -743,7 +743,7 @@
 1732 O*       H   04   63                                                 S01091
 1732 O********E** 04   63                                       S01091    S01117
 1732 O          E    63 84                    04                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O005
 1733 O***********            36CNA2      35                               S01194
      O/COPY WNCPYSRC,GL0420O006
@@ -753,7 +753,7 @@
 1734 O*       H   05   63                                                 S01091
 1734 O********E** 05   63                                       S01091    S01117
 1734 O          E    63 84                    05                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O007
 1735 O***********            36CNA3      35                               S01194
      O/COPY WNCPYSRC,GL0420O008
@@ -762,7 +762,7 @@
 1736 O*       H   06   63                                                 S01091
 1736 O********E** 06   63                                       S01091    S01117
 1736 O          E    63 84                    06                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O009
 1737 O***********            36CNA4      35                               S01194
      O/COPY WNCPYSRC,GL0420O010
@@ -771,7 +771,7 @@
 1738 O*       H   07   62                                                 S01091
 1738 O********E** 07   62                                       S01091    S01117
 1738 O          E    62 84                    07                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O011
      O               58      BRCA                50                             S01117
      O               58                          51 '-'                         S01117
@@ -813,7 +813,7 @@
 1749 O********E** 10   62                                       S01091    S01117
      **C*PY*WN*PY*RC*GL0420O016                                           S01408
 1749 O          E    62 84                    10                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O017
 1750 O                       ANAM                33
      O/COPY WNCPYSRC,GLH00370
@@ -829,7 +829,7 @@
 1754 O*       H   16   62                                                 S01091
 1754 O********E** 16   62                                       S01091    S01117
 1754 O          E    62 84                    16                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O018
 1755 O                                           60 'B/F'
      O/COPY WNCPYSRC,GL0420O019
@@ -845,7 +845,7 @@
      O/COPY WNCPYSRC,GL0420O080
      O**                                                                  CEU013
      O          E    62 84 10                 17                                CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBF              128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -863,7 +863,7 @@
      O*******AND*     N12                                       S01110    S01117
      O/COPY WNCPYSRC,GL0420O022
      O         AND  N12 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O023
 1763 O                       PSTDA                8
      O/COPY WNCPYSRC,GL0420O024
@@ -880,7 +880,7 @@
 1770 O          E    51 42N04DET         1                                      S01091
      O/COPY WNCPYSRC,GL0420O025
      O         AND   84                                                         S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O118
 1771 O                       PSTDA                8
      O/COPY WNCPYSRC,GL0420O026
@@ -909,7 +909,7 @@
      O*                                                                   CEU013
      O          E    51 42N04DET         1                                      CEU013
      O         AND   84 78                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               33                             CEU013
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '      CEU013
@@ -918,7 +918,7 @@
      O*                                                                   216937
      O          E    51 42N04DET         1                                      216937
      O         AND   84 53                                                      216937
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              70                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -934,7 +934,7 @@
      **C*PY*WN*PY*RC*GL0420O026                                           S01408
      O/COPY WNCPYSRC,GL0420OY26                                           S01408
 1786 O         AND  N52 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      **C*PY*WN*PY*RC*GL0420O027                                           S01408
      O/COPY WNCPYSRC,GL0420O060                                           S01408
 1787 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'
@@ -952,7 +952,7 @@
      **C*PY*WN*PY*RC*GL0420O030                                           S01408
      O/COPY WNCPYSRC,GL0420O028                                           S01408
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1794 O*       T 1         42 45                                           S01091
 1795 O*      OR           42 52                                           S01091
      O/COPY WNCPYSRC,GL0420OX61                                           S01408
@@ -967,7 +967,7 @@
      O**                                                                  CEU013
      O          E    84 42 45ENDPG       1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -984,7 +984,7 @@
      **C*PY*WN*PY*RC*GL0420O032                                           S01408
      O/COPY WNCPYSRC,GL0420O030                                           S01408
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O*C*PY*WN*PY*RC*GL0420O033                                           S01408
      O/COPY WNCPYSRC,GL0420O120
 1796 O                                           60 'C/F'                       S01091
@@ -998,7 +998,7 @@
      O**                                                                  CEU013
      O          E    84 42 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1009,19 +1009,19 @@
      O*                                                                   216006
      O          E    84 42 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E    84 42 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E    84 42 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E    84 42 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O**                                                                  CEU013
      O*C*PY*WN*PY*RC*GL0420O034                                           S01408
@@ -1032,7 +1032,7 @@
 1804 O******  E 1         42 45                                    S01091 E10600
 1804 O********E*1         42 45ENDPG                            E10600    S01117
 1804 O          E    84 42 45ENDPG       1                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O032
 1805 O                                          116 '- CONTD'
      O*                                                                   S01408
@@ -1041,7 +1041,7 @@
      O********E*1 03           ERPT3                                                   S01117 239641
      O          E            ERPT3       1                                                    239641
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
      O               58      BRCASV              80                             S01117
@@ -1063,12 +1063,12 @@
 1624 O*L0420P4E** 01   64                                          S01146 S01117
      O/COPY WNCPYSRC,GL0420O035
 1810 OGL0420P4  E    64 84                    01                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       FICHE               16                             S01146
      O/COPY WNCPYSRC,GL0420O076
      O********E** 03   64                                          S01146 S01117
      O          E    64 84                    03                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1811 O*****                              31 '-   -    -'                  S01117
 1812 O*****                    CNUM      21                               S01117
 1813 O*****                    CCY       25                               S01117
@@ -1094,14 +1094,14 @@
 1818 O*       H   04   65                                                 S01091
 1818 O********E** 04   65                                       S01091    S01117
 1818 O          E    65 84                    04                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1819 O***********            36CNA1      50                               S01194
 1819 O***********            36BCCNA1    50                         S01194BHF093
 1819 O                     36@WCNA1              50                             BHF093
 1820 O*       H   05   65                                                 S01091
 1820 O********E** 05   65                                       S01091    S01117
 1820 O          E    65 84                    05                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1821 O***********            36CNA2      50                               S01194
 1821 O***********            36BCCNA2    50                         S01194BHF093
 1821 O                     36@WCNA2              50                             BHF093
@@ -1109,14 +1109,14 @@
 1822 O*       H   06   65                                                 S01091
 1822 O********E** 06   65                                       S01091    S01117
 1822 O          E    65 84                    06                                S01117
-     O         AND  N79
+     O         AND  N79                                                           LUC108
 1823 O***********            36CNA3      50                               S01194
 1823 O***********            36BCCNA3    50                         S01194BHF093
 1823 O                     36@WCNA3              50                             BHF093
 1824 O*       H   07   65                                                 S01091
 1824 O********E** 07   65                                       S01091    S01117
 1824 O          E    65 84                    07                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1825 O***********            36CNA4      50                               S01194
 1825 O***********            36BCCNA4    50                         S01194BHF093
 1825 O                     36@WCNA4              50                             BHF093
@@ -1126,9 +1126,9 @@
 1826 O********E** 07   64 36                                    S01125    S01117
 1827 O*******OR**      64N36                                    S01125    S01117
 1826 O          E    64 36 84                 08                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1827 O         OR    64N36 84                                                   S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1828 O***********                        68 'BRANCH -'                    S01194
 1828 O                  58                       68 'BRANCH -'                  S01194
 1829 O***********              BRNM      99                               S01194
@@ -1142,7 +1142,7 @@
 1832 O*       H   10   64                                                 S01091
 1832 O********E** 10   64                                       S01091    S01117
 1832 O          E    64 84                    10                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O/COPY WNCPYSRC,GLH00371
 1833 O                                           20 'ACCOUNT'
 1834 O                       ANAM                43
@@ -1161,7 +1161,7 @@
 1841 O*       H   13   64                                                 S01091
 1841 O********E** 13   64                                       S01091    S01117
 1841 O          E    64 84                    13                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O
 1842 O                                           21 'DATE'
 1843 O                                           44 'NARRATIVE'
@@ -1172,7 +1172,7 @@
 1846 O*       H   16   64                                                 S01091
 1846 O********E** 16   64                                       S01091    S01117
 1846 O          E    64 84                    16                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O/COPY WNCPYSRC,GL0420O077
 1847 O                                           55 'B/F'
 1848 O                       LSTDA               23
@@ -1185,7 +1185,7 @@
      O/COPY WNCPYSRC,GL0420O083
      O*                                                                   CEU013
      O          E    64 84 10                 17                                CEU013
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBF              100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1206,7 +1206,7 @@
 1855 O          E    43 51 04DET         1                                      S01091
      O*******AND*     N12                                       S01110    S01117
      O         AND  N12 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1856 O                       PSTDA               23
 1857 O                                           27 'DR'
 1858 O                     22                    27 'CR'
@@ -1217,7 +1217,7 @@
 1862 O***     D 1      43 51N04                                           S01091
 1862 O          E    43 51N04DET         1                                      S01091
      O         AND   84                                                         S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1863 O                       PSTDA               23
 1864 O                       PNAR                55
      O/COPY WNCPYSRC,GL0420O147
@@ -1232,7 +1232,7 @@
      O*                                                                   CEU013
      O          E    43 51N04DET         1                                      CEU013
      O         AND   84 78                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       ROCCY               28                             CEU013
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '      CEU013
@@ -1241,7 +1241,7 @@
      O*                                                                   216937
      O          E    43 51N04DET         1                                      216937
      O         AND   84 53                                                      216937
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       W#ORIG              65                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -1253,7 +1253,7 @@
 1873 O          E    L1 43 49BAL         0  0                                   S01091
 1874 O*******AND*     N52                                                 S01117
 1874 O         AND  N52 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O161
 1875 O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'
 1876 O                     71PSTBAL             100 '  ,   ,   ,   , 0 . CR'
@@ -1267,7 +1267,7 @@
 1882 O          E       43 45ENDPG       1                                      S01091
 1874 O         AND   84                                                         S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1882 O*       T 1         43 45                                           S01091
 1883 O*      OR           43 52
 1884 O                                           55 'C/F'
@@ -1283,7 +1283,7 @@
      O          E       43 45ENDPG       1                                      CEU013
      O         AND   84                                                         CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1302,7 +1302,7 @@
 1883 O********E*1         43 52TOT                              S01091    S01117
 1883 O          E    84 43 52TOT         1                                      S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1884 O                                           55 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O165
 1885 O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'     S01091
@@ -1315,7 +1315,7 @@
      O*                                                                   CEU013
      O          E    84 43 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       BKEURO              60                             156327
      O                                           77 '('                         156327
      O                     KAEUPBAL             100 '   ,   ,   ,   , 0 CR)'    156327
@@ -1326,19 +1326,19 @@
      O*                                                                   216006
      O          E    84 43 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E    84 43 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E    84 43 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E    84 43 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O/COPY WNCPYSRC,GL0420O103
      O**********                         78 '('                    CEU013*156327
@@ -1353,7 +1353,7 @@
 1899 O*       T 1         43 45                                           S01091
 1899 O********E*1         43 45ENDPG                            S01091    S01117
 1899 O          E    84 43 45ENDPG       1                                      S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                                           85 '- CONTD'
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP21                                           S01408
@@ -1361,7 +1361,7 @@
      O********E*1 03           ERPT4                                                   S01117 239641
      O          E            ERPT4       1                                                    239641
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
      O               58      BRCASV              80                             S01117
@@ -1379,11 +1379,11 @@
 1624 O*L0420P5E** 01   66                                          S01146 S01117
      O/COPY WNCPYSRC,GL0420O145
 1905 OGL0420P5  E    66 84                    01                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       FICHE               16                             S01146
      O********E** 02   66                                          S01146 S01117
      O          E    66 84                    02                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1906 O*****                              31 '-   -    -'                  S01117
 1907 O*****                    CNUM      21                               S01117
 1908 O*****                    CCY       25                               S01117
@@ -1409,14 +1409,14 @@
 1913 O*       H   04   67                                                 S01091
 1913 O********E** 04   67                                       S01091    S01117
 1913 O          E    67 84                    04                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1914 O***********            36CNA1      50                               S01194
 1914 O***********            36BCCNA1    50                         S01194BHF093
 1914 O                     36@WCNA1              50                             BHF093
 1915 O*       H   05   67                                                 S01091
 1915 O********E** 05   67                                       S01091    S01117
 1915 O          E    67 84                    05                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1916 O***********            36CNA2      50                               S01194
 1916 O***********            36BCCNA2    50                         S01194BHF093
 1916 O                     36@WCNA2              50                             BHF093
@@ -1424,14 +1424,14 @@
 1917 O*       H   06   67                                                 S01091
 1917 O********E** 06   67                                       S01091    S01117
 1917 O          E    67 84                    06                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1918 O***********            36CNA3      50                               S01194
 1918 O***********            36BCCNA3    50                         S01194BHF093
 1918 O                     36@WCNA3              50                             BHF093
 1919 O*       H   07   67                                                 S01091
 1919 O********E** 07   67                                       S01091    S01117
 1919 O          E    67 84                    07                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1920 O***********            36CNA4      50                               S01194
 1920 O***********            36BCCNA4    50                         S01194BHF093
 1920 O                     36@WCNA4              50                             BHF093
@@ -1441,9 +1441,9 @@
 1921 O********E** 07   66 36                                    S01125    S01117
 1922 O*******OR**      66N36                                    S01125    S01117
 1921 O          E    66 36 84                 07                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
 1922 O         OR    66N36 84                                                   S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1923 O***********                        68 'BRANCH -'                    S01194
 1923 O                  58                       68 'BRANCH -'                  S01194
 1924 O***********              BRNM      99                               S01194
@@ -1456,7 +1456,7 @@
 1927 O*       H   10   66                                                 S01091
 1927 O********E** 10   66                                       S01091    S01117
 1927 O          E    66 84                    10                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GLH00372
 1928 O                       ANAM                43
      O/COPY WNCPYSRC,GL0420O135
@@ -1470,7 +1470,7 @@
 1932 O*       H   16   66                                                 S01091
 1932 O********E** 16   66                                       S01091    S01117
 1932 O          E    66 84                    16                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O124
 1933 O                                           55 'B/F'
 1934 O                       LSTDA               23
@@ -1483,7 +1483,7 @@
      O/COPY WNCPYSRC,GL0420O086
      O*                                                                   CEU013
      O          E    66 84 10                 17                                CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           78 '('                         CEU013
      O                     KAEUPBF              101 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1498,7 +1498,7 @@
 1941 O          E    44 51 04DET         1                                      S01091
      O*******AND*     N12                                       S01110    S01117
      O         AND  N12 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1942 O                       PSTDA               23
 1943 O                                           27 'DR'
 1944 O                     22                    27 'CR'
@@ -1509,7 +1509,7 @@
 1948 O***     D 1      44 51N04                                           S01091
 1948 O          E    44 51N04DET         1                                      S01091
 1960 O         AND   84                                                         S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1949 O                       PSTDA               23
 1950 O                       PNAR                55
      O/COPY WNCPYSRC,GL0420O149
@@ -1524,7 +1524,7 @@
      O*                                                                   CEU013
      O          E    44 51N04DET         1                                      CEU013
      O         AND   84 78                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               28                             CEU013
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '      CEU013
@@ -1533,7 +1533,7 @@
      O*                                                                   216937
      O          E    44 51N04DET         1                                      216937
      O         AND   84 53                                                      216937
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              65                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -1545,7 +1545,7 @@
 1959 O          E    L1 44 49BAL         0  0                                   S01091
 1960 O*******AND*     N52                                                 S01117
 1960 O         AND  N52 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O168
 1961 O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'
 1962 O                     71PSTBAL             100 '  ,   ,   ,   , 0 . CR'
@@ -1558,7 +1558,7 @@
 1968 O********E*1         44 45ENDPG                            S01091    S01117
 1968 O          E    84 44 45ENDPG       1                                      S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1968 O*       T 1         44 45                                           S01091
 1969 O*      OR           44 52
 1970 O                                           55 'C/F'
@@ -1572,7 +1572,7 @@
      O*                                                                   CEU013
      O          E    84 44 45ENDPG       1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           78 '('                         CEU013
      O                     KAEUPBAL             101 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1585,7 +1585,7 @@
 1969 O********E*1         44 52TOT                              S01091    S01117
 1969 O          E    84 44 52TOT         1                                      S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1970 O                                           55 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O172
 1971 O                     70PSTBAL             100 '   ,   ,   ,   , 0 CR'     S01091
@@ -1597,7 +1597,7 @@
      O*                                                                   CEU013
      O          E    84 44 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           78 '('                         CEU013
      O                     KAEUPBAL             101 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1608,19 +1608,19 @@
      O*                                                                   216006
      O          E    84 44 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E    84 44 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E    84 44 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E    84 44 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O/COPY WNCPYSRC,GL0420O104
      O*                                                                   CEU013
@@ -1629,7 +1629,7 @@
 1978 O*       T 1         44 45                                           S01091
 1978 O********E*1         44 45ENDPG                            S01091    S01117
 1978 O          E    84 44 45ENDPG       1                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1979 O                                           85 '- CONTD'
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP22                                           S01408
@@ -1637,7 +1637,7 @@
      O********E*2 03           ERPT5                                                   S01117 239641
      O          E            ERPT5       2                                                    239641
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
      O               58      BRCASV              80                             S01117
@@ -1656,11 +1656,11 @@
 1624 O*L0420P6E   03   80                                                 S01146
 1624 O*L0420P6E** 01   80                                          S01146 S01117
 1984 OGL0420P6  E    80 84                    01                                S01117
-     O         AND  N79                                                                     O
+     O         AND  N79                                                         LUC108     O
      O                       FICHE               16                             S01146
      O********E** 03   80                                          S01146 S01117
      O          E    80 84                    03                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1985 O*               N14      CNA1      35
 1985 O***********              CNA1      35                               S01194
 1985 O***********              BCCNA1    35                         S01194BHF093
@@ -1669,7 +1669,7 @@
 1987 O*       H   04   81                                                 S01091
 1987 O********E** 04   81                                       S01091    S01117
 1987 O          E    81 84                    04                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1988 O*               N14      CNA2      35
 1988 O***********              CNA2      35                               S01194
 1988 O***********              BCCNA2    35                         S01194BHF093
@@ -1678,7 +1678,7 @@
 1989 O*       H   05   81                                                 S01091
 1989 O********E** 05   81                                       S01091    S01117
 1989 O          E    81 84                    05                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1990 O*               N14      CNA3      35
 1990 O***********              CNA3      35                               S01194
 1990 O***********              BCCNA3    35                         S01194BHF093
@@ -1686,7 +1686,7 @@
 1991 O*       H   06   81                                                 S01091
 1991 O********E** 06   81                                       S01091    S01117
 1991 O          E    81 84                    06                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 1992 O*               N14      CNA4      35
 1992 O***********              CNA4      35                               S01194
 1992 O***********              BCCNA4    35                         S01194BHF093
@@ -1697,7 +1697,7 @@
 1995 O*       H   07   80N14                                              S01091
 1995 O********E** 07   80                                       S01091    S01117
 1995 O          E    80 84                    07                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O
 1996 O* ETC.
 1997 O*****                              49 'OUR REF'                     S01117
@@ -1731,7 +1731,7 @@
 2008 O*       H   10   80N14                                              S01091
 2008 O********E** 10   80                                       S01091    S01117
 2008 O          E    80 84                    10                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GLH00373
 2009 O                                           10 'ACCOUNT'
 2010 O                       ANAM                33
@@ -1751,7 +1751,7 @@
 2017 O*       H   13   80N14                                              S01091
 2017 O********E** 13   80                                       S01091    S01117
 2017 O          E    80 84                    13                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2018 O                                            7 'POSTING'
 2019 O                                           16 'VALUE'
 2020 O                                           27 'CHEQUE'
@@ -1763,7 +1763,7 @@
 2025 O*       H   14   80N14                                              S01091
 2025 O********E** 14   80                                       S01091    S01117
 2025 O          E    80 84                    14                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2026 O                                            6 'DATE'
 2027 O                                           16 'DATE'
 2028 O                                           25 'NO'
@@ -1771,7 +1771,7 @@
 2029 O*       H   16   80N14                                              S01091
 2029 O********E** 16   80                                       S01091    S01117
 2029 O          E    80 84                    16                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O126
 2030 O                                           60 'B/F'
 2031 O                       LSTDA                8
@@ -1784,7 +1784,7 @@
      O/COPY WNCPYSRC,GL0420O089
      O*                                                                   CEU013
      O          E    80 84 10                 17                                CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBF              128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1799,7 +1799,7 @@
 2038 O***    AND       04                                                 S01110
      O*******AND*     N12 04                                      S01110  S01117
      O         AND  N12 04 84                                                   S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2039 O                       PSTDA                8
 2040 O                     69VALDA               18
 2041 O                                           32 'DR'
@@ -1812,7 +1812,7 @@
 2046 O          E    41 51 34DET         1                                      S01091
 2047 O*******AND*     N04                                                 S01117
 2047 O         AND  N04 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2048 O                       PSTDA                8
 2049 O                     69VALDA               18
      O*                                                                   S01408
@@ -1834,7 +1834,7 @@
      O*                                                                   CEU013
      O          E    41 51 34DET         1                                      CEU013
      O         AND  N04 84 78                                                   CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               33                             CEU013
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '      CEU013
@@ -1843,7 +1843,7 @@
      O*                                                                   216937
      O          E    41 51 34DET         1                                      216937
      O         AND  N04 84 53                                                   216937
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              70                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -1855,7 +1855,7 @@
 2062 O          E    L1 41 49BAL         0  0                                   S01091
 2063 O*******AND*     N52 34                                              S01117
 2063 O         AND  N52 34 84                                                   S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O175
 2064 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'
 2065 O                     71PSTBAL             127 '  ,   ,   ,   , 0 . CR'
@@ -1870,7 +1870,7 @@
 2075 O*******AND*      34                                                 S01117
 2075 O         AND   34 84                                                      S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2076 O*      OR           41 52
 2077 O*      AND       34
 2078 O                                           60 'C/F'
@@ -1885,7 +1885,7 @@
      O          E       41 45ENDPG       1                                      CEU013
      O         AND   34 84                                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1899,7 +1899,7 @@
 2077 O*******AND*      34                                       S01091    S01117
 2077 O         AND   34 84                                                      S01117
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2078 O                                           60 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O179
 2079 O                     70PSTBAL             127 '   ,   ,   ,   , 0 CR'     S01091
@@ -1912,7 +1912,7 @@
      O          E       41 52TOT         1                                      CEU013
      O         AND   34 84                                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              65                             156327
      O                                          105 '('                         CEU013
      O                     KAEUPBAL             128 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -1924,22 +1924,22 @@
      O          E       41 52TOT         1                                      216006
      O         AND   34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND   34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND   34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E       41 52TOT         1                                      216006
      O         AND   34 84                                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O/COPY WNCPYSRC,GL0420O105
      O*                                                                   CEU013
@@ -1949,7 +1949,7 @@
 2086 O          E       41 45ENDPG       1                                      S01091
 2087 O*******AND*      34                                                 S01117
 2087 O         AND   34 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2088 O                                          116 '- CONTD'
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP23                                           S01408
@@ -1957,7 +1957,7 @@
      O********E*1 03           ERPT6                                                   S01117 239641
      O          E            ERPT6       1                                                    239641
      O         AND  N33                                                         S01377
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
      O               58      BRCASV              80                             S01117
@@ -1966,7 +1966,7 @@
      O/COPY WNCPYSRC,GL0420O122
 2310 O********T**202   LR                                       E10433    S01117
      OGL0420AU  T    LR                     2 02                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O***********                        22 'REFERENCE GL0420'            S01117
      O                                           24 'REFERENCE GL0420AU'        S01117
 2312 O*                        TITL      92                     E10433    S01161
@@ -1979,14 +1979,14 @@
      O/COPY WNCPYSRC,GL0420O092
 2315 O*                                                                   E10433
 2316 O          T    LR                     1                                   E10433
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2317 O                                           70 'BALANCE STATEMENTS'        E10433
      O                                           85 'RUN CONTROLS'              S01117
 2318 O          T    LR                     1                                   E10433
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2319 O                                           70 '------------------'        E10433
 2320 O          T    LR                       15                                E10433
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2321 O                                           30 'FILE CONTROLS'             E10433
 2322 O***********                        58 'INPUT'                                    E10433 CGL061
 2323 O                                           81 'CALCULATED'                E10433
@@ -2006,14 +2006,14 @@
 2326 O***********              POSSO 3   58                     E10433    S01161
 2338 O********T** 24   LR                                       E10433    S01161
 2338 O          T    LRNU7                    17                                S01161
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2339 O                                           31 'NO. STATEMENTS'            E10433
      O                                           45 'RECORDS READ:'             E10433
 2340 O***********              STMSIZ3   58                                            E10433 CGL061
 2341 O                       TNAR          3     84                             E10433
 2342 O******************  86            111 '*** OUT OF BALANCE ***'                   E10433 CGL061
      O          T    U7 U8 LR            3                                      E10433
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           42 '***REFERENCE'              E10433
      O***********              DBPGM     51                     E10433    S01194
      O                       DBPGM               53                             S01194
@@ -2021,7 +2021,7 @@
      O***********              DBASE     74                     E10433    S01194
      O                       DBASE               75                             S01194
      O          T    U7 U8 LR            2  2                                   E10433
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                                           37 'FILE NAME'                 E10433
      O***********              DBFILE    43                     E10433    S01194
      O***********                        48 'KEY'               E10433    S01194
@@ -2042,11 +2042,11 @@
 1624 O*L0420P1E   03   87                                                 S01146
 1624 O*L0420P1E** 01   87                                          S01146 S01117
 1624 OGL0420P1  E    87 84                    01                                S01117
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                       FICHE               16                             S01146
      O********E** 03   87                                          S01146 S01117
      O          E    87 84                    03                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2093 O***********         36   CNA1      35                               S01194
 2093 O***********         36   BCCNA1    35                         S01194BHF093
 2093 O                  36   @WCNA1              35                             BHF093
@@ -2054,7 +2054,7 @@
 2095 O*       H   04   89                                                 S01091
 2095 O********E*  04   89                                       S01091    S01117
 2095 O          E    89 84                    04                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2096 O***********            36CNA2      35                               S01194
 2096 O***********            36BCCNA2    35                         S01194BHF093
 2096 O                     36@WCNA2              35                             BHF093
@@ -2062,14 +2062,14 @@
 2097 O*       H   05   89                                                 S01091
 2097 O********E*  05   89                                       S01091    S01117
 2097 O          E    89 84                    05                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2098 O***********            36CNA3      35                               S01194
 2098 O***********            36BCCNA3    35                         S01194BHF093
 2098 O                     36@WCNA3              35                             BHF093
 2099 O*       H   06   89                                                 S01091
 2099 O********E*  06   89                                       S01091    S01117
 2099 O          E    89 84                    06                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2100 O***********            36CNA4      35                               S01194
      O***********            36BCCNA4    35                         S01194BHF093
      O                     36@WCNA4              35                             BHF093
@@ -2078,7 +2078,7 @@
 2103 O*       H   07   87                                                 S01091
 2103 O********E*  07   87                                       S01091    S01117
 2103 O          E    87 84                    07                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2104 O* ETC.
 2105 O*****                              49 'OUR REF'                     S01117
      O/COPY WNCPYSRC,GL0420O110
@@ -2112,7 +2112,7 @@
 2116 O*       H   10   87                                                 S01091
 2116 O********E** 10   87                                       S01091    S01117
 2116 O          E    87 84                    10                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O114
 2117 O                       ANAM                33
      O/COPY WNCPYSRC,GLH00375
@@ -2127,7 +2127,7 @@
 2121 O*       H   16   87                                                 S01091
 2121 O********E*  16   87                                       S01091    S01117
 2121 O          E    87 84                    16                                S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O127
 2122 O**
 2123 O**   NARRATIVES OVERLAP WITH THE DEBITS BY ONE COLUMN.
@@ -2150,7 +2150,7 @@
      O/COPY WNCPYSRC,GL0420O093
      O*                                                                   CEU013
      O          E    87 84 10                 17                                CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           88 '('                         CEU013
      O                     KAEUPBF              111 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2164,7 +2164,7 @@
      O/COPY WNCPYSRC,GL0420O141
 2137 O          E    40 75 51DET         1                                      059213
      O         AND   84                                                         S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O182
 2138 O                     70VDDR                71 ' ,   ,   ,   , 0 '
 2139 O                     71VDDR                71 '   ,   ,   , 0 . '
@@ -2186,7 +2186,7 @@
 2153 O          E    40 51 04DET         1                                      S01091
      O*******AND*     N12                                       S01110    S01117
      O         AND  N12 84                                                      S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2154 O                       PSTDA                7
 2155 O                     69VALDA               15
 2156 O                                           27 'DR'
@@ -2198,7 +2198,7 @@
 2161 O***     D 1      40 51N04                                           S01091
 2161 O          E    40 51N04DET         1                                      S01091
      O         AND   84                                                         S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2162 O                       PSTDA                7
 2163 O                     69VALDA               15
      O*                                                                   S01408
@@ -2221,7 +2221,7 @@
      O/COPY WNCPYSRC,GL0420O095
      O          E    40 51N04DET         1                                      CEU013
      O         AND   84 78                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       ROCCY               28                             CEU013
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '       CEU013
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '      CEU013
@@ -2230,7 +2230,7 @@
      O*                                                                   216937
      O          E    40 51N04DET         1                                      216937
      O         AND   84 53                                                      216937
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       W#ORIG              65                             216937
      O*                                                                   216937
      O** Core hook for externalisation.                                   S01408
@@ -2242,7 +2242,7 @@
 2176 O          E    L1 40 49BAL         0  0                                   S01091
      O*******AND*     N52 51                                              S01117
      O         AND  N52 51 84                                                   S01117
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2178 O*      OR           40 19                                           S01091
 2179 O*      AND      N18 52                                              S01091
      O/COPY WNCPYSRC,GL0420O184
@@ -2277,7 +2277,7 @@
 2192 O********E*1         40 18TOT                              S01091    S01117
 2192 O          E    84 40 18TOT         1                                      S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2193 O                                           55 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O186
 2194 O                     70PSTBAL             110 '   ,   ,   ,   , 0 CR'
@@ -2294,7 +2294,7 @@
      O*                                                                   CEU013
      O          E    84 40 18TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           88 '('                         CEU013
      O                     KAEUPBAL             111 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2310,7 +2310,7 @@
 2206 O********E*  50      40 18TOT                              S01091    S01117
 2206 O          E    84 40 18TOT              50                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2207 O                                          125 '- CONTD'
      O*                                                                   S01408
      O/COPY WNCPYSRC,GL0420OP24                                           S01408
@@ -2321,7 +2321,7 @@
 2210 O********E*  03      40 18TOT                              S01091    S01117
 2210 O          E    84 40 18TOT              03                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2211 O***********         36   CNA1      35                               S01194
 2211 O***********         36   BCCNA1    35                         S01194BHF093
 2211 O                  36   @WCNA1              35                             BHF093
@@ -2333,7 +2333,7 @@
 2213 O********E*  04      40 18TOT                              S01091    S01117
 2213 O          E    84 40 18TOT              04                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2214 O***********            36CNA2      35                               S01194
 2214 O***********            36BCCNA2    35                         S01194BHF093
 2214 O                     36@WCNA2              35                             BHF093
@@ -2342,7 +2342,7 @@
 2215 O********E*  05      40 18TOT                              S01091    S01117
 2215 O          E    84 40 18TOT              05                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2216 O***********            36CNA3      35                               S01194
 2216 O***********            36BCCNA3    35                         S01194BHF093
 2216 O                     36@WCNA3              35                             BHF093
@@ -2350,7 +2350,7 @@
 2217 O********E** 06      40 18TOT                              S01091    S01117
 2217 O          E    84 40 18TOT              06                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2218 O***********            36CNA4      35                               S01194
 2218 O***********            36BCCNA4    35                         S01194BHF093
 2218 O                     36@WCNA4              35                             BHF093
@@ -2360,7 +2360,7 @@
 2221 O********E** 07      40 18TOT                              S01091    S01117
 2221 O          E    84 40 18TOT              07                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2222 O* ETC.
 2223 O                                           49 'OUR REF'
 2224 O**********                         67 '-   -    -'                                      CGL029
@@ -2380,7 +2380,7 @@
 2231 O***********              BRNM     128                               S01117
 2221 O          E    84 40 18TOT              08                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O               58                          12 'BRANCH'                    S01117
      O               58      BRCA                16                             S01117
      O               58      A8BRNM              48                             S01194
@@ -2388,7 +2388,7 @@
 2232 O********E** 10      40 18TOT                              S01091    S01117
 2232 O          E    84 40 18TOT              10                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O115
 2233 O                       ANAM                33
      O/COPY WNCPYSRC,GLH00376
@@ -2402,7 +2402,7 @@
 2237 O********E** 16      40 18TOT                              S01091    S01117
 2237 O          E    84 40 18TOT              16                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2238 O                       LSTDA                7
      O/COPY WNCPYSRC,GL0420O143
 2239 O                                           55 'B/F'
@@ -2421,7 +2421,7 @@
      O*                                                                   CEU013
      O          E    84 40 18TOT              17                                CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           88 '('                         CEU013
      O                     KAEUPBF              111 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2436,7 +2436,7 @@
 2252 O********E*1         40 19TOT                              S01091    S01117
 2252 O          E    84 40 19TOT         1                                      S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O189
 2253 O                     70VDDR                71 ' ,   ,   ,   , 0 '
 2254 O                     71VDDR                71 '   ,   ,   , 0 . '
@@ -2466,7 +2466,7 @@
 2270 O********E*1         40 45ENDPG                            S01091    S01117
 2270 O          E    84 40 45ENDPG       1                                      S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2272 O                                           55 'C/F'
      O/COPY WNCPYSRC,GL0420O191
 2273 O                     70PSTBAL             110 '   ,   ,   ,   , 0 CR'
@@ -2487,7 +2487,7 @@
      O**                                                                  CEU013
      O          E    84 40 45ENDPG       1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           88 '('                         CEU013
      O                     KAEUPBAL             111 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2500,7 +2500,7 @@
 2271 O********E*1         40 52TOT                              S01091    S01117
 2271 O          E    84 40 52TOT         1                                      S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2272 O                                           55 'C/F'                       S01091
      O/COPY WNCPYSRC,GL0420O193
 2273 O                     70PSTBAL             110 '   ,   ,   ,   , 0 CR'     S01091
@@ -2517,7 +2517,7 @@
      O*                                                                   CEU013
      O          E    84 40 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           88 '('                         CEU013
      O                     KAEUPBAL             111 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2533,7 +2533,7 @@
      O/COPY WNCPYSRC,GL0420O116
 2285 O          E    84 40 52TOT              50                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O/COPY WNCPYSRC,GL0420O195
 2286 O                     70CFSB                26 '   ,   ,   ,   , 0 CR'
 2287 O                     71CFSB                26 '  ,   ,   ,   , 0 . CR'
@@ -2563,7 +2563,7 @@
      O*                                                                   CEU013
      O          E    84 40 52TOT         1                                      CEU013
      O         AND  N33 10                                                      CEU013
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       BKEURO              60                             156327
      O                                           87 '('                         CEU013
      O                     KAEUPBAL             110 '   ,   ,   ,   , 0 CR)'    CEU013
@@ -2574,32 +2574,32 @@
      O*                                                                   216006
      O          E    84 40 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX1              97                             216006
      O          E    84 40 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX2              97                             216006
      O          E    84 40 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX3              97                             216006
      O          E    84 40 52TOT         1                                      216006
      O         AND  N33 82                                                      216006
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
      O                       WCMTX4              97                             216006
      O/COPY WNCPYSRC,GL0420O117
      O*                                                                   CEU013
 2306 O********E** 50      40 45ENDPG                            S01091    S01117
 2306 O          E    84 40 45ENDPG            50                                S01117
      O         AND  N33                                                         055721
-     O         AND  N79
+     O         AND  N79                                                                    LUC108
 2306 O*       T   50      40 45                                           S01091
 2307 O*******AND      N52                                                 E10604
 2308 O                                          125 '- CONTD'
 2192 O********E*1 03           ERPT1                                                   S01117 239641
      O          E            ERPT1       1    03                                              239641
-     O         AND  N79
+     O         AND  N79                                                         LUC108
      O                                           66 '*** END OF REPORT '        S01117
      O               58                          77 'FOR BRANCH '               S01117
      O               58      BRCASV              80                             S01117
@@ -2674,21 +2674,21 @@
       * LUC108
       *
      OGL0420P2  E       60 84                 16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA1              62
      O                  35                       86 'DEMAND STATEMENT'
      O                       ANAM               117
       *
      O          E       61 84                 17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA2              62
       *
      O          E       61 84                 18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA3              62
       *
      O          E       61 84                 19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA4              62
      O                       CCY                 87
      O                     27BRCA                97
@@ -2703,18 +2703,18 @@
      O                    N27ACNO               110
       *
      O          E       61 84                 23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E       61 84                 25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E       60 84                 30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -2724,7 +2724,7 @@
      O                     83                   119 'DR'
       *
      O          E    60 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -2735,7 +2735,7 @@
       *
      O          E    41 51N34DET         1
      O         AND   04N12 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                                           25 'DR'
@@ -2746,14 +2746,14 @@
       *
      O          E    41 51N34DET         1
      O         AND  N04 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                  69   VALDA               22
      O                       PNAR                55
-     O************  N25                          47 ' CK'
-     O***********   N25      CHQN                55
-     O              N25NKP                       47 ' CK'
-     O              N25NKP   CHQN                55
+     O************  N25                          47 ' CK'                       LUC133
+     O***********   N25      CHQN                55                             LUC133
+     O              N25NKP                       47 ' CK'                       LUC133
+     O              N25NKP   CHQN                55                             LUC133
      O               23 70   PSTA                75 ' ,   ,   ,   , 0 '
      O               23 71   PSTA                75 '   ,   ,   , 0 . '
      O               23 72   PSTA                75 '  ,   ,   , 0 .  '
@@ -2773,7 +2773,7 @@
       *
      O          E    41 51N34DET         1
      O         AND  N04 84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               33
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '
@@ -2783,7 +2783,7 @@
      O          E       41 45ENDPG            54
      O         AND  N34 84
      O         AND  N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
@@ -2794,7 +2794,7 @@
      O          E       41 45ENDPG       1
      O         AND     N34 84
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -2805,7 +2805,7 @@
       *
      O          E       41 52TOT              54
      O         AND   34N33 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
      O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
@@ -2816,7 +2816,7 @@
      O          E       41 52TOT              55
      O         AND  N34 84
      O         AND  N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -2826,7 +2826,7 @@
      O          E       41 52TOT         1
      O         AND     N34 84
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -2837,13 +2837,13 @@
       *
      O          E       41 45ENDPG            55
      O         AND     N34 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E       41 52TOT              58
      O         AND  N34 84
      O         AND  N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O              N16                          29 'CURRENT PRIME RATE AS AT'
      O              N16      RUNA                37
      O              N16                          39 ':'
@@ -2856,7 +2856,7 @@
      O          E       41 52TOT              60
      O         AND     N34 84
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSCR               119 ' ,   ,   ,   , 0 '
      O                     71PSCR               119 '   ,   ,   , 0 . '
      O                     72PSCR               119 '  ,   ,   , 0 .  '
@@ -2864,7 +2864,7 @@
       *
      O          E            ERPT2       1    03
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O                  58                       77 'FOR BRANCH '
      O                  58   BRCASV              80
@@ -2874,25 +2874,25 @@
       *    GL0420P3  BEGINS  H E R E
       *                      -------
      OGL0420P3  E    62 84                    01
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       FICHE               16
       *
      O          E    62 84                    16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA1              62
      O                  35                       86 'DEMAND STATEMENT'
      O                       ANAM               117
       *
      O          E    63 84                    17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA2              62
       *
      O          E    63 84                    18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA3              62
       *
      O          E    63 84                    19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA4              62
      O                       CCY                 87
      O                     27BRCA                97
@@ -2907,18 +2907,18 @@
      O                    N27ACNO               110
       *
      O          E    63 84                    23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E    63 84                    25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E    62 84                    30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -2928,7 +2928,7 @@
      O                  83                      119 'DR'
       *
      O          E    62 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -2939,7 +2939,7 @@
       *
      O          E    51 42 04DET         1
      O         AND     N12 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                                           25 'DR'
@@ -2950,14 +2950,14 @@
       *
      O          E    51 42N04DET         1
      O         AND         84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                       PNAR                55
-     O************  N25                          47 ' CK'
-     O***********   N25      CHQN                55
-     O              N25NKP                       47 ' CK'
-     O              N25NKP   CHQN                55
+     O************  N25                          47 ' CK'                       LUC133
+     O***********   N25      CHQN                55                             LUC133
+     O              N25NKP                       47 ' CK'                       LUC133
+     O              N25NKP   CHQN                55                             LUC133
      O                  23 70PSTA                75 ' ,   ,   ,   , 0 '
      O                  23 71PSTA                75 '   ,   ,   , 0 . '
      O                  23 72PSTA                75 '  ,   ,   , 0 .  '
@@ -2971,7 +2971,7 @@
       *
      O          E    51 42N04DET         1
      O         AND      84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               33
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '
@@ -2980,7 +2980,7 @@
       *
      O          E    84 42 45ENDPG            54
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
@@ -2990,7 +2990,7 @@
       *
      O          E    84 42 45ENDPG       1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3001,7 +3001,7 @@
       *
      O          E    84 42 52TOT              54
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
      O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
@@ -3011,7 +3011,7 @@
       *
      O          E    84 42 52TOT              55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3020,7 +3020,7 @@
       *
      O          E    84 42 52TOT               1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3030,12 +3030,12 @@
      O                     47                   120 'DR)'
       *
      O          E    84 42 45ENDPG      55
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E    84 42 52TOT        58
      O         AND     N33N16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           29 'CURRENT PRIME RATE AS AT'
      O                       RUNA                37
      O                                           39 ':'
@@ -3043,7 +3043,7 @@
       *
      O          E            ERPT3       1       03
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O                  58                       77 'FOR BRANCH '
      O                  58   BRCASV              80
@@ -3054,24 +3054,24 @@
       *                      -------
       *
      OGL0420P1  E    87 84                    01
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       FICHE               16
      O          E    87 84                    16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA1              62
      O                  35                       86 'DEMAND STATEMENT'
      O                       ANAM               117
       *
      O          E    89 84                    17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA2              62
       *
      O          E    89 84                    18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA3              62
       *
      O          E    89 84                    19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA4              62
      O                       CCY                 87
      O                  27   BRCA                97
@@ -3086,18 +3086,18 @@
      O                 N27   ACNO               110
       *
      O          E    89 84                    23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E    89 84                    25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E    87 84                    30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -3107,7 +3107,7 @@
      O                  83                      119 'DR'
       *
      O          E    87 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -3118,7 +3118,7 @@
       *
      O          E    40 51 04DET         1
      O         AND     N12 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                                           25 'DR'
@@ -3129,14 +3129,14 @@
       *
      O          E    40 51N04DET         1
      O         AND         84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                       PNAR                55
-     O************  N25                          47 ' CK'
-     O***********   N25      CHQN                55
-     O              N25NKP                       47 ' CK'
-     O              N25NKP   CHQN                55
+     O************  N25                          47 ' CK'                       LUC133
+     O***********   N25      CHQN                55                             LUC133
+     O              N25NKP                       47 ' CK'                       LUC133
+     O              N25NKP   CHQN                55                             LUC133
      O                  23 70PSTA                75 ' ,   ,   ,   , 0 '
      O                  23 71PSTA                75 '   ,   ,   , 0 . '
      O                  23 72PSTA                75 '  ,   ,   , 0 .  '
@@ -3150,7 +3150,7 @@
       *
      O          E    40 51N04DET         1
      O         AND      84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               28
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '
@@ -3159,7 +3159,7 @@
       *
      O          E       40 19TOT              54
      O         AND  N18 52 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
      O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
@@ -3169,7 +3169,7 @@
       *
      O          E       40 19TOT              55
      O         AND  N18 52 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3178,7 +3178,7 @@
       *
      O          E    84 40 18TOT              55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3187,7 +3187,7 @@
       *
      O          E    84 40 18TOT         1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3198,12 +3198,12 @@
       *
      O          E    84 40 18TOT              55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E    84 40 18TOT              58
      O         AND     N16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           29 'CURRENT PRIME RATE AS AT'
      O                       RUNA                37
      O                                           39 ':'
@@ -3211,7 +3211,7 @@
       *
      O          E    84 40 19TOT              58
      O         AND  N18 52N16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           29 'CURRENT PRIME RATE AS AT'
      O                       RUNA                37
      O                                           39 ':'
@@ -3219,28 +3219,28 @@
       *
      O          E    84 40 18TOT              16
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA1              62
      O                  35                       91 'DEMAND STATEMENT'
       *
      O          E    84 40 18TOT              17
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA2              62
       *
      O          E    84 40 18TOT              18
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA3              62
       *
      O          E    84 40 18TOT              19
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA4              62
       *
      O          E    84 40 18TOT              30
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -3251,7 +3251,7 @@
       *
      O          E    84 40 18TOT         1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -3262,7 +3262,7 @@
       *
      O          E    84 40 45ENDPG            54
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
@@ -3272,7 +3272,7 @@
       *
      O          E    84 40 45ENDPG       1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3283,7 +3283,7 @@
       *
      O          E    46 40 52TOT              54
      O         AND         84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70PSTAVL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTAVL             119 '  ,   ,   ,   , 0 . CR'
@@ -3293,7 +3293,7 @@
       *
      O          E    84 40 52TOT              55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3302,7 +3302,7 @@
       *
      O          E    84 40 52TOT         1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3313,7 +3313,7 @@
       *
      O          E    84 40 52TOT              58
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                 N16                       29 'CURRENT PRIME RATE AS AT'
      O                 N16   RUNA                37
      O                 N16                       39 ':'
@@ -3324,7 +3324,7 @@
      O                     73PSDR               119 ' ,   ,   , 0 .   '
       *
      O          E    84 40 52TOT              60
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSCR               119 ' ,   ,   ,   , 0 '
      O                     71PSCR               119 '   ,   ,   , 0 . '
      O                     72PSCR               119 '  ,   ,   , 0 .  '
@@ -3332,11 +3332,11 @@
       *
      O          E    84 40 45ENDPG            55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E            ERPT1       1    03
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O                  58                       77 'FOR BRANCH '
      O                  58   BRCASV              80
@@ -3348,25 +3348,25 @@
       *                      -------
       *
      OGL0420P4  E    64 84                    01
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       FICHE               16
       *
      O          E    65 84                    16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA1              62
      O                     35                    86 'DEMAND STATEMENT'
      O                       ANAM               117
       *
      O          E    65 84                    17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA2              62
       *
      O          E    65 84                    18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA3              62
       *
      O          E    65 84                    19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA4              62
      O                       CCY                 87
      O                     27BRCA                97
@@ -3381,36 +3381,36 @@
      O                    N27ACNO               110
       *
      O          E    65 84                    23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E    65 84                    25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E    64 84                    30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
-     O****************************************   41 'BALANCE B/F'
-     O              NKP                          41 'BALANCE B/F'
-     O**********     KP                          41 'BALANCE FORWARD'
-     O               KP                          45 'BALANCE FORWARD'                               
-     O                     70PSTBF              118 '   ,   ,   ,   , 0 CR'                         
-     O                     71PSTBF              118 '  ,   ,   ,   , 0 . CR'                
-     O                     72PSTBF              118 ' ,   ,   ,   , 0 .  CR'                
-     O                     73PSTBF              118 '   ,   ,   , 0 .   CR'                         
-     O                  83                      118 'DR'                                            
-     O**********           70PSTBF              119 '   ,   ,   ,   , 0 CR'                         
-     O**********           71PSTBF              119 '  ,   ,   ,   , 0 . CR'                
-     O**********           72PSTBF              119 ' ,   ,   ,   , 0 .  CR'                
-     O**********           73PSTBF              119 '   ,   ,   , 0 .   CR'                         
-     O**********        83                      119 'DR'                                            
+     O****************************************   41 'BALANCE B/F'               LUC133
+     O              NKP                          41 'BALANCE B/F'               LUC133
+     O**********     KP                          41 'BALANCE FORWARD'                LUC133 MD055823
+     O               KP                          45 'BALANCE FORWARD'                       MD055823
+     O                     70PSTBF              118 '   ,   ,   ,   , 0 CR'                 MD055823
+     O                     71PSTBF              118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBF              118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBF              118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                  83                      118 'DR'                                    MD055823
+     O**********           70PSTBF              119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71PSTBF              119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBF              119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBF              119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********        83                      119 'DR'                                    MD055823
       *
      O          E    64 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              80
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -3421,8 +3421,8 @@
       *
      O          E    43 51 04DET         1
      O         AND     N12 84
-     O*******  AND   79
-     O         AND   79 34
+     O*******  AND   79                                                  LUC108 LUC133
+     O         AND   79 34                                                      LUC133
      O                       PSTDA               14
      O                                           25 'DR'
      O                     22                    25 'CR'
@@ -3430,22 +3430,22 @@
      O                       INTR                53 '  0 .       -'
      O                                           54 '%'
       *
-     O          E    43 51 04DET         1
-     O         AND  N12 84N34
-     O         AND   79 KP
-     O
-     O                       PSTDA               14
-     O                     69VALDA               23
-     O                                           25 'DR'
-     O                     22                    25 'CR'
-     O                                           40 'RATE CHANGE TO'                   
-     O                       INTR                53 '  0 .       -'                    
-     O                                           54 '%'
+     O          E    43 51 04DET         1                                       LUC133
+     O         AND  N12 84N34                                                    LUC133
+     O         AND   79 KP                                                       LUC133
+     O                                                                           LUC133
+     O                       PSTDA               14                              LUC133
+     O                     69VALDA               23                              LUC133
+     O                                           25 'DR'                         LUC133
+     O                     22                    25 'CR'                         LUC133
+     O                                           40 'RATE CHANGE TO'             LUC133
+     O                       INTR                53 '  0 .       -'              LUC133
+     O                                           54 '%'                          LUC133
       *
      O          E    43 51N04DET         1
      O         AND      84
-     O******** AND   79
-     O         AND   79 34
+     O******** AND   79                                                  LUC108 LUC133
+     O         AND   79 34                                                      LUC133
      O                       PSTDA               14
      O                       PNAR                55
      O                  23 70PSTA                75 ' ,   ,   ,   , 0 '
@@ -3459,31 +3459,31 @@
      O                  22 73PSTA                83 ' ,   ,   , 0 .   '
      O                  22                       85 'CR'
       *
-     O          E    43 51N04DET         1
-     O         AND      84N34
-     O         AND   79 KP
-     O                       PSTDA               14
-     O                     69VALDA               23
-     O                       PNAR                55
-     O                  23 70PSTA                75 ' ,   ,   ,   , 0 '         
-     O                  23 71PSTA                75 '   ,   ,   , 0 . '         
-     O                  23 72PSTA                75 '  ,   ,   , 0 .  '         
-     O                  23 73PSTA                75 ' ,   ,   , 0 .   '         
-     O                  23                       77 'DR'
-     O                  22 70PSTA                83 ' ,   ,   ,   , 0 '         
-     O                  22 71PSTA                83 '   ,   ,   , 0 . '         
-     O                  22 72PSTA                83 '  ,   ,   , 0 .  '         
-     O                  22 73PSTA                83 ' ,   ,   , 0 .   '         
-     O                  22                       85 'CR'
-     O                     70RUNBAL             116 '   ,   ,   ,   , 0 '       
-     O                     71RUNBAL             116 '  ,   ,   ,   , 0 . '      
-     O                     72RUNBAL             116 ' ,   ,   ,   , 0 .  '      
-     O                     73RUNBAL             116 '   ,   ,   , 0 .   '       
-     O                  09                      118 'DR'
-     O                 N09                      118 'CR'
+     O          E    43 51N04DET         1                                      LUC133
+     O         AND      84N34                                                   LUC133
+     O         AND   79 KP                                                      LUC133
+     O                       PSTDA               14                             LUC133
+     O                     69VALDA               23                             LUC133
+     O                       PNAR                55                             LUC133
+     O                  23 70PSTA                75 ' ,   ,   ,   , 0 '         LUC133
+     O                  23 71PSTA                75 '   ,   ,   , 0 . '         LUC133
+     O                  23 72PSTA                75 '  ,   ,   , 0 .  '         LUC133
+     O                  23 73PSTA                75 ' ,   ,   , 0 .   '         LUC133
+     O                  23                       77 'DR'                        LUC133
+     O                  22 70PSTA                83 ' ,   ,   ,   , 0 '         LUC133
+     O                  22 71PSTA                83 '   ,   ,   , 0 . '         LUC133
+     O                  22 72PSTA                83 '  ,   ,   , 0 .  '         LUC133
+     O                  22 73PSTA                83 ' ,   ,   , 0 .   '         LUC133
+     O                  22                       85 'CR'                        LUC133
+     O                     70RUNBAL             116 '   ,   ,   ,   , 0 '       LUC133
+     O                     71RUNBAL             116 '  ,   ,   ,   , 0 . '      LUC133
+     O                     72RUNBAL             116 ' ,   ,   ,   , 0 .  '      LUC133
+     O                     73RUNBAL             116 '   ,   ,   , 0 .   '       LUC133
+     O                  09                      118 'DR'                        LUC133
+     O                 N09                      118 'CR'                        LUC133
      O          E    43 51N04DET         1
      O         AND      84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               28
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '
@@ -3493,33 +3493,33 @@
      O          E    43 45   ENDPG            54
      O         AND      84
      O         AND     N33
-     O         AND   79
-     O*************************************      45 'CARRIED FORWARD'                 
-     O              NKP                          45 'CARRIED FORWARD'                 
-     O               KP                          90 'CARRIED FORWARD'                 
-     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                
-     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                
-     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                         
-     O                     47                   118 'DR'                                            
-     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                
-     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                
-     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                         
-     O**********           47                   119 'DR'                                            
+     O         AND   79                                                         LUC108
+     O*************************************      45 'CARRIED FORWARD'           LUC133
+     O              NKP                          45 'CARRIED FORWARD'           LUC133
+     O               KP                          90 'CARRIED FORWARD'           LUC133
+     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                     47                   118 'DR'                                    MD055823
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           47                   119 'DR'                                    MD055823
       *
-     O**********E    43 52   TOT              54                                                    
-     O*********AND  N33 84                                                                          
-     O*********AND   79                                                                      
-     O**********                                 67 'AVAILABLE AMOUNT'                              
-     O**********           70CLBL1              119 '   ,   ,   ,   , 0 CR'                         
-     O**********           71CLBL1              119 '  ,   ,   ,   , 0 . CR'                
-     O**********           72CLBL1              119 ' ,   ,   ,   , 0 .  CR'                
-     O**********           73CLBL1              119 '   ,   ,   , 0 .   CR'                         
-     O**********           24                   119 'DR'                                            
+     O**********E    43 52   TOT              54                                            MD055823
+     O*********AND  N33 84                                                                  MD055823
+     O*********AND   79                                                              LUC108 MD055823
+     O**********                                 67 'AVAILABLE AMOUNT'                      MD055823
+     O**********           70CLBL1              119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71CLBL1              119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72CLBL1              119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73CLBL1              119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           24                   119 'DR'                                    MD055823
       *
      O          E    43 45   ENDPG       1
      O         AND      84
      O         AND  N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              80
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3530,21 +3530,21 @@
       *
      O          E    84 43 52TOT              55
      O         AND     N33
-     O         AND   79
-     O                     70PSTBAL             118 '   ,   ,   ,   , 0 CR'                         
-     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                
-     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                
-     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                         
-     O                     47                   118 'DR'                                            
-     O**********           70PSTBAL             119 '   ,   ,   ,   , 0 CR'                         
-     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                
-     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                
-     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                         
-     O**********           47                   119 'DR'                                            
+     O         AND   79                                                         LUC108
+     O                     70PSTBAL             118 '   ,   ,   ,   , 0 CR'                 MD055823
+     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                     47                   118 'DR'                                    MD055823
+     O**********           70PSTBAL             119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           47                   119 'DR'                                    MD055823
       *
      O          E    84 43 52TOT         1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              80
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3554,38 +3554,38 @@
      O                     47                   120 'DR)'
       *
      O          E    84 43 45ENDPG            55
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
-     O          E       43 52TOT              58
-     O         AND     N34 84
-     O         AND   KPN33
-     O         AND   79
-     O                     70PSDR               118 ' ,   ,   ,   , 0 '                
-     O                     71PSDR               118 '   ,   ,   , 0 . '                
-     O                     72PSDR               118 '  ,   ,   , 0 .  '                
-     O                     73PSDR               118 ' ,   ,   , 0 .   '                
-     O          E       43 52TOT              60
-     O         AND     N34 84
-     O         AND   KPN33
-     O         AND   79
-     O                     70PSCR               118 ' ,   ,   ,   , 0 '                
-     O                     71PSCR               118 '   ,   ,   , 0 . '                
-     O                     72PSCR               118 '  ,   ,   , 0 .  '                
-     O                     73PSCR               118 ' ,   ,   , 0 .   '                
+     O          E       43 52TOT              58                                 LUC133
+     O         AND     N34 84                                                    LUC133
+     O         AND   KPN33                                                       LUC133
+     O         AND   79                                                          LUC133
+     O                     70PSDR               118 ' ,   ,   ,   , 0 '          LUC133
+     O                     71PSDR               118 '   ,   ,   , 0 . '          LUC133
+     O                     72PSDR               118 '  ,   ,   , 0 .  '          LUC133
+     O                     73PSDR               118 ' ,   ,   , 0 .   '          LUC133
+     O          E       43 52TOT              60                                 LUC133
+     O         AND     N34 84                                                    LUC133
+     O         AND   KPN33                                                       LUC133
+     O         AND   79                                                          LUC133
+     O                     70PSCR               118 ' ,   ,   ,   , 0 '          LUC133
+     O                     71PSCR               118 '   ,   ,   , 0 . '          LUC133
+     O                     72PSCR               118 '  ,   ,   , 0 .  '          LUC133
+     O                     73PSCR               118 ' ,   ,   , 0 .   '          LUC133
       *
-     O**********                                                                                    
-     O**********E    84 43 52TOT              58                                                    
-     O*********AND  N33N16                                                                          
-     O*********AND   79                                                                      
-     O**********                                 29 'CURRENT PRIME RATE AS AT'            
-     O**********             RUNA                37                                                 
-     O**********                                 39 ':'                                             
-     O**********             G@BRTE              53 ' , 0 .       '                                 
+     O**********                                                                            MD055823
+     O**********E    84 43 52TOT              58                                            MD055823
+     O*********AND  N33N16                                                                  MD055823
+     O*********AND   79                                                              LUC108 MD055823
+     O**********                                 29 'CURRENT PRIME RATE AS AT'              MD055823
+     O**********             RUNA                37                                         MD055823
+     O**********                                 39 ':'                                     MD055823
+     O**********             G@BRTE              53 ' , 0 .       '                         MD055823
       *
      O          E            ERPT4       1    03
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O                  58                       77 'FOR BRANCH '
      O                  58   BRCASV              80
@@ -3596,25 +3596,25 @@
       *                      -------
       *
      OGL0420P5  E       66 84                 01
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       FICHE               16
       *
      O          E       67 84                 16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                  36   @WCNA1              62
      O                  35                       86 'DEMAND STATEMENT'
      O                       ANAM               117
       *
      O          E    67 84                    17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA2              62
       *
      O          E    67 84                    18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA3              62
       *
      O          E    67 84                    19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     36@WCNA4              62
      O                       CCY                 87
      O                     27BRCA                97
@@ -3629,18 +3629,18 @@
      O                    N27ACNO               110
       *
      O          E    67 84                    23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E    67 84                    25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E    66 84                    30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -3650,7 +3650,7 @@
      O               83                         119 'DR'
       *
      O          E    66 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -3661,7 +3661,7 @@
       *
      O          E    44 51 04DET         1
      O         AND     N12 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                                           25 'DR'
      O                     22                    25 'CR'
@@ -3671,7 +3671,7 @@
       *
      O          E    44 51N04DET         1
      O         AND         84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                       PNAR                55
      O                  23 70PSTA                75 ' ,   ,   ,   , 0 '
@@ -3687,7 +3687,7 @@
       *
      O          E    44 51N04DET         1
      O         AND      84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               28
      O                     KEROAMT               49 '   ,   ,   ,   , 0 '
      O                     KFROAMT               49 '  ,   ,   ,   , 0 . '
@@ -3696,7 +3696,7 @@
       *
      O          E    84 44 45ENDPG            54
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
@@ -3706,7 +3706,7 @@
       *
      O          E    84 44 45ENDPG       1
      O         AND  N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3717,7 +3717,7 @@
       *
      O          E       44 52TOT              54
      O         AND     N33 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
      O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
@@ -3727,7 +3727,7 @@
       *
      O          E    84 44 52TOT              55
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3736,7 +3736,7 @@
       *
      O          E    84 44 52TOT         1
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              79
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3746,12 +3746,12 @@
      O                     47                   120 'DR)'
       *
      O          E    84 44 45ENDPG            55
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E    84 44 52TOT              58
      O         AND     N33N16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           29 'CURRENT PRIME RATE AS AT'
      O                       RUNA                37
      O                                           39 ':'
@@ -3759,7 +3759,7 @@
       *
      O          E            ERPT5      02    03
      O         AND  N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O               58                          77 'FOR BRANCH '
      O               58      BRCASV              80
@@ -3770,25 +3770,25 @@
       *                      -------
       *
      OGL0420P6  E    80 84                    01
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       FICHE               16
       *
      O          E    80 84                    16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       @WCNA1              62
      O                                           86 '*MANAGEMENT STATEMENT*'
      O                       ANAM               117
       *
      O          E    81 84                    17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       @WCNA2              62
       *
      O          E    81 84                    18
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       @WCNA3              62
       *
      O          E    81 84                    19
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       @WCNA4              62
      O                       CCY                 87
      O                     27BRCA                97
@@ -3803,18 +3803,18 @@
      O                    N27ACNO               110
       *
      O          E    81 84                    23
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDN              104
      O                                          106 '-'
      O                       RUNA               116
       *
      O          E    81 84                    25
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       STPA          3     85
      O                       STPP          3    110
       *
      O          E    80 84                    30
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       LSTDA               14
      O                                           41 'BALANCE B/F'
      O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
@@ -3824,7 +3824,7 @@
      O                  83                      119 'DR'
       *
      O          E    80 84 10            1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBF              120 '   ,   ,   ,   , 0 CR)'
@@ -3835,7 +3835,7 @@
       *
      O          E    41 51 34DET         1
      O         AND  N12 04 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                                           25 'DR'
@@ -3846,14 +3846,14 @@
       *
      O          E    41 51 34DET         1
      O         AND     N04 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       PSTDA               14
      O                     69VALDA               22
      O                       PNAR                55
-     O************  N25                          47 ' CK'
-     O***********   N25      CHQN                55
-     O              N25NKP                       47 ' CK'
-     O              N25NKP   CHQN                55
+     O************  N25                          47 ' CK'                       LUC133
+     O***********   N25      CHQN                55                             LUC133
+     O              N25NKP                       47 ' CK'                       LUC133
+     O              N25NKP   CHQN                55                             LUC133
      O                  23 70PSTA                75 ' ,   ,   ,   , 0 '
      O                  23 71PSTA                75 '   ,   ,   , 0 . '
      O                  23 72PSTA                75 '  ,   ,   , 0 .  '
@@ -3867,7 +3867,7 @@
       *
      O          E    41 51 34DET         1
      O         AND  N04 84 78
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       ROCCY               33
      O                     KEROAMT               54 '   ,   ,   ,   , 0 '
      O                     KFROAMT               54 '  ,   ,   ,   , 0 . '
@@ -3877,7 +3877,7 @@
      O          E       41 45ENDPG            54
      O         AND      34 84
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           45 'CARRIED FORWARD'
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
@@ -3888,7 +3888,7 @@
      O          E       41 45ENDPG       1
      O         AND      34 84
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3899,7 +3899,7 @@
       *
      O          E       41 52TOT              54
      O         AND   34N33 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           67 'AVAILABLE AMOUNT'
      O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
      O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
@@ -3910,7 +3910,7 @@
      O          E       41 52TOT              55
      O         AND      34 84
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
      O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
      O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
@@ -3920,7 +3920,7 @@
      O          E       41 52TOT         1
      O         AND      34 84
      O         AND     N33 10
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                       BKEURO              57
      O                                           97 '('
      O                     KAEUPBAL             120 '   ,   ,   ,   , 0 CR)'
@@ -3931,12 +3931,12 @@
       *
      O          E       41 45ENDPG            55
      O         AND      34 84
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                          116 '- CONTD'
       *
      O          E    84 41 52TOT              58
      O         AND  N33 34N16
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           29 'CURRENT PRIME RATE AS AT'
      O                       RUNA                37
      O                                           39 ':'
@@ -3944,7 +3944,7 @@
       *
      O          E            ERPT6       1    03
      O         AND     N33
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           66 '*** END OF REPORT '
      O                  58                       77 'FOR BRANCH '
      O                  58   BRCASV              80
@@ -3955,7 +3955,7 @@
       *                      -------
       *
      OGL0420AU  T       LR                  2  2
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           24 'REFERENCE GL0420AU'
      O                       BJURPT              92
      O                                          104 'DATE'
@@ -3964,35 +3964,35 @@
      O                       PAGE1              127
       *
      O          T       LR                  1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           70 'BALANCE STATEMENTS'
      O                                           85 'RUN CONTROLS'
       *
      O          T       LR                        1
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           70 '------------------'
       *
      O          T       LR                    15
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           30 'FILE CONTROLS'
      O                                           58 'INPUT'
      O                                           81 'CALCULATED'
       *
      O          T       LRNU7                 17
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           31 'NO. STATEMENTS'
      O                                           45 'RECORDS READ:'
      O                       TNAR          3     84
       *
      O          T    U7 U8 LR            3
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           42 '***REFERENCE'
      O                       DBPGM               53
      O                                           71 'DATABASE ERROR AT'
      O                       DBASE               75
       *
      O          T    U7 U8 LR            2  2
-     O         AND   79
+     O         AND   79                                                         LUC108
      O                                           37 'FILE NAME'
      O                       DBFILE              46
      O                                           51 'KEY'

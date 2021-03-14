@@ -4,7 +4,7 @@
 /*                                                                   */
 /*       SCC07 -  RE-OPENING OF INPUT CYCLE                          */
 /*                                                                   */
-/*       (c) Finastra International Banking Systems Ltd. 2001        */
+/*      (c) Finastra International Limited 2014                      */
 /*                                                                   */
 /*       Last Amend No. LUC102  *CREATE    Date 17Dec14              */
 /*                                                                   */

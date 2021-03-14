@@ -26,7 +26,7 @@
       *  (Copy of IBCM021 - CAR ICM003)                               *
       *                                                               *
       ***(C)*COPYRIGHT*MKI*International*LTD*1998**********************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109             Date 25Jan17               *
       *  Prev Amend No. LUC109             Date 21Sep16               *
@@ -755,7 +755,7 @@
       ***/C*PY*ZSRSRC,ZDLINTZ1                                                                LUC109
       /COPY ZSRSRC,ZDLINTZ1LE                                                                 LUC109
 **  CPY@ OBJECT COPYRIGHT **
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

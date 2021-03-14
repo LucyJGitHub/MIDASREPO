@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420IIP8 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. MD055507 *CREATE    Date 16Jun20              *
       *                                                               *

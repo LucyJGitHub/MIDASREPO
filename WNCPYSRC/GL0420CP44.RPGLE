@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420CP44 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC133             Date 01Aug19               *
       *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
@@ -45,30 +45,30 @@
      C     DPMT          IFNE      'FTR'
      C                   MOVEL     PNAR          DUMY3
      C                   ELSE
-     C     LUC133        IFEQ      'N'                                                
+     C     LUC133        IFEQ      'N'                                          LUC133
      C                   MOVE      OTST          DUMY3
-     C                   ELSE                                                         
-     C                   MOVE      *BLANKS       DUMY3                                
-     C                   ENDIF                                                        
+     C                   ELSE                                                   LUC133
+     C                   MOVE      *BLANKS       DUMY3                          LUC133
+     C                   ENDIF                                                  LUC133
      C                   ENDIF
      C                   MOVE      DUMY3         DUMY2
-     C     LUC133        IFEQ      'N'                                                
+     C     LUC133        IFEQ      'N'                                          LUC133
      C                   MOVE      DUMY2         PNAR
-     C                   ENDIF                                                        
+     C                   ENDIF                                                  LUC133
      C                   ENDIF
      C                   ENDIF
       *
-     C     LUC133        IFEQ      'Y'                                                 
-      *                                                                                
-     C     G2AT          IFEQ      'AT'                                                
-     C     G1CY          ANDEQ     '   '                                               
-     C                   MOVE      G2CY          G1CY                                  
-     C                   MOVE      G2AT          G1AT                                  
-     C                   MOVE      G2EX          G1EX                                  
-     C                   END                                                           
-     C                   MOVEL     GNAR1         PNAR                                  
+     C     LUC133        IFEQ      'Y'                                           LUC133
+      *                                                                          LUC133
+     C     G2AT          IFEQ      'AT'                                          LUC133
+     C     G1CY          ANDEQ     '   '                                         LUC133
+     C                   MOVE      G2CY          G1CY                            LUC133
+     C                   MOVE      G2AT          G1AT                            LUC133
+     C                   MOVE      G2EX          G1EX                            LUC133
+     C                   END                                                     LUC133
+     C                   MOVEL     GNAR1         PNAR                            LUC133
       *
-     C                   ENDIF                                                         
+     C                   ENDIF                                                   LUC133
       *
       *****************************************************************
       * End of /COPY GL0420CP44                                       *

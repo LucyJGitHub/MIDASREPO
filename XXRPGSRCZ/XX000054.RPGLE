@@ -17,7 +17,7 @@
   ?   *****************************************************************
       *                                                               *
       ***(C)*Copyright*Midas-Kapiti*International*Ltd.*1998************                       LUC109
-      *  (c) Misys International Banking Systems Ltd. 2016            *                       LUC109
+      *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
       *  Last Amend No. LUC109             Date 20Sep16               *
       *  Prev Amend No. MMI043 *Create     Date 01Dec99               *
@@ -1153,4 +1153,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016

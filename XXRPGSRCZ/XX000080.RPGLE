@@ -13,7 +13,7 @@
       *                                                               *
       *  Called By: XXC000080 - Interest Statement of Deposit Ctl Pgm *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Last Amend No. LUC106             Date 21May15               *
       *  Prev Amend No.                    Date ddmmmyy               *
@@ -556,4 +556,4 @@ CI C.D. ISSUED
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **  CPY@
-(C) Copyright Midas-Kapiti International Ltd. 2001
+(c) Finastra International Limited 2015

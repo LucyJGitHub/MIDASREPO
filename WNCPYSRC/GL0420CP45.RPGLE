@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420CP45 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC133             Date 01Aug19               *
       *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
@@ -22,11 +22,11 @@
      CANN04PSCR          ADD       PSTA          PSCR
      C                   ENDIF
       *
-     C     LUC133        IFEQ      'Y'                                                
-     C   43                                                                           
-     CAN 22                                                                           
-     CANN04PSCR          ADD       PSTA          PSCR                                 
-     C                   ENDIF                                                        
+     C     LUC133        IFEQ      'Y'                                          LUC133
+     C   43                                                                     LUC133
+     CAN 22                                                                     LUC133
+     CANN04PSCR          ADD       PSTA          PSCR                           LUC133
+     C                   ENDIF                                                  LUC133
       *****************************************************************
       * End of /COPY GL0420CP45                                       *
       *****************************************************************

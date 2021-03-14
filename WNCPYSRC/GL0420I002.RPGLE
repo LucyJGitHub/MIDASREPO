@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420I002 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  (c) Finastra International Banking Systems Ltd. 2016         *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. LUC110             Date 29Jan19               *
       *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
@@ -16,7 +16,7 @@
       *                                                               *
       *****************************************************************
      I                                109  111  DPMT
-     I                                115  123  UNQK                                           
+     I                                115  123  UNQK                                     LUC110
       *
       *****************************************************************
       * End of /COPY GL0420I002                                       *

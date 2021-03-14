@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -389,7 +391,8 @@
       * Base Rate
       * Rate/Spread
       *
-     C     P_BRTT        IFNE      *ZERO
+     C*****P_BRTT        IFNE      *ZERO                                                      CSD103
+     C     P_BRTT        IFNE      *BLANKS                                                    CSD103
      C     HKINTR        SUB       HKSPRD        P_BRTE
      C                   Z-ADD     HKSPRD        P_RTSP
      C                   ELSE

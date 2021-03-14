@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -179,11 +182,11 @@
      C                   IF        OKMCPN = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKMCPN <> 'N'
      C                   Z-ADD     WMCpn         S1MCPN
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -194,14 +197,14 @@
       *                                                               *
       *****************************************************************
      C     SRValMinCpn   BEGSR
- 
+
      C                   IF        DDMCPN <> *BLANKS
- 
+
      C                   MOVE      *BLANKS       ZFLD17
      C                   MOVE      DDMCPN        ZFLD17
      C                   Z-ADD     4             ZSDIG
      C                   Z-ADD     7             ZSDEC
- 
+
      C                   CALLB     'ZASIGN'
      C                   PARM      *BLANK        ZASignOk
      C                   PARM                    ZFLD17
@@ -210,7 +213,7 @@
      C                   PARM      *BLANKS       ZSDCSP
      C                   PARM      *BLANKS       ZOUT15
      C                   PARM      *BLANKS       ZFSIGN
- 
+
      C                   IF        ZASignOk = 'N'
      C                   MOVE      'N'           OKMCPN
      C                   ADD       1             IDx
@@ -219,22 +222,22 @@
      C                   ELSE
      C                   MOVE      ZOUT15        WMinCpn
      C                   MOVE      ZOUT15        WMCpn
- 
+
      C                   IF        ZFSign = '-'
      C                   Z-SUB     WMCpn         WMCpn
      C                   ENDIF
- 
+
      C                   IF        WMinCpn > PCpnRt
      C                   MOVE      'N'           OKMCPN
      C                   ADD       1             IDx
      C                   MOVEL     'DDMCPN'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0153'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

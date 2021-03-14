@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *      
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054317           Date 09Sep19               *      
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050018           Date 05Nov18               *
       *                 MD047554           Date 11Oct17               *
@@ -103,6 +104,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054317 - PDCL X not generated for freq based repayment     *      
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -2302,7 +2304,8 @@
       *
      C     LACHTP        IFEQ      'I'                                                      AR547813
      C     LAAMTP        ANDEQ     'BC'                                                     AR547813
-     C     LABRTT        IFNE      *ZERO                                                    AR547813
+     C*****LABRTT        IFNE      *ZERO                                             AR547813 CSD103
+     C     LABRTT        IFNE      *BLANKS                                                    CSD103
      C     LO_CHIN       ANDEQ     *BLANK                                                   AR547813
      C     PTYPA         IFEQ      63                                                       AR547813
      C     PTYPA         OREQ      65                                                       AR547813
@@ -2319,7 +2322,8 @@
       *                                                                                     AR547813
      C     LACHTP        IFEQ      'R'                                                      AR547813
      C     LAAMTP        ANDEQ     'BC'                                                     AR547813
-     C     LO_BRTT       ANDEQ     *ZERO                                                    AR547813
+     C*****LO_BRTT       ANDEQ     *ZERO                                             AR547813 CSD103
+     C     LO_BRTT       ANDEQ     *BLANKS                                                    CSD103
      C                   MOVE      *BLANK        LO_CHIN                                    AR547813
      C                   ENDIF                                                              AR547813
       *                                                                                     AR547813

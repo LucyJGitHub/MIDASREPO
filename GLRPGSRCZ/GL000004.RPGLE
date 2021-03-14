@@ -11,12 +11,15 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2011            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts                  *
@@ -60,7 +63,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -69,17 +72,17 @@
       ** | Named constants                      |
       ** | ===============                      |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
       ** | ==========================           |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** | Declared variables                   |
       ** | ==================                   |
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -94,7 +97,7 @@
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     1             SETLL     ACCNTAB
      C                   READ      ACCNTAB
      C                   DOW       NOT %EOF(ACCNTAB)
@@ -103,13 +106,13 @@
       *
      C                   IF        ATYP = 'R' AND RECI = 'D' AND
      C                             ACEFDT = 0
- 
+
      C                   EVAL      ACEFDT = DACO
- 
+
      C                   UPDATE    ACCNTABF
- 
+
      C                   ENDIF
- 
+
      C                   READ      ACCNTAB
      C                   ENDDO
       *
@@ -128,13 +131,13 @@
       *  Calls: *PSSR                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       ** Read in Installation Data
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

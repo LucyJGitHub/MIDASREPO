@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -162,11 +165,11 @@
      C                   IF        OKSPRI = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKSPRI <> 'N'
      C                   MOVE      DDSPRI        S1SPRI
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -177,9 +180,9 @@
       *                                                               *
       *****************************************************************
      C     SRValSpdInd   BEGSR
- 
+
      C                   IF        DDSPRI <> *BLANK
- 
+
      C                   IF        DDBASS = *BLANKS
      C                   MOVE      'N'           OKSPRI
      C                   ADD       1             IDx
@@ -195,7 +198,7 @@
      C                   MOVEL     'SEA0150'     MsgIdXAr(IDx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDSPRI <> 'A' AND
      C                             DDSPRI <> 'S' AND
      C                             DDSPRI <> 'P'
@@ -204,15 +207,15 @@
      C                   MOVEL     'DDSPRI'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0151'     MsgIdXAr(IDx)
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        DDBASS <> *BLANKS
      C                   MOVE      'A'           DDSPRI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************

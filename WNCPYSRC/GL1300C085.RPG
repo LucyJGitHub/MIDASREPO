@@ -1,0 +1,157 @@
+      *****************************************************************
+      *  Start of /COPY GL1300C085                                    *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. LUC111             Date 24Jan19               *
+      *  Prev Amend No. A67971             Date 29Jan14               *
+      *                 NUC003 (S25019)    Date 16Jun05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC111 - Upgrade R4/NUC003 & fix/es as FB 2.1 LUC111         *
+      *  A67971 - Omit extended narrative 1 because it is the         *
+      *            same as posting narrative in fld 61 subfld 9.      *
+      *  NUC003 - Output EXTENDED NARRATIVES for GL, DL and RE        *
+      *           Modules to SWIFT MT940 statements field 86.         *
+      *                                                               *
+      *****************************************************************
+      *------------------------------------------------------------------
+      *                                                                                       
+      *  SR/F86SR - Format GL, DL and RE Extended Narratives for                              
+      *             MT940, field 86                                                           
+      *                                                                                       
+      *  Called from:  SR/F61SR                                                               
+      *                                                                                       
+      *------------------------------------------------------------------                     
+      *                                                                                       
+     C           F86SR     BEGSR                                                              
+      *                                                                                       
+      * For DL, GL or RE postings only:                                                       
+      *                                                                                       
+     C           MOD86     IFEQ 'DL'                       B1                                 
+     C           MODID     OREQ 'GL'                                                          
+     C           MODID     OREQ 'RE'                                                          
+      *                                                                                       
+      * Read the extention file and pick up extended narratives                               
+      * required for F86 processing.                                                          
+      *                                                                                       
+     C                     MOVE *IN15     SAV15   1                                           
+     C                     MOVE *BLANKS   GNAR1                                               
+     C                     MOVE *BLANKS   GNAR2                                               
+     C                     MOVE *BLANKS   GNAR3                                               
+      *                                                                                       
+     C                     MOVE ZZ009     UNQK                                                
+     C********** APTKEY    CHAINEODPOY1              15                                
+     C           APTKEY    CHAINXXEODPY1             15                                       
+     C           *IN15     IFEQ *ON                        B2                                 
+     C********** APTKEY    CHAINSWPOSY0              15                                
+     C           APTKEY    CHAINXXSWPSY0             15                                       
+     C                     ENDIF                           E2                                 
+      *                                                                                       
+     C                     MOVE CRLF      @CTRC                                               
+     C                     MOVE *BLANKS   FELD86                                              
+      *                                                                                       
+      **  If Posting Extension record for Extended Narratives                                 
+      **  is found for DL, GL or RE postings:                                                 
+      *                                                                                       
+     C           *IN15     IFEQ *OFF                       B2  *IN15                          
+      *                                                                                       
+     C           MODID     IFEQ 'GL'                                                          A67971
+     C                     MOVELGNAR2     FLD861                                              A67971
+     C                     MOVELGNAR3     FLD862                                              A67971
+     C                     ELSE                                                               A67971
+     C                     MOVELGNAR1     FLD861                                              
+     C                     MOVELGNAR2     FLD862                                              
+     C                     MOVELGNAR3     FLD863                                              
+     C                     ENDIF                                                              A67971
+      *                                                                                       
+     C           FELD86    IFNE *BLANKS                    B3  FELD86                         
+     C                     MOVE ':86: '   @MTAG                                               
+      *                                                                                       
+     C                     MOVEAFELD86    ARAY86                                              
+      *                                                                                       
+     C                     Z-ADD1         L       20                                          
+     C           L         DOWLE3                          B4 - DO                            
+      *                                                                                       
+     C           ARAY86,L  IFNE *BLANKS                    B5  ARAY86                         
+     C                     MOVE *BLANKS   WRK86                                               
+     C                     MOVELARAY86,L  WRK86                                               
+     C                     MOVELWRK50X    @MFLD                                               
+     C                     ADD  1         MCNT                                                
+      *                                                                                       
+     C           WRK36     IFEQ *BLANKS                    B6                                 
+     C                     MOVE CRLF      @CTRC                                               
+     C                     ELSE                            X6                                 
+     C                     MOVE *BLANKS   @CTRC                                               
+     C                     ENDIF                           E6                                 
+      *                                                                                       
+     C                     ADD  1         M                                                   
+     C           M         OCUR MULT                                                          
+      *                                                                                       
+     C           WRK36     IFNE *BLANKS                    B6                                 
+     C                     MOVE CRLF      @CTRC                                               
+     C                     MOVELWRK36     @MFLD                                               
+     C                     ADD  1         M                                                   
+     C           M         OCUR MULT                                                          
+     C                     ENDIF                           E6                                 
+      *                                                                                       
+     C                     MOVE *BLANKS   @MTAG                                               
+     C                     ENDIF                           E5  ARAY86                         
+     C                     ADD  1         L                                                   
+     C                     ENDDO                           E4 - DO                            
+     C                     ENDIF                           E3  FELD86                         
+      *                                                                                       
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                      
+      **  If Posting Extension record for Extended Narratives                                 
+      **  is NOT found for DL, GL or RE postings, output the                                  
+      **  core 30 character posting narrative.                                                
+     C                     ELSE                            X2  *IN15 ON                       
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                      
+      *                                                                                       
+     C                     MOVELMPNAR     FLD861                                              
+      *                                                                                       
+     C           FELD86    IFNE *BLANKS                    B3  FELD86                         
+     C                     MOVE ':86: '   @MTAG                                               
+      *                                                                                       
+     C                     MOVEAFELD86    ARAY86                                              
+      *                                                                                       
+     C                     Z-ADD1         L       20                                          
+      *                                                                                       
+     C           ARAY86,L  IFNE *BLANKS                    B4  ARAY86                         
+     C                     MOVE *BLANKS   WRK86                                               
+     C                     MOVELARAY86,L  WRK86                                               
+     C                     MOVELWRK50X    @MFLD                                               
+     C                     ADD  1         MCNT                                                
+      *                                                                                       
+     C           WRK36     IFEQ *BLANKS                    B5                                 
+     C                     MOVE CRLF      @CTRC                                               
+     C                     ELSE                            X5                                 
+     C                     MOVE *BLANKS   @CTRC                                               
+     C                     ENDIF                           E5                                 
+      *                                                                                       
+     C                     ADD  1         M                                                   
+     C           M         OCUR MULT                                                          
+      *                                                                                       
+     C           WRK36     IFNE *BLANKS                    B5                                 
+     C                     MOVE CRLF      @CTRC                                               
+     C                     MOVELWRK36     @MFLD                                               
+     C                     ADD  1         M                                                   
+     C           M         OCUR MULT                                                          
+     C                     ENDIF                           E5                                 
+      *                                                                                       
+     C                     MOVE *BLANKS   @MTAG                                               
+      *                                                                                       
+     C                     ENDIF                           E4  ARAY86                         
+     C                     ENDIF                           E3  FELD86                         
+      *                                                                                       
+     C                     ENDIF                           E2  *IN15                          
+      *                                                                                       
+     C                     MOVE SAV15     *IN15                                               
+      *                                                                                       
+     C                     ENDIF                           E1                                 
+      *                                                                                       
+     C           F86END    ENDSR                                                              
+      *                                                                                       
+      *****************************************************************
+      *  End of /COPY GL1300C085                                      *
+      *****************************************************************

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 CFT157             Date 29Aug14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR1028639          Date 17Dec12               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *

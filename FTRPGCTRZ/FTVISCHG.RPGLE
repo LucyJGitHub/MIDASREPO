@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *

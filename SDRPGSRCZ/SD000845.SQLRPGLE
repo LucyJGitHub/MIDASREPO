@@ -18,12 +18,16 @@
       *                                                               *
       *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CAP735             Date 12May20               *
-      *  Prev Amend No. CAP734             Date 12May20               *
+      *  Last Amend No. CAP774             Date 21Jan21               *
+      *  Prev Amend No. CAP773             Date 21Jan21               *
+      *                 CAP735             Date 12May20               *
+      *                 CAP734             Date 12May20               *
       *                 CAP702  *CREATE    Date 12May20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+/*    *  CAP774 - 24x7 APIs - Loan API                                *
+/*    *  CAP773 - 24x7 APIs - Facility API                            *
       *  CAP735 - 24x7 APIs - GL Accounts API                         *
       *  CAP734 - 24x7 APIs - SD Customer Details API                 *
       *  CAP702 - 24x7 APIs - Common Processing                       *
@@ -258,11 +262,29 @@ e1   C                   ENDIF
      C                   MOVEL     '2AMAD'       APMAPI                         CAP735
      C                   MOVEL     MQMSGN        APXML                          CAP735
      C                   ENDIF                                                  CAP735
+      ** if Facility                                                            CAP773
+     C     CAP773        IFEQ      'Y'                                          CAP773
+     C     APINME        ANDEQ     'FCIP'                                       CAP773
+     C     APIACT        ANDEQ     'WRITE'                                      CAP773
+     C                   MOVEL     '3FCIP'       APMAPI                         CAP773
+     C                   MOVEL     MQMSGN        APXML                          CAP773
+     C                   ENDIF                                                  CAP773
+      ** if Loan                                                                CAP774
+     C     CAP774        IFEQ      'Y'                                          CAP774
+     C     APINME        ANDEQ     'CLIP'                                       CAP774
+     C     APIACT        ANDEQ     'WRITE'                                      CAP774
+     C                   MOVEL     '4CLIP'       APMAPI                         CAP774
+     C                   MOVEL     MQMSGN        APXML                          CAP774
+     C                   ENDIF                                                  CAP774
       *
      C     APINME        IFEQ      'CUSD'                                       CAP734
      C     CAP734        ANDEQ     'Y'                                          CAP734
      C     APINME        OREQ      'AMAD'                                       CAP735
      C     CAP735        ANDEQ     'Y'                                          CAP735
+     C     APINME        OREQ      'FCIP'                                       CAP773
+     C     CAP773        ANDEQ     'Y'                                          CAP773
+     C     APINME        OREQ      'CLIP'                                       CAP774
+     C     CAP774        ANDEQ     'Y'                                          CAP774
      C     APIACT        IFEQ      'WRITE'
       *
       ** Write record to API24X7SPD
@@ -377,6 +399,32 @@ b3   C                   IF        ZASTAT = 'S'
      C                   ELSE                                                   CAP735
      C                   MOVE      'N'           CAP735                         CAP735
      C                   ENDIF                                                  CAP735
+      *
+      ** Check CAP773 - 24X7 APIS Facility API                                  CAP773
+     C                   CALL      'AOSARDR0'                                   CAP773
+     C                   PARM      '*MSG   '     @RTCD             7            CAP773
+     C                   PARM      '*KEY   '     @OPTN             7            CAP773
+     C                   PARM      'CAP773'      @SARD             6            CAP773
+     C     SCSARD        PARM      SCSARD        DSFDY                          CAP773
+      *                                                                         CAP773
+     C     @RTCD         IFEQ      *BLANKS                                      CAP773
+     C                   MOVE      'Y'           CAP773            1            CAP773
+     C                   ELSE                                                   CAP773
+     C                   MOVE      'N'           CAP773                         CAP773
+     C                   ENDIF                                                  CAP773
+      *
+      ** Check CAP774 - 24X7 APIS Loan API                                      CAP774
+     C                   CALL      'AOSARDR0'                                   CAP774
+     C                   PARM      '*MSG   '     @RTCD             7            CAP774
+     C                   PARM      '*KEY   '     @OPTN             7            CAP774
+     C                   PARM      'CAP774'      @SARD             6            CAP774
+     C     SCSARD        PARM      SCSARD        DSFDY                          CAP774
+      *                                                                         CAP774
+     C     @RTCD         IFEQ      *BLANKS                                      CAP774
+     C                   MOVE      'Y'           CAP774            1            CAP774
+     C                   ELSE                                                   CAP774
+     C                   MOVE      'N'           CAP774                         CAP774
+     C                   ENDIF                                                  CAP774
       *
      C                   IN        SDSTAT
      C                   MOVEL     LIBR          Sys24x7

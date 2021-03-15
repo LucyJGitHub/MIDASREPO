@@ -354,11 +354,11 @@
      C     SRBLRT        BEGSR
 
       ** Default value depending on where this program is called
-     C                   IF        DDBLRT = *BLANKS
      C                   SELECT
 
       ** Default to 'N' if blank
-     C                   WHEN      ApiName = 'BSRT'
+     C                   WHEN      ApiName = 'BSRT' and
+     C                             DDBLRT = *BLANKS
      C                   EVAL      DDBLRT = 'N'
 
       ** Default value from base rate code                                                    CLE172
@@ -370,7 +370,6 @@
      C                   EVAL      DDBLRT = CLBLRT                                            CLE172
 
      C                   ENDSL
-     C                   ENDIF
 
       ** Value must be 'Y' or 'N'
      C                   IF        DDBLRT <> 'Y' and

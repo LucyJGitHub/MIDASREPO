@@ -5224,8 +5224,8 @@
      C                   CALLB     'AOBSRTR0'                                                 CLE172
      C                   PARM      *BLANKS       @RtCd                                        CLE172
      C                   PARM      '*KEY   '     @Optn                                        CLE172
-     C                   PARM      DDCURR        @Curr             3                          CLE172
-     C                   PARM      DDBRAT        @BRat             2                          CLE172
+     C                   PARM      DDCURR        @Curr                                        CLE172
+     C                   PARM      DDBRAT        @BRat                                        CLE172
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
       *                                                                                       CLE172
      C     @RtCd         IFNE      *BLANK                                                     CLE172
@@ -5233,7 +5233,7 @@
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                                 CLE172
      C                   MOVEL     'LEA0139'     MsgIdArr(Idx)                                CLE172
-     C                   ENDIF                                                                CLE172
+     C                   ELSE                                                                 CLE172
       *                                                                                       CLE172
       ** Cannot amend base rate code from and to a backward-looking rate                      CLE172
       *                                                                                       CLE172
@@ -5242,6 +5242,7 @@
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                                 CLE172
      C                   MOVEL     '5049430'     MsgIdArr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172

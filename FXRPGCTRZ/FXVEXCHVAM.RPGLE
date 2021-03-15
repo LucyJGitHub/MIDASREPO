@@ -892,16 +892,19 @@
      C                   END                                                                MD057657
       *                                                                                     AR808714
 
+     C                   Z-ADD     0             #SPOTD           13 8
      C     AMTOK         IFNE      'Y'                                                      MD057657
      C     @@MDF1        IFEQ      @@MDF2                                                   MD057657
-     C     @SPOT1        SUB       @SPOT2        #SPOTD           13 8                      MD057657
+     C     @SPOT1        SUB       @SPOT2        #SPOTD                                     MD057657
      C                   ELSE                                                               MD057657
      C     @@MDF1        IFEQ      'D'                                                      MD057657
+     C     DDBCCY        ANDNE     BJLCCY                                                   MD057657
      C     @SPOT1        MULT      -1            #SPOT1           13 8                      MD057657
      C                   ELSE                                                               MD057657
      C                   EVAL      #SPOT1 = @SPOT1                                          MD057657
      C                   END                                                                MD057657
      C     @@MDF2        IFEQ      'D'                                                      MD057657
+     C     DDSCCY        ANDNE     BJLCCY                                                   MD057657
      C     @SPOT2        MULT      -1            #SPOT2           13 8                      MD057657
      C                   ELSE                                                               MD057657
      C                   EVAL      #SPOT2 = @SPOT2                                          MD057657
@@ -913,19 +916,27 @@
      C     #SPOTD        IFLE      1                                                        MD057657
      C     #SPOTD        ANDGE     -1                                                       MD057657
      C     AMTOK         IFNE      'Y'                                                      AR808714
-     C     @AMT7         MULT(H)   @RRATE        @WPROD           15 0                      AR808714
-     C     @AMT7         DIV(H)    @RRATE        @WQUOT           15 0                      AR808714
-     C     @WPROD        IFEQ      @AMT8                                                    AR808714
-     C     @WQUOT        OREQ      @AMT8                                                    AR808714
+     C*****@AMT7*        MULT(H)   @RRATE        @WPROD           15 0             AR808714 MD057657
+     C*****@AMT7*        DIV(H)    @RRATE        @WQUOT           15 0             AR808714 MD057657
+     C     @AMT7R        MULT(H)   @RRATE        @WPROD           15 0                      MD057657
+     C     @AMT7R        DIV(H)    @RRATE        @WQUOT           15 0                      MD057657
+     C*****@WPROD        IFEQ      @AMT8                                           AR808714 MD057657
+     C*****@WQUOT        OREQ      @AMT8                                           AR808714 MD057657
+     C     @WPROD        IFEQ      @AMT8R                                                   MD057657
+     C     @WQUOT        OREQ      @AMT8R                                                   MD057657
      C                   MOVE      'Y'           AMTOK                                      AR808714
      C                   ENDIF                                                              AR808714
      C                   ENDIF                                                              AR808714
       *                                                                                     AR808714
      C     AMTOK         IFNE      'Y'                                                      AR808714
-     C     @AMT8         MULT(H)   @RRATE        @WPROD           15 0                      AR808714
-     C     @AMT8         DIV(H)    @RRATE        @WQUOT           15 0                      AR808714
-     C     @WPROD        IFEQ      @AMT7                                                    AR808714
-     C     @WQUOT        OREQ      @AMT7                                                    AR808714
+     C*****@AMT8*        MULT(H)   @RRATE        @WPROD           15 0             AR808714 MD057657
+     C*****@AMT8*        DIV(H)    @RRATE        @WQUOT           15 0             AR808714 MD057657
+     C     @AMT8R        MULT(H)   @RRATE        @WPROD           15 0                      MD057657
+     C     @AMT8R        DIV(H)    @RRATE        @WQUOT           15 0                      MD057657
+     C*****@WPROD        IFEQ      @AMT7                                           AR808714 MD057657
+     C*****@WQUOT        OREQ      @AMT7                                           AR808714 MD057657
+     C     @WPROD        IFEQ      @AMT7R                                                   MD057657
+     C     @WQUOT        OREQ      @AMT7R                                                   MD057657
      C                   MOVE      'Y'           AMTOK                                      AR808714
      C                   ENDIF                                                              AR808714
      C                   ENDIF                                                              AR808714
@@ -2925,6 +2936,7 @@
      C                   PARM                    @RRATE           13 8          Rate+mgn+fwd pts
      C                   PARM                    @XRATE           13 8          Rate+fwd pts
      C**********         PARM                    F3OSRT           13 8            BUG23050A BUG23668
+     C                   PARM                    BJLCCY            3                        MD057657
       *
       ** WORK OUT TOLERANCE AS A PERCENTAGE
       *

@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 03Feb21               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
@@ -1491,7 +1491,6 @@
 
       /COPY WNCPYSRC,LELERIV058
 
-
       *
       *  *------------------------------------------------------*
       *  *  Check if warning messages                           *
@@ -1730,7 +1729,6 @@
      C                   Z-ADD     L_CLNMDT      L_CLMDAT                                     246575
      C                   Z-ADD     0             L_CLNMDT
      C                   ENDIF
-      *
       *
       **  Update fields from CLOANCK - Valid file
       *
@@ -7007,6 +7005,9 @@
       *  SRBLRTE - Validate backward-looking rate fields              *                       CLE172
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     *BLANKS       NRoScnBlrt                                   CLE172
+     C                   MOVEL     *BLANKS       TempInpDS                                    CLE172
       *                                                                                       CLE172
      C                   MOVEL     LeriScnBlrt   NRoScnBlrt                                   CLE172
       *                                                                                       CLE172

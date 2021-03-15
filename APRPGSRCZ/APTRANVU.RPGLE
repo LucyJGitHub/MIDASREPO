@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 03Feb21               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
@@ -2645,6 +2645,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LEIFLn        Bfp                                          CAP086
 
      C     LEEXLn        SUBST     BUFFER:Bfp    ExtData
+     C                   ADD       LEEXLn        Bfp                                          CLE172
+     C                                                                                        CLE172
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         98                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LEEXLn) + LEBLRDta              CLE172
+                                                                                              CLE172
+     C
 
      C                   CALL      'LELERIVU'
      C                   PARM                    HeadIn

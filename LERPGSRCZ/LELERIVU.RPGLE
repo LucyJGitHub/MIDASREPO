@@ -23,7 +23,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 03Feb21               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -75,7 +75,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending                        *
-      *           (Recompile)                                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -550,7 +549,7 @@
      C                   ADD       RecordLen     eBfp                                         CLE172
                                                                                               CLE172
       ** Backward-Looking Rate Fields                                                         CLE172
-     C                   EVAL      LeriScnBlrt = %SUBST(Extdata500:eBfp:100)                  CLE172
+     C                   EVAL      LeriScnBlrt = %SUBST(Extdata500:eBfp:98)                   CLE172
      C                   ADD       98            eBfp                                         CLE172
                                                                                               CLE172
 

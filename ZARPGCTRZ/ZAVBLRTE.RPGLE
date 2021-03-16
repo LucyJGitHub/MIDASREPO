@@ -387,7 +387,8 @@
                                                                                               CLE172
       ** Issue error if the loan type used is not allowed for                                 CLE172
       ** backward looking rate                                                                CLE172
-     C                   IF        ApiName = 'CLIP'                                           CLE172
+     C                   IF        ApiName = 'CLIP' or                                        CLE172
+     C                             ApiName = 'LERI'                                           CLE172
                                                                                               CLE172
      C                   IF        %LOOKUP(TransType:WLPtyp) = 0 and                          CLE172
      C                             DDBLRT = 'Y'                                               CLE172

@@ -57,7 +57,6 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -999,7 +998,8 @@
      C                   MOVEL     'RO'          E#EVTP
       *
       * (New) Base Rate Code
-     C                   Z-ADD     CL_NBRA       E#BRTT
+     C**********         Z-ADD     CL_NBRA       E#BRTT                                       CSD103
+     C                   MOVE      CL_NBRA       E#BRTT                                       CSD103
       *
       * (New) Rate/Spread
      C                   Z-ADD     CL_NRTS       E#RTSP
@@ -1196,7 +1196,8 @@
       *
      C     LAAMTP        IFEQ      'BC'
      C                   MOVEL     'BC'          E#EVTP
-     C                   Z-ADD     LABRTT        E#BRTT
+     C**********         Z-ADD     LABRTT        E#BRTT                                       CSD103
+     C                   MOVE      LABRTT        E#BRTT                                       CSD103
      C                   END
       *
       * If the loan amendment is a spread change

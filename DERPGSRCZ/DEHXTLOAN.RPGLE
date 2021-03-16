@@ -55,7 +55,6 @@
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -817,7 +816,8 @@
       *
      C     H_AMTP        IFEQ      'BC'
      C                   MOVEL     'BC'          E#EVTP
-     C                   Z-ADD     H_BRTT        E#BRTT
+     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
+     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   MOVEL     'C'           E#IRTP
       * funding rate                                                                          220981
@@ -850,7 +850,8 @@
       *
      C     H_AMTP        IFEQ      'BR'
      C                   MOVEL     'BC'          E#EVTP
-     C                   Z-ADD     H_BRTT        E#BRTT
+     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
+     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   MOVEL     'C'           E#IRTP
      C                   END
@@ -859,7 +860,8 @@
       *
      C     H_AMTP        IFEQ      'RO'
      C                   MOVEL     'RO'          E#EVTP
-     C                   Z-ADD     H_BRTT        E#BRTT
+     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
+     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   Z-ADD     H_RTSP        E#RTSP
      C                   MOVE      H_SPIN        E#SPIN
@@ -911,7 +913,8 @@
      C     H_AMTP        IFEQ      'MC'
 
      C                   MOVEL     'RO'          E#EVTP
-     C                   Z-ADD     H_BRTT        E#BRTT
+     C**********         Z-ADD     H_BRTT        E#BRTT                                       CSD103
+     C                   MOVE      H_BRTT        E#BRTT                                       CSD103
      C                   Z-ADD     H_BRTE        E#BRTE
      C                   Z-ADD     H_RTSP        E#RTSP
      C                   MOVE      H_SPIN        E#SPIN

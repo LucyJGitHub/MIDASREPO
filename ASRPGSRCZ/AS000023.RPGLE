@@ -48,8 +48,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *           (Recompile)                                         *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1240,7 +1239,8 @@
 
      C                   WHEN      H1PRTP = 'FV'
 
-     C                   IF        UBRTT = *ZEROS
+     C**********         IF        UBRTT = *ZEROS                                             CSD103
+     C                   IF        UBRTT = *BLANKS                                            CSD103
      C     10000000      MULT(H)   UEINR         WrkINT
      C                   ELSE
      C     10000000      MULT(H)   TEINR         WrkINT
@@ -1250,7 +1250,8 @@
 
      C                   WHEN      H1PRTP = 'CF'
 
-     C                   IF        UBRTT = *ZEROS
+     C**********         IF        UBRTT = *ZEROS                                             CSD103
+     C                   IF        UBRTT = *BLANKS                                            CSD103
      C     10000000      MULT(H)   TEINR         WrkINT
      C                   ELSE
      C     10000000      MULT(H)   UEINR         WrkINT

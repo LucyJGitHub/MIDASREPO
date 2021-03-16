@@ -1417,6 +1417,11 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
+      ** Initialise data structures                                                           CLE172
+      *                                                                                       CLE172
+     C                   CLEAR                   TempInpDS                                    CLE172
+     C                   CLEAR                   LoanValBlrt                                  CLE172
+                                                                                              CLE172
       ** Initialise Backward-Looking Rate field to N                                          CLE172
       *                                                                                       CLE172
      C                   MOVEL     'N'           CCLBLRT                                      CLE172

@@ -3236,6 +3236,7 @@
       ** If CLE172 is ON, add/subtract the Benchmark Adjustment                               CLE172
       *                                                                                       CLE172
      C     CLE172        IFEQ      'Y'                                                        CLE172
+     C     L_CLBLRT      ANDEQ     'Y'                                                        CLE172
      C     L_CLBADJ      ANDNE     *ZEROS                                                     CLE172
      C                   ADD       L_CLBADJ      INTR                                         CLE172
      C                   ENDIF                                                                CLE172

@@ -1873,6 +1873,7 @@
      C                   PARM                    S_Rec
      C                   PARM                    InfData500                                   CAP086
      C                   PARM                    ExtData500
+     C                   PARM                    Filler                                     MD057739
      C                   PARM                    ReservID         10
      C                   PARM                    DDSTAT
      C                   PARM                    FldNameArr

@@ -621,10 +621,10 @@
      D   MsgDtaTmp                   99                                                     MD000091
 
      DLOAMBuffer       DS             9                                                     MD057739
-     D DDXRLT                  1      2                                                     MD057739
-     D DDXRLS                  3      4                                                     MD057739
-     D DDXRLC                  5      8                                                     MD057739
-     D DDGASS                  9      9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |

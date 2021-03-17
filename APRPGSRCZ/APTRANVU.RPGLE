@@ -754,11 +754,14 @@
      D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
                                                                                              259120A
      D*Filler***       DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
      DRFiller          DS             9                                                     MD057739
-     D DDXRLT                  1      2                                                      259120A
-     D DDXRLS                  3      4                                                      259120A
-     D DDXRLC                  5      8                                                      259120A
-     D DDGASS                  9      9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -2764,6 +2767,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
      C     FILLn         SUBST     BUFFER:Bfp    RFiller                                    MD057739
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LOEXLn) + RFiller             MD057739
      C                   ADD       FILLn         Bfp                                        MD057739
 
      C                   MOVE      ReservID15    ReservID                       BUG2480
@@ -2777,7 +2781,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    RecSttmt
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    ExtData
-     C                   PARM                    RFiller                                    MD057739
      C                   PARM                    ReservID         10
      C                   PARM                    DDSTAT           16
      C                   PARM                    FldNameArr

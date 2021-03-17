@@ -277,12 +277,15 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       **--------------------------------------------------------------------------------------------
 
-     D*iller****       DS             8                                              259120 MD057739
+     D*iller***        DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
      DFiller           DS             9                                                     MD057739
-     D DDXRLT                  1      2                                                       259120
-     D DDXRLS                  3      4                                                       259120
-     D DDXRLC                  5      8                                                       259120
-     D DDGASS                  9      9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0

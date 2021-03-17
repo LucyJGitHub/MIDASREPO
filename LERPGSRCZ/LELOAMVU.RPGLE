@@ -503,12 +503,15 @@
       ** EXTERNAL DS FOR SAR DETAILS
      D SCA_LCD       E                     EXTFLD(LCD)
                                                                                              259120A
-     D*iller****       DS             8                                             259120A MD057739
+     D*iller***        DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
      DFiller           DS             9                                                     MD057739
-     D DDXRLT                  1      2                                                      259120A
-     D DDXRLS                  3      4                                                      259120A
-     D DDXRLC                  5      8                                                      259120A
-     D DDGASS                  9      9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
 
       ** PCA ICD Details
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
@@ -648,6 +651,7 @@
      C                   MOVEL     Trans5002     TranInLOA2                                   CLE106
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   MOVEL     Extdata500    Extdata
+     C                   EVAL      Filler = %SUBST(Extdata500:51:9)                         MD057739
 
 
       * Reset variables gradually updated
@@ -1873,7 +1877,6 @@
      C                   PARM                    S_Rec
      C                   PARM                    InfData500                                   CAP086
      C                   PARM                    ExtData500
-     C                   PARM                    Filler                                     MD057739
      C                   PARM                    ReservID         10
      C                   PARM                    DDSTAT
      C                   PARM                    FldNameArr

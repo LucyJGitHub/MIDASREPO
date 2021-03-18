@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035672           Date 07Sep15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -29,20 +30,21 @@
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
-/*    *                 240408             Date 14Jun06               *
-/*    *                 CLE042             Date 06Sep05               *
+      *                 240408             Date 14Jun06               *
+      *                 CLE042             Date 06Sep05               *
       *                 BUG9655            Date 19Dec05               *
       *                 CLE106             Date 01Aug04               *
       *                 CLE036             Date 22Sep03               *
       *                 CLE034             Date 05May03               *
       *                 CLE031             Date 03Feb03               *
       *                 CAP086             Date 08Jun05               *
-/*    *                 BG1135             Date 19Mar04               *
+      *                 BG1135             Date 19Mar04               *
       *                 CLE030             Date 01Oct02               *
       *                 CAP075  *CREATE    Date 16Jul02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035672 - Spread rate should be shown in spread rate field  *

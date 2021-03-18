@@ -21,11 +21,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103  *CREATE    Date 01Aug20               *
+      *  Last Amend No. MD057770           Date 18Mar21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057770 - Numeric field issue between blank / 0 / 00 inputs *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -195,7 +197,7 @@
      D WNUMAMT2        S             11P 7
      D WDBAV           S              1S 0
      D WNumBADJ        S             11P 7
-     D WNumFLOR        S             11P 7
+     D WNumFLOR        S              9P 6
      D WSign           S              1A
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)
@@ -305,6 +307,7 @@
      C                   CLEAR                   TranScnBlrt
      C                   CLEAR                   BLRTValFlds
      C                   CLEAR                   OutValfld
+     C                   CLEAR                   SDBSRT                                     MD057770
 
       ** Store current number of error index
      C                   Z-ADD     Idx           Ix
@@ -464,8 +467,9 @@
      C                   EVAL      WNumBADJ = 0
 
       ** Value must be numeric not exceeding 4 int and 7 decimal places
-     C                   IF        DDBLRT = 'Y' and
-     C                             DDBADJ <> *BLANKS
+     C**********         IF        DDBLRT = 'Y' and                                         MD057770
+     C**********                   DDBADJ <> *BLANKS                                        MD057770
+     C                   IF        DDBADJ <> *BLANKS                                        MD057770
 
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
@@ -503,8 +507,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDBADJ <> *BLANKS and
-     C                             %TRIMR(DDBADJ) <> '0'
+     C**********                   DDBADJ <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDBADJ) <> '0'                                    MD057770
+     C                             WNumBADJ <> 0                                            MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
@@ -512,6 +517,7 @@
      C                   ENDIF
 
      C                   IF        DDBADJOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
       ** Assign value to screen field if user input is blank
      C                   IF        DDBADJ = *BLANKS
      C                   EVAL      WNUMAMT1 = WNumBADJ
@@ -532,8 +538,9 @@
      C                   EVAL      WNumFLOR = 0
 
       ** Value must be numeric not exceeding 3 int and 6 decimal places
-     C                   IF        DDBLRT = 'Y' and
-     C                             DDFLOR <> *BLANKS
+     C**********         IF        DDBLRT = 'Y' and                                         MD057770
+     C**********                   DDFLOR <> *BLANKS                                        MD057770
+     C                   IF        DDFLOR <> *BLANKS                                        MD057770
 
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDFLOR        @@ALPH
@@ -584,8 +591,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDFLOR <> *BLANKS and
-     C                             %TRIMR(DDFLOR) <> '0'
+     C**********                   DDFLOR <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
+     C                             WNumFLOR <> 0                                            MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
@@ -593,6 +601,7 @@
      C                   ENDIF
 
      C                   IF        DDFLOROK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
       ** Assign value to screen field if user input is blank
      C                   IF        DDFLOR = *BLANKS
      C                   EVAL      WNUMAMT1 = WNumFLOR
@@ -655,8 +664,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDLBDY <> *BLANKS and
-     C                             %TRIMR(DDLBDY) <> '0'
+     C**********                   DDLBDY <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDLBDY) <> '0'                                    MD057770
+     C                             WDAY <> 0                                                MD057770
      C                   EVAL      DDLBDYOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
@@ -664,6 +674,7 @@
      C                   ENDIF
 
      C                   IF        DDLBDYOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDLBDY
      C                   MOVE      WDAY          VLBDY
      C                   ENDIF
@@ -721,8 +732,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDLODY <> *BLANKS and
-     C                             %TRIMR(DDLODY) <> '0'
+     C**********                   DDLODY <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDLODY) <> '0'                                    MD057770
+     C                             WDAY <> 0                                                MD057770
      C                   EVAL      DDLODYOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
@@ -730,6 +742,7 @@
      C                   ENDIF
 
      C                   IF        DDLODYOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDLODY
      C                   MOVE      WDAY          VLODY
      C                   ENDIF
@@ -816,6 +829,7 @@
 
       ** Default to '05'
      C                   WHEN      ApiName = 'BSRT'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      '05'          WDAY
 
      C                   ENDSL
@@ -874,8 +888,9 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDRRDP <> *BLANKS and
-     C                             %TRIMR(DDRRDP) <> '0'
+     C**********                   DDRRDP <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDRRDP) <> '0'                                    MD057770
+     C                             WDAY <> 0                                                MD057770
      C                   EVAL      DDRRDPOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'

@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     MD041126
-/*STD ***RPGBASEMOD****************************************************            MD041126 MD057748
+/*S*D ***RPGBASEMOD****************************************************            MD041126 MD057748
 /*STD *  RPGBASEBND                                                   *                     MD057748
 /*EXI *  TEXT('Midas ER Update MX Files for Bundesbank')              *
       *****************************************************************
@@ -139,7 +139,7 @@
      D*OCODE****       S             10I 0                                         MD041126 MD057748
      D*REASON***       S             10I 0                                         MD041126 MD057748
      D CID             S              9P 0                                                  MD057748
-     D HCON            S              9P 0                                                  MD057748
+     D HCONN           S              9P 0                                                  MD057748
      D OPTS            S              9P 0                                                  MD057748
      D HOBJ            S              9P 0                                                  MD057748
      D OCODE           S              9P 0                                                  MD057748

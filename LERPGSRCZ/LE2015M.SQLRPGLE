@@ -8229,6 +8229,7 @@
       *
       * Disconnect queue manager
      C**********         CALL      'QMQM'                                                   MD041126
+     C                   CALL      'QMQM'                                                   MD057748
       * I: Call Id: Disconnect queue manager
       * I: Connection handle
       * O: Completion code

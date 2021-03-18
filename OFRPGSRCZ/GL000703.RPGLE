@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 05Oct20               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD057748           Date 16Mar21               *
+      *  Prev Amend No. MD041126           Date 05Oct20               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033895           Date 09Jun14               *
       *                 MD027428           Date 09Jun14               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD056616.                             *
       *  CSD101 - Password Encryption                                 *
@@ -567,9 +569,14 @@
      C**********         PARM                    HConn                                      MD041126
      C**********         PARM                    CompletionCode                             MD041126
      C**********         PARM                    ConnReason                                 MD041126
-     C                   CALLP     MQCONN( PMQMgr : HConn :                                 MD041126
-     C                                     CompletionCode :                                 MD041126
-     C                                     ConnReason )                                     MD041126
+     C**********         CALLP     MQCONN( PMQMgr : HConn :                        MD041126 MD057748
+     C**********                           CompletionCode :                        MD041126 MD057748
+     C**********                           ConnReason )                            MD041126 MD057748
+     C                   CALL      'MQCONN'                                                 MD057748
+     C                   PARM                    PMQMgr                                     MD057748
+     C                   PARM                    HConn                                      MD057748
+     C                   PARM                    CompletionCode                             MD057748
+     C                   PARM                    ConnReason                                 MD057748
 
      C                   If        CompletionCode = CCFAIL
      C                   ExSr      *PSSR
@@ -596,8 +603,15 @@
      C**********         PARM                    HObj                                       MD041126
      C**********         PARM                    OpenCode                                   MD041126
      C**********         PARM                    Reason                                     MD041126
-     C                   CALLP     MQOPEN( HConn : MQOD : Options :                         MD041126
-     C                                     HObj : OpenCode : Reason )                       MD041126
+     C**********         CALLP     MQOPEN( HConn : MQOD : Options :                MD041126 MD057748
+     C**********                           HObj : OpenCode : Reason )              MD041126 MD057748
+     C                   CALL      'MQOPEN'                                                 MD057748
+     C                   PARM                    HConn                                      MD057748
+     C                   PARM                    MQOD                                       MD057748
+     C                   PARM                    Options                                    MD057748
+     C                   PARM                    HObj                                       MD057748
+     C                   PARM                    OpenCode                                   MD057748
+     C                   PARM                    Reason                                     MD057748
 
      C                   If        OpenCode = CCFAIL
      C                   ExSr      *PSSR
@@ -623,8 +637,14 @@
      C**********         PARM                    Options                                    MD041126
      C**********         PARM                    CompletionCode                             MD041126
      C**********         PARM                    Reason                                     MD041126
-     C                   CALLP     MQCLOSE( HConn : HObj : Options :                        MD041126
-     C                                      CompletionCode : Reason )                       MD041126
+     C**********         CALLP     MQCLOSE( HConn : HObj : Options :               MD041126 MD057748
+     C**********                            CompletionCode : Reason )              MD041126 MD057748
+     C                   CALL      'MQCLOSE'                                                MD057748
+     C                   PARM                    HConn                                      MD057748
+     C                   PARM                    HObj                                       MD057748
+     C                   PARM                    Options                                    MD057748
+     C                   PARM                    CompletionCode                             MD057748
+     C                   PARM                    Reason                                     MD057748
      C
      C                   If        Reason <> RCNONE
      C                   ExSr      *PSSR
@@ -649,8 +669,12 @@
      C**********         PARM                    HConn                                      MD041126
      C**********         PARM                    CompletionCode                             MD041126
      C**********         PARM                    Reason                                     MD041126
-     C                   CALLP     MQDISC( HConn : CompletionCode :                         MD041126
-     C                                     Reason )                                         MD041126
+     C**********         CALLP     MQDISC( HConn : CompletionCode :                MD041126 MD057748
+     C**********                           Reason )                                MD041126 MD057748
+     C                   CALL      'MQDISC'                                                 MD057748
+     C                   PARM                    HConn                                      MD057748
+     C                   PARM                    CompletionCode                             MD057748
+     C                   PARM                    Reason                                     MD057748
      C                   If        CompletionCode = CCFAIL
      C                   ExSr      *PSSR
      C                   EndIf

@@ -1121,7 +1121,7 @@
      C*****W#TEMP        IFEQ      '5'                                               133783 MD041126
      C                   MOVEL     'MQGET'       W#TEMP                            MD041126 MD057748
      C**********         IF        W#TEMP = 'MQGET'                                MD041126 MD057748
-     C**********         MOVEL     MQGET         W#TEMP            1                        MD057748
+     C                   MOVEL     MQGET         W#TEMP            1                        MD057748
      C     W#TEMP        IFEQ      '5'                                                      MD057748
       *                                                                                       133783
       ** Send Error Message to MOPERQ                                                         133783

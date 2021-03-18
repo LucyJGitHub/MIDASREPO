@@ -105,13 +105,13 @@
       **  The following /COPY contains various standard declarations.
      C***/COPY*RPCPYSRC,Std_Dcl                                                             MD041126
      D***/COPY*RPCPYSRC,STD_DCL                                                    MD041126 MD057748
-     C/COPY RPCPYSRC,Std_Dcl                                                                MD057748
+     C/COPY RPCPYSRC,STD_DCL                                                                MD057748
       *
       ** The following /COPY contains the layout of the Meridian
       ** a data structure
      D***/COPY*RPCPYSRC,Mdn_Hd_DS                                                           MD041126
      D***/COPY*RPCPYSRC,MDN_HD_DS                                                  MD041126 MD057748
-     D/COPY RPCPYSRC,Mdn_Hd_DS                                                              MD057748
+     D/COPY RPCPYSRC,MDN_HD_DS                                                              MD057748
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦

@@ -27,7 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057770 - Numeric field issue between blank / 0 / 00 inputs *
+      *  MD057770 - Numeric field issue between blank, 0, 00 inputs   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *

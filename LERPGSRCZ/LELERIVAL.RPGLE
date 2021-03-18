@@ -682,6 +682,7 @@
      D CLE106          S              1                                                       CLE106
                                                                                               CLE106
      D CLE172          S              1                                                       CLE172
+     D ASTRK           S              1                                                       CLE172
      D CRE073          S              1                                                       CRE073
      D TMCNSP          S             11P 7                                                    CRE073
      D TMBSRT          S             11P 7                                                    CRE073
@@ -7006,6 +7007,10 @@
       *****************************************************************                       CLE172
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
+     C                   EXSR      CHKASTRK                                                   CLE172
+      *
+     C                   IF        ASTRK = 'N'
+      *                                                                                       CLE172
      C                   MOVEL     *BLANKS       NRoScnBlrt                                   CLE172
      C                   MOVEL     *BLANKS       TempInpDS                                    CLE172
       *                                                                                       CLE172
@@ -7044,6 +7049,8 @@
      C                   MOVEL     NRoScnBlrt    LeriScnBlrt                                  CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
+      *
+     C                   ENDIF
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172
       *                                                                                       CLE172
@@ -9388,6 +9395,55 @@
      C                   ENDSR                                                              MD034449
       *****************************************************************                     MD034449
       /EJECT                                                                                MD034449
+      *****************************************************************                       CLE172
+      * CHKASTRK - CHECK ASTERISKS                                    *                       CLE172
+      *****************************************************************                       CLE172
+      *                                                                                       CLE172
+     C     CHKASTRK      BEGSR                                                                CLE172
+      *                                                                                       CLE172
+     C                   EVAL      ASTRK = *BLANKS                                            CLE172
+      *                                                                                       CLE172
+     C                   IF        DDNRFRRB='*' OR DDNCALMB='*' OR                            CLE172
+     C                             DDNBADJB='*' OR DDNFLORB='*' OR                            CLE172
+     C                             DDNLBDYB='*' OR DDNLODYB='*' OR                            CLE172
+     C                             DDNOPSHB='*' OR DDNRRDPB='*' OR                            CLE172
+     C                             DDNDBAVB='*' OR DDNBLRTB='*' OR                            CLE172
+     C                             DDNBRAB='*'                                                CLE172
+      *                                                                                       CLE172
+     C                   IF        DDNRFRRB<>'*' OR DDNCALMB<>'*' OR                          CLE172
+     C                             DDNBADJB<>'*' OR DDNFLORB<>'*' OR                          CLE172
+     C                             DDNLBDYB<>'*' OR DDNLODYB<>'*' OR                          CLE172
+     C                             DDNOPSHB<>'*' OR DDNRRDPB<>'*' OR                          CLE172
+     C                             DDNDBAVB<>'*' OR DDNBLRTB<>'*' OR                          CLE172
+     C                             DDNBRAB<>'*'                                               CLE172
+      *                                                                                       CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDNBLRTB'                               CLE172
+     C                   EVAL      MsgIDArr(Idx) = '5049496'                                  CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVEL     *BLANKS       L_CLNBLR                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNRFR                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNCAL                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNBAD                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNFLR                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNLBD                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNLOD                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNPSH                                     CLE172
+     C                   Z-ADD     *ZEROS        L_CLNRRD                                     CLE172
+     C                   MOVEL     *BLANKS       L_CLNDBA                                     CLE172
+     C                                                                                        CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      ASTRK = 'N'                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ENDSR                                                                CLE172
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *

@@ -639,17 +639,14 @@
       ** Next Averaging Option                                                                CLE172
       *                                                                                       CLE172
      C                   MOVE      NBLRT         DDNBLRT                                      CLE172
-     C                   MOVE      NBLRT         DDNBLRTB                                     CLE172
       *                                                                                       CLE172
       ** Next Risk Free Rate                                                                  CLE172
       *                                                                                       CLE172
      C                   MOVE      NRFRR         DDNRFRR                                      CLE172
-     C                   MOVE      NRFRR         DDNRFRRB                                     CLE172
       *                                                                                       CLE172
       ** Next Calculation Method                                                              CLE172
       *                                                                                       CLE172
      C                   MOVE      NCALM         DDNCALM                                      CLE172
-     C                   MOVE      NCALM         DDNCALMB                                     CLE172
       *                                                                                       CLE172
       ** Next Benchmark Adjustment                                                            CLE172
       *                                                                                       CLE172
@@ -659,7 +656,6 @@
      C                   MOVE      WWNbADJ       @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDNBADJ                                      CLE172
-     C                   MOVE      @@AMTD        DDNBADJB                                     CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Next Floor                                                                           CLE172
@@ -670,33 +666,27 @@
      C                   MOVE      WWNFlor       @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDNFLOR                                      CLE172
-     C                   MOVE      @@AMTD        DDNFLORB                                     CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Next Lookback Days for Settlement                                                    CLE172
       *                                                                                       CLE172
      C                   MOVE      NLBDY         DDNLBDY                                      CLE172
-     C                   MOVE      NLBDY         DDNLBDYB                                     CLE172
       *                                                                                       CLE172
       ** Next Lockout Days                                                                    CLE172
       *                                                                                       CLE172
      C                   MOVE      NLODY         DDNLODY                                      CLE172
-     C                   MOVE      NLODY         DDNLODYB                                     CLE172
       *                                                                                       CLE172
       ** Next Observation Period Shift                                                        CLE172
       *                                                                                       CLE172
      C                   MOVE      NOPSH         DDNOPSH                                      CLE172
-     C                   MOVE      NOPSH         DDNOPSHB                                     CLE172
       *                                                                                       CLE172
       ** Next Rate Rounding Decimal Places                                                    CLE172
       *                                                                                       CLE172
      C                   MOVE      NRRDP         DDNRRDP                                      CLE172
-     C                   MOVE      NRRDP         DDNRRDPB                                     CLE172
       *                                                                                       CLE172
       ** Next Day Basis for Average                                                           CLE172
       *                                                                                       CLE172
      C                   MOVE      NDBAV         DDNDBAV                                      CLE172
-     C                   MOVE      NDBAV         DDNDBAVB                                     CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
       *

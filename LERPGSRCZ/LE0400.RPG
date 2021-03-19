@@ -261,7 +261,7 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD027433 - Interest amount incorrectly capitalised & posted  *
       *             to suspense due to improper use of *IN30 when a   *
@@ -891,7 +891,8 @@
      F***HIUPDHQ*O   F     151            DISK                     127069 157669
      F***HIUPDHQ O   F     178            DISK                                         157669 CAS005
      F***HIUPDHQ O   F     206            DISK                                         CAS005 CRE073
-     FHIUPDHQ O   F     235            DISK                                                   CRE073
+     F***HIUPDHQ O   F     235            DISK                                         CRE073 CLE172
+     FHIUPDHQ O   F     271            DISK                                                   CLE172
 0016 FHIUPDZX O   F     100            DISK
 0017 FACTN5DH O   F     320            DISK
 0017 F***ACTN5DK*O   F     320            DISK                            S01518
@@ -1214,6 +1215,17 @@
      I              PEXI                            WPEXI                                     CLE031
      I              STAL                            WSTAL                                     CLE034
      I              CLAS                            WCLAS                                     CLE042
+     I              BLRT                            WBLRT                                     CLE172
+     I              RFRR                            WRFRR                                     CLE172
+     I              CALM                            WCALM                                     CLE172
+     I              BADJ                            WBADJ                                     CLE172
+     I              FLOR                            WFLOR                                     CLE172
+     I              LBDY                            WLBDY                                     CLE172
+     I              LODY                            WLODY                                     CLE172
+     I              OPSH                            WOPSH                                     CLE172
+     I              RRDP                            WRRDP                                     CLE172
+     I              DBAV                            WDBAV                                     CLE172
+     I              RTKN                            WRTKN                                     CLE172
       *                                                                                     MD028338
      ICLOANCKF                                                                              MD028338
      I              RECI                            WRECIK                                  MD028338
@@ -2716,6 +2728,17 @@
      C********** CLE004    IFEQ 'Y'                                                    CLE004 235743
      C**********           MOVE '0'       IN52                                         CLE004 235743
      C**********           ENDIF                                                       CLE004 235743
+     C                     MOVE *BLANKS   PBLRT   1                                           CLE172
+     C                     MOVE *BLANKS   PRFRR  10                                           CLE172
+     C                     MOVE *BLANKS   PCALM   4                                           CLE172
+     C                     MOVE *ZEROS    PBADJ  117                                          CLE172
+     C                     MOVE *ZEROS    PFLOR  117                                          CLE172
+     C                     MOVE *ZEROS    PLBDY   20                                          CLE172
+     C                     MOVE *ZEROS    PLODY   20                                          CLE172
+     C                     MOVE *BLANKS   POPSH   1                                           CLE172
+     C                     MOVE *ZEROS    PRRDP   20                                          CLE172
+     C                     MOVE *ZEROS    PDBAV   10                                          CLE172
+     C                     MOVE *BLANKS   PRTKN   1                                           CLE172
       *                                                                                       206596
       ** Record read is from control record or detail records (ACTN3DK/N)                     206596
       *                                                                                       206596
@@ -8324,6 +8347,20 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     GOTO OUTBRR                                                        236196
      C                     ENDIF                                                              236196
       *                                                                                       236196
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C           WBLRT     ANDEQ'Y'                                                           CLE172
+     C                     MOVE WBLRT     PBLRT                                               CLE172
+     C                     MOVE WRFRR     PRFRR                                               CLE172
+     C                     MOVE WCALM     PCALM                                               CLE172
+     C                     Z-ADDWBADJ     PBADJ                                               CLE172
+     C                     Z-ADDWFLOR     PFLOR                                               CLE172
+     C                     Z-ADDWLBDY     PLBDY                                               CLE172
+     C                     Z-ADDWLODY     PLODY                                               CLE172
+     C                     MOVE WOPSH     POPSH                                               CLE172
+     C                     Z-ADDWRRDP     PRRDP                                               CLE172
+     C                     Z-ADDWDBAV     PDBAV                                               CLE172
+     C                     MOVE WRTKN     PRTKN                                               CLE172
+     C                     ENDIF                                                              CLE172
      C**  FOR BACK VALUED LOANS STORE THE NEW BASE RATE                   E19243
      C**                                                                  E19243
      C   62                Z-ADDBRTE      NEWBRT                          E19243
@@ -13996,6 +14033,29 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     GOTO INITEN                                                        CLE154
      C                     ENDIF                                                              CLE154
      C                     ENDIF                                                              CLE154
+      *                                                                                       CLE172
+      ** Access SAR details to check if CLE172 is installed                                   CLE172
+      *                                                                                       CLE172
+     C                     MOVE 'N'       CLE172  1                                           CLE172
+     C                     CALL 'AOSARDR0'                                                    CLE172
+     C                     PARM *BLANKS   @RTCD                                               CLE172
+     C                     PARM '*VERIFY' @OPTN                                               CLE172
+     C                     PARM 'CLE172'  @SARD                                               CLE172
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
+      *                                                                                       CLE172
+     C           @RTCD     IFEQ *BLANK                                                        CLE172
+     C                     MOVE 'Y'       CLE172                                              CLE172
+     C                     ELSE                                                               CLE172
+     C           @RTCD     IFNE '*NRF   '                                                     CLE172
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE172
+     C                     MOVEL'CLE172 ' DBKEY                                               CLE172
+     C                     Z-ADD26        DBASE                                               CLE172
+     C                     MOVE *ON       *INU7                                               CLE172
+     C                     MOVE *ON       *INU8                                               CLE172
+     C                     MOVE *ON       *INLR                                               CLE172
+     C                     GOTO INITEN                                                        CLE172
+     C                     ENDIF                                                              CLE172
+     C                     ENDIF                                                              CLE172
       *****************************************************************            MD035545 MD047993
       ***Access*general*ledger*details.********************************            MD035545 MD047993
       *****************************************************************            MD035545 MD047993
@@ -15227,6 +15287,17 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      O                 06      CNSG     224                                                 AR824724
      O                 06      RDMT     231                                                 AR824724
      O                 06      RDFD     235                                                 AR824724
+     O                         PBLRT    236                                                   CLE172
+     O                         PRFRR    246                                                   CLE172
+     O                         PCALM    250                                                   CLE172
+     O                         PBADJ    256P                                                  CLE172
+     O                         PFLOR    262P                                                  CLE172
+     O                         PLBDY    264                                                   CLE172
+     O                         PLODY    266                                                   CLE172
+     O                         POPSH    267                                                   CLE172
+     O                         PRRDP    269                                                   CLE172
+     O                         PDBAV    270                                                   CLE172
+     O                         PRTKN    271                                                   CLE172
      O/COPY WNCPYSRC,LE0400O008
       *                                                                   147438
 3610 O** OUTPUT OF START REC. WHEN CREATED
@@ -15521,6 +15592,17 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      O                         CNSG     224                                                 AR824724
      O                         RDMT     231                                                 AR824724
      O                         RDFD     235                                                 AR824724
+     O                         PBLRT    236                                                   CLE172
+     O                         PRFRR    246                                                   CLE172
+     O                         PCALM    250                                                   CLE172
+     O                         PBADJ    256P                                                  CLE172
+     O                         PFLOR    262P                                                  CLE172
+     O                         PLBDY    264                                                   CLE172
+     O                         PLODY    266                                                   CLE172
+     O                         POPSH    267                                                   CLE172
+     O                         PRRDP    269                                                   CLE172
+     O                         PDBAV    270                                                   CLE172
+     O                         PRTKN    271                                                   CLE172
 3737 O*
 3738 OHIUPDZX T        LR 50
 3739 O                                    1 'T'

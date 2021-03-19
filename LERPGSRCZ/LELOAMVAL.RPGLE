@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
@@ -852,6 +854,9 @@
       *
       ** Loan base rate code change processing
      C     DDATYP        IFEQ      'BC'
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+     C                   EXSR      SRBRAT                                                     CLE172
+     C                   ENDIF                                                                CLE172
      C                   EXSR      SRBCPR
      C                   ENDIF
      C                   ENDIF
@@ -5199,6 +5204,58 @@
      C                   ENDIF
       *
      C     EXBCPR        ENDSR
+      *****************************************************************                       CLE172
+      /EJECT                                                                                  CLE172
+      *****************************************************************                       CLE172
+      *  SRBRAT - Base Rate Code extra validation                     *                       CLE172
+      *****************************************************************                       CLE172
+     C     SRBRAT        BEGSR                                                                CLE172
+      *                                                                                       CLE172
+      ** Loan should be forward-looking or backward-looking but                               CLE172
+      ** calculation method should be 'MANL'.                                                 CLE172
+      *                                                                                       CLE172
+     C                   IF        SVBLRT = 'N'                                               CLE172
+     C                             OR                                                         CLE172
+     C                             (SVBLRT = 'Y' AND SVCALM = 'MANL')                         CLE172
+      *                                                                                       CLE172
+     C     DDCURR        IFNE      *BLANKS                                                    CLE172
+     C     DDBRAT        ANDNE     *BLANKS                                                    CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'AOBSRTR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RtCd                                        CLE172
+     C                   PARM      '*KEY   '     @Optn                                        CLE172
+     C                   PARM      DDCURR        @Curr                                        CLE172
+     C                   PARM      DDBRAT        @BRat                                        CLE172
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
+      *                                                                                       CLE172
+     C     @RtCd         IFNE      *BLANK                                                     CLE172
+     C                   MOVE      'N'           DDBRATOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                                 CLE172
+     C                   MOVEL     'LEA0139'     MsgIdArr(Idx)                                CLE172
+     C                   ELSE                                                                 CLE172
+      *                                                                                       CLE172
+      ** Cannot amend base rate code from and to a backward-looking rate                      CLE172
+      *                                                                                       CLE172
+     C     SVBLRT        IFNE      BABLRT                                                     CLE172
+     C                   MOVE      'N'           DDBRATOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDBRAT'                                 CLE172
+     C                   MOVEL     '5049430'     MsgIdArr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+      ** If loan is not forward-looking or not backward-looking with                          CLE172
+      ** calculation method equal to 'MANL' then error.                                       CLE172
+      *                                                                                       CLE172
+     C                   ELSE                                                                 CLE172
+     C                   MOVE      'N'           DDLOANOK                                     CLE172
+     C                   ADD       1             Idx                                          CLE172
+     C                   EVAL      FldNameArr(Idx) = 'DDLOAN'                                 CLE172
+     C                   MOVEL     '5049431'     MsgIdArr(Idx)                                CLE172
+     C                   ENDIF                                                                CLE172
+     C                   ENDSR                                                                CLE172
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6161,6 +6218,19 @@
      C                   IF        @RtCd = *Blanks                                            CLE042
      C                   EVAL      CLE042 = 'Y'                                               CLE042
      C                   ENDIF                                                                CLE042
+                                                                                              CLE172
+      ** Check if CLE172 is installed                                                         CLE172
+                                                                                              CLE172
+     C                   MOVE      'N'           CLE172            1                          CLE172
+     C                   CALLB     'AOSARDR0'                                                 CLE172
+     C                   PARM      *Blanks       @RtCd                                        CLE172
+     C                   PARM      '*VERIFY'     @Optn                                        CLE172
+     C                   PARM      'CLE172'      @SARD                                        CLE172
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE172
+                                                                                              CLE172
+     C                   IF        @RtCd = *Blanks                                            CLE172
+     C                   EVAL      CLE172 = 'Y'                                               CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE035
       ***Check*if*CLE035*is*installed*********************************               CLE035 BUG10392
       ** Check if CLE036 is installed                                                       BUG10392

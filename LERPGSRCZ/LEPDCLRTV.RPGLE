@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1094242          Date 03Mar13               *
       *                 AR1076968          Date 07Feb13               *
@@ -38,8 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
-      *             (Recompile)                                       *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1094242 - Event code not found                             *
@@ -75,77 +77,77 @@
       *  CLE134 - Past Due Call Loan Processing                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Past Due & Original Loan Link File Format
- 
+
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(X_)
- 
+
       ** Past Due & Original Loan Link File Format - FOID
- 
+
      FLEPDUEL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPDUED0:LEPDUED3)
      F                                     PREFIX(X_)
- 
+
       ** Past Due & Original Loan Link File Format
- 
+
      FLEPDUEL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPDUED0:LEPDUED6)
      F                                     PREFIX(X_)
- 
+
       ** Past Due & Original Fees Link File Format
- 
+
      FLEPDUFL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(Z_)
- 
+
       ** Past Due & Original Fees Link File Format - FOID
- 
+
      FLEPDUFL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPDUFD0:LEPDUFD3)
      F                                     PREFIX(Z_)
- 
+
       ** Past Due & Original Fees Link File Format
- 
+
      FLEPDUFL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEPDUFD0:LEPDUFD1)
      F                                     PREFIX(Z_)
- 
+
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      F                                     PREFIX(C_)
- 
+
       ** Loans file
- 
+
      FCLOANC    IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCLF)
      F                                     IGNORE(CLOANZ1F)
      F                                     PREFIX(K_)
- 
+
       ** Loans File Format
- 
+
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(E_)
- 
+
       ** Fees File Format
- 
+
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYFNF)
      F                                     IGNORE(FCLTYZZF)
      F                                     PREFIX(M_)
- 
+
       ** Facilities File Format
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -153,96 +155,96 @@
       **
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY includes (among others) the LDA layout
       ** and the copyright array definition:
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY includes the definitions for error and
       ** warning message arrays.
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D OKTrnDets     E DS                  EXTNAME(LEEPDCLPD)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
      D SDFEE         E DS                  EXTNAME(SDFEEPD )
- 
+
       ** Loans File Format
- 
+
      D PDCLFilFmtLoanE DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(C_)
- 
+
       ** Loans File Format 2
- 
+
      D PDCLFilFmtLoaKE DS                  EXTNAME(CLOANCK)
      D                                     PREFIX(K_)
- 
+
       ** Fees File Format
- 
+
      D PDCLFilFmtFee E DS                  EXTNAME(LEFEED)
      D                                     PREFIX(E_)
- 
+
       ** Facilities File Format
- 
+
      D PDCLFilFmtFctyE DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(M_)
- 
+
       ** Loan Link File Format
- 
+
      D PDCLFilFmtLnkLE DS                  EXTNAME(LEPDUEPD)
      D                                     PREFIX(X_)
- 
+
       ** Fee Link File Format
- 
+
      D PDCLFilFmtLnkFE DS                  EXTNAME(LEPDUFPD)
      D                                     PREFIX(Z_)
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D ZMUSER          DS
      D  IUSR                   1     10
      D  DBRN                  11     13
@@ -251,31 +253,31 @@
       ** Switchable Feature Details Data Structure                                            CLE148
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE148
                                                                                               CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Ix              S              3P 0
- 
+
       ** Index for arrays of of error message ids etc
- 
+
      D ZACTN           S              1A
      D ZBR             S              3A
      D ERR             S              1P 0
- 
+
      D WCUSN           S              6A
      D WAREF           S             10A
      D WC              S              2P 0
      D WADTYP          S              1A
      D W@ADRC          S              1A
- 
+
      D ModeofOp        S              6A
      D RespMode        S              1A
      D DDACTN          S              1A
      D FOTRID          S             20A
- 
+
      D WFECU           S              6A
      D WFFAC           S              3  0
      D WFCSQ           S              2  0                                                    263289
@@ -285,32 +287,32 @@
      D WORLNT          S              6
      D WFCTY           S              5  0
      D WFLNO           S              6
- 
+
       ** Key fields ofr LEPDUxPD files
- 
+
      D WRECI           S              1A   inz('D')
      D WPLON           S              6A
      D WPIIN           S              1
      D WVDAT           S              5  0
- 
+
      D WPDINT          S             15  0
      D WTKIACL         S              6
      D WTKIABR         S              3
      D WTKIAAC         S             10  0
      D WTKIASE         S              2  0
      D WTKIACY         S              3
- 
+
       ** Parameters for Access Objects
- 
+
      D @CCY            s              3
- 
+
       ** Establish the transaction type
- 
+
      D RecordType      S              1A
      DLoan             C                   CONST('1')
      DFeeLoan          C                   CONST('2')
      DFeeFacility      C                   CONST('3')
- 
+
      DNPLO2            S              6
      DNPLON            S              6
      DDDFLNO           S              6
@@ -363,22 +365,22 @@
       *                                                                                       CLE148
      D LoanAlphaAllow  S              1A                                                      CLE148
      D CSD031          S              1A                                                      CLE148
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -386,53 +388,53 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
      C                   EVAL      *IN98 = *OFF
- 
+
       ** Initialisation
- 
+
      C                   EXSR      INIT
- 
+
       ** If the mode is 'Front Office Transaction Interface'
       ** Do (Extra) Validation for Front Office Transaction Interface
- 
+
      C                   IF        ModeofOp = '*FRONT'
      C                   EXSR      VFRNT
- 
+
       ** Carry out no further validation if errors have occurred.
- 
+
      C                   IF        DDACTNOK = 'N'
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Action Code & Transaction Number
- 
+
      C                   IF        DDACTN <> ' '                                              CLE134
      C                   EXSR      VAL
      C                   ENDIF                                                                CLE134
- 
+
       ** Carry out no further validation if errors have occurred
- 
+
      C                   IF        Ix <> 0
      C                   RETURN
      C                   ENDIF
- 
+
       ** Access Security Checking
- 
+
      C                   IF        DDACTN <> ' '                                              CLE134
      C                   IF        RespMode = 'S'
      C                   EVAL      ZACTN=DDACTN
- 
+
       ** If single branching
       ** Access Security Checking - Single Branching
- 
+
      C                   IF        BJSBRC <> *BLANK AND
      C                             RESPMODE = 'S'
      C                   EXSR      ACSSES
      C                   ENDIF
- 
+
       ** If multibranching
       ** Access Security Checking - Multi-Branching
- 
+
      C                   IF        BJSBRC = *BLANK AND
      C                             DDACTN <> 'I' AND
      C                             RESPMODE = 'S'
@@ -440,15 +442,15 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                                CLE134
- 
+
       ** Carry out no further validation if errors have occurred
- 
+
      C                   IF        DDACTNOK = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
       ** Carry out no further validation if errors occurred.
- 
+
      C                   IF        ( DDACTNOK  = 'N'
      C                             OR DDORLNOK = 'N'
      C                             OR DDFECUOK = 'N'
@@ -457,9 +459,9 @@
      C                             OR DDFLNOOK = 'N' )
      C                   RETURN
      C                   ENDIF
- 
+
       ** Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -467,15 +469,15 @@
       * ACSSES - ACCESS SECURITY CHECKING - SINGLE BRANCHING
       *****************************************************************
      C     ACSSES        BEGSR
- 
+
       ** Check user's authority for the action
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM                    ZACTN
      C                   PARM                    ERR
- 
+
       ** If action invalid for user
- 
+
      C                   IF        ERR = 1
      C                   MOVEL     'N'           DDACTNOK
      C                   ADD       1             Ix
@@ -488,7 +490,7 @@
      C                   MOVEL     'LEL0302'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -496,16 +498,16 @@
       * ACSSEM - ACCESS SECURITY CHECKING - MULTI-BRANCHING
       *****************************************************************
      C     ACSSEM        BEGSR
- 
+
       ** Check user's authority for the action & Booking Branch
- 
+
      C                   CALL      'ZVACTBU'
      C                   PARM                    ZACTN
      C                   PARM      DBRN          ZBR
      C                   PARM                    ERR
- 
+
       ** If action invalid for user
- 
+
      C                   IF        ERR = 1
      C                   MOVEL     'N'           DDACTNOK
      C                   ADD       1             Ix
@@ -525,7 +527,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -533,18 +535,18 @@
       * VFRNT - VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
       *****************************************************************
      C     VFRNT         BEGSR
- 
+
       ** ERROR IF ACTION CODE IS NOT 'I'
- 
+
      C                   IF        DDACTN <> 'I'
      C                   EVAL      DDACTNOK = 'N'
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'APM0200'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** Error if Front Office Transaction ID is Blank
- 
+
      C                   IF        FOTRID = *BLANK
      C                   EVAL      DDACTNOK = 'N'
      C                   ADD       1             Ix
@@ -552,18 +554,18 @@
      C                   MOVEL     'APM0201'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
       ** Access Transaction with Front Office Transaction ID
- 
+
      C     FOTRID        CHAIN     LEPDUEL3                           99
      C  N99FOTRID        CHAIN     LEPDUFL3                           99
- 
+
       ** If Insert
- 
+
      C                   IF        DDACTN = 'I'
- 
+
       ** Front Office Transaction ID can't be Present already
- 
+
      C                   IF        *IN99 = *OFF
      C                   EVAL      DDACTNOK = 'N'
      C                   ADD       1             Ix
@@ -572,11 +574,11 @@
      C                   MOVEL     FOTRID        MsgDtaArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** If not insert, Front Office Transaction ID Must be Present
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DDACTNOK = 'N'
      C                   ADD       1             Ix
@@ -585,9 +587,9 @@
      C                   MOVEL     FOTRID        MsgDtaArr(Ix)
      C                   GOTO      EVFRNT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -595,11 +597,11 @@
       * VAL - VALIDATION OF ACTION CODE AND TRANSACTION NUMBER
       *****************************************************************
      C     VAL           BEGSR
- 
+
       ** Action Code
       ** .. must be 'I' or 'E', if retrieving the data for the confo
       ** page
- 
+
      C                   IF        DDACTN <> 'I'
      C                             AND DDACTN <> 'E'
      C                             AND DDACTN <> 'X'
@@ -609,17 +611,17 @@
      C                   MOVEL     '5045648'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      C                   ENDIF
- 
+
       ** If Enquiry, retrieve the data for the existing LEPDUxPD
       ** records
- 
+
      C                   IF        DDACTN = 'E'
      C                             OR DDACTN = 'X'
- 
+
      C                   IF        DDORLN  <> *BLANKS
- 
+
       ** If the second PDCL has been created
- 
+
      C                   IF        NPLO2 <> *BLANKS
      C                   EVAL      WPLON = NPLO2
      C                   EVAL      WPIIN = 'I'
@@ -633,24 +635,24 @@
      C                   MOVE      X_YTKIACY     WTKIACY
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If first PDCL has been created
- 
+
      C                   IF        NPLON <> *BLANKS
      C                   EVAL      WPLON = NPLON
      C                   EVAL      WPIIN = 'T'
      C     KPDUE2        CHAIN     LEPDUEL6                           9999
- 
+
       ** If not found, need to check P record
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      WPIIN = 'P'
      C     KPDUE2        CHAIN     LEPDUEL6                           9999
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Overwrite some fields if both P and I records exist
- 
+
      C                   IF        NPLON <> *BLANKS AND NPLO2 <> *BLANKS
      C                   Z-ADD     WPDINT        X_YPDINT
      C                   MOVE      WTKIACL       X_YTKIACL
@@ -659,21 +661,21 @@
      C                   MOVE      WTKIASE       X_YTKIASE
      C                   MOVE      WTKIACY       X_YTKIACY
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WPLON = NPLON
      C**********         EVAL      WVDAT = BJRDNB                                             264044
      C*****KPDUF2        CHAIN     LEPDUFL1                           9999                    264044
      C     KPDUF2        SETLL     LEPDUFL1                           9999                    264044
      C     KPDUF2        READE     LEPDUFL1                             9999                  264044
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Retrieve original data
- 
+
      C                   IF        DDORLN  <> *BLANKS
      C                             and ( DDFECU <> *BLANKS or
      C                                   DDFFAC <> *BLANKS or
@@ -689,9 +691,9 @@
      C**********         MOVEL     '5045619'     MsgIdArr(Ix)                                 263627
      C                   GOTO      EVAL
      C                   ENDIF
- 
+
       ** Loan and Fee / Facility details, one has to be entered
- 
+
      C                   IF        DDORLN  = *BLANKS
      C                             and DDFECU = *BLANKS
      C                             and DDFFAC = *BLANKS
@@ -707,9 +709,9 @@
      C**********         MOVEL     '5045620'     MsgIdArr(Ix)                                 263627
      C                   GOTO      EVAL
      C                   ENDIF
- 
+
       ** Retrieve Loan details, if original loan is OK
- 
+
      C                   IF        DDORLN  <> *BLANKS
      C                   EVALR     DDORLN = %trim(DDORLN)
      C                   TESTN                   DDORLN               9798
@@ -814,9 +816,9 @@
      C                   MOVEL     'DDORLN'      FldNameArr(Ix)
      C                   MOVEL     '5045650'     MsgIdArr(Ix)
      C                   ELSE
- 
+
       ** Find type/subtype info
- 
+
      C                   CALL      'AOLOANR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -824,7 +826,7 @@
      C                   PARM      C_SUTP        PLSubType
      C                   PARM      C_CLAS        PLClass
      C     SDLOAN        PARM      SDLOAN        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                             OR AYPPLT = *BLANKS
      C                             OR AYPPLS = *BLANKS
@@ -845,9 +847,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Retrieve Fee details, if fee info are OK
- 
+
      C                   IF        DDORLN  = *BLANKS
      C                             and ( DDFECU <> *BLANKS or
      C                                   DDFFAC <> *BLANKS or
@@ -891,9 +893,9 @@
      C**********         MOVEL     '5045681'     MsgIdArr(Ix)                     AR402732 AR1078443
      C**********         ENDIF                                                    AR402732 AR1078443
      C                   ENDIF                                                    AR402732 AR1078443
- 
+
       ** Fee must be FEAUTO = Y
- 
+
      C**********         IF        E_FEAUTO <> 'Y'                                            263415
      C                   IF        E_FEAUTO = 'N'                                             263415
      C**********                   and DDFECUOK = 'Y'                                         263627
@@ -919,9 +921,9 @@
      C                   MOVEL     '5045688'     MsgIdArr(Ix)                               AR693137
      C                   ENDIF                                                              AR693137
      C                   ENDIF                                                              AR693137
- 
+
       ** Fee must not be suspended
- 
+
      C                   IF        E_FEFSFA = 'Y'
      C**********                   and DDFECUOK = 'Y'                                         263627
      C                             and DDFSEQOK = 'Y'                                         263627
@@ -933,9 +935,9 @@
      C                   MOVEL     'DDFSEQ'      FldNameArr(Ix)                               263627
      C                   MOVEL     '5045649'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
       ** Find type/subtype info
- 
+
      C**********         IF        DDFECUOK = 'Y'                                             263627
      C                   IF        DDFSEQOK = 'Y'                                             263627
      C                             and DDACTN = 'I'
@@ -945,7 +947,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    PFeeCode
      C     SDFEE         PARM      SDFEE         DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                             OR AUCLTY = *BLANKS
      C                             OR AUCLST = *BLANKS
@@ -956,13 +958,13 @@
      C                   MOVEL     'DDFSEQ'      FldNameArr(Ix)                               263627
      C                   MOVEL     '5045655'     MsgIdArr(Ix)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Retrieve Facility Details, if entered
- 
+
      C                   IF        DDORLN  = *BLANKS
      C                             and ( DDFECU <> *BLANKS or
      C                                   DDFFAC <> *BLANKS or
@@ -970,14 +972,14 @@
      C                                   DDFLNO <> *BLANKS )
      C**********                   and DDFECUOK = 'Y'                                         263627
      C                             and DDFSEQOK = 'Y'                                         263627
- 
+
      C                   EVAL      WFECU = DDFECU
      C                   MOVEL     DDFFAC        WFFAC
      C**********         MOVE      DDFFAC        WFSEQ                                        263289
      C                   MOVE      DDFFAC        WFCSQ                                        263289
- 
+
       ** Retrieve Loan details, if Loan fee
- 
+
      C                   IF        DDFLNO <> *BLANKS
      C                   MOVE      DDFLNO        WFLNO
      C     WFLNO         CHAIN     CLOAN
@@ -990,7 +992,7 @@
      C                   EVAL      RecordType = FeeLoan
      C                   ENDIF
      C                   ENDIF
- 
+
      C     KFCLTY        CHAIN     FCLTY
      C                   IF        NOT %FOUND
      C**********         MOVEL     'N'           DDFECUOK                                     263627
@@ -1004,18 +1006,18 @@
      C                   EVAL      RecordType = FeeFacility
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Loan or Fee PDCLs cannot already exist on input
- 
+
      C                   IF        DDACTN = 'I'
      C                             and DDORLNOK  = 'Y'
      C                             and DDFECUOK  = 'Y'
      C                             and DDFFACOK  = 'Y'
      C                             and DDFSEQOK  = 'Y'
      C                             and DDFLNOOK  = 'Y'
- 
+
       ** It is ok if only a 'P' or an 'I' exists                                              263415
                                                                                               263415
      C                   IF        DDORLN  <> *BLANKS
@@ -1049,10 +1051,10 @@
      C                   MOVEL     '5045644'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   GOTO      EVAL
      C                   ENDIF
- 
+
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -1060,25 +1062,25 @@
       * INIT - Initial processing
       *****************************************************************
      C     INIT          BEGSR
- 
+
       ** Clear Outputs
- 
+
      C                   CLEAR                   PDCLFilFmtLoan
      C                   CLEAR                   PDCLFilFmtLoaK
      C                   CLEAR                   PDCLFilFmtFee
      C                   CLEAR                   PDCLFilFmtFcty
- 
+
      C                   EVAL      DDACTNOK    = 'Y'
      C                   EVAL      DDORLNOK    = 'Y'
      C                   EVAL      DDFECUOK    = 'Y'
      C                   EVAL      DDFFACOK    = 'Y'
      C                   EVAL      DDFSEQOK    = 'Y'
      C                   EVAL      DDFLNOOK    = 'Y'
- 
+
      C                   MOVE      IUSR          WUSR
- 
+
      C                   CLEAR                   RecordType
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1086,155 +1088,155 @@
       * *INZSR - Initialisation
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs
- 
+
       ** Return code
- 
+
      C                   PARM                    RetCodeIn
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    ModeofOp
- 
+
       ** Response mode
- 
+
      C                   PARM                    RespMode
- 
+
       ** Action Code
- 
+
      C                   PARM                    DDACTN
- 
+
       ** Front Office Transaction ID
- 
+
      C                   PARM                    FOTRID
- 
+
       ** User ID
- 
+
      C                   PARM                    WUSR
- 
+
       ** Keys
- 
+
      C                   PARM                    DDORLN
      C                   PARM                    DDFECU
      C                   PARM                    DDFFAC
      C                   PARM                    DDFSEQ
      C                   PARM                    DDFLNO
- 
+
      C                   PARM                    NPLON
      C                   PARM                    NPLO2
      C                   PARM                    DDSEIN
       ** COB Mode                                                                          AR1078092
                                                                                            AR1078092
      C                   PARM                    COBMode           1                       AR1078092
- 
+
       ** Outputs
- 
+
       ** Transaction Type
- 
+
      C                   PARM                    RecordType
- 
+
       ** Transaction Details in File Format: Loan 1
- 
+
      C                   PARM                    PDCLFilFmtLoan
- 
+
       ** Transaction Details in File Format: Loan 2
- 
+
      C                   PARM                    PDCLFilFmtLoaK
- 
+
       ** Transaction Details in File Format: Fee
- 
+
      C                   PARM                    PDCLFilFmtFee
- 
+
       ** Transaction Details in File Format: Facility
- 
+
      C                   PARM                    PDCLFilFmtFcty
- 
+
       ** Transaction Details in File Format: Loan Link
- 
+
      C                   PARM                    PDCLFilFmtLnkL
- 
+
       ** Transaction Details in File Format: Fee Link
- 
+
      C                   PARM                    PDCLFilFmtLnkF
- 
+
       ** PDCL Details OK inds
- 
+
      C                   PARM                    OKTrnDets
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    Ix
- 
+
       ** Key Lists
- 
+
      C     KFEE          KLIST
      C                   KFLD                    WFECU
      C                   KFLD                    WFCTY
      C                   KFLD                    WFLNO
      C                   KFLD                    WFSEQ
- 
+
      C     KFCLTY        KLIST
      C                   KFLD                    WFECU
      C                   KFLD                    WFFAC
      C**********         KFLD                    WFSEQ                                        263289
      C                   KFLD                    WFCSQ                                        263289
      C                   KFLD                    WRCTYP
- 
+
       ** Keys for LEPDUEPD files
- 
+
      C     KPDUE         KLIST
      C                   KFLD                    WORLN
- 
+
      C     KPDUE2        KLIST
      C                   KFLD                    WRECI
      C                   KFLD                    WPLON
      C                   KFLD                    WPIIN
- 
+
       ** Keys for LEPDUFPD files
- 
+
      C     KPDUF         KLIST
      C                   KFLD                    WFLNO
      C                   KFLD                    WFECU
      C                   KFLD                    WFCTY
      C                   KFLD                    WFSEQ
- 
+
      C     KPDUF2        KLIST
      C                   KFLD                    WPLON
      C**********         KFLD                    WVDAT                                        264044
- 
+
       ** Initialise program name
- 
+
      C                   EVAL      DBPGM = 'LEPDCLRTV'
- 
+
       ** GET RUNDAT to access MULTI-BRANCHING flag.
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C     *DTAARA       DEFINE                  ZMUSER
      C                   IN        ZMUSER
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  = 900
@@ -1336,10 +1338,10 @@
      C                   EndIf                                                                CLE148
                                                                                               CLE148
      C                   MOVEL     PSysVal1      LoanAlphaAllow                               CLE148
- 
+
       ** Program, module and procedure names for dbase error processing
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
      C                   ENDSR
       *****************************************************************
@@ -1353,15 +1355,15 @@
       *          a ROLLBACK.                                          *
       *                                                               *
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ** Note: if non-standard processing required, use the PSSR_ILENE
       ** subroutine
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************

@@ -2568,6 +2568,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn) + CLAPRDta            MD054028
      C                   ADD       CLCR50Ln      Bfp                                        MD054028
                                                                                             MD054028
+      ** Backward-Looking Rate Fields (CLE172)                                                CLE172
+     C     CLBSRTLn      SUBST     BUFFER:Bfp    BSRDta           50                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:CLEXLn+CLCR50Ln) +              CLE172
+     C                                       BSRDta                                           CLE172
+     C                   ADD       CLBSRTLn      Bfp                                          CLE172
+                                                                                              CLE172
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
@@ -6050,6 +6056,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     RecordLen     CLEXLn            4 0
       *                                                                                     MD054028
      C                   Z-ADD     24            CLCR50Ln          4 0                      MD054028
+      *                                                                                       CLE172
+     C                   Z-ADD     50            CLBSRTLn          4 0                        CLE172
                                                                                               CER049
      C                   MOVEL     *BLANKS       FileName                                     CER049
      C                   MOVEL     'LESTMP2PD'   FileName                                     CER049
@@ -6155,7 +6163,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0
-
 
      C                   ENDSR
       *****************************************************************

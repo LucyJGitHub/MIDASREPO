@@ -117,7 +117,8 @@
      C                   EVAL      PVAL  = 'from ' + W_PDLVAL + ' to '
      C                             + DS_DLVAL1TO5
      C                   EXSR      PrintDetail1
-     C* N10              UPDATE    @DWNLL0
+     C  N10              EVAL      DLVAL = DS_DLVAL
+     C  N10              UPDATE    @DWNLL0
      C                   ENDIF
 
      C                   ENDIF

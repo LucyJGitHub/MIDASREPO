@@ -23,7 +23,6 @@
              DCL        VAR(&LSTD) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
              DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
@@ -114,14 +113,13 @@
 
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&PREF) VALUE(&SVAL1))
-             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
              CHGVAR     VAR(&GPLIB) VALUE(&PREF *TCAT 'GPLIB')
 /**/
 
 FLECHK:
-/* Check if YYXXXXXXXX exists in DPLIB for backup */
+/* Check if YYXXXXXXXX exists in GPLIB for backup */
 /**/
-             CHKOBJ     OBJ(&DPLIB/YYGPDWNLPD) OBJTYPE(*FILE)
+             CHKOBJ     OBJ(&GPLIB/YYGPDWNLPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
              DLTF       FILE(YYGPDWNLPD)
 
@@ -129,7 +127,7 @@ FLECHK:
 /* Create backup */
 /**/
 BACKUP:
-             CPYF       FROMFILE(&GPLIB/GPDWNLPD) TOFILE(&DPLIB/YYGPDWNLPD) +
+             CPYF       FROMFILE(&GPLIB/GPDWNLPD) TOFILE(&GPLIB/YYGPDWNLPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
                 CLRPFM     FILE(YYGPDWNLPD)
@@ -168,7 +166,7 @@ ABNOR:
                         THEN(DO)
              IF         COND(&RUNP *EQ 'YES') THEN(DO)
 
-             CPYF       FROMFILE(&DPLIB/YYGPDWNLPD) TOFILE(&GPLIB/GPDWNLPD) +
+             CPYF       FROMFILE(&GPLIB/YYGPDWNLPD) TOFILE(&GPLIB/GPDWNLPD) +
                              MBROPT(*REPLACE) FMTOPT(*NONE)
              MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
              SNDUSRMSG  MSG('Error occurred in restoring PF/GPDWNLPD from +

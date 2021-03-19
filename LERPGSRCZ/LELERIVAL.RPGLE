@@ -7008,11 +7008,11 @@
      C     SRBLRTE       BEGSR                                                                CLE172
       *                                                                                       CLE172
      C                   EXSR      CHKASTRK                                                   CLE172
-      *
-     C                   IF        ASTRK = 'N'
       *                                                                                       CLE172
-     C                   MOVEL     *BLANKS       NRoScnBlrt                                   CLE172
-     C                   MOVEL     *BLANKS       TempInpDS                                    CLE172
+     C                   IF        ASTRK = 'N'                                                CLE172
+      *                                                                                       CLE172
+     C                   CLEAR                   NRoScnBlrt                                   CLE172
+     C                   CLEAR                   TempInpDS                                    CLE172
       *                                                                                       CLE172
      C                   MOVEL     LeriScnBlrt   NRoScnBlrt                                   CLE172
       *                                                                                       CLE172

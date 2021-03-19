@@ -484,6 +484,7 @@
      C                   PARM                    BNDCSP
 
      C                   IF        @@ERCD <> *ZERO
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
@@ -509,7 +510,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDBADJ <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDBADJ) <> '0'                                    MD057770
-     C                             WNumBADJ <> 0                                            MD057770
+     C                             (WNumBADJ <> 0                                           MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDBADJ'
@@ -555,6 +557,7 @@
      C                   PARM                    BNDCSP
 
      C                   IF        @@ERCD <> *ZERO
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
@@ -593,7 +596,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDFLOR <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
-     C                             WNumFLOR <> 0                                            MD057770
+     C                             (WNumFLOR <> 0                                           MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
@@ -666,7 +670,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDLBDY <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDLBDY) <> '0'                                    MD057770
-     C                             WDAY <> 0                                                MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDLBDYOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDLBDY'
@@ -734,7 +739,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDLODY <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDLODY) <> '0'                                    MD057770
-     C                             WDAY <> 0                                                MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDLODYOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDLODY'
@@ -890,7 +896,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDRRDP <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDRRDP) <> '0'                                    MD057770
-     C                             WDAY <> 0                                                MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDRRDPOK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDRRDP'
@@ -898,6 +905,7 @@
      C                   ENDIF
 
      C                   IF        DDRRDPOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDRRDP
      C                   MOVE      WDAY          VRRDP
      C                   ENDIF

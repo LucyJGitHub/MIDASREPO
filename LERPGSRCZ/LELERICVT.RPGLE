@@ -648,25 +648,30 @@
       *                                                                                       CLE172
      C                   MOVE      NCALM         DDNCALM                                      CLE172
       *                                                                                       CLE172
+      ** Next Observation Period Shift                                                        CLE172
+      *                                                                                       CLE172
+     C                   MOVE      NOPSH         DDNOPSH                                      CLE172
+      *                                                                                       CLE172
+      ** Convert numeric fields into screen field                                             CLE172
+      ** if New Backward-Looking Rate is Y                                                    CLE172
+      *                                                                                       CLE172
+     C                   IF        NBLRT = 'Y'                                                CLE172
+      *                                                                                       CLE172
       ** Next Benchmark Adjustment                                                            CLE172
       *                                                                                       CLE172
-     C                   IF        NBADJ <> *ZEROS                                            CLE172
      C                   Z-ADD     NBADJ         WWNbADJ                                      CLE172
      C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
      C                   MOVE      WWNbADJ       @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDNBADJ                                      CLE172
-     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Next Floor                                                                           CLE172
       *                                                                                       CLE172
-     C                   IF        NFLOR <> *ZEROS                                            CLE172
      C                   Z-ADD     NFLOR         WWNFlor                                      CLE172
      C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
      C                   MOVE      WWNFlor       @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDNFLOR                                      CLE172
-     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Next Lookback Days for Settlement                                                    CLE172
       *                                                                                       CLE172
@@ -676,10 +681,6 @@
       *                                                                                       CLE172
      C                   MOVE      NLODY         DDNLODY                                      CLE172
       *                                                                                       CLE172
-      ** Next Observation Period Shift                                                        CLE172
-      *                                                                                       CLE172
-     C                   MOVE      NOPSH         DDNOPSH                                      CLE172
-      *                                                                                       CLE172
       ** Next Rate Rounding Decimal Places                                                    CLE172
       *                                                                                       CLE172
      C                   MOVE      NRRDP         DDNRRDP                                      CLE172
@@ -687,6 +688,8 @@
       ** Next Day Basis for Average                                                           CLE172
       *                                                                                       CLE172
      C                   MOVE      NDBAV         DDNDBAV                                      CLE172
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
       *

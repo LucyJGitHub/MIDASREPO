@@ -203,7 +203,7 @@
      D WSign           S              1A
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)
-     D BSRTRecFound    S              1A
+     D BSRTRecFound    S              1A                                                      CLE172
 
       ** OK fields
      D DDBLRTOK        S              1A
@@ -242,7 +242,7 @@
       ** If called from a transaction input (e.g. CLIP, LDNI) and
       ** currency/base rate code are not blanks, access the
       ** base rate code table to get the default values
-     C                   EVAL      BSRTRecFound = 'N'                                        CLE172
+     C                   EVAL      BSRTRecFound = 'N'                                         CLE172
      C                   IF        TransCCY  <> *BLANKS and
      C                             TransBSRC <> *BLANKS
 
@@ -254,8 +254,8 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
      C                   IF        PRTCD = '*NRF   '
      C                   SETON                                        80
-     C                   ELSE                                                                CLE172
-     C                   EVAL      BSRTRecFound = 'Y'                                        CLE172
+     C                   ELSE                                                                 CLE172
+     C                   EVAL      BSRTRecFound = 'Y'                                         CLE172
      C                   ENDIF
 
      C                   ENDIF

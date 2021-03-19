@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD020185           Date 29Apr13              */
+/*       Last Amend No. MD056556           Date 31Aug20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD020185           Date 29Apr13              */
 /*                      AR1000214          Date 05Jul12              */
 /*                      AR994306           Date 26Jun12              */
 /*                      BUG27914           Date 09Jul10              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD056556 - Deliverable Data Split for GPGLOBFPD             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD020185 - Replace GO000129 with GPGLCSGEN                  */
 /*       AR1000214 - Customer input in Live not restored to PEA      */
@@ -38,28 +40,29 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
-             DCLF       FILE(GPGLOBFPD)
+
+/*********   DCLF       FILE(GPGLOBFPD) */                                              /*MD056556*/
+             DCLF       FILE(GPGLFJW0)                                                  /*MD056556*/
              DCL        VAR(&PRTCD)  TYPE(*CHAR) LEN(7) VALUE('       ')                  /*CAP203*/
              DCL        VAR(&POPTN)  TYPE(*CHAR) LEN(7)                                   /*CAP203*/
              DCL        VAR(&PSAR)   TYPE(*CHAR) LEN(6)                                   /*CAP203*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CAP203*/
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(50)                                  /*CAP203*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Perform the call for GZSDBRCHPD first. */
              CALL       PGM(GOC0100) PARM('GZSDBRCHPD')
 /* Perform the calls for GZSDCURRPD and GZSDNOSTPD next.                                  /*248348*/
              CALL       PGM(GOC0100) PARM('GZSDCURRPD')                                   /*248348*/
              CALL       PGM(GOC0100) PARM('GZSDNOSTPD')                                   /*248348*/
- 
+
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
@@ -67,7 +70,7 @@ READNEXT:
 /*********      GOTO       CMDLBL(FCLTY_SYNC)                       */       /*BUG27095*/ /*CAP203*/
                 GOTO       CMDLBL(REPLICA)                                                /*CAP203*/
              ENDDO
- 
+
              IF         COND(&GFBLSY *EQ 'Y') THEN(DO)
 /*********      IF         COND(&GFGPF *NE 'GZSDBRCHPD') THEN(DO)   ************************248348*/
                 IF         COND((&GFGPF *NE 'GZSDBRCHPD') *AND (&GFGPF +
@@ -76,9 +79,9 @@ READNEXT:
                    CALL       PGM(GOC0100) PARM(&GFGPF)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
 REPLICA:                                                                                  /*CAP203*/
                                                                                           /*CAP203*/
              CHGVAR     VAR(&PSAR) VALUE('CAP203')                                        /*CAP203*/

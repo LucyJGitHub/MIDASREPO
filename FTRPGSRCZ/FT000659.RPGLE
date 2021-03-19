@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,7 +36,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CSW209 - SWIFT 2009 Changes (Recompile)                      *

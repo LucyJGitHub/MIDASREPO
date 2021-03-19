@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Last Amend No. MD056993           Date 27Oct20               *
       *  Prev Amend No. MD056823           Date 29Sep20               *
       *                 MD052870           Date 27Feb19               *
       *                 MD046248           Date 27Oct17               *
@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
+      *  MD056993 - Added clear of valid file layout data structures  *
       *  MD056823 - Unable to Authorise in PAUT afer Reversal of      *
       *             Amendment in WIP                                  *
       *  MD052870 - Recompiled due to changes made by MD-50928 in     *
@@ -356,6 +356,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
+      *                                                                                     MD056993
+      ** Clear Incoming Payments File format                                                MD056993
+      *                                                                                     MD056993
+     C                   CLEAR                   IPAYFilFmt                                 MD056993
+     C                   CLEAR                   IPY2FilFmt                                 MD056993
       *                                                                                      BUG7029
       ** Retrieve ZMUSER details.                                                            BUG7029
       *                                                                                      BUG7029

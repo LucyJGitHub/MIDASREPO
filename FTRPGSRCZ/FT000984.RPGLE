@@ -25,9 +25,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CFT120             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *

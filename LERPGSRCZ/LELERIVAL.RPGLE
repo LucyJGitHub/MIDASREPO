@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. LUC109             Date 23Aug16               *
-      *  Prev Amend No. MD034915A          Date 26Aug20               *
+      *  Last Amend No. MD057191           Date 02Dec20               *
+      *  Prev Amend No. MD057323           Date 09Dec20               *
+      *                 MD045482           Date 23Oct20               *
+      *                 MD034915A          Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
@@ -120,13 +122,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
-      *           Issue error message if facility is blocked.         *
-      *           Amendment of core hook LELERIV001                   *
-      *           Amendment of core hook LELERIV002                   *
-      *           Amendment of core hook LELERIV010                   *
-      *           Amendment of core hook LELERIV058                   *
-      *           Amendment of core hook LELERIV069                   *      
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034449.                                      *
+      *  MD057323 - LELERIVAL compilation error due to mis-           *
+      *             alignment when MD-45482 was merged                *
+      *  MD045482 - Additional Handling of NFRS and NFSN (Spread Rate *
+      *             and Funding Sign). When NFRS & NFSN are blank and *
+      *             When NFRS & NFSN are '*' to clear fields          *
+      *           - Applied for MD057026.                             *
       *  MD034915A - New funding rate disappears after input. Change  *
       *              from Z-ADD to MOVE when passing value of @@AMT   *
       *              to VNFRS.                                        *
@@ -421,10 +426,10 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
 
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
-     D                                     PREFIX(DL_)                                      MD034449
-      ** External DS for Dealing Details                                                    MD034449
-                                                                                            MD034449
+     D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034449 MD057191
+     D**********                           PREFIX(DL_)                             MD034449 MD057191
+      ***External*DS*for*Dealing*Details*******************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       ** EXTERNAL DS FOR CUSTOMER LENDING ICD
 
@@ -704,6 +709,7 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+     D DL_BNDCSP       S              1A                                                    MD057191
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -1633,14 +1639,38 @@
       *
      C     *IN62         IFEQ      *ON
       *
+     C     DDNFRSB       IFEQ      '*'                                                      MD045482
+     C                   MOVE      *BLANK        L_CLNFSN                                   MD045482
+     C                   MOVE      *BLANKS       L_CLNFRS                                   MD045482
+     C                   ELSE                                                               MD045482
+     C     DDNFRSB       IFEQ      *BLANKS                                                  MD045482
+     C                   MOVE      *BLANKS       ZFIELD                                     MD045482
+     C                   MOVE      NFRS          ZFIELD                                     MD045482
+     C                   Z-ADD     7             ZADEC                                      MD045482
+     C                   EXSR      ZEDIT                                                    MD045482
+     C                   MOVE      ZFIELD        DDNFRSB                                    MD045482
+     C                   ELSE                                                               MD045482
      C     VNFRS         IFNE      *ZEROS
      C     VNFRS         ANDNE     NFRS
      C                   Z-ADD     VNFRS         L_CLNFRS
+     C                   ELSE                                                               MD045482
+     C                   MOVE      DDNFRS        DDNFRSB                                    MD045482
      C                   ENDIF
+     C                   ENDIF                                                              MD045482
       *
+     C     DDNFSNB       IFEQ      '*'                                                      MD045482
+     C                   MOVE      *BLANK        L_CLNFSN                                   MD045482
+     C                   ELSE                                                               MD045482
+     C     DDNFSNB       IFEQ      *BLANKS                                                  MD045482
+     C                   MOVE      NFSN          DDNFSNB                                    MD045482
+     C                   ELSE                                                               MD045482
      C     VNFSN         IFNE      NFSN
      C                   MOVE      VNFSN         L_CLNFSN
      C                   ENDIF
+     C                   ENDIF                                                              MD045482
+     C                   ENDIF                                                              MD045482
+     C                   ENDIF                                                              MD045482
+      *                                                                                     MD045482
      C                   MOVE      DDNFPCB       L_CLNFPC
      C                   ENDIF
       *
@@ -6852,6 +6882,7 @@
       *
       *
      C     *IN62         IFEQ      *ON
+     C     DDNFSNB       ANDNE     '*'                                                      MD045482
       *
       **  Must be either '+', '-', or blank.
      C                   SELECT
@@ -6893,6 +6924,7 @@
       *
      C     *IN62         IFEQ      *ON
      C     DDNFRSB       ANDNE     *BLANKS
+     C     DDNFRSB       ANDNE     '*'                                                      MD045482
      C**********         MOVE      *BLANKS       ZFIELD                                     MD034915
      C**********         MOVE      DDNFRSB       ZFIELD                                     MD034915
      C**********         Z-ADD     4             ZADIG                                      MD034915
@@ -9651,19 +9683,19 @@
      C     PRTCD         IFEQ      *BLANKS                                                    CLE141
      C                   MOVE      'Y'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
-      *                                                                                     MD034449
-      ** Access Dealing Details                                                             MD034449
-      *                                                                                     MD034449
-     C                   CALL      'AODEALR1'                                               MD034449
-     C                   PARM      *BLANKS       @RTCD                                      MD034449
-     C                   PARM      '*FIRST '     @OPTN                                      MD034449
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
-      *                                                                                     MD034449
-      * Database Error                                                                      MD034449
-      *                                                                                     MD034449
-     C     @RTCD         IFNE      *BLANK                                                   MD034449
+      **********                                                                   MD034449 MD057191
+      ***Access*Dealing*Details****************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034449 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
+      ***********                                                                  MD034449 MD057191
+      **Database*Error*************************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
-     C                   ENDIF                                                              MD034449
+     C**********         ENDIF                                                     MD034449 MD057191
       *
       **  Key list for LELOAML0
       *

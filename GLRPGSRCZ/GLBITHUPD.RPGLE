@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055854           Date 15Jun20               *
+      *  Last Amend No. MD057237           Date 04Dec20               *
       *  Prev Amend No. MD054702           Date 07Sep20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
@@ -86,9 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055854 - When deleting a batch or batch item from frontend *
-      *             the narratives in XXJENPX0 file is not deleted    *
-      *             Amend to delete corresponding rec in XXJENPX0.    *
+      *  MD057237 - Journal Entry via Interface File: Batch Stuck     *
+      *             in Upload Status                                  *
       *  MD054702 - Update valid indicator to 'Y' if batch header and *
       *             batch details are already valid. Fix patterned    *
       *             to GEMS fix 255331.                               *
@@ -280,8 +279,6 @@
       *                                                                                     AR992022
       ** MIDAS RE Settled Transaction Index file                                            AR992022
       *                                                                                     AR992022
-     F/COPY WNCPYSRC,LUC110_104                                                             MD055854
-      *                                                                                     MD055854
      FGLJENPI2  UF   E           K DISK    INFSR(*PSSR)                                     MD042261
      F                                     COMMIT                                           MD042261
       ** Midas GL Journal Entry - Posting Date                                              MD042261
@@ -754,7 +751,6 @@
      C                   ENDDO                                                               BUG3500
      C                   ENDIF                                                               BUG3500
      C                   SETOFF                                       9899                   BUG3500
-     C/COPY WNCPYSRC,LUC110_105                                                             MD055854
      C/COPY WNCPYSRC,GLBITHDC03
      C                   DELETE    @BRREAG                                                    CAP084
       *                                                                                       CER001
@@ -836,6 +832,7 @@
      C**********         MOVE      B1BTSF        BRBTSF                                CAP084 239155
      C     CGL016        IFEQ      'Y'                                                     AR792734A
      C     CRE023        OREQ      'Y'                                                     AR792734A
+     C     CGL182        OREQ      'Y'                                                      MD057237
      C                   MOVE      B1BTSF        BRBTSF                                    AR792734A
      C                   ENDIF                                                             AR792734A
      C                   MOVE      B1BIUF        BRBIUF                                      BUG1898
@@ -1749,8 +1746,6 @@
       **********                                                                  AR1092517 MD045854
       *****************************************************************                     MD046910
       ** Access SAR details file to*see if CAP209 is installed.                             MD046910
-     C/COPY WNCPYSRC,LUC110_106                                                             MD055854
-      *                                                                                     MD055854
       *****************************************************************                     MD046910
      C                   MOVE      'N'           CAP209            1                        MD046910
      C                   CALL      'AOSARDR0'                                               MD046910

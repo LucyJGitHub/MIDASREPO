@@ -17,9 +17,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 AR898162           Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR898162           Date 25Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR895223           Date 19Nov12               *
       *                 CFT120             Date 28Sep12               *
@@ -58,7 +57,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR898162 - Charge codes passed via API are lost              *
       *             (Child: AR898163)                                 *

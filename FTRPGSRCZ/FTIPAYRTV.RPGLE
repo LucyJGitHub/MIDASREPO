@@ -22,7 +22,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Last Amend No. AR1088819          Date 03Jun20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD027200           Date 20Sep16               *
       *                 MD030957           Date 10Oct14               *
@@ -59,7 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
+      *              calls                                            *
+      *            - Applied for MD050405                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027200 - Record locking when amending and deleting pay-    *
       *             ment. Reverse fix 261468 in this module only.     *
@@ -1125,6 +1127,8 @@
      C     PParmLevel    ANDEQ     '1'                                                        CAP084
      C     PSJobName     OREQ      'QSQSRVR'                                                  247277
      C     PParmLevel    ANDEQ     '1'                                                        247277
+     C     PSJobName     OREQ      'QZDASSINIT'                                            AR1088819
+     C     PParmLevel    ANDEQ     '1'                                                     AR1088819
       *
       ***If*action*code*is*'I',*a*SWIFT*reference*has*been*entered*and*                       257673
       ***no*errors*so*far,*check*that*the*user*is*also*authorised*to***                       257673

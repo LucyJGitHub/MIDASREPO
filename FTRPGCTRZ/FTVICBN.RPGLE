@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD034542           Date 29May15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034542           Date 29May15               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24663           Date 29Jun09               *
@@ -22,7 +21,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034542 - Additional 59F validation for Beneficiary Cover   *
       *  MD000091 - Event Codes Substitution                          *

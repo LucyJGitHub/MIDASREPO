@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. LUC116             Date 21Jan19               *
-      *  Prev Amend No. LUC109             Date 23Aug16               *
-      *                 MD053093           Date 03Sep19               *
+      *  Last Amend No. MD027065           Date 22Sep20               *      
+      *  Prev Amend No. MD053093           Date 03Sep19               *
       *                 MD046484           Date 03Sep19               *
       *                 MD039655           Date 03Sep19               *
       *                 MD054782           Date 04Dec19               *
@@ -84,18 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  LUC116 - Facility Expiry and Last Availability Dates -       *
-      *             Until Further Notice                              *
-      *             Amendment of core hook LEH01208                   *
-      *             Addition of hook LUC116_001                       *
-      *             Addition of hook LUC116_002                       *
-      *  LUC109   - HO Reporting (Upgrade to FB Midas 2.1)            *
-      *             Allow back value to be input                      *
-      *             Amendment of core hook LEH01208                   *
-      *             Addition of hook LUC109_006                       *
-      *             Addition of hook LUC109_007                       *
-      *             Addition of hook LUC109_008                       *
-      *             Addition of hook LUC109_009                       *
+      *  MD027065 - Expiry date of CA facility cannot be earlier than *
+      *             TR facility attached to it. Pattern after 239194. *      
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
       *             truncated CANM. .                                 *
       *           - Applied for MD052591.                             *
@@ -1370,7 +1359,6 @@
       **  Earlier than run date
       **   Field protected for expired facilities - do not validate
      C     ZDAYNO        IFLT      RUND
-     C/COPY WNCPYSRC,LUC109_006
      C     DDACTN        ANDNE     'A'
      C     DDACTN        ANDNE     'X'
      C     @@RECI        ANDNE     'E'
@@ -1381,7 +1369,6 @@
      C                   ENDIF
       *
      C     ZDAYNO        IFLT      RUND
-     C/COPY WNCPYSRC,LUC109_007
      C     DDACTN        ANDEQ     'A'
      C     @@RECI        ANDNE     'E'
      C                   Move      'N'           DDDTEXOK
@@ -1399,7 +1386,6 @@
       *
       ** Check if Expiry Date is a Holiday
      C     DDDTEXOK      IFNE      'N'
-     C/COPY WNCPYSRC,LUC116_001
      C*****DDDTEX        ANDNE     DAYSV                                                     BUG4351
      C                   MOVEL     DDFCCY        ZCCY
      C                   CALLB     'ZCHKH'
@@ -1421,7 +1407,6 @@
      C                   ENDIF                                                              BUG22020
      C**********         MOVEL     'Y'           W#WARN            1                         BUG4351
      C                   ENDIF
-     C/COPY WNCPYSRC,LUC116_002
      C                   ENDIF
       *
      C**********         MOVE      DDDTEX        DAYSV             6                         BUG4351
@@ -1853,7 +1838,6 @@
  
      C     ZDAYNO        WHENLE    RUND
      C     DDACTN        ANDEQ     'I'
-     C/COPY WNCPYSRC,LUC109_008
      C                   Move      'N'           DDRVDTOK
      C                   Add       1             Idx
      C                   Movel     'DDRVDT'      FldNamXAr(Idx)
@@ -2540,6 +2524,36 @@ E4   C                   ENDIF
      C                   Movel     'LEF0269'     MsgIDXAr(Idx)
      C                   ENDIF
       *
+      **Expiry date of CA should not be before the expiry date of its tranches              MD027065
+      *                                                                                     MD027065
+     C                   MOVE      '0'           *IN36                                      MD027065
+     C                   MOVE      @@CNUM        K0CANM                                     MD027065
+     C                   MOVE      @@FACT        K0CAFT                                     MD027065
+     C                   MOVE      @@FCNO        K0CAFN                                     MD027065
+      *                                                                                     MD027065
+     C     K#KY10        SETLL     LEFCLTL9                                                 MD027065
+     C     K#KY10        READE     LEFCLTL9                               80                MD027065
+      *                                                                                     MD027065
+     C     *IN80         DOWEQ     '0'                                                      MD027065
+     C     *IN36         ANDEQ     '0'                                                      MD027065
+      *                                                                                     MD027065
+      ** If new Expiry date is earlier than TR's Expiry date, display                       MD027065
+      ** error message                                                                      MD027065
+      *                                                                                     MD027065
+     C     W#DTEX        IFLT      LEDTEX                                                   MD027065
+     C     LETRCA        ANDEQ     'TR'                                                     MD027065
+     C     LERECI        ANDEQ     'D'                                                      MD027065
+     C                   Move      'N'           DDDTEXOK                                   MD027065
+     C                   Add       1             Idx                                        MD027065
+     C                   Movel     'DDDTEX'      FldNamXAr(Idx)                             MD027065
+     C                   Movel     '5049413'     MsgIDXAr(Idx)                              MD027065
+     C                   Move      '1'           *IN36                                      MD027065
+     C                   ENDIF                                                              MD027065
+      *                                                                                     MD027065
+     C     K#KY10        READE     LEFCLTL9                               80                MD027065
+      *                                                                                     MD027065
+     C                   ENDDO                                                              MD027065
+      *                                                                                     MD027065
      C                   MOVE      *BLANKS       CACY
      C                   ENDIF
       *
@@ -3077,7 +3091,6 @@ E4   C                   ENDIF
      C     K#KY05        CHAIN     CLOAN                              80
       *
      C     ZDAYNO        IFLT      CLMDAT
-     C/COPY WNCPYSRC,LUC109_009
      C                   MOVE      'Y'           W#ERR4
      C                   LEAVE
      C                   ENDIF

@@ -37,8 +37,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR928996A          Date 03May12               *
-      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *  Last Amend No. 223783             Date 28May12               *      
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
@@ -56,6 +57,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Call AOIBANR4 with correct parameter                *
+      *         - Applied for AR973615 (Child: AR973617)              *      
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *
@@ -368,7 +371,8 @@
      C     CFT004        Wheneq    'Y'
      C                   CALL      'AOIBANR4'                           90
      C                   PARM                    P@RTCD
-     C                   PARM      '*VERIFY'     P@OPTN
+     C**********         PARM      '*VERIFY'     P@OPTN                                       223783
+     C                   PARM      '*KEY   '     P@OPTN                                       223783
      C                   PARM                    @IBAN
      C     ACCT          PARM      ACCT          DSSDY
      C*
@@ -433,9 +437,11 @@
       *
       *  Retrieve Posting Amount
      C                   If        PMTPY = '101'
-     C                   Eval      WPSTA = %subst(P32B : 28 : 15)
+     C**********         Eval      WPSTA = %subst(P32B : 28 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(P32B : 34 : 15)                          AR928996A
      C                   Else
-     C                   Eval      WPSTA = %subst(PDCA : 34 : 15)
+     C**********         Eval      WPSTA = %subst(PDCA : 34 : 15)                          AR928996A
+     C                   Eval      WPSTA = %subst(PDCA : 40 : 15)                          AR928996A
      C                   Endif
      C                   Eval      X=%scan(',' : WPSTA)
       *
@@ -467,7 +473,8 @@
       *
       *  Retrieve Posting Value date
      C     PMTPY         IfEQ      '101'
-     C                   Eval      WVDAT = %subst(PH30 : 25 : 6)
+     C**********         Eval      WVDAT = %subst(PH30 : 25 : 6)                           AR928996A
+     C                   Eval      WVDAT = %subst(PH30 : 31 : 6)                           AR928996A
      C                   Else
      C                   Movel     PDCA          DSTRAN
      C                   Movel     TVVDAT        WVDAT

@@ -11,13 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259496             Date 10Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 198865             Date 25Mar02               *
+      *                 198865             Date 25Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CRE007             Date 01Mar01               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259496 - Reversed fix 198865. BRT Category in accounts should*
+      *           be mandatory.                                       *
+      *         - Applied fix for MD056903.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  198865 - Allow Base Rate Tax Category to be blanks.          *
       *  CRE007 - Base Rate Tax 2001.                                 *
@@ -37,7 +41,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -56,65 +60,65 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -129,9 +133,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
@@ -149,8 +153,8 @@
      C     DDBRTCA       ANDNE     'N'
      C     DDBRTCA       ANDNE     'C'
      C     DDBRTCA       ANDNE     'B'
-      * Allow blanks.                                                                         198865
-     C     DDBRTCA       ANDNE     ' '                                                        198865
+      **Allow blanks.********                                                          198865 259496
+     C*****DDBRTCA*****  ANDNE     ' '                                                 198865 259496
       *                                                                                       CRE007
       ** If Account Holder type is R                                                          CRE007
       ** Validate field - Mandatory entry must be L,P,X,N,C,B OR R                            CRE007
@@ -162,8 +166,8 @@
      C     DDBRTCA       ANDNE     'C'                                                        CRE007
      C     DDBRTCA       ANDNE     'B'                                                        CRE007
      C     DDBRTCA       ANDNE     'R'                                                        CRE007
-      * Allow blanks.                                                                         198865
-     C     DDBRTCA       ANDNE     ' '                                                        198865
+      **Allow blanks.********                                                          198865 259496
+     C*****DDBRTCA*****  ANDNE     ' '                                                 198865 259496
       *                                                                                       CRE007
      C                   Move      'N'           DDBRTCAOk
      C                   Add       1             Idx
@@ -318,7 +322,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -351,9 +355,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

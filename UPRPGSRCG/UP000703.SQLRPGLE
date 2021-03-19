@@ -12,13 +12,19 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD056696             Date 09Sep20             *
-      *  Prev Amend No. MD055681             Date 31Jul20             *
+      *  Last Amend No. MD057670             Date 02Mar21             *
+      *  Prev Amend No. MD056556             Date 31Aug20             *
+      *                 MD056608             Date 08Sep20             *
+      *                 MD056696             Date 09Sep20             *
+      *                 MD055681             Date 31Jul20             *
       *                 MD054955             Date 16Dec19             *
       *                 MD054605   *CREATE   Date 17Oct19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057670 - Deliverable Data Split for APNDCONPD              *
+      *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
+      *  MD056608 Deliverable Data Split for APFUNCPD                 *
       *  MD056696 - SCSARDPD, SCSAREPD and REAPWDPD should not be     *
       *             added as Bespoke record in SCTRGBTD.              *
       *  MD055681 - Deliverable Data Split for SAR                    *
@@ -376,6 +382,39 @@
      C/END-EXEC                                                                             MD056696
      C                   Endif                                                              MD056696
                                                                                             MD056696
+     C                   If        XINDEX = 'APFUNCTD'                                      MD056608
+     C/EXEC SQL                                                                             MD056608
+     C+ delete from APFUNBTD WHERE AAINSERTID = 'CER047'                                    MD056608
+     C/END-EXEC                                                                             MD056608
+     C/EXEC SQL                                                                             MD056608
+     C+ delete from APFUNXTD WHERE AAINSERTID = 'CER047' and AAMODE = 'B'                   MD056608
+     C/END-EXEC                                                                             MD056608
+     C                   Endif                                                              MD056608
+                                                                                            MD056608
+     C                   If        XINDEX = 'GPGLFCTD'                                      MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ delete from GPGLFBTD where GFGPF ='GZREAPWDPD'                                      MD056556
+     C/END-EXEC                                                                             MD056556
+     C/EXEC SQL                                                                             MD056556
+     C+ delete from GPGLFXTD where GFGPF ='GZREAPWDPD'                                      MD056556
+     C/END-EXEC                                                                             MD056556
+     C                   Endif                                                              MD056556
+                                                                                            MD056556
+     C                   If        XINDEX = 'APNDCCTD'                                      MD057670
+     C/EXEC SQL                                                                             MD057670
+     C+ delete from APNDCBTD where NCDFLD = 'SFORMIDTPC'                                    MD057670
+     C+ or NCDFLD = 'SPIDFTPC' or NCDFLD = 'SFORMIDOPC'                                     MD057670
+     C+ or NCDFLD = 'SPIDFOPC'                                                              MD057670
+     C+ or (NCDFLD = 'VDAT' and NCAPDT = 'V_LOANAMD')                                       MD057670
+     C/END-EXEC                                                                             MD057670
+     C/EXEC SQL                                                                             MD057670
+     C+ delete from APNDCXTD where NCDFLD = 'SFORMIDTPC'                                    MD057670
+     C+ or NCDFLD = 'SPIDFTPC' or NCDFLD = 'SFORMIDOPC'                                     MD057670
+     C+ or NCDFLD = 'SPIDFOPC'                                                              MD057670
+     C+ or (NCDFLD = 'VDAT' and NCAPDT = 'V_LOANAMD')                                       MD057670
+     C/END-EXEC                                                                             MD057670
+     C                   Endif                                                              MD057670
+                                                                                            MD057670
      C                   ENDSR
 
       /EJECT

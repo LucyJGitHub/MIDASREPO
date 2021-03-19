@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055683           Date 21May20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD039086           Date 24Oct16              */
+/*       Prev Amend No. MD055683           Date 21May20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      MD027386           Date 19Aug14              */
@@ -48,6 +49,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD039086 - Submit GO_ONL_ABC background updater             */
+/*                  Applied for MD-57273.                            */
 /*       MD055683 - SWIFT jobs will now run based on configurations  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
@@ -594,6 +597,10 @@
              CALL       PGM(REC001500)                                                    /*CAP205*/
              RTVDTAARA  DTAARA(GLFRATMSTS (1 1)) RTNVAR(&FRSTAT)                       /*BUG27831A*/
              IF         COND(&FRSTAT *EQ ' ') THEN(CALL PGM(GLC004607))                /*BUG27831A*/
+/* Submit GO_ONL_ABC background updater */                                              /*MD039086*/
+                                                                                        /*MD039086*/
+             CALL       PGM(GLC007011)                                                  /*MD039086*/
+                                                                                        /*MD039086*/
              ENDDO                                                                        /*CAP205*/
                                                                                           /*CAP205*/
 /*/COPY OFCPYSRCZ,CGL155_006                                         */                   /*CGL155*/

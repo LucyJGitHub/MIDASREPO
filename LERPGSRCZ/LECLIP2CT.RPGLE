@@ -170,9 +170,6 @@
      D SCA_LCD       E                     EXTFLD(LCD)                                        CLE035
       ***  External DS for SAR details                                                        CLE035
       *                                                                                       CLE035
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CLE172
-      ** External DS for Dealing details                                                      CLE172
-      *                                                                                       CLE172
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -208,6 +205,7 @@
      D @@RETC          S             10A                                                      CLE172
      D @@AMTW          S             13P 0                                                    CLE172
      D @@QECN          S              1P 0                                                    CLE172
+     D @@DCSP          S              1A                                                      CLE172
      D @@AMTD          S             14A                                                      CLE172
                                                                                               CLE172
      D*CLE035***       S              1                                               CLE035 BUG9491
@@ -723,7 +721,7 @@
      C                   PARM      *BLANK        @@RETC                                       CLE172
      C                   PARM                    @@AMTW                                       CLE172
      C                   PARM                    @@QECN                                       CLE172
-     C                   PARM                    BNDCSP                                       CLE172
+     C                   PARM      '.'           @@DCSP                                       CLE172
      C                   PARM      *BLANK        @@AMTD                                       CLE172
                                                                                               CLE172
      C                   ENDSR                                                                CLE172
@@ -785,19 +783,6 @@
      C                   EXSR      *PSSR                                        *************
      C                   END
       *
-      ** Access Dealing details to get the Decimal Separator setting                          CLE172
-      *                                                                                       CLE172
-     C                   CALL      'AODEALR1'                                                 CLE172
-     C                   PARM      *BLANKS       @RTCD                                        CLE172
-     C                   PARM      '*FIRST '     @OPTN                                        CLE172
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                        CLE172
-      *                                                                                       CLE172
-      ** Database Error                                                                       CLE172
-      *                                                                                       CLE172
-     C     @RTCD         IFNE      *BLANK                                                     CLE172
-     C                   EVAL      BNDCSP =  '.'                                              CLE172
-     C                   END                                                                  CLE172
-                                                                                              CLE172
      C                   CALLB     'AOSARDR0'                                                 CLE035
      C                   PARM      *Blanks       PRtcd                                        CLE035
      C                   PARM      '*VERIFY'     POptn                                        CLE035

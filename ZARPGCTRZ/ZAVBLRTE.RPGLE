@@ -21,11 +21,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103  *CREATE    Date 01Aug20               *
+      *  Last Amend No. MD057770           Date 18Mar21               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057770 - DDfield and WDAY issue between 00, 0, and BLANKS  *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -201,6 +203,7 @@
      D WSign           S              1A
      D KSCRFLD         S                   LIKE(SCRFLD)
      D KINTVAL         S                   LIKE(INTVAL)
+     D BSRTRecFound    S              1A
 
       ** OK fields
      D DDBLRTOK        S              1A
@@ -239,6 +242,7 @@
       ** If called from a transaction input (e.g. CLIP, LDNI) and
       ** currency/base rate code are not blanks, access the
       ** base rate code table to get the default values
+     C                   EVAL      BSRTRecFound = 'N'                                        CLE172
      C                   IF        TransCCY  <> *BLANKS and
      C                             TransBSRC <> *BLANKS
 
@@ -250,6 +254,8 @@
      C     SDBSRT        PARM      SDBSRT        DSSDY
      C                   IF        PRTCD = '*NRF   '
      C                   SETON                                        80
+     C                   ELSE                                                                CLE172
+     C                   EVAL      BSRTRecFound = 'Y'                                        CLE172
      C                   ENDIF
 
      C                   ENDIF
@@ -323,6 +329,7 @@
      C                   CLEAR                   TranScnBlrt
      C                   CLEAR                   BLRTValFlds
      C                   CLEAR                   OutValfld
+     C                   CLEAR                   SDBSRT                                     MD057770
 
       ** Store current number of error index
      C                   Z-ADD     Idx           Ix
@@ -362,11 +369,13 @@
      C                   EVAL      DDBLRT = 'N'
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDBLRT = BABLRT                                            CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
-     C                   WHEN      ApiName = 'LERI'                                           CLE172
+     C                   WHEN      ApiName = 'LERI' and                                       CLE172
+     C                             DDBLRT = *BLANKS                                           CLE172
      C                   EVAL      DDBLRT = CLBLRT                                            CLE172
 
      C                   ENDSL
@@ -444,7 +453,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDRFRR = BARFRR                                            CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -506,7 +516,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDCALM = BACALM                                            CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -569,7 +580,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumBADJ = BABADJ                                          CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -580,8 +592,9 @@
      C                   ENDIF                                                                CLE172
 
       ** Value must be numeric not exceeding 4 int and 7 decimal places
-     C                   IF        DDBLRT = 'Y' and
-     C                             DDBADJ <> *BLANKS
+     C**********         IF        DDBLRT = 'Y' and                                         MD057770
+     C**********                   DDBADJ <> *BLANKS                                        MD057770
+     C                   IF        DDBADJ <> *BLANKS                                        MD057770
 
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDBADJ        @@ALPH
@@ -596,6 +609,7 @@
      C                   PARM                    BNDCSP
 
      C                   IF        @@ERCD <> *ZERO
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -624,8 +638,10 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDBADJ <> *BLANKS and
-     C                             %TRIMR(DDBADJ) <> '0'
+     C**********                   DDBADJ <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDBADJ) <> '0'                                    MD057770
+     C                             (  WNumBADJ <> 0                                         MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -638,6 +654,7 @@
      C                   ENDIF
 
      C                   IF        DDBADJOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
       ** Assign value to screen field if user input is blank
      C                   IF        DDBADJ = *BLANKS
      C                   EVAL      WNUMAMT1 = WNumBADJ
@@ -660,7 +677,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      WNumFLOR = BAFLOR                                          CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -671,8 +689,9 @@
      C                   ENDIF                                                                CLE172
 
       ** Value must be numeric not exceeding 3 int and 6 decimal places
-     C                   IF        DDBLRT = 'Y' and
-     C                             DDFLOR <> *BLANKS
+     C**********         IF        DDBLRT = 'Y' and                                         MD057770
+     C**********                   DDFLOR <> *BLANKS                                        MD057770
+     C                   IF        DDFLOR <> *BLANKS                                        MD057770
 
      C                   MOVE      *BLANKS       @@ALPH
      C                   MOVE      DDFLOR        @@ALPH
@@ -687,6 +706,7 @@
      C                   PARM                    BNDCSP
 
      C                   IF        @@ERCD <> *ZERO
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -713,6 +733,7 @@
 
       ** Value must be numeric from -100 to 100
      C                   IF        DDFLOROK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
 
      C                   IF        WNumFlor < -100 or
      C                             WNumFlor >  100
@@ -733,8 +754,10 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDFLOR <> *BLANKS and
-     C                             %TRIMR(DDFLOR) <> '0'
+     C**********                   DDFLOR <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
+     C                             (  WNumFLOR <> 0                                         MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -747,6 +770,7 @@
      C                   ENDIF
 
      C                   IF        DDFLOROK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
       ** Assign value to screen field if user input is blank
      C                   IF        DDFLOR = *BLANKS
      C                   EVAL      WNUMAMT1 = WNumFLOR
@@ -770,7 +794,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALBDY        WDAY                                         CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -828,8 +853,10 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDLBDY <> *BLANKS and
-     C                             %TRIMR(DDLBDY) <> '0'
+     C**********                   DDLBDY <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDLBDY) <> '0'                                    MD057770
+     C                             (  WDAY <> 0                                             MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDLBDYOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -842,6 +869,7 @@
      C                   ENDIF
 
      C                   IF        DDLBDYOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDLBDY
      C                   MOVE      WDAY          VLBDY
      C                   ENDIF
@@ -860,7 +888,8 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BALODY        WDAY                                         CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -918,8 +947,10 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDLODY <> *BLANKS and
-     C                             %TRIMR(DDLODY) <> '0'
+     C**********                   DDLODY <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDLODY) <> '0'                                    MD057770
+     C                             (  WDAY <> 0                                             MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDLODYOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -932,6 +963,7 @@
      C                   ENDIF
 
      C                   IF        DDLODYOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDLODY
      C                   MOVE      WDAY          VLODY
      C                   ENDIF
@@ -953,7 +985,8 @@
      C                   EVAL      DDOPSH = 'N'
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDOPSH = BAOPSH                                            CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -1052,10 +1085,12 @@
 
       ** Default to '05'
      C                   WHEN      ApiName = 'BSRT'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      '05'          WDAY
 
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y'                                         CLE172
      C                   MOVE      BARRDP        WDAY                                         CLE172
                                                                                               CLE172
       ** Default value from loan details                                                      CLE172
@@ -1128,8 +1163,10 @@
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
-     C                             DDRRDP <> *BLANKS and
-     C                             %TRIMR(DDRRDP) <> '0'
+     C**********                   DDRRDP <> *BLANKS and                                    MD057770
+     C**********                   %TRIMR(DDRRDP) <> '0'                                    MD057770
+     C                             (  WDAY <> 0                                             MD057770
+     C                             or @@ERCD <> *ZERO )                                     MD057770
      C                   EVAL      DDRRDPOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -1142,6 +1179,7 @@
      C                   ENDIF
 
      C                   IF        DDRRDPOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVE      WDAY          DDRRDP
      C                   MOVE      WDAY          VRRDP
      C                   ENDIF
@@ -1159,7 +1197,9 @@
      C                   SELECT                                                               CLE172
                                                                                               CLE172
       ** Default value from base rate code                                                    CLE172
-     C                   WHEN      ApiName = 'CLIP'                                           CLE172
+     C                   WHEN      ApiName = 'CLIP' and                                       CLE172
+     C                             BSRTRecFound = 'Y' and                                     CLE172
+     C                             DDBLRT = 'Y'                                               CLE172
      C                   EVAL      WDBAV = BADBAV                                             CLE172
      C                   MOVEL     BADBAV        DDDBAV                                       CLE172
                                                                                               CLE172
@@ -1231,6 +1271,7 @@
      C                   ENDIF
 
      C                   IF        DDDBAVOK <> 'N'
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   MOVEL     WDBAV         DDDBAV
      C                   Z-ADD     WDBAV         VDBAV
      C                   ENDIF

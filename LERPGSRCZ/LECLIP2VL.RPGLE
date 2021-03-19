@@ -1442,8 +1442,7 @@
       *                                                                                       CLE172
       ** Call program to validate Backward Looking Rate Fields                                CLE172
       *                                                                                       CLE172
-     C     CCLBRTT       IFNE      *BLANKS                                                    CLE172
-     C     DDBLRTOK      ANDNE     'N'                                                        CLE172
+     C     DDBLRTOK      IFNE      'N'                                                        CLE172
      C                   MOVEL     CCLPTYP       TransType                                    CLE172
      C                   CALLB     'ZAVBLRTE'                                                 CLE172
      C                   PARM      'CLIP'        ApiName           4                          CLE172
@@ -1460,6 +1459,9 @@
      C                   PARM                    TempOutDS       200                          CLE172
      C                   PARM      *BLANKS       RetCodeOut                                   CLE172
       *                                                                                       CLE172
+      ** Move back updated values to screen fields                                            CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     TempInpDS     LoanScnBlrt                                  CLE172
      C     RetCodeOut    IFNE      'Error'                                                    CLE172
      C                   MOVEL     TempOutDS     LoanValBlrt                                  CLE172
      C                   MOVEL     WCLBLRT       CCLBLRT                                      CLE172
@@ -2483,7 +2485,7 @@
                                                                                               CLE172
      C                   MOVEL     'N'           SkipCINT          1                          CLE172
      C     CLE172        IFEQ      'Y'                                                        CLE172
-     C     CCLBLRT       ANDEQ     'Y'                                                        CLE172
+     C     DDBLRT        ANDEQ     'Y'                                                        CLE172
      C                   MOVEL     'Y'           SkipCINT                                     CLE172
      C                   MOVE      *ZERO         DDIPRD                                       CLE172
      C                   ENDIF                                                                CLE172

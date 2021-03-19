@@ -630,25 +630,34 @@
                                                                                               CLE172
      C                   MOVE      CALM          DDCALM                                       CLE172
                                                                                               CLE172
+      ** Observation Period Shift                                                             CLE172
+                                                                                              CLE172
+     C                   MOVE      OPSH          DDOPSH                                       CLE172
+                                                                                              CLE172
+      ** Rates Known                                                                          CLE172
+                                                                                              CLE172
+     C                   MOVE      RTKN          DDRTKN                                       CLE172
+                                                                                              CLE172
+      ** Convert numeric fields into screen field                                             CLE172
+      ** if Backward-Looking Rate is Y                                                        CLE172
+                                                                                              CLE172
+     C                   IF        BLRT = 'Y'                                                 CLE172
+                                                                                              CLE172
       ** Benchmark Adjustment                                                                 CLE172
                                                                                               CLE172
-     C                   IF        BADJ <> *ZEROS                                             CLE172
      C                   Z-ADD     BADJ          WWBadj                                       CLE172
      C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
      C                   MOVE      WWBadj        @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDBADJ                                       CLE172
-     C                   ENDIF                                                                CLE172
                                                                                               CLE172
       ** Floor                                                                                CLE172
                                                                                               CLE172
-     C                   IF        FLOR <> *ZEROS                                             CLE172
      C                   Z-ADD     FLOR          WWFlor                                       CLE172
      C                   Z-ADD     *ZEROS        @@AMTW                                       CLE172
      C                   MOVE      WWFlor        @@AMTW                                       CLE172
      C                   EXSR      FMTRATE                                                    CLE172
      C                   MOVE      @@AMTD        DDFLOR                                       CLE172
-     C                   ENDIF                                                                CLE172
                                                                                               CLE172
       ** Lookback Days                                                                        CLE172
                                                                                               CLE172
@@ -658,10 +667,6 @@
                                                                                               CLE172
      C                   MOVE      LODY          DDLODY                                       CLE172
                                                                                               CLE172
-      ** Observation Period Shift                                                             CLE172
-                                                                                              CLE172
-     C                   MOVE      OPSH          DDOPSH                                       CLE172
-                                                                                              CLE172
       ** Rate Rounding Decimal Places                                                         CLE172
                                                                                               CLE172
      C                   MOVE      RRDP          DDRRDP                                       CLE172
@@ -670,9 +675,7 @@
                                                                                               CLE172
      C                   MOVE      DBAV          DDDBAV                                       CLE172
                                                                                               CLE172
-      ** Rates Known                                                                          CLE172
-                                                                                              CLE172
-     C                   MOVE      RTKN          DDRTKN                                       CLE172
+     C                   ENDIF                                                                CLE172
                                                                                               CLE172
      C                   ENDIF                                                                CLE172
                                                                                               CLE172

@@ -756,14 +756,7 @@
       *                                                                                       CLE172
       ** Benchmark Adjustment                                                                 CLE172
       *                                                                                       CLE172
-     C     DDBADJ        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDBADJ                                       CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
-     C     @DDBADJ       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDBADJ                                      CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
+     C     DDBADJ        IFNE      *BLANKS                                                    CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172
      C                   PARM      DDBADJ        ZCMPAMT1                                     CLE172
      C                   PARM      @DDBADJ       ZCMPAMT2                                     CLE172
@@ -777,17 +770,11 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBADJ)                    CLE172
      C                   EVAL      DDBADJOK        = 'N'                                      CLE172
      C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Floor                                                                                CLE172
       *                                                                                       CLE172
-     C     DDFLOR        IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           DDFLOR                                       CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
-     C     @DDFLOR       IFEQ      *BLANKS                                                    CLE172
-     C                   MOVEL     '0'           @DDFLOR                                      CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
+     C     DDFLOR        IFNE      *BLANKS                                                    CLE172
      C                   CALLB     'ZCMPAMTS'                                                 CLE172
      C                   PARM      DDFLOR        ZCMPAMT1                                     CLE172
      C                   PARM      @DDFLOR       ZCMPAMT2                                     CLE172
@@ -801,9 +788,11 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDFLOR)                    CLE172
      C                   EVAL      DDFLOROK        = 'N'                                      CLE172
      C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Lookback Days                                                                        CLE172
       *                                                                                       CLE172
+     C     DDLBDY        IFNE      *BLANKS                                                    CLE172
      C     DDLBDY        IFNE      @DDLBDY                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDLBDY'                                 CLE172
@@ -812,9 +801,11 @@
      C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLBDY)                   CLE172
      C                   EVAL      DDLBDYOK        = 'N'                                      CLE172
      C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Lockout Days                                                                         CLE172
       *                                                                                       CLE172
+     C     DDLODY        IFNE      *BLANKS                                                    CLE172
      C     DDLODY        IFNE      @DDLODY                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDLODY'                                 CLE172
@@ -822,6 +813,7 @@
      C                   EVAL      BLen = %Len(%Trim(@DDLODY))                                CLE172
      C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDLODY)                   CLE172
      C                   EVAL      DDLODYOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Observation Period Shift                                                             CLE172
@@ -837,6 +829,7 @@
       *                                                                                       CLE172
       ** Rate Rounding Decimal Places                                                         CLE172
       *                                                                                       CLE172
+     C     DDRRDP        IFNE      *BLANKS                                                    CLE172
      C     DDRRDP        IFNE      @DDRRDP                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDRRDP'                                 CLE172
@@ -845,9 +838,11 @@
      C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDRRDP)                   CLE172
      C                   EVAL      DDRRDPOK        = 'N'                                      CLE172
      C                   ENDIF                                                                CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Day Basis for Average                                                                CLE172
       *                                                                                       CLE172
+     C     DDDBAV        IFNE      *BLANKS                                                    CLE172
      C     DDDBAV        IFNE      @DDDBAV                                                    CLE172
      C                   ADD       1             Idx                                          CLE172
      C                   EVAL      FldNameArr(Idx) = 'DDDBAV'                                 CLE172
@@ -855,6 +850,7 @@
      C                   EVAL      BLen = %Len(%Trim(@DDDBAV))                                CLE172
      C                   EVAL      MsgDtaArr(Idx)  = LenStr +%TRIM(@DDDBAV)                   CLE172
      C                   EVAL      DDDBAVOK        = 'N'                                      CLE172
+     C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
       ** Rates Known                                                                          CLE172

@@ -163,7 +163,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR932611 - COF does not settle the amount that was accrued as*
       *             of interest payment date after MR of outstanding  *
@@ -515,9 +515,6 @@
      FCLOANLC IF  E           K        DISK         KINFSR *PSSR                              CAS016
      F            CLOANCLF                          KRENAMECLOAN1F                            CAS016
       *                                                                                       CAS016
-      ** Loans LIBOR Deregulation Extract File                                                CLE172
-     FLELIBEL0IF  E           K        DISK         KINFSR *PSSR                              CLE172
-      *                                                                                       CLE172
      FSDBSRTPDIF  E                    DISK                               S01194
 0015 F*TABLED**IF**F      96 12AI     2 DISK                              S01194
 0016 F*CLINT***IF**F     256  7AI     2 DISK                              S01194
@@ -722,7 +719,6 @@
      I              FPRC                            FPRCC                 136244
      I              STAL                            STALC                                     CLE034
      I              REPT                            REPTC                                     CLE154
-     I              BLRT                            BLRTC                 CLE172
      I/COPY WNCPYSRC,LE0370I001
 0139 I********NS* 03   1 CD   8 CA                                        S01117
 0140 I*******OR** 03   1 CR   8 CA                                        S01117
@@ -1826,43 +1822,16 @@
 0718 C********** BRTT      COMP 0                    30                                       CSD103
 0718 C           BRTT      COMP *BLANKS              30                                       CSD103
 0719 C  N30                GOTO BYE2
-     C                     MOVE ' '       WLIBE   1                                           CLE172
-     C           CLE172    IFEQ 'Y'                                                           CLE172
-     C                     MOVE *OFF      *IN46                                               CLE172
-     C           LNRF      CHAINCLOANLC              88                                       CLE172
-     C           *IN88     IFEQ *OFF                                                          CLE172
-     C           BLRTC     ANDEQ'Y'                                                           CLE172
-     C           LNRF      SETLLLELIBEL0                                                      CLE172
-     C           LNRF      READELELIBEL0                 88                                   CLE172
-     C           *IN88     DOWEQ'0'                                                           CLE172
-     C                     MOVE *ON       *IN46                                               CLE172
-     C                     MOVE 'Y'       WLIBE                                               CLE172
-     C                     GOTO LIBT                                                          CLE172
-     C           LIBS      TAG                                                                CLE172
-     C                     MOVE ' '       WLIBE                                               CLE172
-     C           LNRF      READELELIBEL0                 88                                   CLE172
-     C                     ENDDO                                                              CLE172
-     C                     ENDIF                                                              CLE172
-     C                     ENDIF                                                              CLE172
 0720 C* CHECK IF THERE IS BR CHANGE PENDING.
 0721 C                     Z-ADD1         D       30
 0722 C           BRKEY     LOKUPAB1,D                    46
 0723 C  N46                GOTO BYE2                       NO CHNG PENDING
-     C           LIBT      TAG                                                                CLE172
      C** 30 IS USED IN THE FOLLOWING SECTION TO SIGNIGY A BASE RATE
      C** CHANGE HAS BEEN APPLIED TO A FORWARD VALUED LOAN.
      C                     SETOF                     30
 0724 C* IF BR CHANGE DATE IS EARLIER THAN LAST RATE CHANGE
 0725 C* DATE,PRODUCE EXCEPTION REPORT.
 0726 C           DLRC      COMP AB2,D                504747
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C           DLRC      ANDGTLDVDAT                                                        CLE172
-     C                     MOVE *OFF      *IN47                                               CLE172
-     C                     MOVE *ON       *IN50                                               CLE172
-     C                     ELSE                                                               CLE172
-     C                     MOVE *ON       *IN47                                               CLE172
-     C                     MOVE *OFF      *IN50                                               CLE172
-     C                     ENDIF                                                              CLE172
 0727 C   47                GOTO BYE15
 0728 C*
 0729 C* CHAIN TO CLIENT TO GET NAME + TOWN FOR R/LE0370.
@@ -1877,9 +1846,6 @@
 0733 C*
 0734 C* CONVERT DATES FOR PRINTOUT
 0735 C                     MOVE AB2,D     ZDAYNO
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C                     MOVE LDVDAT    ZDAYNO                                              CLE172
-     C                     ENDIF                                                              CLE172
 0736 C                     EXSR ZDATE2
 0737 C                     MOVE ZADATE    DATVAL  7
 0738 C*
@@ -1895,20 +1861,13 @@
      C*                                                                   038790
      C           MDAT      IFGT 0                                         047239
      C           MDAT      ANDLEAB2,D                                     047239
-     C           WLIBE     ANDEQ' '                                                           CLE172
      C                     GOTO END                                       047239
      C                     END                                            047239
-     C           MDAT      IFGT 0                                                             CLE172
-     C           MDAT      ANDLELDVDAT                                                        CLE172
-     C           WLIBE     ANDEQ'Y'                                                           CLE172
-     C                     GOTO LIBS                                                          CLE172
-     C                     ENDIF                                                              CLE172
      C*
 0744 C***46***** ACTIC     ADD  1         ACTIC                                               223823
      C   46N95   ACTIC     ADD  1         ACTIC                                               223823
 0745 C*A 'BR' REC OUTPUT TO ACTN SET Y FOR 'CO'REC
 0746 C                     MOVE Y         ACCR
-     C           WLIBE     IFEQ ' '                                                           CLE172
 0747 C* CHECK IF BACK/VALUED BEYOND INT.ACC.DATE OR START/LAST INT.DATE
 0748 C   47      AB2,D     COMP IACD                   57
 0749 C   50      DLRC      COMP IACD                   57
@@ -1918,34 +1877,10 @@
      C   47      AB2,D     COMP SLID                   3131               E10253
      C   50      DLRC      COMP SLID                   3131               E10253
 0753 C   31                MOVE Y         RBVS
-     C                     ELSE                                                               CLE172
-     C           LDVDAT    IFLT IACD                                                          CLE172
-     C           *IN47     ANDEQ'1'                                                           CLE172
-     C           DLRC      ORLT IACD                                                          CLE172
-     C           *IN50     ANDEQ'1'                                                           CLE172
-     C                     MOVE Y         RBVA                                                CLE172
-     C                     MOVE *ON       *IN57                                               CLE172
-     C                     ENDIF                                                              CLE172
-     C           LDVDAT    IFLE IACD                                                          CLE172
-     C           *IN47     ANDEQ'1'                                                           CLE172
-     C           DLRC      ORLE IACD                                                          CLE172
-     C           *IN50     ANDEQ'1'                                                           CLE172
-     C                     MOVE Y         RBVS                                                CLE172
-     C                     MOVE *ON       *IN31                                               CLE172
-     C                     ENDIF                                                              CLE172
-     C                     ENDIF                                                              CLE172
 0754 C                     SETOF                     5731
 0755 C* PASS BR TO SET AMENDMENT INDICATORS SR.
 0756 C   47                Z-ADDAB2,D     BRVDAT  50
 0757 C   50                Z-ADDDLRC      BRVDAT
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C           *IN47     IFEQ '1'                                                           CLE172
-     C                     Z-ADDLDVDAT    BRVDAT                                              CLE172
-     C                     ENDIF                                                              CLE172
-     C           *IN50     IFEQ '1'                                                           CLE172
-     C                     Z-ADDDLRC      BRVDAT                                              CLE172
-     C                     ENDIF                                                              CLE172
-     C                     ENDIF                                                              CLE172
      C***46N95**           SUB  1         ACTIC                                      254799 AR796151
       *                                                                                       249811
      C********** BRVDAT    IFGT ECD                                                 249811 AR1075566
@@ -1970,14 +1905,6 @@
      C                     ENDIF                                          CAC001
      C                     END                                            043221
      C*                                                                   043221
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C                     MOVE 'Y'       ACTI                                                CLE172
-     C                     Z-ADDLDCART    BASERT                                              CLE172
-     C                     MOVE *ON       *IN29                                               CLE172
-     C                     Z-ADDLDVDAT    NIAD                                                CLE172
-     C                     Z-ADDRLDT      WRLDT   50                                          CLE172
-     C                     Z-ADDLDVDAT    RLDT                                                CLE172
-     C                     ENDIF                                                              CLE172
 0758 C                     EXSR ACBP
       **                                                                  S01117
       **  A RECORD PRINTED ON P1 REPORT                                   S01117
@@ -1987,9 +1914,6 @@
      C                     END                                            S01117
       *                                                                   S01117
 0759 C                     EXCPT
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C                     Z-ADDWRLDT     RLDT                                                CLE172
-     C                     ENDIF                                                              CLE172
 0760 C                     SETOF                     50
       *                                                                                       262648
       ** Set the effective interest rate indicators if CAS009 is enabled                      262648
@@ -2049,9 +1973,6 @@
      C                     MOVE WIN10     *IN10                                               262648
      C                     ENDIF                                                              262648
       *                                                                                       262648
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C                     GOTO LIBS                                                          CLE172
-     C                     ENDIF                                                              CLE172
 0761 C           BYE2      TAG                             ** BYE2 TAG **
 0762 C**PROCESS TO SEE IF BR CHANGES CONNECTED WITH ROLLOVERS NEED
 0763 C** TO BE OUTPUT.
@@ -2256,10 +2177,6 @@
 0808 C* IF REC FOUND, VALUE DATED >R/O DATE,OUTPUT WITH VALUE
 0809 C* DATE OF RATE CHANGE.
 0810 C           AB2,D     COMP RLDT                 28
-     C           WLIBE     IFEQ 'Y'                                                           CLE172
-     C                     MOVE *OFF      RLDT                                                CLE172
-     C           LDVDAT    COMP RLDT                 28                                       CLE172
-     C                     ENDIF                                                              CLE172
 0811 C*
 0812 C  N28 45             GOTO END
      C                     ENDIF                                                              CLE036
@@ -2269,7 +2186,6 @@
      C  N95      ACTIC     ADD  1         ACTIC                                               223823
 0815 C*'BR' REC OUTPUT TO ACTN SET Y FOR 'CO' REC.
 0816 C                     MOVE Y         ACCR
-     C           WLIBE     IFEQ ' '                                                           CLE172
 0817 C*CHECK REC BACKVALUED BEYOND INT.ACC.DATE AND START/LAST INT.DATE
 0818 C   28 45   AB2,D     COMP IACD                   57
 0819 C   29      RLDT      COMP IACD                   57
@@ -2279,16 +2195,6 @@
      C   28 45   AB2,D     COMP SLID                   3131               E10253
      C   29      RLDT      COMP SLID                   3131               E10253
 0823 C   31                MOVE Y         RBVS
-     C                     ELSE                                                               CLE172
-     C           LDVDAT    IFGT IACD                                                          CLE172
-     C           LDVDAT    ANDGTIACD                                                          CLE172
-     C                     MOVE Y         RBVA                                                CLE172
-     C                     ENDIF                                                              CLE172
-     C           LDVDAT    IFGT SLID                                                          CLE172
-     C           LDVDAT    ANDGTSLID                                                          CLE172
-     C                     MOVE Y         RBVS                                                CLE172
-     C                     ENDIF                                                              CLE172
-     C                     ENDIF                                                              CLE172
 0824 C                     SETOF                     5731
 0825 C   29                Z-ADDRLDT      BRVDAT
 0826 C   45 28             Z-ADDAB2,D     BRVDAT
@@ -4766,29 +4672,6 @@
      C                     ENDIF                                                              223823
      C                     ENDIF                                                              223823
       *                                                                                       223823
-      ** Check if CLE172 Enhancement switched on                                              CLE172
-      *                                                                                       CLE172
-     C                     CALL 'AOSARDR0'                                                    CLE172
-     C                     PARM *BLANKS   PRTCD                                               CLE172
-     C                     PARM '*VERIFY' POPTN                                               CLE172
-     C                     PARM 'CLE172'  PSARD                                               CLE172
-     C           SCSARD    PARM SCSARD    DSFDY                                               CLE172
-      *                                                                                       CLE172
-     C           PRTCD     IFEQ *BLANKS                                                       CLE172
-     C                     MOVE 'Y'       CLE172  1                                           CLE172
-     C                     ELSE                                                               CLE172
-     C                     MOVE 'N'       CLE172                                              CLE172
-     C           PRTCD     IFNE '*NRF   '                                                     CLE172
-     C                     MOVEL'SCSARDPD'DBFILE                                              CLE172
-     C                     MOVEL'CLE172'  DBKEY                                               CLE172
-     C                     Z-ADD56        DBASE                                               CLE172
-     C                     MOVE '1'       *INU7                                               CLE172
-     C                     MOVE '1'       *INU8                                               CLE172
-     C                     MOVE '1'       *INLR                                               CLE172
-     C                     EXSR *PSSR                                                         CLE172
-     C                     GOTO FIREND                                                        CLE172
-     C                     ENDIF                                                              CLE172
-     C                     ENDIF                                                              CLE172
      C*                                                                   CLE003
      C** ACCESS GENERAL LEDGER DETAILS                                    S01194
      C**********           CALL 'AOGELRR0'                                             S01194 CGL029

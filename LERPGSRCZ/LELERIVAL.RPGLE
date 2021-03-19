@@ -7049,8 +7049,8 @@
      C                   MOVEL     NRoScnBlrt    LeriScnBlrt                                  CLE172
       *                                                                                       CLE172
      C                   ENDIF                                                                CLE172
-      *
-     C                   ENDIF
+      *                                                                                       CLE172
+     C                   ENDIF                                                                CLE172
       *                                                                                       CLE172
      C                   ENDSR                                                                CLE172
       *                                                                                       CLE172

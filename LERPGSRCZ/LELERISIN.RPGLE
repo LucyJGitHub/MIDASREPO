@@ -66,7 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -333,6 +333,11 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE (LERI) Extra Data - File (D/B) format
 
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            98                                                       CLE172
+      *                                                                                       CLE172
      D                 DS                                                                     CSD027
       ** General data structure to handle OLNO field now that is alpha.                       CSD027
      D*OLNOAlpha               1      6                                                CSD027 CLE148
@@ -839,6 +844,10 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM      *BLANK        @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
       * Field OK flags (DS) from/to caller
      C                   PARM                    LERI_OK
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1309,6 +1318,10 @@
      C                   PARM                    NwRoScnFmt
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
       *
       *** Update 'Current' Loan with Loan in Screen Format
       *

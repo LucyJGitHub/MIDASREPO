@@ -2651,6 +2651,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       LEIFLn        Bfp                                          CAP086
 
      C     LEEXLn        SUBST     BUFFER:Bfp    ExtData
+     C                   ADD       LEEXLn        Bfp                                          CLE172
+     C                                                                                        CLE172
+      *** Backward-Looking Rate Fields (CLE172)                                               CLE172
+     C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         98                          CLE172
+     C                   EVAL      ExtData = %SUBST(ExtData:1:LEEXLn) + LEBLRDta              CLE172
+                                                                                              CLE172
 
      C                   CALL      'LELERIVU'
      C                   PARM                    HeadIn
@@ -6099,6 +6105,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LEEXLn            4 0
+      *                                                                                       CLE172
+     C                   Z-ADD     98            LEBLRTLn          4 0                        CLE172
 
      C                   ENDSR
       *****************************************************************

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057746           Date 18Mar21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
       *                 AR641183           Date 27Nov12               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057746 - Field in error should be the base rate code       *
+      *             instead of base rate name. Changed DDBSRN to      *
+      *             DDBSRC.                                           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
@@ -1032,7 +1036,8 @@
      C     #1TESTN       ORGT      '9'                                                       BUG3124
      C                   MOVE      'N'           DDBSRCOK                                    BUG3124
      C                   ADD       1             Idx                                         BUG3124
-     C                   EVAL      FldNamXAr(Idx) = 'DDBSRN'                                 BUG3124
+     C**********         EVAL      FldNamXAr(Idx) = 'DDBSRN'                        BUG3124 MD057746
+     C                   EVAL      FldNamXAr(Idx) = 'DDBSRC'                                MD057746
      C                   EVAL      MsgIdXAr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
      C                   ELSE                                                                 CSD103

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054245           Date 09Sep19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054245           Date 09Sep19               *
       *                 MD051883           Date 04Apr19               *
       *                 MD051944           Date 22Sep18               *
       *                 MD049865           Date 06Aug18               *
@@ -28,6 +29,7 @@
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054245 - Missing P and S settlement entries on Loan Fee    *

@@ -2657,7 +2657,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEBLRTLn      SUBST     BUFFER:Bfp    LEBLRDta         98                          CLE172
      C                   EVAL      ExtData = %SUBST(ExtData:1:LEEXLn) + LEBLRDta              CLE172
                                                                                               CLE172
-     C
 
      C                   CALL      'LELERIVU'
      C                   PARM                    HeadIn

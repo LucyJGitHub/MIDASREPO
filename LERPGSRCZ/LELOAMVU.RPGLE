@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 259120             Date 23Sep14               *
-      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. 259120             Date 23Sep14               *
+      *                 MD026384           Date 16Sep14               *
       *                 MD024811           Date 24Jan20               *
       *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
@@ -102,6 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
       *  259120A- Adjust buffer to include DDXRLT, DDXRLS, DDXRLC     *
       *         - Applied for MD-28282.                               *
       *  MD026384 - Added generation by assignment processing.        *
@@ -500,10 +503,15 @@
       ** EXTERNAL DS FOR SAR DETAILS
      D SCA_LCD       E                     EXTFLD(LCD)
                                                                                              259120A
-     DFiller           DS             8                                                      259120A
-     D DDXRLT                  1      2                                                      259120A
-     D DDXRLS                  3      4                                                      259120A
-     D DDXRLC                  5      8                                                      259120A
+     D*iller***        DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
+     DFiller           DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
 
       ** PCA ICD Details
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
@@ -643,6 +651,7 @@
      C                   MOVEL     Trans5002     TranInLOA2                                   CLE106
      C                   EVAL      InfData = InfData500                                       CAP086
      C                   MOVEL     Extdata500    Extdata
+     C                   EVAL      Filler = %SUBST(Extdata500:51:9)                         MD057739
 
 
       * Reset variables gradually updated
@@ -1452,7 +1461,8 @@
       *                                                                                     MD026384
       ** Secondary transaction information                                                  MD026384
       *                                                                                     MD026384
-     C                   PARM                    TranInLOA2                                 MD026384
+     C**********         PARM                    TranInLOA2                                 MD026384
+     C                   PARM                    Filler                                     MD057739
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

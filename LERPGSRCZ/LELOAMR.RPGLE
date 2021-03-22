@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 259120             Date 23Sep14               *
-      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. 259120             Date 23Sep14               *
+      *                 MD026384           Date 16Sep14               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
       *  259120 - Adjust buffer to include DDXRLT, DDXRLS, DDXRLC     *
       *         - Applied for MD-28282.                               *
       *  MD026384 - Added generation by assignment processing.        *
@@ -274,11 +277,16 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       **--------------------------------------------------------------------------------------------
 
-     DFiller           DS             8                                                       259120
-     D DDXRLT                  1      2                                                       259120
-     D DDXRLS                  3      4                                                       259120
-     D DDXRLC                  5      8                                                       259120
-                                                                                              259120
+     D*iller***        DS             8                                             259120A MD057739
+     D*DDXRLT***               1      2                                             259120A MD057739
+     D*DDXRLS***               3      4                                             259120A MD057739
+     D*DDXRLC***               5      8                                             259120A MD057739
+     DFiller           DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
 

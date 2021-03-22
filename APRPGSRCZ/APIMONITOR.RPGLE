@@ -30,6 +30,11 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
+      *           - Delete APIMONITOR.RPGLE introduced by MD-41126.   *
+      *           - Restore APIMONITOR.RPG from SP23 and convert from *
+      *             RPG to RPGLE. Also, changed RPGBASE and RPGBASEBND*
+      *             and copy source from QRPGSRC to QRPGLESRC because *
+      *             copy source members in QRPGSRC were missing.      *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - PAckaging changes for MidasPlus 1.3.                *
       *                                                               *

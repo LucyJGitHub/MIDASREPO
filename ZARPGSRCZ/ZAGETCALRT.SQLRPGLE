@@ -25,181 +25,183 @@
 000128210222      ** the Program Status Data Structures.  They have meaningful
 000129210222      ** names, prefixed by 'PS'.
 000130210304
-000131210306     D/INCLUDE LIBHTTP123/QRPGLESRC,YAJL_H
-000132210306     D/INCLUDE LIBHTTP123/QRPGLESRC,HTTPAPI_H1
-000133210304
-000134210222     D/COPY ZACPYSRC,PSDS
-000135210222     D/COPY ZACPYSRC,STD_D_SPEC
-000136210306     D/COPY ZSRSRC,ZINTDYZ1LE
-000137210306     D/COPY ZSRSRC,ZHOLILE
-000138210306     D/COPY ZSRSRC,ZHOLELE
-000140210222
-000141210222      ** +--------------------------------------+
-000142210222      ** ¦ Program Prototypes                   ¦
-000143210222      ** ¦ ==================                   ¦
-000144210222      ** +--------------------------------------+
-000145210304
-000146210226     D ACCESS_SVAL     PR                  EXTPGM('AOSVALR0')
-000147210226     D pRetCode                       7A
-000148210226     D pOP01                         20A
-000149210226     D pVL01                        200A
-000151210226     D pOP02                         20A
-000152210226     D pVL02                        200A
-000153210226     D pOP03                         20A
-000154210226     D pVL03                        200A
-000155210226     D pOP04                         20A
-000156210226     D pVL04                        200A
-000157210226     D pOP05                         20A
-000158210226     D pVL05                        200A
-000159210226     D pOP06                         20A
-000160210226     D pVL06                        200A
-000161210226     D pOP07                         20A
-000162210226     D pVL07                        200A
-000163210226     D pOP08                         20A
-000164210226     D pVL08                        200A
-000165210226     D pOP09                         20A
-000166210226     D pVL09                        200A
-000167210226     D pOP10                         20A
-000168210226     D pVL10                        200A
-000169210301
-000170210301     D  ACCESS_SDBANK  pr                  extpgm('AOBANKR0')
-000171210301     D    pReturnCode                 7A
-000172210301     D    pOption                     7A
-000173210301     D    pDSFDY                    200A
-000174210304
-000175210301     D  CONVERT_DATE   pr                  extpgm('ZDATE1')
-000176210301     D    ErrorFlag                   7a
-000177210301     D    DateIN                      6p 0
-000178210301     D    DateInd                     1a
-000179210301     D    DateOUT                     5p 0
-000180210301
-000181210222      *  +----------------+
-000182210222      ** |Parameter lists |
-000183210222      ** +----------------+
-000184210222
-000185210222     D Main            pr                  extpgm('ZAGETCALRT')
-000186210301      **-----------------------------------------------------**
-000187210301     D  moduleID                      2a
-000188210301      ** Module ID
-000189210301      **--** LE - Lending
-000190210301      **--** DL - Dealing
-000191210301      **--** FR - FRA/IRS
-000192210301     D  transactREF                   6a
-000193210301      ** Transaction Reference
-000194210226     D  calcMethod                    4a
-000195210301      ** Calculation Method
-000196210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
-000197210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
-000198210301      **--** SARR - Simple Average
-000199210301      **--** SAVG - Simple Average
-000201210224     D  intPrdStartDt                10a
-000202210224      ** Interest Period Start Date
-000203210224     D  intPrdEndDt                  10a
-000204210224      ** Interest Period End Date
-000205210310     D  riskFreeRate                  5a
-000206210224      ** Risk Free Rate
-000207210226     D  riskFreeRatFl                20a
-000208210224      ** Risk Free Rate Floor
-000209210226     D  lookBackDays                  2a
-000210210224      ** Lookback Days
-000211210301     D  obserPrdShift                 5a
-000212210224      ** Observation Period Shift
-000213210301      ** True/False
-000214210226     D  RateRndDecPts                 3a
-000215210224      ** Rate Rounding Decimal Points
-000216210303     D  dayCntConvent                 7a
-000217210224      ** Day Count Convention
-000218210226     D  lockOutDays                   2a
-000219210224      ** Lockout Days
-000220210301     D  showDailyDeta                 5a
-000221210224      ** Show Dailty Details
-000222210301      ** True/False
-000223210224     D  callTillDate                 10a
-000224210224      ** Calculate Till Date
-000225210310     D  benchMarkAdj                 20a
-000226210305      ** Benchmark Adjustment
-000227210312     D  returnCD                     20a
-000228210312      ** Return Code
-000229210222
-000230210222     D Main            pi
-000231210301      **-----------------------------------------------------**
-000232210301     D  moduleID                      2a
-000233210301      ** Module ID
-000234210301      **--** LE - Lending
-000235210301      **--** DL - Dealing
-000236210301      **--** FR - FRA/IRS
-000237210301     D  transactREF                   6a
-000238210301      ** Transaction Reference
-000239210226     D  calcMethod                    4a
-000240210226      ** Calculation Method
-000241210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
-000242210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
-000243210301      **--** SARR - Simple Average
-000244210301      **--** SAVG - Simple Average
-000246210226     D  intPrdStartDt                10a
-000247210226      ** Interest Period Start Date
-000248210226     D  intPrdEndDt                  10a
-000249210226      ** Interest Period End Date
-000250210310     D  riskFreeRate                  5a
-000251210226      ** Risk Free Rate
-000252210226     D  riskFreeRatFl                20a
-000253210226      ** Risk Free Rate Floor
-000254210226     D  lookBackDays                  2a
-000255210226      ** Lookback Days
-000256210301     D  obserPrdShift                 5a
-000257210226      ** Observation Period Shift
-000258210301      ** True/False
-000259210226     D  RateRndDecPts                 3a
-000260210226      ** Rate Rounding Decimal Points
-000261210303     D  dayCntConvent                 7a
-000262210226      ** Day Count Convention
-000263210226     D  lockOutDays                   2a
-000264210226      ** Lockout Days
-000265210301     D  showDailyDeta                 5a
-000266210226      ** Show Dailty Details
-000267210301      ** True/False
-000268210226     D  callTillDate                 10a
-000269210226      ** Calculate Till Date
-000270210310     D  benchMarkAdj                 20a
-000271210305      ** Benchmark Adjustment
-000272210312     D  returnCD                     20a
-000273210312      ** Return Code
-000274210224
-000275210222      ** +--------------------------------------+
-000276210222      ** ¦ Manually included D-specs            ¦
-000277210222      ** ¦ =========================            ¦
-000278210222      ** +--------------------------------------+
-000279210310      ** +--------------------------------------+
-000280210303
-000281210301      ** Extract File
-000282210301     D LELIBEDS      e ds                  extname(LELIBEPD)
-000283210301     D ExtractFLDS     ds                  likeds(LELIBEDS)
-000284210303
-000285210303      ** Audit Log
-000286210303     D SDARRLDS      e ds                  extname(SDARRLOGTD)
-000287210312     D AuditLogDS      ds                  likeds(SDARRLDS)
-000288210303
-000289210303      ** ARR Daily Rates History File
-000290210303     D ARRDLYDS      e ds                  extname(SDHSDRTD)
-000291210303     D DailyHistDS     ds                  likeds(ARRDLYDS)
-000292210303
-000293210304      ** Core DS
-000294210222     D dssdy         e ds                  extname(DSSDY)
-000295210222     D dsfdy         e ds                  extname(DSFDY)
-000296210222
-000297210222      ** +--------------------------------------+
-000298210222      ** ¦ Constants declaration                ¦
-000299210222      ** ¦ =====================                ¦
-000300210222      ** +--------------------------------------+
-000301210304
-000302210304     D AMP             c                   const('&')
-000303210315     D HTTP_HEAD       c                   const('http://')
-000304210304     D INSERT          c                   const(0)
-000305210304     D LELIBEPD        c                   const(1)
-000306210301     D NO_ERROR        c                   const(0)
-000307210301     D NO_RECORD       c                   const(100)
-000308210315     D QUE             c                   const('?')
-000309210301     D QUO             c                   const('''')
+000132210322      ** Scott Clements library for Parsing JSON Data
+000133210322      ** and HTTP Calls
+000134210306     D/INCLUDE LIBHTTP123/QRPGLESRC,YAJL_H
+000135210319     D/INCLUDE LIBHTTP123/QRPGLESRC,HTTPAPI_H
+000138210322
+000139210222     D/COPY ZACPYSRC,PSDS
+000140210222     D/COPY ZACPYSRC,STD_D_SPEC
+000141210306     D/COPY ZSRSRC,ZINTDYZ1LE
+000142210306     D/COPY ZSRSRC,ZHOLILE
+000143210306     D/COPY ZSRSRC,ZHOLELE
+000144210222
+000145210222      ** +--------------------------------------+
+000146210222      ** ¦ Program Prototypes                   ¦
+000147210222      ** ¦ ==================                   ¦
+000148210222      ** +--------------------------------------+
+000149210304
+000150210226     D ACCESS_SVAL     PR                  EXTPGM('AOSVALR0')
+000151210226     D pRetCode                       7A
+000152210226     D pOP01                         20A
+000153210226     D pVL01                        200A
+000154210226     D pOP02                         20A
+000155210226     D pVL02                        200A
+000156210226     D pOP03                         20A
+000157210226     D pVL03                        200A
+000158210226     D pOP04                         20A
+000159210226     D pVL04                        200A
+000160210226     D pOP05                         20A
+000161210226     D pVL05                        200A
+000162210226     D pOP06                         20A
+000163210226     D pVL06                        200A
+000164210226     D pOP07                         20A
+000165210226     D pVL07                        200A
+000166210226     D pOP08                         20A
+000167210226     D pVL08                        200A
+000168210226     D pOP09                         20A
+000169210226     D pVL09                        200A
+000170210226     D pOP10                         20A
+000171210226     D pVL10                        200A
+000172210301
+000173210301     D  ACCESS_SDBANK  pr                  extpgm('AOBANKR0')
+000174210301     D    pReturnCode                 7A
+000175210301     D    pOption                     7A
+000176210301     D    pDSFDY                    200A
+000177210304
+000178210301     D  CONVERT_DATE   pr                  extpgm('ZDATE1')
+000179210301     D    ErrorFlag                   7a
+000180210301     D    DateIN                      6p 0
+000181210301     D    DateInd                     1a
+000182210301     D    DateOUT                     5p 0
+000183210301
+000184210222      *  +----------------+
+000185210222      ** |Parameter lists |
+000186210222      ** +----------------+
+000187210222
+000188210222     D Main            pr                  extpgm('ZAGETCALRT')
+000189210301      **-----------------------------------------------------**
+000190210301     D  moduleID                      2a
+000191210301      ** Module ID
+000192210301      **--** LE - Lending
+000193210301      **--** DL - Dealing
+000194210301      **--** FR - FRA/IRS
+000195210301     D  transactREF                   6a
+000196210301      ** Transaction Reference
+000197210226     D  calcMethod                    4a
+000198210301      ** Calculation Method
+000199210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
+000200210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
+000201210301      **--** SARR - Simple Average
+000202210301      **--** SAVG - Simple Average
+000203210224     D  intPrdStartDt                10a
+000204210224      ** Interest Period Start Date
+000205210224     D  intPrdEndDt                  10a
+000206210224      ** Interest Period End Date
+000207210310     D  riskFreeRate                  5a
+000208210224      ** Risk Free Rate
+000209210226     D  riskFreeRatFl                20a
+000210210224      ** Risk Free Rate Floor
+000211210226     D  lookBackDays                  2a
+000212210224      ** Lookback Days
+000213210301     D  obserPrdShift                 5a
+000214210224      ** Observation Period Shift
+000215210301      ** True/False
+000216210226     D  RateRndDecPts                 3a
+000217210224      ** Rate Rounding Decimal Points
+000218210303     D  dayCntConvent                 7a
+000219210224      ** Day Count Convention
+000220210226     D  lockOutDays                   2a
+000221210224      ** Lockout Days
+000222210301     D  showDailyDeta                 5a
+000223210224      ** Show Dailty Details
+000224210301      ** True/False
+000225210224     D  callTillDate                 10a
+000226210224      ** Calculate Till Date
+000227210310     D  benchMarkAdj                 20a
+000228210305      ** Benchmark Adjustment
+000229210312     D  returnCD                     20a
+000230210312      ** Return Code
+000231210222
+000232210222     D Main            pi
+000233210301      **-----------------------------------------------------**
+000234210301     D  moduleID                      2a
+000235210301      ** Module ID
+000236210301      **--** LE - Lending
+000237210301      **--** DL - Dealing
+000238210301      **--** FR - FRA/IRS
+000239210301     D  transactREF                   6a
+000240210301      ** Transaction Reference
+000241210226     D  calcMethod                    4a
+000242210226      ** Calculation Method
+000243210301      **--** NCCR - Daily Compounding in Arrears (Non-Cumulative Compounded Rate)
+000244210301      **--** CCR  - Average Compounded In Arrears (Cumulative Compounded Rate)
+000245210301      **--** SARR - Simple Average
+000246210301      **--** SAVG - Simple Average
+000247210226     D  intPrdStartDt                10a
+000248210226      ** Interest Period Start Date
+000249210226     D  intPrdEndDt                  10a
+000250210226      ** Interest Period End Date
+000251210310     D  riskFreeRate                  5a
+000252210226      ** Risk Free Rate
+000253210226     D  riskFreeRatFl                20a
+000254210226      ** Risk Free Rate Floor
+000255210226     D  lookBackDays                  2a
+000256210226      ** Lookback Days
+000257210301     D  obserPrdShift                 5a
+000258210226      ** Observation Period Shift
+000259210301      ** True/False
+000260210226     D  RateRndDecPts                 3a
+000261210226      ** Rate Rounding Decimal Points
+000262210303     D  dayCntConvent                 7a
+000263210226      ** Day Count Convention
+000264210226     D  lockOutDays                   2a
+000265210226      ** Lockout Days
+000266210301     D  showDailyDeta                 5a
+000267210226      ** Show Dailty Details
+000268210301      ** True/False
+000269210226     D  callTillDate                 10a
+000270210226      ** Calculate Till Date
+000271210310     D  benchMarkAdj                 20a
+000272210305      ** Benchmark Adjustment
+000273210312     D  returnCD                     20a
+000274210312      ** Return Code
+000275210224
+000276210222      ** +--------------------------------------+
+000277210222      ** ¦ Manually included D-specs            ¦
+000278210222      ** ¦ =========================            ¦
+000279210222      ** +--------------------------------------+
+000280210310      ** +--------------------------------------+
+000281210303
+000282210318      ** Extract file for LE0370 consumption and BR event creation
+000283210301     D LELIBEDS      e ds                  extname(LELIBEPD)
+000284210301     D ExtractFLDS     ds                  likeds(LELIBEDS)
+000285210303
+000286210303      ** Audit Log
+000287210303     D SDARRLDS      e ds                  extname(SDARRLOGTD)
+000288210312     D AuditLogDS      ds                  likeds(SDARRLDS)
+000289210303
+000290210303      ** ARR Daily Rates History File
+000291210303     D ARRDLYDS      e ds                  extname(SDHSDRTD)
+000292210303     D DailyHistDS     ds                  likeds(ARRDLYDS)
+000293210303
+000294210318      ** Core data structures
+000295210318     D dssdy         e ds                  extname(DSSDY)
+000296210222     D dsfdy         e ds                  extname(DSFDY)
+000297210222
+000298210222      ** +--------------------------------------+
+000299210222      ** ¦ Constants declaration                ¦
+000300210222      ** ¦ =====================                ¦
+000301210222      ** +--------------------------------------+
+000302210304
+000303210304     D AMP             c                   const('&')
+000304210315     D HTTP_HEAD       c                   const('http://')
+000305210304     D INSERT          c                   const(0)
+000306210304     D LELIBEPD        c                   const(1)
+000307210301     D NO_ERROR        c                   const(0)
+000308210301     D NO_RECORD       c                   const(100)
+000309210315     D QUE             c                   const('?')
+000310210301     D QUO             c                   const('''')
 000312210304     D SDHSDRTD        c                   const(0)
 000315210303     D UPDATE          c                   const(1)
 000317210226
@@ -602,9 +604,9 @@
 000751210224
 000752210224       begsr buildParameter;
 000753210304
-000754210305                   RestAPIParm = %trim(CalcMetURL) +
+000754210318                   RestAPIParm =    %trim(CalcMetURL) +
 000755210305                                 QUE + 'interestPeriodStartDate=' +
-000756210305                                       %trim(intPrdStartDt) +
+000756210318                                    %trim(intPrdStartDt) +
 000757210304                                 AMP + 'interestPeriodEndDate=' +
 000758210305                                    %trim(intPrdEndDt) +
 000759210305                                 AMP + 'riskFreeRate=' +

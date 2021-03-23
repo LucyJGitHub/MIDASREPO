@@ -556,8 +556,13 @@
      C                   PARM      *ZERO         @@AMT
      C                   PARM                    BNDCSP
 
-     C                   IF        @@ERCD <> *ZERO
-     C                             and DDBLRT = 'Y'                                         MD057770
+      ** Value must be numeric from -100 to 100 upto 6 decimal                              MD057770
+     C**********         IF        @@ERCD <> *ZERO                                          MD057770
+     C**********                   and DDBLRT = 'Y'                                         MD057770
+     C                   IF        DDBLRT = 'Y'                                             MD057770
+     C                             and (@@ERCD <> *ZERO or                                  MD057770
+     C                             WNumFlor < -100 or                                       MD057770
+     C                             WNumFlor >  100)                                         MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
@@ -577,18 +582,18 @@
 
      C                   ENDIF
 
-      ** Value must be numeric from -100 to 100
-     C                   IF        DDFLOROK <> 'N'
-
-     C                   IF        WNumFlor < -100 or
-     C                             WNumFlor >  100
-     C                   EVAL      DDFLOROK = 'N'
-     C                   EVAL      Idx = Idx + 1
-     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
-     C                   EVAL      MsgIdXAr(Idx) = '5049494'
-     C                   ENDIF
-
-     C                   ENDIF
+      ***Value*must*be*numeric*from*-100*to*100***********************                      MD057770
+     C**********         IF        DDFLOROK <> 'N'                                          MD057770
+      **********                                                                            MD057770
+     C**********         IF        WNumFlor < -100 or                                       MD057770
+     C**********                   WNumFlor >  100                                          MD057770
+     C**********         EVAL      DDFLOROK = 'N'                                           MD057770
+     C**********         EVAL      Idx = Idx + 1                                            MD057770
+     C**********         EVAL      FldNamXAr(Idx) = 'DDFLOR'                                MD057770
+     C**********         EVAL      MsgIdXAr(Idx) = '5049494'                                MD057770
+     C**********         ENDIF                                                              MD057770
+      **********                                                                            MD057770
+     C**********         ENDIF                                                              MD057770
 
      C                   ENDIF
 

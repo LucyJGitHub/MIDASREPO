@@ -17,7 +17,7 @@
       *  Last Amend No. MD057739           Date 15Mar21               *
       *  Prev Amend No. MD026384           Date 16Sep14               *
       *                 CER050             Date 16Jun19               *
-      *                 MD034449           Date 24Jan19               *      
+      *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
@@ -480,9 +480,9 @@
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
 
-      ** Loan amendment in screen format 2                                                  MD026384
-     D LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                                MD026384
-                                                                                            MD026384
+      ***Loan*amendment in screen format 2                                         MD026384 MD057739
+     D*LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                       MD026384 MD057739
+      ***********                                                                  MD026384 MD057739
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
 

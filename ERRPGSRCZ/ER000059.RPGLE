@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*S*D ***RPGBASEBND****************************************************                     MD041126
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  TEXT('Midas ER Update MX Files for Bundesbank')              *
       *****************************************************************
       *                                                               *
@@ -11,13 +12,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025621A          Date 04Apr14               *
+      *  Last Amend No. MD053992A          Date 06Apr20               *
+      *  Prev Amend No. MD041126           Date 02Dec19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD025621A          Date 04Apr14               *
       *                 MD025621           Date 31Mar14               *
       *                 AR690511*CREATE    Date 31Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053992A - End of support WebSphere MQ v.8.                 *
+      *            - BNDSRVPGM must be QMQM/LIBMQM (Recompile).       *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-53992                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025621A - Files are updated even when inputs did not pass  *
       *              validation.                                      *
@@ -75,12 +82,14 @@
       ** Declare MQI structures needed
       ** MQI Constants
  
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
  
       ** Object Descriptor
  
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
  
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -116,12 +125,17 @@
  
      D MQUEUE          S             48A
      D MQMGR           S             48A                                                    MD025621
-     D CID             S              9P 0
-     D HCONN           S              9P 0
-     D OPTS            S              9P 0
-     D HOBJ            S              9P 0
-     D OCODE           S              9P 0
-     D REASON          S              9P 0
+     D***CID****         S              9P 0                                                MD041126
+     D***HCONN**         S              9P 0                                                MD041126
+     D***OPTS***         S              9P 0                                                MD041126
+     D***HOBJ***         S              9P 0                                                MD041126
+     D***OCODE**         S              9P 0                                                MD041126
+     D***REASON*         S              9P 0                                                MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HOBJ            S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
  
      D WEMSGQ          S                   LIKE(EXMSGQ)
      D WCMSGQ          S                   LIKE(CDMSGQ)
@@ -264,14 +278,17 @@
      C                   IF        MQMGR <> *BLANKS                                         MD025621
                                                                                             MD025621
      C                   EVAL      ODMN = MQMGR                                             MD025621
-     C                   EVAL      CID = MQCONN                                             MD025621
-                                                                                            MD025621
-     C                   CALL      'QMQM'                                                   MD025621
-     C                   PARM                    CID                                        MD025621
-     C                   PARM                    MQMGR                                      MD025621
-     C                   PARM                    HCONN                                      MD025621
-     C                   PARM                    OCODE                                      MD025621
-     C                   PARM                    REASON                                     MD025621
+     C**********         EVAL      CID = MQCONN                                    MD025621 MD041126
+      **********                                                                   MD025621 MD041126
+     C**********         CALL      'QMQM'                                          MD025621 MD041126
+     C**********         PARM                    CID                               MD025621 MD041126
+     C**********         PARM                    MQMGR                             MD025621 MD041126
+     C**********         PARM                    HCONN                             MD025621 MD041126
+     C**********         PARM                    OCODE                             MD025621 MD041126
+     C**********         PARM                    REASON                            MD025621 MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCONN( MQMGR : HCONN :                                  MD041126
+     C                                     OCODE : REASON )                                 MD041126
                                                                                             MD025621
      C                   IF        OCODE =  CCFAIL                                          MD025621
      C                   MOVEL     'LEF0018'     ZAMSID                                     MD025621
@@ -287,7 +304,7 @@
       ** Set up MQSeries data necessary to open a queue
  
      C                   EVAL      OPTS = OOOUT + OOFIQ
-     C                   EVAL      CID = MQOPEN
+     C**********         EVAL      CID = MQOPEN                                             MD041126
  
       ** ODON is a subfield of the MQOD data structure, which holds the
       ** name of the queue to be opened.  It is declared in the CMQODR
@@ -299,14 +316,17 @@
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
  
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS
-     C                   PARM                    HOBJ
-     C                   PARM                    OCODE
-     C                   PARM                    REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS                                       MD041126
+     C**********         PARM                    HOBJ                                       MD041126
+     C**********         PARM                    OCODE                                      MD041126
+     C**********         PARM                    REASON                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HOBJ : OCODE : REASON )                          MD041126
  
       ** CCFAIL is a named constant containing the value for OCODE
       ** indicating a failure to open the queue.
@@ -330,24 +350,33 @@
       **  Close MQ Queue
  
      C                   EVAL      OPTS = CONONE
-     C                   EVAL      CID = MQCLOS
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    HOBJ
-     C                   PARM                    OPTS
-     C                   PARM      *ZERO         OCODE
-     C                   PARM      *ZERO         REASON
+     C**********         EVAL      CID = MQCLOS                                             MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM                    HOBJ                                       MD041126
+     C**********         PARM                    OPTS                                       MD041126
+     C**********         PARM      *ZERO         OCODE                                      MD041126
+     C**********         PARM      *ZERO         REASON                                     MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HOBJ : OPTS :                           MD041126
+     C                                      OCODE : REASON )                                MD041126
                                                                                             MD025621
       ** Close Connection to MQ Manager                                                     MD025621
                                                                                             MD025621
      C                   IF        MQMGR <> *BLANKS                                         MD025621
-     C                   EVAL      CID = MQDISC                                             MD025621
-     C                   CALL      'QMQM'                                                   MD025621
-     C                   PARM                    CID                                        MD025621
-     C                   PARM                    HCONN                                      MD025621
-     C                   PARM      *ZERO         OCODE                                      MD025621
-     C                   PARM      *ZERO         REASON                                     MD025621
+     C**********         EVAL      CID = MQDISC                                    MD025621 MD041126
+     C**********         CALL      'QMQM'                                          MD025621 MD041126
+     C**********         PARM                    CID                               MD025621 MD041126
+     C**********         PARM                    HCONN                             MD025621 MD041126
+     C**********         PARM      *ZERO         OCODE                             MD025621 MD041126
+     C**********         PARM      *ZERO         REASON                            MD025621 MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
      C                   ENDIF                                                              MD025621
                                                                                             MD025621
      C                   ENDIF

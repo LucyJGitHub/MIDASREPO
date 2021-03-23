@@ -17,7 +17,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054017-Change on validation of System Value "APR Formula"  *
       *  CER050 - Annualised Percentage Rate (APR)                    *

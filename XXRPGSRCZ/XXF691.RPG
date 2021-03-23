@@ -1,0 +1,890 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX Add new records from SDACRCPD')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  XXF691 - Add new records from SDACRCPD                       *
+      *                                                               *
+      *  Called by: XXCF691                                           *
+      *                                                               *
+      *  Calls: GL0765   - Currency Conversion                        *
+      *         AOBANKR0                                              *
+      *         AORPERR0                                              *
+      *                                                               *
+      *  Parameters: 2A Group code                                    *
+      *              50 Current Period Start date                     *
+      *              50 Current Period Term 1 Start Date              *
+      *              50 Current Period Term 2 Start Date              *
+      *              50 Current Period Year Start Date                *
+      *              1A Report Set Number                             *
+      *              1A Return code                                   *
+      *                                                               *
+      *  (C) Copyright Finastra Systems Technology, Inc. 2020         *
+      *                                                               *
+      *  Last Amend No. EML108             Date 20Jan20               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 and fixes to FBM2.1SP21              *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *  230735 - Add new records from SDACRCPD                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     FMCWORKX1IF  E                    DISK
+      * OPNQRY of selected accounts
+     FMCWORKV2IF  E           K        DISK
+      * Start of Year Opening Balance
+     FUPWORKV1IF  E           K        DISK
+      * Extracted movements
+     FGLHBCGL1IF  E           K        DISK
+      * Control Group Details
+     FSDRPSTL0IF  E           K        DISK
+      * Reporting Sets
+     FSDACRCL6IF  E           K        DISK
+      * Report Codes
+     FMCWORKV0UF  E           K        DISK                      A
+      * Daily Balances and Movements
+     FMCAVBLV0UF  E           K        DISK                      A
+      * Aggregate Balances and movements
+      /SPACE
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  End of file read on MCWORKX1                          *
+      *  20  -  End of file read on UPWORKV1                          *
+      *      -  CHAIN failure on GLHBCGL1                             *
+      *  30  -  CHAIN failure on MCWORKV2                             *
+      *  40  -  CHAIN failure on MCWORKV0                             *
+      *  60  -  CHAIN failure on SDACRCL6 (Debit Code)                *
+      *  70  -  CHAIN failure on SDACRCL6 (Credit Code)               *
+      *  80  -  CHAIN failure on MCAVBLV0                             *
+      *  90  -  CHAIN failure on SDRPTSL0                             *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT    -  Retrieve Control Group Details and                *
+      *          -  Fnitialise fields                                 *
+      *  PROCES  -  Process postings                                  *
+      *  DBERR   -  Error processing                                  *
+      *                                                               *
+      *****************************************************************
+      /COPY ZSRSRC,ZHOLE
+     E                    CPY@    1   1 80               Copyright
+      *
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSBANK    E DSSDBANKPD
+      *
+      **  Period Details
+      *
+     IDSPERD    E DSGLPERDPD
+      *
+      **  Period Details
+      *
+      /COPY ZSRSRC,ZHOLI
+      /COPY ZSRSRC,ZHOLDS
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2
+     C                     PARM           CSPDD   50
+     C                     PARM           CEPDD   50
+     C                     PARM           CST1D   50
+     C                     PARM           CST2D   50
+     C                     PARM           CSOYD   50
+     C                     PARM           RSNO    1
+     C                     PARM           XRETC   1        Return code
+      /SPACE
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      /SPACE
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      /SPACE
+      *
+     C                     EXSR INIT
+     C                     EXSR MAIN
+     C                     MOVE '1'       *INLR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  KLISTS                                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           WRK0      KLIST
+     C                     KFLD           XGRPC
+     C                     KFLD           M0RSNO
+     C                     KFLD           M0RSCD
+     C                     KFLD           M0BRCA
+     C                     KFLD           M0CNUM
+     C                     KFLD           M0CCY
+     C                     KFLD           M0ACOD
+     C                     KFLD           M0ACSQ
+      *
+     C           REPC      KLIST
+     C                     KFLD           G5RSNO
+     C                     KFLD           M1ACOD
+     C                     KFLD           KDRCR   1
+      *
+     C           AVBL      KLIST
+     C                     KFLD           XGRPC
+     C                     KFLD           G5RSNO
+     C                     KFLD           KRSCD  10
+     C                     KFLD           M1BRCA
+     C                     KFLD           M1CNUM
+     C                     KFLD           M1CCY
+     C                     KFLD           M1ACOD
+     C                     KFLD           M1ACSQ
+      *
+     C           CHRKEY    KLIST
+     C                     KFLD           XGRPC
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCCNUM  6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KCACOD 10
+     C                     KFLD           KCACSQ  2
+      *
+     C           AVKEY     KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KCACOD
+     C                     KFLD           KCACSQ
+      *
+     C           NUMKEY    KLIST
+     C                     KFLD           KBRCA
+     C**********           KFLD           KNCNUM  60                                          EML108
+     C                     KFLD           KNCNUM  6                                           EML108
+     C                     KFLD           KCCY
+     C                     KFLD           KNACOD 100
+     C                     KFLD           KNACSQ  20
+      /EJECT
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C           DSBANK    PARM DSBANK    DSFDY
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'AOBANKR0'#FILE   8        ************
+     C                     Z-ADD8         #BASE   30       * Error 01 *
+     C                     MOVELXGRPC     #KEY             ************
+     C                     MOVEL'XXF690'  DBPGM
+     C                     END                             --- E001
+     C                     MOVELBJSLCD    ZLOC
+     C                     MOVELBJCYCD    ZCCY
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZBKDT
+     C                     Z-ADDZDYNBR    PRVWKD  50
+      *
+      ** Get group details - Error if not found
+     C           XGRPC     CHAINGLHBCGL1             20
+     C           *IN20     IFEQ '1'
+     C                     MOVEL'GLHBCGL1'#FILE   8        ************
+     C                     Z-ADD1         #BASE   30       * Error 01 *
+     C                     MOVELXGRPC     #KEY   29        ************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     Z-ADD-1        P@PSRN
+     C                     CALL 'AORPERR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM HCPSTC    P@PSTC  1
+     C                     PARM           P@PSRN  30
+     C           DSPERD    PARM DSPERD    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AORPERR0'#FILE            ************
+     C                     Z-ADD7         #BASE            * Error 05 *
+     C           P@PSTC    CAT  ' -1'     #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E001
+      *
+     C           PRVWKD    IFGE CSPDD
+     C                     Z-ADDCSPDD     SPDD    50
+     C                     Z-ADDCEPDD     EPDD    50
+     C                     Z-ADDCST1D     ST1D    50
+     C                     Z-ADDCST2D     ST2D    50
+     C                     Z-ADDCSOYD     SOYD    50
+     C                     Z-ADDPRVWKD    PRUN    50
+     C                     ELSE
+     C                     Z-ADDDTSPDD    SPDD
+     C                     Z-ADDDTEPDD    EPDD
+     C                     Z-ADDDTST1D    ST1D
+     C                     Z-ADDDTST2D    ST2D
+     C                     Z-ADDDTSOYD    SOYD
+     C                     Z-ADDDTEPDD    PRUN
+     C                     ENDIF
+     C           *LIKE     DEFN EVDT      SVEVDT
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main processing, process UPDBALPD records           *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      /SPACE
+      * Read file sequentially, exit at EoF
+     C                     READ MCWORKX1                 10
+      *
+     C           *IN10     DOWEQ'0'
+     C                     Z-ADD0         TEMPCB 190
+     C                     MOVELMBRCA     KBRCA
+     C                     MOVE MCNUM     KCCNUM
+     C**********           Z-ADDMCNUM     KNCNUM                                              EML108
+     C                     MOVE MCNUM     KNCNUM                                              EML108
+     C                     MOVELMCCY      KCCY
+     C                     MOVE MACOD     KCACOD
+     C                     Z-ADDMACOD     KNACOD
+     C                     MOVE MACSQ     KCACSQ
+     C                     Z-ADDMACSQ     KNACSQ
+     C           CHRKEY    CHAINMCWORKV2             30
+     C           *IN30     IFEQ '0'
+     C                     Z-ADDM2TDOB    TDOB
+     C                     ELSE
+     C                     Z-ADD0         TDOB   190
+     C                     ENDIF
+     C                     Z-ADD0         DRAMT  190
+     C                     Z-ADD0         CRAMT  190
+      *
+     C           NUMKEY    SETLLUPWORKV1
+     C           NUMKEY    READEUPWORKV1                 20
+      *
+     C           *IN20     IFEQ '1'
+     C           *IN30     ANDEQ'0'
+     C           M2TDOB    ANDNE0
+     C                     EXSR NOPOST
+     C                     ENDIF
+      *
+     C                     Z-ADDEVDT      SVEVDT
+     C           *IN20     DOWEQ'0'
+      * If currency code does not equal the 'currency of balances' from
+      * the group control record (and 'currency of balances' is non-blank)
+      * convert the amount via GL0765
+     C           CCY       IFNE HCCCYB
+     C           HCCCYB    ANDNE*BLANKS
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM           CCY
+     C                     PARM           HCCCYB
+     C                     PARM           EVDT
+     C                     PARM PAMT      CVAMT  190
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'GL0765'  #FILE            ************
+     C                     Z-ADD3         #BASE            * Error 03 *
+     C                     MOVEL*BLANKS   #KEY             ************
+     C                     EXSR DBERR
+     C                     END
+     C                     ELSE
+     C                     Z-ADDPAMT      CVAMT
+     C                     END
+      *
+     C           VOIN      IFEQ 1
+     C           CVAMT     ANDGT0
+     C           VOIN      OREQ 0
+     C           CVAMT     ANDLT0
+     C                     ADD  CVAMT     CRAMT
+     C                     ELSE
+     C                     ADD  CVAMT     DRAMT
+     C                     ENDIF
+      *
+     C                     Z-ADDEVDT      SVEVDT
+     C           NUMKEY    READEUPWORKV1                 20
+     C           EVDT      IFNE SVEVDT
+     C           *IN20     OREQ '1'
+     C                     EXSR PROCES
+     C                     Z-ADDTEMPCB    TDOB
+     C                     Z-ADD0         CRAMT
+     C                     Z-ADD0         DRAMT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     READ MCWORKX1                 10
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PROCES- Process movements                                    *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *
+     C                     Z-ADD0         TDR    190
+     C                     Z-ADD0         TCR    190
+     C                     Z-ADD0         TMV    190
+     C                     Z-ADD0         TAGG   190
+     C                     Z-ADD0         DIFFDR 190
+     C                     Z-ADD0         DIFFCR 190
+     C                     Z-ADD0         RESTDR 190
+     C                     Z-ADD0         RESTCR 190
+     C                     MOVE *BLANKS   DBRSCD 10
+     C                     MOVE *BLANKS   CRRSCD 10
+      *
+     C                     MOVELXGRPC     M0CGCD
+     C                     MOVELMBRCA     M0BRCA
+     C                     MOVELMCCY      M0CCY
+     C                     MOVE MACOD     M0ACOD
+     C                     MOVE MCNUM     M0CNUM
+     C                     MOVE MACSQ     M0ACSQ
+      *
+     C                     MOVELXGRPC     M1CGCD
+     C                     MOVELMBRCA     M1BRCA
+     C                     MOVELMCCY      M1CCY
+     C                     MOVE MACOD     M1ACOD
+     C                     MOVE MCNUM     M1CNUM
+     C                     MOVE MACSQ     M1ACSQ
+      *
+     C           DRAMT     ADD  CRAMT     TMV
+     C           TDOB      ADD  TMV       TEMPCB
+      *
+      ** If the opening balance changed from debit to credit
+      *
+     C           TDOB      IFGE 0
+     C           TEMPCB    ANDLT0
+     C           TDOB      ADD  DRAMT     DIFFCR
+     C                     Z-SUBDIFFCR    DIFFCR
+     C                     Z-ADDTEMPCB    RESTCR
+     C                     ENDIF
+     C           TDOB      IFLT 0
+     C           TEMPCB    ANDGE0
+     C           TDOB      ADD  CRAMT     DIFFDR
+     C                     Z-SUBDIFFDR    DIFFDR
+     C                     Z-ADDTEMPCB    RESTDR
+     C                     ENDIF
+      *
+     C           RSNO      CHAINSDRPSTL0             90
+     C           *IN90     IFEQ '0'
+      *
+     C                     MOVELG5RSNO    M0RSNO
+     C                     MOVELG5RSNO    M1RSNO
+     C                     MOVE '0'       KDRCR
+     C           REPC      CHAINSDACRCL6             60
+     C           *IN60     IFEQ '0'
+     C                     MOVELG6RSCD    DBRSCD
+     C                     ENDIF
+     C                     MOVE '1'       KDRCR
+     C           REPC      CHAINSDACRCL6             70
+     C           *IN70     IFEQ '0'
+     C                     MOVELG6RSCD    CRRSCD
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN70     OREQ '0'
+      *
+     C           DBRSCD    IFNE CRRSCD
+     C           *IN60     ANDEQ'0'
+     C           *IN70     ANDEQ'0'
+      *
+     C                     Z-ADD0         ODB    190
+     C                     Z-ADD0         TDR
+     C                     Z-ADD0         TCR
+     C           TDOB      IFGE 0
+     C           RESTDR    ORNE 0
+     C           TDOB      ORLT 0
+     C           TEMPCB    ANDEQ0
+     C           TDOB      IFGE 0
+     C                     Z-ADDTDOB      ODB
+     C                     ENDIF
+     C                     SELEC
+     C           TDOB      WHGE 0
+     C           TEMPCB    ANDGE0
+     C                     Z-ADDDRAMT     TDR
+     C                     Z-ADDCRAMT     TCR
+     C           TDOB      WHLT 0
+     C           TEMPCB    ANDEQ0
+     C                     Z-SUBCRAMT     TDR
+     C                     Z-ADDCRAMT     TCR
+     C           RESTDR    WHEQ 0
+     C                     Z-ADDDRAMT     TDR
+     C                     Z-ADDDIFFCR    TCR
+     C                     OTHER
+     C                     Z-ADDRESTDR    TDR
+     C                     ENDSL
+     C                     ENDIF
+     C                     MOVELDBRSCD    KRSCD
+     C                     EXSR UPDWRK
+     C                     EXSR UPDFLE
+      *
+     C                     Z-ADD0         TDR
+     C                     Z-ADD0         TCR
+     C                     Z-ADD0         TMV
+     C                     Z-ADD0         TAGG
+     C                     Z-ADD0         ODB    190
+     C           TDOB      IFLT 0
+     C           RESTCR    ORNE 0
+     C           TDOB      IFLT 0
+     C                     Z-ADDTDOB      ODB
+     C                     ENDIF
+     C                     SELEC
+     C           TDOB      WHLT 0
+     C           TEMPCB    ANDLT0
+     C                     Z-ADDDRAMT     TDR
+     C                     Z-ADDCRAMT     TCR
+     C           TDOB      WHLT 0
+     C           TEMPCB    ANDEQ0
+     C                     Z-SUBTDOB      TDR
+     C           RESTCR    WHEQ 0
+     C                     Z-ADDDIFFDR    TDR
+     C                     Z-ADDCRAMT     TCR
+     C                     OTHER
+     C                     Z-ADDRESTCR    TCR
+     C                     ENDSL
+     C                     ENDIF
+     C                     MOVELCRRSCD    KRSCD
+     C                     EXSR UPDWRK
+     C                     EXSR UPDFLE
+      *
+     C                     ELSE
+     C                     SELEC
+     C           TDOB      WHGE 0
+     C           *IN60     ANDEQ'0'
+     C                     MOVELDBRSCD    KRSCD
+     C           TDOB      WHLT 0
+     C           *IN70     ANDEQ'0'
+     C                     MOVELCRRSCD    KRSCD
+     C           TDOB      WHEQ 0
+     C           *IN60     ANDEQ'1'
+     C           TEMPCB    ANDLT0
+     C           *IN70     ANDEQ'0'
+     C                     MOVELCRRSCD    KRSCD
+     C                     OTHER
+     C                     MOVEL'SDACRCPD'#FILE
+     C                     Z-ADD5         #BASE
+     C                     MOVELM0ACOD    #KEY
+     C                     EXSR DBERR
+     C                     ENDSL
+     C                     Z-ADDTDOB      ODB
+     C                     Z-ADDDRAMT     TDR
+     C                     Z-ADDCRAMT     TCR
+     C                     EXSR UPDWRK
+     C                     EXSR UPDFLE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDRPSTPD'#FILE
+     C                     Z-ADD6         #BASE
+     C                     MOVELRSNO      #KEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDFLE - Update/Write records to MCAVBLV0                    *
+      *                                                               *
+      *****************************************************************
+     C           UPDFLE    BEGSR
+      *
+     C                     Z-ADD*ZEROS    M1PDDR
+     C                     Z-ADD*ZEROS    M1PDCR
+     C                     Z-ADD*ZEROS    M1PAGG
+     C                     Z-ADD*ZEROS    M1T1DR
+     C                     Z-ADD*ZEROS    M1T1CR
+     C                     Z-ADD*ZEROS    M1T1AG
+     C                     Z-ADD*ZEROS    M1T2DR
+     C                     Z-ADD*ZEROS    M1T2CR
+     C                     Z-ADD*ZEROS    M1T2AG
+     C                     Z-ADD*ZEROS    M1YTDR
+     C                     Z-ADD*ZEROS    M1YTCR
+     C                     Z-ADD*ZEROS    M1YAGG
+     C                     MOVELG5RSNO    M1RSNO
+     C                     MOVELKRSCD     M1RSCD
+     C           AVBL      CHAINMCAVBLV0             80
+     C           *IN80     IFEQ '1'
+      *
+     C           SVEVDT    IFGE SPDD
+     C           SVEVDT    SUB  SPDD      DAYS
+     C           ODB       MULT DAYS      HDAYCB
+     C                     Z-ADDTDR       M1PDDR
+     C                     Z-ADDTCR       M1PDCR
+     C                     Z-ADDHDAYCB    M1PAGG
+     C                     ADD  M0TDCB    M1PAGG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE ST1D
+     C           SVEVDT    SUB  ST1D      DAYS
+     C           ODB       MULT DAYS      HDAYCB
+     C                     Z-ADDTDR       M1T1DR
+     C                     Z-ADDTCR       M1T1CR
+     C                     Z-ADDHDAYCB    M1T1AG
+     C                     ADD  M0TDCB    M1T1AG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE ST2D
+     C           SVEVDT    SUB  ST2D      DAYS
+     C           ODB       MULT DAYS      HDAYCB
+     C                     Z-ADDTDR       M1T2DR
+     C                     Z-ADDTCR       M1T2CR
+     C                     Z-ADDHDAYCB    M1T2AG
+     C                     ADD  M0TDCB    M1T2AG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE SOYD
+     C           SVEVDT    SUB  SOYD      DAYS
+     C           ODB       MULT DAYS      HDAYCB
+     C                     Z-ADDTDR       M1YTDR
+     C                     Z-ADDTCR       M1YTCR
+     C                     Z-ADDHDAYCB    M1YAGG
+     C                     ADD  M0TDCB    M1YAGG
+     C                     ENDIF
+     C                     Z-ADDM0TDCB    M1PDCB
+     C                     Z-ADDSVEVDT    M1LMDT
+     C           *IN20     IFEQ '1'
+     C                     EXSR RMCAVB
+     C                     ENDIF
+     C                     WRITEMCAVBLD0
+     C                     ELSE
+      *
+     C           SVEVDT    SUB  M1LMDT    DAYS    50
+     C           DAYS      IFGT 1
+     C                     SUB  1         DAYS
+     C           M1PDCB    MULT DAYS      HDAYCB 190
+     C                     ELSE
+     C                     Z-ADD0         HDAYCB
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE SPDD
+     C           M1LMDT    IFLT SPDD
+     C           SVEVDT    SUB  SPDD      DAYS
+     C           M1PDCB    MULT DAYS      T1PAGG
+     C                     ADD  T1PAGG    M1PAGG
+     C                     ELSE
+     C                     ADD  HDAYCB    M1PAGG
+     C                     ENDIF
+     C                     ADD  TDR       M1PDDR
+     C                     ADD  TCR       M1PDCR
+     C                     ADD  M0TDCB    M1PAGG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE ST1D
+     C           M1LMDT    IFLT ST1D
+     C           SVEVDT    SUB  ST1D      DAYS
+     C           M1PDCB    MULT DAYS      T1T1AG
+     C                     ADD  T1T1AG    M1T1AG
+     C                     ELSE
+     C                     ADD  HDAYCB    M1T1AG
+     C                     ENDIF
+     C                     ADD  TDR       M1T1DR
+     C                     ADD  TCR       M1T1CR
+     C                     ADD  M0TDCB    M1T1AG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE ST2D
+     C           M1LMDT    IFLT ST2D
+     C           SVEVDT    SUB  ST2D      DAYS
+     C           M1PDCB    MULT DAYS      T1T2AG
+     C                     ADD  T1T2AG    M1T2AG
+     C                     ELSE
+     C                     ADD  HDAYCB    M1T2AG
+     C                     ENDIF
+     C                     ADD  TDR       M1T2DR
+     C                     ADD  TCR       M1T2CR
+     C                     ADD  M0TDCB    M1T2AG
+     C                     ENDIF
+      *
+     C           SVEVDT    IFGE SOYD
+     C           M1LMDT    IFLT SOYD
+     C           SVEVDT    SUB  SOYD      DAYS
+     C           M1PDCB    MULT DAYS      T1YAGG
+     C                     ADD  T1YAGG    M1YAGG
+     C                     ELSE
+     C                     ADD  HDAYCB    M1YAGG
+     C                     ENDIF
+     C                     ADD  TDR       M1YTDR
+     C                     ADD  TCR       M1YTCR
+     C                     ADD  M0TDCB    M1YAGG
+     C                     ENDIF
+      *
+     C                     Z-ADDSVEVDT    M1LMDT
+     C                     Z-ADDM0TDCB    M1PDCB
+     C           *IN20     IFEQ '1'
+     C                     EXSR RMCAVB
+     C                     ENDIF
+     C                     UPDATMCAVBLD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDWRK - Update/Write records to MCWORKV0                    *
+      *                                                               *
+      *****************************************************************
+     C           UPDWRK    BEGSR
+      *
+     C                     MOVELKRSCD     M0RSCD
+     C                     Z-ADDSVEVDT    M0LMDT
+     C           TDR       ADD  TCR       TMV
+      *
+     C                     Z-ADD0         M0TTCR
+     C                     Z-ADD0         M0TTDR
+     C           WRK0      CHAINMCWORKV0             40
+      *
+     C           *IN40     IFEQ '1'
+      *
+     C                     Z-ADDHCCPNB    M0CPNB
+     C                     Z-ADDODB       M0TDOB
+     C                     Z-ADDTDR       M0TTDR
+     C                     Z-ADDTCR       M0TTCR
+     C           M0TDOB    ADD  TMV       M0TDCB
+     C                     WRITEMCWORKD0
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDM0TDCB    M0TDOB
+     C                     Z-ADDTDR       M0TTDR
+     C                     Z-ADDTCR       M0TTCR
+     C           M0TDOB    ADD  TMV       M0TDCB
+     C                     Z-ADDSVEVDT    M0LMDT
+     C                     UPDATMCWORKD0
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DBERR  - Error handling                                      *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+     C                     MOVEL#FILE     DBFILE
+     C                     Z-ADD#BASE     DBASE
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL'XXF691'  DBPGM
+     C                     DUMP
+     C                     MOVEL'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      /SPACE
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  NOPOST - Process MCAVBLX0 records that have no postings for  *
+      *           today                                               *
+      *****************************************************************
+     C           NOPOST    BEGSR
+      *
+     C                     MOVELXGRPC     M0CGCD
+     C                     MOVELXGRPC     M1CGCD
+     C                     MOVELMBRCA     M0BRCA
+     C                     MOVELMCCY      M0CCY
+     C                     MOVELMACOD     M0ACOD
+     C                     MOVELMCNUM     M0CNUM
+     C                     MOVELMACSQ     M0ACSQ
+      *
+     C                     MOVELMBRCA     M1BRCA
+     C                     MOVELMCCY      M1CCY
+     C                     MOVELMACOD     M1ACOD
+     C                     MOVELMCNUM     M1CNUM
+     C                     MOVELMACSQ     M1ACSQ
+     C                     Z-ADD0         M0TDOB
+     C                     Z-ADD0         M0TTDR
+     C                     Z-ADD0         M0TTCR
+     C                     Z-ADD0         M0TDCB
+     C                     Z-ADD0         M1PDDR
+     C                     Z-ADD0         M1PDCR
+     C                     Z-ADD0         M1PAGG
+     C                     Z-ADD0         M1T1DR
+     C                     Z-ADD0         M1T1CR
+     C                     Z-ADD0         M1T1AG
+     C                     Z-ADD0         M1T2DR
+     C                     Z-ADD0         M1T2CR
+     C                     Z-ADD0         M1T2AG
+     C                     Z-ADD0         M1YTDR
+     C                     Z-ADD0         M1YTCR
+     C                     Z-ADD0         M1YAGG
+     C           PRUN      SUB  SPDD      DAYS
+     C                     ADD  1         DAYS
+     C           M2TDOB    MULT DAYS      T1PAGG 190
+     C           PRUN      SUB  ST1D      DAYS
+     C                     ADD  1         DAYS
+     C           M2TDOB    MULT DAYS      T1T1AG 190
+     C           PRUN      SUB  ST2D      DAYS
+     C                     ADD  1         DAYS
+     C           M2TDOB    MULT DAYS      T1T2AG 190
+     C           PRUN      SUB  SOYD      DAYS
+     C                     ADD  1         DAYS
+     C           M2TDOB    MULT DAYS      T1YAGG 190
+     C           RSNO      CHAINSDRPSTL0             90
+     C           *IN90     IFEQ '0'
+      *
+     C                     Z-ADD0         M0TDOB
+     C                     Z-ADD0         M0TDCB
+     C                     Z-ADD0         M1PDCB
+     C                     Z-ADD0         M1PAGG
+     C                     Z-ADD0         M1T1AG
+     C                     Z-ADD0         M1T2AG
+     C                     Z-ADD0         M1YAGG
+      *
+     C                     MOVELG5RSNO    M0RSNO
+     C                     MOVELG5RSNO    M1RSNO
+     C                     MOVE '0'       KDRCR
+     C           REPC      CHAINSDACRCL6             60
+     C           *IN60     IFEQ '0'
+     C                     MOVELG6RSCD    DBRSCD
+     C                     ENDIF
+     C                     MOVE '1'       KDRCR
+     C           REPC      CHAINSDACRCL6             70
+     C           *IN70     IFEQ '0'
+     C                     MOVELG6RSCD    CRRSCD
+     C                     ENDIF
+     C           *IN60     IFEQ '0'
+     C           *IN70     OREQ '0'
+     C           DBRSCD    IFNE CRRSCD
+     C                     MOVELDBRSCD    M0RSCD
+     C                     MOVELDBRSCD    M1RSCD
+     C                     MOVELDBRSCD    KRSCD
+     C           M2TDOB    IFGE 0
+     C                     Z-ADDM2TDOB    M0TDOB
+     C                     Z-ADDM2TDOB    M0TDCB
+     C                     Z-ADDM2TDOB    M1PDCB
+     C                     Z-ADDT1PAGG    M1PAGG
+     C                     Z-ADDT1T1AG    M1T1AG
+     C                     Z-ADDT1T2AG    M1T2AG
+     C                     Z-ADDT1YAGG    M1YAGG
+     C                     Z-ADDPRUN      M1LMDT
+     C                     ENDIF
+     C           AVBL      CHAINMCAVBLV0             80
+     C           WRK0      CHAINMCWORKV0             40
+     C                     WRITEMCAVBLD0
+     C                     WRITEMCWORKD0
+      *
+     C                     Z-ADD0         M0TDOB
+     C                     Z-ADD0         M0TDCB
+     C                     Z-ADD0         M1PAGG
+     C                     Z-ADD0         M1T1AG
+     C                     Z-ADD0         M1T2AG
+     C                     Z-ADD0         M1YAGG
+     C                     Z-ADD0         M1PDCB
+     C                     MOVELCRRSCD    M0RSCD
+     C                     MOVELCRRSCD    M1RSCD
+     C                     MOVELCRRSCD    KRSCD
+     C           M2TDOB    IFLT 0
+     C                     Z-ADDM2TDOB    M0TDOB
+     C                     Z-ADDM2TDOB    M0TDCB
+     C                     Z-ADDM2TDOB    M1PDCB
+     C                     Z-ADDT1PAGG    M1PAGG
+     C                     Z-ADDT1T1AG    M1T1AG
+     C                     Z-ADDT1T2AG    M1T2AG
+     C                     Z-ADDT1YAGG    M1YAGG
+     C                     Z-ADDPRUN      M1LMDT
+     C                     ENDIF
+     C           AVBL      CHAINMCAVBLV0             80
+     C           WRK0      CHAINMCWORKV0             40
+     C                     WRITEMCAVBLD0
+     C                     WRITEMCWORKD0
+     C                     ELSE
+     C                     MOVELG6RSCD    M0RSCD
+     C                     MOVELG6RSCD    M1RSCD
+     C                     MOVELG6RSCD    KRSCD
+     C                     Z-ADDM2TDOB    M0TDOB
+     C                     Z-ADDM2TDOB    M0TDCB
+     C                     Z-ADDM2TDOB    M1PDCB
+     C                     Z-ADDT1PAGG    M1PAGG
+     C                     Z-ADDT1T1AG    M1T1AG
+     C                     Z-ADDT1T2AG    M1T2AG
+     C                     Z-ADDT1YAGG    M1YAGG
+     C                     Z-ADDPRUN      M1LMDT
+     C           AVBL      CHAINMCAVBLV0             80
+     C           WRK0      CHAINMCWORKV0             40
+     C                     WRITEMCAVBLD0
+     C                     WRITEMCWORKD0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'SDRPSTPD'#FILE
+     C                     Z-ADD2         #BASE
+     C                     MOVELRSNO      #KEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           RMCAVB    BEGSR
+      *
+     C                     Z-ADD0         DAYS
+      *
+     C           M1LMDT    IFNE PRUN
+      *
+     C           PRUN      IFGT SPDD
+     C           M1LMDT    IFLT SPDD
+     C           PRUN      SUB  SPDD      DAYS
+     C                     ADD  1         DAYS
+     C           DAYS      IFLT 0
+     C                     Z-ADD0         DAYS
+     C                     ENDIF
+     C           M1PDCB    MULT DAYS      M1PAGG
+     C                     ELSE
+     C           PRUN      SUB  M1LMDT    DAYS
+     C           DAYS      IFNE 0
+     C           M1PDCB    MULT DAYS      T1PAGG 190
+     C                     ADD  T1PAGG    M1PAGG
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           M1LMDT    IFLT ST1D
+     C           PRUN      SUB  ST1D      DAYS
+     C                     ADD  1         DAYS
+     C           M1PDCB    MULT DAYS      M1T1AG
+     C                     ELSE
+     C           PRUN      SUB  M1LMDT    DAYS
+     C           DAYS      IFNE 0
+     C           M1PDCB    MULT DAYS      T1T1AG 190
+     C                     ADD  T1T1AG    M1T1AG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           M1LMDT    IFLT ST2D
+     C           PRUN      SUB  ST2D      DAYS
+     C                     ADD  1         DAYS
+     C           M1PDCB    MULT DAYS      M1T2AG
+     C                     ELSE
+     C           PRUN      SUB  M1LMDT    DAYS
+     C           DAYS      IFNE 0
+     C           M1PDCB    MULT DAYS      T1T2AG 190
+     C                     ADD  T1T2AG    M1T2AG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           M1LMDT    IFLT SOYD
+     C           PRUN      SUB  SOYD      DAYS
+     C                     ADD  1         DAYS
+     C           M1PDCB    MULT DAYS      M1YAGG
+     C                     ELSE
+     C           PRUN      SUB  M1LMDT    DAYS
+     C           DAYS      IFNE 0
+     C           M1PDCB    MULT DAYS      T1YAGG 190
+     C                     ADD  T1YAGG    M1YAGG
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDPRUN      M1LMDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

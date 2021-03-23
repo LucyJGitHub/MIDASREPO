@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 243329             Date 06May20               *
+      *  Prev Amend No. MD020027           Date 12Mar20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR868380           Date 11Jun13               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -36,6 +38,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD049414.                               *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
@@ -255,6 +265,10 @@
       ** Parameter for LERPSCRTV to retrive Extended settlement intruction                    244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
+      ** Parameter for LEMAPYRTV to retrive Extended settlement intruction                  MD020027
+      *                                                                                     MD020027
+     D***PPayParm        S            335                                            MD020027 243329
+     D PPayParm        S           1045                                                       243329
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -584,6 +598,7 @@ E004 C                   ENDIF
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
       *
       ***  Save the settlement details for update
       *
@@ -694,7 +709,7 @@ E004 C                   ENDIF
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVEL     BGMBIN        MBIN              1
       *
       ***  Access General Ledger
@@ -720,7 +735,7 @@ E004 C                   ENDIF
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C                   endif
       *
       ***  Determine if Customer Lending Enhancements - Authorization
@@ -859,7 +874,7 @@ E004 C                   ENDIF
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE023
      C                   END
- 
+
       *  Check if an existing DBU_CLIP job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589

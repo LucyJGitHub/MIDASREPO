@@ -24,8 +24,9 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041126           Date 11May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039105           Date 06Jun16               *
       *                 CSW216             Date 14Mar16               *
       *                 CPK030             Date 11Apr14               *
@@ -131,6 +132,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD055661.                             *
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
@@ -284,20 +287,20 @@
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** File to log received data
      F***APOUTPUTPDO*   E           K DISK                                                   CAP186C
      F***APOUTPUTPDO    E           K DISK    PREFIX(O_)                            CAP186C MD039105
- 
+
       ** File to log unauthorised access attempts
      FAPUNAUTHPDO    E           K DISK    USROPN
- 
+
       ** File to log details of message after exception error
      FAPEXCPERPDO    E           K DISK
- 
+
       ** File to log job details
      FAPIJOBL0  O    E           K DISK    USROPN
- 
+
      F/COPY WNCPYSRC,APH00044
       *****************************************************************
       ** +--------------------------------------+
@@ -317,50 +320,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       * Constant to hold input parameter for AOSVALR0.                                        245310
      D MQManager       C                   Const('MQQueueManagerAPI')                         245310
                                                                                               245310
       ** Input queue name
      D RootQueue       C                   CONST('MIDASXX.TRANSACT.Q')
- 
+
       ** MQSeries error message literals
      D OpenFailed      C                   CONST('MQSeries MQOPEN failed: ')
      D ReadFailed      C                   CONST('MQSeries MQGET  failed: ')
      D ClosFailed      C                   CONST('MQSeries MQCLOS failed: ')
      D ConnFailed      C                   CONST('MQSeries MQCONN failed: ')                  245310
      D DiscFailed      C                   CONST('MQSeries MQDISC failed: ')                  245310
- 
+
       ** Do NOT change the following constant values. Alterations
       ** here require changes to PC applications.
- 
+
       * Don't need little letters...
      D CHARSET         C                   'ABCDEFGHIJKLMNOPQRST-
      D                                     UVWXYZABCDEFGHIJKLMN-
@@ -370,36 +373,36 @@
      D                                     JAmesC0oKunlO4G3i-
      D                                     XhW8pxQftVvTPLHgFdby-
      D                                     7qkZUM'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D/COPY WNCPYSRC,APH00045
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
       ***External*DS*for*SAR*Details*******                                            CAS001 CAP083
      D*SCSARD********E DS                  EXTNAME(SCSARDPD)                           CAS001 CAP083
      D/COPY WNCPYSRC,APH00046
                                                                                               CAS001
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** Data area containing system prefix
      D SDSTAT        E DS                  DTAARA(SDSTAT)
- 
+
       ** Data area for queue name
      D                 DS
      D  QIN                    1     20
      D  SysPrefix              6      7
- 
+
       ** Incoming message header format
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
      D/COPY WNCPYSRC,APH00047
- 
+
       ** Data structure for incoming message formats
      D*BUFFER****      DS          3000                                         CAP004
      D*BUFFER******    DS          4000                                                 CAP004182598
@@ -411,7 +414,7 @@
      D  USERID                33     42
      D**PASSWORD              43     52                                                       CSD102
      D  PASSWORD              43    170                                                       CSD102
- 
+
       ** Command to update dtaara ZMUSER                                                      CDL010
      D CHG@            S             45    DIM(1) CTDATA PERRCD(1)                            CDL010
                                                                                               CDL010
@@ -430,30 +433,35 @@
                                                                                             AR401481
       **  Declare MQI structures needed
       * MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
+
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
+
       ** Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
+
       ** Get message options
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
+
       ** Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
- 
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
+
+
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
      D/COPY QSYSINC/QRPGLESRC,QUSEC
       * API Error code parameter
- 
+
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions
      D RecSttmt      E DS                  EXTNAME(SDESSRPD)
@@ -470,7 +478,7 @@
       * Pay Settlement Instructions                                                           CIR003
      D RecStmtM      E DS                  EXTNAME(SDESSRPD)  PREFIX(M)                       CIR003
       * Receive Settlement Instructions                                                       CIR003
- 
+
      D  DLRIS1In     E DS                  EXTNAME(DLRIS1PD)                                  CSW213
      D  DLRIS2In     E DS                  EXTNAME(DLRIS2PD)                                  CSW213
      D  DLRIS3In     E DS                  EXTNAME(DLRIS3PD)                                  CSW213
@@ -494,23 +502,23 @@
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Real message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D MsgID           S                   LIKE(#MsgID)
      D MsgF            S             10A
- 
+
      D Object          S             10A   INZ('APISERVER')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A   INZ('*DTAARA')
@@ -520,7 +528,7 @@
      D Dlcobj          S              1A
      D Return          S              7A
      D Bypass          S              1A                                                      CPK015
- 
+
       ** Error message for sending to the operator                              138019
      D MQError         S            132A                                        138019
                                                                                 138019
@@ -656,17 +664,29 @@
      D RPIFLn          S              4P 0                                                    CSW213
      D CU13Ln          S              4S 0                                                    CSW213
      D O_BUFFER        S          32000                                                     MD039105
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMNAME          S             48A                                                    MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ****************************************************************
       *                                                              *
       *  Main processing                                             *
       *                                                              *
       ****************************************************************
- 
+
       ** If a Queue Manager is specified on system value MQManager, connect                   245310
       ** to it and retain connection handle for other QMQM calls instead                      245310
       ** of using the default Queue Manager and connection                                    245310
@@ -703,24 +723,24 @@
      C                   ENDIF                                                                245310
                                                                                               245310
      C                   EXSR      OPQIN
- 
+
       ** Loop until shutdown message received
      C     TYPE          DOWNE     'SHUTDOWN'
      C/COPY WNCPYSRC,APH00048
- 
- 
+
+
       *                                                                                     AR401481
      C                   CALL      'QCMDEXC'                            9999                AR401481
      C                   PARM                    CJOB@                                      AR401481
      C                   PARM      20            LEN                                        AR401481
       *                                                                                     AR401481
      C                   EXSR      GETMSG
- 
+
      C     TYPE          IFEQ      'SHUTDOWN'
      C                   LEAVE
      C                   ENDIF
      C/COPY WNCPYSRC,APH00049
- 
+
       ** If an exception error occurred when validating the last
       ** message, then the rollback will cause the same message to
       ** be retrieved again.
@@ -728,7 +748,7 @@
       ** file and retrieve the next message.
       ** The module in error is stored in the return code on the
       ** APHEAD parameter.
- 
+
      C     APRETCODE     IFNE      *BLANKS
      C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   WRITE     APEXCPERD0
@@ -737,7 +757,7 @@
      C                   COMMIT
      C                   ELSE
      C/COPY WNCPYSRC,APH00075
- 
+
       ** If required, validate the Profile / Password
      C                   IF        GHPWCR = 'Y'
      C                   EXSR      ValPrfPwd
@@ -745,34 +765,34 @@
      C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   EVAL      APPASSWORD = *BLANKS                                       CSD102
      C                   END
- 
+
       ** QUESI is the Error MSGID from the API call
       **   N.B. QUESI will always be blank if the checking is off
      C     QUSEI         IFEQ      *BLANKS
- 
+
      C                   EXSR      VALID8
- 
+
       ** The PrfHandle must be released to avoid hitting the job limit:
       ** 25574 simultaneous handles.
      C                   IF        GHPWCR = 'Y'
      C                   CALL      'QSYRLSPH'
      C                   PARM                    PrfHandle
      C                   END
- 
+
      C                   ELSE
- 
+
       ** Send an error message for the  Profile / Password
      C                   EXSR      PrfPwdErr
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C/COPY WNCPYSRC,APH00076
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      CLQIN
- 
+
       ** Perform a commit to ensure that the 'Shutdown' message is removed
       ** from the queue.
      C                   COMMIT
@@ -783,7 +803,7 @@
      C     QMGR          IFNE      *BLANKS                                                    245310
      C                   EXSR      MQDISCONNECT                                               245310
      C                   ENDIF                                                                245310
- 
+
      C                   SETON                                        LR
      C                   RETURN
       ****************************************************************
@@ -797,12 +817,19 @@
                                                                                               245310
       **  Attempt to CONNECT to the MQ Manager                                                245310
       *              ~~~~~~~                                                                  245310
-     C                   CALL      'QMQM'                                                     245310
-     C                   PARM      MQCONN        CID               9 0                        245310
-     C                   PARM      QMGR          QMNAME           48                          245310
-     C                   PARM      *ZERO         HANDLE            9 0                        245310
-     C                   PARM      *ZERO         OCODE             9 0                        245310
-     C                   PARM      *ZERO         REASON            9 0                        245310
+     C**********         CALL      'QMQM'                                            245310 MD041126
+     C**********         PARM      MQCONN        CID               9 0               245310 MD041126
+     C**********         PARM      QMGR          QMNAME           48                 245310 MD041126
+     C**********         PARM      *ZERO         HANDLE            9 0               245310 MD041126
+     C**********         PARM      *ZERO         OCODE             9 0               245310 MD041126
+     C**********         PARM      *ZERO         REASON            9 0               245310 MD041126
+      *                                                                                     MD041126
+     C                   EVAL      QMNAME = QMGR                                            MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
+     C                                     OCODE  : REASON )                                MD041126
                                                                                               245310
       ** Error processing                                                                     245310
      C     REASON        IFNE      RCNONE                                                     245310
@@ -834,11 +861,15 @@
                                                                                               245310
       **  Attempt to DISCONNECT from the MQ Manager                                           245310
       *                                                                                       245310
-     C                   CALL      'QMQM'                                                     245310
-     C                   PARM      MQDISC        CID               9 0                        245310
-     C                   PARM                    HCONN                                        245310
-     C                   PARM      *ZERO         OCODE                                        245310
-     C                   PARM      *ZERO         REASON                                       245310
+     C**********         CALL      'QMQM'                                            245310 MD041126
+     C**********         PARM      MQDISC        CID               9 0               245310 MD041126
+     C**********         PARM                    HCONN                               245310 MD041126
+     C**********         PARM      *ZERO         OCODE                               245310 MD041126
+     C**********         PARM      *ZERO         REASON                              245310 MD041126
+      *                                                                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
                                                                                               245310
       ** Error processing                                                                     245310
      C     REASON        IFNE      RCNONE                                                     245310
@@ -868,45 +899,48 @@
       *                                                              *
       ****************************************************************
      C     OPQIN         BEGSR
- 
+
       ** Use input queue
      C                   MOVEL     QIN           ODON             48
- 
+
       ** Open options: INPUT and FAIL_IF_QUIESCING
      C     OOINPQ        ADD       OOFIQ         OPTS
- 
+
       ** Open queue
-     C                   Z-ADD     MQOPEN        CID
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
- 
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
+
       ** Error processing
      C     REASON        IFNE      RCNONE
- 
+
       ** Send message to MOPERQ and QSYSOPR before crashing out
      C****************** MOVEL     OpenFailed    MQError          28            138019
      C****************** MOVE      REASON        MQError                        138019
      C                   MOVE      REASON        ReasonA                        138019
      C                   EVAL      MQError = OpenFailed + ReasonA               138019
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
       ** Shut down the program
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -916,42 +950,45 @@
       *                                                              *
       ****************************************************************
      C     CLQIN         BEGSR
- 
+
       ** Close options: NONE
      C                   Z-ADD     CONONE        OPTS
- 
+
       ** Close queue
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
- 
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
+
       ** Error processing
      C     REASON        IFNE      RCNONE
      C     REASON        ANDNE     RC2018                                                    248095A
      C     REASON        ANDNE     RC2019                                                    248095A
- 
+
       ** Send message to MOPERQ and QSYSOPR before crashing out
      C****************** MOVEL     ClosFailed    MQError                        138019
      C****************** MOVE      REASON        MQError                        138019
      C                   MOVE      REASON        ReasonA                        138019
      C                   EVAL      MQError = ClosFailed + ReasonA               138019
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn
      C                   PARM                    MQError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
       ** Shut down the program
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -961,9 +998,9 @@
       *                                                              *
       ****************************************************************
      C     VALID8        BEGSR
- 
+
      C                   MOVEL     BUFFER        APHEAD
- 
+
      C     APMIDUSR      IFEQ      *BLANKS
      C**********         MOVEL     MDUID         APMIDUSR                                     245862
      C                   ENDIF
@@ -980,7 +1017,7 @@
      C                   CALL      'QCMDEXC'                            9999    *             CDL010
      C                   PARM                    CMDTXT                                       CDL010
      C                   PARM      57            LEN              15 5                        CDL010
- 
+
       ** Log incoming data
      C                   MOVEL     *BLANKS       O_BUFFER                                    CAP186C
      C                   MOVEL     BUFFER        O_BUFFER                                    CAP186C
@@ -996,9 +1033,9 @@
      C+   :O_BUFFER                                                                         MD039105
      C+ )                                                                                   MD039105
      C/end-exec                                                                             MD039105
- 
+
       ** Set up the Transaction & Settlement DS's
- 
+
      C*******************EXSR      TRANSETI                                                   CAP083
      C*******************EXSR      TRANSETI                                            CGL032 243084
      C                   SELECT                                                               248920
@@ -1080,7 +1117,7 @@
      C                   WRITE     APEXCPERD0                                                 CAP083
      C                   COMMIT                                                               CAP083
      C                   ENDIF                                                                CAP083
- 
+
       ** Load the entire message header into the API Dump data area so that
       **  dumps in any lower level modules will include the key information
      C     *Lock         IN        APDump
@@ -1103,10 +1140,10 @@
      C                   MOVEL     APRETCODE     ARRETCODE                                    CSD102
      C                   MOVEL     APMIDUSR      ARMIDUSR                                     CSD102
      C                   OUT       APDump
- 
+
      C/COPY WNCPYSRC,APH00050
       ** Validate
- 
+
       ***Call*CL*to*apply*override*and*call*appropriate*validation*program******CAP006
       ** Call submodule to apply override and call appropriate                  CAP006
       ** validation program                                                     CAP006
@@ -1195,7 +1232,7 @@
      C                   PARM                    #ProcName
      C                   ENDSL                                                                248920
      C                   ENDIF                                                                CPK015
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1407,7 +1444,7 @@
      C****************** ADD       IRFALn        Bfp                            CAP056        CAP083
                                                                                 CAP056        CAP083
      C*****IRFRLn        SUBST     BUFFER:Bfp    ExtData                        CAP004        CAP083
- 
+
       **Single*Currency*Interest*Rate*Swaps                                                   CAP083
                                                                                               CAP083
      C*****TYPE          WHENEQ    'IRSIRS'                                                   CAP083
@@ -1510,7 +1547,7 @@
      C*****IRRSLn        SUBST     BUFFER:Bfp    InfData                               CAP043 CAP083
      C****************** ADD       IRRSLn        Bfp                                   CAP043 CAP083
      C*****IRSSLn        SUBST     BUFFER:Bfp    ExtData                               CAP043 CAP083
- 
+
       **Cross*Currency*Interest*Rate*Swaps                                                    CAP083
                                                                                               CAP083
      C*****TYPE          WHENEQ    'IRCIRS'                                                   CAP083
@@ -2315,7 +2352,7 @@
       *                                                              *
       ****************************************************************
      C     GETMSG        BEGSR
- 
+
       ** Get options: WAIT, CONVERT and ALLOW TRUNCATION.
       ** Note: the last of these options means that a message longer than
       ** the buffer length defined in this module (currently 1500 bytes)
@@ -2324,39 +2361,43 @@
      C                   Z-ADD     GMWT          GMOPT
      C                   ADD       GMCONV        GMOPT
      C                   ADD       GMATM         GMOPT
- 
+
       ** Set wait interval to infinite
      C                   Z-ADD     WIULIM        GMWI
      C/COPY WNCPYSRC,APH00077
- 
+
       ** Perform get operation inside commitment control. Commitment
       ** boundary is at the valid/invalid deals file. Any return
       ** MQ messages are also inside this commitment cycle.
      C                   ADD       GMSYP         GMOPT
- 
+
       ** MsgId and CorrelId are selectors cleared to ensure messages
       ** are processed in arrival/priority sequence
      C                   MOVEL     MINONE        MDMID
      C                   MOVEL     CINONE        MDCID
- 
+
       ** Clear message buffer
      C                   MOVEL     *BLANKS       BUFFER
- 
+
      C/COPY WNCPYSRC,APH00051
       ** Get message
-     C                   Z-ADD     MQGET         CID
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C                   PARM                    BUFLEN            9 0
-     C                   PARM                    BUFFER
-     C                   PARM                    MESLEN            9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQGET         CID                                        MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM                    BUFLEN            9 0                      MD041126
+     C**********         PARM                    BUFFER                                     MD041126
+     C**********         PARM                    MESLEN            9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
       *                                                                                      248095A
       ** If connection handle not valid error, reconnect and try again                       248095A
       *                                                                                      248095A
@@ -2369,42 +2410,46 @@
      C                   Z-ADD     HANDLE        HCONN                                       248095A
      C                   EXSR      OPQIN                                                     248095A
      C/COPY WNCPYSRC,APH00052
-     C                   Z-ADD     MQGET         CID                                         248095A
-     C                   CALL      'QMQM'                                                    248095A
-     C                   PARM                    CID               9 0                       248095A
-     C                   PARM                    HCONN             9 0                       248095A
-     C                   PARM                    HIN               9 0                       248095A
-     C                   PARM                    MQMD                                        248095A
-     C                   PARM                    MQGMO                                       248095A
-     C                   PARM                    BUFLEN            9 0                       248095A
-     C                   PARM                    BUFFER                                      248095A
-     C                   PARM                    MESLEN            9 0                       248095A
-     C                   PARM                    CCODE             9 0                       248095A
-     C                   PARM                    REASON            9 0                       248095A
+     C**********         Z-ADD     MQGET         CID                                248095A MD041126
+     C**********         CALL      'QMQM'                                           248095A MD041126
+     C**********         PARM                    CID               9 0              248095A MD041126
+     C**********         PARM                    HCONN             9 0              248095A MD041126
+     C**********         PARM                    HIN               9 0              248095A MD041126
+     C**********         PARM                    MQMD                               248095A MD041126
+     C**********         PARM                    MQGMO                              248095A MD041126
+     C**********         PARM                    BUFLEN            9 0              248095A MD041126
+     C**********         PARM                    BUFFER                             248095A MD041126
+     C**********         PARM                    MESLEN            9 0              248095A MD041126
+     C**********         PARM                    CCODE             9 0              248095A MD041126
+     C**********         PARM                    REASON            9 0              248095A MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
      C                   ENDIF                                                               248095A
- 
+
       ** Error processing
      C     REASON        IFNE      RCNONE
      C/COPY WNCPYSRC,APH00053
- 
+
       ** Send message to MOPERQ and QSYSOPR before crashing out
      C****************** MOVEL     ReadFailed    MQError                        138019
      C****************** MOVE      REASON        MQError                        138019
      C                   MOVE      REASON        ReasonA                        138019
      C                   EVAL      MQError = ReadFailed + ReasonA               138019
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn
      C                   PARM                    MQError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
       ** Shut down the program
      C                   EXSR      *pssr
- 
+
      C/COPY WNCPYSRC,APH00054
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
      C/COPY WNCPYSRC,APH00055
@@ -2415,10 +2460,10 @@
       *                                                              *
       ****************************************************************
      C     ValPrfPwd     BEGSR
- 
+
       ** Decode the APPASSWORD field in preparation for the validation
      C                   EXSR      DECODE
- 
+
       ** The following call is an OS/400 API which will validate
       ** the incoming message parameters of UserId and Password.
       ** If the incoming details were valid, then the field QUSEI
@@ -2428,21 +2473,21 @@
       ** logged to APUNAUTHPD, and a message is sent to QSYSOPR.
       ** Unauthorised information will not be logged to APOUTPUTPD, as
       ** this file is updated during the VALID8 subroutine.
- 
+
      C                   MOVE      *BLANKS       PrfHandle
      C                   RESET                   QUSEC
- 
+
      C                   CALL      'QSYGETPH'
      C                   PARM                    USERID
      C                   PARM                    PASSWORD
      C                   PARM                    PrfHandle        12
      C                   PARM                    QUSEC
- 
+
       ** The UserID and Password fields are now irrelevant, and are
       ** starred out to prevent them appearing on log files and dumps.
      C                   MOVE      '**********'  APPASSWORD
      C                   MOVE      '**********'  PASSWORD
- 
+
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -2451,11 +2496,11 @@
       *                                                              *
       ****************************************************************
      C     PrfPwdErr     BEGSR
- 
+
       ** Send message to QSYSOPR warning of attempted unauthorised
       ** access to Midas APIs
- 
- 
+
+
      C                   CLEAR                   MQError
      C                   EVAL      MsgF = 'APMSGF'
      C                   IF        APUserID = *Blanks
@@ -2463,21 +2508,21 @@
      C                   ELSE
      C                   EVAL      MsgID = 'API0001'
      C                   END
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn
      C                   PARM                    MQError
      C                   PARM                    MsgID
      C                   PARM                    MsgF
- 
+
      C                   OPEN      APUNAUTHPD
      C                   WRITE     APUNAUTHD0
      C                   CLOSE     APUNAUTHPD
- 
- 
+
+
       ** Commit the MQGET operation
      C                   COMMIT
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2487,7 +2532,7 @@
       *                                                              *
       ****************************************************************
      C     DECODE        BEGSR
- 
+
      C                   MOVE      *BLANK        CURRCHAR          1
      C                   MOVE      *BLANKS       DECODED          10
      C                   Z-ADD     0             W                 1 0
@@ -2499,46 +2544,46 @@
       * X is the position in the clear or enciphered constant,
       * Y is a work field
       * Z is the position in the incoming (enciphered) password
- 
+
      C     Z             DOWLT     11
- 
+
       ** Get the next character in the password
      C     1             SUBST     PASSWORD:Z    CURRCHAR
- 
+
       ** Look up the cipher value
      C     CURRCHAR      SCAN      CIPHER        X
- 
+
       ** Ignore unrecognised characters
      C     X             IFNE      0
- 
+
      C     Z             MULT      2             Y
      C                   SUB       Y             X
      C     X             IFLE      0
      C                   ADD       63            X
      C                   ENDIF
- 
+
       ** Substitute in the correct value
      C     1             SUBST     CHARSET:X     CURRCHAR
- 
+
       ** Drop out if character is a blank
      C     CURRCHAR      IFEQ      *BLANK
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   CAT       CURRCHAR:W    DECODED
- 
+
       ** Cater for special case of blanks
      C     CURRCHAR      IFEQ      *BLANK
      C                   Z-ADD     1             W
      C                   ELSE
      C                   Z-ADD     0             W
      C                   ENDIF
- 
+
      C                   ADD       1             Z
- 
+
      C                   ENDDO
- 
+
      C                   MOVEL     DECODED       PASSWORD
      C                   ENDSR
       ****************************************************************
@@ -2611,20 +2656,20 @@
       *                                                              *
       ****************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here.
       *   The function to submit this tries to get a *EXCL lock.
- 
+
       *                         Submitter
       *                 Lock      Lock     Submitter
       *      Status    Status   Successful   Action
       *      ------    ------   ---------- ---------
       *   Not running  None        Yes      Submit this
- 
+
       *   Running      *SHRRD      No        None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -2634,26 +2679,26 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Set up input queue name for transactions
      C                   MOVEL     RootQueue     QIN
      C                   IN        SDSTAT
      C                   MOVE      LIBR          SysPrefix
- 
+
       ** Set up Midas SPF Environment
      C                   CALL      'SFC0401'
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       ** Check for success, else bomb
      C     ReturnCde     IFNE      *BLANKS
      C                   ENDIF
- 
+
       ** Use default connection handle, and implicit connection
      C                   Z-ADD     HCDEFH        HCONN
- 
+
       ** Set incoming message length
      C*******            Z-ADD     3000          BUFLEN                         CAP004
      C*******            Z-ADD     4000          BUFLEN                   CAP004182598
@@ -2661,21 +2706,21 @@
      C**********         Z-ADD     6000          BUFLEN                                CIR003 CFT039
      C**********         Z-ADD     12000         BUFLEN                                CFT039 CSW213
      C                   Z-ADD     29997         BUFLEN                                       CSW213
- 
+
       ** Log job start-up in jobs file
      C                   OPEN      APIJOBL0
      C                   WRITE     JOBRCD
      C                   CLOSE     APIJOBL0
- 
+
       ** Set up the procedure/module/program names for calls to the
       **  validation modules
      C                   EVAL      #ProcPgm  = PSProcPgm
      C                   EVAL      #ProcMod  = PSProcMod
      C                   EVAL      #ProcName = PSProcName
- 
+
       ** Call CL to start commitment control
      C                   CALLB     'ZACSCMTCTL'
- 
+
       ** Access API ICD via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOAPIR0'
@@ -2683,7 +2728,7 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDAPI         PARM      SDAPI         DSFDY
      C/COPY WNCPYSRC,APH00056
- 
+
       ***Determine*API*Header record lengths                                                  CAP083
                                                                                               CAP083
      C*******************MOVEL     'APHEADPD'    FileName                                     CAP083
@@ -2721,7 +2766,7 @@
      C*******************MOVEL     'MMLDNIPD'    FileName                                     CAP083
      C*******************EXSR      GETRCDLN                                                   CAP083
      C*******************Z-ADD     RecordLen     LDNILn            4 0                        CAP083
- 
+
       ***Check*if*CDL006*enhancement*is*installed***                                   209905 CAP083
                                                                                        209905 CAP083
      C****************** CALLB     'AOSARDR0'                                          209905 CAP083

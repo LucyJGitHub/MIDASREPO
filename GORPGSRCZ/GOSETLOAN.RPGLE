@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD035257           Date 19Feb20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. EMP100             Date 12Aug20               *
+      *  Prev Amend No. MD035257           Date 19Feb20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -39,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EMP100A - ML Date Adjustment (Upgrade from SP21 to SP23)     *
+      *           Amendment of hooks EMP100_001 and EMP100_003        *
+      *  EMP100 - ML Date Adjustment (Upgrade NADF04 to FM2.1 SP21)   *
+      *           Addition of hooks EMP100_001 to EMP100_004          *
       *  MD035257 - Set T_EDAT to rundate for live non auto-settle    *
       *             loans.                                            *
       *           - Applied for MD054829.                             *
@@ -72,6 +77,7 @@
      D/COPY ZACPYSRC,STD_D_SPEC
 
 
+     D/COPY WNCPYSRC,EMP100_001                                                          EMP100
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
 
 
@@ -83,6 +89,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                MD035257
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD035257
+     D/COPY WNCPYSRC,EMP100_002                                                          EMP100
 
 
       * ENTRY PARAMETERS
@@ -262,6 +269,7 @@
      C                   Z-ADD     CL_MDAT       T_EDAT
      C                   ENDIF                                                              MD035257
      C                   ENDIF                                                              MD035257
+      /COPY WNCPYSRC,EMP100_004                                                          EMP100
       * Recourse ind
      C                   MOVEL     CL_RCSI       T_RCSI
       * Customer branch
@@ -337,6 +345,7 @@
      C                   KFLD                    T_MOD
      C                   KFLD                    T_SMOD
      C                   KFLD                    T_TREF
+      /COPY WNCPYSRC,EMP100_003                                                          EMP100
      C                   ENDSR
       *****************************************************************
       /SPACE 5

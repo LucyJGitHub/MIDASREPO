@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE070             Date 19Jun19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CER073D            Date 13Aug20               *
+      *  Prev Amend No. CLE070             Date 19Jun19               *
+      *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
+      *      EML014 - AnaCredit Reporting Enhancement                 *
       *  CLE070 - Manual Diary                                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
@@ -164,6 +167,7 @@
      C     I#BFAF        ANDEQ     'A'
      C     PFLNAME       CASEQ     'CLOANCK'     GLOB_CLOANCK
      C     PFLNAME       CASEQ     'CLOANCL'     GLOB_CLOANCL
+     C     PFLNAME       CASEQ     'FCANACQD'    GLOB_FCANACQD                               CER073D
      C     PFLNAME       CASEQ     'FCLTYFM'     GLOB_FCLTYFM
      C     PFLNAME       CASEQ     'FCLTYFN'     GLOB_FCLTYFN
      C     PFLNAME       CASEQ     'LEADINPD'    GLOB_LEADINPD                                CLE106
@@ -243,6 +247,12 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                      CER073D
+      * Global Updates - AnaCredit Facility Details                                          CER073D
+      *****************************************************************                      CER073D
+     C     GLOB_FCANACQD BEGSR                                                               CER073D
+      /COPY GPCPYSRCG,GPFCANACQD                                                             CER073D
+     C                   ENDSR                                                               CER073D
       *****************************************************************
       * Global Updates - Facility A record
       *****************************************************************

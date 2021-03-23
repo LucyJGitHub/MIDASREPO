@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -336,6 +338,11 @@
      D ExtData       E DS                  EXTNAME(LELEEXPD)
       * LE Rollover Instructions Extra Data - File (D/B) format
 
+      *                                                                                       CLE172
+      ** LERI Backward-Looking Rate Fields                                                    CLE172
+      *                                                                                       CLE172
+     D LeriScnBlrt     DS            98                                                       CLE172
+      *                                                                                       CLE172
       *                                                                                     AR702532
       ** LE Extra Data - Classe 1 Data - File (D/B) format                                  AR702532
       *                                                                                     AR702532
@@ -735,6 +742,10 @@
      C                   PARM                    C_LERI
       * Rollover Work Fields
      C                   PARM                    NwRoScnFmt2
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
 
       *  If action is X, the VAL module validates the current file fields
       *  instead of the screen fields and move these fields into V fields
@@ -863,6 +874,10 @@
       ** Action Code (Reject transaction)                                                   AR702532
       *                                                                                     AR702532
      C                   PARM      *BLANK        @ACTRV            1                        AR702532
+      *                                                                                       CLE172
+      ** Backward-Looking Rate Fields                                                         CLE172
+      *                                                                                       CLE172
+     C                   PARM                    LeriScnBlrt                                  CLE172
       *
       * OUTPUTS
 

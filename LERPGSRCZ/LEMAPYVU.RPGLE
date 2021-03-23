@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055652           Date 13Jul20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD049414           Date 06May20               *
+      *  Prev Amend No. MD020027           Date 12Mar20               *
+      *                 MD055652           Date 13Jul20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051892           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
@@ -99,6 +101,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049414 - Changed size of PPayParm from 92 to 1045 to       *
+      *             include other fields.                             *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  MD055652 - Error LEM0215 occurs when authorising a manual    *
       *             repayment attached to PD. In the codes introduced *
       *             by CLE164, add condition to check if expected     *
@@ -680,6 +688,9 @@
      D WKCNUM          S              6A                                                      CLE035
      D WKFACT          S              3A                                                      CLE035
      D WKFCNO          S              2A                                                      CLE035
+      ** Parameter for LEMAPYRTV                                                            MD049414
+     D PPayParm        S           1045                                                     MD049414
+                                                                                            MD049414
                                                                                               244636
       ** Parameter for LEMAPYRTV                                                              244636
      D***PRcvParm        S             92                                             244636 CSF011A
@@ -828,6 +839,18 @@
      C***********        MOVEL     PRcvParm      InRecSttmt                            244636 249205
      C***********        ENDIF                                                         244636 249205
       ***********                                                                      244636 249205
+      *                                                                                     MD020027
+      ** Default settlement details from related loan                                       MD020027
+     C                   IF        InRecSttmt = *blank AND                                  MD020027
+     C                             PRcvParm <> *blank                                       MD020027
+     C                   MOVEL     PRcvParm      InRecSttmt                                 MD020027
+     C                   ENDIF                                                              MD020027
+      *                                                                                     MD020027
+      ** Default settlement details from related loan                                       MD020027
+     C                   IF        InPaySttmt = *blank AND                                  MD020027
+     C                             PPayParm <> *blank                                       MD020027
+     C                   MOVEL     PPayParm      InPaySttmt                                 MD020027
+     C                   ENDIF                                                              MD020027
       ***Protect*Pay Settlement from Validation as it is already not in use            244636 249205
      C***********        EVAL      ##PPAY = 'Y'                                        244636 249205
 
@@ -981,6 +1004,7 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
      C**********         PARM      *BLANKS       UpSRFlg           1                 CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDauto            1                          CLE164

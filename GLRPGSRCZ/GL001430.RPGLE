@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. 222088             Date 28May12               *
+      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
       *                 212319             Date 28May12               *      
       *                 MD049134           Date 27Jul20               *
@@ -62,6 +63,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *           EML010 - Structured field :86:                      *
+      *           Added EML104_004 EML104_005                         *
       *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
       *  222088 - Conditioning of CM narrative should account for     *
       *           details on heirarchy, not ICD.                      *
@@ -582,6 +586,7 @@
      C**********                   (EDEXET <> *BLANKS AND                            CER030 BUG26608
      C                   IF        (EDEXET <> *BLANKS AND                                   BUG26608
      C                             EDEXET <> '*NONE')                                         CER030
+      /COPY WNCPYSRC,EML104_004                                                               EML104
      C                   EVAL      PMsgTyp = '940'                                            CER030
       *                                                                                       CER030
      C                   CALL      EDEXET                               99                    CER030
@@ -1258,6 +1263,7 @@
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      CSW022 = 'Y'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_005                                                               EML104
                                                                                               CRE008
       ** Check if feature CRE008 (Cash Management feature) is installed                       CRE008
                                                                                               CRE008

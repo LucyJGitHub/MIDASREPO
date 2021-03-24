@@ -9,57 +9,69 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD057576           Date 15Mar21              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGP004  *CREATE    Date 23May03              */
+/*                      CGP004  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057576 - GPAUCHPD is not house kept based on the retention*/
+/*                  setup.                                           */
+/*                - Correctly retrieve the retention days from       */
+/*                  GOICDTPD file.                                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGP004 - Audit Reporting                                    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RETDYS)
- 
+
              DCL        VAR(&RETDYS)  TYPE(*DEC) LEN(3 0)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
              DCLF       FILE(GOICDTPD)
- 
+
 /** GLOBAL MONITOR MESSAGE */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
  READ:       RCVF
 /* EOF. Goto abnormal proessing section */
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ABNOR))
- 
-             CHGVAR     VAR(&RETDYS) VALUE(&ZNAURD)
- 
+
+/*********   CHGVAR     VAR(&RETDYS) VALUE(&ZNAURD)                  */                 /*MD057576*/
+             CHGVAR     VAR(&RETDYS) VALUE(0)                                           /*MD057576*/
+
 /* Keep a minimum of 31 days of history */
- 
-             IF         COND(&RETDYS < 31) THEN(CHGVAR VAR(&RETDYS) +
-                          VALUE(31))
- 
- 
+
+/**********  IF         COND(&RETDYS < 31) THEN(CHGVAR VAR(&RETDYS) +*/                 /*MD057576*/
+/**********               VALUE(31))                                 */                 /*MD057576*/
+                                                                                        /*MD057576*/
+             IF         COND(&ZNAURD *NE 0) THEN(CHGVAR VAR(&RETDYS) +
+                          VALUE(&ZNAURD))                                               /*MD057576*/
+             ELSE (DO)                                                                  /*MD057576*/
+                        CHGVAR     VAR(&RETDYS) VALUE(31)                               /*MD057576*/
+                                                                                        /*MD057576*/
+             ENDDO                                                                      /*MD057576*/
+
              GOTO       CMDLBL(END)
- 
- 
+
+
 /** ABNORMAL ERROR PROCESSING                                      */
  ABNOR:      SNDPGMMSG  MSG('PROGRAM GOC0316 ENDED ABNORMALLY') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              ENDPGM

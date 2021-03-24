@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No  MD056651           Date 05Oct20               *
-      *  Prev Amend No. MD041767           Date 25Jun20               *
+      *  Last Amend No. MD057744           Date 24Mar21               *
+      *  Prev Amend No  MD056651           Date 05Oct20               *
+      *                 MD041767           Date 25Jun20               *
       *                 CSD102             Date 08Jan19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
@@ -92,6 +93,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057744 - T&P Batch item goes into Repair - overwrites      *
+      *             another item when repaired. Amend program to add  *
+      *             condition, Insert will not pass through processing*
+      *             for updates/deletes.                              *
       *  MD056651 - BITH HashItemNo Input increments during UPDATE    *
       *  MD041767 - COB Component GLC0263 failed. Added *IN43 in the  *
       *             condition to ensure that when record was not read *
@@ -717,7 +722,9 @@
      C                   MOVE      B2BINB        BTBINB                                       CAP084
                                                                                               CAP084
      C     KJENP         CHAIN     GLJENPL0                           91                      CAP084
-     C                   IF        *IN91 = *OFF                                             MD020761
+     C**********         IF        *IN91 = *OFF                                    MD020761 MD057744
+     C                   IF        *IN91 = *OFF  AND                                        MD057744
+     C                             PActnCde <> 'I'                                          MD057744
                                                                                               CRE023
       ** Save the current GLJENPPD record before the validated screen                         CRE023
       ** input is applied to GLJENPPD.                                                        CRE023
@@ -759,6 +766,7 @@
       ** Ensure update/delete is attempted only if JE Item was                              MD020761
       ** found previously                                                                   MD020761
      C     *IN91         ANDEQ     *OFF                                                     MD020761
+     C     PActnCde      ANDNE     'I'                                                      MD057744
       *                                                                                     MD020761
      C     JAVAUSER      ANDEQ     'Y'                                                        CAP084
      C     WPlayBack     ANDEQ     'N'                                                        CSC024
@@ -1522,6 +1530,7 @@ E1   C                   ENDIF                                                  
       ** provided that record was found                                                     MD047741
      C     *IN91         ANDEQ     *OFF                                                     MD047741
      C     WPlayBack     ANDEQ     'N'                                                        CSC024
+     C     PActnCde      ANDNE     'I'                                                      MD057744
      C                   Z-ADD     *ZERO         WINT15                                       CAP084
      C                   Z-ADD     *ZERO         WDEC09                                       CAP084
      C                   Z-ADD     *ZERO         WHASH                                        CAP084

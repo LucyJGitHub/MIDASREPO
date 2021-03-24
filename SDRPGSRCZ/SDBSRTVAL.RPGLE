@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057746           Date 18Mar21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD057795           Date 24Mar21               *
+      *  Prev Amend No. MD057746           Date 18Mar21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057795 - BSRT not throwing an error during Insert of       *
+      *             AlphaNumeric Base Rate Code when                  *
+      *             AlphaBaseRateCode System Value = N                *
       *  MD057746 - Field in error should be the base rate code       *
       *             instead of base rate name. Changed DDBSRN to      *
       *             DDBSRC.                                           *
@@ -335,6 +339,36 @@
 
       /COPY WNCPYSRC,SDBSRTV003
 
+      ** Check for Alphanumeric Base Rate Code system value                                 MD057795
+     C                   CALLB     'AOSVALR0'                                               MD057795
+     C                   PARM      *BLANKS       @RTCD                                      MD057795
+     C                   PARM      AlphaBSRC     PSysVal01        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet01       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal02        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet02       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal03        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet03       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal04        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet04       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal05        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet05       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal06        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet06       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal07        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet07       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal08        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet08       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal09        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet09       200                        MD057795
+     C                   PARM      *BLANKS       PSysVal10        20                        MD057795
+     C                   PARM      *BLANKS       PCurSet10       200                        MD057795
+      * If the system value is not found then default value to 'N'                          MD057795
+     C     @RTCD         IFNE      *BLANKS                                                  MD057795
+     C                   MOVE      'N'           AlphaCode         1                        MD057795
+     C                   ELSE                                                               MD057795
+     C                   MOVEL     PCurSet01     AlphaCode         1                        MD057795
+     C                   ENDIF                                                              MD057795
+                                                                                            MD057795
       * Call Validation Modules in Sequence
 
                                                                                              BUG3124
@@ -1312,35 +1346,35 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
-      ** Check for Alphanumeric Base Rate Code system value                                   CSD103
-     C                   CALLB     'AOSVALR0'                                                 CSD103
-     C                   PARM      *BLANKS       @RTCD                                        CSD103
-     C                   PARM      AlphaBSRC     PSysVal01        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet01       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal02        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet02       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal03        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet03       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal04        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet04       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal05        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet05       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal06        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet06       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal07        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet07       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal08        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet08       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal09        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet09       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal10        20                          CSD103
-     C                   PARM      *BLANKS       PCurSet10       200                          CSD103
-      * If the system value is not found then default value to 'N'                            CSD103
-     C     @RTCD         IFNE      *BLANKS                                                    CSD103
-     C                   MOVE      'N'           AlphaCode         1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
-     C                   ENDIF                                                                CSD103
+      ***Check*for*Alphanumeric*Base*Rate*Code*system*value***********               CSD103 MD057795
+     C**********         CALLB     'AOSVALR0'                                        CSD103 MD057795
+     C**********         PARM      *BLANKS       @RTCD                               CSD103 MD057795
+     C**********         PARM      AlphaBSRC     PSysVal01        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet01       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal02        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet02       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal03        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet03       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal04        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet04       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal05        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet05       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal06        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet06       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal07        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet07       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal08        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet08       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal09        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet09       200                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PSysVal10        20                 CSD103 MD057795
+     C**********         PARM      *BLANKS       PCurSet10       200                 CSD103 MD057795
+      **If*the*system*value*is*not*found*then*default*value*to*'N'****               CSD103 MD057795
+     C*****@RTCD         IFNE      *BLANKS                                           CSD103 MD057795
+     C**********         MOVE      'N'           AlphaCode         1                 CSD103 MD057795
+     C**********         ELSE                                                        CSD103 MD057795
+     C**********         MOVEL     PCurSet01     AlphaCode         1                 CSD103 MD057795
+     C**********         ENDIF                                                       CSD103 MD057795
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

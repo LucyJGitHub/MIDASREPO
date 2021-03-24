@@ -21,13 +21,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057790           Date 23Mar21               *
-      *  Prev Amend No. MD057770           Date 18Mar21               *
+      *  Last Amend No. MD057794           Date 24Mar21               *
+      *  Prev Amend No. MD057790           Date 23Mar21               *
+      *                 MD057770           Date 18Mar21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057794 - Non-mandatory dropdown fields in BSRT throws an   *
+      *             error when left blank                             *
       *  MD057790 - Amendment of Floor limit error message            *
       *  MD057770 - Numeric field issue between blank, 0, 00 inputs   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -394,6 +397,9 @@
       *****************************************************************
      C     SRRFRR        BEGSR
 
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDRFRR <> *BLANKS)                                   MD057794
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
 
@@ -408,6 +414,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
@@ -430,6 +437,9 @@
       *****************************************************************
      C     SRCALM        BEGSR
 
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDCALM <> *BLANKS)                                   MD057794
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
 
@@ -444,6 +454,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
@@ -927,6 +938,9 @@
 
      C                   EVAL      WDBAV = 0
 
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDDBAV <> *BLANKS)                                   MD057794
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
 
@@ -943,6 +957,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and

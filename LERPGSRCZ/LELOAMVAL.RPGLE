@@ -14,9 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 16Sep14               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD034449           Date 24Jan19               *      
+      *  Last Amend No. MD057739           Date 15Mar21               *
+      *  Prev Amend No. MD026384           Date 16Sep14               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057739 - Settlement parameter mismatch. Reorganize new     *
+      *             field buffers.                                    *
       *  MD026384 - Added generation by assignment processing.        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
@@ -477,9 +480,9 @@
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
 
-      ** Loan amendment in screen format 2                                                  MD026384
-     D LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                                MD026384
-                                                                                            MD026384
+      ***Loan*amendment in screen format 2                                         MD026384 MD057739
+     D*LoamSc2Fmt    E DS                  EXTNAME(LELOA2PD)                       MD026384 MD057739
+      ***********                                                                  MD026384 MD057739
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
 
@@ -616,6 +619,11 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
+     DLOAMBuffer       DS             9                                                     MD057739
+     D DDGASS                  1      1                                                     MD057739
+     D DDXRLT                  2      3                                                     MD057739
+     D DDXRLS                  4      5                                                     MD057739
+     D DDXRLC                  6      9                                                     MD057739
       ** +--------------------------------------+
       ** | End of D-specs                       |
       ** | ==============                       |
@@ -5979,7 +5987,8 @@
       *                                                                                     MD026384
       ** Transaction information 2                                                          MD026384
       *                                                                                     MD026384
-     C                   PARM                    LoamSc2Fmt                                 MD026384
+     C*********          PARM                    LoamSc2Fmt                        MD026384 MD057739
+     C                   PARM                    LOAMBuffer                                 MD057739
 
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam

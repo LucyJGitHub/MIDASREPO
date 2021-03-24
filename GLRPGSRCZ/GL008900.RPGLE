@@ -289,37 +289,6 @@
      C                   ENDIF                                                              MD050216
                                                                                             MD050216
  
-     C                   CALL      'AOSVALR0'                                               MD050216
-     C                   PARM      *BLANKS       PRtCd                                      MD050216
-     C                   PARM      PEASystem     PSysVal01                                  MD050216
-     C                   PARM                    PCurSet01                                  MD050216
-     C                   PARM      CurSystem     PSysVal02                                  MD050216
-     C                   PARM                    PCurSet02                                  MD050216
-     C                   PARM                    PSysVal03                                  MD050216
-     C                   PARM                    PCurSet03                                  MD050216
-     C                   PARM                    PSysVal04                                  MD050216
-     C                   PARM                    PCurSet04                                  MD050216
-     C                   PARM                    PSysVal05                                  MD050216
-     C                   PARM                    PCurSet05                                  MD050216
-     C                   PARM                    PSysVal06                                  MD050216
-     C                   PARM                    PCurSet06                                  MD050216
-     C                   PARM                    PSysVal07                                  MD050216
-     C                   PARM                    PCurSet07                                  MD050216
-     C                   PARM                    PSysVal08                                  MD050216
-     C                   PARM                    PCurSet08                                  MD050216
-     C                   PARM                    PSysVal09                                  MD050216
-     C                   PARM                    PCurSet09                                  MD050216
-     C                   PARM                    PSysVal10                                  MD050216
-     C                   PARM                    PCurSet10                                  MD050216
-                                                                                            MD050216
-     C                   IF        PrtCd   = *BLANKS                                        MD050216
-     C                             AND PCurSet01 <> *BLANKS                                 MD050216
-     C                   EVAL      WPEA    = PCurSet01                                      MD050216
-     C                   EVAL      WSYS    = PCurSet02                                      MD050216
-     C                   ELSE                                                               MD050216
-     C                   EXSR      *PSSR                                                    MD050216
-     C                   ENDIF                                                              MD050216
-                                                                                            MD050216
       ** Process all corrective batch entries for additional posting
  
      C     *LOVAL        SETLL     GLJENPJ0

@@ -1,8 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
-/*S*D****RPGBASEBNC****************************************************                       CSD103
-/*STD *  RPGBASEMOD                                                   *                       CSD103
+/*S*D****RPGBASEBNC****************************************************                     MD057243
+/*STD *  RPGBASEMOD                                                   *                     MD057243
 /*EXI *  TEXT('Bulk Global Update of Accounts (deletions) tsk-spt')   *
       *****************************************************************
       *                                                               *
@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057243           Date 10Aug20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR854619           Date 06Jan12               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -34,7 +35,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057243 - Source not compilable. Changed the creation       *
+      *             parameter from RPGBASEBNC to RPGBASEMOD and       *
+      *             introduce an equivalent PGM.                      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR854619 - In Main list the new fields are blank and user    *
       *             input contractual spread (Recompile)              *

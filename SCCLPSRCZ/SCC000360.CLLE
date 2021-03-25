@@ -10,14 +10,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP774             Date 21Jan21              */
-/*       Prev Amend No. CAP773             Date 21Jan21              */
+/*       Last Amend No. MD057749           Date 15Mar21              */
+/*       Prev Amend No. CAP774             Date 21Jan21              */
+/*                      CAP773             Date 21Jan21              */
 /*                      CAP735             Date 12May20              */
 /*                      CAP734             Date 12May20              */
 /*                      CAP702  *CREATE    Date 12May20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057749 - 24x7 APIs DZLIB setup process rework for new API */
 /*       CAP774 - 24x7 APIs - Loan API                               */
 /*       CAP773 - 24x7 APIs - Facility API                           */
 /*       CAP735 - 24x7 APIs - GL Accounts API                        */
@@ -45,11 +47,13 @@
              DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(9)
 
              DCL        VAR(&LNGTEN) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&DVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVALLS) TYPE(*CHAR) LEN(10)            /*MD057749*/
+             DCL        VAR(&DVALSP) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DMALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DPALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GVALSP) TYPE(*CHAR) LEN(10)            /*MD057749*/
              DCL        VAR(&GMALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GPALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GTALLS) TYPE(*CHAR) LEN(10)
@@ -84,10 +88,12 @@
 
              CHGVAR     VAR(&LNGTEN) VALUE(&PRE *TCAT 'BFMNGTEN')
              CHGVAR     VAR(&DVALLS) VALUE(&PRE *TCAT 'SAVDVALL')
+             CHGVAR     VAR(&DVALSP) VALUE(&PRE *TCAT 'SVDVALSP')         /*M057749*/
              CHGVAR     VAR(&DMALLS) VALUE(&PRE *TCAT 'SAVDMALL')
              CHGVAR     VAR(&DPALLS) VALUE(&PRE *TCAT 'SAVDPALL')
              CHGVAR     VAR(&DTALLS) VALUE(&PRE *TCAT 'SAVDTALL')
              CHGVAR     VAR(&GVALLS) VALUE(&PRE *TCAT 'SAVGVALL')
+             CHGVAR     VAR(&GVALSP) VALUE(&PRE *TCAT 'SVGVALSP')         /*M057749*/
              CHGVAR     VAR(&GMALLS) VALUE(&PRE *TCAT 'SAVGMALL')
              CHGVAR     VAR(&GPALLS) VALUE(&PRE *TCAT 'SAVGPALL')
              CHGVAR     VAR(&GTALLS) VALUE(&PRE *TCAT 'SAVGTALL')
@@ -189,8 +195,10 @@ LOOP13:      RCVF       OPNID(S4C)
 
              IF         COND((&S4C_SATYPE *EQ 'LF') *AND +
                           (&S4C_SADEPN *EQ 'DV')) THEN(DO)              /*CAP773*/
+/****        RSTOBJ     OBJ(&S4C_SAOBJ) SAVLIB(&DVLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DVALLS) RSTLIB(&DZLIB) ****/ /*CAP773*/ /*MD057749*/
              RSTOBJ     OBJ(&S4C_SAOBJ) SAVLIB(&DVLIB) DEV(*SAVF) +
-                          SAVF(&LNGTEN/&DVALLS) RSTLIB(&DZLIB)          /*CAP773*/
+                          SAVF(&LNGTEN/&DVALSP) RSTLIB(&DZLIB)          /*MD057749*/
                           GOTO LOOP13                                   /*CAP773*/
              ENDDO       /*CAP773*/
                           GOTO LOOP13
@@ -237,8 +245,10 @@ LOOP14:      RCVF       OPNID(S4B)
 
              IF         COND((&S4B_SATYPE *EQ 'LF') *AND +
                           (&S4B_SADEPN *EQ 'DV')) THEN(DO)              /*CAP773*/
+/****        RSTOBJ     OBJ(&S4B_SAOBJ) SAVLIB(&DVLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DVALLS) RSTLIB(&DZLIB) ****/ /*CAP773*/ /*MD057749*/
              RSTOBJ     OBJ(&S4B_SAOBJ) SAVLIB(&DVLIB) DEV(*SAVF) +
-                          SAVF(&LNGTEN/&DVALLS) RSTLIB(&DZLIB)          /*CAP773*/
+                          SAVF(&LNGTEN/&DVALSP) RSTLIB(&DZLIB)          /*MD057749*/
                           GOTO LOOP14                                   /*CAP773*/
              ENDDO       /*CAP773*/
                           GOTO LOOP14
@@ -285,8 +295,10 @@ LOOP15:      RCVF       OPNID(G4C)
 
              IF         COND((&G4C_SATYPE *EQ 'LF') *AND +
                           (&G4C_SADEPN *EQ 'GV')) THEN(DO)              /*CAP773*/
+/****        RSTOBJ     OBJ(&G4C_SAOBJ) SAVLIB(&GVLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GVALLS) RSTLIB(&DZLIB)  ****/ /*CAP773*/ /*MD057749*/
              RSTOBJ     OBJ(&G4C_SAOBJ) SAVLIB(&GVLIB) DEV(*SAVF) +
-                          SAVF(&LNGTEN/&GVALLS) RSTLIB(&DZLIB)          /*CAP773*/
+                          SAVF(&LNGTEN/&GVALSP) RSTLIB(&DZLIB)          /*MD057749*/
                           GOTO LOOP15                                   /*CAP773*/
              ENDDO       /*CAP773*/
                           GOTO LOOP15
@@ -331,8 +343,10 @@ LOOP16:      RCVF       OPNID(G4B)
 
              IF         COND((&G4B_SATYPE *EQ 'LF') *AND +
                           (&G4B_SADEPN *EQ 'GV')) THEN(DO)              /*CAP773*/
+/****        RSTOBJ     OBJ(&G4B_SAOBJ) SAVLIB(&GVLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GVALLS) RSTLIB(&DZLIB) ****/ /*CAP773*/ /*MD057749*/
              RSTOBJ     OBJ(&G4B_SAOBJ) SAVLIB(&GVLIB) DEV(*SAVF) +
-                          SAVF(&LNGTEN/&GVALLS) RSTLIB(&DZLIB)          /*CAP773*/
+                          SAVF(&LNGTEN/&GVALSP) RSTLIB(&DZLIB)          /*MD057749*/
                           GOTO LOOP16                                   /*CAP773*/
              ENDDO       /*CAP773*/
                           GOTO LOOP16

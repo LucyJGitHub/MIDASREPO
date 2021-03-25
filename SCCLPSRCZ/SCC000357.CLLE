@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CAP774             Date 21Jan21              */
-/*       Prev Amend No. CAP773             Date 21Jan21              */
+/*       Last Amend No. MD057749           Date 15Mar21              */
+/*       Prev Amend No. CAP774             Date 21Jan21              */
+/*                      CAP773             Date 21Jan21              */
 /*                      MD056682           Date 03Sep20              */
 /*                      MD056572           Date 24Aug20              */
 /*                      CAP735             Date 12May20              */
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057749 - 24x7 APIs DZLIB setup process rework for new API */
 /*       CAP774 - 24x7 APIs - Loan API                               */
 /*       CAP773 - 24x7 APIs - Facility API                           */
 /*       MD056682 - Files in DZLIB are only journaled with           */
@@ -96,10 +98,12 @@
 
              DCL        VAR(&LNGTEN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVALSP) TYPE(*CHAR) LEN(10)            /*MD057749*/
              DCL        VAR(&DMALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DPALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GVALSP) TYPE(*CHAR) LEN(10)            /*MD057749*/
              DCL        VAR(&GMALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GPALLS) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GTALLS) TYPE(*CHAR) LEN(10)
@@ -155,10 +159,12 @@
              CHGVAR     VAR(&NDBLB) VALUE(&PRE *TCAT 'X24LIB')
              CHGVAR     VAR(&LNGTEN) VALUE(&PRE *TCAT 'BFMNGTEN')
              CHGVAR     VAR(&DVALLS) VALUE(&PRE *TCAT 'SAVDVALL')
+             CHGVAR     VAR(&DVALSP) VALUE(&PRE *TCAT 'SVDVALSP')         /*MD057749*/
              CHGVAR     VAR(&DMALLS) VALUE(&PRE *TCAT 'SAVDMALL')
              CHGVAR     VAR(&DPALLS) VALUE(&PRE *TCAT 'SAVDPALL')
              CHGVAR     VAR(&DTALLS) VALUE(&PRE *TCAT 'SAVDTALL')
              CHGVAR     VAR(&GVALLS) VALUE(&PRE *TCAT 'SAVGVALL')
+             CHGVAR     VAR(&GVALSP) VALUE(&PRE *TCAT 'SVGVALSP')         /*MD057749*/
              CHGVAR     VAR(&GMALLS) VALUE(&PRE *TCAT 'SAVGMALL')
              CHGVAR     VAR(&GPALLS) VALUE(&PRE *TCAT 'SAVGPALL')
              CHGVAR     VAR(&GTALLS) VALUE(&PRE *TCAT 'SAVGTALL')
@@ -335,6 +341,8 @@
 
              ENDDO       /*MD056572*/
 
+             ENDDO       /*MD057749*/
+
 /* 2a. Create Backup of LF from LF library (i.e. zzDVLIB)   */
              CRTSAVF    FILE(&LNGTEN/&DVALLS)
              MONMSG     MSGID(CPF5813 CPF7302)
@@ -388,7 +396,9 @@ LOOP1:       RCVF       OPNID(SCC)
                           *EQ 'DV')) THEN(DO)              /*CAP773*/
                           GOTO LOOP1                       /*CAP773*/
              ENDDO       /*CAP773*/
+                          GOTO LOOP1                       /*MD057749*/
                 ENDDO       /*CAP734*/
+                          GOTO LOOP1                       /*MD057749*/
 EXIT1:
 
 /* 4a. Move SET of LF from ggGVLIB into ggGMLIB, ggGPLIB and ggGTALIB   */
@@ -432,7 +442,9 @@ LOOP2:       RCVF       OPNID(GPC)
                           *EQ 'GV')) THEN(DO)              /*CAP773*/
                           GOTO LOOP2                       /*CAP773*/
              ENDDO       /*CAP773*/
+                          GOTO LOOP2                       /*MD057749*/
                 ENDDO       /*CAP734*/
+                          GOTO LOOP2                       /*MD057749*/
 
 EXIT2:
 
@@ -476,8 +488,10 @@ LOOP3:       RCVF       OPNID(SCB)
                           (&SCB_SADEPN *EQ 'DV')) THEN(DO)     /*CAP773*/
                           GOTO LOOP3                           /*CAP773*/
              ENDDO       /*CAP773*/
+                          GOTO LOOP3                       /*MD057749*/
 
                 ENDDO       /*CAP734*/
+                          GOTO LOOP3                       /*MD057749*/
 EXIT3:
 
 /* 6a. Move SET of LF from ggGVLIB into ggGMLIB, ggGPLIB and ggGTALIB   */
@@ -520,10 +534,27 @@ LOOP4:       RCVF       OPNID(GPB)
                           (&GPB_SADEPN *EQ 'GV')) THEN(DO)     /*CAP773*/
                           GOTO LOOP4                           /*CAP773*/
              ENDDO       /*CAP773*/
+                          GOTO LOOP4                       /*MD057749*/
 
                 ENDDO       /*CAP734*/
+                          GOTO LOOP4                       /*MD057749*/
 
 EXIT4:
+
+/* 7. Move SET of PF from zzDMLIB, zzDPLIB and zzDTALIB into zzDVLIB    */ /*MD057749*/
+             CALL       PGM(SCC000366)                                     /*MD057749*/
+
+/* 7.1 Create Backup of LF/PF from LF library (i.e. zzDVLIB)   */          /*MD057749*/
+             CRTSAVF    FILE(&LNGTEN/&DVALSP)                              /*MD057749*/
+             MONMSG     MSGID(CPF5813 CPF7302)                             /*MD057749*/
+             CLRSAVF    FILE(&LNGTEN/&DVALSP)                              /*MD057749*/
+             SAVLIB     LIB(&DVLIB) DEV(*SAVF) SAVF(&LNGTEN/&DVALSP)       /*MD057749*/
+                                                                           /*MD057749*/
+/* 7.2 Create Backup of LF/PF from LF global library (i.e. ggGVLIB)   */   /*MD057749*/
+             CRTSAVF    FILE(&LNGTEN/&GVALSP)                              /*MD057749*/
+             MONMSG     MSGID(CPF5813 CPF7302)                             /*MD057749*/
+             CLRSAVF    FILE(&LNGTEN/&GVALSP)                              /*MD057749*/
+             SAVLIB     LIB(&GVLIB) DEV(*SAVF) SAVF(&LNGTEN/&GVALSP)       /*MD057749*/
 
 /* 7a. Save all objects from zzDMLIB                       */
              CRTSAVF    FILE(&LNGTEN/&DMALLS)
@@ -570,16 +601,21 @@ EXIT4:
 /* 8a. Move Back SET of LF from zzDMLIB, zzDPLIB and zzDTALIB into zzDVLIB    */
              CALL       PGM(SCC000358)
 
+/* 9a. Move Back SET of PF from zzDVLIB into zzDMLIB, zzDPLIB and zzDTALIB    */    /*MD057749*/
+             CALL       PGM(SCC000365)                                              /*MD057749*/
+
 /* 12a. Restore SET of PF from zzDMLIB, zzDPLIB and zzDTALIB to zzDZLIB   */
              CALL       PGM(SCC000359)
 
 /* 16a. Restore SET of LF from zzDMLIB, zzDPLIB and zzDTALIB to zzDZLIB    */
              CALL       PGM(SCC000360)
 
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)      /*MD057749*/
 /* 20. Create New Journal in zzX24LIB                      */
              CRTJRNRCV  JRNRCV(&NDBLB/IR00000001)
              CRTJRN     JRN(&NDBLB/ICJRN24X7)  JRNRCV(&NDBLB/IR00000001) +
                           MNGRCV(*SYSTEM) DLTRCV(*YES)
+             ENDDO                                          /*MD057749*/
 
 /* 21. End Journaling at zzDZLIB                           */
              CALL       PGM(SCC000361)
@@ -590,6 +626,7 @@ EXIT4:
 /*           MONMSG     MSGID(CPF7030) */
              CALL       PGM(SCC000362)
 
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)      /*MD057749*/
 /* 23. Start Object (DTAARA) Journaling at zzDZLIB         */
              CRTDUPOBJ  OBJ(MNATN) FROMLIB(&DMLIB) OBJTYPE(*DTAARA) +
                           TOLIB(&DZLIB) NEWOBJ(MNATN)
@@ -621,6 +658,10 @@ EXIT4:
              MONMSG     MSGID(CPC7002)
              STRJRNOBJ  OBJ(&DZLIB/SDSTAT)   OBJTYPE(*DTAARA) JRN(&NDBLB/ICJRN24X7)
 
+             ENDDO                                          /*MD057749*/
+
+             IF         COND(&CAP773 *EQ 'Y') THEN(DO)      /*MD057749*/
+
              CRTDUPOBJ  OBJ(LEALLO) FROMLIB(&DMLIB) OBJTYPE(*DTAARA) +
                           TOLIB(&DZLIB) NEWOBJ(LEALLO)      /*CAP773*/
              ENDJRNOBJ  OBJ(&DZLIB/LEALLO)   OBJTYPE(*DTAARA)    /*CAP773*/
@@ -633,6 +674,10 @@ EXIT4:
              MONMSG     MSGID(CPC7002)                           /*CAP773*/
              STRJRNOBJ  OBJ(&DZLIB/AOLENDO)   OBJTYPE(*DTAARA) JRN(&NDBLB/ICJRN24X7) /*CAP773*/
 
+             ENDDO                                          /*MD057749*/
+
+
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)      /*MD057749*/
 /* 24. Start zzDZLIB Library Journaling                   */
 /*           STRJRNLIB  LIB(&DZLIB) JRN(&NDBLB/ICJRN24X7) INHRULES((*ALL *ALLOPR +
                           *INCLUDE *AFTER *OPNCLO))*/ /*MD056682*/

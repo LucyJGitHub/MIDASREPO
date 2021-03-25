@@ -558,13 +558,8 @@
      C                   PARM      *ZERO         @@AMT
      C                   PARM                    BNDCSP
 
-      ** Value must be numeric from -100 to 100 upto 6 decimal places                       MD057790
-     C**********         IF        @@ERCD <> *ZERO                                          MD057790
-     C**********                   and DDBLRT = 'Y'                                MD057770 MD057790
-     C                   IF        DDBLRT = 'Y'                                             MD057790
-     C                             and (@@ERCD <> *ZERO or                                  MD057790
-     C                             WNumFlor < -100 or                                       MD057790
-     C                             WNumFlor >  100)                                         MD057790
+     C                   IF        @@ERCD <> *ZERO
+     C                             and DDBLRT = 'Y'                                         MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
@@ -582,6 +577,16 @@
      C                   Z-SUB     WNumFlor      WNumFlor
      C                   ENDIF
 
+      ** Value must be numeric from -100 to 100 upto 6 decimal                              MD057790
+     C                   IF        DDBLRT = 'Y'                                             MD057790
+     C                             and (WNumFlor < -100                                     MD057790
+     C                             or WNumFlor >  100)                                      MD057790
+     C                   EVAL      DDFLOROK = 'N'                                           MD057790
+     C                   EVAL      Idx = Idx + 1                                            MD057790
+     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'                                MD057790
+     C                   EVAL      MsgIdXAr(Idx) = '5049408'                                MD057790
+     C                   ENDIF                                                              MD057790
+                                                                                            MD057790
      C                   ENDIF
 
       ***Value*must*be*numeric*from*-100*to*100***********************                      MD057790

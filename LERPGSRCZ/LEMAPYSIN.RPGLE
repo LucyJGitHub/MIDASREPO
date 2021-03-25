@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 243329             Date 06May20               *
+      *  Prev Amend No. MD020027           Date 12Mar20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -47,6 +49,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD-49414.                               *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
@@ -227,7 +237,7 @@
      D  LoanRecInstEx       1597   1614                                                       CGL029
      D  LoanPayInstEx       1615   1632                                                       CGL029
       *
- 
+
      D @CCI@           DS
       ***  Current control indicators for details screens 1
       *
@@ -318,7 +328,7 @@
      D**********                           Like(WMsgIDArr)                                   BUG4351
      D WReDisplay      S              1A
      D*WiX******       S              3P 0                                                   BUG4351
- 
+
      D PassDtaDS       DS           512
      D CLE002                  1      1A
      D CLE003                  2      2A
@@ -389,6 +399,9 @@
      D PRcvParm        S            335                                                      CSF011A
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
+      ** Parameter for LEMAPYRTV to retrive Extended settlement intruction                  MD020027
+     D***PPayParm        S            335                                            MD020027 243329
+     D PPayParm        S           1045                                                       243329
       *                                                                                       244636
       ** Parameters for calling AOSVALR0 (System Value Access Object)                         CLE148
       *                                                                                       CLE148
@@ -434,52 +447,52 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ***  Read next browse subfile record
- 
+
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   ENDIF
- 
+
       ***  Read next browse subfile record
- 
+
      C     @SCRN         IFEQ      'B'
      C                   EXSR      BLDBRW
      C                   ENDIF
- 
+
       ***  Do while screen: Screen details
- 
+
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   ENDDO
- 
+
       ***  Do while screen: Settlement details
- 
+
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   ENDDO
- 
+
       ***  Screen: Confirmation of input
- 
+
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   ENDIF
- 
+
       ***  Do file updates
- 
+
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   ENDIF
- 
+
       ***  Terminate program
- 
+
      C     @SCRN         IFEQ      'T'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
@@ -637,7 +650,7 @@
       *
      C                   if        @EKYFD = 'Y'                                 key fld not valid
      C                             or DDACTN = 'X' and @RDNB = 'Y'
- 
+
      C     DDACTN        IFNE      @PACTN
      C     DDLNRF        ORNE      @PLNRF
      C     DDVALD        ORNE      @PVALD
@@ -662,13 +675,13 @@
      C                   EVAL      DDACTN = WKACTN
      C                   EVAL      DDEVAL = WKEVAL
      C                   EVAL      DDESEQ = WKESEQ
- 
+
      C                   IF        DDACTN = 'I'
      C                   EVAL      DDCUST = WKCUST
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      RTVMAPY
      C                   Endif
       *
@@ -689,17 +702,17 @@
       *
      C**********         if        IDX = 0                                                   BUG4351
      C**********                   AND WReDisplay = *BLANK                                   BUG4351
- 
+
      C**********         Z-ADD     1             WiX                                         BUG4351
- 
+
      C**********         DOW       WiX <= WIDx AND WReDisplay = *BLANK                       BUG4351
- 
+
      C**********         IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)                         BUG4351
      C                   EVAL      WReDisplay = 'Y'
      C**********         ELSE                                                                BUG4351
      C**********         EVAL      WiX = WiX + 1                                             BUG4351
      C**********         ENDIF                                                               BUG4351
- 
+
      C**********         ENDDO                                                               BUG4351
       *
      C                   IF        WRedisplay =  'Y'
@@ -872,7 +885,7 @@
      C                   PARM      'Y'           @@RSTE            1            Reset Fld in error
       *
      C                   Endif
- 
+
      C     DDACTN        IFEQ      'I'
       *
       ***  Validate Manual Repayment input details
@@ -1055,7 +1068,7 @@
      C                   EXSR      SNDM@M
      C                   GOTO      EROLL
      C                   ELSE
- 
+
       *
       ***  Save pointers clear last screen fields then set pointers
       ***  again.
@@ -1221,7 +1234,7 @@
      C                   CLEAR                   NwMaPyScnFmt
      C                   GOTO      EBLDBR
      C                   ENDIF
- 
+
       * If Insert (F9) selected from browse, go to key screen
      C                   IF        @OPSEL = 'I'
       *
@@ -1448,6 +1461,7 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
       *
       ***  Save the settlement details for update (OLDSettlDS)
       *
@@ -1486,7 +1500,7 @@
      C                   PARM      0             WrkOutPrinc      13 0          Outstanding Princ.
      C                   PARM      0             WrkRemainInt     13 0          Loan Remaining int.
      C                   ELSE
- 
+
       ** If action code is insert, set up relevant screen fields
      C                   EXSR      SetupIns
      C                   ENDIF
@@ -1811,7 +1825,8 @@
       *
       ***  input Screen Fmt
       *
-     C                   PARM                    ##PAYS                         Payment Instructions
+     C**********         PARM                    ##PAYS                Payment Instructions MD020027
+     C                   PARM      PPayParm      ##PAYS                                     MD020027
      C**********         PARM                    ##RECS                        Receipt Instru 244636
      C                   PARM      PRcvParm      ##RECS                                       244636
      C                   PARM                    ##FRIS                         FRA/IRS Instructions
@@ -1961,7 +1976,7 @@
       ***  If amend, enquire, authorize or reverse
       ***  move settlement file fields to screen fields
       ***  Else clear settlement screen fields
- 
+
      C     DDACTN        IFEQ      'A'
      C     DDACTN        OREQ      'E'
      C     DDACTN        OREQ      'X'
@@ -2504,19 +2519,19 @@
       * SetupIns - Set up relevant screen fields for insert mode      *
       *****************************************************************
      C     SetupIns      BEGSR
- 
+
       **  Key to retrieve Facilty loan Details
      C     KEYLoanFac    KLIST
      C*****              KFLD                    K@CNUM            6 0                        CSD027
      C                   KFLD                    K@CNUM            6                          CSD027
      C                   KFLD                    K@FACT            3 0
      C                   KFLD                    K@FCNO            2 0
- 
+
       **  Retrieve Facility details
      C                   EVAL      K@CNUM = WRKLNFCUS
      C                   EVAL      K@FACT = WRKLNFTYP
      C                   EVAL      K@FCNO = WRKLNFSEQ
- 
+
      C     KEYLoanFac    CHAIN     FCLTY
       ** Date
      C                   MOVE      DDVALD        ZDATE
@@ -2528,10 +2543,10 @@
      C                   PARM                    ZDAYNO            5 0
      C                   Z-ADD     ZDAYNO        LVDAT
      C                   Z-ADD     ZDAYNO        WrkValDate        5 0
- 
+
       ** Currency
      C                   EVAL      DDSCCY = WRKLNCCY
- 
+
       ** Amount
      C                   MOVEL     DDSCCY        @CURR             3
      C                   CALLB     'AOCURRR0'
@@ -2546,13 +2561,13 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002 *
      C                   EXSR      *PSSR                                        *************
      C                   ENDIF
- 
+
      C                   MOVE      A6NBDP        CrNBDP            1 0          current Dec. places
- 
+
      C                   Z-ADD     WRKLNCPAM     ZFLD15           15 0          Current Principal
      C                   Z-Add     CrNBDP        ZDECS             1 0
      C                   MOVE      'J'           ZECODE
- 
+
      C                   EXSR      ZFRPED
       *
      C                   if        ZNEG = '-'
@@ -2568,7 +2583,7 @@
      C                   Z-ADD     WrkOutIntr    ZFLD15                         O/S interest
      C                   MOVE      'J'           ZECODE
      C                   EXSR      ZFRPED
- 
+
      C                   if        ZNEG = '-'
      C                   MOVE      ZOUT21        DDINTD
      C                   else
@@ -2689,21 +2704,21 @@
       *
      C                   Endif                                                  PD_VDAT <> 0
      C                   MOVE      WRKLNWTIN     DDWTTP
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * ZFRPED -                                                      *
       *****************************************************************
      C     ZFRPED        BEGSR
- 
+
      C                   CALLB     'ZFRPED'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM                    ZECODE            1
      C                   PARM      *BLANKS       ZOUT22           22
      C                   PARM      *BLANKS       ZOUT25           25
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -3317,7 +3332,7 @@
       *  SRResetErr - Reset error fields                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRResetErr    BEGSR
       *
       ***  Reset error fields.
@@ -3326,7 +3341,7 @@
      C                   CLEAR                   MsgIDArr
      C                   CLEAR                   MsgDtaArr
      C                   CLEAR                   IdX
- 
+
      C                   CLEAR                   WFldNamArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WMsgDtaArr
@@ -3335,7 +3350,7 @@
       ***  Initialise screen fields error indicators.
       *
      C                   MOVE      *ALL'Y'       ErrorMaPy
- 
+
      C     ESRResetErr   ENDSR
       *****************************************************************
       /EJECT
@@ -3419,7 +3434,7 @@
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVEL     BGMBIN        MBIN              1
       *
       ***  Access General Ledger
@@ -3445,7 +3460,7 @@
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C                   endif
       *
       ***  Determine if Customer Lending Enhancements - Authorization

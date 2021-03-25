@@ -1,0 +1,761 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Manual Turnover Commission Update')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *    XX6500 - Midas RE Manual Turnover Commission Update        *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. AR803379           Date 17Apr20               *
+      *  Prev Amend No. EML105  *CREATE    Date 17Apr20               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR803379 - Turnover commission apply changed from 'N' to ' ' *
+      *             caused PSTA to be included on amount to be        *
+      *             considered for Debit turnover.                    *
+      *             Added validation to include PSTA on debit turnover*
+      *             only if #1TCOM is 'Y'. (Child: AR803380)          *
+      *  EML105 - Upgrade CFT043 to FBM 2.1 SP22                      *
+      *           Exclude FT Transactions from Turnover Commission    *
+      *                                                               *
+      *****************************************************************
+      *
+      **   Selection of history posting for retail activity
+     FREHPOPL IF  E           K        DISK
+     F            REHPOSPF                          KRENAMEREHPOPLF
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      *
+      **   Retail commissions enquiry file
+     FRECOM   UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      **   Accounts number file
+     FACCNTL1 IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   Retail ICD by currency
+     FRECCY   IF  E           K        DISK
+     F            RECCYAF                           KIGNORE
+     F            RECCYZF                           KIGNORE
+     F                                              KINFSR *PSSR
+      **   Display file
+     FXX6500DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+     F                                        #1RRN KSFILE #SFLNUM
+      *
+      **   Customer details - update index
+     FSDCUSTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      **   Customer group updates
+     FTABCGU  IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB10F                          KIGNORE
+     F            TABLETXF                          KIGNORE
+      *
+      **   Retail history file - posting records
+     FREHPOSPPUF  E                    DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     ******************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      * ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *
+      *   KL : CMD 12 - Previous screen
+      *   KC : CMD  3 - End of program
+      *
+      *   LR :    Last record
+      *   U7/U8 : Database error
+      *
+      *   10 : Error with file  ACCNTL1
+      *   11 : Error with file  TABLEV4
+      *   12 : Error with file  SDCUSTX0
+      *   13 : Error with array CGRP
+      *   14 : Error with file  RECOM
+      *   15 : Error with file  REHPOSPP
+      *
+      *   27 : Rollup subfile
+      *   30 : End of REPOSL file
+      *   32 : End of subfile
+      *   50 : Error indicator
+      *   51 : Error indicator
+      *   52 : Error indicator
+      *   80 : Display subfile control
+      *   81 : Display subfile
+      *   89 : Working indicator
+      *
+      *   98 : Indicator used by subroutine ZDATE1
+      *   99 : Indicator used by subroutine ZDATE1
+      *
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      **   ARRAYS USED BY ZDATE1
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      **   FOR COMPILATION - COPYRIGHT INSERTION
+      *
+     E                    CPY@    1   1 80
+      *
+      **   STORE THE EIGHT GROUP EACH CUSTOMER IS ASSOCIATED
+      *
+     E                    CGRP        9  1               CUSTOMER GROUP
+     E                    AGRP        9  1               ACCOUNT COMMISS.
+      *
+      /COPY ZSRSRC,ZEDITZ1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     IRECOMDF
+      *
+      ** RENAME RECOMDF FORMAT FIELDS - RECOM FILE
+      *
+     I              RECI                            RRECI
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Second DS for access programs, long data structure
+      *
+      **   PROGRAM DATA STRUCTURE
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      **   FILE INFORMATION DATA STRUCTURE
+      *
+     IINFDS1    E DSY2I1DSP
+      *
+      **   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      **   DATA STRUCTURE FOR DATABASE ERROR
+      *
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I            DS
+     I                                        1   6 CNUM
+     I                                        7   9 CCY
+     I                                       10  190ACOD
+     I                                       20  210ACSQ
+     I                                       22  24 BRCA
+     I                                        1  24 DKEY
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      **   MAIN PROCESSING
+      *
+      **   WHILE CMD3 NOT PRESSED
+      *
+     C           *INKC     DOWEQ'0'
+      *
+      **   DISPLAY AND VALIDATE FIRST SCREEN
+      *
+     C                     EXSR #SCR1
+      *
+      **   SUBFILE INITIALIZATION
+      *
+     C                     EXSR #INIT                      INIT SUBFILE MIROIR
+     C                     EXSR #LOAD                      LOAD SUBFILE MIROIR
+      *
+      **   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **   WRITE BOTTOM OF THE SCREEN
+      *
+     C                     WRITE#MSGCTL
+      *
+      **   WHILE CMD3 AND CMD12 NOT PRESSED
+      *
+     C           *INKL     DOWEQ'0'
+     C           *INKC     ANDEQ'0'
+      *
+      **   DISPLAY SUBFILE
+      *
+     C                     TIME           ##TME
+     C                     EXFMT#CTLNUM
+      *
+      **   DON'T PROCESS SUBFILE IF NO RECORD.
+      *
+     C           *IN81     IFEQ '1'
+      *
+      **   READ CHANGED RECORD(S) IN THE SUBFILE
+      *
+     C                     READC#SFLNUM                  32
+      *
+      **   WHILE THERE ARE CHANGED RECORDS
+      *
+     C           *IN32     DOWEQ'0'
+      *
+      **   IF RECORD HAS EFFECTIVELY CHANGED, UPDATE FILE REHPOSPP
+      *
+     C           #1TURN    IFNE #1TCOM
+     C           #1RCNO    CHAINREHPOSPP             15
+      *
+      **   IF RECORD NOT FOUND
+      *
+     C           *IN15     IFEQ '1'
+     C                     MOVEL'004'     DBASE            *****************
+     C                     MOVEL'REHPOSPP'DBFILE           ** DB ERROR 04 **
+     C                     MOVEL#1RCNO    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE #1TCOM    TURN
+     C                     UPDATREHPOSPF
+      *
+      **   IF TURNOVER COMMISSION IS SET FROM Y TO BLANK, SUBTRACT PSTA
+      *
+     C           #1TURN    IFEQ 'Y'
+     C           GVDPE     SUB  PSTA      GVDPE
+     C                     ELSE
+      *
+      **   IF TURNOVER COMMISSION IS SET FROM BLANK TO Y, ADD PSTA
+      *
+     C           #1TCOM    IFEQ 'Y'                                                         AR803379
+     C                     ADD  PSTA      GVDPE
+     C                     ENDIF                                                            AR803379
+     C                     END
+      *
+     C                     MOVE #1TCOM    #1TURN
+     C                     UPDAT#SFLNUM
+     C                     END
+      *
+      **   READ CHANGED RECORD(S) IN THE SUBFILE
+      *
+     C                     READC#SFLNUM                  32
+     C                     END
+      *
+      **   IF ROLLUP, LOAD SUBFILE
+      *
+     C           *IN27     IFEQ '1'
+     C                     EXSR #LOAD
+     C                     END
+      *
+      **   END OF IF
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **   RECALCULATE ACCEA TO ALLOW OSIC TO SHOW CORRECT AMOUNT
+      *
+     C                     Z-ADD0         RATE   108
+     C           CEXB      IFNE 'E'
+     C                     MOVEL*BLANKS   K1FLD1 12
+     C                     MOVEL*BLANKS   WU004A  4
+     C                     MOVELCCY       WU004A
+     C                     MOVE 'D'       WU004A
+     C                     MOVE WU004A    K1FLD1
+     C           K1FLD1    CHAINRECCY                89
+     C           *IN89     IFEQ '0'
+     C           CEXB      IFNE *BLANKS
+     C                     MOVE CEXB      RATE
+     C                     ELSE
+     C                     Z-ADDACRT      RATE
+     C                     END
+     C                     END
+     C                     END
+      *    ACCOUNT COMMISSION IS CALCULATED
+     C           GVDPE     MULT RATE      TOTAL  150
+     C           TOTAL     DIV  100       TOTAL
+      *    BELOW MINIMUM COMMISSION
+     C           TOTAL     IFLE ACMN
+     C                     MOVE ACMN      ACCEA
+     C                     ELSE
+      *    ABOVE MAXIMUM COMMISSION
+     C           TOTAL     IFGE ACMX
+     C                     MOVE ACMX      ACCEA
+     C                     ELSE
+      *    NOT BELOW MNIMUM AND NOT ABOVE MAXIMUM COMMISSION
+     C                     MOVE TOTAL     ACCEA
+     C                     END
+     C                     END
+      *    Include any manual adjustments to the enquiry value.
+     C                     ADD  CACCC     ACCEA
+      *
+      **   UPDATE FILE RECOM
+      *
+     C                     UPDATRECOMDF
+      *
+      **   COMMITMENT CONTROL
+      *
+     C                     COMIT
+     C                     END
+      *
+      **   END OF PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+      * #INIT SUBFILE                                                 *
+      *****************************************************************
+     C           #INIT     BEGSR
+      *
+      **   CLEAR SUBFILE
+      *
+     C                     Z-ADD0         WWRRN   40       SAVE RCD.NBR.
+     C                     MOVE '1'       *IN80
+     C                     WRITE#CTLNUM
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+      *
+      **   POSITION IN FILE
+      *
+     C                     Z-ADD*ZEROS    KHISD
+     C           KKEY2     SETLLREHPOPL
+     C           KKEY1     READEREHPOPL                  30
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+      * #LOAD SUBFILE                                                 *
+     ******************************************************************
+     C           #LOAD     BEGSR
+      *
+      **   RESTORE LAST POSITION IN SUBFILE
+      *
+     C                     Z-ADDWWRRN     #1RRN            SFL.RCD.NBR.
+      *
+      **   INIT SCREEN LINE NUMBER
+      *
+     C                     Z-ADD0         WWCPT   20
+      *
+      **   LOAD SUBFILE
+      *
+     C           *IN30     DOWEQ'0'
+     C           WWCPT     ANDLT13
+      *
+      **   IF POSTING DATE > OR = THAN START DATE OF THE FIRST SCREEN
+      *
+     C           PSTD      IFGE SDAT
+      *
+      **  IF  POSTING DATE > OR = THAN LAST DEBIT/CREDIT CAPITALISATION
+      **  OR  VALUE   DATE > OR = THAN LAST DEBIT/CREDIT CAPITALISATION
+      **  AND POSTING DATE <      THAN LAST DEBIT/CREDIT CAPITALISATION
+      *
+     C           PSTD      IFGE LDID
+     C           VALD      ORGE LDID
+     C           PSTD      ANDLTLDID
+      *
+     C                     ADD  1         #1RRN      81    SFLRCDNBR
+     C                     ADD  1         WWCPT            SCREEN LINE NBR
+      *
+     C                     Z-ADD@1RCNO    #1RCNO           PF RECORD NUMBER
+     C                     MOVE TURN      #1TURN           TURNOVER COMMISSION
+     C                     MOVE TURN      #1TCOM           TURNOVER COMMISSION
+     C                     Z-ADDTRAT      #1TRAT           TRANSACTION TYPE
+     C                     MOVE PSTA      ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1PSTA           POSTING AMOUNT
+     C                     MOVE PNAR      #1PNAR           POSTING NARRATIVE
+      *
+      **   EDIT POSTING DATE
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #1PSTD
+      *
+      **   EDIT VALUE   DATE
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #1VALD
+      *
+      **   ADD RECORD IN SUBFILE
+      *
+     C                     WRITE#SFLNUM
+     C                     END
+     C                     END
+      *
+     C           KKEY1     READEREHPOPL                  30
+      *
+     C                     ENDDO                           - E1
+      *
+      **   SAVE POSITION
+      *
+     C                     Z-ADD#1RRN     WWRRN            SAVE SFL.RCD.NBR.
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+      * *PSSR : ERROR PROCESSING                                      *
+     ******************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+      * * INZR : INITIALIZATION SUBROUTINE                            *
+     ******************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEL'XX6500  'DBPGM
+      *
+      **   KEY FIELD
+      *
+     C           KKEY      KLIST
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+      *
+      **   KEY FIELD
+      *
+     C           KKEY2     KLIST
+     C                     KFLD           KBRCD   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KHISD   50
+      *
+     C           KKEY1     KLIST
+     C                     KFLD           KBRCD   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'XX6500  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                    ***
+      *
+      ** Get Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE BJMRDT    ##MRDT           Midas rundate
+      *
+      **   STORE THE EIGHT GROUPS RECORDS FROM THE RETAIL TABLE
+      *
+     C                     Z-ADD1         Y       10
+     C                     MOVEL'81      'CTKEY  12
+     C                     MOVE '    '    CTKEY
+     C           CTKEY     SETLLTABLEV4F
+     C                     READ TABLEV4F                 11
+     C                     MOVELCTKEY     CT      2
+      *
+     C           *IN11     DOUEQ'1'                        READ UNTIL EOF
+     C           RECI      IFEQ 'D'
+     C           CT        IFEQ '81'
+     C                     MOVE KEY       CGRP,Y
+     C                     MOVE ACMI      AGRP,Y
+     C                     ADD  1         Y
+     C                     END
+     C                     READ TABLEV4F                 11
+     C                     MOVELCTKEY     CT      2
+     C                     END
+     C                     END
+      *
+      **   SELECT THE PROGRAM MSGQ FOR ERROR MSG
+      *
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'XXUSRMSG'PMSGF  10
+      *
+      **   FILL IN FIELDS FOR SUBROUTINE ZASNMS
+      *
+     C                     MOVEL'XX6500'  ZAPGM  10        Message queue
+     C                     MOVEL'XXUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      **   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     *********************************************************************
+      *  #SCR1 : DISPLAY AND VALIDATE FIRST DISPLAY SCREEN
+     *********************************************************************
+      *
+     C           #SCR1     BEGSR
+      *
+     C                     MOVE '1'       *IN52
+      *
+      **   WHILE CMD3 NOT PRESSED AND ERROR ON FIELDS
+      *
+     C           *INKC     DOWEQ'0'
+     C           *IN52     ANDEQ'1'
+      *
+      **   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     TIME           ##TME
+      *
+      **   WRITE FIRST ENTRY SCREEN
+      *
+     C                     EXFMTXX6500F1
+      *
+      **   VALIDATE FIRST FIELD : RETAIL ACCOUNT NUMBER
+      *
+      **   RETAIL ACCOUNT NUMBER MUST BE NUMERIC AND NOT EQUAL TO ZERO
+      *
+     C           #RNUM     IFEQ *ZEROS
+     C                     MOVE '1'       *IN50            Reverse image
+     C                     MOVEL'XX76021' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      *
+      **   ACCOUNT NUMBER MUST DEFINE A LIFE RETAIL ACCOUNT
+      *
+     C           #RNUM     CHAINACCNTL1              10
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *IN50            Reverse image
+     C                     MOVEL'XX76022' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+      *
+      **   ACCOUNT NUMBER DEFINE A LIFE RETAIL NUMBER
+      *
+     C                     ELSE
+      *
+     C                     MOVE CNUM      KCNUMA  6
+     C           KCNUMA    CHAINSDCUSTL0             12
+      *
+      **   IF RECORD NOT FOUND OR NOT LIVE
+      *
+     C           *IN12     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDCUSTL0'DBFILE           ** DB ERROR 01 **
+     C                     MOVELKCNUMA    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADD1         I       10       INDEX
+     C           BBCGRP    LOKUPCGRP,I                   13CUSTOMER GROUP
+      *
+      **   IF RECORD NOT FOUND ON THE TABLE
+      *
+     C           *IN13     IFEQ '0'
+     C                     MOVEL'002'     DBASE            *****************
+     C                     MOVEL'TABLEV4F'DBFILE           ** DB ERROR 02 **
+     C                     MOVELBBCGRP    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   IF ACCOUNT COMMISSION INDICATOR IS NOT EQUAL TO 'Y'
+      *
+     C           AGRP,I    IFNE 'Y'                        - B3
+     C                     MOVE '1'       *IN50
+     C                     MOVEL'XX76024' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      *
+      **   PREPARE KEY FIELDS
+      *
+     C                     MOVE CNUM      KCNUM
+     C                     MOVE CCY       KCCY
+     C                     Z-ADDACOD      KACOD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVELBRCA      KBRCD
+     C           KKEY1     CHAINRECOM                14
+      *
+      **   IF RECORD NOT FOUND ON THE TABLE
+      *
+     C           *IN14     IFEQ '1'
+     C                     MOVEL'003'     DBASE            *****************
+     C                     MOVEL'RECOM   'DBFILE           ** DB ERROR 03 **
+     C                     MOVELDKEY      DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   IF FIELD TURNOVER COMMISSION OVERRIDE IS 'E'
+      *
+     C           CEXB      IFEQ 'E'
+     C                     MOVE '1'       *IN50
+     C                     MOVEL'XX76025' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE '0'       *IN50
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      **   EDIT LAST CAPITALISATION  DATE
+     C                     Z-ADDLDID      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #LDID
+      *
+     C                     Z-ADDLCID      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #LCID
+      *
+      **   VALIDATE SECOND FIELD : START DATE
+      *
+      *
+      **   THE START DATE MUST NOT BE EQUAL TO ZERO
+      *
+     C           #SDAT     IFEQ *ZEROS
+     C                     MOVE '1'       *IN51            Reverse image
+     C                     MOVEL'XX76023' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      *
+      **   THE START DATE MUST BE A VALID DATE
+      *
+     C                     Z-ADD#SDAT     ZDATE
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN51            Reverse image
+     C                     MOVEL'XX76023' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE '0'       *IN51
+     C                     Z-ADDZDAYNO    SDAT    50
+     C                     END
+     C                     END
+      *
+      **   IF ERROR ON AT LEAST ONE FIELD
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN51     OREQ '1'
+     C                     MOVE '1'       *IN52
+     C                     ELSE
+     C                     MOVE '0'       *IN52
+     C                     END
+      *
+     C                     WRITE#MSGCTL
+      *
+      **   END OF DO WHILE
+      *
+     C                     END
+      *
+      **   IF CMD3 PRESSED, END OF PROGRAM
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      **   FIND NUMBER OF DECIMAL PLACES
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'006'     DBASE            *****************
+     C                     MOVEL'SDCURRPD'DBFILE           ** DB ERROR 06 **
+     C                     MOVELCCY       DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     *****************************************************************
+      *  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+     *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      **   message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      **   Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      **   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+      **              CONVERT TO A NUMBER OF DAYS.
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE1Z2
+      **
+     C/COPY ZSRSRC,ZEDITZ2
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(C) Finastra International Limited 2002

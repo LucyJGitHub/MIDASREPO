@@ -26,8 +26,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 243329             Date 06May20               *
+      *  Prev Amend No. MD020027           Date 12Mar20               *
+      *                 CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
@@ -55,6 +57,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD049414.                               *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -413,7 +423,7 @@
      D WrkDDPASD              14     14A
      D WrkCntrMR              15     15  0
      D WrkReactFacil          16     16
- 
+
       ** Data structure for data area commitment control                                      CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  ComitJobs              4    103A                                                      CSC022
@@ -494,6 +504,10 @@
       ** Parameter for LERPSCRTV                                                              244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
+      ** Parameter for LEMAPYRTV                                                            MD020027
+     D***PPayParm        S            335                                            MD020027 243329
+     D PPayParm        S           1045                                                       243329
+                                                                                            MD020027
                                                                                               CAP086
      D CAP086          S              1A                                                      CAP086
                                                                                               CAP086
@@ -651,6 +665,16 @@
      C                             PRcvParm <> *blank                                         244636
      C                   MOVEL     PRcvParm      S_Rec                                        244636
      C                   ENDIF                                                                244636
+      *                                                                                     MD020027
+      ** Default settlement details from related loan                                       MD020027
+     C                   IF        WRKLNPTYP = 66 or WRKLNPTYP = 67                           243329
+     C                             or WRKLNPTYP = 69 or WRKLNPTYP = 72                        243329
+     C                   IF        S_Pay = *blank AND                                       MD020027
+     C                             PPayParm <> *blank                                       MD020027
+     C                   MOVEL     PpayParm      S_Pay                                      MD020027
+     C                   ENDIF                                                              MD020027
+     C                   ENDIF                                                                243329
+      *                                                                                     MD020027
      C                   EXSR      ValidateSt
       *
      C                   WHEN         DDACTN = 'A'
@@ -714,7 +738,7 @@
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
@@ -773,7 +797,7 @@
       /COPY WNCPYSRC,LEMAPYC015
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -893,7 +917,7 @@
      C                   IF        GHSUBS <> *blank
      C     GHSUBS        SCAN      TransIncom    SubForTRNN        2 0
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     '*FRONT'      ModeofOp
      C                   ELSE
@@ -970,6 +994,7 @@
      C                   PARM                    Idx
      C                   PARM                    WIdx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
       *
       ***  Save the settlement details for update if not insert
       *

@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057244           Date 18Dec20               *
-      *  Prev Amend No. MD037479           Date 20Sep17               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD037479           Date 20Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,10 +31,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057244 - Error message for alternative account error is    *
-      *             not descriptive enough. Use errror message that   *
-      *             details 'selected account is using an alternate   *
-      *             account.                                          *
       *  MD037479 - Not possible to insert alternative acc on account *
       *             with negative spread. Allow insertion of negative *
       *             spread even if entered with alternative account.  *
@@ -352,8 +347,7 @@
      C                   Move      'N'           DDDRBROk
      C                   Add       1             Idx
      C                   MoveL     'DDDACP'      FldNamXAr(Idx)
-     C**********         MoveL     'RE71224'     MsgIDXAr(Idx)                              MD057244
-     C                   MoveL     'RE71422'     MsgIDXAr(Idx)                              MD057244
+     C                   MoveL     'RE71224'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
      C                   END

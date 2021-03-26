@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 05Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057748           Date 16Mar21               *
+      *  Prev Amend No. MD041126           Date 05Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1079155          Date 23Jan12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 259935C            Date 21May09               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD056616.                             *
       *  MD046248 - Finastra Rebranding                               *
@@ -65,7 +67,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -84,19 +86,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--- MQSeries includes ----------------+
       ** ¦                                      ¦
       ** ¦ The following set of includes is     ¦
@@ -106,67 +108,71 @@
       ** ¦ values.                              ¦
       ** ¦                                      ¦
       ** +--------------------------------------+
- 
+
       ** MQI named constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
-     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
- 
+     D***/COPY QMQM/QRPGLESRC,CMQG                                                 MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQR                                                             MD057748
+
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQODG                                               MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQODR                                                           MD057748
+
       ** Message Descriptor
      D MQMD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
-     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
- 
+     D***/COPY QMQM/QRPGLESRC,CMQMDG                                               MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQMDR                                                           MD057748
+
       ** Put message options
      D MQPMO           DS
      D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
- 
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOG                                              MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQPMOR                                                          MD057748
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D/COPY WNCPYSRC,ZAH00026
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** 4-alpha and 6-alpha fields for the MQ error code
      D RCode4A         S              4A
      D RCode6A         S              6A   INZ('RC    ')
- 
+
       * Constant to hold input parameter for AOSVALR0.                                       248095A
      D MQManager       C                   Const('MQQueueManagerAPI')                        248095A
                                                                                              248095A
       ** The name of the queue to use
      D*Queue***********S             20A                                        CAP006
      D Queue           S             48A                                        CAP006
- 
+
       ** The name of the last queue used                                        CAP004
      D*LastQueue*******S             20A                                        CAP006
      D LastQueue       S             48A                                        CAP006
@@ -175,13 +181,13 @@
      D/COPY WNCPYSRC,ZAH00054
      D MQString        S           1102A
      D/COPY WNCPYSRC,ZAH00055
- 
+
       ** The length of the MQString field
      D/COPY WNCPYSRC,ZAH00056
      D*MQStrLen*       S              5P 0 INZ(1102)                                       AR1079155
      D/COPY WNCPYSRC,ZAH00057
      D MQStrLen        S              9P 0 INZ(1102)                                       AR1079155
- 
+
       ** The position of the first blank position in the string after the
       ** bosy of the text.
      D FirstBlnkP      S              5P 0
@@ -206,16 +212,16 @@
      D PCurSet09       S            200A                                                     248095A
      D PSysVal10       S             20A                                                     248095A
      D PCurSet10       S            200A                                                     248095A
- 
-      ** MQ Parameters                                                                      MD041126
-     D HCONN           S             10I 0                                                  MD041126
-     D HOBJ            S             10I 0                                                  MD041126
-     D BUFLEN          S             10I 0                                                  MD041126
-     D CCODE           S             10I 0                                                  MD041126
-     D REASON          S             10I 0                                                  MD041126
-     D HANDLE          S             10I 0                                                  MD041126
-     D OCODE           S             10I 0                                                  MD041126
-     D OPTS            S             10I 0                                                  MD041126
+
+      ***MQ*Parameters*************************************************            MD041126 MD057748
+     D*HCONN****       S             10I 0                                         MD041126 MD057748
+     D*HOBJ*****       S             10I 0                                         MD041126 MD057748
+     D*BUFLEN***       S             10I 0                                         MD041126 MD057748
+     D*CCODE****       S             10I 0                                         MD041126 MD057748
+     D*REASON***       S             10I 0                                         MD041126 MD057748
+     D*HANDLE***       S             10I 0                                         MD041126 MD057748
+     D*OCODE****       S             10I 0                                         MD041126 MD057748
+     D*OPTS*****       S             10I 0                                         MD041126 MD057748
                                                                                             MD041126
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -224,7 +230,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -232,7 +238,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      ****+---*Open*MQSeries*queue*--------------+*******************************CAP004
      ****¦**************************************¦*******************************CAP004
      ****¦*For*each*message,*the*queue*has*to***¦*******************************CAP004
@@ -337,8 +343,8 @@
       *                                                                                       256332
      C                   EXSR      OpenQueue
      C                   ENDIF                                                  CAP004
- 
- 
+
+
       ** +--- Set the length of the message ----+
       ** ¦                                      ¦
       ** ¦ The length of the message is         ¦
@@ -365,7 +371,7 @@
      C                   PARM                    FirstBlnkP
      C                   PARM                    MQString
      C                   PARM                    MQStrLen
- 
+
       ** FirstBlnkP contains the position of the first blank aftter all the
       ** meaningful text.  The actual string length is one less than this.
      C                   EVAL      BUFLEN = FirstBlnkP - 1
@@ -375,7 +381,7 @@
                                                                                 CAP006
      C                   RESET                   MDPRI                          CAP006
      C                   Z-ADD     5             MDPRI                          CAP006
- 
+
       ** +--- Send the message -----------------+
       ** ¦                                      ¦
       ** ¦ Call the MQSeries program, using the ¦
@@ -389,8 +395,9 @@
       ** defined in CMQR; it contains 6.
      C                   EVAL      MDFMT = FMSTR
      C**********         EVAL      CID = MQPUT                                              MD041126
+     C                   EVAL      CID = MQPUT                                              MD057748
      C/COPY WNCPYSRC,ZAH00027
- 
+
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126
      C**********         PARM                    HCONN             9 0                      MD041126
@@ -402,16 +409,26 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C                   CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :                     MD041126
-     C                                    BUFLEN : %ADDR(MQString) :                        MD041126
-     C                                    CCODE :  REASON )                                 MD041126
- 
+     C**********         CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :            MD041126 MD057748
+     C**********                          BUFLEN : %ADDR(MQString) :               MD041126 MD057748
+     C**********                          CCODE :  REASON )                        MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    CID               9 0                      MD057748
+     C                   PARM                    HCONN             9 0                      MD057748
+     C                   PARM                    HOBJ              9 0                      MD057748
+     C                   PARM                    MQMD                                       MD057748
+     C                   PARM                    MQPMO                                      MD057748
+     C                   PARM                    BUFLEN            9 0                      MD057748
+     C                   PARM                    MQString                                   MD057748
+     C                   PARM                    CCODE             9 0                      MD057748
+     C                   PARM                    REASON            9 0                      MD057748
+
       ** If an error occured, put the MQSeries return code into this
       ** module's return code.
      C                   IF        REASON <> RCNONE
      C                   EXSR      SetRetCode
      C                   ENDIF
- 
+
      ****+---*Close*MQSeries*queue*-------------+*******************************CAP004
      ****¦**************************************¦*******************************CAP004
      ****¦*For*each*message,*the*queue**********¦*******************************CAP004
@@ -425,9 +442,9 @@
      C*****QMGR*         IFNE      *BLANKS                                            248095A 256332
      C**********         EXSR      MQDISCONNECT                                       248095A 256332
      C**********         ENDIF                                                        248095A 256332
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT                                                                                 248095A
       ****************************************************************                       248095A
@@ -446,11 +463,17 @@
      C**********         PARM      *ZERO         OCODE             9 0              248095A MD041126
      C**********         PARM      *ZERO         REASON            9 0              248095A MD041126
                                                                                             MD041126
-     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
-     C                   Z-ADD     *ZERO         OCODE                                      MD041126
-     C                   Z-ADD     *ZERO         REASON                                     MD041126
-     C                   CALLP     MQCONN( QMGR  : HANDLE :                                 MD041126
-     C                                     OCODE : REASON )                                 MD041126
+     C**********         Z-ADD     *ZERO         HANDLE                            MD041126 MD057748
+     C**********         Z-ADD     *ZERO         OCODE                             MD041126 MD057748
+     C**********         Z-ADD     *ZERO         REASON                            MD041126 MD057748
+     C**********         CALLP     MQCONN( QMGR  : HANDLE :                        MD041126 MD057748
+     C**********                           OCODE : REASON )                        MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM      MQCONN        CID               9 0                      MD057748
+     C                   PARM                    QMGR                                       MD057748
+     C                   PARM      *ZERO         HANDLE            9 0                      MD057748
+     C                   PARM      *ZERO         OCODE             9 0                      MD057748
+     C                   PARM      *ZERO         REASON            9 0                      MD057748
                                                                                              248095A
       ** Error processing                                                                    248095A
      C     REASON        IFNE      RCNONE                                                    248095A
@@ -480,9 +503,14 @@
      C**********         PARM      *ZERO         OCODE                              248095A MD041126
      C**********         PARM      *ZERO         REASON                             248095A MD041126
                                                                                             MD041126
-     C                   Z-ADD     *ZERO         OCODE                                      MD041126
-     C                   Z-ADD     *ZERO         REASON                                     MD041126
-     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
+     C**********         Z-ADD     *ZERO         OCODE                             MD041126 MD057748
+     C**********         Z-ADD     *ZERO         REASON                            MD041126 MD057748
+     C**********         CALLP     MQDISC( HCONN : OCODE : REASO                   MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM      MQDISC        CID               9 0                      MD057748
+     C                   PARM                    HCONN                                      MD057748
+     C                   PARM      *ZERO         OCODE                                      MD057748
+     C                   PARM      *ZERO         REASON                                     MD057748
                                                                                              248095A
       ** Error processing                                                                    248095A
      C     REASON        IFNE      RCNONE                                                    248095A
@@ -505,15 +533,15 @@
       * Calls: PGM/QMQM                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     OpenQueue     BEGSR
- 
+
       ** Set up MQSeries data necessary to open a queue
- 
+
       **  Open the target message queue for output (and fail if
       **  MQM is quiescing)
       **  Resulting queue handle is HOBJ
- 
+
       ** Options are Output and Fail-if-quiescing
       ** OOOUT and OOFIQ are MQ named constants, declared in the CMQR
       ** include member.  OPTS is a program-described field declared in the
@@ -522,12 +550,13 @@
       ** kind of call is being made.
      C                   EVAL      OPTS = OOOUT + OOFIQ
      C**********         EVAL      CID = MQOPEN                                             MD041126
- 
+     C                   EVAL      CID = MQOPEN                                             MD057748
+
       ** ODON is a subfield of the MQOD data structure, which holds the
       ** name of the queue to be opened.  It is declared in the CMQODR
       ** include member.
      C                   EVAL      ODON = Queue
- 
+
       ** The call returns the parameter HOBJ, an object handle, which
       ** uniquely identifies the queue.  It is used later by the "Put" call.
       ** It also returns OCODE, a completion code, which tells us whether
@@ -542,16 +571,24 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
-     C                                     HOBJ : OCODE : REASON )                          MD041126
- 
+     C**********         CALLP     MQOPEN( HCONN : MQOD : OPTS :                   MD041126 MD057748
+     C**********                           HOBJ : OCODE : REASON )                 MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    CID               9 0                      MD057748
+     C                   PARM                    HCONN             9 0                      MD057748
+     C                   PARM                    MQOD                                       MD057748
+     C                   PARM                    OPTS              9 0                      MD057748
+     C                   PARM                    HOBJ              9 0                      MD057748
+     C                   PARM                    OCODE             9 0                      MD057748
+     C                   PARM                    REASON            9 0                      MD057748
+
       ** Report reason, if any; stop if failed
       ** RCNONE is a named constant indicating no failure (it is zero).
      C                   IF        REASON <> RCNONE
      C                   EXSR      SetRetCode
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** CCFAIL is a named constant containing the value for OCODE
       ** indicating a failure to open the queue.
      C                   IF         OCODE = CCFAIL
@@ -562,9 +599,9 @@
       ** If all was successful, save the name of the queue for checking         CAP004
       ** on subsequent calls.                                                   CAP004
      C                   EVAL      LastQueue = Queue                            CAP004
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -576,17 +613,18 @@
       * Calls: PGM/QMQM                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     CloseQueue    BEGSR
- 
+
       ** Set up MQSeries data necessary to close a queue
- 
+
       ** CONONE is a named constant (equal to zero) indicating that no
       ** options are to be used.  MQCLOS is a named constant indicating
       ** that the queue is to be closed.  Both are defined in CMQR.
      C                   EVAL      OPTS = CONONE
      C**********         EVAL      CID = MQCLOS                                             MD041126
- 
+     C                   EVAL      CID = MQCLOS                                             MD057748
+
       ** The call returns CCODE, a completion code, which tells us whether
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
@@ -598,18 +636,25 @@
      C**********         PARM                    CCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
                                                                                             MD041126
-     C                   CALLP     MQCLOSE( HCONN : HOBJ : OPTS :                           MD041126
-     C                                      CCODE : REASON )                                MD041126
- 
+     C**********         CALLP     MQCLOSE( HCONN : HOBJ : OPTS :                  MD041126 MD057748
+     C**********                            CCODE : REASON )                       MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    CID               9 0                      MD057748
+     C                   PARM                    HCONN             9 0                      MD057748
+     C                   PARM                    HOBJ              9 0                      MD057748
+     C                   PARM                    OPTS              9 0                      MD057748
+     C                   PARM                    CCODE             9 0                      MD057748
+     C                   PARM                    REASON            9 0                      MD057748
+
       ** Report reason, if any; stop if failed
       ** RCNONE is a named constant indicating no failure (it is zero).
      C                   IF        REASON <> RCNONE
      C                   EXSR      SetRetCode
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -621,9 +666,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SetRetCode    BEGSR
- 
+
       ** First move the (numeric) reason code into a 4-alpha field; then
       ** put it into the rightmost four bytes of a 6-alpha field which
       ** begins with 'RC'; lastly concatenate it with 'Err' for the return
@@ -631,9 +676,9 @@
      C                   MOVE      REASON        RCode4A
      C                   MOVE      RCode4A       RCode6A
      C                   EVAL      RetCodeIn = 'Err' + RCode6A
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -645,9 +690,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C******entry********PLIST                                                  CAP006
       ***Return*code*(10A, returned from this module to caller)                 CAP006
      C*******************PARM                    RetCodeIn                      CAP006
@@ -663,15 +708,15 @@
      C/COPY WNCPYSRC,ZAH00060
       ** String containing message to send (1102A, received from caller)        CAP006
      C                   PARM                    MQString                       CAP006
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
- 
+
+
       ** Set the buffer length of the MQSeries to the length of the message
       ** field.
       ** (We can't use the %LEN function at present because it's not
@@ -680,10 +725,10 @@
      C***                EVAL      BUFLEN = %LEN(MQString)
      C/COPY WNCPYSRC,ZAH00061
      C                   EVAL      BUFLEN = 1102
- 
+
      C/COPY WNCPYSRC,ZAH00028
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

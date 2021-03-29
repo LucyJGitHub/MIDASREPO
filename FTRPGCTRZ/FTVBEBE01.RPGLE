@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034749           Date 19Jun15               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034749           Date 19Jun15               *
       *                 MD034728           Date 18Jun15               *
       *                 229251             Date 18Jun15               *
       *                 CSW215             Date 06Apr15               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034749 - Entry of number code '1/' should not be allowed   *
       *             in Beneficiary Line 1                             *
@@ -656,14 +659,14 @@
       *                                                                                       221776
       ** Inactive                                                                             221776
       *                                                                                       221776
-     C                   TESTB     '4'           WRETB                    48                  221776
-     C                   If        *IN48 = '1'                                                221776
-     C                   Eval      WIx              =   WIx + 1                               221776
-     C                   Eval      RetCodeIn        =   'Error'                               221776
-     C                   Eval      WMsgIdXAr(WIx)   =   'FTM0017'                             221776
-     C                   Eval      WFldNmXAr(WIx)   =   DDSName                               221776
-     C                   Eval      OKBA35 = 'W'                                               221776
-     C                   Endif                                                                221776
+     C**********         TESTB     '4'           WRETB                    48           221776 259576
+     C**********         If        *IN48 = '1'                                         221776 259576
+     C**********         Eval      WIx              =   WIx + 1                        221776 259576
+     C**********         Eval      RetCodeIn        =   'Error'                        221776 259576
+     C**********         Eval      WMsgIdXAr(WIx)   =   'FTM0017'                      221776 259576
+     C**********         Eval      WFldNmXAr(WIx)   =   DDSName                        221776 259576
+     C**********         Eval      OKBA35 = 'W'                                        221776 259576
+     C**********         Endif                                                         221776 259576
       *                                                                                       221776
       ** Referred Credit                                                                      221776
       *                                                                                       221776

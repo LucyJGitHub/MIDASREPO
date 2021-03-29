@@ -1,7 +1,9 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*S*D ***RPGBASEBND****************************************************                     MD041126
+/*S*D ***RPGBASEMOD****************************************************            MD041126 MD057748
+/*STD *  RPGBASEBND                                                   *                     MD057748
 /*EXI *  TEXT('Midas GP MQ Series Input/Output')                      *
       *****************************************************************
       *                                                               *
@@ -14,13 +16,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1020531          Date 09Jan13               *
+      *  Last Amend No. MD057748           Date 16Mar21               *
+      *  Prev Amend No. MD041126           Date 05Oct20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1020531          Date 09Jan13               *
       *                 BUG27831B          Date 09Aug10               *
       *                 BUG27831A *CREATE  Date 03Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057748 - Reversal of CBS-3703 / MD-56616 fix               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD056616.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1020531 - Component GLC004604 is failed during COB due to  *
       *              ADDLIBLE QMQM command. Did not follow original   *
@@ -80,27 +87,37 @@
       ** Declare MQI structures needed
       ** MQI Constants
  
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQG                                                 MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQR                                                             MD057748
  
       ** Object Descriptor
  
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQODG                                               MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQODR                                                           MD057748
  
       ** Message Descriptor
  
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQMDG                                               MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQMDR                                                           MD057748
  
       ** Get message options
  
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOG                                              MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQGMOR                                                          MD057748
  
       ** Put message options
  
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOG                                              MD041126 MD057748
+     D/COPY QMQM/QRPGLESRC,CMQPMOR                                                          MD057748
  
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
@@ -114,14 +131,29 @@
      D P@MSGBUF        S          32000A
      D P@KEY           S              4A
      D P@MQMgr         S             48A                                                   BUG27831B
-     D P@CID           S              9P 0
-     D P@CONN          S              9P 0
-     D P@IN            S              9P 0
-     D P@OPTS          S              9P 0
-     D P@CODE          S              9P 0
-     D P@RESN          S              9P 0
-     D P@MSGLEN        S              9P 0
-     D P@SLEN          S              9P 0
+     D***P@CID**         S              9P 0                                                MD041126
+     D***P@CONN*         S              9P 0                                                MD041126
+     D***P@IN***         S              9P 0                                                MD041126
+     D***P@OPTS*         S              9P 0                                                MD041126
+     D***P@CODE*         S              9P 0                                                MD041126
+     D***P@RESN*         S              9P 0                                                MD041126
+     D***P@MSGLEN        S              9P 0                                                MD041126
+     D***P@SLEN*         S              9P 0                                                MD041126
+     D*P@CONN***       S             10I 0                                         MD041126 MD057748
+     D*P@IN*****       S             10I 0                                         MD041126 MD057748
+     D*P@OPTS***       S             10I 0                                         MD041126 MD057748
+     D*P@CODE***       S             10I 0                                         MD041126 MD057748
+     D*P@RESN***       S             10I 0                                         MD041126 MD057748
+     D*P@MSGLEN*       S             10I 0                                         MD041126 MD057748
+     D*P@SLEN***       S             10I 0                                         MD041126 MD057748
+     D P@CID           S              9P 0                                                  MD057748
+     D P@CONN          S              9P 0                                                  MD057748
+     D P@IN            S              9P 0                                                  MD057748
+     D P@OPTS          S              9P 0                                                  MD057748
+     D P@CODE          S              9P 0                                                  MD057748
+     D P@RESN          S              9P 0                                                  MD057748
+     D P@MSGLEN        S              9P 0                                                  MD057748
+     D P@SLEN          S              9P 0                                                  MD057748
  
       ** Parameters for QCMDEXEC
  
@@ -187,19 +219,35 @@
  
       ** Send message
  
-     C                   EVAL      P@CID = MQPUT
+     C**********         EVAL      P@CID = MQPUT                                            MD041126
+     C                   EVAL      P@CID = MQPUT                                            MD057748
      C                   EVAL      PMOPT = PMNMID
  
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@CONN
-     C                   PARM                    P@IN
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    P@MSGLEN
-     C                   PARM                    P@MSGBUF
-     C                   PARM                    P@CODE
-     C                   PARM                    P@RESN
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@CONN                                     MD041126
+     C**********         PARM                    P@IN                                       MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQPMO                                      MD041126
+     C**********         PARM                    P@MSGLEN                                   MD041126
+     C**********         PARM                    P@MSGBUF                                   MD041126
+     C**********         PARM                    P@CODE                                     MD041126
+     C**********         PARM                    P@RESN                                     MD041126
+                                                                                            MD041126
+     C**********         CALLP     MQPUT( P@CONN : P@IN : MQMD :                   MD041126 MD057748
+     C**********                          MQPMO : P@MSGLEN :                       MD041126 MD057748
+     C**********                          %ADDR(P@MSGBUF) : P@CODE :               MD041126 MD057748
+     C**********                          P@RESN )                                 MD041126 MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    P@CID                                      MD057748
+     C                   PARM                    P@CONN                                     MD057748
+     C                   PARM                    P@IN                                       MD057748
+     C                   PARM                    MQMD                                       MD057748
+     C                   PARM                    MQPMO                                      MD057748
+     C                   PARM                    P@MSGLEN                                   MD057748
+     C                   PARM                    P@MSGBUF                                   MD057748
+     C                   PARM                    P@CODE                                     MD057748
+     C                   PARM                    P@RESN                                     MD057748
  
       ** If send message failed, indicate abnormal end
  
@@ -253,19 +301,38 @@
  
       ** Get message
  
-     C                   EVAL      P@CID = MQGET
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@CONN
-     C                   PARM                    P@IN
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C                   PARM      32000         P@MSGLEN
-     C                   PARM                    P@MSGBUF
-     C                   PARM                    P@SLEN
-     C                   PARM                    P@CODE
-     C                   PARM                    P@RESN
+     C**********         EVAL      P@CID = MQGET                                            MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@CONN                                     MD041126
+     C**********         PARM                    P@IN                                       MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM      32000         P@MSGLEN                                   MD041126
+     C**********         PARM                    P@MSGBUF                                   MD041126
+     C**********         PARM                    P@SLEN                                     MD041126
+     C**********         PARM                    P@CODE                                     MD041126
+     C**********         PARM                    P@RESN                                     MD041126
+                                                                                            MD041126
+     C**********         Z-ADD     32000         P@MSGLEN                          MD041126 MD057748
+     C**********         CALLP     MQGET( P@CONN : P@IN :                          MD041126 MD057748
+     C**********                          MQMD : MQGMO : P@MSGLEN :                MD041126 MD057748
+     C**********                          %ADDR(P@MSGBUF) : P@SLEN :               MD041126 MD057748
+     C**********                          P@CODE : P@RESN )                        MD041126 MD057748
+     C                   EVAL      P@CID = MQGET                                            MD057748
+                                                                                            MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    P@CID                                      MD057748
+     C                   PARM                    P@CONN                                     MD057748
+     C                   PARM                    P@IN                                       MD057748
+     C                   PARM                    MQMD                                       MD057748
+     C                   PARM                    MQGMO                                      MD057748
+     C                   PARM      32000         P@MSGLEN                                   MD057748
+     C                   PARM                    P@MSGBUF                                   MD057748
+     C                   PARM                    P@SLEN                                     MD057748
+     C                   PARM                    P@CODE                                     MD057748
+     C                   PARM                    P@RESN                                     MD057748
  
       ** If receive message failed, indicate abnormal end
  
@@ -295,13 +362,23 @@
                                                                                            BUG27831B
      C                   IF        P@MQMgr <> *BLANKS                                      BUG27831B
      C                   EVAL      ODMN = P@MQMgr                                          BUG27831B
-     C                   EVAL      P@CID = MQCONN                                          BUG27831B
-     C                   CALL      'QMQM'                                                  BUG27831B
-     C                   PARM                    P@CID                                     BUG27831B
-     C                   PARM                    P@MQMgr                                   BUG27831B
-     C                   PARM                    P@CONN                                    BUG27831B
-     C                   PARM                    P@CODE                                    BUG27831B
-     C                   PARM                    P@RESN                                    BUG27831B
+     C**********         EVAL      P@CID = MQCONN                                 BUG27831B MD041126
+     C**********         CALL      'QMQM'                                         BUG27831B MD041126
+     C**********         PARM                    P@CID                            BUG27831B MD041126
+     C**********         PARM                    P@MQMgr                          BUG27831B MD041126
+     C**********         PARM                    P@CONN                           BUG27831B MD041126
+     C**********         PARM                    P@CODE                           BUG27831B MD041126
+     C**********         PARM                    P@RESN                           BUG27831B MD041126
+                                                                                            MD041126
+     C**********         CALLP     MQCONN( P@MQMgr : P@CONN :                      MD041126 MD057748
+     C**********                           P@CODE  : P@RESN )                      MD041126 MD057748
+     C                   EVAL      P@CID = MQCONN                                           MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    P@CID                                      MD057748
+     C                   PARM                    P@MQMgr                                    MD057748
+     C                   PARM                    P@CONN                                     MD057748
+     C                   PARM                    P@CODE                                     MD057748
+     C                   PARM                    P@RESN                                     MD057748
      C                                                                                     BUG27831B
      C                   IF        P@CODE =  CCFAIL                                        BUG27831B
      C                   EVAL      I#ERMS = 'Unable to connect to MQM '                    BUG27831B
@@ -335,16 +412,30 @@
  
       ** Open queue
  
-     C                   EVAL      P@CID = MQOPEN
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@CONN
-     C                   PARM                    MQOD
-     C                   PARM                    P@OPTS
-     C                   PARM                    P@IN
-     C                   PARM                    P@CODE
-     C                   PARM                    P@RESN
+     C**********         EVAL      P@CID = MQOPEN                                           MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@CONN                                     MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    P@OPTS                                     MD041126
+     C**********         PARM                    P@IN                                       MD041126
+     C**********         PARM                    P@CODE                                     MD041126
+     C**********         PARM                    P@RESN                                     MD041126
+                                                                                            MD041126
+     C**********         CALLP     MQOPEN( P@CONN : MQOD :                         MD041126 MD057748
+     C**********                           P@OPTS : P@IN :                         MD041126 MD057748
+     C**********                           P@CODE : P@RESN )                       MD041126 MD057748
+     C                   EVAL      P@CID = MQOPEN                                           MD057748
+                                                                                            MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    P@CID                                      MD057748
+     C                   PARM                    P@CONN                                     MD057748
+     C                   PARM                    MQOD                                       MD057748
+     C                   PARM                    P@OPTS                                     MD057748
+     C                   PARM                    P@IN                                       MD057748
+     C                   PARM                    P@CODE                                     MD057748
+     C                   PARM                    P@RESN                                     MD057748
  
       ** If open queue failed, indicate abnormal end
  
@@ -371,15 +462,27 @@
  
       ** Close queue
  
-     C                   EVAL      P@CID = MQCLOS
- 
-     C                   CALL      'QMQM'
-     C                   PARM                    P@CID
-     C                   PARM                    P@CONN
-     C                   PARM                    P@IN
-     C                   PARM                    P@OPTS
-     C                   PARM                    P@CODE
-     C                   PARM                    P@RESN
+     C**********         EVAL      P@CID = MQCLOS                                           MD041126
+      **********                                                                            MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    P@CID                                      MD041126
+     C**********         PARM                    P@CONN                                     MD041126
+     C**********         PARM                    P@IN                                       MD041126
+     C**********         PARM                    P@OPTS                                     MD041126
+     C**********         PARM                    P@CODE                                     MD041126
+     C**********         PARM                    P@RESN                                     MD041126
+                                                                                            MD041126
+     C**********         CALLP     MQCLOSE( P@CONN : P@IN :                        MD041126 MD057748
+     C**********                            P@OPTS : P@CODE : P@RESN )             MD041126 MD057748
+     C                   EVAL      P@CID = MQCLOS                                           MD057748
+                                                                                            MD057748
+     C                   CALL      'QMQM'                                                   MD057748
+     C                   PARM                    P@CID                                      MD057748
+     C                   PARM                    P@CONN                                     MD057748
+     C                   PARM                    P@IN                                       MD057748
+     C                   PARM                    P@OPTS                                     MD057748
+     C                   PARM                    P@CODE                                     MD057748
+     C                   PARM                    P@RESN                                     MD057748
  
       ** If close queue failed, indicate abnormal end
  

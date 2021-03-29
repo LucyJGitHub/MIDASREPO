@@ -10,9 +10,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057450           Date 11Feb21               *
-      *  Prev Amend No. MD051264           Date 27Jun18               *
-      *                 MD050842           Date 22May18               *
+      *  Last Amend No. MD051264           Date 27Jun18               *      
+      *  Prev Amend No. MD050842           Date 22May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034285           Date 14Feb17               *
@@ -109,10 +108,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD057450 - FX: Payment in MMM has not been deleted after     *
-      *             changing FX Netting Settlement details from 08/29 *
-      *             to 01/29.                                         *
-      *           - Create SRFXNT subr for PRSX2PH and PRESX3PH.      *
       *  MD051264 - Allow cancellation processing for FX netting      *
       *             deals. Fix patterned after BUG7538.               *
       *  MD050842 - Condition fields 33B and 36 by System Value.      
@@ -290,14 +285,6 @@
      FPRSX5   IF  E           K        DISK
      F            PREXHHF                           KIGNORE
      F            PREXZZF                           KIGNORE
-     FPRSX2   IF  E           K        DISK                                                 MD057450
-     F            PREXPHF                           KRENAMEPREX2HF                          MD057450
-     F            PREXHHF                           KIGNORE                                 MD057450
-     F            PREXZZF                           KIGNORE                                 MD057450
-     FPRSX3   IF  E           K        DISK                                                 MD057450
-     F            PREXPHF                           KRENAMEPREX3HF                          MD057450
-     F            PREXHHF                           KIGNORE                                 MD057450
-     F            PREXZZF                           KIGNORE                                 MD057450
      FDEALS   IF  E           K        DISK
      FDEAMS   IF  E           K        DISK
      FDLFEEDL1UF  E           K        DISK                                                   CAS009
@@ -368,22 +355,6 @@
      I              RCDT                            PRCDT
      I              DASN                            PDASN
      I              BRCA                            PBRCA
-     IPREX2HF                                                                               MD057450
-     I              RECI                            PRECI                                   MD057450
-     I              CCY                             PCCY                                    MD057450
-     I              VDAT                            PVDAT                                   MD057450
-     I              CNUM                            PCNUM                                   MD057450
-     I              RCDT                            PRCDT                                   MD057450
-     I              DASN                            PDASN                                   MD057450
-     I              BRCA                            PBRCA                                   MD057450
-     IPREX3HF                                                                               MD057450
-     I              RECI                            PRECI                                   MD057450
-     I              CCY                             PCCY                                    MD057450
-     I              VDAT                            PVDAT                                   MD057450
-     I              CNUM                            PCNUM                                   MD057450
-     I              RCDT                            PRCDT                                   MD057450
-     I              DASN                            PDASN                                   MD057450
-     I              BRCA                            PBRCA                                   MD057450
       **  Rename conflicting PRSX5 fields
       *
      IDEAMSDHF
@@ -895,10 +866,6 @@
      C                     END                                       E2
      C/COPY WNCPYSRC,DL6315C022
      C                     END                                       E1
-      ** READ FX Netting Change                                                             MD057450
-     C           CDL002    IFEQ 'Y'                                                         MD057450
-     C                     EXSR SRFXNT                                                      MD057450
-     C                     ENDIF                                                            MD057450
      C/COPY WNCPYSRC,DL6315C001
       *
       **  Terminate program
@@ -2760,58 +2727,6 @@
      C                     UPDATDLFEEDD0                                                      CAS009
       *                                                                                       CAS009
      C                     ENDSR                                                              CAS009
-     C/EJECT                                                                                MD057450
-      *****************************************************************                     MD057450
-      *                                                               *                     MD057450
-      *  SRFXNT  - FX NET CHANGE                                      *                     MD057450
-      *                                                               *                     MD057450
-      *****************************************************************                     MD057450
-     C           SRFXNT    BEGSR                                                            MD057450
-      *                                                                                     MD057450
-     C                     Z-ADD0         X1      20                                        MD057450
-      *                                                                                     MD057450
-     C           X1        DOWLE2                                                           MD057450
-     C                     ADD  1         X1                                                MD057450
-     C           X1        IFEQ 1                                                           MD057450
-     C                     READ PRSX2                    10                                 MD057450
-     C                     ENDIF                                                            MD057450
-     C           X1        IFEQ 2                                                           MD057450
-     C                     READ PRSX3                    10                                 MD057450
-     C                     ENDIF                                                            MD057450
-      *                                                                                     MD057450
-     C           *IN10     DOWEQ'0'                                                         MD057450
-      *                                                                                     MD057450
-     C           SETP      IFEQ 01                                                          MD057450
-     C                     Z-ADDPVDAT     MGAVDT                                            MD057450
-     C                     Z-ADD0         MGASEQ                                            MD057450
-      *                                                                                     MD057450
-      **  If net record with a net ref get details                                          MD057450
-      **  from net master file                                                              MD057450
-      *                                                                                     MD057450
-     C           PRCDT     IFEQ 'N'                                                         MD057450
-     C                     EXSR SRRNET                                                      MD057450
-     C                     ENDIF                                                            MD057450
-      *                                                                                     MD057450
-     C           CSW025    IFEQ 'Y'                                                         MD057450
-     C           CDL002    ANDEQ'Y'                                                         MD057450
-     C           PRCDT     ANDEQ'N'                                                         MD057450
-     C                     EXSR CANC                                                        MD057450
-     C                     ENDIF                                                            MD057450
-      *                                                                                     MD057450
-     C           X1        IFEQ 1                                                           MD057450
-     C                     READ PRSX2                    10                                 MD057450
-     C                     ENDIF                                                            MD057450
-     C           X1        IFEQ 2                                                           MD057450
-     C                     READ PRSX3                    10                                 MD057450
-     C                     ENDIF                                                            MD057450
-      *                                                                                     MD057450
-     C                     ENDIF                                                            MD057450
-      *                                                                                     MD057450
-     C                     ENDDO                                                            MD057450
-      *                                                                                     MD057450
-     C                     ENDDO                                                            MD057450
-      *                                                                                     MD057450
-     C                     ENDSR                                                            MD057450
       *****************************************************************
       *   *PSSR - error handling                                      *
       *****************************************************************

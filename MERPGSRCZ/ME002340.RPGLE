@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD050698           Date 17Jul18               *
+      *  Last Amend No. MD057679           Date 24Mar21               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD050698           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD040941           Date 05Sep16               *
       *                 BUG22523           Date 03Feb09               *
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057679 - Enhance fix MD-50698 such that error message is   *
+      *             returned if SWIFT ID to be used as Destination    *
+      *             is being used by more than one live customer AND  *
+      *             any of those customers is set to suppress MT940.  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050698 - Send an error message if the SWIFT ID to be used  *
       *             as Destination is being used by more than one     *
@@ -211,7 +216,11 @@
      D WBICB           S              4A                                                    MD050698   
      D WCtr            S              4S 0                                                  MD050698
      D WLen            S              2S 0                                                  MD050698
- 
+     D W940            S              4S 0                                                  MD057679
+     D WCtr2           S              4S 0                                                  MD057679
+     D BBNGEN          S              3A   DIM(15)                                          MD057679
+     D                                     BASED(Pointer1)                                  MD057679
+     D Pointer1        S               *   INZ(%Addr(ABBNG01))                              MD057679
       *                                                                                     BUG22523
       ** Constants                                                                          BUG22523
      D CDigits         C                   '0123456789'                                     BUG22523
@@ -397,6 +406,8 @@
      C                   EVAL      WLen = %LEN(%TRIM(F0DSTN))                               MD050698
      C                   IF        @ICUST = 'Y' AND WLen > 6                                MD050698
      C                   EVAL      WCtr = 0                                                 MD050698
+     C                   EVAL      WCtr2 = 0                                                MD057679
+     C                   EVAL      W940 = 0                                                 MD057679
      C                   EVAL      WCSID = @BICC                                            MD050698
      C                   EVAL      WBICB = @BICB                                            MD050698
      C                   MOVE      WBICB         WCSID                                      MD050698
@@ -404,9 +415,17 @@
                                                                                             MD050698
      C     KSDCUSTL7     SETLL     SDCUSTSW                                                 MD050698
      C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698 
-     C                   DOW       *IN90 = *OFF AND WCtr <= 1                               MD050698
+     C**********         DOW       *IN90 = *OFF AND WCtr <= 1                      MD050698 MD057679
+     C                   DOW       *IN90 = *OFF                                             MD057679
      C                   IF        ABBDTDL = 0                                              MD050698
      C                   EVAL      WCtr = WCtr + 1                                          MD050698
+      *                                                                                     MD057679
+      ** Check if at least one SWIFT BIC is set to suppress MT940                           MD057679
+      *                                                                                     MD057679
+     C                   EVAL      W940 = %LOOKUP('940':BBNGEN)                             MD057679
+     C                   IF        W940 > 0                                                 MD057679
+     C                   EVAL      WCtr2 = WCtr2 + 1                                        MD057679
+     C                   ENDIF                                                              MD057679
      C                   ENDIF                                                              MD050698
      C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698
      C                   ENDDO                                                              MD050698
@@ -416,16 +435,25 @@
      C                   MOVE      'XXX '        WCSID                                      MD050698
      C     KSDCUSTL7     SETLL     SDCUSTSW                                                 MD050698
      C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698 
-     C                   DOW       *IN90 = *OFF AND WCtr <= 1                               MD050698
+     C**********         DOW       *IN90 = *OFF AND WCtr <= 1                      MD050698 MD057679
+     C                   DOW       *IN90 = *OFF                                             MD057679
      C                   IF        ABBDTDL = 0                                              MD050698
      C                   EVAL      WCtr = WCtr + 1                                          MD050698
+      *                                                                                     MD057679
+      ** Check if at least one SWIFT BIC is set to suppress MT940                           MD057679
+      *                                                                                     MD057679
+     C                   EVAL      W940 = %LOOKUP('940':BBNGEN)                             MD057679
+     C                   IF        W940 > 0                                                 MD057679
+     C                   EVAL      WCtr2 = WCtr2 + 1                                        MD057679
+     C                   ENDIF                                                              MD057679
      C                   ENDIF                                                              MD050698
      C     KSDCUSTL7     READE     SDCUSTSW                               90                MD050698
      C                   ENDDO                                                              MD050698
      C                   ENDIF                                                              MD050698
      C                   ENDIF                                                              MD050698
                                                                                             MD050698
-     C                   IF        WCtr > 1                                                 MD050698
+     C**********         IF        WCtr > 1                                        MD050698 MD057679
+     C                   IF        WCtr > 1 AND WCtr2 >= 1                                  MD057679
      C                   EVAL      ZAMSID = 'MIN0614'                                       MD050698
      C                   EVAL      ZAMSDA = W2CSID                                          MD050698 
      C                   EVAL      *IN41 = *ON                                              MD050698

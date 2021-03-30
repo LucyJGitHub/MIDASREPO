@@ -44,7 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  247308 - Add Validation for Group Accounting                 *
+      *  247308 - Add Validation for Group Accounting.                *
       *  224603 - Allow alternate account input even if not within    *
       *           hierarchy.                                          *
       *  223051 - No need to verify presence of shadow account for    *

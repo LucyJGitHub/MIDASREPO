@@ -29,7 +29,7 @@
 /*********************************************************************/
 /*                                                                   */
 /*       AR853283 - Apply 235493.  Introduce new parameter on EU0100 */
-/*                  and EU0110.  (Child: AR860489)                   */
+/*                  and EU0110.  (Child: AR860489).                  */
 /*       262056 - Attempt to start commitment control as it may be   */
 /*                not started.                                       */
 /*              - Applied for AR1068690 (Child: AR1069087)           */

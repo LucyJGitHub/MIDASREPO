@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR868282           Date 25Nov11               *      
+      *  Last Amend No. AR868282           Date 25Nov11               *
       *  Prev Amend No. CFT162             Date 16Oct20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1084524          Date 13Feb13               *
@@ -57,7 +57,7 @@
       *                                                               *
       *  AR868282 - Dbase 08 Dbfile Accntab - Instructed Party is     *
       *             free format so do not validate against BFMidas.   *
-      *             (Child: AR868283)                                 *      
+      *             (Child: AR868283).                                *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *

@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR856864           Date 14Nov11               *      
+      *  Last Amend No. AR856864           Date 14Nov11               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,7 +28,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  AR856864 - Patterned after 261932 (ME1540).  Mismatch #1GNCR *
-      *             and SGncr.  (Child: AR856865)                     *      
+      *             and SGncr.  (Child: AR856865).                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT009 - FT Fees and Charges                                 *
       *                                                               *
@@ -69,13 +69,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FME1570DF  CF   E             WORKSTN
      FFTPCHGL0  IF   E           K DISK
      FFTXTRHL0  IF   E           K DISK
      FFTPDOCL0  IF   E           K DISK
      FMEGNCRL0  UF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -102,23 +102,23 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D Stars           C                   '*****'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D***SGncr**         DS           268                                                   AR856864
      D SGncr           DS           316                                                     AR856864
       *
@@ -151,9 +151,9 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
      D ActionCode      S              1
      D MsgType         S              3
      D MsgSet          S              3
@@ -191,7 +191,7 @@
       ** Entry parameter for FT000940, FT000950, FT000960
       *
       *****************************************************************
- 
+
       *****************************************************************
       *
       ** +--- Start of Main processing -----------------------------------+
@@ -200,25 +200,25 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       *
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
       *
      C                   Eval      SRUNA = AGMRDT
- 
+
       ** Retrieve details
- 
+
      C     KTypeSet      Chain     MEGNCRL0                           80
       *
      C                   If        *In80 = *On
- 
+
       ** If not found, database error in file MEGNCRL0
- 
+
      C     *LOCK         IN        LDA
      C                   Eval      *INU7 = *ON
      C                   Eval      *INU8 = *ON
@@ -232,53 +232,53 @@
      C                   Exsr      *PSSR
       *
      C                   Endif
- 
+
       ** Move file fields into screen fields
- 
+
      C                   Exsr      File2Screen
       *
      C                   Dow       Error = 'Y'
- 
+
       ** Write error messages
- 
+
      C                   Write     #MSGCTL
- 
+
       ** Show screen
- 
+
      C                   Exfmt     ME1570F1
- 
+
       ** Clear error messages
- 
+
      C                   Call      'ZA0250'
- 
+
       ** Reset error indicators
- 
+
      C                   MoveA     '000000000000'*In(31)
      C                   MoveA     '00000000'    *In(43)
       *
      C                   Select
- 
+
       ** F3 - Exit
- 
+
      C                   When      *In03 = *ON
      C                   Eval      KeyPress = 'F03'
      C                   Eval      Error = 'N'
- 
+
       ** F12 - Previous
- 
+
      C                   When      *In12 = *On
      C                   Eval      KeyPress = 'F12'
      C                   Eval      Error = 'N'
- 
+
       ** F5 - Refresh
- 
+
      C                   When      *In05 = *On
      C                   Exsr      File2Screen
       *
      C                   Other
- 
+
       ** Validate screen
- 
+
      C                   If        ActionCode <> 'E'
      C                   Exsr      Validate
      C                   Endif
@@ -288,23 +288,23 @@
      C                   Enddo
       *
      C                   If        *In03 = *Off and *In12 = *Off
- 
+
       ** Move screen fields into file fields
- 
+
      C                   Exsr      Screen2File
- 
+
       ** Update MEGNCRL0
- 
+
      C                   Update    @GNCRPD
       *
      C                   Endif
- 
+
       ** Update saved record image
- 
+
      C                   Eval      SGncr = FGncr
       *
      C                   Seton                                        LR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -315,32 +315,32 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Validate      Begsr
- 
+
       ** Initialise error indicators array and counters
- 
+
      C                   Reset                   IndArray
      C                   Eval      Idx = 1
      C                   Eval      Ind = 0
      C                   Eval      ErrorFld = 'N'
- 
+
       ** ? processing
- 
+
      C     '?'           Scan      SPDOCD                                 96
- 
+
      C                   If        *In96
- 
+
      C                   Call      'FT000960'
      C                   Parm      *Blanks       Code
- 
+
      C                   Eval      SPDOCD = Code
      C                   Eval      ErrorFld = 'Y'
- 
+
      C                   Else
- 
+
       ** Payment dates offset code table
- 
+
      C     SPDOCD        Setll     FTPDOCL0                               81
       *
      C                   If        *In81 = *Off AND SPDOCD <> Stars
@@ -355,22 +355,22 @@
      C                   Endif
       *
      C                   Add       1             Idx
- 
+
       ** ? processing
- 
+
      C     '?'           Scan      SFXSCD                                 96
      C                   If        *In96
- 
+
      C                   Call      'FT000950'
      C                   Parm      *Blanks       Code
- 
+
      C                   Eval      SFXSCD = Code
      C                   Eval      ErrorFld = 'Y'
- 
+
      C                   Else
- 
+
       ** Exchange rate spread parent
- 
+
      C     SFXSCD        Setll     FTXTRHL0                               82
       *
      C                   If        *In82 = *Off AND SFXSCD <> Stars
@@ -455,9 +455,9 @@
      C                   Eval      ChrgKey = SMI5CD
      C                   Exsr      ChkChgCde
      C                   Eval      SMI5CD = Chrgkey
- 
+
       ** Error indicators
- 
+
      C                   MoveA     IndArray      *In(33)
       *
      C                   If        ErrorFld = 'N'
@@ -475,27 +475,27 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkChgCde     Begsr
       *
      C                   Add       1             Idx
      C                   Add       1             Ind
- 
+
       ** ? processing
- 
+
      C     '?'           Scan      ChrgKey                                96
      C                   If        *In96
- 
+
      C                   Call      'FT000940'
      C                   Parm      *Blanks       Code
- 
+
      C                   Eval      ChrgKey = Code
      C                   Eval      ErrorFld = 'Y'
- 
+
      C                   Else
- 
+
       ** Payment Charge Definition
- 
+
      C     ChrgKey       Setll     FTPCHGL0                               83
       *
      C                   If        *In83 = *Off AND ChrgKey <> Stars
@@ -506,9 +506,9 @@
      C                   Eval      MsgId = 'MIN0417'
      C                   Exsr      SndMsg
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endsr
       **********************************************************************
       /EJECT
@@ -521,9 +521,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     File2Screen   Begsr
- 
+
      C                   Eval      SMTPY = MsgType
      C                   Eval      SMSET = MsgSet
      C                   Eval      SPDOCD = PDTOCD
@@ -546,9 +546,9 @@
      C                   Eval      SMI4CD = MICHG4
      C                   Eval      STCOCD = TFCOCH
      C                   Eval      SMI5CD = MICHG5
- 
+
      C                   Endsr
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -559,9 +559,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Screen2File   Begsr
- 
+
      C                   Eval      MsgType = SMTPY
      C                   Eval      MsgSet = SMSET
      C                   Eval      PDTOCD = SPDOCD
@@ -584,7 +584,7 @@
      C                   Eval      MICHG4 = SMI4CD
      C                   Eval      TFCOCH = STCOCD
      C                   Eval      MICHG5 = SMI5CD
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -597,9 +597,9 @@
       *                                                               *
       *****************************************************************
      C     SndMsg        Begsr
- 
+
       * Only write message if requested
- 
+
      C                   If        MsgId <> *Blanks
      C                   CallB     'AOCREPT'
      C                   Parm                    MsgId
@@ -611,11 +611,11 @@
      C                   Parm                    FtMsgq
      C                   Parm                    FtMsgt
      C                   Endif
- 
+
       * Reset message Id
- 
+
      C                   Reset                   MsgDs
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -627,44 +627,44 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        Plist
      C                   Parm                    ActionCode
      C                   Parm                    MsgType
      C                   Parm                    MsgSet
      C                   Parm                    KeyPress
      C                   Parm                    SGncr
- 
+
      ** Keylist for MEGNCRL0
- 
+
      C     KTypeSet      Klist
      C                   Kfld                    KMsgType
      C                   Kfld                    KMsgSet
- 
+
      C                   Eval      KMsgType = MsgType
      C                   Move      MsgSet        KMsgSet
- 
+
      C                   Eval      ##PGM = PsProcName
      C                   Eval      SUSER = PSUser
      C                   Eval      SWSID = PSJobName
- 
+
      ** If enquiry mode, protect screen fields
- 
+
      C                   If        ActionCode = 'E'
      C                   Eval      *IN30 = *On
      C                   Else
      C                   Eval      *IN30 = *Off
      C                   Endif
- 
+
       ** Reset error indicators
- 
+
      C                   MoveA     '000000000000'*In(31)
      C                   MoveA     '00000000'    *In(43)
- 
+
      C                   Eval      KeyPress = *Blanks
- 
+
      C                   Endsr
       *********************************************************************
       /EJECT
@@ -680,25 +680,25 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         Begsr
- 
+
      C                   Dump
- 
+
      C                   If        @RUN = *Blank
      C                   Eval      @RUN = 'Y'
- 
+
      C                   CallB     'DBERRCTL'
- 
+
      C                   Endif
- 
+
      C                   Eval      *InU7 = *On
      C                   Eval      *InU8 = *On
      C                   Eval      *InLR = *On
      C                   Return
- 
+
      C                   Endsr
- 
+
       ********************************************************************
 ** MsgArray
 Payment date offset code

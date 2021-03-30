@@ -90,7 +90,7 @@
       *  AR758977 - Postings still exists from dropped accounts.      *
       *             Check if account still has existing postings      *
       *             before dropping the account. Applied fix 261478.  *
-      *             (Child:AR758978)                                  *
+      *             (Child:AR758978).                                 *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD048980 - Dumps in GLC3320                                  *
       *  MD046248 - Finastra Rebranding                               *

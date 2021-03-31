@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055600           Date 11Apr20               *
-      *  Prev Amend No. MD051884           Date 05Sep19               *
+      *  Last Amend No. MD057589           Date 17Feb21               *
+      *  Prev Amend No. MD055600           Date 11Apr20               *
+      *                 MD051884           Date 05Sep19               *
       *                 260931             Date 25Nov15               *
       *                 MD055995           Date 13Jul20               *
       *                 MD050459           Date 12Mar20               *
@@ -151,6 +152,11 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD057589 - Formatting error in MT320s which causes them to   *
+      *             become stuck on MMM_SWIFTRep.                     *
+      *           - Move MFLD to WRK22B if MGMATU = 'C' (COB).        *
+      *           - Display :32H if WRK22B is not 'CONF'.             *
+      *           - Display :30X if MGMATU is 'C'                     *
       *  MD055600 - FM2.1 SP21 MT320 Field 32H not generated with     *
       *             CSW208 ON, CAS009 OFF and DLFSWIFTConf = Y        *
       *  MD051884 - SWIFT MT320 early maturity unexpected interest    *
@@ -4345,6 +4351,9 @@
      C                     ENDSL                                          CSW200
       *                                                                   CSW200
      C                     MOVEL':22B:'   MTAG                            CSW200
+     C           MGMATU    IFEQ 'C'                                                         MD057589
+     C                     MOVELMFLD      WRK22B                                            MD057589
+     C                     ENDIF                                                            MD057589
       *                                                                   CSW200
       **  FIELD 22C 'Common reference'                                    CSW200
       *                                                                   CSW200
@@ -4898,6 +4907,7 @@
      C********** MGEVTP    OREQ 'PI'                                               MD034675 MD055600
      C********** MGEVTP    OREQ 'PD'                                               MD034675 MD055600
      C**********           ELSE                                                    MD034675 MD055600
+     C           WRK22B    IFNE 'CONF'                                                      MD057589
       *                                                                   CSW200
      C                     ADD  1         X                               CSW200
      C           X         OCUR MULT                                      CSW200
@@ -4908,6 +4918,7 @@
      C           ZAMNT     ANDNE*ZERO                                     CSW200
      C           'N'       CAT  MFLD      MFLD                            CSW200
      C                     ENDIF                                          CSW200
+     C                     ENDIF                                                            MD057589
       *                                                                   CSW200
      C**********           ENDIF                                                   MD034675 MD055600
      C                     END                                            CSW200
@@ -5145,8 +5156,9 @@
       *                                                                   CSW200
       **  Format Next Interest date                                       CSW200
       *                                                                   CSW200
-     C           MGMATU    IFNE 'C'                                       CSW200
-     C           MGMATU    ANDNE'I'                                       CSW200
+     C********** MGMATU    IFNE 'C'                                                  CSW200 MD057589
+     C********** MGMATU    ANDNE'I'                                                  CSW200 MD057589
+     C           MGMATU    IFNE 'I'                                                         MD057589
      C           WRK22B    OREQ 'CONF'                                                      AR908919
      C           MGEVTP    ANDEQ'EM'                                                        AR908919
      C                     CALL 'ZM0065'               15                 CSW200

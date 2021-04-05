@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048586           Date 11Jan21               *
-      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *      
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 AR1088819          Date 03Jun20               *
       *                 MD020135           Date 03Jun20               *
       *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *      
       *  MD048586 - Remove conditions for executing SRCLR             *
       *           - Applied for MD-57430.                             *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *

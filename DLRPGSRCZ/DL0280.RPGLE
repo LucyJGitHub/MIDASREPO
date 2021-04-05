@@ -3895,7 +3895,7 @@
       ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
       ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
       ** December will be one day shorter, and the period in January will be                MD051554
-      ** one day longer for calculation basis 6                                             MD051554
+      ** one day longer for calculation basis 6.                                            MD051554
       *                                                                                     MD051554
      C                   IF        DTYP = 'FR' or                                           MD051554
      C                             DTYP = 'RS' or                                           MD051554

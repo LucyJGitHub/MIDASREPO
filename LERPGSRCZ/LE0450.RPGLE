@@ -12,9 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Prev Amend No. AR760843           Date 01Sep11               *
+      *  Last Amend No. AR760843           Date 01Sep11               *
       *  Prev Amend No. EML111             Date 13Jul20               *
-      *                 AR923246           Date 15Mar12               *      
+      *                 AR923246           Date 15Mar12               *
       *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
@@ -433,7 +433,7 @@
       *  AR760843 - Automatic Next interest payment date set in-      *
       *             correctly. Move value of W@STBL to ZLOC only if   *
       *             not blank. Use ZDYNBR instead of ZDAYNO for IBDT  *
-      *             and RBDT. (Child: AR760844)                       *      
+      *             and RBDT. (Child: AR760844)                       *
       *  EML111   -Holidays should be based on currency of transaction*
       *            and NEVER on local currency.                       *
       *            Apply fix 198974.                                  *
@@ -441,7 +441,7 @@
       *                /COPY EML111_004 EML111_005                    *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
-      *             when written. (Child: AR923248)                   *      
+      *             when written. (Child: AR923248)                   *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *           - Applied for MD054876                              *

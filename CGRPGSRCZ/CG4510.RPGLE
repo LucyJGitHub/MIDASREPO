@@ -103,9 +103,6 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  EML102A - Moved EML102 codes from CG4510C005 to EML102_030   *
-      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
-      *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
-      *             to readable unicode equivalent.                   *
       *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
       *           UNL007 - Extended Narratives                        *
       *           Used CG4510C002, CG4510C004, CG4510C005, CG4510C006,*

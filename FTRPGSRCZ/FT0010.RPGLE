@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053553           Date 21Jan20               *
-      *  Prev Amend No. MD050134           Date 21Mar18               *
+      *  Last Amend No. MD057650           Date 31Mar21               *
+      *  Prev Amend No. MD053553           Date 21Jan20               *
+      *                 MD050134           Date 21Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057650 - A serious midas error encountered when settlement *
+      *             and pay amounts are both blank                    *
       *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
       *  MD050134 - A serious midas error encountered when exchange   *
       *             rate exceeds tolerance level                      *
@@ -623,7 +626,7 @@
      C                   MOVE      *ON           *IN02
      C                   MOVE      *ON           *IN03
      C                   MOVEL     'FTM2572'     FTMSID
-     C                   SETON                                        55                    MD050134
+     C**********         SETON                                        55           MD050134 MD057650
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
      C                   SETOFF                                       55                    MD050134

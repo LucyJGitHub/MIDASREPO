@@ -71,6 +71,63 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
+     C/EXEC SQL
+     C+ update HISTSHM
+     C+ set BLRT = 'N'
+     C+ where BLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 2
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C/EXEC SQL
+     C+ update HISTSHN
+     C+ set BLRT = 'N'
+     C+ where BLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 3
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C/EXEC SQL
+     C+ update HISTSHQ
+     C+ set BLRT = 'N'
+     C+ where BLRT <> 'Y'
+     C+ with nc
+     C/END-EXEC
+
+      ** Handle SQL Error
+
+     C                   IF        SQLCOD < 0
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBASE = 4
+     C                   EVAL      DBFILE = 'SQL STM'
+     C                   EVAL      DBKEY = 'SQLSTT : ' + SQLSTT
+     C                                   + ';  SQLCOD : ' + %char(SQLCOD)
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
 

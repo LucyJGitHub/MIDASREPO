@@ -5,7 +5,7 @@
 /*EXI *  TEXT('Midas SD Housekeeping of ARR Daily Rates file')        *
       *****************************************************************
       *                                                               *
-      *  Midas - Implementation Module                                *
+      *  Midas - Standing Data ILE Module        *
       *                                                               *
       *  SD001015 - Housekeeping of ARR Daily Rates file.             *
       *             Transactions in historical file must be housekept *
@@ -16,7 +16,7 @@
       *            Daily Rates file if the main transaction is deleted*
       *            in main transaction file.                          *
       *                                                               *
-      *  (c)Finastra International Limited 2020                       *
+      *  (c) Finastra International Limited 2020                      *
       *                                                               *
       *  Last Amend No. CSD103    *CREATE  Date 10Aug20               *
       *                                                               *
@@ -25,91 +25,37 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
-     FSDHSDRTL1 IF   E           K DISK    INFSR(*PSSR)
-     FCLOAN     IF   E           K DISK    INFSR(*PSSR)
-     F                                     IGNORE(CLOANCKF)
-     F                                     IGNORE(CLOANZ1F)
-     FDEALS     IF   E           K DISK    INFSR(*PSSR)
-     F                                     IGNORE(DEALSDAF)
-     F                                     IGNORE(DEALSDBF)
-     F                                     IGNORE(DEALSDDF)
-     F                                     IGNORE(DEALSDEF)
-     F                                     IGNORE(DEALSDFF)
-      *
-      **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
       *
+     D LDA           E DS           256    EXTNAME(LDA)
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
-     D CTRNIDX         S              6A
      D thisSQL         S            500
      D thisSQL1        S            500
-      ** Indicator Array
-     D Indicators      DS                  BASED(IndicatorP)
-     D  ErrorOnFl             35     35
-     D  EndOfFile             45     45
-      ** Pointer for the indicator Array
-     D IndicatorP      S               *   INZ(%Addr(*IN))
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
-     C     *LOVAL        SETLL     SDHSDRTL1
-     C                   READ      SDHSDRT0                             3545
       *
-      ** Database error
+      **Main Processing
       *
-     C                   IF        ErrorOnFl = True
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBKey = '*FIRST'
-     C                   EVAL      DBFile = 'SDHSDRT0'
-     C                   EVAL      DBase = 1
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-      *
-      ** Start loop
-      *
-     C                   DOW       EndOfFile = False
-      *
-     C                   MOVEL     CTRNID        CTRNIDX
-      *
-      ** Processing of Lending Transactions
-      *
-     C     CMODID        IFEQ      'LE'
      C                   EXSR      SRLending
-     C                   ENDIF
       *
-      ** Processing of Dealing Transactions
-      *
-     C     CMODID        IFEQ      'DL'
-     C                   MOVEL     CTRNID        CTRNIDDL          6 0
-     C                   EXSR      SRDealing
-     C                   ENDIF
-      *
-      ** Read next record
-      *
-     C                   READ      SDHSDRT0                             3545
-      *
-     C                   IF        ErrorOnFl = True
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBKey = '*NEXT'
-     C                   EVAL      DBFile = 'SDHSDRT0'
-     C                   EVAL      DBase = 2
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
-      *
-     C                   ENDDO
-     C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -123,59 +69,42 @@
       *                                                               *
       *****************************************************************
      C     SRLending     BEGSR
-     C     CTRNID        CHAIN     CLOANCLF                           90
       *
-      ** If no record found, delete the transactions
-      *
-     C                   IF        *IN90 = '1'
      C                   EVAL      thisSQL = 'Delete from SDHSDRTD where +
-     C                              CTRNID = '+CTRNIDX+''
+     C                              CMODID = ''LE'' AND CTRNID not in +
+     C                              (select LNRF from CLOANCL) AND CTRNID +
+     C                              not in (select LNRF from MCLONCL)'
      C                   EVAL      thisSQL1 = 'Delete from SDARRLOGTD where +
-     C                              SJTREF = '+CTRNIDX+''
+     C                              SJMODI = ''LE'' AND SJTREF not in +
+     C                              (select LNRF from CLOANCL)'
       *
      C/EXEC SQL
      C+ EXECUTE IMMEDIATE :thisSQL
      C/END-EXEC
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100
+     C                   EVAL      DBFILE = 'SDHSDRTD'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBPGM  = 'SD001015'
+     C                   EVAL      DBASE  = SQLCODE
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
      C/EXEC SQL
      C+ EXECUTE IMMEDIATE :thisSQL1
      C/END-EXEC
-      *
+     C                   IF         SQLCOD <> 0 AND SQLCOD <> 100
+     C                   EVAL      DBFILE = 'SDARRLOGTD'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBPGM  = 'SD001015'
+     C                   EVAL      DBASE  = SQLCODE
+     C                   EXSR      *PSSR
      C                   ENDIF
-     C                   ENDSR
-      *****************************************************************
-      *                                                               *
-      * SRDealing - Processing of Dealing Transactions                *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
-      *****************************************************************
-     C     SRDealing     BEGSR
-     C     CTRNIDDL      CHAIN     DEALSDCF                           91
+
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
       *
-      ** If not existing in DEALSDC, check DEALSDG
-      *
-     C                   IF        *IN91 = '1'
-     C     CTRNIDDL      CHAIN     DEALSDGF                           92
-      *
-      ** If still not existing, delete the transactions
-      *
-     C                   IF        *IN92 = '1'
-     C                   EVAL      thisSQL = 'Delete from SDHSDRTD where +
-     C                              CTRNID = '+CTRNIDX+''
-     C                   EVAL      thisSQL1 = 'Delete from SDARRLOGTD where +
-     C                              SJTREF = '+CTRNIDX+''
-      *
-     C/EXEC SQL
-     C+ EXECUTE IMMEDIATE :thisSQL
-     C/END-EXEC
-     C/EXEC SQL
-     C+ EXECUTE IMMEDIATE :thisSQL1
-     C/END-EXEC
-      *
-     C                   ENDIF
-     C                   ENDIF
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -187,12 +116,18 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
+     C                   EVAL      *INLR = '1'
      C                   DUMP
      C                   RETURN
-
+      *
      C                   ENDSR
       *****************************************************************
 **  CPY@

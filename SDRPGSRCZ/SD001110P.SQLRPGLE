@@ -211,11 +211,7 @@
       *
      C                   EVAL      P1OBSP = OPSH
      C                   EVAL      P1RAKI = RTKN
-     C                   SETON                                        20
      C                   EVAL      P1FLOR = FLOR
-     C     0             IFEQ      FLOR
-     C                   SETOFF                                       20
-     C                   ENDIF
       *
       ** Daily Details
       *

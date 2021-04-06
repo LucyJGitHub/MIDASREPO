@@ -45,7 +45,7 @@
 /********************************************************************/
 /**/
              PGM
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -64,27 +64,27 @@
              DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(133)             /*S01502*/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5) VALUE('     ')  /*S01117*/
              RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)                /*E22046*/
- 
- 
+
+
 /* SEND PGM MESSAGE */
- 
+
              CHGVAR     VAR(&MEM) VALUE('SEC0606J - Reconciliation +
                           reports')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)  MSGTYPE(*INFO)
- 
+
 /* CLEAR WORK FILES */
- 
+
              CLRPFM     FILE(REC01D)
              CLRPFM     FILE(REC02D)
- 
+
 /*  CALL EXTRACT AND REPORT PROGRAMS TO RECONCILE DEPOT POSITIONS */
- 
+
              CALL       PGM(SE2605)
 /************CALL       PGM(SE2610) PARM(&ECOUNT1)                   * *S01117*/
              CALL       PGM(SE2610) PARM(&ECOUNT1 &RSEQ)              /*S01117*/
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA */
- 
+
 /*ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              E22486*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /*           RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)          */ /*S01117*/
@@ -96,18 +96,18 @@
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
                 GOTO ENDPGM
              ENDDO
- 
+
 /*  CALL EXTRACT AND REPORT PROGRAMS TO RECONCILE CUSTOMER POSITIONS */
 /*  IF PORTFOLIO CLIENTS HAVE BEEN LICENSED.                          /*E22046*/
- 
+
            IF         COND(%SST(&SESTAT 64 1) = 'Y') THEN( +
              DO)                                                      /*E22046*/
              CALL       PGM(SE2615)
 /************CALL       PGM(SE2620) PARM(&ECOUNT2)                   * *S01117*/
              CALL       PGM(SE2620) PARM(&ECOUNT2 &RSEQ)              /*S01117*/
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA */
- 
+
 /*ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              E22486*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /*           RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)          */ /*S01117*/
@@ -119,14 +119,14 @@
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
                 GOTO ENDPGM
              ENDDO
- 
+
 /*  CALL PROGRAM TO RECONCILE CUSTOMER MOVEMENTS */
- 
+
 /************CALL       PGM(SE2630) PARM(&ECOUNT3)                   * *S01117*/
              CALL       PGM(SE2630) PARM(&ECOUNT3 &RSEQ)              /*S01117*/
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA */
- 
+
 /*ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              E22486*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /*           RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)          */ /*S01117*/
@@ -139,14 +139,14 @@
                 GOTO ENDPGM
              ENDDO
            ENDDO                                                      /*E22046*/
- 
+
 /*  CALL PROGRAM TO RECONCILE BOOK/DEPOT POSITIONS */
- 
+
 /************CALL       PGM(SE2640) PARM(&ECOUNT4)                   * *S01117*/
              CALL       PGM(SE2640) PARM(&ECOUNT4 &RSEQ)              /*S01117*/
- 
+
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA */
- 
+
 /*ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              E22486*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /*           RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)          */ /*S01117*/
@@ -158,9 +158,9 @@
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
                 GOTO ENDPGM
              ENDDO
- 
+
 /* CHECK FOR DEPOT POSITIONS OUT OF BALANCE */
- 
+
              CHGVAR     VAR(&ECNTN1) VALUE(&ECOUNT1)
              IF         COND(&ECNTN1 *NE 0) THEN(DO)
              CHGVAR     VAR(&MEM) VALUE(' ')
@@ -170,10 +170,10 @@
                           DO NOT BALANCE')
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
- 
+
 /* CHECK FOR CUSTOMER POSITIONS OUT OF BALANCE */
 /*  IF PORTFOLIO CLIENTS HAVE BEEN LICENSED.                          /*E22046*/
- 
+
            IF         COND(%SST(&SESTAT 64 1) = 'Y') THEN( +
              DO)                                                      /*E22046*/
              CHGVAR     VAR(&ECNTN2) VALUE(&ECOUNT2)
@@ -185,9 +185,9 @@
                           POSITIONS DO NOT BALANCE')
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
- 
+
 /* CHECK FOR CUSTOMER MOVEMENTS OUT OF BALANCE */
- 
+
              CHGVAR     VAR(&ECNTN3) VALUE(&ECOUNT3)
              IF         COND(&ECNTN3 *NE 0) THEN(DO)
              CHGVAR     VAR(&MEM) VALUE(' ')
@@ -198,9 +198,9 @@
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
            ENDDO                                                      /*E22046*/
- 
+
 /* CHECK FOR BOOK/DEPOT POSITIONS OUT OF BALANCE */
- 
+
              CHGVAR     VAR(&ECNTN4) VALUE(&ECOUNT4)
              IF         COND(&ECNTN4 *NE 0) THEN(DO)
              CHGVAR     VAR(&MEM) VALUE(' ')
@@ -211,18 +211,14 @@
                           DO NOT BALANCE')
              SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
              ENDDO
- 
+
 /* IF ANY ERRORS, HALT END OF DAY */
- 
+
              CHGJOB     SWS(XXXXXXX0)
 /************IF         COND((&ECNTN1 *NE 0) *OR (&ECNTN2 *NE 0) *OR +
                           (&ECNTN3 *NE 0) *OR (&ECNTN4 *NE 0)) +
                           THEN(CHGJOB SWS(XXXXXXX1))                  **CDL008*/
- 
-             IF         COND((&ECNTN1 *NE 0) *OR (&ECNTN2 *NE 0) *OR +
-                          (&ECNTN3 *NE 0) *OR (&ECNTN4 *NE 0)) +
-                          THEN(CHGJOB SWS(XXXXXXX1))                  /*196904*/
- 
+
 /*ENDPGM:*********ENDPGM                                             * *S01117*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

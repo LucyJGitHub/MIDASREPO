@@ -269,6 +269,8 @@
      D isError         s               n   inz(false)
      D isException     s               n   inz(false)
      D writeLogs       S              1a
+     D strDate         s              5s 0
+     D endDate         s              5s 0
 
       *---------------*
       ** JSON Details *
@@ -554,10 +556,14 @@
 
                    exec sql close P1;
 
-                   // Initialize Current Interest Period Flag to N
+                   // Set Current Interest Period Flag to N
+                   eval strDate = %dec(intPrdStrMDAY:5:0);
+                   eval endDate = %dec(intPrdEndMDAY:5:0);
                    exec sql  update SDHSDRTD set CINFLG = 'N'
                     where CMODID = :moduleID
-                    and   CTRNID = :transactREF;
+                    and   CTRNID = :transactREF
+                    and   CINPSD <> :strDate
+                    and   CINPED <> :endDate;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                      AuditLogDS.SJTMST = %timestamp();
@@ -1360,7 +1366,7 @@
                               'A.CINPSD = ' + %char(DailyHistDS.CINPSD) +
                                ' , ' +
                               'A.CINPED = ' + %char(DailyHistDS.CINPED) +
-                               QUO + ' , ' +
+                               ' , ' +
                               'A.CINFLG = ' + QUO + %trim(DailyHistDS.CINFLG) +
                                QUO + ' , ' +
                               'A.CINPDT = ' + %char(DailyHistDS.CINPDT) +
@@ -1390,7 +1396,9 @@
                               ' where A.CMODID = ' +
                                 QUO + %trim(moduleID) + QUO +
                               ' and   A.CTRNID = ' +
-                                QUO + %trim(transactREF) + QUO;
+                                QUO + %trim(transactREF) + QUO +
+                              ' and CINPDT = ' +
+                                      %char(DailyHistDS.CINPDT);
 
                    exec sql
                    execute immediate :wSqlStr;

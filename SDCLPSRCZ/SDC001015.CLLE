@@ -23,22 +23,19 @@
 
               DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
 
-/* Monitor for any errors and send appropriate message to MOPERQ */
-             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
-                          CMDLBL(ERROR))
-
              SNDMSG     MSG('SDC001015 - Midas SD Housekeeping of +
                           ARR Daily Rates File') TOMSGQ(MRUNQ)
 
 /* Call the program */
              CHGJOB     SWS(XXXXXX00)
-             CALL       PGM(SDC001015)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CALL       PGM(SD001015)
 
 /* Monitor for database error and send appropriate message to MOPERQ */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
-               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
-                          TOMSGQ(MOPERQ MRUNQ)
                GOTO       CMDLBL(ERROR)
              ENDDO
 
@@ -60,6 +57,8 @@ ERROR:
                           File has terminated abnormally.') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000)
+
+             GOTO       CMDLBL(END)
 
 END:
 

@@ -31,14 +31,6 @@
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
       *
-     D LDA           E DS           256    EXTNAME(LDA)
-      ** Local data area for database error details
-      ** *LOCK IN LDA immediately before and OUT LDA immediately
-      ** after each database error handling.
-      **                                    134 141 DBFILE
-      **       Defines:                     142 170 DBKEY
-      **                                    171 180 DBPGM
-      **                                    181 1830DBASE
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
@@ -51,8 +43,11 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
-      ** Main Processing
+      * Initialization of indicators
+     C                   SETOFF                                           90
+     C                   SETOFF                                           91
       *
+      ** Main Processing
       ** Housekeeping of Lending Records
       *
      C                   EVAL      thisSQL = 'Delete from SDHSDRTD where +
@@ -67,23 +62,14 @@
      C+ EXECUTE IMMEDIATE :thisSQL
      C/END-EXEC
      C                   IF         SQLCOD <> 0 AND SQLCOD <> 100
-     C                   EVAL      DBFILE = 'SDHSDRTD'
-     C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBPGM  = 'SD001015'
-     C                   EVAL      DBASE  = SQLCODE
+     C                   SETON                                            90
      C                   EXSR      *PSSR
      C                   ENDIF
-
-     C                   EVAL      *INLR = *ON
-     C                   RETURN
      C/EXEC SQL
      C+ EXECUTE IMMEDIATE :thisSQL1
      C/END-EXEC
      C                   IF         SQLCOD <> 0 AND SQLCOD <> 100
-     C                   EVAL      DBFILE = 'SDARRLOGTD'
-     C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBPGM  = 'SD001015'
-     C                   EVAL      DBASE  = SQLCODE
+     C                   SETON                                            91
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -101,10 +87,11 @@
       *****************************************************************
      C     *PSSR         BEGSR
       *
-     C                   IF        @RUN = *BLANK
-     C                   EVAL      @RUN = 'Y'
-     C                   DUMP
-     C                   ENDIF
+     C   90              MOVE      'SDHSDRTD'    DBFILE
+     C   91              MOVE      'SDARRLOGTD'  DBFILE
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBPGM  = 'SD001015'
+     C                   EVAL      DBASE  = SQLCODE
       *
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'

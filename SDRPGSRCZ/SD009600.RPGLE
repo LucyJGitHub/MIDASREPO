@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas SD Validate currency for a system value')
+/*EXI *  TEXT('Midas SD Validate currency for a system value')        *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -22,7 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *           Update the message ID of the validation error       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD026 - Program for system value 'RatesDownloadTime'        *

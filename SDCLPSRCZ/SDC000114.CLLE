@@ -9,12 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CLE172             Date 01Oct20              */
-/*       Prev Amend No. CSD103  *CREATE    Date 10Aug20              */
+/*       Last Amend No. CSD103  *CREATE    Date 10Aug20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       CLE172 - LIBOR Deregulation - Lending                       */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*                                                                   */
 /*********************************************************************/
@@ -23,11 +21,6 @@
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNDATE) TYPE(*DEC) LEN(5 0)
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE172*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE172*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CLE172*/
-             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CLE172*/
-             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1)                                   /*CLE172*/
 
              DCLF       FILE(SDCSTSTD) OPNID(STAT)
              DCLF       FILE(SDBANKPD) OPNID(BANK)
@@ -74,6 +67,8 @@ READ:
 CONTINUE:
              ALCOBJ     OBJ((SDARRCLCK *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(DO)
+                SNDPGMMSG  MSG('ARR Calculator Batch Job is already +
+                             running') TOMSGQ(MOPERQ MRUNQ)
                 GOTO CMDLBL(END)
              ENDDO
 
@@ -92,33 +87,19 @@ CONTINUE:
                 GOTO       CMDLBL(ABNOR)
              ENDDO
 
-/** Check if CLE172 feature is installed */                                               /*CLE172*/
-                                                                                          /*CLE172*/
-             CHGVAR     VAR(&CLE172) VALUE('N')                                           /*CLE172*/
-             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE172*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE172*/
-             CHGVAR     VAR(&SARD) VALUE('CLE172')                                        /*CLE172*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CLE172*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE172*/
-                 CHGVAR     VAR(&CLE172) VALUE('Y')                                       /*CLE172*/
-             ENDDO                                                                        /*CLE172*/
-                                                                                          /*CLE172*/
-/** If CLE172 is ON, call program for Daily Rates Report (successful) */                  /*CLE172*/
-/** and Exception Error Report (faciled) for Loan Transactions */                         /*CLE172*/
-                                                                                          /*CLE172*/
-             IF         COND(&CLE172 *EQ 'Y') THEN(DO)                                    /*CLE172*/
-                                                                                          /*CLE172*/
-                CALL       PGM(LE001110P)                                                 /*CLE172*/
-                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CLE172*/
-                   GOTO       CMDLBL(ABNOR)                                               /*CLE172*/
-                ENDDO                                                                     /*CLE172*/
-                                                                                          /*CLE172*/
-                CALL       PGM(LE001112)                                                  /*CLE172*/
-                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CLE172*/
-                   GOTO       CMDLBL(ABNOR)                                               /*CLE172*/
-                ENDDO                                                                     /*CLE172*/
-                                                                                          /*CLE172*/
-             ENDDO                                                                        /*CLE172*/
+/** Call program to produce Daily Rates Report */
+
+             CALL       PGM(SD001110P)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/** Call program to produce Exception Error Report */
+
+             CALL       PGM(SD001112)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
 
              GOTO       CMDLBL(END)
 

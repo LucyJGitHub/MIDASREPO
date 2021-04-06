@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2019')
+     H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD ARR Calculator Batch Job')                    *
@@ -34,15 +34,19 @@
       *                                                               *
       *  SUBROUTINE INDEX                                             *
       *                                                               *
-      * SRUpdSTAT - Update ARR Calculator Status File                 *
-      * SRUpdFILE - Update Rates Known Field                          *
-      * SRDetINTDATE - Determine Interest Period Dates                *
-      * SRDetRTKN - Determine if transaction has reached the          *
-      * SRPrepPARM - Prepare parameters for calling ARR Calculator    *
-      * SRCallARRC - Call program that will invoke the ARR Calculator *
-      * SRZDATE - Convert Midas Day into YYMMDD Date Format           *
-      * *INZSR - Program Initialisation routine                       *
-      * *PSSR - Error processing                                      *
+      * SRUpdSTAT     - Update ARR Calculator Status File             *
+      * SRDltLOGS     - Delete logs for failed transactions on re-run *
+      * SRSelTRAN     - Select backward-looking rate transactions     *
+      * SRReadNEXT    - Read next record                              *
+      * SRCloseCURSOR - Close cursor                                  *
+      * SRUpdFILE     - Update Rates Known Field                      *
+      * SRDetINTDATE  - Determine Interest Period Dates               *
+      * SRDetRTKN     - Determine if transaction has reached the      *
+      * SRPrepPARM    - Prepare parameters for calling ARR Calculator *
+      * SRCallARRC    - Call program to invoke the ARR Calculator     *
+      * SRZDATE       - Convert Midas Day into YYMMDD Date Format     *
+      * *INZSR        - Program Initialisation routine                *
+      * *PSSR         - Error processing                              *
       *                                                               *
       *****************************************************************
 
@@ -69,6 +73,10 @@
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
 
+      ** Holiday File Standard Subroutine Variables
+     D/COPY ZSRSRC,ZHOLILE
+     D/COPY ZSRSRC,ZHOLELE
+
       ** Data Sructure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
@@ -85,18 +93,17 @@
      D SDSTAT        E DS           256    EXTNAME(SDSTAT) DTAARA(SDSTAT)
      D  SYSID                  6      7
 
-      ** Data Structure for Backward-Looking Rate Transaction
-     D TransBLRT       DS
+      ** Data Structure for Backward-Looking Rate Loans
+     D LoanBLRT        DS
      D  TrMODI                        2A
      D  TrTRAN                        6A
      D  TrCCY                         3A
      D  TrVDAT                        5S 0
      D  TrMDAT                        5S 0
      D  TrNIDT                        5S 0
-     D  TrSLID                        5S 0
-     D  TrADDI                        1A
-     D  TrREPT                        1S 0
      D  TrNRPD                        5S 0
+     D  TrREPT                        1S 0
+     D  TrADDI                        1A
      D  TrBLRT                        1A
      D  TrRFRR                       10A
      D  TrCALM                        4A
@@ -114,7 +121,9 @@
      D  TransREF                      6A
      D  CalcMethod                    4A
      D  IntPrdStartDt                10A
+     D  IntPrdStrMDay                 5A
      D  IntPrdEndDt                  10A
+     D  IntPrdEndMDay                 5A
      D  RiskFreeRate                  5A
      D  RiskFreeRatFl                20A
      D  LookBackDays                  2A
@@ -134,6 +143,10 @@
      D  WMin                   4      5
      D  WColon2                6      6
      D  WSec                   7      8
+
+      ** Constants declaration
+     D NO_ERROR        c                   const(0)
+     D NO_RECORD       c                   const(100)
 
       ** Reference Rates Array
      D ArraySize       C                   CONST(10)
@@ -173,7 +186,6 @@
      D EOY             S              1A
      D Error           S              1A
 
-
       ** Program Variables
      D WRUN            S              1A
      D ARRCalcFreq     S              1A
@@ -184,14 +196,15 @@
      D SumLBLO         S              3S 0
      D Idx             S              2S 0
      D WStatus         S              1A
-     D NoOfRecs        S              2S 0
+     D NoOfRecs        S              3S 0
      D WStrDate        S              5S 0
-     D WStrTime        S              6S 0
-     D WEndDate        S              5S 0
-     D WEndTime        S              6S 0
      D WStrDateSV      S              5S 0
-     D WStrTimeSV      S              6S 0
+     D WEndDate        S              5S 0
+     D WEndTime        S              6A
+     D WStrTime        S              6A
+     D WStrTimeSV      S              6A
      D WTime           S              6A
+     D WZeroMDATFlag   S              1A
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -213,32 +226,16 @@
       ** Delete logs for failed transactions on re-run
      C                   EXSR      SRDltLOGS
 
-      ** Select all transactions which uses a backward looking-rate
-     C/exec SQL
-     C+ declare TransBLRTCursor insensitive scroll cursor for
-     C+ select 'LE', LNRF, CCY,  VDAT, MDAT,
-     C+        NIDT, SLID, ADDI, REPT, NRPD,
-     C+        BLRT, RFRR, CALM, BADJ, FLOR,
-     C+        LBDY, LODY, OPSH, RRDP, DBAV
-     C+ from CLOANCL
-     C+ where RECI = 'D' and VDAT <= :BJRDNB and
-     C+       BLRT = 'Y' and CALM <> 'MANL' and
-     C+       PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
-     C/end-exec
+      ** Select the backward looking rate transactions
+     C                   EXSR      SRSelTRAN
 
-     C/exec SQL
-     C+ open TransBLRTCursor
-     C/end-exec
+      ** Read next record
+     C                   EXSR      SRReadNEXT
+     C                   DOW       SQLCOD <> NO_RECORD
 
-     C/exec SQL
-     C+ fetch next from TransBLRTCursor into :TransBLRT
-     C/end-exec
-
-     C                   DOW       SQLCOD <> 100
-
-     C                   IF        SQLCODE <> 0 and
-     C                             SQLCODE <> 100
-     C                   EVAL      DBFILE = 'CLOANCL'
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
      C                   EVAL      DBKEY  = 'SQL ERROR'
      C                   EVAL      DBASE  = 004
      C                   EXSR      *PSSR
@@ -247,11 +244,14 @@
      C                   EVAL      CallARR = 'Y'
 
       ** Determine Interest Period Dates
+     C                   EVAL      WZeroMDATFlag = 'N'
      C                   EXSR      SRDetINTDATE
 
       ** Check if transaction has reached the Rates Known window
      C                   EVAL      RatesKnown = 'N'
+     C                   IF        WZeroMDATFlag = 'N'
      C                   EXSR      SRDetRTKN
+     C                   ENDIF
 
       ** If ARRCalcFrequency is M-Monthly and it is not End of Month,
       ** skip call to ARR Calculator unless it satisfies below conditions
@@ -271,10 +271,17 @@
      C                   EVAL      CallARR = 'Y'
      C                   ENDIF
 
-      ** Transaction has a new interest period
-     C                   IF        (TrNIDT   = BJRDNB and TrADDI = 'F') or
-     C                             (TrNIDT+1 = BJRDNB and TrADDI = 'L') or
-     C                             (TrVDAT >= BJRDNB and TrVDAT < BJDNWD)
+      ** Transaction has a new interest period (i.e. the new interest
+      ** start and end date has no reords yet in Daily Rates File)
+     C/exec SQL
+     C+ select count(*) into :NoOfRecs
+     C+ from SDHSDRTD
+     C+ where CMODID = :TrMODI
+     C+   and CTRNID = :TrTRAN
+     C+   and CINPSD = :IntPerSDATE
+     C+   and CINPED = :IntPerEDATE
+     C/end-exec
+     C                   IF        NoOfRecs = 0
      C                   EVAL      CallARR = 'Y'
      C                   ENDIF
 
@@ -312,15 +319,11 @@
 
      C                   ENDIF
 
-     C/exec SQL
-     C+ fetch next from TransBLRTCursor INTO :TransBLRT
-     C/end-exec
-
+      ** Read next record
+     C                   EXSR      SRReadNEXT
      C                   ENDDO
 
-     C/exec SQL
-     C+ close TransBLRTCursor
-     C/end-exec
+     C                   EXSR      SRCloseCURSOR
 
       ** Set Status File to C-Completed
      C                   EVAL      WStatus = 'C'
@@ -329,6 +332,61 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRSelTRAN - Select backward-looking rate transactions         *
+      *                                                               *
+      *****************************************************************
+     C     SRSelTRAN     BEGSR
+
+      ** Select all transactions which uses a backward looking-rate
+     C/exec SQL
+     C+ declare TransBLRTCursor insensitive scroll cursor for
+     C+ select 'LE', LNRF, CCY,  VDAT, MDAT,
+     C+        NIDT, NRPD, REPT, ADDI, BLRT,
+     C+        RFRR, CALM, BADJ, FLOR, LBDY,
+     C+        LODY, OPSH, RRDP, DBAV
+     C+ from CLOANCL
+     C+ where RECI = 'D' and VDAT <= :BJDNWD - 1 and
+     C+       BLRT = 'Y' and CALM <> 'MANL' and
+     C+       PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
+     C/end-exec
+
+     C/exec SQL
+     C+ open TransBLRTCursor
+     C/end-exec
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRReadNEXT - Read next record                                 *
+      *                                                               *
+      *****************************************************************
+     C     SRReadNEXT    BEGSR
+
+     C/exec SQL
+     C+ fetch next from TransBLRTCursor into :LoanBLRT
+     C/end-exec
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCloseCURSOR - Close cursor                                  *
+      *                                                               *
+      *****************************************************************
+     C     SRCloseCURSOR BEGSR
+
+     C/exec SQL
+     C+ close TransBLRTCursor
+     C/end-exec
+
+     C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -343,7 +401,7 @@
 
      C                   IF        WStatus = 'R'
      C                   EVAL      WStrDate = BJRDNB
-     C                   MOVEL     WTime         WStrTime
+     C                   EVAL      WStrTime = WTime
      C                   EVAL      WEndDate = *ZEROS
      C                   EVAL      WEndTime = *ZEROS
      C                   EVAL      WStrDateSV = WStrDate
@@ -352,7 +410,7 @@
      C                   EVAL      WStrDate = WStrDateSV
      C                   EVAL      WStrTime = WStrTimeSV
      C                   EVAL      WEndDate = BJRDNB
-     C                   MOVEL     WTime         WEndTime
+     C                   EVAL      WEndTime = WTime
      C                   ENDIF
 
       ** Check if record exists on file already.
@@ -432,17 +490,49 @@
       *****************************************************************
      C     SRDetINTDATE  BEGSR
 
+      ** Get the Start Date
+     C                   EVAL      WrkDATE = 0
+     C                   IF        TrVDAT >= BJRDNB and
+     C                             TrVDAT <= BJDNWD - 1
+     C                   EVAL      WrkDATE = TrVDAT
+     C                   ELSE
+
+      ** or Last Interest Payment Date
+     C                   SELECT
+
+     C                   WHEN      TrREPT = 1 or TrREPT = 3
+     C/exec SQL
+     C+ select max(VDAT) into WrkDATE
+     C+ from HISTSHP
+     C+ where LNRF = :TrTRAN and AMTP = 'RE'
+     C/end-exec
+
+     C                   WHEN      TrREPT = 2
+     C/exec SQL
+     C+ select max(VDAT) into WrkDATE
+     C+ from HISTSHP
+     C+ where LNRF = :TrTRAN and AMTP = 'IN'
+     C/end-exec
+
+     C                   ENDSL
+
+      ** If work date is zero, set to transaction start date
+     C                   IF        WrkDATE = 0
+     C                   EVAL      WrkDATE = TrVDAT
+     C                   ENDIF
+
+     C                   ENDIF
+
       ** Determine Interest Period Start Date
      C                   EVAL      IntPerSDATE = 0
      C                   IF        TrADDI = 'L'
-     C                   EVAL      IntPerSDATE = TrSLID + 1
+     C                   EVAL      IntPerSDATE = WrkDATE + 1
      C                   ELSE
-     C                   EVAL      IntPerSDATE = TrSLID
+     C                   EVAL      IntPerSDATE = WrkDATE
      C                   ENDIF
 
-      ** Determine Interest Period End Date
+      ** Get the Next Interest Payment Date
      C                   EVAL      WrkDATE = 0
-     C                   EVAL      IntPerEDATE = 0
      C                   SELECT
      C
      C                   WHEN      (TrREPT = 1 or TrREPT = 3) and
@@ -458,16 +548,18 @@
 
      C                   ENDSL
 
-     C                   IF        WrkDATE = 0
-     C                   EVAL      WrkDATE = BJDNWD - 1
-     C                   ENDIF
-
+      ** Determine Interest Period End Date
+     C                   EVAL      IntPerEDATE = 0
      C                   IF        TrADDI = 'F'
      C                   EVAL      IntPerEDATE = WrkDATE - 1
      C                   ELSE
      C                   EVAL      IntPerEDATE = WrkDATE
      C                   ENDIF
 
+     C                   IF        IntPerEDATE <= 0
+     C                   EVAL      WZeroMDATFlag = 'Y'
+     C                   EVAL      IntPerEDATE = BJDNWD - 1
+     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************
@@ -494,21 +586,19 @@
      C                   EVAL      RTKNDate = 0
      C                   EVAL      SumLBLO = TrLBDY + TrLODY
 
-     C                   CALL      'ZBKDT'
-     C                   PARM      IntPerEDATE   ZDAYNO            5 0
-     C                   PARM      TrCCY         ZCCY              3
-     C                   PARM      *BLANKS       ZLOC              3
-     C                   PARM      SumLBLO       ZNRDYS            2 0
-     C                   PARM                    ZDYNBR            5 0
+     C                   MOVEL     TrCCY         ZCCY              3
+     C                   MOVEL     *BLANKS       ZLOC              3
+     C                   Z-ADD     IntPerEDATE   ZDAYNO            5 0
+     C                   Z-ADD     SumLBLO       ZNRDYS            2 0
+     C                   Z-ADD     *ZEROS        ZDYNBR            5 0
+     C                   EXSR      ZBKDT
 
      C                   EVAL      RTKNDate = ZDYNBR
 
-     C                   CALL      'ZFWDT'
-     C                   PARM      RTKNDate      ZDAYNO
-     C                   PARM      RPubLag       ZNRDYS
-     C                   PARM                    ZDYNBR
-     C                   PARM      TrCCY         ZCCY
-     C                   PARM      *BLANKS       ZLOC
+     C                   Z-ADD     RTKNDate      ZDAYNO
+     C                   Z-ADD     RPubLag       ZNRDYS
+     C                   Z-ADD     *ZEROS        ZDYNBR
+     C                   EXSR      ZFWDT
 
      C                   EVAL      RTKNDate = ZDYNBR
 
@@ -516,9 +606,11 @@
       ** passed the system date and the reference rate publication time
      C                   IF        RTKNDate <= BJRDNB and
      C                             RTKNDate <> 0
-     C                   EVAL      CurrTime = %char(%time():*HMS)
-     C                   IF        CurrTime >= RPubTim
      C                   EVAL      RatesKnown = 'Y'
+     C                   EVAL      CurrTime = %char(%time():*HMS)
+     C                   IF        RTKNDate = BJRDNB and
+     C                             RPubTim > CurrTime
+     C                   EVAL      RatesKnown = 'N'
      C                   ENDIF
      C                   ENDIF
 
@@ -545,10 +637,14 @@
      C                   EXSR      SRZDATE
      C                   EVAL      IntPrdStartDt = %char(ISODate)
 
+     C                   MOVEL     IntPerSDATE   IntPrdStrMDay
+
       ** Convert Interest Period End Date into *ISO Date Format
      C                   EVAL      ZDAYNO = IntPerEDATE
      C                   EXSR      SRZDATE
      C                   EVAL      IntPrdEndDt = %char(ISODate)
+
+     C                   MOVEL     IntPerEDATE   IntPrdEndMDay
 
      C                   EVAL      RiskFreeRate = TrRFRR
 
@@ -581,9 +677,17 @@
       ** Compute for Calculate Till Date and convert to *ISO Date Format
      C                   EVAL      WCalcTillDate = *BLANKS
      C                   EVAL      WrkDATE = BJDNWD - 1
+
+      ** Interest Start Date cannot be greater than calculateTillDate
+     C                   IF        IntPerSDATE > WrkDATE
+     C                   EVAL      WrkDATE = IntPerSDATE
+     C                   ENDIF
+
+      ** calculateTillDate cannot be greater than Interest End Date
      C                   IF        WrkDATE > IntPerEDATE
      C                   EVAL      WrkDATE = IntPerEDATE
      C                   ENDIF
+
      C                   EVAL      ZDAYNO = WrkDATE
      C                   EXSR      SRZDATE
      C                   EVAL      WCalcTillDate = %char(ISODate)
@@ -595,7 +699,7 @@
       /EJECT
       *****************************************************************
       *                                                               *
-      * SRCallARRC - Call program that will invoke the ARR Calculator *
+      * SRCallARRC - Call program to invoke the ARR Calculator        *
       *                                                               *
       *****************************************************************
      C     SRCallARRC    BEGSR
@@ -605,7 +709,9 @@
      C                   PARM                    TransREF
      C                   PARM                    CalcMethod
      C                   PARM                    IntPrdStartDt
+     C                   PARM                    IntPrdStrMDay
      C                   PARM                    IntPrdEndDt
+     C                   PARM                    IntPrdEndMDay
      C                   PARM                    RiskFreeRate
      C                   PARM                    RiskFreeRatFl
      C                   PARM                    LookBackDays
@@ -779,3 +885,8 @@
 
      C                   ENDSR
       *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZBKDT_ILE
+     C/COPY ZSRSRC,ZFWDT_ILE
+     C/COPY ZSRSRC,ZACCHLE

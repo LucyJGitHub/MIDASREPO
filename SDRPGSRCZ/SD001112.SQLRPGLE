@@ -2,12 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas LE ARR Calc Batch Job Exception Rpt Pgm')        *
+/*EXI *  TEXT('Midas SD ARR Calc Batch Job Exception Rpt Pgm')        *
       *****************************************************************
       *                                                               *
-      *  Midas - Customer Lending Module                              *
+      *  Midas - Standing Data Module                                 *
       *                                                               *
-      *  LE001112 - ARR Calculator Batch Job Exception Report Program *
+      *  SD001112 - ARR Calculator Batch Job Exception Report Program *
       *                                                               *
       *  Function:  This program will generate exception report to    *
       *             list the Loan Transaction for which the call to   *
@@ -17,11 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CLE172  *CREATE    Date 01Oct20               *
+      *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -36,7 +36,7 @@
       *****************************************************************
 
       ** Report File
-     FLE001112P1O    E             PRINTER USROPN
+     FSD001112P1O    E             PRINTER USROPN
      F                                     INFDS(SPOOL1)
 
       *****************************************************************
@@ -57,7 +57,7 @@
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
 
-      ** File Information Data Structure for LE001112P1
+      ** File Information Data Structure for SD001112P1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
@@ -165,7 +165,7 @@
 
       ** Report fields have value at this point, open report file
      C                   IF        WOPNP1 <> 'Y'
-     C                   OPEN      LE001112P1
+     C                   OPEN      SD001112P1
      C                   EVAL      WOPNP1 = 'Y'
      C                   ENDIF
 
@@ -201,7 +201,7 @@
 
       ** Write out Trailer Format
      C                   WRITE     TRAILP1
-     C                   CLOSE     LE001112P1
+     C                   CLOSE     SD001112P1
 
      C                   ENDIF
 
@@ -220,7 +220,7 @@
      C     *INZSR        BEGSR
 
       ** Initialize Work fields
-     C                   EVAL      DBPGM = 'LE001112'
+     C                   EVAL      DBPGM = 'SD001112'
 
       ** Access Bank Details
      C                   CALL      'AOBANKR0'

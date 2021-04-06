@@ -641,7 +641,7 @@
              IF         COND(&CSD103 *EQ 'Y' *AND +
                            (&MPHAS *EQ 'A' *OR &MPHAS *EQ 'G')) +
                            THEN(DO)                                                       /*CSD103*/
-                CALL      PGM(SDC000115)                                                  /*CSD103*/
+                CALL      PGM(SDC000113)                                                  /*CSD103*/
              ENDDO                                                                        /*CSD103*/
                                                                                           /*CSD103*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */

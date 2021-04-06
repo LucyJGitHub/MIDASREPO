@@ -51,24 +51,9 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *
+      ** Main Processing
       *
-      **Main Processing
-      *
-     C                   EXSR      SRLending
-      *
-     C                   RETURN
-      *****************************************************************
-      *  P R O G R A M   E N D                                        *
-      *****************************************************************
-      *                                                               *
-      * SRLending - Processing of Lending Transactions                *
-      *                                                               *
-      * Called by: Main Processing                                    *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
-      *****************************************************************
-     C     SRLending     BEGSR
+      ** Housekeeping of Lending Records
       *
      C                   EVAL      thisSQL = 'Delete from SDHSDRTD where +
      C                              CMODID = ''LE'' AND CTRNID not in +
@@ -105,7 +90,6 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *
-     C                   ENDSR
       *****************************************************************
       *                                                               *
       *  *PSSR - Subroutine to handle error conditions                *

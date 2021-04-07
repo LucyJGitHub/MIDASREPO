@@ -4687,6 +4687,11 @@
      C                   OTHER
      C                   MOVEL     AUCRIN        PFldData
      C                   ENDSL
+      *                                                                                       CLE172
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                             AND BABLRT = 'Y'                                           CLE172
+     C                   MOVEL     'D'           PFldData                                     CLE172
+     C                   ENDIF                                                                CLE172
       *
      C                   EVAL      PFldTag  = 'DDCHIN'
      C                   EVAL      PFldType = *BLANK

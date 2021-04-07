@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD057604           Date 06Apr21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD041649           Date 06Oct16               *
       *                 CLE168             Date 26Feb18               *
@@ -72,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057604 - EUC0190 fails in COB. Do not allow input of sett  *
+      *             details if non dicount loan and not a multi-ccy   *
+      *             rollover.                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -1023,8 +1027,54 @@
      C                   MOVEL     'DDNCCYB'     FldNameArr(Ix)
      C                   MOVEL     'LEV0175'     MsgIdArr(Ix)
      C                   ENDIF
+                                                                                            MD057604
+     C                   ELSE                                                               MD057604
+     C     DDWPSET       IFNE      'Y'                                                      MD057604
+     C     DDMULTI       ANDEQ     'Y'                                                      MD057604
+     C     DDLNCAT       ANDNE     'DISC'                                                   MD057604
+     C     DDNCCYB       ANDEQ     *BLANKS                                                  MD057604
+     C     DDNCCY        ANDEQ     *BLANKS                                                  MD057604
+     C     DDACTN        ANDEQ     'A'                                                      MD057604
+                                                                                            MD057604
+     C     DDPSTM        IFNE      '00'                                                     MD057604
+     C     DDPSTM        ANDNE     '  '                                                     MD057604
+     C     DDRSTM        ORNE      '00'                                                     MD057604
+     C     DDRSTM        ANDNE     '  '                                                     MD057604
+     C                   EVAL      Idx = Idx + 1                                            MD057604
+     C                   EVAL      Ix = Idx                                                 MD057604
+     C                   MOVEL     'DDNCCYB'     FldNameArr(Ix)                             MD057604
+     C                   MOVEL     'LEV0175'     MsgIdArr(Ix)                               MD057604
+     C                   ENDIF                                                              MD057604
+                                                                                            MD057604
+     C                   ENDIF                                                              MD057604
 
      C                   ENDIF
+
+      ** Settlement details should not be filled up for                                     MD057604
+      ** non discount loans and non multi currency rollovers.                               MD057604
+                                                                                            MD057604
+     C     DDLNCAT       IFNE      'DISC'                                                   MD057604
+     C     DDWPSET       ANDNE     'Y'                                                      MD057604
+     C     DDMULTI       ANDNE     'Y'                                                      MD057604
+     C     DDACTN        ANDEQ     'A'                                                      MD057604
+                                                                                            MD057604
+     C     DDRSTM        IFNE      '00'                                                     MD057604
+     C     DDRSTM        ANDNE     '  '                                                     MD057604
+     C                   EVAL      Idx = Idx + 1                                            MD057604
+     C                   EVAL      Ix = Idx                                                 MD057604
+     C                   MOVEL     'DDRSTM'      FldNameArr(Ix)                             MD057604
+     C                   MOVEL     '5049497'     MsgIdArr(Ix)                               MD057604
+     C                   ENDIF                                                              MD057604
+                                                                                            MD057604
+     C     DDPSTM        IFNE      '00'                                                     MD057604
+     C     DDPSTM        ANDNE     '  '                                                     MD057604
+     C                   EVAL      Idx = Idx + 1                                            MD057604
+     C                   EVAL      Ix = Idx                                                 MD057604
+     C                   MOVEL     'DDPSTM'      FldNameArr(Ix)                             MD057604
+     C                   MOVEL     '5049498'     MsgIdArr(Ix)                               MD057604
+     C                   ENDIF                                                              MD057604
+                                                                                            MD057604
+     C                   ENDIF                                                              MD057604
 
      C                   IF        DDRSTA = 'Y'                                               CLE034
      C                   EVAL      ##PAYS = *Blanks                                           CLE034

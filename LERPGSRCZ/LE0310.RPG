@@ -350,6 +350,8 @@
      FSDCURRPDIF  E                    DISK                                                   CLE038
      FLEAPRHI0IF  E           K        DISK                                                   CER050
      FLEANACI1IF  E           K        DISK                                                   CER073
+      ** Libor Standing data                                                                  CLE172
+     FSDLIBRTDIF  E           K        DISK                                                   CLE172
       ** CER073 AnaCredit - Loans Extension File                                              CER073
 0018 F*E0310P1O   F     132     OF     PRINTER                      S01124S01117
      FLE0310AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
@@ -391,7 +393,7 @@
      F*       19      NO DETAILS TO REPORT FOR THIS BRANCH                S01117
 0035 F*       20      FIRST CYCLE INDICATOR
      F*       21      FIRST LINE OF SPECIAL INSTRUCTIONS IS BLANK
-     F*               CLE172 is switched on                               CLE172
+     F*               CLE172 is switched on                                                   CLE172
 0036 F*       22      ACTIONED TODAY
      F*       23      WORK INDICATOR USED FOR BENIFICIARY BANK DETAILS
 0037 F*       24      INSERTED RECORD
@@ -1878,6 +1880,10 @@
      C           PRTCD     IFEQ *BLANKS                                                       CLE172
      C                     MOVE 'Y'       CLE172                                              CLE172
      C                     ENDIF                                                              CLE172
+     C*                                                                                       CLE172
+     C           KLIBR     KLIST                                                              CLE172
+     C                     KFLD           KSCFLD  8                                           CLE172
+     C                     KFLD           KINVAL 10                                           CLE172
       *                                                                                       CER050
       ** Determine if CER050 feature is enabled                                               CER050
       *                                                                                       CER050
@@ -2187,12 +2193,12 @@ STOP  *                                                                   CLE004
       *                                                                   CLE004
 0411 C           ENDT      TAG                             ** ENDT TAG **
       *                                                                   CLE004
-      *                                                                   CLE172
-      **   Switched ON *IN21 when CLE172 = 'Y'                            CLE172
-      *                                                                   CLE172
-     C           CLE172    IFEQ 'Y'                                       CLE172
-     C                     MOVE *ON       *IN21                           CLE172
-     C                     ENDIF                                          CLE172
+      *                                                                                       CLE172
+      **   Switched ON *IN21 when CLE172 = 'Y'                                                CLE172
+      *                                                                                       CLE172
+     C           CLE172    IFEQ 'Y'                                                           CLE172
+     C                     MOVE *ON       *IN21                                               CLE172
+     C                     ENDIF                                                              CLE172
 0412 C*
 0413 C*    LAST RECORD PROCESSING
       **                                                                  S01117
@@ -4040,7 +4046,14 @@ STOP  *                                                                   CLE004
      C                     MOVELLODY      RLODY                                               CLE172
      C                     MOVELOPSH      ROPSH                                               CLE172
      C                     MOVELRRDP      RRRDP                                               CLE172
-     C                     MOVELDBAV      RDBAV                                               CLE172
+      ** Day Basis for Average Description - DBAV                                             CLE172
+     C                     MOVEL'DAYCOUNT'KSCFLD                                              CLE172
+     C                     MOVELDBAV      KINVAL                                              CLE172
+     C           KLIBR     CHAINSDLIBRTD             70                                       CLE172
+     C           *IN70     IFEQ '0'                                                           CLE172
+     C                     MOVELDSPVAL    RDBAV                                               CLE172
+     C                     ENDIF                                                              CLE172
+     C                     MOVELRTKN      RRTKN                                               CLE172
      C                     MOVELNBLRT     RNBLRT                                              CLE172
      C                     MOVELNRFRR     RNRFRR                                              CLE172
      C                     MOVELNCALM     RNCALM                                              CLE172
@@ -4050,7 +4063,13 @@ STOP  *                                                                   CLE004
      C                     MOVELNLODY     RNLODY                                              CLE172
      C                     MOVELNOPSH     RNOPSH                                              CLE172
      C                     MOVELNRRDP     RNRRDP                                              CLE172
-     C                     MOVELNDBAV     RNDBAV                                              CLE172
+      ** Day Basis for Average Description - NDBAV                                            CLE172
+     C                     MOVEL'DAYCOUNT'KSCFLD                                              CLE172
+     C                     MOVELNDBAV     KINVAL                                              CLE172
+     C           KLIBR     CHAINSDLIBRTD             70                                       CLE172
+     C           *IN70     IFEQ '0'                                                           CLE172
+     C                     MOVELDSPVAL    RNDBAV                                              CLE172
+     C                     ENDIF                                                              CLE172
      C                     ENDIF                                                              CLE172
       *                                                                   CEU020
      C                     ENDSR                                          CLE006
@@ -4890,7 +4909,9 @@ STOP  *                                                                   CLE004
      O                                   31 'PLACES'                                          CLE172
      O                         RRRDP     37                                                   CLE172
      O                                   60 'DAY BASIS FOR AVERAGE'                           CLE172
-     O                         RDBAV    113                                                   CLE172
+     O                         RDBAV     75                                                   CLE172
+     O                                   90 'RATES KNOWN'                                     CLE172
+     O                         RTKN     113                                                   CLE172
       *                                                                                       CLE172
      O/COPY WNCPYSRC,LE0310O010
 1200 O********D  1     30                                                 S01518

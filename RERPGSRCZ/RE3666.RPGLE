@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055830           Date 25Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CRE100A            Date 13Apr20               *
+      *  Prev Amend No. MD055830           Date 25Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039111           Date 01Jun16               *
       *                 MD034990           Date 25May16               *
       *                 CRE100             Date 21Mar14               *
@@ -74,6 +75,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CRE100A - Additional flexibility for CRE100                  *
+      *            Value of 'I'in system value RET_INTATC_CUST_LVL    *
+      *            should only impact income and expense a/c postings *
       *  MD055830 - Checked first if CRE100 is switched on considering*
       *             system values RET_INTAC_CUST_LVL and RET_CHG_CUST_*
       *             LVL would not be allocated when CRE100 is switched*
@@ -1140,6 +1144,10 @@
 
      C                   MOVE      DIAC1         ACODGE           10
      C/COPY WNCPYSRC,RE3666C015
+     C     PVAL1         IFEQ      'I'                                                       CRE100A
+     C                   MOVE      BICN          BICN##            6                         CRE100A
+     C                   MOVE      CNUM          BICN                                        CRE100A
+     C                   END                                                                 CRE100A
      C                   MOVE      '1'           DRCRGE            1
      C   42              MOVE      '0'           DRCRGE
      C                   EXSR      ACDCHN
@@ -1156,6 +1164,10 @@
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
      C/COPY WNCPYSRC,RE3666C027
+      * RESTORE                                                                              CRE100A
+     C     PVAL1         IFEQ      'I'                                                       CRE100A
+     C                   MOVE      BICN##        BICN                                        CRE100A
+     C                   END                                                                 CRE100A
 
       ** Posting to A.I. receivable account - DB if interest is debit
 
@@ -1227,6 +1239,10 @@
 
      C                   MOVE      CIAD1         ACODGE
      C/COPY WNCPYSRC,RE3666C017
+     C     PVAL1         IFEQ      'I'                                                       CRE100A
+     C                   MOVE      BICN          BICN##            6                         CRE100A
+     C                   MOVE      CNUM          BICN                                        CRE100A
+     C                   END                                                                 CRE100A
      C                   MOVE      '1'           DRCRGE
      C  N41              MOVE      '0'           DRCRGE
      C                   EXSR      ACDCHN
@@ -1243,6 +1259,10 @@
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
      C/COPY WNCPYSRC,RE3666C029
+      * RESTORE                                                                              CRE100A
+     C     PVAL1         IFEQ      'I'                                                       CRE100A
+     C                   MOVE      BICN##        BICN                                        CRE100A
+     C                   END                                                                 CRE100A
 
       ** Posting to A.I. payable account - CR if interest is credit
 

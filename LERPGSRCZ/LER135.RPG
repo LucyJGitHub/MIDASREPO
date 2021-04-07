@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057082           Date 16Dec20               *
-      *  Prev Amend No. MD057048           Date 24Nov20               *
+      *  Last Amend No. MD057366           Date 21Jan21               *
+      *  Prev Amend No. AR782308           Date 21Jan21               *
+      *                 MD057082           Date 16Dec20               *
+      *                 MD057048           Date 24Nov20               *
       *                 MD053375           Date 11Oct19               *
       *                 MD055481           Date 04Sep20               *
       *                 AR820690           Date 12Oct12               *
@@ -302,6 +304,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057366 - Applied partial fix from MD026622 (the part that  *
+      *             enhanced the AR782308 condition)                  *
+      *  AR782308 - During monthend COB, 1 day accrual was missing.   *
+      *             Added condition in SR/UPDFEE to ensure that when  *
+      *             fee next payment date is changed equal to rundate *
+      *             and system is set to accrue every last day of the *
+      *             month, no unnecessary amount would be posted in   *
+      *             field FELPAM. (Child: AR782309)                   *
+      *           - Applied for MD057366.                             *
       *  MD057082 - Incorrect accrual calculation for a backvalued    *
       *             facility with a backvalued Payment date. Consider *
       *             Next Payment Date if less than rundate and CODT   *
@@ -6624,6 +6635,11 @@
      C                     ENDIF                                                              227253
       *                                                                                       227253
      C***********          Z-ADDLKEAMT    FELPAM                   BH3467 BH3481
+      *                                                                                     AR782308
+     C           FENPYD    IFEQ BJRDNB                                                      AR782308
+     C           FENPYD    ANDEQFELPDT                                                      AR782308
+     C                     Z-ADD0         LKEAMT                                            AR782308
+     C                     ELSE                                                             AR782308
      C                     Z-ADDFELPAM    FEADBP                          100515
       *                                                                                       258597
       ** If there are any adjustments from RECALC                                             258597
@@ -6650,6 +6666,10 @@
      C           FENPYD    ORLE CODT                                                       AR740063A
      C           FENPYD    ANDLEFEPEND                                                     AR740063A
      C********** FELOAN    ANDGT*BLANKS                                           AR740063A MD052410
+     C           BKAPFQ    ORNE 'D'                                                         AR782308
+     C           FENPYD    ANDNEFELPDT                                                      AR782308
+     C********** FENPYD    ANDEQBJRDNB                                             AR782308 MD057366
+     C           FENPYD    ANDLECODT                                                        MD057366
      C                     Z-ADD0         FELPAM                          BH3481
      C                     ELSE                                                               218648
      C**********           Z-ADDFEADAT    FELPAM                                       218648 261129
@@ -6786,6 +6806,7 @@
      C                     Z-ADDENDATE    FELPDT
      C                     Z-ADDENDATE    FEDDAT
      C**********           Z-ADDENDATE    FELADT                                       E32516 261129
+     C                     ENDIF                                                            AR782308
       *                                                                   CLE005
       ***If*CLE005*is*on,*setup*details*for*writing*a*record*in********               CLE005 BUG8762
       ***LFHST.********************************************************               CLE005 BUG8762

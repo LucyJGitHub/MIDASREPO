@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR898442           Date 24Feb12               *
-      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *  Last Amend No. EML104             Date 06Feb20               *
+      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD047450           Date 25Sep19               *
@@ -83,6 +84,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Used hooks MGH00042, MGH00045                       *
+      *           Added hooks EML104_012 EML104_013                   *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
       *             (Child: AR898443)                                 *
       *  MD055842 - Second tag 86 not translated to To Characters.    *
@@ -193,6 +198,7 @@
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Customers by unique SWIFT ID
 
+     F/COPY WNCPYSRC,EML104_012                                                               EML104
      FMGOMSGPD  O    E             DISK    COMMIT  PREFIX(Mo_)
       ** Midas MG Master Message Data file
 
@@ -2812,6 +2818,7 @@
 
      C                   ENDIF                                                                CMG006
      C                   ENDIF                                                                CMG006
+     C/COPY WNCPYSRC,EML104_013                                                               EML104
 
       ** Key to access Network Account or Posting details.
 

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD095CC1          Date 13Sep16               *
+      *  Last Amend No. 220932             Date 01Jun10               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD095CC1          Date 13Sep16               *
       *                 MD030458           Date 17Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 252514             Date 19Aug14               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  220932 - Use the customer's branch for the security check.   *
+      *         - Applied for MD-28927.                               *      
       *  MD046248 - Finastra Rebranding                               *
       *  CSD095CC1 - Allow Deal Sub-Type and Branch for IRS, FRA and  *
       *              CCF SSIs                                         *
@@ -2718,6 +2721,38 @@
      C                     MOVEL'Y2U0001' ZAMSID
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
+     C                     ELSE                                                               220932
+      *                                                                                       220932
+     C           P2ANCD    IFEQ 'I'                        *IF                                220932
+     C           #1CUST    CHAIN@BBREBF              9091  *                                  220932
+     C           BJSBRC    IFNE *BLANK                                                        220932
+      *                                                                                       220932
+      ** If single branching                                                                  220932
+      ** ACCESS SECURITY CHECKING - SINGLE BRANCHING                                          220932
+      *                                                                                       220932
+     C                     CALL 'ZVACTU'                                                      220932
+     C                     PARM 'I'       ZACTN   1                                           220932
+     C                     PARM           ERR     10                                          220932
+      *                                                                                       220932
+     C                     ELSE                                                               220932
+      *                                                                                       220932
+      ** If multibranching                                                                    220932
+      ** ACCESS SECURITY CHECKING - MULTI-BRANCHING                                           220932
+      *                                                                                       220932
+     C                     CALL 'ZVACTBU'                                                     220932
+     C                     PARM 'I'       ZACTN   1                                           220932
+     C                     PARM BBBRCD    ZBR     3                                           220932
+     C                     PARM           ERR     10                                          220932
+     C                     ENDIF                                                              220932
+      *                                                                                       220932
+     C           ERR       IFNE 0                                                             220932
+     C                     MOVEL'RE7102B' ZAMSID  7                                           220932
+     C                     MOVEL'REUSRMSG'ZAMSGF                                              220932
+     C                     EXSR ZASNMS                                                        220932
+     C                     SETON                     9932                                     220932
+     C                     ENDIF                                                              220932
+     C                     ENDIF                                                              220932
+      *                                                                                       220932     
      C                     END                             FI
       * Transaction Type required
      C           #1TRTY    IFEQ *BLANK                     IF

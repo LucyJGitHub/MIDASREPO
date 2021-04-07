@@ -167,7 +167,7 @@
      C                   Parm      *Blanks       P@Vl09          200
      C                   Parm      *Blanks       P@Op10           20
      C                   Parm      *Blanks       P@Vl10          200
- 
+
       *
       * Move priorities to fields for comparison. If error on access
       * of the system value, simply end program with no defaulting

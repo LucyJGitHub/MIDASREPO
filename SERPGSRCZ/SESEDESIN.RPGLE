@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. 260191A            Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260191A- System should not allow deletion of LIVE/MATURED    *
+      *           security diary event if ALL generated position      *
+      *           settlements are still unsettled/live records.       *
+      *           Hence, system will not generate reversal position   *
+      *           settlements.                                        *
+      *  260191 - System should not allow deletion of a security diary*
+      *           event if atleast one live position exists for the   *
+      *           event. This validation is only valid if the diary   *
+      *           event being deleted is still live record. Applied   *
+      *           fix 255857.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -114,6 +125,11 @@
       *
       ** Midas module flag - details
      FMMODF     IF   E             DISK    INFSR(*PSSR)
+      *                                                                                      260191A
+      ** Position Settlement by Security                                                     260191A
+      *                                                                                      260191A
+     FPOSET3    IF   E           K DISK    INFSR(*PSSR)                                      260191A
+     F                                     PREFIX(F3)                                        260191A
       *
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,SESEDE001
@@ -443,7 +459,7 @@
       *
       ** Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SESEDE010
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -557,7 +573,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -592,11 +608,11 @@
       *
       ** Enter key was pressed.  Validate input to initial screen.
      C                   OTHER
- 
+
      C                   EXSR      SRValI
- 
+
      C                   ENDSL
- 
+
      C     ESRScrnI      ENDSR
       *
       *****************************************************************
@@ -618,23 +634,23 @@
       ** if there are warnings which have not been displayed yet.
       *
      C                   IF        IDx = *ZERO
- 
+
      C                   Z-ADD     1             WiX
- 
+
      C                   DOW       WiX <= WIDx AND WReDisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)
      C                   EVAL      WReDisplay = 'Y'
      C                   ELSE
      C                   EVAL      WiX = WiX + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WReDisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Errors occurred during retrieval of security diary events
@@ -673,7 +689,7 @@
       ** Display the main screen.
       *
      C                   EVAL      WScrn  = 'P'
- 
+
      C     ESRValI       ENDSR
       *
       *****************************************************************
@@ -714,7 +730,7 @@
      C                   MOVEL     DDSDSN        WDDSDSN
      C                   MOVEL     DDSDED        WDDSDED
      C                   MOVEL     DDSDET        WDDSDET
- 
+
      C                   ENDIF
       *
       ** Enable all fields on the main screen as well as all function keys.
@@ -868,7 +884,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -922,23 +938,23 @@
       **   still exist.  Otherwise, display initial screen with
       **   blank screen fields.
      C                   IF        DDACTN = 'E'
- 
+
      C                   IF        BGWDPR = 'Y'
      C                   EVAL      WScrn = 'W'
      C                   GOTO      ESRScrnP
      C                   ENDIF
- 
+
      C                   IF        WRdNBrw = 'Y'
      C                   EVAL      WScrn = 'R'
      C                   ELSE
      C                   EXSR      SRClearScn
      C                   EVAL      WScrn = 'I'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     ESRScrnP      ENDSR
       *
       *****************************************************************
@@ -949,9 +965,9 @@
       *                                                               *
       *****************************************************************
      C     SRDefault     BEGSR
- 
+
      C     WProcOnce     IFEQ      *BLANK
- 
+
      C                   CALLB     'SESEDE1DT'
       *                             =========
       ** INPUT
@@ -1013,14 +1029,14 @@
                                                                                               CSE065
       ** Maturity Date                                                                        CSE065
      C                   PARM                    DDMATY                                       CSE065
- 
+
      C                   ENDIF
       *
       ** Set default variable to 'Y' to bypass defaulting the
       ** second time around.
       *
      C                   EVAL      WProcOnce = 'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1193,7 +1209,7 @@
       *
       ** Redisplay screen
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   EVAL      WReDisplay = *BLANK
       *
       ** If no errors occurred during validation of main screen
@@ -1201,23 +1217,23 @@
       ** displayed yet.
       *
      C                   IF        IDx = *ZERO
- 
+
      C                   Z-ADD     1             WiX
- 
+
      C                   DOW       WiX <= WIDx AND WReDisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WiX) <> WPrvWarnAr(WiX)
      C                   EVAL      WReDisplay = 'Y'
      C                   ELSE
      C                   EVAL      WiX = WiX + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WReDisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Redisplay main screen if there are errors or if there
@@ -1236,7 +1252,7 @@
      C                   ELSE
      C                   EVAL      WScrn = 'F'
      C                   ENDIF
- 
+
      C     ESRValP       ENDSR
       *
       *****************************************************************
@@ -1372,7 +1388,7 @@
      C                   PARM                    Data
      C                   PARM      *BLANKS       PWRtn
      C                   PARM                    PWSpare
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1401,11 +1417,11 @@
      C                   EXSR      SRClearScn
      C                   EVAL      WScrn = 'I'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     ESRScrnW      ENDSR
       *
       *****************************************************************
@@ -1543,7 +1559,7 @@
       ** Reset error fields.
       *
      C                   EXSR      SRResetErr
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1556,10 +1572,10 @@
       *
       ** Enter key was pressed.  Update record.
      C                   OTHER
- 
+
      C                   EVAL      WScrn = 'U'
      C                   ENDSL
- 
+
      C     ESRScrnF      ENDSR
       *
       *****************************************************************
@@ -1574,6 +1590,7 @@
       ** Action is delete - Update record id to 'C'.
       *
      C                   IF        DDACTN = 'D'
+     C
       *                                                                                       260331
       ** If Record Id is 'D', reset SDDT to zero                                              260331
       *                                                                                       260331
@@ -1582,6 +1599,35 @@
      C                               OR S2SDET = 'PP'                                         260331
      C                   Z-ADD     0             S2SDDT                                       260331
      C                   ENDIF                                                                260331
+      *                                                                                      260191A
+     C                   ELSE                                                                260191A
+     C                   IF        S2RECI = 'M'                                              260191A
+     C                   MOVE      'N'           NOTALL            1                         260191A
+     C     S2SDSN        SETLL     POSETDF                                                   260191A
+     C     S2SDSN        READE     POSETDF                                02                 260191A
+     C                   DOW       NOT *IN02                                                 260191A
+      *                                                                                      260191A
+     C     S2SDET        IFEQ      'MP'                                                      260191A
+     C     S2SDET        OREQ      'DV'                                                      260191A
+     C     S01512        ANDNE     'Y'                                                       260191A
+     C                   Z-ADD     S2SDPD        WWPDUD            5 0                       260191A
+     C                   ELSE                                                                260191A
+     C                   Z-ADD     S2SDED        WWPDUD                                      260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   IF        S2SDET = F3PEVT and WWPDUD = F3PDUD                       260191A
+     C                             AND F3RECI = 'M'                                          260191A
+     C                   MOVE      'Y'           NOTALL                                      260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C     S2SDSN        READE     POSETDF                                02                 260191A
+     C                   ENDDO                                                               260191A
+      *                                                                                      260191A
+     C                   IF        NOTALL = 'N'                                              260191A
+     C                   Z-ADD     0             S2SDDT                                      260191A
+     C                   ENDIF                                                               260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
      C                   ENDIF                                                                260331
       *                                                                                       260331
      C                   EVAL      S2RECI = 'C'
@@ -1653,15 +1699,15 @@
       *
      C                   IF        RetCodeOut <> *BLANKS AND
      C                             RetCodeOut <> '*RECUPD'
- 
+
      C                   If        (CSC022 = 'N')                                            BUG2604
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                 BUG2604
      C                   ROLBK
      C                   EndIf                                                               BUG2604
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   IF        RetCodeOut = '*RECUPD'
      C                   If        (CSC022 = 'N')                                            BUG2604
      C                   ROLBK
@@ -1678,7 +1724,7 @@
      C                   COMMIT
      C                   EndIf                                                               BUG2604
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If update not done due to record being updated by another
@@ -1702,7 +1748,7 @@
       *
      C                   EXSR      SRClearScn
      C                   EVAL      WScrn = 'I'
- 
+
      C     ESRUpdate     ENDSR
       *
       *****************************************************************
@@ -1774,7 +1820,7 @@
       ** KL = Command key 12 = Cancel
      C                   PARM                    PINKC
      C                   PARM                    PINKL
- 
+
      C                   SELECT
       *
       ** F3 - End program.
@@ -1794,12 +1840,12 @@
       *
       ** Enter - read selected subfile records.
      C                   OTHER
- 
+
      C                   EVAL      WRdNBrw = 'Y'
      C                   EVAL      WScrn   = 'R'
- 
+
      C                   ENDSL
- 
+
      C     ESRBldBrw     ENDSR
       *
       *****************************************************************
@@ -1896,7 +1942,7 @@
      C                   EVAL      DDSDSN = PSDSNSel
      C                   EVAL      DDSDED = PSDEDSel
      C                   EVAL      DDSDET = PSDETSel
- 
+
      C                   EXSR      SRRtvSEDE
       *
       ** If warning or error occurred in the retrieval of security
@@ -1931,7 +1977,7 @@
       ** Display the main screen.
       *
      C                   EVAL      WScrn  = 'P'
- 
+
      C     ESRRdNBrw     ENDSR
       *
       *****************************************************************
@@ -1942,7 +1988,7 @@
       *                                                               *
       *****************************************************************
      C     SRRtvSEDE     BEGSR
- 
+
                                                                                               CSC011
       ** Use Proc date in SC24X7 for RTV module if CSC011 is present                          CSC011
       ** and current system is support system.                                                CSC011
@@ -2065,7 +2111,7 @@
       ** Redisplay screen
      C
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2077,7 +2123,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSEDE     BEGSR
- 
+
      C                   CALLB     'SESEDECVT'
       *                             =========
       ** INPUT
@@ -2132,9 +2178,9 @@
       ** SE Diary events screen details from incoming transaction
       ** - screen format
      C                   PARM                    CrDE1ScnFmt
- 
+
      C                   EVAL      NwDE1ScnFmt = CrDE1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2161,7 +2207,7 @@
      C                   EVAL      PRdBck = *BLANK
      C                   EVAL      PRdFwd = 'Y'
      C                   ENDIF
- 
+
      C                   CALLB     'SESEDERED'
       *                             =========
       ** INPUT
@@ -2228,7 +2274,7 @@
      C                   EVAL      DDSDSN = PSDSNSel
      C                   EVAL      DDSDED = PSDEDSel
      C                   EVAL      DDSDET = PSDETSel
- 
+
      C                   EXSR      SRRtvSEDE
       *
       ** If warning or error occurred in the retrieval of security
@@ -2262,7 +2308,7 @@
       ** Display the main screen.
       *
      C                   EVAL      WScrn = 'P'
- 
+
      C     ESRRoll       ENDSR
       *
       *****************************************************************
@@ -2273,12 +2319,12 @@
       *                                                               *
       *****************************************************************
      C     SRSavKey      BEGSR
- 
+
      C                   EVAL      WOACTN = DDACTN
      C                   EVAL      WDSDSN = DDSDSN
      C                   EVAL      WDSDED = DDSDED
      C                   EVAL      WDSDET = DDSDET
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2289,7 +2335,7 @@
       *                                                               *
       *****************************************************************
      C     SRRstKey      BEGSR
- 
+
      C                   EVAL      DDACTN = WOACTN
      C                   EVAL      DDSDSN = WDSDSN
      C                   EVAL      DDSDED = WDSDED
@@ -2297,7 +2343,7 @@
       *
       ** Initialise keylists for use in browse module.
      C                   CLEAR                   KeyLists
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2308,11 +2354,11 @@
       *                                                               *
       *****************************************************************
      C     SRSetupKey    BEGSR
- 
+
      C                   EVAL      WDSDSN = DDSDSN
      C                   EVAL      WDSDED = DDSDED
      C                   EVAL      WDSDET = DDSDET
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2328,7 +2374,7 @@
       *
      C                   CLEAR                   CrDE1ScnFmt
      C                   CLEAR                   NwDE1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2356,7 +2402,7 @@
       ** Set processing to end program.
       *
      C                   EVAL      WScrn = 'E'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2386,7 +2432,7 @@
      C     *BLANK        LOOKUP    FldNameArr(Ex)                         99
      C                   EVAL      FldNameArr(Ex) = '*ANY'
      C                   EVAL      MsgIdArr(Ex) = PErrMs
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2404,7 +2450,7 @@
      C                   CLEAR                   MsgIDArr
      C                   CLEAR                   MsgDtaArr
      C                   CLEAR                   IDx
- 
+
      C                   CLEAR                   WFldNamArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WMsgDtaArr
@@ -2413,7 +2459,7 @@
       ** Initialise screen fields error indicators.
       *
      C                   EVAL      SEESEDE = *ALL'Y'
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2498,7 +2544,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           CSE010
      C                   ELSE
@@ -2525,7 +2571,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           S01509
      C                   ELSE
@@ -2552,7 +2598,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           S01510
      C                   ELSE
@@ -2695,6 +2741,34 @@
      C                   ELSE                                                                 CGL031
      C                   MOVEL     'N'           CGL031                                       CGL031
      C                   ENDIF                                                                CGL031
+      *                                                                                      260191A
+      ** Check if S01512 is installed                                                        260191A
+      *                                                                                      260191A
+     C                   CallB     'AOSARDR0'                                                260191A
+     C                   Parm      *BLANKS       PRTCD             7                         260191A
+     C                   Parm      '*VERIFY'     POPTN             7                         260191A
+     C                   Parm      'S01512'      PSARD             6                         260191A
+     C     SCSARD        Parm      SCSARD        DSFDY                                       260191A
+      *                                                                                      260191A
+      ** An NRF (No Record Found) return code is valid.                                      260191A
+      ** Issue database error only for error return codes.                                   260191A
+      *                                                                                      260191A
+     C                   IF        PRtcd <> *BLANKS AND                                      260191A
+     C                             PRtcd <> '*NRF   '                                        260191A
+     C     *LOCK         IN        LDA                                                       260191A
+     C                   EVAL      DBKey = 'S01512'                                          260191A
+     C                   EVAL      DBFile= 'SCSARDPD'                                        260191A
+     C                   EVAL      DBase = 011                                               260191A
+     C                   OUT       LDA                                                       260191A
+     C                   EXSR      *PSSR                                                     260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   IF        PRTCD = *BLANKS                                           260191A
+     C                   MOVE      'Y'           S01512            1                         260191A
+     C                   ELSE                                                                260191A
+     C                   MOVE      'N'           S01512                                      260191A
+     C                   ENDIF                                                               260191A
+      *
       *
       ** Retrieve ZMUSER details.
       *
@@ -2704,7 +2778,7 @@
       ** Access MMODF to determine if Strategic Risk Man. Ind is on
       *
      C                   READ      MMODF                                  01
- 
+
      C                   EVAL      WScrn = 'I'
       *
       ** Access SAR details file to determine if Commitment Control                          BUG2604
@@ -2782,7 +2856,7 @@
       *
       ** Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SESEDE011
- 
+
      C                   ENDSR
       *
       *****************************************************************

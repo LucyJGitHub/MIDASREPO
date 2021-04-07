@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR706553           Date 22May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR706553 - Trades Input Repair, Pay To/From fields are not   *
+      *             amendable. (Child: AR706554)                      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -298,11 +301,11 @@
      C                   MOVE      '0'           *IN61
      C                   MOVE      '0'           *IN62
      C     BJSBRC        IFEQ      *BLANK
-     C     DDTDTP        IFEQ      'TS'
-     C                   MOVE      '1'           *IN61
-     C                   ELSE
-     C                   MOVE      '1'           *IN62
-     C                   END
+     C*****DDTDTP        IFEQ      'TS'                                                     AR706553
+     C**********         MOVE      '1'           *IN61                                      AR706553
+     C**********         ELSE                                                               AR706553
+     C**********         MOVE      '1'           *IN62                                      AR706553
+     C**********         END                                                                AR706553
      C                   ELSE
      C                   MOVE      '1'           *IN61
      C                   MOVE      '1'           *IN62

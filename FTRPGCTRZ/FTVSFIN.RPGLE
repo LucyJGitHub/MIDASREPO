@@ -68,7 +68,7 @@
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSW037A - Additional Field extended to 40 chars (recompile)  *
       *  CSD025 - Customer De-Activation                              *
       *  CSW037 - Additional Field Data on MT300/MT320                *
       *  CSW036 - Dual SWIFT BIC held on Client Details               *

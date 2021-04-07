@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. HUT101             Date 27Mar20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -29,6 +30,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT101 - Upgrade CFT129 to FBM 2.1 SP22                     */
+/*                Payment Authorisation for Funds Transfer           */
+/*                Use /copy FTC0060002                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
@@ -50,7 +54,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PREF &RETC)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -200,11 +204,11 @@
                   CHGJOB SWS(X1XXXXXX)
              ENDDO
 /**/
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*  CALL PROGRAM & MONITOR FOR ERRORS                               */
- 
+
              CALL       PGM(FT0060) PARM(&PREF &RETC)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
  /**/                                                                                     /*CSC022*/
@@ -274,9 +278,9 @@
 /**/
              ENDDO
 /**/
- 
+
 /**   DATABASE ERROR HANDLING   **/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
@@ -301,12 +305,12 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
 /*/COPY WNCPYSRC,FTC0060009                                          */
              ENDDO
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*END:********ENDPGM****/                                             /*042167*/
- 
+
 /**/                                                                  /*042167*/
 /* CALL AOC8000 to release locks */                                   /*042167*/
 /* */                                                                 /*042167*/
@@ -327,4 +331,4 @@ END:         CHGVAR     VAR(&MODULE) VALUE('FT')                      /*042167*/
                 ENDDO                                                                     /*CRE020*/
                                                                                           /*CRE020*/
              ENDPGM                                                   /*042167*/
- 
+

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR806147           Date 21May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. AR806147           Date 21May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -87,12 +88,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter to be used in the vali-     *
+      *           dation of action code when authorising a reversal   *
+      *           transaction. Apply fix 258724.                      *
       *  AR806147 - Value date of any deal amendment must be less     *
       *             than the Early Maturity date if deal has a live   *
       *             Early Maturity deal amendment. (Child: AR806148)  *
       *           - Applied for MD-48300.                             *
       *  MD046248 - Finastra Rebranding                               *
-      *  CDL099 - Split Value Date (Recompile)                        *      
+      *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1981,9 +1985,18 @@ E2   C                   ENDDO
      C*  Access file for deal associated  branch code
      C*  for validation.
      C     @@DLNO        CHAIN     MMDEALLL                           65
+      *                                                                                       260173
+      ** For reversal transaction, use @ACTRV instead of DDACTN in access security checking   260173
+     C                   MOVE      *BLANK        WACTN             1                          260173
+     C     @ACTRV        IFEQ      'X'                                                        260173
+     C                   MOVE      @ACTRV        WACTN                                        260173
+     C                   ELSE                                                                 260173
+     C                   MOVE      DDACTN        WACTN                                        260173
+     C                   ENDIF                                                                260173
      C*
      C                   CALL      'ZVACTBU'
-     C                   PARM      DDACTN        ZACTN             1
+     C**********         PARM      DDACTN        ZACTN             1                          260173
+     C                   PARM      WACTN         ZACTN             1                          260173
      C                   PARM      H@BRCA        ZBR               3
      C                   PARM                    @@ERR             1 0
      C*
@@ -2109,6 +2122,8 @@ E2   C                   ENDDO
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM                    @ACTRV            1                          260173
       *
       * OUTPUTS
       *

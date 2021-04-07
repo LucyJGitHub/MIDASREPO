@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047971           Date 16Oct17               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
@@ -72,9 +73,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251029 - Applied fix 231306.                                 *
+      *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *      
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -2263,12 +2266,19 @@
       * UPDATES AND END THIS PROGRAM. OTHERWISE, COMMIT THE UPDATES
       *
      C     @RTCD         IFNE      *BLANK
-     C     @RTCD         ANDNE     '*RECUPD'                                    CAP006
+     C*****@RTCD         ANDNE     '*RECUPD'                                           CAP006 251029
+      *                                                                                       231306
+     C     @RTCD         IFEQ      '*RECUPD'                                                  231306
+     C     @RTCD         OREQ      '*RECLCK'                                                  231306
+     C                   ROLBK                                                                231306
+      *                                                                                       231306
+     C                   ELSE                                                                 231306
      C                   If        (CSC022 = 'N')                                             CSC022
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
      C                   ROLBK
      C                   EndIf                                                                CSC022
      C                   EXSR      *PSSR
+     C                   ENDIF                                                                231306
      C                   ELSE
      C                   If        (CSC022 = 'N')                                             CSC022
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
@@ -2285,11 +2295,37 @@
      C** workstation send message to screen.                                    CAP006
      C                                                                          CAP006
      C     @RTCD         IFEQ      '*RECUPD'                                    CAP006
+     C     @RTCD         OREQ      '*RECLCK'                                                  231306
+      *                                                                                       231306
+      ** Blank deal number variables if return code is an error due to                        231306
+      ** object lock (Recupd).  Deal number generation needs to be                            231306
+      ** reset until database update is successful.                                           231306
+      *                                                                                       231306
+     C     DDACTN        IFEQ      'I'                                                        231306
+     C                   MOVE      *BLANKS       DDDLNO                                       231306
+     C                   MOVE      *BLANKS       @SIDN                                        231306
+     C                   ENDIF                                                                231306
+      *                                                                                       231306
      C                                                                          CAP006
      C                   MOVEL     '*ANY'        FldNameArr(1)                  CAP006
+      *                                                                                       231306
+     C     @RTCD         IFEQ      '*RECUPD'                                                  231306
      C                   MOVEL     'MMM1067'     MsgIdArr(1)                    CAP006
+     C                   ELSE                                                                 231306
+     C                   MOVEL     'MMM1068'     MsgIdArr(1)                                  231306
+      *                                                                                       231306
+      ** Even if action "I"nsert was done thru F15, message needs to be                       231306
+      ** displayed on main screen to prevent lost of inserted values.                         231306
+      *                                                                                       231306
+     C                   MOVE      *BLANKS       SAVRDNB           1                          231306
+     C                   MOVE      @RDNB         SAVRDNB                                      231306
+     C                   MOVE      *BLANKS       @RDNB                                        231306
+      *                                                                                       231306
+     C                   ENDIF                                                                231306
+      *                                                                                       231306
      C                                                                          CAP006
-     C                   END                                                    CAP006
+     C**********         END                                                           CAP006 231306
+     C                   ELSE                                                                 231306
      C                                                                          CAP006
       * BLANK THE MAIN DETAILS SCREEN
       *
@@ -2314,6 +2350,12 @@
       *
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
+      *                                                                                       231306
+     C     SAVRDNB       IFNE      *BLANKS                                                    231306
+     C                   MOVE      SAVRDNB       @RDNB                                        231306
+     C                   ENDIF                                                                231306
+      *                                                                                       231306
+     C                   ENDIF                                                                231306
       *
       * IF RECORDS ARE STILL TO BE READ FROM THE SUBFILE, READ THEM
       *

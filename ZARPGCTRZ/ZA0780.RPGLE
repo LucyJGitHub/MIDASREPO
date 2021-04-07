@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. 248024             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23050A          Date 20Mar09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248024 - Apply fix patterned after 242105 for determining    *
+      *           'Normally Quoted Decimal for forward points.        *
+      *           Applied fix 243459.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23050A -Reciprocal rate indicator not defaulting.         *
@@ -43,7 +47,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -62,50 +66,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the ZA standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
      D     @@SXP2      S                   LIKE(@@SXP1)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @@AY            S             10  0 DIM(10) CTDATA PERRCD(1)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -247,7 +251,28 @@
      C                   Z-ADD     5             @@NDP             1 0
      C                   GOTO      ZA0799
      C                   END
-      *
+      *                                                                                       248024
+      ** Compare normally-quoted decimal places of both currencies invovled;                  248024
+      ** If both are the same, use either value as NQD...                                     248024
+      *                                                                                       248024
+     C     @@NDP1        IFEQ      @@NDP2                                                     248024
+     C                   Z-ADD     @@NDP1        @@NDP                                        248024
+     C                   GOTO      ZA0799                                                     248024
+     C                   ENDIF                                                                248024
+      *                                                                                       248024
+      ** If they are not the same, use the lesser value of the two...                         248024
+      *                                                                                       248024
+     C     @@NDP1        IFNE      @@NDP2                                                     248024
+     C     @@NDP1        IFLT      @@NDP2                                                     248024
+     C                   Z-ADD     @@NDP1        @@NDP                                        248024
+     C                   ELSE                                                                 248024
+     C     @@NDP2        IFLT      @@NDP1                                                     248024
+     C                   Z-ADD     @@NDP2        @@NDP                                        248024
+     C                   ENDIF                                                                248024
+     C                   ENDIF                                                                248024
+     C                   GOTO      ZA0799                                                     248024
+     C                   ENDIF                                                                248024
+     C*
      C     @@IRAT        IFGE      100
      C                   Z-ADD     2             @@NDP
      C                   ELSE

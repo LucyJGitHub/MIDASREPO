@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+     F*  Last Amend No. 253776             Date 22May20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037149           Date 11May16               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE075             Date 06Dec10               *
@@ -65,6 +66,12 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  253776 - Check the address reference if alternate address is *
+      *           to be printed.                                      *
+      *         - Initialize the report output fields properly.       *
+      *         - Issue DUMP and RETRN in DBSR error handling SR      *
+      *         - Database error should not be issued if RAT21 and    *
+      *           BAL21 are both 0.                                   *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037149 - ORF Queries not running (Recompile)               *
@@ -4684,6 +4691,8 @@
      C                     MOVE '1'       *INU8
      C                     MOVE '1'       *INLR
      C                     WRITEERRAU
+     C                     DUMP                                                               253776
+     C                     RETRN                                                              253776
      C*
      C                     MOVE *BLANKS   DBFILE
      C                     MOVE *BLANKS   DBKEY
@@ -5492,7 +5501,8 @@
      C* Retrieve correspondent details from CGCORRPD via AOALTNR0:        084174
      C*                                                                   084174
      C                     MOVELCCNUM     P#CUST                          084174
-     C                     MOVELRCDT      P#ADCD                          084174
+     C**********           MOVELRCDT      P#ADCD                                       084174 253776
+     C                     MOVELWRCDT     P#ADCD                                              253776
      C                     MOVEL*BLANKS   P#CUS1                          087284
      C                     MOVELCCNUM     P#CUS1                          087284
       *                                                                   CFT004
@@ -5543,7 +5553,8 @@
       *                                                                   087284
       * If address reference is B use AOCUSTRO else AOALTNR0              087284
       *                                                                   087284
-     C           RCDT      IFEQ 'B'                                       087284
+     C********** RCDT      IFEQ 'B'                                                    087284 253776
+     C           WRCDT     IFEQ 'B'                                                           253776
      C                     CALL 'AOCUSTR0'             9090               087284
      C                     PARM *BLANKS   P#RTCD  7                       087284
      C                     PARM '*KEY   ' P#OPTN  7                       087284
@@ -5585,7 +5596,8 @@
       *                                                                   087284
       * Move in address fields                                            087284
       *                                                                   087284
-     C           RCDT      IFEQ 'B'                                       087284
+     C********** RCDT      IFEQ 'B'                                                    087284 253776
+     C           WRCDT     IFEQ 'B'                                                           253776
      C                     MOVELBBCNA1    CNA1                            087284
      C                     MOVELBBCNA2    CNA2                            087284
      C                     MOVELBBCNA3    CNA3                            087284
@@ -5599,6 +5611,9 @@
      C                     ENDIF                                          084174
      C**********           END                                            084174
      C*
+     C                     MOVE WRCDT     RCDT                                                253776
+     C           KLIST4    CHAINCLINT                05                                       253776
+     C           *IN05     IFEQ '1'                                                           253776
      C                     MOVE 'A'       RCDT
      C           KLIST4    CHAINCLINT                99
      C           *IN99     IFEQ '1'                        - B1
@@ -5609,6 +5624,7 @@
      C                     MOVEA'1'       *IN,89
      C                     EXSR DBSR
      C                     END                             - E1
+     C                     ENDIF                                                              253776
      C*
      C                     MOVELCCNUM     AXCNUM  6
      C*
@@ -5727,7 +5743,7 @@
      C                     END                             - E2
      C                     END                             - E1
      C*
-     C                     EXSR INITPR
+     C**********           EXSR INITPR                                                        253776
      C*
      C                     ENDSR                           **DETPR ENDSR**
      C********************************************************************
@@ -6129,8 +6145,22 @@
      C                     MOVE *BLANKS   XNARR
      C                     MOVE *BLANKS   DNARR
      C                     MOVE *BLANKS   BNARR
+     C                     MOVE *BLANKS   ONARR                                               253776
+     C                     MOVE *BLANKS   QNARR                                               253776
+     C                     MOVE *BLANKS   NARRD                                               253776
      C*
      C                     Z-ADD*ZEROS    PSTD0
+     C                     Z-ADD*ZEROS    CHGR0                                               253776
+     C                     Z-ADD*ZEROS    CHGN0                                               253776
+     C                     Z-ADD*ZEROS    TCHR0                                               253776
+     C                     Z-ADD*ZEROS    TCHN0                                               253776
+     C                     Z-ADD*ZEROS    CHGP0                                               253776
+     C                     Z-ADD*ZEROS    SNITMS                                              253776
+     C                     Z-ADD*ZEROS    TNUMD                                               253776
+     C                     Z-ADD*ZEROS    TNUMC                                               253776
+     C                     Z-ADD*ZEROS    OODRL                                               253776
+     C                     Z-ADD*ZEROS    OAODR                                               253776
+     C                     Z-ADD*ZEROS    RATET                                               253776
      C                     Z-ADD*ZEROS    RATE
      C                     Z-ADD*ZEROS    DAYS
      C                     Z-ADD*ZEROS    NUMB0
@@ -7050,6 +7080,7 @@
      C                     END                             - E3
      C*
      C/COPY WNCPYSRC,RE3765C034
+     C                     EXSR INITPR                                                        253776
      C                     EXSR DETPR
      C                     SETOF                     U7U8
      C*
@@ -7613,18 +7644,18 @@
      C                     EXSR OVERDC
      C                     WRITERAT2DC
      C*
-     C           RAT21     IFNE *ZEROS                     - B2
-     C           BAL21     ORNE *ZEROS
+     C********** RAT21     IFNE *ZEROS                     - B2                               253776
+     C********** BAL21     ORNE *ZEROS                                                        253776
      C                     Z-ADDRAT21     ORAT1
      C                     Z-ADDBAL21     OBAL01
-     C                     ELSE                            - X2
-     C                     Z-ADDCHISD     WDATE
-     C                     Z-ADD26        DBASE            ***************
-     C                     MOVE 'RATE '   DBFILE           **DB ERROR 26**
-     C                     MOVELWDATE     DBKEY            ***************
-     C                     MOVEA'1'       *IN,89
-     C                     EXSR DBSR
-     C                     END                             - E2
+     C**********           ELSE                            - X2                               253776
+     C**********           Z-ADDCHISD     WDATE                                               253776
+     C**********           Z-ADD26        DBASE            ***************                    253776
+     C**********           MOVE 'RATE '   DBFILE           **DB ERROR 26**                    253776
+     C**********           MOVELWDATE     DBKEY            ***************                    253776
+     C**********           MOVEA'1'       *IN,89                                              253776
+     C**********           EXSR DBSR                                                          253776
+     C**********           END                             - E2                               253776
      C*
      C           RAT22     IFNE *ZEROS                     - B2
      C           BAL22     ORNE *ZEROS
@@ -7825,18 +7856,18 @@
      C                     EXSR OVERDC
      C                     WRITERAT2DC
      C*
-     C           RAT21     IFNE *ZEROS                     - B2
-     C           BAL21     ORNE *ZEROS
+     C********** RAT21     IFNE *ZEROS                     - B2                               253776
+     C********** BAL21     ORNE *ZEROS                                                        253776
      C                     Z-ADDRAT21     ORAT1
      C                     Z-ADDBAL21     OBAL01
-     C                     ELSE                            - X2
-     C                     Z-ADDCHISD     WDATE
-     C                     Z-ADD27        DBASE            ***************
-     C                     MOVE 'RATE '   DBFILE           **DB ERROR 27**
-     C                     MOVELWDATE     DBKEY            ***************
-     C                     MOVEA'1'       *IN,89
-     C                     EXSR DBSR
-     C                     END                             - E2
+     C**********           ELSE                            - X2                               253776
+     C**********           Z-ADDCHISD     WDATE                                               253776
+     C**********           Z-ADD27        DBASE            ***************                    253776
+     C**********           MOVE 'RATE '   DBFILE           **DB ERROR 27**                    253776
+     C**********           MOVELWDATE     DBKEY            ***************                    253776
+     C**********           MOVEA'1'       *IN,89                                              253776
+     C**********           EXSR DBSR                                                          253776
+     C**********           END                             - E2                               253776
      C*
      C           RAT22     IFNE *ZEROS                     - B2
      C           BAL22     ORNE *ZEROS

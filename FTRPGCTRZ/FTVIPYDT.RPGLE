@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036683A          Date 12Apr16               *
+      *  Last Amend No. HUT108             Date 26Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036683A          Date 12Apr16               *
       *                 MD036683           Date 06Jan16               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT108 - Upgrade HUT017 to FBM 2.1 SP22                      *
+      *           Pay Value Date Validation and Defaulting Changes    *
+      *           Add /copies: HUT108_001, HUT108_002, HUT108_003     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036683A - Validate the settlement value date against the   *
       *              DACO even if the value date is holiday.          *
@@ -326,6 +330,7 @@
      C                   MOVE      BJLCCY        ZCCY
      C                   MOVE      BJSLCD        ZLOC
      C                   ENDIF
+      /COPY WNCPYSRC,HUT108_001                                                               HUT108
       *
      C                   If        ZCCY = BJCYCD
      C                   Z-ADD     BJRDNB        ZDAYNO
@@ -354,6 +359,7 @@
       *
      C                   Z-ADD     ZDYNBR        WPYDT
      C                   EndIf
+      /COPY WNCPYSRC,HUT108_002                                                               HUT108
       *
      C                   ELSE
       *
@@ -610,6 +616,7 @@
       *
       ** Incoming Payments for file update - file format
      C                   PARM                    NwIPFilFmt
+      /COPY WNCPYSRC,HUT108_003                                                               HUT108
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

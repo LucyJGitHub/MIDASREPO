@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR567569           Date 27Jul12               *
+      *  Last Amend No. MD052122           Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR567569           Date 27Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *   MD052122 - Include field tag 119 and SWIFT 2018 tags 111    *
+      *              and 121 in block 3. Also recoded some parts of   *
+      *              block 1-3 to handle correct position of details. *
       *  MD046248 - Finastra Rebranding                               *
       *  AR567569 - MT950 with multiple messages can cause array      *
       *             index error.  Fix is to report multiple and       *
@@ -108,7 +112,8 @@
      E                    IMSG     9999  1                                CSW095
      E                    LINE      130  1
      E                    MSGA    1   3 78
-     E                    HDGA    1   9 78
+     E**********          HDGA    1   9 78                              MD052122
+     E                    HDGA    1  14 78                              MD052122
      E                    CPY@    1   1 80                                S01310
       *
      ILDA         DS                            256
@@ -155,15 +160,26 @@
      I                                        7  18 @RAD
      I                                       19  22 @SNN
      I                                       23  28 @SQN
-     I                                       34  36 @MTP
-     I                                       37  40 @ITM
-     I                                       41  68 @MIR
-     I                                       69  74 @ODT
-     I                                       75  78 @OTM
-     I                                       79  79 @MPY
-     I                                       81  83 @WK3
+     I**********                             34  36 @MTP                                    MD052122
+     I**********                             37  40 @ITM                                    MD052122
+     I**********                             41  68 @MIR                                    MD052122
+     I**********                             69  74 @ODT                                    MD052122
+     I**********                             75  78 @OTM                                    MD052122
+     I**********                             79  79 @MPY                                    MD052122
+     I**********                             81  83 @WK3                                    MD052122
       **  Subdivide message header
       *
+     I            DS                                                                        MD052122
+     I                                        1  85 HDR2                                    MD052122
+     I                                        5   7 @MTP                                    MD052122
+     I                                        8  11 @ITM                                    MD052122
+     I                                       12  39 @MIR                                    MD052122
+     I                                       40  45 @ODT                                    MD052122
+     I                                       46  49 @OTM                                    MD052122
+     I                                       50  50 @MPY                                    MD052122
+     I                                       52  54 @WK3                                    MD052122
+      **  Format for header block 2                                                         MD052122
+      *                                                                                     MD052122
      I            DS
      I                                        1  78 RCD1
      I                                        1  12 ORAD
@@ -2045,9 +2061,19 @@
       *
      C           SFLE      BEGSR
       *
+      *                                                                                     MD052122
+      ** Determine starting position of block 1                                             MD052122
+     C                     Z-ADD1         X                                                 MD052122
+     C                     Z-ADD1         WCTR    50                                        MD052122
+     C           IMSG,X    IFEQ ' '                                                         MD052122
+     C           IMSG,X    DOUEQ'{'                                                         MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     ENDIF                                                            MD052122
       **  Analyse message headers using data structure
-     C                     MOVEAIMSG,1    @HDR  114
-     C                     Z-ADD86        X
+     C**********           MOVEAIMSG,1    @HDR  114                                         MD052122
+     C**********           Z-ADD86        X                                                 MD052122
+     C                     MOVEAIMSG,X    @HDR  114                                         MD052122
       *
       **  Write basic header (block 1)
      C                     MOVE HDGA,1    RCD
@@ -2063,6 +2089,12 @@
      C                     MOVE RCD1      RCD
      C                     WRITEMS5015F3
      C                     ADD  2         RRN
+      *                                                                                     MD052122
+      ** Determine starting position of block 2                                             MD052122
+     C           IMSG,X    DOUEQ'{'                                                         MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     MOVEAIMSG,X    HDR2   85                                         MD052122
       *
       **  Write application header (block 2)
      C                     MOVE HDGA,3    RCD
@@ -2085,6 +2117,12 @@
      C                     MOVE RCD2      RCD
      C                     WRITEMS5015F3
      C                     ADD  2         RRN
+      *                                                                                     MD052122
+      ** Determine starting position of block 3                                             MD052122
+     C           IMSG,X    DOUEQ'{'                                                         MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     MOVEAIMSG,X    @WK3                                              MD052122
       *
       **  If user header present
      C/COPY WNCPYSRC,MS5015C001
@@ -2092,21 +2130,25 @@
      C                     MOVE *BLANKS   OBPY
      C                     MOVE *BLANKS   OMUR
      C/COPY WNCPYSRC,MS5015C007
-     C                     Z-ADD84        X
+     C**********           Z-ADD84        X                                                 MD052122
+     C                     ADD  3         X                                                 MD052122
       *
       **  Write user header (block 3)
      C                     MOVE HDGA,5    RCD
      C                     WRITEMS5015F3
      C                     ADD  1         RRN
-     C                     MOVE HDGA,6    RCD
+     C**********           MOVE HDGA,6    RCD                                               MD052122
      C/COPY WNCPYSRC,MS5015C009
-     C                     WRITEMS5015F3
-     C                     ADD  1         RRN
+     C**********           WRITEMS5015F3                                                    MD052122
+     C**********           ADD  1         RRN                                               MD052122
      C/COPY WNCPYSRC,MS5015C002
       *
       **  If banking priority present
      C                     MOVEAIMSG,X    @WK5    5
      C           @WK5      IFEQ '{113:'
+     C                     MOVE HDGA,10   RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
      C                     ADD  5         X
      C                     Z-ADD1         Z       30
      C           IMSG,X    DOUEQ'}'
@@ -2114,14 +2156,21 @@
      C                     ADD  1         X
      C                     ADD  1         Z
      C                     END
-     C                     MOVEALINE      OBPY
+     C**********           MOVEALINE      OBPY                                              MD052122
+     C                     MOVEALINE      RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
      C                     MOVEA*BLANKS   LINE
      C                     ADD  1         X
      C                     END
       *
       **  If message user reference (MUR) present
+     C           WCTR      DOUEQ6                                                           MD052122
      C                     MOVEAIMSG,X    @WK5
      C           @WK5      IFEQ '{108:'
+     C                     MOVE HDGA,11   RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
      C                     ADD  5         X
      C                     Z-ADD1         Z
      C           IMSG,X    DOUEQ'}'
@@ -2129,16 +2178,82 @@
      C                     ADD  1         X
      C                     ADD  1         Z
      C                     END
-     C                     MOVEALINE      OMUR
+     C**********           MOVEALINE      OMUR                                              MD052122
+     C                     MOVEALINE      RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
      C                     MOVEA*BLANKS   LINE
      C                     ADD  1         X
      C                     END
      C/COPY WNCPYSRC,MS5015C008
       *
-     C                     MOVE RCD3      RCD
+     C**********           MOVE RCD3      RCD                                               MD052122
      C/COPY WNCPYSRC,MS5015C010
-     C                     WRITEMS5015F3
-     C                     ADD  2         RRN
+     C**********           WRITEMS5015F3                                                    MD052122
+     C**********           ADD  2         RRN                                               MD052122
+      *                                                                                     MD052122
+      **  SWIFT 2018                                                                        MD052122
+      *                                                                                     MD052122
+     C                     MOVEAIMSG,X    @WK5                                              MD052122
+     C           @WK5      IFEQ '{119:'                                                     MD052122
+     C                     MOVE HDGA,12   RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     ADD  5         X                                                 MD052122
+     C                     Z-ADD1         Z                                                 MD052122
+     C           IMSG,X    DOUEQ'}'                                                         MD052122
+     C                     MOVE IMSG,X    LINE,Z                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ADD  1         Z                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     MOVEALINE      RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     MOVEA*BLANKS   LINE                                              MD052122
+     C                     ENDIF                                                            MD052122
+      *                                                                                     MD052122
+     C                     MOVEAIMSG,X    @WK5                                              MD052122
+     C           @WK5      IFEQ '{111:'                                                     MD052122
+     C                     MOVE HDGA,13   RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     ADD  5         X                                                 MD052122
+     C                     Z-ADD1         Z                                                 MD052122
+     C           IMSG,X    DOUEQ'}'                                                         MD052122
+     C                     MOVE IMSG,X    LINE,Z                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ADD  1         Z                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     MOVEALINE      RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     MOVEA*BLANKS   LINE                                              MD052122
+     C                     ENDIF                                                            MD052122
+      *                                                                                     MD052122
+     C                     MOVEAIMSG,X    @WK5                                              MD052122
+     C           @WK5      IFEQ '{121:'                                                     MD052122
+     C                     MOVE HDGA,14   RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     ADD  5         X                                                 MD052122
+     C                     Z-ADD1         Z                                                 MD052122
+     C           IMSG,X    DOUEQ'}'                                                         MD052122
+     C                     MOVE IMSG,X    LINE,Z                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     ADD  1         Z                                                 MD052122
+     C                     ENDDO                                                            MD052122
+     C                     ADD  1         X                                                 MD052122
+     C                     MOVEALINE      RCD                                               MD052122
+     C                     WRITEMS5015F3                                                    MD052122
+     C                     ADD  1         RRN                                               MD052122
+     C                     MOVEA*BLANKS   LINE                                              MD052122
+     C                     ENDIF                                                            MD052122
+     C                     ADD  1         WCTR                                              MD052122
+     C                     ENDDO                                                            MD052122
+     C                     ADD  1         RRN                                               MD052122
+      *                                                                                     MD052122
      C/COPY WNCPYSRC,MS5015C004
      C                     ADD  6         X
      C                     END

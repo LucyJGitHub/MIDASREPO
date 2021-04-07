@@ -4,19 +4,21 @@
 /*EXI *  TEXT('Midas PM Generate positions & trade events')
      F*****************************************************************
      F*                                                               *
-     F*  Midas - Portfolio Management Module                      *
+     F*  Midas - Portfolio Management Module                          *
      F*                                                               *
      F*  PM1400 - Generate Forward Portfolio Positions                *
      F*              and Portfolio Trade Events                       *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057247           Date 01Feb21               *
+      *  Prev Amend No. AR1075401          Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -49,6 +51,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD057247 - Multiple calls of UTCHOBJEX for several COB com-  *
+      *             ponents - Securities module.                      *
+      *           - Moved the call of AOSARDR0 from /copy ZLCDZ1.     *
+      *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
+      *              Recompiled. (Child: AR1075402)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -508,6 +515,35 @@
      C                     EXSR *PSSR                                     CEU017
      C                     END                                            CEU017
      C                     END                                            CEU017
+      *                                                                                     MD057247
+      ** Access Switchable Features file to determine if CSE031 is                          MD057247
+      ** installed in the system.                                                           MD057247
+      *                                                                                     MD057247
+     C                     CALL 'AOSARDR0'                                                  MD057247
+     C                     PARM           URTNCD  7                                         MD057247
+     C                     PARM '*VERIFY' UOPTN   7                                         MD057247
+     C                     PARM 'CSE031'  UUKEY   6                                         MD057247
+     C                     PARM           UDSFDY 76                                         MD057247
+      *                                                                                     MD057247
+     C                     MOVE 'N'       CSE031  1                                         MD057247
+     C           URTNCD    IFEQ *BLANKS                                                     MD057247
+     C                     MOVE 'Y'       CSE031                                            MD057247
+     C                     ENDIF                                                            MD057247
+      *                                                                                     MD057247
+      ** Access Switchable Features file to determine if CSE071 is                          MD057247
+      ** installed in the system.                                                           MD057247
+      *                                                                                     MD057247
+     C                     CALL 'AOSARDR0'                                                  MD057247
+     C                     PARM           URTNCD                                            MD057247
+     C                     PARM '*VERIFY' UOPTN                                             MD057247
+     C                     PARM 'CSE071'  UUKEY                                             MD057247
+     C                     PARM           UDSFDY                                            MD057247
+      *                                                                                     MD057247
+     C                     MOVE 'N'       CSE071  1                                         MD057247
+     C           URTNCD    IFEQ *BLANKS                                                     MD057247
+     C                     MOVE 'Y'       CSE071                                            MD057247
+     C                     ENDIF                                                            MD057247
+      *                                                                                     MD057247
      C****                                                                B08268
      C****CCESS LF/SDGELRL1 TO OBTAIN GENERAL LEDGER DETAILS              B08268
      C****                 READ SDGELRL1                 71               B08268
@@ -1712,7 +1748,7 @@
       /EJECT
       /COPY ZSRSRC,ZDATE2Z2
       /EJECT
-      /COPY ZSRSRC,ZLCDZ1
+      /COPY ZSRSRC,ZLCDZ1                                                                   MD057247
       /EJECT
       /COPY ZSRSRC,ZCCYCN
       ****/EJECT

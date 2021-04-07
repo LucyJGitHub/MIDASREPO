@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. 250041A            Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250041A - Increased the length of receiver charges wrkfield. *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
@@ -75,7 +77,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -96,64 +98,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *                                                                                       CFT017
@@ -165,27 +167,27 @@
       *                                                                                       CFT017
       ** Array of warning message data.                                                       CFT017
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                      CFT017
- 
+
       ** Incoming Transaction (First screen level 1)
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Incoming Transaction (Fourth screen level 2)
      D TranInFour    E DS                  EXTNAME(FTOPY6PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY4PD)
- 
+
       ** Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADIG           S              2  0
@@ -194,18 +196,21 @@
      D WVMIFF          S              1                                                       CFT017
      D BTMIFE          S             11P 0                                                    CFT017
      D Wx              S              3P 0                                                    CFT017
+      ** Workfield for receiver charges remitted                                             250041A
+     D RCRM            S             12P 0                                                   250041A
+                                                                                             250041A
                                                                                             MD000091
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -216,28 +221,28 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
      C                   Eval      MsgIDXAr  = *Blanks
      C                   Eval      MsgDtaXAr = *Blanks
      C                   Eval      Idx = 0
      C                   Eval      Wx = 0                                                     CFT017
- 
+
       ** Receiver's Charges Remitted validation
- 
+
      C                   ExSr      SrRcvChg
- 
+
       ** If an error was found, set the return code appropriately
- 
+
      C                   If        OKRCRM = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   EndIf
- 
+
      C                   Return
- 
+
       *****************************************************************
       /Title Sr/SrRcvChg
       *****************************************************************
@@ -251,21 +256,23 @@
       * ZEDIT       - Converts numeric value to screen value.         *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRcvChg      BegSr
- 
+
       ** Receiver's Charges Remitted is optional.
       ** If entered must be valid for payment currency details
- 
+
      C                   Eval      @RCRM = *Zero
- 
+
       ** Receiver's charges remitted entered while the Detail of Charges
       ** is 'BEN', or Detail of Charges is 'OUR' and the add/deduct indica
       ** tor is not 'A' or Details of Charges is 'SHA', error.
- 
-     C                   Move(P)   SRCRM         @RCRM                                        CAP084
+
+     C**********         Move(P)   SRCRM         @RCRM                                CAP084 250041A
+     C                   Move(P)   SRCRM         RCRM                                        250041A
      C                   If        SRCRM <> *Blank
-     C                             And @RCRM <> *Zero                                         CAP084
+     C                             And RCRM  <> *Zero                                        250041A
+     C**********                   And @RCRM <> *Zero                                 CAP084 250041A
      C                   If        (SDTCH = 'BEN') Or (SDTCH = 'SHA') Or
      C                             (SDTCH = 'OUR') And (SADDC <> 'A')
      C
@@ -274,18 +281,18 @@
      C                   Movel     'SRCRM'       FldNamXAr(Idx)
      C                   Movel     'FTM3231'     MsgIdXAr(Idx)
      C                   EndIf
- 
+
      C                   Eval      ZFIELD = *Blank
      C                   Eval      ZFIELD = SRCRM
      C                   Eval      ZADIG = 11 - @RCDP
      C                   Eval      ZADEC = @RCDP
- 
+
      C                   CallB     'ZALIGN'
      C                   Parm                    ZalignOK
      C                   Parm                    ZFIELD
      C                   Parm                    ZADEC
      C                   Parm                    ZADIG
- 
+
      C                   If        ZalignOK = 'N'
      C                   Move      'N'           OKRCRM
      C                   Add       1             Idx
@@ -318,10 +325,10 @@
      C                   ENDIF                                                                CFT017
       *                                                                                       CFT017
      C                   EndIf
- 
+
       ** If Receiver's charges is entered, instructed amount must not be
       ** zero
- 
+
      C                   If        @PDAM = *Zero  And SPYTP <> 'RP'
      C                   If        @MT103='Y'                                                 208219
      C                             And (SSTTP <> '02')                                        208219
@@ -332,9 +339,9 @@
      C                   Endif                                                                208219
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/*InzSr
       *****************************************************************
@@ -346,9 +353,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
      C     *Entry        Plist
      C                   Parm                    RetCodeIn
      C                   Parm                    TranInPrim
@@ -364,9 +371,9 @@
      C                   PARM                    CFT017                                       CFT017
      C                   PARM                    WVMIFF                                       CFT017
      C                   PARM                    BTMIFE                                       CFT017
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

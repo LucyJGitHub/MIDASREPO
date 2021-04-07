@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 261824             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -155,11 +160,11 @@
      D Wx              S              2P 0
       *
       ** Parameters for ZDATE1
- 
+
      D PDate           S              6A
      D PDaynoOut       S              5P 0
      D ErrorFlag       S              1A
- 
+
       ** Parameters for ZCHKH
      D PDateIn         S              5P 0
      D PCurrency       S              3A
@@ -179,7 +184,7 @@
      D  PCRArr         S             12A
      D  PEvtCd         S              5P 0
      D  PNxtCd         S              5P 0
- 
+
      D WFstCpn         S              5P 0
      D WKFCPN          S              4A
      D PCpnRt          S             15P 0
@@ -224,7 +229,7 @@
      C                   MOVE      DDCD10        WSCD(10)
      C                   MOVE      DDCD11        WSCD(11)
      C                   MOVE      DDCD12        WSCD(12)
- 
+
      C                   MOVE      DDCR01        WSCR(1)
      C                   MOVE      DDCR02        WSCR(2)
      C                   MOVE      DDCR03        WSCR(3)
@@ -248,13 +253,13 @@
      C                   IF        OKFCPN <> 'Y'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKFCPN <> 'N'
      C                   Z-ADD     WFstCpn       S1FCPN
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -262,7 +267,7 @@
       *  SRVALFCPNDT - Validation for Fisrt Coupon Date               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValFCpnDt   BEGSR
       *
       ** Validate if not equal to blanks
@@ -281,7 +286,7 @@
       ** Check valid date
       *
      C                   TESTN                   DDFCPN               01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKFCPN
      C                   ADD       1             IDx
@@ -289,7 +294,7 @@
      C                   MOVEL     'SEA0182'     MsgIdXAr(IDx)
      C                   GOTO      EValFCpnDt
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       PDate
      C                   MOVE      DDFCPN        PDate
      C                   CALLB     'ZDATE1'
@@ -297,7 +302,7 @@
      C                   PARM      *ZEROS        PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        ErrorFlag
- 
+
      C                   IF        ErrorFlag = 'Y'
      C                   MOVE      'N'           OKFCPN
      C                   ADD       1             IDx
@@ -305,7 +310,7 @@
      C                   MOVEL     'SEA0182'     MsgIdXAr(IDx)
      C                   GOTO      EValFCpnDt
      C                   ENDIF
- 
+
      C                   Z-ADD     PDaynoOut     WFstCpn
       *
       ** If processing type is 3 and switch CSE005 is on
@@ -334,6 +339,7 @@
       *
      C                   IF        WFstCpn <= S1ITLD OR
      C                             WFstCpn > S1MATY
+     C                             and S1MATY <> *ZEROS                                       261824
      C                   MOVE      'N'           OKFCPN
      C                   ADD       1             IDx
      C                   MOVEL     'DDFCPN'      FldNamXAr(IDx)
@@ -347,33 +353,33 @@
      C                   Z-ADD     1             Wx
      C                   MOVEL     DDFCPN        WKFCPN
      C                   MOVEL     'N'           WLoop
- 
+
      C                   DOW       Wx <= 12 AND WLoop = 'N'
- 
+
      C                   IF        WKFCPN = WSCD(Wx) AND
      C                             WSCR(Wx) <> 'R'
      C                   EVAL      WLoop = 'Y'
      C                   ENDIF
- 
+
      C                   ADD       1             Wx
      C                   ENDDO
- 
+
      C                   IF        WLoop = 'N'
      C                   MOVE      'W'           OKFCPN
      C                   ADD       1             WIx
      C                   MOVEL     'DDFCPN'      WFldNmXAr(WIx)
      C                   MOVEL     'SEA0181'     WMsgIdXAr(WIx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If first coupon date not entered, get next coupon date after
       ** the initial date.
- 
+
      C                   IF        PCpnRt <> *ZEROS AND OKITLD <> 'N' AND
      C                             OKMATY1 <> 'N' AND OKMATY2 <> 'N' AND
      C                             OKBCNV <> 'N'  AND
- 
+
      C                             OKCD01 <> 'N' AND OKCD02 <> 'N' AND
      C                             OKCD03 <> 'N' AND OKCD04 <> 'N' AND
      C                             OKCD05 <> 'N' AND OKCD06 <> 'N' AND
@@ -387,11 +393,11 @@
      C                             OKCR07 <> 'N' AND OKCR08 <> 'N' AND
      C                             OKCR09 <> 'N' AND OKCR10 <> 'N' AND
      C                             OKCR11 <> 'N' AND OKCR12 <> 'N'
- 
+
      C                   EVAL      PEvtCd = S1ITLD + 1
      C                   MOVEA     WSCD          PCDArr
      C                   MOVEA     WSCR          PCRArr
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    S1ITLD
      C                   PARM      *ZEROS        PFCPN
@@ -414,14 +420,14 @@
      C                   PARM                    DDHCY8                                       CSE071
      C                   PARM                    DDHCY9                                       CSE071
      C                   PARM                    PNxtCd
- 
+
      C                   Z-ADD     PNxtCd        WFstCpn
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValFCpnDt    ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -429,7 +435,7 @@
       *  SRChkHol - Check if First Coupon Date is Holiday             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRChkHol      BEGSR
       *
       ** If the first coupon date is a holiday in nominal currency
@@ -440,9 +446,9 @@
      c                   PARM      S1NMCY        PCurrency
      C                   PARM      *BLANKS       PLocation
      C                   PARM                    PHolInd
- 
+
      C                   IF        PHolInd = 'H'
- 
+
      C                   Z-ADD     1             PDaysFwd
      C                   CALLB     'ZFWDT'
      C                   PARM                    PDateIn
@@ -450,19 +456,19 @@
      C                   PARM                    PDaynoOut
      C                   PARM                    PCurrency
      C                   PARM                    PLocation
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM                    PZDate
      C                   PARM                    PZaDate
- 
+
      C                   MOVE      PZDate        DDFCPN
      C                   MOVE      PDaynoOut     WFstCpn
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

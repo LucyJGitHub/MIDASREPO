@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 258901             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,7 +40,7 @@
       *                 CAP003  *CREATE    Date 28Jan98               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  258901 - Error in tax amount for charges and commissions.    *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -66,12 +67,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FSECGT     IF   E           K DISK
      FTRADSDL2  IF   E           K DISK
      F                                     RENAME(TRADSDF:TRADSDF2)
      F                                     PREFIX(F2)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,92 +84,92 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ZRA             S             15  0 DIM(15)                              RANGE LIMITS
      D ZPC             S              7  4 DIM(15)                              PERCENTAGES
      D ZCG             S             15  0 DIM(15)                              FLAT CHARGES
- 
- 
+
+
       ** Trade charges & commissions in screen format
      D TrChCm        E DS                  EXTNAME(SETRCCPD)
- 
+
       ** Trade charges & commissions Ok indicators
      D OKTrChCm      E DS                  EXTNAME(SEETRCCPD)
- 
+
       ** Previous Trade charges & commissions in screen format
      D @P_TRCC       E DS                  EXTNAME(SETRCCPD)
      D                                     PREFIX(@P_)
- 
- 
+
+
       ** Security Details
      D SECTY         E DS                  EXTNAME(SECTYD)
- 
- 
+
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
       ** External data structure for currency details.
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       **Second DS for access programs, long data structure.
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D*TCNR*****       S              6S 0                                                    CSD027
      D TCNR            S              6A                                                      CSD027
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -176,9 +177,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Clear calculated amounts
- 
+
      C                   Z-ADD     0             Cal_TBCA         13 0
      C                   Z-ADD     0             Cal_TCCA         13 0
      C                   Z-ADD     0             Cal_TCA1         13 0
@@ -334,7 +335,7 @@
       ** Return
       *
      C                   RETURN
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -351,7 +352,7 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      BVCHRC        @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6SPRT        ZRATE1
      C                   MOVE      A6MDIN        ZMDI1
      C                   Z-ADD     NomCcySPRT    ZRATE2
@@ -394,7 +395,7 @@
       *  Edit Broker Commission calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TBCA
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TBCA      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -415,7 +416,7 @@
      C                   MOVE      Cal_DDTBCA    DDTBCA
      C                   MOVEL     'Y'           TBCA_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -442,7 +443,7 @@
       *  Edit Customer Commission calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCCA
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCCA      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -463,7 +464,7 @@
      C                   MOVE      Cal_DDTCCA    DDTCCA
      C                   MOVEL     'Y'           TCCA_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -487,7 +488,7 @@
       *  Edit Charge Amount 1 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA1
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA1      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -508,7 +509,7 @@
      C                   MOVE      Cal_DDTCA1    DDTCA1
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -532,7 +533,7 @@
       *  Edit Charge Amount 2 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA2
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA2      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -553,7 +554,7 @@
      C                   MOVE      Cal_DDTCA2    DDTCA2
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -577,7 +578,7 @@
       *  Edit Charge Amount 3 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA3
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA3      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -598,7 +599,7 @@
      C                   MOVE      Cal_DDTCA3    DDTCA3
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -622,7 +623,7 @@
       *  Edit Charge Amount 4 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA4
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA4      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -643,7 +644,7 @@
      C                   MOVE      Cal_DDTCA4    DDTCA4
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -667,7 +668,7 @@
       *  Edit Charge Amount 5 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA5
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA5      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -688,7 +689,7 @@
      C                   MOVE      Cal_DDTCA5    DDTCA5
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -712,7 +713,7 @@
       *  Edit Charge Amount 6 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA6
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA6      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -733,7 +734,7 @@
      C                   MOVE      Cal_DDTCA6    DDTCA6
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -757,7 +758,7 @@
       *  Edit Charge Amount 7 calculated
       *
      C                   Z-ADD     ZCHGA         Cal_TCA7
- 
+
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      Cal_TCA7      ZFLD15
      C                   EXSR      EDIT_AMT
@@ -778,7 +779,7 @@
      C                   MOVE      Cal_DDTCA7    DDTCA7
      C                   MOVEL     'Y'           TCCx_Chgd
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -885,6 +886,8 @@
      C     Cal_TAXA      IFNE      *ZEROS                                                    BUG7703
      C                   EXSR      EDIT_AMT
      C                   MOVE      ZOUT21        Cal_DDTAXA       14
+     C                   ELSE                                                                 258901
+     C                   MOVE      *BLANKS       Cal_DDTAXA                                   258901
      C                   ENDIF                                                               BUG7703
       *
       *  Override Tax Amount if
@@ -902,7 +905,7 @@
      C                   Z-ADD     Cal_TAXA      TAXA
      C                   MOVE      Cal_DDTAXA    DDTAXA
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -943,7 +946,7 @@
      C                   Z-ADD     Cal_BCMR      BCMR
      C                   MOVE      Cal_DDBCMR    DDBCMR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -984,7 +987,7 @@
      C                   Z-ADD     Cal_CCMR      CCMR
      C                   MOVE      Cal_DDCCMR    DDCCMR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1038,7 +1041,7 @@
      C                   Z-ADD     Cal_TXRB      TXRB
      C                   MOVE      Cal_DDTXRB    DDTXRB
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1437,7 +1440,7 @@
      C                   MOVE      ChgCcyDec     ZCDPI
      C                   MOVE      NomCcyDec     ZCDPO
      C                   END
- 
+
      C                   EXSR      ZTCAL1
       *
       *    Reset sign
@@ -1457,11 +1460,11 @@
       *                                                               *
       *****************************************************************
      C     ZCCAL1        BEGSR
- 
+
      C                   CALLB     'ZCCAL'
- 
+
       * INPUTS
- 
+
       *
       * FROM THE CHARGE TYPES FILE
       *
@@ -1500,12 +1503,12 @@
      C                   PARM                    ZTPI             15 0
      C                   PARM                    S01446            1
      C                   PARM                    BVACOP            1
- 
+
       * OUTPUTS
- 
+
       * CHARGE/COMMISSION AMOUNT CALCULATED
      C                   PARM      *ZERO         ZCHGA            15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1515,11 +1518,11 @@
       *                                                               *
       *****************************************************************
      C     ZTCAL1        BEGSR
- 
+
      C                   CALLB     'ZTCAL'
- 
+
       * INPUTS
- 
+
       *
       * FROM THE CHARGE TYPES FILE
       *
@@ -1550,12 +1553,12 @@
       *  New parameters for S01446
       *
      C                   PARM                    S01446
- 
+
       * OUTPUTS
- 
+
       * THE TAX CALCULATED (ZTAXA)
      C                   PARM      *ZERO         ZTAXA            15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1613,13 +1616,13 @@
      C     KLSECGT       KLIST
      C                   KFLD                    @C_CCY            3
      C                   KFLD                    @C_CCOM           2
- 
+
      C                   MOVE      CustTAXC      @C_CCOM
- 
+
      C     KLSECGT       CHAIN     SECGT                              44
- 
+
       * If found and taxable, set up charge details
- 
+
      C     *IN44         IFEQ      '0'
      C     RECI          ANDEQ     'D'
      C                   MOVE      'Y'           TAX_CALC
@@ -1673,7 +1676,7 @@
      C                   MOVE      MNCH          TXC_MNCH
      C                   MOVE      MXCH          TXC_MXCH
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1683,13 +1686,13 @@
       *                                                               *
       *****************************************************************
      C     EDIT_AMT      BEGSR
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15           15 0
      C                   PARM      NomCcyDec     ZDECS             1 0
      C                   PARM      *BLANK        ZECODE            1
      C                   PARM      *BLANK        ZOUT21           21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1699,11 +1702,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUTS
- 
+
       ** Trade reference
       ** Security
       ** Trade Type
@@ -1751,13 +1754,13 @@
      C                   PARM                    BVCHRC            3
      C                   PARM                    BVACSD            1
      C                   PARM                    S01446            1
- 
+
       * INPUTS & OUTPUTS
- 
+
       ** Trade Charges & commissions screen fields
- 
+
      C                   PARM                    TrChCm
- 
+
       ** Trade details
      C                   PARM                    TBCA             13 0
      C                   PARM                    TCCA             13 0
@@ -1772,8 +1775,8 @@
      C                   PARM                    BCMR             13 0                         S0117
      C                   PARM                    CCMR             13 0                         S0117
      C                   PARM                    TXRB             13 0                         S0117
- 
- 
+
+
      C     *LIKE         DEFINE    CHGB          TXC_CHGB
      C     *LIKE         DEFINE    THRI          TXC_THRI
      C     *LIKE         DEFINE    MNCH          TXC_MNCH
@@ -1823,15 +1826,15 @@
      C     *LIKE         DEFINE    FC14          TXC_FC14
      C     *LIKE         DEFINE    FC15          TXC_FC15
      C     *LIKE         DEFINE    LPSI          TXC_LPSI
- 
- 
- 
+
+
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

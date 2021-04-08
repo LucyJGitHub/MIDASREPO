@@ -1012,7 +1012,10 @@
       ** new currency field is not entered
 
      C     DDWPSET       IFEQ      'Y'
-     C     DDMULTI       ANDEQ     'Y'
+     C     DDWPSET       ORNE      'Y'                                                      MD057604
+                                                                                            MD057604
+     C*****DDMULTI       ANDEQ     'Y'                                                      MD057604
+     C     DDMULTI       IFEQ      'Y'                                                      MD057604
      C     DDLNCAT       ANDNE     'DISC'
      C     DDNCCYB       ANDEQ     *BLANKS
      C     DDNCCY        ANDEQ     *BLANKS
@@ -1027,27 +1030,8 @@
      C                   MOVEL     'DDNCCYB'     FldNameArr(Ix)
      C                   MOVEL     'LEV0175'     MsgIdArr(Ix)
      C                   ENDIF
-                                                                                            MD057604
-     C                   ELSE                                                               MD057604
-     C     DDWPSET       IFNE      'Y'                                                      MD057604
-     C     DDMULTI       ANDEQ     'Y'                                                      MD057604
-     C     DDLNCAT       ANDNE     'DISC'                                                   MD057604
-     C     DDNCCYB       ANDEQ     *BLANKS                                                  MD057604
-     C     DDNCCY        ANDEQ     *BLANKS                                                  MD057604
-     C     DDACTN        ANDEQ     'A'                                                      MD057604
-                                                                                            MD057604
-     C     DDPSTM        IFNE      '00'                                                     MD057604
-     C     DDPSTM        ANDNE     '  '                                                     MD057604
-     C     DDRSTM        ORNE      '00'                                                     MD057604
-     C     DDRSTM        ANDNE     '  '                                                     MD057604
-     C                   EVAL      Idx = Idx + 1                                            MD057604
-     C                   EVAL      Ix = Idx                                                 MD057604
-     C                   MOVEL     'DDNCCYB'     FldNameArr(Ix)                             MD057604
-     C                   MOVEL     'LEV0175'     MsgIdArr(Ix)                               MD057604
-     C                   ENDIF                                                              MD057604
-                                                                                            MD057604
-     C                   ENDIF                                                              MD057604
 
+     C                   ENDIF                                                              MD057604
      C                   ENDIF
 
       ** Settlement details should not be filled up for                                     MD057604

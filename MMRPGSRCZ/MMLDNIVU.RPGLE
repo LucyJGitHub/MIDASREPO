@@ -33,10 +33,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057049           Date 03Nov20               *
-      *  Prev Amend No. MD056313           Date 21Sep20               *
+      *  Last Amend No. MD057529           Date 28Jan21               *
+      *  Prev Amend No. AR926400           Date 19Jun13               *
+      *                 MD057049           Date 03Nov20               *
+      *                 MD056313           Date 21Sep20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
@@ -139,6 +142,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057529 - Redeliver of the correct version of the program   *
+      *             that was missed during SP24 + compatibility patch *
+      *  AR926400 - Unable to update Front Office ID. Allow changes   *
+      *             on HKFRNT. (Child: AR926403)                      *
       *  MD057049 - Move value of IKRRAT to HKRRAT                    *
       *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -2139,6 +2146,17 @@
 
      C     ValidateAc    BEGSR
 
+      *                                                                                     AR926400
+      ** Set retrieve mode to '*FRONT' (Access using Front Office ID)                       AR926400
+      ** Otherwise                                                                          AR926400
+      ** Set retrieve mode to blank (Access using Midas transaction ID)                     AR926400
+      *                                                                                     AR926400
+     C     DDFOID        IFNE      *BLANKS                                                  AR926400
+     C                   MOVEL     '*FRONT'      ModeofOp                                   AR926400
+     C                   ELSE                                                               AR926400
+     C                   MOVEL     '      '      ModeofOp                                   AR926400
+     C                   ENDIF                                                              AR926400
+      *                                                                                     AR926400
       * Validate action code versus transaction IDs supplied
       * This function will set the Midas deal number and the Midas
       * associated deal number.
@@ -2153,7 +2171,8 @@
 
       * Mode = '*FRONT' (Front Office transaction interface)
       * Mode = '      ' (Not Front Office transaction interface)
-     C                   PARM      '      '      ModeofOp          6
+     C**********         PARM      '      '      ModeofOp          6                        AR926400
+     C                   PARM                    ModeofOp          6                        AR926400
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE

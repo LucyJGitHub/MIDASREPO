@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057577           Date 17Mar21               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057577 - Enhance UTMENU to display last option used        *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK023 - Remove prompt for Bridge library.                   *
@@ -622,6 +624,7 @@
      C*
      C                   END                                                    *** E10
      C***********          ENDSR                                          140586
+     C                   MOVE      ICDE          LOPT                                       MD057577
      C     END030        ENDSR                                                                 14058
      C*
      C********************************************************************

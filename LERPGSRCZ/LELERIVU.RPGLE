@@ -502,6 +502,8 @@
                                                                                               CSD095
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
+     D WDDRSTM         S              2A                                                    MD057604
+     D WDDPSTM         S              2A                                                    MD057604
 
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
@@ -1007,6 +1009,10 @@
      C                   EXSR      ValidateSt
      C                   MOVE      WDDACTN       DDACTN                                     MD041649
      C**********         ENDIF                                                              BUG10456
+     C                   EVAL      WDDRSTM = DDRSTM                                         MD057604
+     C                   EVAL      WDDPSTM = DDPSTM                                         MD057604
+     C                   EVAL      DDRSTM = *BLANKS                                         MD057604
+     C                   EVAL      DDPSTM = *BLANKS                                         MD057604
 
       ** Settlement details should not be filled up when the
       ** new currency field is not entered
@@ -1021,10 +1027,16 @@
      C     DDNCCY        ANDEQ     *BLANKS
      C     DDACTN        ANDEQ     'A'
 
-     C     DDPSTM        IFNE      '00'
-     C     DDPSTM        ANDNE     '  '
-     C     DDRSTM        ORNE      '00'
-     C     DDRSTM        ANDNE     '  '
+     C*****DDPSTM        IFNE      '00'                                                     MD057604
+     C*****DDPSTM        ANDNE     '  '                                                     MD057604
+     C*****DDRSTM        ORNE      '00'                                                     MD057604
+     C*****DDRSTM        ANDNE     '  '                                                     MD057604
+     C     WDDRSTM       IFNE      '00'                                                     MD057604
+     C     WDDRSTM       ANDNE     '  '                                                     MD057604
+     C     ##RECS        ORNE      *BLANKS                                                  MD057604
+     C     WDDPSTM       ORNE      '00'                                                     MD057604
+     C     WDDPSTM       ANDNE     '  '                                                     MD057604
+     C     ##PAYS        ORNE      *BLANKS                                                  MD057604
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      Ix = Idx
      C                   MOVEL     'DDNCCYB'     FldNameArr(Ix)
@@ -1042,16 +1054,18 @@
      C     DDMULTI       ANDNE     'Y'                                                      MD057604
      C     DDACTN        ANDEQ     'A'                                                      MD057604
                                                                                             MD057604
-     C     DDRSTM        IFNE      '00'                                                     MD057604
-     C     DDRSTM        ANDNE     '  '                                                     MD057604
+     C     WDDRSTM       IFNE      '00'                                                     MD057604
+     C     WDDRSTM       ANDNE     '  '                                                     MD057604
+     C     ##RECS        ORNE      *BLANKS                                                  MD057604
      C                   EVAL      Idx = Idx + 1                                            MD057604
      C                   EVAL      Ix = Idx                                                 MD057604
      C                   MOVEL     'DDRSTM'      FldNameArr(Ix)                             MD057604
      C                   MOVEL     '5049497'     MsgIdArr(Ix)                               MD057604
      C                   ENDIF                                                              MD057604
                                                                                             MD057604
-     C     DDPSTM        IFNE      '00'                                                     MD057604
-     C     DDPSTM        ANDNE     '  '                                                     MD057604
+     C     WDDPSTM       IFNE      '00'                                                     MD057604
+     C     WDDPSTM       ANDNE     '  '                                                     MD057604
+     C     ##PAYS        ORNE      *BLANKS                                                  MD057604
      C                   EVAL      Idx = Idx + 1                                            MD057604
      C                   EVAL      Ix = Idx                                                 MD057604
      C                   MOVEL     'DDPSTM'      FldNameArr(Ix)                             MD057604
@@ -1059,6 +1073,8 @@
      C                   ENDIF                                                              MD057604
                                                                                             MD057604
      C                   ENDIF                                                              MD057604
+     C                   EVAL      DDRSTM = WDDRSTM                                         MD057604
+     C                   EVAL      DDPSTM = WDDPSTM                                         MD057604
 
      C                   IF        DDRSTA = 'Y'                                               CLE034
      C                   EVAL      ##PAYS = *Blanks                                           CLE034

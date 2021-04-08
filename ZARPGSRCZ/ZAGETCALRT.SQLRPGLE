@@ -412,6 +412,18 @@
        // ** ¦                                                                ¦
        // ** +----------------------------------------------------------------+
 
+       // Set compile options for this program, Commit = *Chg is specified to
+       // ensure that commit/rollback processing would be peformed
+
+                   exec sql
+                      set option
+                         Naming    = *Sys,
+                         Commit    = *Chg,
+                         UsrPrf    = *Owner,
+                         DynUsrPrf = *Owner,
+                         Datfmt    = *iso,
+                         CloSqlCsr = *EndMod;
+
                    exsr processTransaction;
 
                    *Inlr = *On;

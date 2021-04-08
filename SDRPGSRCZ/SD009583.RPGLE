@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SD Alpha Base Rate Code System Value Checker')   *
@@ -15,9 +15,9 @@
       *                                                               *
       *  Called By: System Values Maintenance Screen                  *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD057857 *CREATE   Date 23Jul12               *
+      *  Last Amend No. MD057857 *CREATE   Date 08Apr21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -166,7 +166,7 @@
      C                   RETURN
      C                   ENDIF
 
-      ** Retrieve System Value 'LoanAlphaAllow'
+      ** Retrieve System Value 'AlphaBaseRateCode'
 
      C                   EVAL      PRetCode = *BLANKS
      C                   EVAL      PSysValK1 = 'AlphaBaseRateCode'
@@ -185,7 +185,7 @@
 
      C                   EVAL      WAlphaBaseRate = PSysVal1
 
-      ** If LoanAlphaAllow is being changed from 'Y' to 'N'
+      ** If AlphaBaseRateCode is being changed from 'Y' to 'N'
 
      C                   IF        WAlphaBaseRate = 'Y' AND
      C                             %TRIM(NewCurrVal) = 'N'

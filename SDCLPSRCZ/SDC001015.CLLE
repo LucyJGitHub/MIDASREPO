@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Housekeeping of ARR Daily Rates File')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC001015 - Midas SD Housekeeping of ARR Daily Rates    */
+/*                       File                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CSD103  *CREATE    Date 10Aug20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2020')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SDC001015 - Midas SD Housekeeping of +
+                          ARR Daily Rates File') TOMSGQ(MRUNQ)
+
+/* Call the program */
+             CHGJOB     SWS(XXXXXX00)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CALL       PGM(SD001015)
+
+/* Monitor for database error and send appropriate message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/* Reorginising of files */
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+
+             CALL       PGM(SCC000060) PARM('SDHSDRTD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ERROR))
+
+             CALL       PGM(SCC000060) PARM('SDARRLOGTD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ERROR))
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+
+             SNDPGMMSG  MSG('Midas SD Housekeeping of ARR Daily Rates +
+                          File has terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+
+             GOTO       CMDLBL(END)
+
+END:
+
+             ENDPGM

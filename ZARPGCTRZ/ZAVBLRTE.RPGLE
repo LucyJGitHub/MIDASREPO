@@ -21,13 +21,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057770           Date 18Mar21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD057794           Date 24Mar21               *
+      *  Prev Amend No. MD057790           Date 23Mar21               *
+      *                 MD057770           Date 18Mar21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD057770 - DDfield and WDAY issue between 00, 0, and BLANKS  *
+      *  MD057794 - Non-mandatory dropdown fields in BSRT throws an   *
+      *             error when left blank                             *
+      *  MD057790 - Amendment of Floor limit error message            *
+      *  MD057770 - Numeric field issue between blank, 0, 00 inputs   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
@@ -361,6 +366,7 @@
      C     SRBLRT        BEGSR
 
       ** Default value depending on where this program is called
+
      C                   SELECT
 
       ** Default to 'N' if blank
@@ -465,6 +471,10 @@
                                                                                               CLE172
      C                   ENDSL                                                                CLE172
      C                   ENDIF                                                                CLE172
+	
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDRFRR <> *BLANKS)                                   MD057794
 
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
@@ -485,6 +495,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
@@ -528,6 +539,10 @@
                                                                                               CLE172
      C                   ENDSL                                                                CLE172
      C                   ENDIF                                                                CLE172
+	
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDCALM <> *BLANKS)                                   MD057794
 
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
@@ -548,6 +563,7 @@
      C                   ENDIF
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and
@@ -640,8 +656,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDBADJ <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDBADJ) <> '0'                                    MD057770
-     C                             (  WNumBADJ <> 0                                         MD057770
-     C                             or @@ERCD <> *ZERO )                                     MD057770
+     C                             (WNumBADJ <> 0                                           MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDBADJOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -729,26 +745,35 @@
      C                   Z-SUB     WNumFlor      WNumFlor
      C                   ENDIF
 
-     C                   ENDIF
-
-      ** Value must be numeric from -100 to 100
-     C                   IF        DDFLOROK <> 'N'
-     C                             and DDBLRT = 'Y'                                         MD057770
-
-     C                   IF        WNumFlor < -100 or
-     C                             WNumFlor >  100
-     C                   EVAL      DDFLOROK = 'N'
-     C                   EVAL      Idx = Idx + 1
+      ** Value must be numeric from -100 to 100 upto 6 decimal                              MD057790
+     C                   IF        DDBLRT = 'Y'                                             MD057790
+     C                             and (WNumFlor < -100                                     MD057790
+     C                             or WNumFlor >  100)                                      MD057790
+     C                   EVAL      DDFLOROK = 'N'                                           MD057790
+     C                   EVAL      Idx = Idx + 1                                            MD057790
       ** Use BLRT Next Fields if LERI                                                         CLE172
      C                   IF        ApiName = 'LERI'                                           CLE172
      C                   EVAL      FldNamXAr(Idx) = 'DDNFLOR'                                 CLE172
      C                   ELSE                                                                 CLE172
-     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'
+     C                   EVAL      FldNamXAr(Idx) = 'DDFLOR'                                MD057790
      C                   ENDIF                                                                CLE172
-     C                   EVAL      MsgIdXAr(Idx) = '5049494'
+     C                   EVAL      MsgIdXAr(Idx) = '5049408'                                MD057790
+     C                   ENDIF                                                              MD057790
+                                                                                            MD057790
      C                   ENDIF
 
-     C                   ENDIF
+      ***Value*must*be*numeric*from*-100*to*100***********************                      MD057790
+     C**********         IF        DDFLOROK <> 'N'                                          MD057790
+      **********                                                                            MD057790
+     C**********         IF        WNumFlor < -100 or                                       MD057790
+     C**********                   WNumFlor >  100                                          MD057790
+     C**********         EVAL      DDFLOROK = 'N'                                           MD057790
+     C**********         EVAL      Idx = Idx + 1                                            MD057790
+     C**********         EVAL      FldNamXAr(Idx) = 'DDFLOR'                                MD057790
+     C**********         EVAL      MsgIdXAr(Idx) = '5049494'                                MD057790
+     C**********         ENDIF                                                              MD057790
+      **********                                                                            MD057790
+     C**********         ENDIF                                                              MD057790
 
      C                   ENDIF
 
@@ -756,8 +781,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDFLOR <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDFLOR) <> '0'                                    MD057770
-     C                             (  WNumFLOR <> 0                                         MD057770
-     C                             or @@ERCD <> *ZERO )                                     MD057770
+     C                             (WNumFLOR <> 0                                           MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDFLOROK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -855,8 +880,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDLBDY <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDLBDY) <> '0'                                    MD057770
-     C                             (  WDAY <> 0                                             MD057770
-     C                             or @@ERCD <> *ZERO )                                     MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDLBDYOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -949,8 +974,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDLODY <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDLODY) <> '0'                                    MD057770
-     C                             (  WDAY <> 0                                             MD057770
-     C                             or @@ERCD <> *ZERO )                                     MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDLODYOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -1165,8 +1190,8 @@
      C                   IF        DDBLRT = 'N' and
      C**********                   DDRRDP <> *BLANKS and                                    MD057770
      C**********                   %TRIMR(DDRRDP) <> '0'                                    MD057770
-     C                             (  WDAY <> 0                                             MD057770
-     C                             or @@ERCD <> *ZERO )                                     MD057770
+     C                             (WDAY <> 0                                               MD057770
+     C                             or @@ERCD <> *ZERO)                                      MD057770
      C                   EVAL      DDRRDPOK = 'N'
      C                   EVAL      Idx = Idx + 1
       ** Use BLRT Next Fields if LERI                                                         CLE172
@@ -1213,6 +1238,9 @@
      C                   ENDSL                                                                CLE172
      C                   ENDIF                                                                CLE172
 
+     C                   IF        ApiName <> 'BSRT'                                        MD057794
+     C                             or (ApiName = 'BSRT'                                     MD057794
+     C                             and DDDBAV <> *BLANKS)                                   MD057794
       ** Value must exist on ARR Calculator Parameter Details File
      C                   IF        DDBLRT = 'Y'
 
@@ -1254,6 +1282,7 @@
      C                   ENDIF                                                                CLE172
 
      C                   ENDIF
+     C                   ENDIF                                                              MD057794
 
       ** Entry is prohibited if Backward Looking Rate Indicator is 'N'
      C                   IF        DDBLRT = 'N' and

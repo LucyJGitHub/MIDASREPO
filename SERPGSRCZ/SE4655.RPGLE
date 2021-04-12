@@ -13,11 +13,11 @@
       *  Called By   : SEC4651 - SE Statement Processing                       *
       *  Component of: SP9SE0001                                               *
       *                                                                        *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2021           *
+      *  (C) Copyright Finastra International Banking Systems Ltd. 2021        *
       *                                                                        *
-      *  Last Amend No. 252259             Date 08Jan08                        *
-      *  Prev Amend No. CSW207             Date 02Oct07                        *
-      *                 CSE040   *Create   Date 17Feb04                        *
+      *  Last Amend No. 252259             Date 10Mar21                        *
+      *  Prev Amend No. CSW207             Date 10Mar21                        *
+      *                 CSE040   *Create   Date 10Mar21                        *
       *                                                                        *
       *   ------------------------------------------------------------------   *
       *                                                                        *

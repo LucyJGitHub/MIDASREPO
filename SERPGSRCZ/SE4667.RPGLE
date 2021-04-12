@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2021')
+     H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
       *****************************************************************
@@ -13,11 +13,11 @@
       *                                                               *
       *             XML format for MMM and Correspondence Manager     *	
       *                                                               *
-      *  Called By   : CG6080 - SE Statement Driver                   *
+      *  Called By   : SE4663 - SE Statement Driver                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2021            *
+      *  (c) Finastra International Banking Systems Ltd. 2021         *
       *                                                               *
-      *  Last Amend No. 252259             Date 08Jan08               *
+      *  Last Amend No. 252259             Date 10Mar21               *
       *  Prev Amend No. CSE040  *Create    Date 10Mar21               *
       *                                                               *
       *****************************************************************

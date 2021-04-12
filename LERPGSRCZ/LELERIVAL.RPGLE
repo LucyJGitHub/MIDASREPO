@@ -119,7 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending                        *
+      *  CLE172 - LIBOR Deregulation - Lending.                       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD024812A - Consider new maturity date if non-blanks and     *
       *              rollover date = current maturity date.           *

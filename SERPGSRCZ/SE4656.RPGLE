@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSE040             Date 10Mar21               *  
+      *  Last Amend No. CSE040             Date 10Mar21               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -663,6 +663,8 @@
       *                                                                                       CSE040
      C                   DOW       NOT %EOF(SEPTRAL1)                                         CSE040
       *                                                                                       CSE040
+     C                   EVAL      HGACTI = 'Y'
+      *
       ** Verify if the current message details + Transaction details                          CSE040
       ** does not exceed the maximum length.                                                  CSE040
       *                                                                                       CSE040

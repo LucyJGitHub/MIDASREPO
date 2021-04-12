@@ -17,10 +17,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend No. CLE172             Date 01Oct20               *
+      *  Prev Amend No. CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE172 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
@@ -34,7 +36,6 @@
       *                                                               *
       *  SUBROUTINE INDEX                                             *
       *                                                               *
-      * SRUpdSTAT     - Update ARR Calculator Status File             *
       * SRDltLOGS     - Delete logs for failed transactions on re-run *
       * SRSelTRAN     - Select backward-looking rate transactions     *
       * SRReadNEXT    - Read next record                              *
@@ -89,10 +90,6 @@
       ** Long Data Structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
 
-      ** Data Structure for System Prefix
-     D SDSTAT        E DS           256    EXTNAME(SDSTAT) DTAARA(SDSTAT)
-     D  SYSID                  6      7
-
       ** Data Structure for Backward-Looking Rate Loans
      D LoanBLRT        DS
      D  TrMODI                        2A
@@ -136,13 +133,6 @@
      D  BenchMarkAdj                 20A
      D  RatesKnownInd                 1A
      D  ReturnCode                   20A
-
-     D CurrTime        DS
-     D  WHrs                   1      2
-     D  WColon1                3      3
-     D  WMin                   4      5
-     D  WColon2                6      6
-     D  WSec                   7      8
 
       ** Constants declaration
      D NO_ERROR        c                   const(0)
@@ -195,16 +185,10 @@
      D WCalcTillDate   S             10A
      D SumLBLO         S              3S 0
      D Idx             S              2S 0
-     D WStatus         S              1A
      D NoOfRecs        S              3S 0
-     D WStrDate        S              5S 0
-     D WStrDateSV      S              5S 0
-     D WEndDate        S              5S 0
-     D WEndTime        S              6A
-     D WStrTime        S              6A
-     D WStrTimeSV      S              6A
-     D WTime           S              6A
      D WZeroMDATFlag   S              1A
+     D CurrTime        S              8A
+     D PublTime        S              8A
      D ISODate         S               D   DATFMT(*ISO)
      D IntPerSDATE     S                   LIKE(TrNIDT)
      D IntPerEDATE     S                   LIKE(TrNIDT)
@@ -219,9 +203,11 @@
       *****************************************************************
 
       ** MAIN PROCESSING
-      ** Set Status File to R-Running
-     C                   EVAL      WStatus = 'R'
-     C                   EXSR      SRUpdSTAT
+
+      ** Start commitment control
+     C/exec SQL
+     C+ set option COMMIT = *CHG
+     C/end-exec
 
       ** Delete logs for failed transactions on re-run
      C                   EXSR      SRDltLOGS
@@ -325,10 +311,7 @@
 
      C                   EXSR      SRCloseCURSOR
 
-      ** Set Status File to C-Completed
-     C                   EVAL      WStatus = 'C'
-     C                   EXSR      SRUpdSTAT
-
+      ** End program
      C                   EVAL      *INLR = *ON
      C                   RETURN
 
@@ -341,7 +324,7 @@
       *****************************************************************
      C     SRSelTRAN     BEGSR
 
-      ** Select all transactions which uses a backward looking-rate
+      ** Select loan transactions which uses a backward looking-rate
      C/exec SQL
      C+ declare TransBLRTCursor insensitive scroll cursor for
      C+ select 'LE', LNRF, CCY,  VDAT, MDAT,
@@ -349,9 +332,19 @@
      C+        RFRR, CALM, BADJ, FLOR, LBDY,
      C+        LODY, OPSH, RRDP, DBAV
      C+ from CLOANCL
-     C+ where RECI = 'D' and VDAT <= :BJDNWD - 1 and
-     C+       BLRT = 'Y' and CALM <> 'MANL' and
-     C+       PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
+     C+ where RECI = 'D' and VDAT < :BJDNWD
+     C+   and BLRT = 'Y' and CALM <> 'MANL'
+     C+   and PTYP in ( 61, 62, 64, 66, 68, 69, 70, 71, 72 )
+     C+   and RLDT = 0
+     C+ union all                                                                             CLE172
+     C+ select 'LE',   LNRF,   CCY,    VDAT,   MDAT,                                          CLE172
+     C+        NIDT,   NRPD,   REPT,   ADDI,   ROBLRT,                                        CLE172
+     C+        RORFRR, ROCALM, ROBADJ, ROFLOR, ROLBDY,                                        CLE172
+     C+        ROLODY, ROOPSH, RORRDP, RODBAV                                                 CLE172
+     C+ from LEROBLPD                                                                         CLE172
+     C+ left join CLOANCL                                                                     CLE172
+     C+ on ROLNRF = LNRF                                                                      CLE172
+     C+ where ROLNRF is not null and ROCALM <> 'MANL'                                         CLE172
      C/end-exec
 
      C/exec SQL
@@ -385,69 +378,6 @@
      C/exec SQL
      C+ close TransBLRTCursor
      C/end-exec
-
-     C                   ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      * SRUpdSTAT - Update ARR Calculator Status File                 *
-      *                                                               *
-      *****************************************************************
-     C     SRUpdSTAT     BEGSR
-
-     C                   EVAL      CurrTime = %char(%time():*HMS)
-     C                   EVAL      WTime = WHrs + WMin + WSec
-
-     C                   IF        WStatus = 'R'
-     C                   EVAL      WStrDate = BJRDNB
-     C                   EVAL      WStrTime = WTime
-     C                   EVAL      WEndDate = *ZEROS
-     C                   EVAL      WEndTime = *ZEROS
-     C                   EVAL      WStrDateSV = WStrDate
-     C                   EVAL      WStrTimeSV = WStrTime
-     C                   ELSE
-     C                   EVAL      WStrDate = WStrDateSV
-     C                   EVAL      WStrTime = WStrTimeSV
-     C                   EVAL      WEndDate = BJRDNB
-     C                   EVAL      WEndTime = WTime
-     C                   ENDIF
-
-      ** Check if record exists on file already.
-     C/exec SQL
-     C+ select count(*) into :NoOfRecs
-     C+ from SDCSTSTD
-     C+ where SDZONE = :SYSID
-     C/end-exec
-
-      ** If there is no record, then write one
-     C                   IF        NoOfRecs = 0
-     C/exec SQL
-     C+ insert into SDCSTSTD
-     C+ (
-     C+   SDZONE, SDSTAT, SDSTDT, SDSTTM, SDENDT, SDENTM,
-     C+   SDJOBN, SDJOBU, SDJNBR
-     C+ )
-     C+ values
-     C+ (
-     C+   :SYSID, :WStatus,
-     C+   :WStrDate,  :WStrTime,
-     C+   :WEndDate,  :WEndTime,
-     C+   :PSJobName, :PSUser, :PSJobNo
-     C+ )
-     C/end-exec
-
-      ** Else, update the file
-     C                   ELSE
-     C/exec SQL
-     C+ update SDCSTSTD
-     C+ set SDSTAT = :WStatus,
-     C+     SDSTDT = :WStrDate,  SDSTTM = :WStrTime,
-     C+     SDENDT = :WEndDate,  SDENTM = :WEndTime,
-     C+     SDJOBN = :PSJobName, SDJOBU = :PSUser, SDJNBR = :PSJobNo
-     C+ where SDZONE = :SYSID
-     C/end-exec
-     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************
@@ -502,14 +432,14 @@
 
      C                   WHEN      TrREPT = 1 or TrREPT = 3
      C/exec SQL
-     C+ select max(VDAT) into WrkDATE
+     C+ select max(VDAT) into :WrkDATE
      C+ from HISTSHP
      C+ where LNRF = :TrTRAN and AMTP = 'RE'
      C/end-exec
 
      C                   WHEN      TrREPT = 2
      C/exec SQL
-     C+ select max(VDAT) into WrkDATE
+     C+ select max(VDAT) into :WrkDATE
      C+ from HISTSHP
      C+ where LNRF = :TrTRAN and AMTP = 'IN'
      C/end-exec
@@ -578,6 +508,7 @@
      C                   IF        Idx <> 0
      C                   EVAL      RPubLag = ArrPubLag(Idx)
      C                   EVAL      RPubTim = %trim(ArrPubTim(Idx))
+     C                   EVAL      PublTime = %trim(RPubTim) + ':00'
      C                   ENDIF
 
       ** Get the starting date of the Rates Known Window
@@ -609,7 +540,7 @@
      C                   EVAL      RatesKnown = 'Y'
      C                   EVAL      CurrTime = %char(%time():*HMS)
      C                   IF        RTKNDate = BJRDNB and
-     C                             RPubTim > CurrTime
+     C                             PublTime > CurrTime
      C                   EVAL      RatesKnown = 'N'
      C                   ENDIF
      C                   ENDIF
@@ -765,10 +696,6 @@
       ** Initialize Work fields
      C                   EVAL      DBPGM = 'SD000114'
 
-      ** Retrieve System ID
-     C     *LOCK         IN        SDSTAT
-     C                   OUT       SDSTAT
-
       ** Get the Bank details via access program
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
@@ -874,9 +801,6 @@
      C                   EVAL      WRUN = 'Y'
      C                   DUMP
      C                   ENDIF
-
-     C                   EVAL      WStatus = 'F'
-     C                   EXSR      SRUpdSTAT
 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON

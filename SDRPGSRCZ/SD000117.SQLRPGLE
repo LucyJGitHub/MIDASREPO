@@ -18,7 +18,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -95,7 +95,6 @@
       *****************************************************************
 
       ** MAIN PROCESSING
-
       ** Setup Library List
      C                   CALL      'SD000907'
      C                   PARM      *BLANKS       MsgArr
@@ -132,15 +131,40 @@
      C                             WStartDate = BJRDNB and
      C                             PRunAgain = *BLANK
      C                   EVAL      PReturnCode = 'COMPLETED '
+     C                   EXSR      SREndProgram
+     C                   ENDIF
 
       ** Set returncode to RUNNING if ARR Calculator Batch Job
-      ** is already running
-     C                   ELSEIF    SQLCODE <> 100 and
-     C                             WStatus = 'R'
+      ** is already running (i.e. DTAARA/SDARRCLCK is allocated)
+      /free
+        WCommand = 'ALCOBJ OBJ((SDARRCLCK *DTAARA *EXCL)) WAIT(0)';
+      /end-free
+     C                   CALLP(E)  RunSysCmd(WCommand: %len(WCommand))
+     C                   IF        %Error = *ON
+     C                   IF        PSExcpType = 'CPF' and
+     C                             PSExcpNo = '1002'
      C                   EVAL      PReturnCode = 'RUNNING   '
+     C                   EXSR      SREndProgram
+     C                   ELSE
+     C                   EVAL      DBFILE = 'QCMDEXC'
+     C                   EVAL      DBKEY  = 'QCMDEXC ERROR'
+     C                   EVAL      DBASE  = 004
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+
+      /free
+        WCommand = 'DLCOBJ OBJ((SDARRCLCK *DTAARA *EXCL))';
+      /end-free
+     C                   CALLP(E)  RunSysCmd(WCommand: %len(WCommand))
+     C                   IF        %Error = *ON
+     C                   EVAL      DBFILE = 'QCMDEXC'
+     C                   EVAL      DBKEY  = 'QCMDEXC ERROR'
+     C                   EVAL      DBASE  = 005
+     C                   EXSR      *PSSR
+     C                   ENDIF
 
       ** Submit ARR Calculator Batch Job
-     C                   ELSE
       /free
         WJobName = 'ARRCALC_' + SYSID;
         WCommand = 'SBMJOB JOB(' + %trim(WJobName) +') '
@@ -148,21 +172,30 @@
                  + 'RQSDTA(''CALL SDC000114'') '
                  + 'INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)';
       /end-free
-
      C                   CALLP(E)  RunSysCmd(WCommand: %len(WCommand))
      C                   IF        %Error = *ON
      C                   EVAL      DBFILE = 'QCMDEXC'
      C                   EVAL      DBKEY  = 'QCMDEXC ERROR'
-     C                   EVAL      DBASE  = 004
+     C                   EVAL      DBASE  = 006
      C                   EXSR      *PSSR
      C                   ENDIF
 
-     C                   ENDIF
-
       ** End program
+     C                   EXSR      SREndProgram
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SREndProgram - Subroutine to end the program                  *
+      *                                                               *
+      *****************************************************************
+     C     SREndProgram  BEGSR
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
 
+     C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************

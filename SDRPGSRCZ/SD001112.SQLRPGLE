@@ -21,7 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************
       *                                                               *

@@ -34,12 +34,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057546           Date 19Mar21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP087             Date 12Sep05               *
+      *                 CAP087             Date 12Sep05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP003 *C *CREATE  Date 22Apr98               *
@@ -47,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057546 - Depot Walk-In: Customer Delivery/Withdrawal error *
+      *             message is incorrectly displayed.                 *
+      *           - Allow Customer Delivery/Withdrawal value of 'Y'   *
+      *             if Beneficiary customer entry is a PB customer.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP087 - Depot Movement API - Java Wrapper in Midasplus.     *
       *  CAP003 - Conversion of SE inputs into modular structure to   *
@@ -137,6 +142,7 @@
      D BFCLASCus       S              1A
      D PortPreIn       S              1A
      D PortCusInd      S              1A
+     D PrivCusInd      S              1A                                                    MD057546
  
       ** Working fields
       ** Index for arrays of error message ids etc
@@ -211,6 +217,8 @@
       *
      C     DDCWDI        IFEQ      *BLANKS
      C     PortCusInd    ANDEQ     'Y'
+     C     DDCWDI        OREQ      *BLANKS                                                  MD057546
+     C     PrivCusInd    ANDEQ     'Y'                                                      MD057546
  
      C     BFCLASCus     IFEQ      'D'
      C     BFCLASCus     OREQ      'S'
@@ -220,6 +228,7 @@
      C                   END
  
      C     PortCusInd    IFEQ      'Y'
+     C     PrivCusInd    OREQ      'Y'                                                      MD057546
       *
       ** Mandatory Entry Y, or N,
       *
@@ -326,6 +335,8 @@
  
      C                   PARM                    DDCWDIOk
      C                   PARM                    CWDI
+      ** Private Banking Customer Indicator (1A)                                            MD057546
+     C                   PARM                    PrivCusInd                                 MD057546
  
  
       **--------------------------------------------------------------------------------------------

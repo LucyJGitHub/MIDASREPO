@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030959           Date 17Jun15              */
+/*       Last Amend No. LUC110             Date 24Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030959           Date 17Jun15              */
 /*                      AR1097467          Date 01Apr13              */
 /*                      BUG27667           Date 14May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -37,6 +38,11 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)      */
+/*              Use of core hook REC90001                            */
+/*              Use of core hook REC90003                            */
+/*              Use of core hook REC90010                            */
+/*              Use of core hook REC90MP2                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*     MD030959 - Recompiled due to changed PF/HELDIHC.              */
 /*     AR1097467 - Expected 15% COB run optimization not met        */

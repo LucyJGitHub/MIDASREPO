@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR918361           Date 02Apr12               *
-      *  Prev Amend No. MD029863           Date 18Jan18               *
+      *  Last Amend No. LUC123             Date 18Jun19               *
+      *  Prev Amend No. LUC109             Date 23Aug16               *
+      *                 AR918361           Date 02Apr12               *
+      *                 MD029863           Date 18Jan18               *
       *                 MD055714           Date 06May20               *
       *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
@@ -171,6 +173,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC123 - Extend Customer De-Activation (CSD025) to GL and LE *
+      *           Amendment of core hook LECLIP1V27                   *
+      *           Addition of hook LUC123_012                         *
+      *           Addition of hook LUC123_013                         *
+      *           Addition of hook LUC123_014                         *
+      *           Addition of hook LUC123_015                         *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *         - bypass check if maturity date of loan is greater    *
+      *           than expiry date of facility.                       *
+      *         - bypass check if value date of the loan is greater   *
+      *           than the last availability date of facility.        *
+      *           Amendment of core hook LECLIP1V01                   *
+      *           Amendment of core hook LECLIP1V25                   *
+      *           Amendment of core hook LECLIP1V27                   *
+      *           Addition of hook LUC109_001                         *
+      *           Addition of hook LUC109_002                         *
+      *           Addition of hook LUC109_003                         *
       *  AR918361 - No error message for rollover frequency when not  *
       *             defined in facility rollover types. Validate the  *
       *             rollover frequency properly against the facility  *
@@ -811,6 +830,7 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  First DS for access programs, long data structure
+     D/COPY WNCPYSRC,LUC123_012                                                               LUC123
       *                                                                                     CER050
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   CER050
      D                                     PREFIX(L@)                                       CER050
@@ -2091,12 +2111,14 @@
       ***  Must be a valid customer
       *
      C                   ELSE
+     C/COPY WNCPYSRC,LUC123_013
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      DDCUST        @CUST            10
      C                   PARM      *BLANKS       @KEYSTS           7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,LUC123_014
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'N'           DDCUSTOK
      C                   ADD       1             Idx
@@ -2122,6 +2144,7 @@
      C                   MOVEL     'DDCUST'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0036'     MsgIDXAr(Idx)
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC123_015
      C                   ENDIF
      C                   ENDIF
       *
@@ -4321,6 +4344,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     WSVVD         IFGT      AVLD
      C     AVLD          ANDNE     *ZERO
+     C/COPY WNCPYSRC,LUC109_001
      C     CLE030        IFEQ      'N'                                                        CLE030
      C     PGNTF         IFEQ      'Y'                                                        244213
      C     @@GPRT        OREQ      'Y'                                                        244213
@@ -4362,6 +4386,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     WSVVD         IFGT      AVLDB
      C     AVLDB         ANDNE     0
+     C/COPY WNCPYSRC,LUC109_002
       *                                                                                       CLE030
       ** If CLE030 is off then this is an error                                               CLE030
       *                                                                                       CLE030
@@ -5392,6 +5417,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     *IN83         IFEQ      '0'
      C     DDFCUSOK      ANDNE     'N'
+     C/COPY WNCPYSRC,LUC109_003
      C*****WSVMD         ANDGT     DTEXF                                                      241198
      C     WREAC         IFEQ      *ON                                                        241198
      C     WSVMD         ANDGT     NDEX                                                       241198

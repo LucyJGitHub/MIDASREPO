@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Ament No. LUC114             DATE 24Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,10 +18,13 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. S01413 *CREATE     DATE 13APR93              */
+/*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC114 - Change Layout of Interest Capitalization Report    */
+/*                Amend CORE hook:  REC3761001 REC3761002            */
+/*                Add New hook   :  LUC114_001                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
@@ -39,6 +43,7 @@
 /* declare &BJLANG as a program field as this hasn't been incorp to */
 /*    SDBANKPD yet */
              DCL        VAR(&BJLANG) TYPE(*CHAR) LEN(2) VALUE('GB')
+/*/COPY WNCPYSRC,LUC114_001                                          */
 /**/
              DCLF       FILE(SDBANKPD)
 /**/

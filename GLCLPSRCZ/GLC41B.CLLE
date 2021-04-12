@@ -11,12 +11,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*       Last Amend No. LUC110             Date 28Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL049             Date 17Feb15              */
 /*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)    */
+/*                Addition of hook LUC110_097                        */
+/*                Addition of hook LUC110_098                        */
+/*                Addition of hook LUC110_099                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       CGL120 - GL COB Components Task Split                       */
@@ -42,6 +47,7 @@
              DCL        VAR(&ACPO5) TYPE(*DEC) LEN(3 0) VALUE(053)
              DCL        VAR(&ACPO6) TYPE(*DEC) LEN(3 0) VALUE(059) /* CGL049 */
              DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+/*/COPY WNCPYSRC,LUC110_097                                        */ /*LUC110*/
  
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2012')
@@ -72,7 +78,8 @@
                           '*NRF   ') THEN(DO)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+/*/COPY WNCPYSRC,LUC110_098                                        */ /*LUC110*/
+
              CALL       PGM(AOMMODR0) PARM('*DBERR ' '*FIRST ' &MMOD)
  
              CHGVAR     VAR(&RTCD) VALUE('       ')
@@ -160,50 +167,51 @@ ENDACPO:     DLTOVR     FILE(*ALL) LVL(*JOB)
 /* in GLC41A                                                       */
  
              CALL       PGM(GL0400) PARM('S')
- 
+/*/COPY WNCPYSRC,LUC110_099                                        */ /*LUC110*/
+
 /* Check if all is OK: No database error,                          */
 /* No account balance error etc                                    */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
              COMMIT
              ENDDO
- 
+
              DLTOVR     FILE(*ALL) LVL(*JOB)
- 
+
              IF         COND(&CMX001 = 'Y') THEN(DO)
              CALL       PGM(MXC0491)  PARM('GLC41 ' 'XXX' 'N')
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
- 
+
              SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') +
                           TOMSGQ(MOPERQ)
              SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') TOMSGQ(MRUNQ)
              GOTO       CMDLBL(ERROR)
- 
+
              ENDDO
- 
+
 /* Extract End of Day Postings for all Private Banking Customers   */
- 
+
              IF   COND(%SUBSTRING(&MMOD 104 1) *EQ 'Y') THEN(DO)
              CALL       PGM(RPC1403)
              ENDDO
- 
+
              CHGVAR     VAR(%SUBSTRING(&GLSTAT &ACPO1 5)) +
                           VALUE('NNNNN')
              CHGVAR     VAR(%SUBSTRING(&GLSTAT &ACPO6 1)) VALUE('N') /* CGL049 */
              CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
- 
+
              GOTO       CMDLBL(END)
- 
+
 /* If error is found                                               */
- 
+
 ERROR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC41 ended abnormally - see job log') +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
- 
+
 END:
              ROLLBACK
              ENDCMTCTL

@@ -663,8 +663,8 @@
       *                                                                                       CSE040
      C                   DOW       NOT %EOF(SEPTRAL1)                                         CSE040
       *                                                                                       CSE040
-     C                   EVAL      HGACTI = 'Y'
-      *
+     C                   EVAL      HGACTI = 'Y'                                               CSE040
+      *                                                                                       CSE040
       ** Verify if the current message details + Transaction details                          CSE040
       ** does not exceed the maximum length.                                                  CSE040
       *                                                                                       CSE040

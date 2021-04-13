@@ -4689,8 +4689,19 @@
      C                   ENDSL
       *                                                                                       CLE172
      C                   IF        CLE172 = 'Y'                                               CLE172
-     C                             AND BABLRT = 'Y'                                           CLE172
+      *                                                                                       CLE172
+      ** Get Backward-looking base rate details                                               CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'AOBSRTR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*KEY    '    POPTN                                        CLE172
+     C                   PARM      C_CCY         PCURR                                        CLE172
+     C                   PARM      WBSRC         PBRAT                                        CLE172
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
+      *                                                                                       CLE172
+     C                   IF        BABLRT = 'Y'                                               CLE172
      C                   MOVEL     'D'           PFldData                                     CLE172
+     C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
       *
      C                   EVAL      PFldTag  = 'DDCHIN'
@@ -6233,15 +6244,6 @@
      C                   EXSR      SRFmtWMsg                                               MD021423B
                                                                                            MD021423B
      C                   IF        CLE172 = 'Y'                                               CLE172
-      *                                                                                       CLE172
-      ** Get Backward-looking base rate details                                               CLE172
-      *                                                                                       CLE172
-     C                   CALLB     'AOBSRTR0'                                                 CLE172
-     C                   PARM      *BLANKS       @RTCD                                        CLE172
-     C                   PARM      '*KEY    '    POPTN                                        CLE172
-     C                   PARM      C_CCY         PCURR                                        CLE172
-     C                   PARM      WBSRC         PBRAT                                        CLE172
-     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
       *                                                                                       CLE172
       ** Backward-looking Flag                                                                CLE172
       *                                                                                       CLE172

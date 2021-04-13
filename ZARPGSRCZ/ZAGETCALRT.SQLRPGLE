@@ -16,7 +16,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer Standing Data.    *
+      *  CSD103 - LIBOR Deregulation - Common Layer Standing Data     *
       *                                                               *
       *****************************************************************
 
@@ -658,6 +658,8 @@
                                     %trim(lookBackDays)  +
                                  AMP + 'rateRoundingDecimalPoints=' +
                                     %trim(RateRndDecPts) +
+                                 AMP + 'dayCountConvention=' +
+                                    %trim(dayCntConvent) +
                                  AMP + 'observationPeriodShift=' +
                                     %trim(obserPrdShift) +
                                  AMP + 'lockoutDays=' +

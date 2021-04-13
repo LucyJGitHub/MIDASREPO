@@ -367,7 +367,7 @@
       *                                                                                     MD057729
      C                   IF        PRTCD <> *BLANKS AND                                     MD057729
      C                             PRTCD <> '*NRF   '                                       MD057729
-     C                   EVAL      DBFILE = 'SDSVLCTD'                                      MD057729
+     C                   EVAL      DBFILE = 'SDSVLJW0'                                      MD057729
      C                   EVAL      DBKEY = SVALK1                                           MD057729
      C                   EVAL      DBPGM = 'AP000015'                                       MD057729
      C                   EVAL      DBASE  =  4                                              MD057729

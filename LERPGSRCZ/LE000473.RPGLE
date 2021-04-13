@@ -4695,7 +4695,7 @@
      C                   CALLB     'AOBSRTR0'                                                 CLE172
      C                   PARM      *BLANKS       @RTCD                                        CLE172
      C                   PARM      '*KEY    '    POPTN                                        CLE172
-     C                   PARM      C_CCY         PCURR                                        CLE172
+     C                   PARM      @CURR         PCURR                                        CLE172
      C                   PARM      WBSRC         PBRAT                                        CLE172
      C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
       *                                                                                       CLE172

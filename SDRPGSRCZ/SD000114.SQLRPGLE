@@ -233,6 +233,34 @@
      C                   EVAL      WZeroMDATFlag = 'N'
      C                   EXSR      SRDetINTDATE
 
+      ** If the backward-looking rate parameters are changed via                              CLE172
+      ** Rollover, this will be applied to the whole interest period.                         CLE172
+      ** Thus, existing daily rates records should be deleted.                                CLE172
+     C/exec SQL                                                                               CLE172
+     C+ select count(*) into :NoOfRecs                                                        CLE172
+     C+ from LEROBLPD                                                                         CLE172
+     C+ where ROLNRF = :TrTRAN                                                                CLE172
+     C/end-exec                                                                               CLE172
+                                                                                              CLE172
+     C                   IF        NoOfRecs <> 0                                              CLE172
+                                                                                              CLE172
+     C/exec SQL                                                                               CLE172
+     C+ delete from SDHSDRTD                                                                  CLE172
+     C+ where CMODID = :TrMODI                                                                CLE172
+     C+   and CTRNID = :TrTRAN                                                                CLE172
+     C+   and CINPSD = :IntPerSDATE                                                           CLE172
+     C+   and CINPED = :IntPerEDATE                                                           CLE172
+     C/end-exec                                                                               CLE172
+     C                   IF        SQLCODE <> NO_ERROR and                                    CLE172
+     C                             SQLCODE <> NO_RECORD                                       CLE172
+     C                   EVAL      DBFILE = 'SQLERROR'                                        CLE172
+     C                   EVAL      DBKEY  = 'SQL ERROR'                                       CLE172
+     C                   EVAL      DBASE  = 004                                               CLE172
+     C                   EXSR      *PSSR                                                      CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
       ** Check if transaction has reached the Rates Known window
      C                   EVAL      RatesKnown = 'N'
      C                   IF        WZeroMDATFlag = 'N'
@@ -442,7 +470,7 @@
       ** Get the Start Date
      C                   EVAL      WrkDATE = 0
      C                   IF        TrVDAT >= BJRDNB and
-     C                             TrVDAT <= BJDNWD - 1
+     C                             TrVDAT <  BJDNWD
      C                   EVAL      WrkDATE = TrVDAT
      C                   ELSE
 
@@ -499,12 +527,19 @@
 
       ** Determine Interest Period End Date
      C                   EVAL      IntPerEDATE = 0
-     C                   IF        TrADDI = 'F'
-     C                   EVAL      IntPerEDATE = WrkDATE - 1
-     C                   ELSE
+     C                   IF        TrADDI = 'L'
      C                   EVAL      IntPerEDATE = WrkDATE
+     C                   ELSE
+     C                   EVAL      IntPerEDATE = WrkDATE - 1
      C                   ENDIF
 
+      ** If the Additional Day Indicator is B-Both, the last interest                         CLE172
+      ** period will be extended by 1 day to include the maturity date                        CLE172
+     C                   IF        TrADDI = 'B' and                                           CLE172
+     C                             WrkDATE = TrMDAT                                           CLE172
+     C                   EVAL      IntPerEDATE = WrkDATE                                      CLE172
+     C                   ENDIF                                                                CLE172
+                                                                                              CLE172
      C                   IF        IntPerEDATE <= 0
      C                   EVAL      WZeroMDATFlag = 'Y'
      C                   EVAL      IntPerEDATE = BJDNWD - 1

@@ -16,7 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR927395           Date 05Aug13               *
+      *  Prev Amend No. MD029248           Date 22Aug14               *
+      *                 MD055733           Date 03Jul20               *
+      *                 AR927395           Date 05Aug13               *
       *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
@@ -121,6 +123,11 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD029248 - Move interest amount for projection of risk loans *
+      *             manual repayment for interest.                    *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
@@ -560,6 +567,7 @@
      D  SHAMTP                23     24
      D  SHCCY                 35     37
      D  SHPRAM                38     44P 0
+     D  SHINTA                45     51P 0                                                  MD029248
      D  SHTAMT                66     72P 0
      D  SHBRCA                73     75
      D  SHREPT                82     82  0
@@ -5266,6 +5274,7 @@
      C                   MOVE      AMTP          SHAMTP
      C                   MOVE      CCY           SHCCY
      C                   Z-ADD     PRAM          SHPRAM
+     C                   Z-ADD     INTA          SHINTA                                     MD029248
      C                   Z-ADD     TAMT          SHTAMT
      C                   MOVE      BRCA          SHBRCA
      C                   Z-ADD     0             SHREPT

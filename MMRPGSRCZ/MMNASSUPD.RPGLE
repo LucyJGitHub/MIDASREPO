@@ -12,7 +12,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056655A          Date 09Oct20               *
+      *                 MD056655           Date 21Sep20               *
+      *                 MD031031           Date 13Mar15               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -54,6 +57,13 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD056655A - Deal no already exists is encountered when NASP  *
+      *              transaction is entered; error in SOAP exists     *
+      *  MD056655 - Deal no already exists is encountered when NASP   *
+      *             transaction is entered                            *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -114,6 +124,12 @@
      F                                     USROPN                                             CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
+     FDLDEALNA  UF A E           K DISK                                                     MD031031
+     F                                     COMMIT                                           MD031031
+     FDLDEALNB  IF   E           K DISK    PREFIX(WF)                                       MD056655
+     F                                     RENAME(DLDLDDD0:DLDLDDD1)                        MD056655
+     F                                     RENAME(DLDLDED0:DLDLDED1)                        MD056655
+      ** Deals Extension file                                                               MD031031
      F/COPY WNCPYSRC,MMNASSDF01
 
       *****************************************************************
@@ -535,6 +551,16 @@
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
+     C     PSJobName     IFNE      'QZDASOINIT'                                            MD056655A
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            MD056655A
+     C                   MOVEL     DLNO          PDLNO             6                        MD056655
+     C     PDLNO         CHAIN     DLDLDED1                           75                    MD056655
+     C                   IF        *IN75 = *ON                                              MD056655
+     C                   MOVE      DLNO          F1DLNO                                     MD031031
+     C                   Eval      F1BRCA = BRCA                                            MD031031
+     C                   WRITE     DLDLDED0                                                 MD031031
+     C                   ENDIF                                                              MD056655
+     C                   ENDIF                                                             MD056655A
      C/COPY WNCPYSRC,MMNASSDC02
       *
      C                   ENDSR
@@ -1242,6 +1268,19 @@
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
      C                   ENDIF                                                                CRE020
+      *                                                                                    MD056655A
+     C                   CALLB     'ZACRTVJOBA'                         90                 MD056655A
+     C                   PARM                    PSJobName                                 MD056655A
+     C                   PARM                    PSUser                                    MD056655A
+     C                   PARM                    PSJobNo                                   MD056655A
+     C                   PARM                    JobType           5                       MD056655A
+      *                                                                                    MD056655A
+     C     *IN90         IFEQ      '1'                                                     MD056655A
+     C                   EVAL      DBFile = 'ZACRTVJOBA'                                   MD056655A
+     C                   EVAL      DBase = 904                                             MD056655A
+     C                   EVAL      DBKey = '*CALL'                                         MD056655A
+     C                   EXSR      SRERR                                                   MD056655A
+     C                   ENDIF                                                             MD056655A
      C*
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and

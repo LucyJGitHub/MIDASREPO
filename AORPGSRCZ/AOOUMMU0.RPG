@@ -11,7 +11,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD055501           Date 29Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
@@ -124,6 +125,8 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
@@ -2784,7 +2787,8 @@
      C           ##LOD     OREQ 'D'                        * deposit
      C           ##TRYP    ANDEQ'SI'                       * + settle int.
      C********** *IN31     ANDEQ'0'                        * + Non-neg               101523 MD031115
-     C           HNPENP    OREQ 'P'                        * pay penalty  BUG3045
+     C********** HNPENP    OREQ 'P'                        * pay penalty            BUG3045 MD053472
+     C           ##LOD     OREQ 'D'                                                         MD053472
      C           ##TRYP    ANDEQ'EM'                       * + Early mat. BUG3045
      C                     MOVEL##PAYD    ##SETD           * Pay details
      C                     ELSE
@@ -2959,6 +2963,21 @@
      C                     MOVEL##TRN     C#TRN
       *
       * Movement amount
+      *                                                                                     MD053472
+     C           ##TRYP    IFEQ 'EM'                                                        MD053472
+     C           HNPENP    IFEQ 'R'                                                         MD053472
+     C           ##REVI    ANDNE'YES'                                                       MD053472
+     C           HNPENP    OREQ 'P'                                                         MD053472
+     C           ##REVI    ANDEQ'YES'                                                       MD053472
+     C                     Z-ADD##AMT     C#AMT                                             MD053472
+     C                     ENDIF                                                            MD053472
+     C           HNPENP    IFEQ 'R'                                                         MD053472
+     C           ##REVI    ANDEQ'YES'                                                       MD053472
+     C           HNPENP    OREQ 'P'                                                         MD053472
+     C           ##REVI    ANDNE'YES'                                                       MD053472
+     C                     Z-SUB##AMT     C#AMT                                             MD053472
+     C                     ENDIF                                                            MD053472
+     C                     ELSE                                                             MD053472
      C           ##PYRC    IFEQ 'P'
      C           ##REVI    ANDNE'YES'
      C           ##PYRC    OREQ 'R'
@@ -2967,6 +2986,7 @@
      C                     ELSE
      C                     Z-ADD##AMT     C#AMT            * rec ie debit
      C                     END
+     C                     ENDIF                                                            MD053472
       *
       * Module
      C                     MOVEL'DL'      C#MOD

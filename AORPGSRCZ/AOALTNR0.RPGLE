@@ -1,8 +1,9 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
       *****************************************************************
 /***D ***RPG***********************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXS *  RPGCVTOPT2                                                   *                       CSD053
+/*E*S ***RPGCVTOPT2****************************************************              CSD053 MD056543
 /*EXI *  TEXT('Midas AO Alternative names and address')
      F********************************************************************
      F*                                                                  *
@@ -13,8 +14,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043685           Date 23Jan17               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043685           Date 23Jan17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -46,6 +48,9 @@
      F*                                                                  *
      F*****************************************************************   S01230
      F*                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD to readable  *
+      *             unicode equivalent.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043685 - If CCG024 is on, alternate address must be        *
       *             retrieved from SDALTNPD.                          *

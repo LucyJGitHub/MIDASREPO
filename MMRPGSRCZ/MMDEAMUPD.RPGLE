@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
       *                 MD024110           Date 13Dec13               *
       *                 MD020388           Date 23Apr13               *
@@ -49,6 +50,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD053472 - Payment settlement details cleared for Early      *
+      *             Maturity                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *  MD024110 - Wrong update of actual interest rate in DEAM      *
@@ -380,7 +383,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'P'                                          BUG4092
+     C*****IGPENP        ANDEQ     'P'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       ** PAYMENT SETTLEMENT INSTRUCTIONS
       *
@@ -402,7 +406,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'R'                                          BUG4092
+     C*****IGPENP        ANDEQ     'R'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       ** RECEIVE SETTLEMENT INSTRUCTIONS
       *
@@ -596,7 +601,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'D'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'P'                                          BUG4092
+     C*****IGPENP        ANDEQ     'P'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'D'                                                      MD053472
       *
       ** PAY SETTLEMENT INSTRUCTIONS
       *
@@ -618,7 +624,8 @@
      C     IGTYPE        OREQ      'SI'
      C     W#LOD         ANDEQ     'L'
      C     IGTYPE        OREQ      'EM'                                         BUG4092
-     C     IGPENP        ANDEQ     'R'                                          BUG4092
+     C*****IGPENP        ANDEQ     'R'                                              BUG4092 MD053472
+     C     W#LOD         ANDEQ     'L'                                                      MD053472
       *
       ** RECEIVE SETTLEMENT INSTRUCTIONS
       *

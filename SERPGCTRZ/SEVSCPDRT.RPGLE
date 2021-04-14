@@ -22,7 +22,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1077982          Date 28Jan13               *
       *                 AR826623           Date 17Sep12               *
       *                 AR750169           Date 17Sep12               *
@@ -48,6 +49,10 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
+      *  MD056949 - SE0045 is dumping on security with no coupon      *
+      *             date array - which is not an error                *
+      *           - introduce new error message if the security has   *
+      *             no coupon/rate days and BCNV is not 'N'           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1077982 - Blank value for Last Coupon Date triggers error  *
       *  AR826623 - ST: Serious midas error in Securities details.    *
@@ -376,8 +381,16 @@
      C                   MOVEA     '000'         *IN(01)
      C                   MOVEA     WSCD          Work48
  
-     C                   IF        Work48 = *BLANKS
- 
+     C                   IF        Work48 = *BLANKS                                         
+     C                   IF        CSE005 = 'Y'                                             MD056949
+     C                   IF        DDBCNV <> 'N'                                            MD056949
+     C                   MOVE      'N'           OKCD01                                     MD056949
+     C                   ADD       1             IDx                                        MD056949
+     C                   MOVEL     'DDCD01'      FldNamXAr(IDx)                             MD056949
+     C                   MOVEL     '5049451'     MsgIdXAr(IDx)                              MD056949
+     C                   ENDIF                                                              MD056949
+     C                   ENDIF                                                              MD056949
+
      C                   IF        S1INCS = 'C'
      C                   IF        PCpnRt <> *ZEROS
      C                   MOVE      'N'           OKCD01
@@ -913,8 +926,10 @@
      C                   PARM                    ITLD                                       AR750169
      C                   PARM                    FCPN                                       AR750169
      C                   PARM                    MATY                                       AR750169
-     C                   PARM                    CDArr                                      AR750169
-     C                   PARM                    CRArr                                      AR750169
+     C**********         PARM                    CDArr                                      AR750169
+     C**********         PARM                    CRArr                                      AR750169
+     C                   PARM                    WSCD                              AR750169 MD056949
+     C                   PARM                    WSCR                              AR750169 MD056949
      C                   PARM                    LCPN                                       AR826623
       *                                                                                     AR750169
       ** Event Control Date                                                                 AR750169

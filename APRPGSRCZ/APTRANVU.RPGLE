@@ -14,7 +14,12 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD056546           Date 16Sep20               *
+      *                 MD039655           Date 03Sep19               *
+      *                 MD044553           Date 08May17               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD030856           Date 06Nov19               *
+      *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -227,6 +232,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD056546 - Serious Midas Error encountered on CIRS Input     *
+      *             Reversed MD044553                                 *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
+      *  MD044553 - Corrected buffer position for WIP timestamp       *
+      *  MD055373 - Audit trail not available                         *
+      *           - Include DDIUSR and DDAUSR fields on TransInEx2.   *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -673,6 +686,7 @@
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
      D  TransBRTCent                 10A                                                    MD055446
+     D  TransPROFUser                20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -805,6 +819,7 @@
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
      D @TimeStamp      S             26                                                      BUG1569
+     D*@WIPTmst*       S             26                                            MD044553 MD056546
      D NewButton       S              3                                                       255190
      D DDACTC          S              1                                                      BUG3684
      D DDFOID          S             20                                                       239400
@@ -2445,6 +2460,7 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                             BUG13174
      C     LEIFLn        SUBST     BUFFER:Bfp    DDPATH          200                        BUG13174
      C                   ADD       200           Bfp                                        BUG13174
+                                                                                            MD039655
                                                                                               CER049
       ** Stamp Tax fields                                                                     CER049
                                                                                               CER049
@@ -2474,6 +2490,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
+      ** Restore Authorise Reversal Action Code                                             MD039655
+                                                                                            MD039655
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
+     C                   ADD       1             Bfp                                        MD039655
+                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2505,6 +2526,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
+     C                   PARM                    @ACTRV                                     MD039655
 
       * Loan Input
 
@@ -3226,6 +3248,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     TempData#9    ExtData                                    MD029663
      C                   ADD       IRCSLn        Bfp                                        MD030454
      C                   ADD       168           Bfp                                        MD030454
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                          MD044553 MD056546
+     C**********         ADD       26            Bfp                               MD044553 MD056546
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
@@ -5151,6 +5175,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD056546
+     C**********         ADD       26            Bfp                                MD044553 MD056546
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 
@@ -7352,6 +7378,11 @@ RGC  D RPIF4LN         S              4  0                                      
       *** BRT Customer Details - Century                                                    MD055446
      C                   EVAL      TransBRTCent = %SUBST(BufferEx2:Bfp:10)                  MD055446
      C                   EVAL      Bfp  += 10                                               MD055446
+      *                                                                                     MD055373
+      ** Insert User and Amend User fields                                                  MD055373
+     C                   EVAL      TransPROFUser = %SUBST(BufferEx2:Bfp:20)                 MD055373
+     C                   EVAL      Bfp  += 20                                               MD055373
+      *                                                                                     MD055373
      C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093

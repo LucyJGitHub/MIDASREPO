@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Prev Amend No. MD057437           Date 20Jan21               *
+      *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD038303           Date 13May16               *
       *                 245692             Date 11Dec13               *
@@ -73,6 +74,11 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057437 - IRS - Their Details - Negative Principal Amount   *
+      *             Fix is to not allow CIRS transaction with         *
+      *             Principal change (Decrease) that will result to   *
+      *             zero or negative amount. Also, convert the TPAMT  *
+      *             correctly by checking TPAMT instead of UPAMT.     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
       *  MD046248 - Finastra Rebranding                               *
@@ -720,7 +726,8 @@
      C     SDCURR        PARM      SDCURR        DSSDY
      C*
      C**  Format Deal Amount, using deal ccy decimal places
-     C     UPAMT         IFLT      0
+     C*****UPAMT         IFLT      0                                                        MD057437
+     C     TPAMT         IFLT      0                                                        MD057437
      C                   Z-SUB     TPAMT         @@AMTW
      C                   ELSE
      C                   Z-ADD     TPAMT         @@AMTW

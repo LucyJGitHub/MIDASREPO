@@ -17,7 +17,10 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. 223783             Date 28May12               *      
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR972805           Date 27Feb13               *
@@ -61,6 +64,13 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  223783 - Use IBAN as account number.                         *
+      *         - Applied for AR973615.(Child: AR973617)              *      
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
@@ -731,10 +741,12 @@
      C                   else
      C                   If        IDSTYP = 'Z'                                 212316
      C*******************Eval      MFLD = 'CMZ' +'/'+%subst(IDEXA1:2:34) 212316 213572
-     C                   Eval      MFLD = 'CMZ' + '/' + WAccount                213572
+     C**********         Eval      MFLD = 'CMZ' + '/' + WAccount                       213572 223783
+     C                   EVAL      MFLD = 'CMZ' + '/' + WAccount2                             223783
      C                   Else                                                   212316
      C*******************Eval      MFLD = 'CMT' +'/'+%subst(IDEXA1:2:34) 212316 213572
-     C                   Eval      MFLD = 'CMT' + '/' + WAccount                213572
+     C**********         Eval      MFLD = 'CMT' + '/' + WAccount                       213572 223783
+     C                   EVAL      MFLD = 'CMT' + '/' + WAccount2                             223783
      C                   Endif                                                  212316
      C*******************Eval      MFLD = 'NONREF'                              212316
      C                   endif
@@ -930,10 +942,12 @@
      C                   else
      C                   If        IDSTYP = 'Z'                                 212316
      C*******************Eval      MFLD = 'CMZ' +'/'+%subst(IDEXA1:2:34) 212316 213572
-     C                   Eval      MFLD = 'CMZ' + '/' + WAccount                213572
+     C**********         Eval      MFLD = 'CMZ' + '/' + WAccount                       213572 223783
+     C                   EVAL      MFLD = 'CMZ' + '/' + WAccount2                             223783
      C                   Else                                                   212316
      C*******************Eval      MFLD = 'CMT' +'/'+%subst(IDEXA1:2:34) 212316 213572
-     C                   Eval      MFLD = 'CMT' + '/' + WAccount                213572
+     C**********         Eval      MFLD = 'CMT' + '/' + WAccount                       213572 223783
+     C                   EVAL      MFLD = 'CMT' + '/' + WAccount2                             223783
      C                   Endif                                                  212316
      C*******************Eval      MFLD = 'NONREF'                              212316
      C                   endif
@@ -4082,9 +4096,17 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C
+     C                   MOVE      *Blanks       WAccount         34                          223783
+     C                   MOVE      *Blanks       WAccount2        34                          223783
      C                   IF        ACNO <> 0
      C**********         Movel     ACNO          WAccount         18                          CGL029
-     C                   Movel     ACNO          WAccount         24                          CGL029
+     C**********         Movel     ACNO          WAccount         24                   CGL029 223783
+     C                   IF        IBAN <> *Blanks                                            223783
+     C                   MOVEL     IBAN          WAccount                                     223783
+     C                   ELSE                                                                 223783
+     C                   MOVEL     ACNO          WAccount                                     223783
+     C                   ENDIF                                                                223783
+     C                   MOVEL     ACNO          WAccount2                                    223783
      C                   Else
      C**********         Movel     ChildAccount  WAccount         18                          CGL029
      C                   Movel     ChildAccount  WAccount                                     CGL029

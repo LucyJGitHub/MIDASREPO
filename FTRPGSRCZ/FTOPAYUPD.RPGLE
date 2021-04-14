@@ -15,7 +15,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD048586           Date 11Jan21               *
+      *                 MD023298A          Date 03Jun20               *
+      *                 MD020135           Date 03Jun20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -126,6 +129,15 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD048586 - Remove conditions for executing SRCLR             *
+      *           - Applied for MD-57430.                             *
+      *  MD023298A - Front office ID already exists for OTPAYDQD.     *
+      *              Do not write to OTPAYDQD when jobname is         *
+      *              QZDASSINIT.                                      *
+      *            - Applied for MD050405                             *
+      *  MD020135 - Duplicate records in OTPAYDQD. Write to OTPAYDQD  *
+      *             file only if not from Java screen.                *
+      *            - Applied for MD050405                             *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
@@ -765,10 +777,10 @@
      C                   EXSR      INSSR                                                     BUG4449
       *  Clear stored values
      C/COPY WNCPYSRC,FTH00472
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   Exsr      SRCLR
      C/COPY WNCPYSRC,FTH00473
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
 
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
@@ -866,10 +878,10 @@
       *  Clear stored values
      C     UPDEND        TAG
      C/COPY WNCPYSRC,FTH00478
-     C     OTCHTP        IFNE      'S'                                                        CFT157
+     C*****OTCHTP        IFNE      'S'                                               CFT157 MD048586
      C                   EXSR      SRCLR
      C/COPY WNCPYSRC,FTH00479
-     C                   Endif                                                                CFT157
+     C**********         Endif                                                       CFT157 MD048586
                                                                                               201577
       ** Call CL program to deallocate this reference to a dataarea                           201577
                                                                                               201577
@@ -1287,6 +1299,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           MD023298A
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      OTFRID = OTFRNT                                            257487
      C                   Write     OTPAYQD0                             99                    257487
                                                                                               257487
@@ -1296,6 +1311,7 @@
      C                   Movel     OTPREF        DBKEY                                        257487
      C                   Exsr      *PSSR                                                      257487
      C                   End                                                                  257487
+     C                   ENDIF                                                              MD020135
       **********                                                                    BUG4776 BUG4776R
       ****If*new*record*was*successfully*writen*to*OTPAYDD,*add*new*record*to***    BUG4776 BUG4776R
       ****FT*Payment*Reference*Control*file*-*FTPREFPD**************************    BUG4776 BUG4776R

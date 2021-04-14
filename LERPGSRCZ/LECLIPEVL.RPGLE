@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045010           Date 05Apr17               *
       *                 MD039016           Date 26May16               *
@@ -47,6 +48,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *

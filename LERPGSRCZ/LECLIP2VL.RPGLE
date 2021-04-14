@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055219           Date 27May20               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD055219           Date 27May20               *
       *                 MD055059           Date 21May20               *
       *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
@@ -132,6 +133,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034449.                                      *
       *  MD055219 - Interest rate must not be zero for discount and   *
       *             flat loan                                         *
       *  MD055059 - Allow negative fixed rate                         *
@@ -523,10 +528,10 @@
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)                                 246516
       ***  Historic Base rate codes                                                          246516
       *
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
-     D                                     PREFIX(DL_)                                      MD034449
-      ** External DS for Dealing Details                                                    MD034449
-                                                                                            MD034449
+     D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034449 MD057191
+     D**********                           PREFIX(DL_)                             MD034449 MD057191
+      ***External*DS*for*Dealing*Details*******************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -887,6 +892,7 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+     D DL_BNDCSP       S              1A                                                    MD057191
      D/COPY WNCPYSRC,LEH00617
       *
       ** +--------------------------------------+
@@ -6757,19 +6763,19 @@ E004 C                   ENDIF
      C                   PARM                    PNDEC             1 0
      C                   PARM                    PNDIG             2 0
      C                   PARM      *BLANKS       PRVAL            16
-      *                                                                                     MD034449
-      ** Access Dealing Details                                                             MD034449
-      *                                                                                     MD034449
-     C                   CALL      'AODEALR1'                                               MD034449
-     C                   PARM      *BLANKS       @RTCD                                      MD034449
-     C                   PARM      '*FIRST '     @OPTN                                      MD034449
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
-      *                                                                                     MD034449
-      * Database Error                                                                      MD034449
-      *                                                                                     MD034449
-     C     @RTCD         IFNE      *BLANK                                                   MD034449
+      **********                                                                   MD034449 MD057191
+      ***Access*Dealing*Details****************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034449 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+      **Database*Error*************************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
-     C                   ENDIF                                                              MD034449
+     C**********         ENDIF                                                     MD034449 MD057191
       *
       *
       ***  Key list for Facilities file

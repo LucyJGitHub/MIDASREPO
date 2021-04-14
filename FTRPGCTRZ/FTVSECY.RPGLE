@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. 254841A            Date 14May20               *
+      *  Prev Amend No. 254841             Date 14May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -48,6 +50,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254841A - Error message BAW0001 is returned as warning.      *
+      *            Introduce FT0805A to imitate RABC processing.      *
+      *          - Applied for MD055654.                              *
+      *  254841 - Perform Balance Checking during input.              *
+      *         - Applied for MD055654.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -190,6 +197,17 @@
      D WkACOD                 10     19  0                                                    CGL029
      D WkACSQ                 20     21  0                                                    CGL029
      D WkBRCA                 22     24                                                       CGL029
+      *                                                                                       254841
+      ** External data structure for Accounts                                                 254841
+     D WACCN         E DS                  EXTNAME(ACCNTAB)                                   254841
+      *                                                                                       254841
+      ** External data structure for Partial Account                                          254841
+      *                                                                                       254841
+     D W@@ACNT         DS                                                                     254841
+     D W@@CNUM                 1      6                                                       254841
+     D W@@ACOD                 7     16                                                       254841
+     D W@@ACSQ                17     18                                                       254841
+     D W@@BRCA                19     21                                                       254841
                                                                                               CRE008
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -240,6 +258,10 @@
      D WkRetNoC        S             10                                                       CRE008
                                                                                               CRE008
      D CRE008          S              1                                                       CRE008
+     D PIBAN           S             34                                                       254841
+     D W#SLSH          S              1                                                       254841
+     D W@@SMAM         S             13  0                                                    254841
+     D W@@SLDT         S              5  0                                                    254841
                                                                                               CRE008
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -263,6 +285,7 @@
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      Idx = 0
+     C                   Eval      WIdx = 0                                                  254841A
  
       * Settle currency validation
       *
@@ -296,6 +319,13 @@
      C                   ENDIF                                                                CRE008
      C                   ENDIF                                                                CRE008
                                                                                               CRE008
+     C                   If        OKORC1 = 'Y' and                                           254841
+     C                             OKSMAM = 'Y' and                                           254841
+     C                             OKSMCY = 'Y' and                                           254841
+     C                             OKORBK = 'Y'                                               254841
+     C                   EXSR      SrRABCChk                                                  254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
       ** If an error was found, set the return code appropriately
      C                   If        OKSmcy = 'N' or
      C                             OKSmam = 'N'
@@ -569,6 +599,133 @@
      C                   ENDSR                                                                CRE008
       *****************************************************************                       CRE008
      C/EJECT
+      *****************************************************************                       254841
+      * SrRABCChk Validation of Retail Account Balance Checking       *                       254841
+      *                                                               *                       254841
+      *****************************************************************                       254841
+      *                                                                                       254841
+     C     SrRABCChk     BegSR                                                                254841
+      *                                                                                       254841
+      ** Initialize fields per call of this subroutine                                        254841
+      *                                                                                       254841
+     C                   Move      *blanks       W@ACNT                                       254841
+     C                   Move      *blanks       W@@ACNT                                      254841
+     C                   Move      *blanks       W@CCY                                        254841
+     C                   Move      *blanks       W@BRCA                                       254841
+      *                                                                                       254841
+      ** If Ordering Bank is entered                                                          254841
+      *                                                                                       254841
+     C                   If        SORBK <> *Blanks                                           254841
+     C                   Eval      W@ACNT = SORBK                                             254841
+     C                   If        @MBIN = 'Y'                                                254841
+     C                   Eval      W@BRCA = SORBB                                             254841
+     C                   Else                                                                 254841
+     C                   Eval      W@BRCA = @BJSBRC                                           254841
+     C                   Endif                                                                254841
+     C                   Eval      W@CCY = SSMCY                                              254841
+      *                                                                                       254841
+      ** else, if Ordering Customer is entered                                                254841
+      *                                                                                       254841
+     C                   Else                                                                 254841
+     C                   If        @ORCT  <> 'C' and                                          254841
+     C                             @ORCT  <> 'A'                                              254841
+     C                   SELECT                                                               254841
+     C                   When      @ORCT = 'I'                                                254841
+     C                   If        W#SLSH = '/'                                               254841
+     C                   Eval      PIBAN = %subst(SORC1:2)                                    254841
+     C                   Else                                                                 254841
+     C                   Eval      PIBAN = SORC1                                              254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
+      ** If Ordering Customer is an IBAN, retrieve Account Info                               254841
+      *                                                                                       254841
+     C                   Move      *BLANKS       DSSDY                                        254841
+     C                   Move      *BLANKS       W@ACNT                                       254841
+     C                   CALLB     'AOIBANR4'                                                 254841
+     C                   PARM                    C#RTCD                                       254841
+     C                   PARM      '*KEY   '     C#OPTN                                       254841
+     C                   PARM                    PIBAN                                        254841
+     C     WACCN         PARM                    DSSDY                                        254841
+      *                                                                                       254841
+     C                   If        C#RTCD= *Blanks                                            254841
+     C                   Move      BRCA          W@BRCA                                       254841
+     C                   Move      CNUM          W@@CNUM                                      254841
+     C                   Move      ACOD          W@@ACOD                                      254841
+     C                   Move      ACSQ          W@@ACSQ                                      254841
+     C                   Move      BRCA          W@@BRCA                                      254841
+     C                   Move      CCY           W@CCY                                        254841
+     C                   Move      W@@ACNT       W@ACNT                                       254841
+     C                   Else                                                                 254841
+     C                   Movel     'ACCNTL6'     DBFILE                                       254841
+     C                   Movel     PIBAN         DBKEY                                        254841
+     C                   Z-Add     900           DBASE                                        254841
+     C                   Exsr      *PSSR                                                      254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
+     C                   When      @ORCT = 'P'                                                254841
+     C                   If        W#SLSH = '/'                                               254841
+     C                   Eval      W@ACNT = %subst(SORC1:2)                                   254841
+     C                   Else                                                                 254841
+     C                   Eval      W@ACNT = SORC1                                             254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
+     C                   If        @MBIN  = 'Y'                                               254841
+     C                   Eval      W@BRCA = SBRCA                                             254841
+     C                   Else                                                                 254841
+     C                   Eval      W@BRCA = @BJSBRC                                           254841
+     C                   Endif                                                                254841
+     C                   Eval      W@CCY = SSMCY                                              254841
+      *                                                                                       254841
+     C                   Other                                                                254841
+     C                   Eval      W@CCY = SSMCY                                              254841
+     C                   Eval      W@ACNT = SORC1                                             254841
+     C                   If        @MBIN  = 'Y'                                               254841
+     C                   Eval      W@BRCA = SBRCA                                             254841
+     C                   Else                                                                 254841
+     C                   Eval      W@BRCA = @BJSBRC                                           254841
+     C                   Endif                                                                254841
+     C                   Endsl                                                                254841
+      *                                                                                       254841
+     C                   Endif                                                                254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
+      ** Call validation program                                                              254841
+      *                                                                                       254841
+     C                   Move      @SMAM         W@@SMAM                                      254841
+      *                                                                                       254841
+     C**********         Call      'FT0805'                                           254841 254841A
+     C                   Call      'FT0805A'                                                 254841A
+     C                   PARM                    W@ACNT           21                          254841
+     C                   PARM                    W@CCY             3                          254841
+     C                   PARM                    W@BRCA            3                          254841
+     C                   PARM                    W@@SMAM                                      254841
+     C                   PARM      @SLDT         W@@SLDT                                      254841
+     C                   PARM      *BLANKS       W@RCD             1                          254841
+     C                   PARM      'NO'          W@MODE            3                         254841A
+      *                                                                                       254841
+      ** Check for insufficient funds.                                                        254841
+      *                                                                                       254841
+     C                   If        W@RCD = 'E'                                                254841
+     C                   Movel     'FT0805'      DBFILE                               254841 254841A
+     C                   Movel     'FT0805A'     DBFILE                                      254841A
+     C                   Movel     '*CALL'       DBKEY                                        254841
+     C                   Z-Add     901           DBASE                                        254841
+     C                   Exsr      *PSSR                                                      254841
+     C                   Endif                                                                254841
+      *                                                                                       254841
+     C                   If        W@RCD = 'Y'                                                254841
+     C**********         Add       1             Idx                                  254841A 254841
+     C**********         Movel     'SSMAM'       FldNamXAr(Idx)                       254841A 254841
+     C**********         Movel     'BAW0001'     MsgIdXAr(Idx)                        254841A 254841
+     C**********         EVAL      OKSmam = 'N'                                       254841A 254841
+     C                   Eval      WIdx = WIdx + 1                                           254841A
+     C                   Eval      WFldNmXAr(WIdx) = 'SSMAM'                                 254841A
+     C                   Eval      WMsgIDXAr(WIdx) = 'BAW0001'                               254841A
+     C                   EVAL      OKSmam = 'W'                                              254841A
+     C                   Endif                                                                254841
+      *                                                                                       254841
+     C                   EndSR                                                                254841
+     C/EJECT                                                                                  254841 
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************

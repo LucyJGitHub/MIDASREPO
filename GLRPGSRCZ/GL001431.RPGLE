@@ -15,7 +15,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. 223783             Date 28May12               *      
+      *                 MD049134           Date 27Jul20               *
+      *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
@@ -47,6 +49,10 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *      
+      *  MD049134 - Retrieve History Balance from Retail History      *
+      *             instead of CLBL from ACCNTAB for the correct      *
+      *             Available Balance in Field 64.                    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR401845 - MT940 generation does not take into account       *
       *             regional holidays (CHILD: AR401846)               *
@@ -103,6 +109,11 @@
 
      FGLNWKAPD  IF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL Network Activity Control File.
+                                                                                            MD049134
+     FREHISDL   IF   E           K DISK                   INFSR(*PSSR)                      MD049134
+     F                                     PREFIX(RX)                                       MD049134
+      ** Midas RE Retail History Header and Position                                        MD049134
+                                                                                            MD049134
      FGLNW94L5  IF   E           K DISK                   INFSR(*PSSR)                        CGL178
       ** Midas GL Network accounts - MT94x - live+gen.MT940                                   CGL178
 
@@ -528,6 +539,17 @@
      C                   EVAL      MGIOBL = NA5LCB                              Initial Opening Bala
      C                   EVAL      MGFCBL = NA5LCB + WkBalance                  Final Closing Balanc
      C                   EVAL      MGCLBL = CLBL                                Available Balance
+                                                                                            MD049134
+     C     KeyRetHis     CHAIN     REHISDL                            98                    MD049134
+                                                                                            MD049134
+     C                   IF        *IN98 = *OFF                                             MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ELSE                                                               MD049134
+     C     KeyRetHis     SETLL     REHISDL                                                  MD049134
+     C                   READP     REHISDL                                                  MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ENDIF                                                              MD049134
+                                                                                            MD049134
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
 
@@ -990,6 +1012,15 @@
      C                   KFLD                    KeyNwACCD                      Account code
      C                   KFLD                    KeyNwACSQ                      Account sequence num
      C                   KFLD                    KeyNwNATY                      Network Account Type
+                                                                                            MD049134
+     C     KeyRetHis     KLIST                                                              MD049134
+     C                   KFLD                    NABRCH                                     MD049134
+     C                   KFLD                    NACNUM                                     MD049134
+     C                   KFLD                    NACCY                                      MD049134
+     C                   KFLD                    NAACOD                                     MD049134
+     C                   KFLD                    NAACSQ                                     MD049134
+     C                   KFLD                    BJRDNB                                     MD049134
+                                                                                            MD049134
 
       ** Key to access MT940                                                                  CGL178
                                                                                               CGL178

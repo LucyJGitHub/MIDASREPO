@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD055685           Date 24Apr20              */
-/*       Prev Amend No. MD054799           Date 14Nov19              */
+/*       Last Amend No. MD056889           Date 11Oct20              */
+/*       Prev Amend No. MD055685           Date 24Apr20              */
+/*                      MD054799           Date 14Nov19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD021351           Date 06May14              */
 /*                      MD021605           Date 22Aug13              */
@@ -62,6 +63,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD055685 - Double posting of Retail Account Debit Balance   */
 /*                  on FCLTYFN and FACHISA. Do not process RSACMTPD  */
 /*                  records on ANWD run. Set job switch 4 to ON to   */
@@ -188,7 +190,8 @@
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
              DCL        VAR(&MRPDCL) TYPE(*CHAR) LEN(1)                                 /*MD021605*/
   /*         DCLF       FILE(SDJARFPD)        */                               /*CLE040*/ /*CSD028*/
-             DCLF       FILE(SDJARFL0)                                                    /*CSD028*/
+/**********  DCLF       FILE(SDJARFL0) */                                       /*CSD028**MD056889*/
+             DCLF       FILE(SDJARJW1)                                                  /*MD056889*/
 /*/COPY WNCPYSRC,LEC0609A05                                          */
 /**/
 /*  Global Monitor Message                                            /*131373*/
@@ -688,7 +691,8 @@ RECVRD:                                                                         
 /**********               A/logs:+                                                       /*CLE040*/
 /**********               A/calmancl')                                                   /*CLE040*/
                                                                                           /*CLE040*/
- SETUP_PATH: RCVF       RCDFMT(SDJARFD0)                                                  /*CLE040*/
+/*SETUP_PATH: RCVF       RCDFMT(SDJARFD0) */                                    /*CLE040**MD056889*/
+ SETUP_PATH: RCVF       RCDFMT(SDJARJT1)                                                /*MD056889*/
                                                                                           /*CLE040*/
              /* END OF FILE */                                                            /*CLE040*/
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ADD_ENVVAR))                      /*CLE040*/

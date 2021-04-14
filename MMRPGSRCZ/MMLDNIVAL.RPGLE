@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD047719           Date 24Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -158,6 +159,7 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -4060,6 +4062,7 @@
      C                   PARM      *BLANKS       PWMsgID1                                     CDL049
      C                   PARM                    IKINTR                                       CDL049
      C                   PARM                    IKRRAT                                       CDL049
+     C                   PARM                    BNDCSP                                     MD057049
       *                                                                                       CDL049
       * Update error fields/message IDs/message data (arrays)                                 CDL049
      C     MSG1          IFNE      *BLANK                                                     CDL049

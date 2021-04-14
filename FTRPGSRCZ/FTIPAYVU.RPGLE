@@ -34,7 +34,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -103,6 +105,11 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
       *              'Stamp Tax Amount' : Invalid Numeric Value       *

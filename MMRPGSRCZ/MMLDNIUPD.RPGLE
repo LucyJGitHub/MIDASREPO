@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 AR784570           Date 21Feb17               *
@@ -104,6 +105,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057049 - Moved IKRRAT to FSRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1261,6 +1263,7 @@
       **  Reference Rate                                                                      CDL049
      C**********         MOVE      IKRRAT        FSRRAT                              CDL049 BUG24144
      C                   MOVE      *ZERO         FSRRAT                                     BUG24144
+     C                   MOVE      IKRRAT        FSRRAT                                     MD057049
       *                                                                                       CER020
       ** Initial Start Date, Final Maturity Date and                                          CER020
       ** Original Deal Number                                                                 CER020
@@ -1792,6 +1795,7 @@
       **  Reference Rate                                                                      CDL049
      C**********         MOVE      IKRRAT        FSRRAT                              CDL049 BUG24144
      C                   MOVE      *ZERO         FSRRAT                                     BUG24144
+     C                   MOVE      IKRRAT        FSRRAT                                     MD057049
       *                                                                                       CER020
       ** Initial Start Date, Final Maturity Date and                                          CER020
       ** Original Deal Number                                                                 CER020

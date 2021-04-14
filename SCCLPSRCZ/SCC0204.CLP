@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 05Feb18              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. MD039086           Date 27Jan21              */
+/*       Prev Amend No. MD022132           Date 05Mar15              */
+/*                      MD046248           Date 05Feb18              */
+/*                      MD045731           Date 27Sep17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */
 /*                      MD025679A          Date 12May14              */
@@ -35,6 +37,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD039086 - Submit GLC007011 when CAP205 is switched *ON.    */
+/*                  Applied for MD-57273.                            */
+/*       MD022132 - Triggers don't pick up Rollback deletes of ABC   */
+/*                  files.                                           */
+/*                - Applied for MD-57273.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart batch job for MT94x if not active.       */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
@@ -376,6 +383,12 @@ NEXT:                                                                           
                                                                                         /*MD025679*/
              CALL       PGM(GLC007001)                                                 /*MD025679A*/
                                                                                        /*MD025679A*/
+/* Submit the background updater */                                                     /*MD022132*/
+                                                                                        /*MD022132*/
+             IF         COND(&CAP205 *EQ 'Y') THEN(DO)                                  /*MD039086*/
+             CALL       PGM(GLC007011)                                                  /*MD022132*/
+             ENDDO                                                                      /*MD039086*/
+                                                                                        /*MD022132*/
 /* Start audit reporting batch job */                                                     /*CGP004*/
                                                                                           /*CGP004*/
              IF         COND(&CGP004 *EQ 'Y') THEN(CALL +

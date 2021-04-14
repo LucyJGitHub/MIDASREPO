@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056887           Date 29Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6546            Date 25Apr05              */
+/*                      BUG6546            Date 25Apr05              */
 /*                      CSC018 *C *CREATE  Date 31May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056887 - Deliverable Data Split for SCNJRNPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG6546 - Check SCNJRNL2 in calling program SCC2469 and     */
 /*                 SCC2471. Remove RCVF loop from this program.      */
@@ -28,9 +30,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&DTAQ &LIB)
- 
+
 /*/COPY WNCPYSRC,SCC2472INT                                                                       */
- 
+
              DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
@@ -38,22 +40,23 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
-             DCLF       FILE(SCNJRNL2)
+/**********  DCLF       FILE(SCNJRNL2) */                                               /*MD056887*/
+             DCLF       FILE(SCNJRJW0)                                                  /*MD056887*/
 /**********  DCLF       FILE(SCNJRNL2) */                                                /*BUG6546*/
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,SCC2472MPS                                                                       */
- 
+
              CRTMSGQ    MSGQ(QTEMP/SCC2472)
              MONMSG     MSGID(CPF0000)
- 
+
 /**Check*to*see*if*the*date*queue*should*be*journalled*and*if*so,                        /*BUG6546*/
 /**journal*it.                                                                           /*BUG6546*/
- 
+
 /*RCVF:****                                                                              /*BUG6546*/
 /**********  RCVF                                                                        /*BUG6546*/
 /**********  MONMSG     MSGID(CPF0864) EXEC(DO)                                          /*BUG6546*/
@@ -76,40 +79,40 @@
                 MONMSG     MSGID(CPF0000)                                                /*BUG6546*/
                 GOTO       CMDLBL(END)
 /**********  ENDDO                                                                       /*BUG6546*/
- 
+
 /**********  IF         COND((&NJFILE *EQ &DTAQ) *AND (&NJACTV *EQ +                     /*BUG6546*/
 /**********               'Y')) THEN(DO)                                                 /*BUG6546*/
 /**********     GOTO       CMDLBL(END)                                                   /*BUG6546*/
 /**********  ENDDO                                                                       /*BUG6546*/
- 
+
 /*/COPY WNCPYSRC,SCC2472MPE                                                                       */
- 
+
 /**********  GOTO       CMDLBL(RCVF)                                                     /*BUG6546*/
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,SCC2472ERR                                                                       */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC2472 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGVAR     VAR(&MESSAGE) VALUE(&MSGCLR)
              CHGVAR     VAR(&MESSAGE) VALUE('Program SCC2472 ended +
                           abnormally - see job log')
              SNDMSG     MSG(&MESSAGE) TOMSGQ(QTEMP/SCC2472)
              MONMSG     MSGID(CPF0000)
- 
+
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*/COPY WNCPYSRC,SCC2472END                                                                       */
- 
+
              RETURN
- 
+
              ENDPGM

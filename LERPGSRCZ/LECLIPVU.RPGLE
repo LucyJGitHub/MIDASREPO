@@ -34,7 +34,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD053956           Date 29Oct19               *
+      *  Prev Amend No. MD056313           Date 21Sep20               *      
+      *                 MD051895           Date 22May19               *
+      *                 MD053956           Date 29Oct19               *
       *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
@@ -145,6 +147,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD056313 - Settlement validated twice. Used placeholder for  *
+      *             messages in first ZASETINVAL call                 *      
+      *  MD051895 - Error when rejecting a change to a loan which     *
+      *             settles over a GL account.                        *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
@@ -1021,6 +1027,14 @@
       *                                                                                       LLN022
      D/COPY QWINDSRC,LECLIPDTA                                                                LLN022
 
+      ** Placeholder for ZASETINVAL
+     D   IdxHld        S                   LIKE(Idx)                                        MD056313
+     D   FldNamHld     S                   LIKE(FldNameArr)                                 MD056313
+     D   MsgIdArrHld   S                   LIKE(MsgIdArr)                                   MD056313
+     D   WIdxHld       S                   LIKE(WIdx)                                       MD056313
+     D   WFldNamHld    S                   LIKE(WFldNamArr)                                 MD056313
+     D   WMsgIdArrHld  S                   LIKE(WMsgIdArr)                                  MD056313
+     D   WMsgDtaArrHl  S                   LIKE(WMsgDtaArr)                                 MD056313
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2519,13 +2533,20 @@
      C                   PARM                    OKPayInsDS                                MD036838A
      C                   PARM                    OKRecInsDS                                MD036838A
      C                   PARM                    OKFRAInsDS                                MD036838A
-     C                   PARM                    FldNameArr                                MD036838A
-     C                   PARM                    MsgIDArr                                  MD036838A
-     C                   PARM                    Idx                                       MD036838A
-     C                   PARM                    WFldNamArr                                MD036838A
-     C                   PARM                    WMsgIdArr                                 MD036838A
-     C                   PARM                    WMsgDtaArr                                MD036838A
-     C                   PARM                    WIdx                                      MD036838A
+     C**********         PARM                    FldNameArr                      MD036838A  MD056313
+     C**********         PARM                    MsgIDArr                        MD036838A  MD056313
+     C**********         PARM                    Idx                             MD036838A  MD056313
+     C**********         PARM                    WFldNamArr                      MD036838A  MD056313
+     C**********         PARM                    WMsgIdArr                       MD036838A  MD056313
+     C**********         PARM                    WMsgDtaArr                      MD036838A  MD056313
+     C**********         PARM                    WIdx                            MD036838A  MD056313
+     C                   PARM                    FldNamHld                                  MD056313
+     C                   PARM                    MsgIdArrHld                                MD056313
+     C                   PARM                    IdxHld                                     MD056313
+     C                   PARM                    WFldNamHld                                 MD056313
+     C                   PARM                    WMsgIdArrHld                               MD056313
+     C                   PARM                    WMsgDtaArrHl                               MD056313
+     C                   PARM                    WIdxHld                                    MD056313
      C                   PARM                    ##PAYF                                    MD036838A
      C                   PARM                    ##RECF                                    MD036838A
      C                   PARM                    ##FRIF                                    MD036838A
@@ -2599,6 +2620,7 @@
       ** Move validation here.                                                              MD036838
       *                                                                                     MD036838
      C                   IF        ##PAYS <> C_Pay AND DDACTN <> 'X'                        MD053956
+     C                             AND DDACTN <> 'I'                                        MD056313
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                              MD036838
@@ -2606,6 +2628,7 @@
      C                   ENDIF                                                              MD036838
                                                                                             MD036838
      C                   IF        ##RECS <> C_Rec  AND DDACTN <> 'X'                       MD053956
+     C                             AND DDACTN <> 'I'                                        MD056313
      C                                                                                      MD036838
      C                   EVAL      WIdx = WIdx + 1                                          MD036838
      C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                              MD036838
@@ -3501,7 +3524,8 @@
      C                   MOVE      DDPSCY        CL_SCCY                                    AR804863
      C                   MOVE      DDIC72        CL_ICCY                                    AR804863
       *                                                                                     AR804863
-     C                   MOVEL     DDPSTM        CL_RSTM                                    AR804863
+     C**********         MOVEL     DDPSTM        CL_RSTM                           AR804863 MD051895
+     C                   MOVEL     DDRSTM        CL_RSTM                                    MD051895
      C                   MOVE      DDRSCY        CL_SCCY                                    AR804863
       *                                                                                     MD034643
      C                   MOVE      DDPEXI        CL_PEXI                                    MD034643

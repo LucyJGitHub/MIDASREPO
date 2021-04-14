@@ -12,7 +12,9 @@
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD057681           Date 16Mar21               *
+      *                 MD026863           Date 11Jun14               *
+      *                 AR674226           Date 04Dec19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -71,6 +73,16 @@
 0009 F*---------------------------------------------------------------*
      F*                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057681 - Available amount in LE0720P1 report is different  *
+      *             in Fusion Midas and MidasPlus. Introduce system   *
+      *             value CommFacReportDate. This determines whether  *
+      *             the report shows the current outstanding amount   *
+      *             and available amount based on bank's preference.  *
+      *             There are two options for the settings to be      *
+      *             defined in the system value:                      *
+      *             1. Y - as at rundate of the report, or            *
+      *             2. N - as at next working day.                    *
+      *  MD026863 - Only do AR677799 if Credit agreement is live.     *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utility sequence no. and adjust position of    *
       *             SQNO when writing to facexfa. (Child: AR674227)   *
@@ -975,6 +987,9 @@
 0648 I                                      142 170 DBKEY                 S01117
 0649 I                                      171 180 DBPGM                 S01117
 0650 I                                      181 1830DBASE                 S01117
+      *                                                                                     MD057681
+     I              'CommFacReportDate'   C         WSVLK1                                  MD057681
+      *                                                                                     MD057681
      C**********           MOVEACPY@      BIS@   80                                           CSC042
      C*    DEFINE LDA                                                     S01117
      C           *NAMVAR   DEFN           LDA                             S01117
@@ -1128,6 +1143,45 @@
      C                     OPEN FACEXFAA                                  CLE059
      C                     OPEN FACEXT4A                                  CLE059
      C                     ENDIF                                          CLE059
+      *                                                                                     MD057681
+     C                     MOVELWSVLK1    SVALK1                                            MD057681
+      *                                                                                     MD057681
+     C                     CALL 'AOSVALR0'                                                  MD057681
+     C                     PARM           RTNCDE  7                                         MD057681
+     C                     PARM           SVALK1 20                                         MD057681
+     C                     PARM           SVAL1 200                                         MD057681
+     C                     PARM           SVALK2 20                                         MD057681
+     C                     PARM           SVAL2 200                                         MD057681
+     C                     PARM           SVALK3 20                                         MD057681
+     C                     PARM           SVAL3 200                                         MD057681
+     C                     PARM           SVALK4 20                                         MD057681
+     C                     PARM           SVAL4 200                                         MD057681
+     C                     PARM           SVALK5 20                                         MD057681
+     C                     PARM           SVAL5 200                                         MD057681
+     C                     PARM           SVALK6 20                                         MD057681
+     C                     PARM           SVAL6 200                                         MD057681
+     C                     PARM           SVALK7 20                                         MD057681
+     C                     PARM           SVAL7 200                                         MD057681
+     C                     PARM           SVALK8 20                                         MD057681
+     C                     PARM           SVAL8 200                                         MD057681
+     C                     PARM           SVALK9 20                                         MD057681
+     C                     PARM           SVAL9 200                                         MD057681
+     C                     PARM           SVALK0 20                                         MD057681
+     C                     PARM           SVAL10200                                         MD057681
+      *                                                                                     MD057681
+     C           RTNCDE    IFNE *BLANKS                                                     MD057681
+     C                     MOVE 'SDSVLJW0'DBFILE                                            MD057681
+     C                     MOVELSVALK1    DBKEY                                             MD057681
+     C                     Z-ADD13        DBASE                                             MD057681
+     C                     MOVE '1'       *INU7                                             MD057681
+     C                     MOVE '1'       *INU8                                             MD057681
+     C                     GOTO END                                                         MD057681
+     C                     ENDIF                                                            MD057681
+      *                                                                                     MD057681
+      ** Save setting of 'CommFacReportDate' system value                                   MD057681
+      *                                                                                     MD057681
+     C                     MOVELSVAL1     REPDAT  1                                         MD057681
+      *                                                                                     MD057681
      C/COPY WNCPYSRC,LE0700C002
 0663 C**
 0664 C                     SETON                     40
@@ -1272,10 +1326,20 @@
       *                                                                                     AR677799
      C           TRCA      IFEQ 'CA'                                                        AR677799
      C           *IN07     ANDEQ'1'                                                         AR677799
+     C           RECIF     ANDEQ'D'                                                         MD026863
      C                     MOVE OAM1      PEXP                                              AR677799
      C                     ENDIF                                                            AR677799
       *                                                                                     AR677799
+     C           *IN07     IFEQ '1'                                                         MD057681
+     C                     Z-ADD0         WCAMT  130                                        MD057681
+     C           REPDAT    IFEQ 'Y'                                                         MD057681
+     C                     Z-ADDPEXP      WCAMT                                             MD057681
 0732 C   07                MOVE PEXP      ZZAMT
+     C                     ELSE                                                             MD057681
+     C                     Z-ADDCAMD      WCAMT                                             MD057681
+     C                     MOVE CAMD      ZZAMT                                             MD057681
+     C                     ENDIF                                                            MD057681
+     C                     ENDIF                                                            MD057681
      C********** *IN11     IFEQ '1'                                                  220263 AR677799
      C********** *IN07     ANDEQ'1'                                                  220263 AR677799
      C**********           MOVE CEXP      ZZAMT                                      220263 AR677799
@@ -1297,7 +1361,13 @@
 0741 C**
 0742 C**   DETERMINE CURRENT AVAILABLE AMOUNT
 0743 C***07***** FAMT      SUB  OAM1      CALC1  130                                          259872
+     C           *IN07     IFEQ '1'                                                         MD057681
+     C           REPDAT    IFEQ 'Y'                                                         MD057681
+     C           FAMT      SUB  OAM1      CALC1                                             MD057681
+     C                     ELSE                                                             MD057681
      C   07      FAMT      SUB  OAM2      CALC1  130                                          259872
+     C                     ENDIF                                                            MD057681
+     C                     ENDIF                                                            MD057681
      C***07*11** FAMT      SUB  CEXP      CALC1                                   AR989943 AR989943A
      C***07*11** FAMT      SUB  CAMD      CALC1                                   AR989943A MD029793
 0744 C**
@@ -1899,7 +1969,8 @@
      O                       07RECIF     27                               S01117
 1035 O                       07FAMT      34P
      O****************       10TCMA      34P                              S01339
-     O                       07PEXP      41P
+     O**********             07PEXP      41P                                                MD057681
+     O                       07WCAMT     41P                                                MD057681
      O**********          11 07CEXP      41P                                         220263 AR677799
      O**********          11 07CEXP      41P                                      AR989943 AR989943A
      O**********          11 07CAMD      41P                                      AR989943A MD029793
@@ -2003,7 +2074,8 @@
      O                       07FCCY      26                               CLE059
      O                       07RECIF     27                               CLE059
      O                       07FAMT      34P                              CLE059
-     O                       07PEXP      41P                              CLE059
+     O**********             07PEXP      41P                                         CLE059 MD057681
+     O                       07WCAMT     41P                                                MD057681
      O**********          11 07CEXP      41P                                      AR989943 AR989943A
      O**********          11 07CAMD      41P                                      AR989943A MD029793
      O                       07CALC1     48P                              CLE059

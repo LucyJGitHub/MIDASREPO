@@ -3,6 +3,7 @@
 /***D ***RPG***********************************************************   CAP002
 /*S*D ***RPGBASEMOD****************************************************   CAP002 MD024398
 /*STD *  RPGSQLMOD                                                               MD024398
+/*EXI *  CLOSQLCSR(*ENDMOD)                                           *          MD055681
 /*EXI *  TEXT('Midas AO Zone switchable features access object')
      F*****************************************************************
      F*                                                               *
@@ -13,8 +14,9 @@
      F*                                                               *
      F*  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *   Last Amend No. MD046248         Date 27Oct17                *
-      *   Prev Amend No. MD024398         Date 03Feb14                *
+      *   Last Amend No. MD055681         Date 31Jul20                *
+      *   Prev Amend No. MD046248         Date 27Oct17                *
+      *                  MD024398         Date 03Feb14                *
       * Midas Plus 1.4 ----------- Base ------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
@@ -26,6 +28,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API performance enhancements.                     *
       *           Cache valid features, and do not set on LR.         *
@@ -71,7 +74,7 @@
       /EJECT
       ************************************************************
      F*CSARDL1IF**E           K        DISK                           UC  076385
-     FSCSARDL1  IF   E           K DISK                                         076385
+     F*SCSARDL1* IF   E           K DISK                                         076385     MD055681
       **IN**-*SCSARDD0*SAR*Descriptions                                   S01407
       * IN  - @SARDL1  Switchable features                                S01407
       ************************************************************
@@ -122,6 +125,8 @@
      D P@FMT         E DS                  EXTNAME(DSFDY)
      I* External Data structure to hold the outgoing record format
      I* of the file.
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
+     D                                     PREFIX(X)                                        MD055681
       *
       ************************************************************
       /EJECT
@@ -225,7 +230,7 @@
       *
      C     P@OPTN        IFEQ      '*FIRST '                                    IF 3 FIRST REC
      C************LOVAL****SETLLSCSARDD0             9390    Set file     S01407
-     C     *LOVAL        SETLL     @SARDL1                            9390        Set file     S0140
+     C******LOVAL        SETLL     @SARDL1                            9390        Set S0140 MD055681
      C     *IN93         CABEQ     '1'           T@SKIP                           Empty file
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   MOVE      '*NEXT  '     P@OPTN                           Force *Next
@@ -235,7 +240,7 @@
       *
      C     P@OPTN        IFEQ      '*NEXT  '                                    IF 4 NEXT REC
      C*********************READ SCSARDD0               9094  Read record  S01407
-     C                   READ      @SARDL1                              9094      Read record  S0140
+     C**********         READ      @SARDL1                              9094      ReadS0140 MD055681
      C     *IN94         CABEQ     '1'           T@SKIP                           End of file
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   END                                                    FI 4
@@ -244,7 +249,7 @@
       *
      C     P@OPTN        IFEQ      '*LAST  '                                    IF 5 LAST REC
      C************HIVAL****SETGTSCSARDD0               90    Set file     S01407
-     C     *HIVAL        SETGT     @SARDL1                              90        Set file     S0140
+     C******HIVAL        SETGT     @SARDL1                              90        Set S0140 MD055681
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   MOVE      '*PREV  '     P@OPTN                           Force *Prev
      C                   END                                                    FI 5
@@ -253,7 +258,7 @@
       *
      C     P@OPTN        IFEQ      '*PREV  '                                    IF 6 PREV.REC
      C*********************READPSCSARDD0               9094  Read record  S01407
-     C                   READP     @SARDL1                              9094      Read record  S0140
+     C**********         READP     @SARDL1                              9094      ReadS0140 MD055681
      C     *IN94         CABEQ     '1'           T@SKIP                           End of file
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   END                                                    FI 6
@@ -263,7 +268,21 @@
      C     P@OPTN        IFEQ      '*KEY   '                                    IF 7 KEYED ACC
      C     P@OPTN        OREQ      '*VERIFY'                                    OR
      C***********P@SARD****CHAINSCSARDD0             9590    Get record   S01407
-     C     P@SARD        CHAIN     @SARDL1                            9590        Get record   S0140
+     C*****P@SARD        CHAIN     @SARDL1                            9590        Get S0140 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ SELECT *                                                                            MD055681
+     C+ into :SCSARD                                                                        MD055681
+     C+ from SCSRDJW0                                                                       MD055681
+     C+ where SARN = :P@SARD                                                                MD055681
+     C/END-EXEC                                                                             MD055681
+     C                   SETOFF                                       9095                  MD055681
+     C                   IF        SQLCODE = 100                                            MD055681
+     C                   SETON                                          95                  MD055681
+     C                   ENDIF                                                              MD055681
+     C                   IF        SQLCODE <> 100 and SQLCODE <> 0                          MD055681
+     C                   SETON                                          90                  MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
      C     *IN95         CABEQ     '1'           T@SKIP                           No record fnd
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   MOVE      'V'           MODE                                         CSC007
@@ -352,6 +371,7 @@
      C     P@OPTN        IFNE      '*VERIFY'                                    IF 13
      C     P@OPTN        ANDNE     '*FREE  '                                      AND
      C     P@RTCD        ANDNE     '*OPTION'                                      AND
+     C                   eval      D@FMT = SCSARD                                           MD055681
      C                   MOVEL     D@FMT         P@FMT                          FI 13
      C                   END
       *

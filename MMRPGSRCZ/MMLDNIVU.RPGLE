@@ -34,7 +34,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 MD056313           Date 21Sep20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD049048           Date 20Dec17               *
@@ -140,6 +142,8 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD057049 - Move value of IKRRAT to HKRRAT                    *
+      *  MD056313 - Deal settlement not validated during authorize    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -1321,8 +1325,10 @@
                                                                                              BUG4482
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
+     C                   MOVEL     DealFilFmt    ValidDeal                                  MD056313
      C                   EVAL      IKINTR = HKINTR                                         MD037869A
      C                   EVAL      IKSPRD = HKSPRD                                         MD037869A
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   EXSR      ValidateTr                                                BUG4482
      C**********         EXSR      ValidateAc                                      BUG6164 MD037869A
      C                   EXSR      ValidateSt                                                BUG4482
@@ -2716,7 +2722,7 @@
      C                   EVAL      W#CCY = *BLANKS                                          MD022656
      C     PayDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PPAY                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -2727,7 +2733,7 @@
      C                   ENDIF                                                                260428
      C     RecDat        IFLT      BJRDNB                                                     260428
      C     TransDate     ANDNE     BJRDNB                                                     260428
-     C     DDACTN        OREQ      'X'                                                       260428A
+     C*****DDACTN*****   OREQ      'X'                                              260428A MD056313
      C                   MOVEL     'Y'           ##PREC                                       260428
      C                   IF        DDACTN = 'A'                                             MD022656
      C**********                   AND ModeofOp = '*FRONT'                        MD022656 MD024884A
@@ -3324,6 +3330,7 @@
      C                   EVAL      IKPOBN = *BLANKS                                           CSD027
      C                   EVAL      IKPOCN = *BLANKS                                           CSD027
      C                   Z-ADD     *ZERO         IKOMDT
+     C                   Z-ADD     *ZERO         IKRRAT                                     MD057049
 
       ** Have to clear the settlement data structure, or the packed numeric
       ** fields are not initialised correctly.
@@ -3536,6 +3543,7 @@
      C                   IF           DDACTN = 'D'
      C                             OR DDACTN = 'X'
      C                   MOVEL     DealFilFmt    ValidDeal
+     C                   EVAL      IKRRAT = HKRRAT                                          MD057049
      C                   ENDIF
 
       * Set Valid file field(s) that are needed for all Action Codes

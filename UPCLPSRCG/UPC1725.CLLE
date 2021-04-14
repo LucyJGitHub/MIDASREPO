@@ -10,25 +10,27 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. CUP021             Date 10Feb11              */
+/*       Last Amend No. MD056129           Date 26Jun20              */
+/*       Prev Amend No. CUP021             Date 10Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUP031 *CREATE     Date 12Jan05              */
+/*                      CUP031 *CREATE     Date 12Jan05              */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056129 - Avoid CPF5149 when migrating from 11.06 to 2.1   */
 /*       CUP021 - Rewrite of Action File processing.                 */
 /*       CUP031 - Creation of new set of Action File utilities.      */
 /*                                                                   */
 /*********************************************************************/
 /**********  PGM        PARM(&MODE)                                                    */ /*CUP021*/
              PGM        PARM(&MODE &OLDLIB &NEWLIB)                                       /*CUP021*/
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OLDFLDN) TYPE(*DEC) LEN(5 0)
@@ -36,25 +38,25 @@
              DCL        VAR(&FLDDTA) TYPE(*CHAR) LEN(2000)                                /*CUP021*/
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                  /*CUP021*/
              DCL        VAR(&IN01) TYPE(*LGL)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2005')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**********  CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)                                */ /*CUP021*/
 /**********  CHGJOB     SWS(XXXXXX00)                                                  */ /*CUP021*/
- 
+
              IF         COND(&MODE *EQ 'I') THEN(DO)
- 
+
 /**Retrieve*&OLDLIB*and**&NEWLIB*from*data*area*ACTIONFDTA**/ /*                       */ /*CUP021*/
 /**********     RTVDTAARA  DTAARA(QTEMP/ACTIONFDTA (11 10)) +                          */ /*CUP021*/
 /**********                 RTNVAR(&OLDLIB)                                            */ /*CUP021*/
 /**********     RTVDTAARA  DTAARA(QTEMP/ACTIONFDTA (21 10)) +                          */ /*CUP021*/
 /**********                 RTNVAR(&NEWLIB)                                            */ /*CUP021*/
- 
+
 /* Get no. of fields (&OLDFLDN) in T_GREMNUL in &OLDLIB. */
 /**********     DSPFD      FILE(&OLDLIB/T_GRMENUL) TYPE(*RCDFMT) +                     */ /*CUP021*/
 /**********                 OUTPUT(*OUTFILE) OUTFILE(QTEMP/FDRFMTTMP) +                */ /*CUP021*/
@@ -67,7 +69,7 @@
                              '*FIRST' &RTNCODE &FLDDTA)                                   /*CUP021*/
                 DLTOVR     FILE(UPFFDSTPD)                                                /*CUP021*/
                 CHGVAR     VAR(&OLDFLDN) VALUE(%SST(&FLDDTA 120 5))                       /*CUP021*/
- 
+
 /* Get no. of fields (&NEWFLDN) in T_GREMNUL in &OLDLIB. */
 /**********     DSPFD      FILE(&NEWLIB/T_GRMENUL) TYPE(*RCDFMT) +                     */ /*CUP021*/
 /**********                 OUTPUT(*OUTFILE) OUTFILE(QTEMP/FDRFMTTMP) +                */ /*CUP021*/
@@ -80,14 +82,14 @@
                              '*FIRST' &RTNCODE &FLDDTA)                                   /*CUP021*/
                 DLTOVR     FILE(UPFFDSTPD)                                                /*CUP021*/
                 CHGVAR     VAR(&NEWFLDN) VALUE(%SST(&FLDDTA 120 5))                       /*CUP021*/
- 
+
 /* Delete any existing copy of work file UPGMULTPD1. */
                 DLTF       FILE(QTEMP/UPGMULTPD1)
                 MONMSG     MSGID(CPF2105)
- 
+
 /* The file with greater no. of fields is the latest version. */
                 IF         COND(&OLDFLDN *GT &NEWFLDN) THEN(DO)
- 
+
 /* Copy the latest version to be UPGMULTPD1 in QTEMP as template. */
                    CPYF       FROMFILE(&OLDLIB/T_GRMENUL) +
                                TOFILE(QTEMP/UPGMULTPD1) +
@@ -97,31 +99,31 @@
                    CPYF       FROMFILE(&NEWLIB/T_GRMENUL) +
                                TOFILE(QTEMP/UPGMULTPD1) CRTFILE(*YES)
                 ENDDO
- 
+
 /* Copy data from new library to the version in QTEMP. */
                 CPYF       FROMFILE(&NEWLIB/T_GRMENUL) +
                             TOFILE(QTEMP/UPGMULTPD1) MBROPT(*REPLACE) +
                             FMTOPT(*MAP *DROP)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
- 
+
                 OVRDBF     FILE(NEWGMUL) TOFILE(QTEMP/UPGMULTPD1) +
                             OVRSCOPE(*JOB)
- 
+
 /* Compare T_GRMENUL to retreive records that have been moved: */
- 
+
 /* Delete any existing copies of work files used for command CMPPFM. */
                 DLTF       FILE(QTEMP/UPGMULC_O)
                 MONMSG     MSGID(CPF2105)
                 DLTF       FILE(QTEMP/UPGMULC_N)
                 MONMSG     MSGID(CPF2105)
- 
+
 /* Copy template file UPGMULCTPD to QTEMP twice - once for old and once for new. */
                 CPYF       FROMFILE(UPGMULCTPD) TOFILE(QTEMP/UPGMULC_O) +
                              CRTFILE(*YES)
                 CPYF       FROMFILE(UPGMULCTPD) TOFILE(QTEMP/UPGMULC_N) +
                              CRTFILE(*YES)
- 
+
 /* Copy data from old and new libraries to the versions in QTEMP. */
                 CPYF       FROMFILE(&OLDLIB/T_GRMENUL) +
                              TOFILE(QTEMP/UPGMULC_O) MBROPT(*REPLACE) +
@@ -133,12 +135,12 @@
                              FMTOPT(*MAP *DROP)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
- 
+
 /* Compare modified T_GRMENUL in old and new libraries. */
                 CMPPFM     NEWFILE(UPGMULC_N) OLDFILE(UPGMULC_O) +
                            OUTPUT(*OUTFILE) OUTFILE(QTEMP/CMPPFMOUTF) +
                            OUTMBR(*FIRST *REPLACE) OPTION(*FLGMOVLIN)
- 
+
                 CPYF       FROMFILE(QTEMP/CMPPFMOUTF) +
                            TOFILE(UPGMULMPD) MBROPT(*REPLACE) +
                            INCCHAR(*RCD 2 *EQ 'IM-') FMTOPT(*NOCHK)
@@ -147,23 +149,25 @@
 /* Ignore the empty from file */
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
- 
+
+/**********     OVRDBF     FILE(GMUL1KF) TOFILE(QTEMP/T_GRMENU_N) +
+                            OVRSCOPE(*JOB)                                              /*MD056129*/
                 OVRDBF     FILE(GMUL1KF) TOFILE(QTEMP/T_GRMENU_N) +
-                            OVRSCOPE(*JOB)
- 
+                            OVRSCOPE(*JOB) SHARE(*NO)                                   /*MD056129*/
+
              ENDDO
- 
+
              CALL       PGM(UP1725) PARM(&MODE)
- 
+
              IF         COND(&MODE *EQ 'I') THEN(DO)
              DLTOVR     FILE(NEWGMUL GMUL1KF) LVL(*JOB)
              ENDDO
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN+
                 (GOTO       CMDLBL(ABNOR2))
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
  /* Recursive error. */
              IF         COND(&IN01) THEN(DO)
@@ -172,7 +176,7 @@ ABNOR:
                              UPC1725') MSGTYPE(*ESCAPE)
              ENDDO
              CHGVAR     VAR(&IN01) VALUE('1')
- 
+
 ABNOR2:
 /* Abnormal termination. */
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
@@ -188,6 +192,6 @@ ABNOR2:
                              check the dump.') MSGTYPE(*ESCAPE)
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 END:
              ENDPGM

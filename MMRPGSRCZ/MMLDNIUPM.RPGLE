@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
@@ -114,6 +115,7 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *
+      *  MD057049 - Moved IKRRAT to HKRRAT                            *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -835,6 +837,7 @@
      C                   MOVEL     MMVLDN        MMDELD
      C**********         Z-ADD     IKRRAT        HKRRAT                            BUG12308 BUG24144
      C                   Z-ADD     *ZERO         HKRRAT                                     BUG24144
+     C                   Z-ADD     IKRRAT        HKRRAT                                     MD057049
      C                                                                                        CER020
      C                   IF        CER020 = 'Y'                                               CER020
       *                                                                                       CER020
@@ -1196,6 +1199,7 @@
      C                   MOVEL     MMDELD        MMVLDN
      C**********         Z-ADD     HKRRAT        IKRRAT                            BUG12308 BUG24144
      C                   Z-ADD     *ZERO         IKRRAT                                     BUG24144
+     C                   Z-ADD     HKRRAT        IKRRAT                                     MD057049
      C*
      C**  UPDATE 'AFTER' STATUS
      C*
@@ -1271,6 +1275,7 @@
      C                   MOVEL     MMDELD        MMVLDN
      C**********         Z-ADD     HKRRAT        IKRRAT                            BUG12308 BUG24144
      C                   Z-ADD     *ZERO         IKRRAT                                     BUG24144
+     C                   Z-ADD     HKRRAT        IKRRAT                                     MD057049
      C*
      C**  UPDATE 'AFTER' STATUS
      C*
@@ -1337,6 +1342,7 @@
      C                   MOVEL     MMDELD        MMVLDN
      C**********         Z-ADD     HKRRAT        IKRRAT                            BUG12308 BUG24144
      C                   Z-ADD     *ZERO         IKRRAT                                     BUG24144
+     C                   Z-ADD     HKRRAT        IKRRAT                                     MD057049
      C*
      C**  UPDATE 'AFTER' STATUS
      C*
@@ -2074,6 +2080,7 @@
       ** Reference Rate                                                                       CDL049
      C**********         MOVEL     IKRRAT        HKRRAT                              CDL049 BUG24144
      C                   Z-ADD     *ZERO         HKRRAT                                     BUG24144
+     C                   MOVEL     IKRRAT        HKRRAT                                     MD057049
       *                                                                                       CER020
       ** Initial Start Date, Final Maturity Date and Original                                 CER020
       ** Deal Number                                                                          CER020

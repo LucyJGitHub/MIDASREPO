@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057558           Date 18Feb21               *
+      *  Prev Amend No. MD057049           Date 03Nov20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 MD023981           Date 13Jan14               *
@@ -29,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057558 - Set tolerance to 0 if no reference rate defined   *
+      *  MD057049 - Amended ZA0840 result checking                    *
+      *           - Moved @@AMT to ZFIELD for formatting              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -43,14 +48,14 @@
       *  CDL049 - Addition of a Reference Rate field                  *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
       ** ¦ =========================  ¦
       ** +----------------------------+
       **
- 
+
       * SD Reference Rate Tolerance File
      FSDRRATPD  IF   E             DISK    INFSR(*PSSR)
       **
@@ -76,64 +81,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(MMLDNIPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D ZalignOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZADIG           S              2  0
- 
+
      D RateIn          S             11  7
- 
+
       ** Decimal separator                                                                  MD023981
      D BNDCSP          S              1A                                                    MD023981
                                                                                             MD023981
@@ -162,7 +167,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -170,20 +175,20 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      MsgId1 = *Blanks
      C                   Eval      PWMsgId1 = *Blanks
- 
+
       ** *------------------------------*
       ** * Validate Reference Rate      *
       ** *------------------------------*
- 
+
      C                   Eval      MM#REF = 0
       *
       **  Check it is a valid figure with 8 decimal places max.
- 
+
      C                   Z-ADD     0             @@AMT                                      MD023981
      C                   Z-ADD     0             @@ERCD                                     MD023981
      C     DDRRAT        IFNE      *BLANKS
@@ -211,11 +216,12 @@
      C                   PARM                    @@ERCD                                     MD023981
      C                   PARM                    @@AMT                                      MD023981
      C                   PARM                    BNDCSP                                     MD023981
- 
+
       **  Set error code if invalid
- 
+
      C**********         If        ZalignOK = 'N'                                           MD023981
-     C     @@ERCD        IFEQ      0                                                        MD023981
+     C*****@@ERCD**      IFEQ      0                                               MD023981 MD057049
+     C     @Rtcde        IFNE      *blanks                                                  MD057049
      C                   Movel     'MMA1337'     MsgId1
      C                   Else
       *
@@ -224,12 +230,13 @@
      C**********         MOVE      ZFIELD        MM#REF           13 8                      MD023981
      C                   MOVE      @@AMT         MM#REF           13 8                      MD023981
      C                   Z-ADD     MM#REF        RefRate          13 8
+     C                   MOVE      @@AMT         ZFIELD                                     MD057049
       *
       * Convert numeric field - insert decimal point
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      8             ZADEC
- 
+
      C                   MOVE      ZFIELD        DDRRAT
       *
       **  Check tolerance
@@ -258,7 +265,7 @@
       *
      C                   EndIf                                                  End Valid
      C                   EndIf                                                  End Blank
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -272,9 +279,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
       *  Return Code
      C                   Parm                    RetCodeIn
@@ -291,23 +298,25 @@
       * Retrieve Reference Rate Tolerance File
      C     1             SETLL     SDRRATPD
      C                   READ      SDRRATPD                               90
- 
+
       * Record not found
      C     *IN90         IFEQ      '1'
-     C                   MOVEL     'SDRRATPD'    DBFILE                         ***************
-     C                   MOVEL     '001'         DBASE                          * DB ERROR 001*
-     C                   MOVEL     '*FIRST '     DBKEY                          ***************
-     C                   EXSR      *PSSR
+     C                   Z-ADD     0             IRATET                                     MD057558
+     C                   Z-ADD     0             IINRRT                                     MD057558
+     C**********         MOVEL     'SDRRATPD'    DBFILE                         ************MD057558
+     C**********         MOVEL     '001'         DBASE                          * DBERR 001 MD057558
+     C**********         MOVEL     '*FIRST '     DBKEY                          ************MD057558
+     C**********         EXSR      *PSSR                                                    MD057558
      C                   ENDIF
- 
- 
+
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

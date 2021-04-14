@@ -31,7 +31,13 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 234464 (Reopen)    Date 28May12               *
+      *                 234464             Date 28May12               *
+      *                 223783             Date 28May12               *      
+      *                 AR1004252          Date 06Aug12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
@@ -53,6 +59,26 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  234464 - (Reopen) Program unable to correctly compare field  *
+      *           33 of successive MT103 messages with the field 32   *
+      *           of unreconciled MT101 messages as work field ZFIELD *
+      *           contains values from previous message's processing  *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  234464 - Amended program to be able to correctly compare     *
+      *           field 33B of MT103 message with the field 32 of     *
+      *           unreconciled MT101 message.                         *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - Call AOIBANR4 with correct parameter.               *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  AR1004252 - Check functions fail to recognise account as CM  *
+      *              and hence payment is not STP'd. Change REZCMTOPA *
+      *              and REZCMTPAN to also check Account name and     *
+      *              Alternative address "X". (Child: AR1004253)      *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -86,6 +112,7 @@
      FMGOMSGL1IF  E           K        DISK
      FMGOMSGLAIF  E           K        DISK
      F            MGOMSGD0                          KRENAMEMGMSGLA
+     FSDCURRLDIF  E           K        DISK                                                   234464
       *
       /EJECT
      E                    CPY@    1   1 80
@@ -96,6 +123,7 @@
      IACCT      E DSACCNTAB
      I              LCD                             CLCD
      IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY                                                                  AR1004252
      ISCSARD    E DSSCSARDPD
       *
      I            DS
@@ -114,6 +142,14 @@
      I            DS                                                       211499
      I                                        1 175 @59                    211499
      I                                       71 175 @59X                   211499
+     I            DS                                                                       AR1004252
+     I                                        1 175 @59RET                                 AR1004252
+     I                                        2  34 @59REA                                 AR1004252
+     I                                       71 175 @59REX                                 AR1004252
+     I            DS                                                                       AR1004252
+     I                                        1 175 @59IBN                                 AR1004252
+     I                                        2  34 @59IBA                                 AR1004252
+     I                                       71 175 @59IBX                                 AR1004252
      I            DS                                                       211499
      I                                        1 175 W59                    211499
      I                                       71 175 W59X                   211499
@@ -225,6 +261,24 @@
      C                     MOVELP59       DSTRAN                           211499
      C                     MOVELTMLIN     @59   175                        211499
      C                     MOVE TMLIN1    @591                             211499
+      *                                                                                    AR1004252
+     C                     MOVEL*BLANKS   W#IBAN                                           AR1004252
+     C                     MOVEL*BLANKS   @59RET                                           AR1004252
+     C                     MOVEL*BLANKS   @59IBN                                           AR1004252
+     C                     CALL 'AOIBANR4'             90                                  AR1004252
+     C                     PARM           P@RTCD                                           AR1004252
+     C                     PARM '*KEY   ' P@OPTN                                           AR1004252
+     C                     PARM           @IBAN                                            AR1004252
+     C           ACCT      PARM ACCT      DSSDY                                            AR1004252
+      *                                                                                    AR1004252
+     C           P@RTCD    IFEQ *BLANK                                                     AR1004252
+     C           RECI      ANDEQ'D'                                                        AR1004252
+     C                     MOVELTMLIN     @59RET                                           AR1004252
+     C                     MOVEL*BLANKS   @59REA                                           AR1004252
+     C                     MOVELACNO      @59REA    P                                      AR1004252
+     C                     MOVEL*BLANKS   @59REX                                           AR1004252
+     C                     MOVEL'Y'       W#IBAN  1                                        AR1004252
+     C                     ENDIF                                                           AR1004252
       *                                                                    211499
      C                     SELEC                                           211499
      C           @BL24     WHEQ *BLANK                                     211499
@@ -248,9 +302,17 @@
      C                     MOVELCCY       KCCY                             211499
      C                     MOVELACOD      KACCD                            211499
      C                     MOVELACSQ      KACSQ                            211499
+      *                                                                                    AR1004252
+      ** Set Up IBan equivalent                                                            AR1004252
+      *                                                                                    AR1004252
+     C                     MOVELTMLIN     @59IBN                                           AR1004252
+     C                     MOVEL*BLANKS   @59IBA                                           AR1004252
+     C                     MOVELIBAN      @59IBA    P                                      AR1004252
+     C                     MOVEL*BLANKS   @59IBX                                           AR1004252
      C                     ENDIF                                           211499
      C*                                                                    211499
      C           @BL16     WHEQ *BLANK                                     211499
+     C           W#IBAN    ANDNE'Y'                                                        AR1004252
      C                     MOVELBRCA      KBRCA                            211499
      C                     MOVELCNUM      KCNUM                            211499
      C                     MOVELCCY       KCCY                             211499
@@ -261,9 +323,11 @@
      C           CFT004    WHEQ 'Y'                                        211499
      C                     CALL 'AOIBANR4'             90                  211499
      C                     PARM           P@RTCD                           211499
-     C                     PARM '*VERIFY' P@OPTN                           211499
+     C**********           PARM '*VERIFY' P@OPTN                                       211499 223783
+     C                     PARM '*KEY   ' P@OPTN                                              223783
      C                     PARM           @IBAN                            211499
-     C           ACCT      PARM ACCT      DSFDY                            211499
+     C********** ACCT      PARM ACCT      DSFDY                            211499          AR1004252
+     C           ACCT      PARM ACCT      DSSDY                                            AR1004252
      C*                                                                    211499
      C           P@RTCD    IFEQ *BLANK                                     211499
      C           RECI      ANDEQ'D'                                        211499
@@ -350,6 +414,41 @@
       *      Get MT103 Fld 33B:
      C                     MOVELP33B      DSTRAN
      C                     MOVE TTCA      @33B   18
+     C                     MOVELTTAMT     WTAMT  15 P                                         234464
+     C           TTCCY     CHAINSDCURRD0             72                                       234464
+      *                                                                                       234464
+      ** Change decimal comma separator to decimal point separator                            234464
+      *                                                                                       234464
+     C********** ',':'.'   XLATEWTAMT     ZFIELD                                       234464 234464
+     C           ',':'.'   XLATEWTAMT     ZFIELD    P                                         234464
+      *                                                                                       234464
+      ** Format field 33B amount with the correct number of decimal                           234464
+      ** places                                                                               234464
+      *                                                                                       234464
+     C           13        SUB  A6NBDP    ZADIG                                               234464
+     C                     Z-ADDA6NBDP    ZADEC                                               234464
+      *                                                                                       234464
+     C                     CALL 'ZALIGN'                                                      234464
+     C                     PARM *BLANKS   ZRTCD   7                                           234464
+     C                     PARM           ZFIELD 16                                           234464
+     C                     PARM           ZADEC   10                                          234464
+     C                     PARM           ZADIG   20                                          234464
+     C           ZFIELD    PARM *BLANKS   ZAFLD  16                                           234464
+      *                                                                                       234464
+      ** Format field 33B which now has the correct number of decimal                         234464
+      ** places according to SWIFT standards                                                  234464
+      *                                                                                       234464
+     C**********           MOVE ZFIELD    ZAMNT                                        234464 234464
+     C                     MOVE ZFIELD    ZAMNT     P                                         234464
+     C                     CALL 'ZM0040'                                                      234464
+     C                     PARM           ZAMNT  130                                          234464
+     C                     PARM TTCCY     ZCCY    3                                           234464
+     C                     PARM           ZSAMNT 17                                           234464
+     C                     PARM           ZSCCY   3                                           234464
+     C                     PARM           ZERR    1                                           234464
+      *                                                                                       234464
+     C********** TTCCY     CAT  ZSAMNT    @33B                                         234464 234464
+     C           TTCCY     CAT  ZSAMNT    @33B      P                                         234464
       *      Get MT101 Fld 32B:
      C                     MOVEL':32B:'   KMTAG
      C           KMGO      CHAINMGOMSGL1             71
@@ -520,6 +619,8 @@
      C*
      C*  Compare MT103  vs MT101
      C           @59       IFEQ W59
+     C           @59RET    OREQ W59                                                        AR1004252
+     C           @59IBN    OREQ W59                                                        AR1004252
      C                     MOVEL'T'       RTNCDE    P
      C                     ELSE
      C                     MOVEL'F'       RTNCDE    P

@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*       1989                                                        */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR787620           Date 10Jun11              */
+/*       Last Amend No. CLE165             Date 11Dec20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CLE165 - Reporting Sequence on Financial Loans Diary Report */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR787620 - Hooks Incorporation                              */
 /*                  WNCPYSRC,LEH00001                                */
@@ -77,6 +79,14 @@
                         REPORT')
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CLE050) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE050*/
+             DCL        VAR(&PRTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')                        /*CLE165*/
+             DCL        VAR(&CLE165) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CLE165*/
+/**/                                                                                      /*CLE165*/
+/** Access Switchable Features file to see if CLE165 present ***/                         /*CLE165*/
+                                                                                          /*CLE165*/
+             CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CLE165')                              /*CLE165*/
+             IF (&PRTCD *EQ ' ') (CHGVAR (&CLE165) VALUE('Y'))                            /*CLE165*/
+                                                                                          /*CLE165*/
 /*/COPY WNCPYSRC,LEC0711005                                          */
 /************DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
 /**/
@@ -164,6 +174,15 @@
              THEN(DO)                                                 /*S01117*/
 /*********** OVRDBF *** FILE(LVEDS) POSITION(*KEY 1 LVEDIF1F &RENT)    *080565*/
 /*/COPY WNCPYSRC,LEH00001                                            */
+         IF (&CLE165 *EQ 'Y') THEN(DO)                                                    /*CLE165*/
+            OVRDBF  FILE(LELVEDL0) POSITION(*KEY 2 LVEDIF1F &RENT)                        /*CLE165*/
+            MONMSG    MSGID(CPF0000)                                                      /*CLE165*/
+            OPNDBF    FILE(LELVEDL0) OPTION(*ALL)                                         /*CLE165*/
+            MONMSG    MSGID(CPF0000) EXEC(DO)                                             /*CLE165*/
+              DLTOVR     FILE(LELVEDL0)                                                   /*CLE165*/
+              ENDDO                                                                       /*CLE165*/
+            ENDDO                                                                         /*CLE165*/
+         ELSE    CMD(DO)                                                                  /*CLE165*/
              OVRDBF     FILE(LVEDS) POSITION(*KEY 2 LVEDIF1F &RENT)   /*080565*/
                  MONMSG    MSGID(CPF0000)                             /*098642*/
                  OPNDBF    FILE(LVEDS) OPTION(*ALL)                   /*S01117*/
@@ -171,17 +190,29 @@
                      DLTOVR     FILE(LVEDS)                           /*S01117*/
                  ENDDO                                                /*S01117*/
 /*/COPY WNCPYSRC,LEH00002                                            */
+             ENDDO                                                                        /*CLE165*/
              ENDDO                                                    /*S01117*/
 /*/COPY WNCPYSRC,LEC0711003                                          */
+             IF       COND(&CLE165 *EQ 'Y') THEN(DO)                                      /*CLE165*/
+                      CALL       PGM(LE0691A) PARM(&RSEQ &RENT)                           /*CLE165*/
+                      ENDDO                                                               /*CLE165*/
+             ELSE     CMD(DO)                                                             /*CLE165*/
                       CALL    PGM(LE0691) PARM(&RSEQ &RENT)           /*S01117*/
+                      ENDDO                                                               /*CLE165*/
 /*/COPY WNCPYSRC,LEC0711004                                          */
 /**/                                                                  /*098642*/
              IF COND((&RENT *NE '   ') *AND (&RENT *NE 'ALL')) +
              THEN(DO)                                                 /*098642*/
 /*/COPY WNCPYSRC,LEH00003                                            */
+         IF (&CLE165 *EQ 'Y') THEN(DO)                                                    /*CLE165*/
+                 DLTOVR    FILE(LELVEDL0)                                                 /*CLE165*/
+                 MONMSG    MSGID(CPF0000)                                                 /*CLE165*/
+            ENDDO                                                                         /*CLE165*/
+         ELSE    CMD(DO)                                                                  /*CLE165*/
                      DLTOVR     FILE(LVEDS)                           /*098642*/
                  MONMSG    MSGID(CPF0000)                             /*098642*/
 /*/COPY WNCPYSRC,LEH00004                                            */
+                 ENDDO                                                                    /*CLE165*/
              ENDDO                                                    /*098642*/
 /**/                                                                  /*098642*/
                   ENDDO                                               /*S01117*/
@@ -189,9 +220,15 @@
              CLOF       OPNID(LVEDSL2)                                /*E37223*/
              MONMSG     MSGID(CPF0000)                                /*E37223*/
 /*/COPY WNCPYSRC,LEH00005                                            */
+         IF (&CLE165 *EQ 'Y') THEN(DO)                                                    /*CLE165*/
+             CLOF       OPNID(LELVEDL0)                                                   /*CLE165*/
+             MONMSG     MSGID(CPF0000)                                                    /*CLE165*/
+            ENDDO                                                                         /*CLE165*/
+         ELSE    CMD(DO)                                                                  /*CLE165*/
              CLOF       OPNID(LVEDS)                                  /*E37223*/
              MONMSG     MSGID(CPF0000)                                /*E37223*/
 /*/COPY WNCPYSRC,LEH00006                                            */
+             ENDDO                                                                        /*CLE165*/
                 IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
 /*/COPY WNCPYSRC,LEC0711001                                          */
                    CLRPFM     FILE(LVEDIF1)

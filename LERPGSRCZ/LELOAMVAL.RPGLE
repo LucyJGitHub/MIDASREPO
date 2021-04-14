@@ -15,7 +15,10 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD057191           Date 02Dec20               *
+      *                 MD054876           Date 26Aug20               *
+      *                 MD034915           Date 26Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
@@ -100,6 +103,19 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD057191 - SP23 Unable to save Loan Input. FBM removes       *
+      *             interest rate                                     *
+      *           - DL ICD must not be used, removed unnecessary codes*
+      *             of MD034449.                                      *
+      *  MD054876 - When only funding rate/spread is populated, value *
+      *             of IRCF becomes 'Y'. Remove passing of value of   *
+      *             @@ALPH to DDRTSP so as to differentiate an SC with*
+      *             intentional zero spread rate from an SC with      *
+      *             funding details amendment only.                   *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *             Use ZA0841 for validation instead of ZALIGN.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
@@ -292,9 +308,9 @@
                                                                                               CLE025
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
-     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
-     D                                     PREFIX(DL_)                                      MD034449
-      ** External DS for Dealing Details                                                    MD034449
+     D*SDDEAL***     E DS                  EXTNAME(SDDEALPD)                       MD034449 MD057191
+     D**********                           PREFIX(DL_)                             MD034449 MD057191
+      ***External*DS*for*Dealing*Details*******************************            MD034449 MD057191
                                                                                             MD034449
      D PERCD           S              1P 0                                                  MD034449
      D PAMT            S             15P 0                                                  MD034449
@@ -317,6 +333,7 @@
      D PZSDCSP         S              1A                                                    MD034449
      D PZOut15         S             15A                                                    MD034449
      D PZFSign         S              1A                                                    MD034449
+     D DL_BNDCSP       S              1A                                                    MD057191
 
       *****************************************************************
       /EJECT
@@ -2417,7 +2434,7 @@
      C                   ELSE                                                               MD034449
      C                   Z-ADD     WNumBas       WSPRT                                      MD034449
      C                   ENDIF                                                              MD034449
-     C                   MOVE      @@ALPH        DDRTSP                                     MD034449
+     C**********         MOVE      @@ALPH        DDRTSP                            MD034449 MD054876
      C**********         MOVE      ZFIELD        WSPRT            11 7                      MD034449
      C                   ENDIF
      C                   Endif                                                                CLE035
@@ -4890,13 +4907,20 @@
       *
       ** If funding rate/spread entered, check if it is a valid figure
      C                   ELSE
-     C                   CALLB     'ZALIGN'
-     C                   PARM      *BLANK        ZALIGNok          1
-     C                   PARM      DDFRAT        ZFIELD           16
-     C                   PARM      7             ZADEC             1 0
-     C                   PARM      4             ZADIG             2 0
+     C**********         CALLB     'ZALIGN'                                                 MD034915
+     C**********         PARM      *BLANK        ZALIGNok          1                        MD034915
+     C**********         PARM      DDFRAT        ZFIELD           16                        MD034915
+     C**********         PARM      7             ZADEC             1 0                      MD034915
+     C**********         PARM      4             ZADIG             2 0                      MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      DDFRAT        @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID            1                        MD034915
+     C                   EXSR      VALAMT                                                   MD034915
       *
-     C     ZALIGNok      IFEQ      'N'
+     C*****ZALIGNok      IFEQ      'N'                                                      MD034915
+     C     @@ERCD        IFNE      0                                                        MD034915
      C                   MOVE      'N'           DDFRATOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFRAT'
@@ -4904,7 +4928,8 @@
       *
       ** If valid figure, assign rate change flag and funding sign
      C                   ELSE
-     C                   MOVE      ZFIELD        WFRAT
+     C**********         MOVE      ZFIELD        WFRAT                                      MD034915
+     C                   MOVE      @@AMT         WFRAT                                      MD034915
      C                   Z-ADD     WFRAT         WFRSP
      C                   MOVE      'Y'           WFRCF
      C                   MOVE      SVFSGN        WFSGN
@@ -6471,19 +6496,19 @@
      C                   MOVE      'P'           PPCUST                                       240408
      C                   ENDIF                                                                240408
      C                   ENDIF                                                                240408
-      *                                                                                     MD034449
-      ** Access Dealing Details                                                             MD034449
-      *                                                                                     MD034449
-     C                   CALL      'AODEALR1'                                               MD034449
-     C                   PARM      *BLANKS       @RTCD                                      MD034449
-     C                   PARM      '*FIRST '     @OPTN                                      MD034449
-     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
-      *                                                                                     MD034449
-      * Database Error                                                                      MD034449
-      *                                                                                     MD034449
-     C     @RTCD         IFNE      *BLANK                                                   MD034449
+      **********                                                                   MD034449 MD057191
+      ***Access*Dealing*Details****************************************            MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C**********         CALL      'AODEALR1'                                      MD034449 MD057191
+     C**********         PARM      *BLANKS       @RTCD                             MD034449 MD057191
+     C**********         PARM      '*FIRST '     @OPTN                             MD034449 MD057191
+     C*****SDDEAL        PARM      SDDEAL        DSSDY                             MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+      **Database*Error************************************************             MD034449 MD057191
+      **********                                                                   MD034449 MD057191
+     C*****@RTCD         IFNE      *BLANK                                          MD034449 MD057191
      C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
-     C                   ENDIF                                                              MD034449
+     C**********         ENDIF                                                     MD034449 MD057191
       ***********                                                                    BUG11965 249197
       ***Access*Midas SD Hedging ICD File                                            BUG11965 249197
       ***********                                                                    BUG11965 249197

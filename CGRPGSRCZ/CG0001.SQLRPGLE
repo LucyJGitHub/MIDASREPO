@@ -1,5 +1,6 @@
      H DEBUG
-     H CVTOPT (*GRAPHIC)                                                                    MD054955
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
+     H*CVTOPT*(*GRAPHIC)***********************************************            MD054955 MD056543
       *****************************************************************
 /*S*D****RPGBASE*******************************************************                       CSD053
 /**** *  RPGBNOCVT                                                    *              CSD053 MD054955
@@ -29,7 +30,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. CSD103             Date 10Aug20               *
+=======
+      *  Last Amend No. MD056543           Date 15Sep20               *
+>>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  Prev Amend No. MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -50,8 +55,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+=======
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD to readable  *
+      *             unicode equivalent.                               *
+>>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -178,7 +189,8 @@
      C                   MOVEL     'D'           CDRECI
      C                   MOVEL     BBCUST        CDCUST
      C                   MOVEL     'C'           CDRTYP
-     C     BBCRNM        CAT(P)    BBCRTN        CDCORN
+     C*****BBCRNM        CAT(P)    BBCRTN        CDCORN                                     MD056543
+     C                   EVAL      CDCORN = BBCRNM + BBCRTN                                 MD056543
      C                   Z-ADD     AGRDNB        CDCDTE
      C                   MOVEL     'N'           CDPLAB
      C                   Z-ADD     AGRDNB        CDATDT
@@ -239,7 +251,8 @@
      C                   MOVEL     BCCNA4        CDADD4
      C                   MOVEL     BCCRTN        CDADD5
      C                   Z-ADD     AGRDNB        CDCDTE
-     C     BBCRNM        CAT(P)    BBCRTN        CDCORN
+     C*****BBCRNM        CAT(P)    BBCRTN        CDCORN                                     MD056543
+     C                   EVAL      CDCORN = BBCRNM + BBCRTN                                 MD056543
      C                   MOVEL     'N'           CDPLAB
      C                   Z-ADD     AGRDNB        CDATDT
      C                   MOVEL     'DEFAULT'     CDCTYP

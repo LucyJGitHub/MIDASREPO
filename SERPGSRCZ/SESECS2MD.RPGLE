@@ -22,7 +22,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 16May13               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -52,6 +53,10 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
+      *  MD056949 - SE0045 is dumping on security with no coupon      *
+      *             date array - which is not an error                *
+      *           - Allow amendment of security with no Coupon/Rate   *
+      *             Days                                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -928,6 +933,7 @@
      C                   IF        ADDBCNV = 'N'                                              CSE031
       ** Fields are amendable.                                                                CSE031
      C                   ELSE                                                                 CSE031
+     C                   IF        DDCD01 <> *BLANKS                                        MD056949
      C                   IF        ADDCD01 <> DDCD01                                          CSE031
      C                   EVAL      IDx = IDx + 1                                              CSE031
      C                   EVAL      FldNameArr(IDx) = 'DDCD01'                                 CSE031
@@ -1143,6 +1149,7 @@
      C                   ENDIF                                                                CSE031
      C                   EVAL      OKCD12 = 'N'                                               CSE031
      C                   ENDIF                                                                CSE031
+     C                   ENDIF                                                              MD056949
                                                                                               CSE031
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031

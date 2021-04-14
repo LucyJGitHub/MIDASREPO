@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024459           Date 07Feb14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038257           Date 13Apr16               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE164             Date 18Aug14               *
@@ -50,6 +51,9 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD024459 - LES0157 is not being shown upon authorisation     *
+      *           Remove checking of DDACTN so that LES0157 will be   *
+      *           issued accordingly whethere during insert or auth.  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038257 - Incorrect Default value for Auto settle indicator *
       *           - Get the value of auto settle indicator of the     *
@@ -363,8 +367,10 @@
       ***  For Authorisation of a Complete Repayment, validate as Insert
       *
      C     DDACTN        IFEQ      'I'
+     C     DDACTN        OREQ      'A'                                                      MD024459
      C     DDACTN        OREQ      'X'
-     C     @@ASTS        ANDEQ     'C'
+     C     RPASTS        ANDEQ     'C'                                                      MD024459
+     C*****@@ASTS        ANDEQ     'C'                                                      MD024459
       *
       ***  Validate the customer number
       *
@@ -1371,9 +1377,9 @@
      C                   Z-ADD     WNAMT         WLAMT
      C                   ENDIF
       *
-     C     DDACTN        IFNE      'X'
+     C*****DDACTN        IFNE      'X'                                                      MD024459
      C     WLAMT         IFGT      WPRIN
-     C     WLAMT         ANDNE     WAMNT
+     C*****WLAMT         ANDNE     WAMNT                                                    MD024459
      C*****WESAMT        IFEQ      *BLANKS                                                   BUG4351
      C*****WESAMT        OREQ      'Y'                                                       BUG4351
      C*****WLAMT         ANDNE     WSLAMT                                                    BUG4351
@@ -1387,7 +1393,7 @@
      C                   ENDIF
      C                   Z-ADD     WLAMT         WAMNT            13 0
      C                   Z-ADD     W#LAMT        WLAMT
-     C                   ENDIF
+     C**********         ENDIF                                                              MD024459
       *
      C                   ENDIF
      C                   ENDIF

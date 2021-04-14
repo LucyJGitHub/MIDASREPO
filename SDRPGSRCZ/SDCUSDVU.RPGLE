@@ -32,8 +32,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *  Last Amend No. MD057294           Date 03Dec20               *
+      *  Prev Amend No. MD050526           Date 27Oct20               *
+      *                 AR970389B          Date 16Sep20               *
+      *                 AR970389A          Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
+      *                 MD055446           Date 04Apr20               *
+      *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
@@ -153,6 +158,22 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057294 - Missing Customer's Authority Holders Link after   *
+      *             amend                                             *
+      *  MD050526 - Maintain Customers tab Authority Holders Link and *
+      *             Details by Country of Tax code not shown in red   *
+      *             in case of errors                                 *
+      *  AR970389B - Reopen AR970389A due to the field also being     *
+      *              defaulted to 'N' when some features are switched *
+      *              ON. (Child: AR970392B)                           *
+      *            - Applied for MD-56719.                            *
+      *  AR970389A - Reopen AR970389 due to error still occurs in     *
+      *              validation if transaction is coming from external*
+      *              systems. (Child: AR970392A)                      *
+      *            - Applied for MD-56719.                            *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from APTRANVU.                                    *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
@@ -947,6 +968,7 @@
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
      D  TransCent                    10A                                                    MD055446
+     D  TransUser                    20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -997,6 +1019,9 @@
       ** Index for arrays of error message ids etc
      D*****Idx             S              3P 0                                               BUG5082
      D Idx             S              3P 0 INZ(0)                                            BUG5082
+
+      ** Counter used for checking errors returned by validators                            MD050526
+     D Idz             S              3P 0 INZ(0)                                           MD050526
 
       ** Index for arrays of warning message ids etc
      D***** WIdx            S              3P 0                                              BUG5082
@@ -1159,7 +1184,8 @@
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
      D***FillerBufEx2    S           5591A                                           CGL157 MD054028
      D***FillerBufEx2    S           5590A                                         MD054028 MD055446
-     D FillerBufEx2    S           5580A                                                    MD055446
+     D***FillerBufEx2    S           5580A                                         MD055446 MD055373
+     D FillerBufEx2    S           5560A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1581,6 +1607,7 @@
      C                                       + TranInCRSS                                     CGL157
      C                                       + DDAPRC                                       MD054028
      C                                       + TranInBRTCent                                MD055446
+     C                                       + TransUser                                    MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -2023,6 +2050,7 @@
      C                   EVAL      V_CTETXS =  TXDDETXS                                     MD023188
      C                   EVAL      V_CCTXArr(Idy)  = ValidCCTX                              AR740196
      C                   EVAL      CCTXArr(Idy) = TranInCCTX1                               MD023188
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                            AR740196
      C                   EVAL      hasDetails = *ON                                         AR743761
      C                   ENDDO                                                              AR740196
@@ -2222,29 +2250,40 @@
      C     PMDDCSBY      ORNE      *BLANKS                                                    CSD079
      C*****PMDDSAFI      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDSAFI      ORNE      'N'                                                      AR970389
+     C     PMDDSAFI      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDCMS      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLFQ      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLDM      ORNE      *BLANKS                                                    CSD079
      C     PMDDVLND      ORNE      *BLANKS                                                    CSD079
      C*****PMDDS1VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS1VR      ORNE      'N'                                                      AR970389
+     C     PMDDS1VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS2VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS2VR      ORNE      'N'                                                      AR970389
+     C     PMDDS2VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS3VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS3VR      ORNE      'N'                                                      AR970389
+     C     PMDDS3VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS4VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS4VR      ORNE      'N'                                                      AR970389
+     C     PMDDS4VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS5VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS5VR      ORNE      'N'                                                      AR970389
+     C     PMDDS5VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS6VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS6VR      ORNE      'N'                                                      AR970389
+     C     PMDDS6VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS7VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS7VR      ORNE      'N'                                                      AR970389
+     C     PMDDS7VR      ANDNE     *BLANKS                                                 AR970389A
      C*****PMDDS8VR      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDS8VR      ORNE      'N'                                                      AR970389
+     C     PMDDS8VR      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDAPBC      ORNE      *BLANKS                                                    CSD079
+     C     PMDDAPBC      ANDNE     'N'                                                     AR970389B
      C*****PMDDPPCS      ORNE      *BLANKS                                           CSD079 AR970389
      C     PMDDPPCS      ORNE      'N'                                                      AR970389
+     C     PMDDPPCS      ANDNE     *BLANKS                                                 AR970389A
      C     PMDDDFPO      ORNE      *BLANKS                                                    CSD079
      C     PMDDINSU      ORNE      *BLANKS                                                    CSD079
      C     PMDDCYSU      ORNE      *BLANKS                                                    CSD079
@@ -2347,6 +2386,7 @@
      C                   EVAL      TranInCUAH1 = CUAHArr(Idy)                                 CER059
      C                   EXSR      ValdCUAH                                                   CER059
      C                   EVAL      V_CUAHArr(Idy)  = ValidCUAH                                CER059
+     C                   EXSR      SrChkErr                                                 MD050526
      C                   EVAL      Idy = Idy + 1                                              CER059
      C                   ENDDO                                                                CER059
      C**********         ENDIF                                                     AR728530 MD026253
@@ -4535,6 +4575,8 @@
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
      C                   PARM                    ValidCuBrCent                              MD055446
+     C                   PARM                    TransUser                                  MD055373
+     C                   PARM                    AAUTH                                      MD055373
                                                                                               CER059
      C**********         IF        @RTCD = *BLANKS                                   CER059 MD053634
      C**********                   AND (DDACTN <> 'D'                              AR741363 MD053634
@@ -4560,6 +4602,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD053634
      C                             AND (DDACTN <> 'D'                                       MD053634
      C                             AND DDACTN <> 'C')                                       MD053634
+     C                   IF        V_CUAHArr(1) = *Blanks                                   MD057294
+     C                   EVAL      V_CUAHArr(1) = DDCUSN                                    MD057294
+     C                   ENDIF                                                              MD057294
      C                   EXSR      SrUpdCUAH                                                MD053634
      C                   ENDIF                                                              MD053634
                                                                                             MD053634
@@ -6208,6 +6253,85 @@
       *****************************************************************                       CER059
       /EJECT                                                                                  CER059
       *****************************************************************                       CER059
+      *                                                               *                     MD050526
+      * SrChkErr                                                      *                     MD050526
+      *                                                               *                     MD050526
+      *****************************************************************                     MD050526
+                                                                                            MD050526
+     C     SrChkErr      BEGSR                                                              MD050526
+     C                   EVAL      Idz = 1                                                  MD050526
+     C                   DOW       Idz <= Idx                                               MD050526
+      *                                                                                     MD050526
+     C                   IF        FldNameArr(Idz) = 'DDAUT0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAAUTH' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDLTP0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CALTYP' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG10'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG1' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG20'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG2' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG30'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG3' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPG40'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPRG4' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDTPA0'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CATYPA' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCINT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CACINT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDPCNT0'                              MD050526
+     C                   EVAL      FldNameArr(Idz) = 'CAPCNT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDETXS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXETXS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCTTX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCTTX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCERF'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCERF' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCEEX'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCEEX' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCSTS'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCSTS' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCADT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCADT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+      *                                                                                     MD050526
+     C                   ELSEIF    FldNameArr(Idz) = 'DDCVDT'                               MD050526
+     C                   EVAL      FldNameArr(Idz) = 'AXCVDT' +                             MD050526
+     C                             %TRIM (%CHAR(Idy))                                       MD050526
+     C                   ENDIF                                                              MD050526
+     C                   EVAL      Idz = Idz + 1                                            MD050526
+     C                   ENDDO                                                              MD050526
+     C                   ENDSR                                                              MD050526
+      *****************************************************************                     MD050526
+      /EJECT                                                                                MD050526
+      *****************************************************************                     MD050526
       *                                                               *
       * *INZSR - Program Initialisation routine                       *
       *                                                               *

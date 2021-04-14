@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD056996           Date 19Oct20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD020922           Date 26Jun13               *
       *                 AR1092084          Date 03Apr13               *
@@ -123,6 +124,11 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
+      *  MD056996 - In a 2 node system where trades are processed     *
+      *             symulaneously, a duplicate record error was       *
+      *             encountered in writing to BKPHPD file. Fix was to *
+      *             ensure that the duplicate record will be ignored  *
+      *             and no database error will be encountered.        * 
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *
@@ -2435,8 +2441,12 @@
      C                   Z-ADD     *ZEROS        NAVP                                         CSE065
      C                   Z-ADD     *ZEROS        BKVAMT                                       CSE065
      C                   Z-ADD     *ZEROS        EQTAMT                                       CSE065
-     C                   WRITE     BKPHDDF
+     C**********         WRITE     BKPHDDF                                                  MD056996
+     C                   WRITE(E)  BKPHDDF                                                  MD056996
+     C                   IF        %ERROR AND %STATUS = 01021                               MD056996
+     C                   ELSE                                                               MD056996
      C                   ADD       1             BK_NOR
+     C                   ENDIF                                                              MD056996
      C*
      C                   END
      C*
@@ -2486,8 +2496,12 @@
      C                   Z-ADD     *ZEROS        NAVP                                         CSE065
      C                   Z-ADD     *ZEROS        BKVAMT                                       CSE065
      C                   Z-ADD     *ZEROS        EQTAMT                                       CSE065
-     C                   WRITE     BKPHDDF
+     C**********         WRITE     BKPHDDF                                                  MD056996
+     C                   WRITE(E)  BKPHDDF                                                  MD056996
+     C                   IF        %ERROR AND %STATUS = 01021                               MD056996
+     C                   ELSE                                                               MD056996
      C                   ADD       1             BK_NOR
+     C                   ENDIF                                                              MD056996
      C*
      C                   END
      C*

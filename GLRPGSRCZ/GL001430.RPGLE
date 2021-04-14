@@ -15,7 +15,12 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 222088             Date 28May12               *
+      *                 216936             Date 28May12               *
+      *                 212319             Date 28May12               *      
+      *                 MD049134           Date 27Jul20               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD031848           Date 12Mar20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD055383           Date 30Apr20               *
@@ -60,6 +65,19 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  222088 - Conditioning of CM narrative should account for     *
+      *           details on heirarchy, not ICD.                      *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  216936 - Text from CM ICD should not be present on           *
+      *           statements for top accounts                         *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  212319 - Default text for Zeo Balance account not reported   *
+      *           on statements                                       *
+      *         - Applied for AR973615 (Child: AR973617)              *      
+      *  MD049134   - Retrieve History Balance from Retail History    *
+      *             instead of CLBL from ACCNTAB for the correct      *
+      *             Available Balance in Field 64.                    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD031848 - Recently Closed account not generating MT940      *
       *             Amend to include closed today.                    *
@@ -144,7 +162,11 @@
 
      FGLNWKAPD  IF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL Network Activity Control File.
-
+                                                                                            MD049134
+     FREHISDL   IF   E           K DISK                   INFSR(*PSSR)                      MD049134
+     F                                     PREFIX(RX)                                       MD049134
+      ** Midas RE Retail History Header and Position                                        MD049134
+                                                                                            MD049134
      FGLNW94L0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
      F                                     PREFIX(Up)
      F                                     RENAME(GLNW94D0:UpGLNW94D0)
@@ -152,6 +174,12 @@
                                                                                               CRE008
      FREGAHLJ2  IF   E           K DISK                   INFSR(*PSSR)                        CRE008
       ** Midas RE Group Account Hierarchy Links                                               CRE008
+                                                                                              212319
+     FREZSHLL1  IF   E           K DISK                   INFSR(*PSSR)                        212319
+      ** Midas RE Group Account Hierarchy Links                                               212319
+                                                                                              222088
+     FREGAHDL0  IF   E           K DISK                   INFSR(*PSSR)                        222088
+      ** Midas RE Group Account Hierarchy Details                                             222088
 
      FMGF940PD  O    E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas MG MT940 Generation Extract - Account Detail.
@@ -176,6 +204,8 @@
       * 27 - Access Network Account (LF/GLNW94L5)                              *
       * 28 - Access Postings        (LF/GLPOSTL0)                              *
       * 29 - Access Group Account   (LF/REGAHLJ2)                              *              CRE008
+      * 30 - Access T/S   Account   (LF/REZSHLL1)                              *              212319
+      * 35 - Access CM A/C Hierarchy (LF/REGAHDL0)                             *              222088
       * 40 - General Error                                                     *
       *    41         For tagging as Processed                        *                     AR549926
       *                                                                        *
@@ -664,7 +694,18 @@
       *  instead                                                                              CRE008
      C                   IF        CRE008 = 'Y'                                               CRE008
      C     KeyAcntBl     Chain     REGAHLJ2                           29                      CRE008
+     C                   IF        *IN29 = *OFF                                               222088
+     C     CLHIER        CHAIN     REGAHDL0                           35                      222088
+     C                   IF        *IN35 = *ON                                                222088
+     C                   EXSR      *PSSR                                                      222088
+     C                   ENDIF                                                                222088
+     C                   ENDIF                                                                222088
      C                   If        *IN29 = *OFF                                               CRE008
+     C                             AND CLCCAT <> 'T'                                          216936
+     C                             AND GDTOPB = 'Y'                                           222088
+     C                             OR  *IN29 = *OFF                                           222088
+     C                             AND CLCCAT = 'T'                                           222088
+     C                             AND GDTOPB = 'N'                                           222088
      C                   EVAL      MGMIO1 = CMTXTG                                            CRE008
      C                   EVAL      MGMIO2 = %subst(CMTXTG:66:65)                              CRE008
      C                   EVAL      MGMIO3 = %subst(CMTXTG:131:65)                             CRE008
@@ -672,6 +713,15 @@
      C                   EVAL      MGMIO5 = *blanks                                           CRE008
      C                   EVAL      MGMIO6 = *blanks                                           CRE008
      C                   Else                                                                 CRE008
+     C     KeyAcntBg     CHAIN     REZSHLL1                           30                      212319
+     C                   IF        *IN30 = *OFF                                               212319
+     C                   EVAL      MGMIO1 = CMTXTZ                                            212319
+     C                   EVAL      MGMIO2 = %subst(CMTXTZ:66:65)                              212319
+     C                   EVAL      MGMIO3 = %subst(CMTXTZ:131:65)                             212319
+     C                   EVAL      MGMIO4 = %subst(CMTXTZ:196:5)                              212319
+     C                   EVAL      MGMIO5 = *blanks                                           212319
+     C                   EVAL      MGMIO6 = *blanks                                           212319
+     C                   ELSE                                                                 212319
      C                   EVAL      MGMIO1 = N40MI1                              Manual Prod Msg leve
      C                   EVAL      MGMIO2 = N40MI2                              Manual Prod Msg leve
      C                   EVAL      MGMIO3 = N40MI3                              Manual Prod Msg leve
@@ -680,12 +730,24 @@
      C                   EVAL      MGMIO6 = N40MI6                              Manual Prod Msg leve
      C                   Endif                                                                CRE008
      C                   Endif                                                                CRE008
+     C                   ENDIF                                                                212319
      C*                                                                                       CRE008
      C                   EVAL      MGSTNO = N40LSN + 1                          Last Statement Page
      C                   EVAL      MGLSDT = N40LSD                              Last Statement Date
      C                   EVAL      MGIOBL = N40LCA                              Initial Opening Bala
      C                   EVAL      MGFCBL = N40LCA + WkBalance                  Final Closing Balanc
      C                   EVAL      MGCLBL = CLBL                                Available Balance
+                                                                                            MD049134
+     C     KeyRetHis     CHAIN     REHISDL                            98                    MD049134
+                                                                                            MD049134
+     C                   IF        *IN98 = *OFF                                             MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ELSE                                                               MD049134
+     C     KeyRetHis     SETLL     REHISDL                                                  MD049134
+     C                   READP     REHISDL                                                  MD049134
+     C                   EVAL      MGCLBL = RXHISB                                          MD049134
+     C                   ENDIF                                                              MD049134
+                                                                                            MD049134
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
 
@@ -1261,7 +1323,22 @@
      C                   KFLD                    KeyACOD                                      CRE008
      C                   KFLD                    KeyACSQ                                      CRE008
      C                   KFLD                    KeyBRCA                                      CRE008
-
+                                                                                              212319
+     C     KeyAcntBg     KLIST                                                                212319
+     C                   KFLD                    KeyBRCA                                      212319
+     C                   KFLD                    KeyCNUM                                      212319
+     C                   KFLD                    KeyCCY                                       212319
+     C                   KFLD                    KeyACOD                                      212319
+     C                   KFLD                    KeyACSQ                                      212319
+                                                                                            MD049134
+     C     KeyRetHis     KLIST                                                              MD049134
+     C                   KFLD                    N4BRCA                                     MD049134
+     C                   KFLD                    N4CNUM                                     MD049134
+     C                   KFLD                    N4CCY                                      MD049134
+     C                   KFLD                    N4ACCD                                     MD049134
+     C                   KFLD                    N4ACSQ                                     MD049134
+     C                   KFLD                    BJRDNB                                     MD049134
+                                                                                            MD049134
       *    ------        -----
      C     @INZSR        ENDSR
 

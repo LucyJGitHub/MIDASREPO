@@ -27,7 +27,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *  Prev Amend No. AR898442           Date 24Feb12               *
+      *                 MD055842           Date 02Jun20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD047450           Date 25Sep19               *
@@ -85,6 +86,8 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  AR898442 - MT940 nacked if narrative starts with a /         *
+      *             (Child: AR898443)                                 *
       *  MD055842 - Second tag 86 not translated to To Characters.    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
@@ -1563,6 +1566,13 @@
 
      C/COPY WNCPYSRC,MGH00041
      C                   IF        MGSFD9 <> *BLANKS
+     C                   Movel     MGSFD9        Wrk1              1                       AR898442
+     C     Wrk1          ifeq      '/'                                                     AR898442
+     C     Wrk1          oreq      '-'                                                     AR898442
+     C                   Move      MGSFD9        Wrk33            33                       AR898442
+     C                   Move      *Blanks       MGSFD9                                    AR898442
+     C                   Movel     Wrk33         MGSFD9                                    AR898442
+     C                   Endif                                                             AR898442
 
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT

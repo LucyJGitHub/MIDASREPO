@@ -10,10 +10,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD053116  *CREATE  Date 08Oct19              */
+/*       Last Amend No. MD057176           Date 24Nov20              */  
+/*       Prev Amend No. MD053116  *CREATE  Date 08Oct19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057176 - Update DDSTAT to 'A' if the Customer De-activated*/
+/*                  flag is 'N'. (Recompile)                         */    
 /*       MD053116 - Customer Deactivated but not displayed as        */
 /*                  inactive.                                        */
 /*                                                                   */

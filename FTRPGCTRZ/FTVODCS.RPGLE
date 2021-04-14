@@ -18,7 +18,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD055570           Date 15May20               *
+      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
@@ -120,6 +121,8 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
+      *           - Check on QZDASSINIT job for system with SSL is ON *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD051978 - ':' should not be present in first character of   *
@@ -1026,6 +1029,7 @@ E4   C**********         End                                                    
      C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                         240689 CSD089
       *                                                                                     MD055570
      C                   IF         PSJobName = 'QZDASOINIT' OR                             MD055570
+     C                              PSJobName = 'QZDASSINIT' OR                             MD050405
      C                              PSJobName = 'QSQSRVR' OR                                MD055570
      C                              PSJobName = 'APISERVER'                                 MD055570
       *                                                                                     MD055570

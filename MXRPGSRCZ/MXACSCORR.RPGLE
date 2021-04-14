@@ -1,4 +1,5 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -13,18 +14,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CTI006  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD056543           Date 15Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *           - Translate graphic fields of CGCORRPD to readable  *
+      *             unicode equivalent.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *                                                               *
       *****************************************************************
- 
+
      FCGCORRL4  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -42,51 +47,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       * Additional Correspondent Details
      D CGCORR        E DS                  EXTNAME(CGCORRPD)
- 
+
      C     *ENTRY        PLIST
      C/COPY MXCPYSRC,MXACSPRMI
- 
+
       * Use input link-to field
- 
+
      C                   MOVEL     I#LFD1        CDCUST
- 
+
       * If no customer number is supplied
       * pass back a blank format
- 
+
      C                   IF        CDCUST = *BLANKS
      C                   CLEAR                   CGCORR
      C                   ELSE
- 
+
       * Access the correspondent
- 
+
      C     CDCUST        CHAIN     @CORRL4                            99
- 
+
       * Error if the correspondent was not found
- 
+
      C                   IF        NOT %FOUND
      C                   CLEAR                   CGCORR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Set up output data
- 
+
      C                   EVAL      InData = CGCORR
- 
+
       * Return
- 
+
      C                   RETURN
       *
       ********************************************************************

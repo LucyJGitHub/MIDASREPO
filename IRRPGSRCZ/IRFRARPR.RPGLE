@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031031           Date 24Feb15               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -76,6 +77,9 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -2042,7 +2046,8 @@
                                                                                               245219
       ** Add record within Deals Master Extension File (done from Java layer).                245219
      C**********         IF        SACCD = 'I'                                          245219247888
-     C                   IF        SACCD = 'I' and CLE025 = 'Y'                               247888
+     C**********         IF        SACCD = 'I' and CLE025 = 'Y'                      247888 MD031031
+     C                   IF        SACCD = 'I'                                              MD031031
      C                   EXSR      WriteDLDLDG                                                245219
      C                   END                                                                  245219
                                                                                               245219

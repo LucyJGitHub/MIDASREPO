@@ -1138,18 +1138,21 @@
                    clear compAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+                   ExtractFLDS.LDINPD = result.list(i).intPrdDays;
 
                    select;
                         when calcMethod = 'NCCR';
                              compAveRate =
                                %Dec(Result.List(i).dlyCompRate:30:9);
                         when calcMethod = 'CCR';
+                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
                                %Dec(Result.List(i).aveCompRate:30:9);
                         when calcMethod = 'SARR';
                              compAveRate =
                                %Dec(Result.List(i).rateApplied:30:9);
                         when calcMethod = 'SAVG';
+                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
                                %Dec(Result.List(i).simpleAve:30:9);
                    endsl;
@@ -1190,18 +1193,21 @@
                    clear compAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+                   ExtractFLDS.LDINPD = result.list(i).intPrdDays;
 
                    select;
                         when calcMethod = 'NCCR';
                              compAveRate =
                                %Dec(Result.List(i).dlyCompRate:30:9);
                         when calcMethod = 'CCR';
+                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
                                %Dec(Result.List(i).aveCompRate:30:9);
                         when calcMethod = 'SARR';
                              compAveRate =
                                %Dec(Result.List(i).rateApplied:30:9);
                         when calcMethod = 'SAVG';
+                             ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
                                %Dec(Result.List(i).simpleAve:30:9);
                    endsl;

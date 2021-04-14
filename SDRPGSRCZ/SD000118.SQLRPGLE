@@ -22,6 +22,19 @@
       *                                                               *
       *****************************************************************
 
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
 
@@ -37,10 +50,15 @@
      D  WColonC2               6      6
      D  WSec                   7      8
 
+      ** Constants declaration
+     D NO_ERROR        c                   const(0)
+     D NO_RECORD       c                   const(100)
+
       ** Entry Parameter
      D PStatus         S              1A
 
       ** Program Variables
+     D WRUN            S              1A
      D RunDate         S              5S 0
      D NoOfRecs        S              3S 0
      D WStrDate        S              5S 0
@@ -48,6 +66,10 @@
      D WEndTime        S              6A
      D WStrTime        S              6A
      D WTime           S              6A
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
 
       ** MAIN PROCESSING
      C     *ENTRY        PLIST
@@ -126,7 +148,43 @@
      C/end-exec
      C                   ENDIF
 
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 001
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
       ** End program
      C                   EVAL      *INLR = *ON
      C                   RETURN
+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+
+     C                   IF        WRUN = *BLANK
+     C                   EVAL      WRUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+
+     C                   ENDSR
       *****************************************************************

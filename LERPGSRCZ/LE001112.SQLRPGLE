@@ -60,6 +60,10 @@
      D SDSTAT        E DS           256    EXTNAME(SDSTAT) DTAARA(SDSTAT)
      D  SYSID                  6      7
 
+      ** Constants declaration
+     D NO_ERROR        c                   const(0)
+     D NO_RECORD       c                   const(100)
+
       ** Parameters for calling access programs
      D PRtCd           S              7A
      D POptn           S              7A
@@ -73,6 +77,11 @@
       *****************************************************************
 
       ** MAIN PROCESSING
+
+      ** Start commitment control
+     C/exec SQL
+     C+ set option COMMIT = *CHG
+     C/end-exec
 
       ** Get Zone Name of the System ID
      C     SYSID         CHAIN     GPZONEL2
@@ -94,6 +103,14 @@
      C+           and MSWSTAT = 'TO_AUTHORISE')
      C/end-exec
 
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 002
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
       ** If rollover input is not yet authorised and loan is using a
       ** backward-looking rate, insert to extract file the current
       ** backward-looking rate details
@@ -109,6 +126,17 @@
      C+         where MSWAPI = 'LERI' AND MSWZONE = :Zone
      C+           and MSWSTAT = 'TO_AUTHORISE')
      C/end-exec
+
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 003
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+      ** Commit Changes
+     C                   COMMIT
 
       ** End program
      C                   EVAL      *INLR = *ON
@@ -165,6 +193,8 @@
      C                   DUMP
      C                   ENDIF
 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
 

@@ -43,6 +43,12 @@
              SNDPGMMSG  MSG('SDC000114 - ARR Calculator Batch Job') +
                           TOMSGQ(MRUNQ)
 
+/** Start commitment control */
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
 /** Retrieve Midas phase */
 
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
@@ -109,12 +115,6 @@ CONTINUE:
 
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
 
-/** Start commitment control */
-
-             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
-                          CMTSCOPE(*JOB)
-             MONMSG     MSGID(CPF8351)
-
 /** If CLE172 is ON, call program to create an extract file for */                        /*CLE172*/
 /** Rollover that uses a backward-looking rate */                                         /*CLE172*/
                                                                                           /*CLE172*/
@@ -122,7 +122,6 @@ CONTINUE:
                 CLRPFM     FILE(LEROBLPD)                                                 /*CLE172*/
                 CALL       PGM(LE001112)                                                  /*CLE172*/
                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CLE172*/
-                   ROLLBACK                                                               /*CLE172*/
                    GOTO       CMDLBL(ERROR)                                               /*CLE172*/
                 ENDDO                                                                     /*CLE172*/
              ENDDO                                                                        /*CLE172*/
@@ -132,7 +131,6 @@ CONTINUE:
              CLRPFM     FILE(LELIBEPD)
              CALL       PGM(SD000114)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-                ROLLBACK
                 GOTO       CMDLBL(ERROR)
              ENDDO
 
@@ -150,10 +148,8 @@ CONTINUE:
                 GOTO       CMDLBL(ERROR)
              ENDDO
 
-/** If sucessful completion, commit changes and */
-/** update status file to Completed */
+/** If sucessful completion, update status file to Completed */
 
-             COMMIT
              CALL       PGM(SD000118) PARM('C')
              MONMSG     MSGID(CPF0000 MCH0000)
 
@@ -166,6 +162,8 @@ ERROR:
 
 /** Abnormal termination */
 ABNOR:
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SDC000114 ended abnormally - see job log') +

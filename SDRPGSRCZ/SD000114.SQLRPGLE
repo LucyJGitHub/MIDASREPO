@@ -311,6 +311,9 @@
 
      C                   EXSR      SRCloseCURSOR
 
+      ** Commit Changes
+     C                   COMMIT
+
       ** End program
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -394,6 +397,14 @@
      C+ where SJSTAT = 'F' and SJMDAY = :BJRDNB
      C/end-exec
 
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 005
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -409,6 +420,14 @@
      C+ set RTKN = :RatesKnown
      C+ where LNRF = :TransREF
      C/end-exec
+
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 006
+     C                   EXSR      *PSSR
+     C                   ENDIF
 
      C                   ENDSR
       *****************************************************************
@@ -660,7 +679,7 @@
      C                   IF        ReturnCode = 'CONNECTION_ERROR'
      C                   EVAL      DBFILE = 'ZAGETCALRT'
      C                   EVAL      DBKEY = TransREF
-     C                   EVAL      DBASE  = 005
+     C                   EVAL      DBASE  = 006
      C                   EXSR      *PSSR
      C                   ENDIF
 

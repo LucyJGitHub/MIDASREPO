@@ -12,6 +12,7 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD057764           Date 17Mar21               *
       *  Last Amend No. MD047693           Date 30Jan18               *
       *  Prev Amend No. MD050018           Date 05Nov18               *
       *                 MD050007           Date 05Nov18               *
@@ -402,9 +403,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057764 - Apply MD034915                                    *
+      *  MD034915 - Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD-34918                              *
       *  MD047693 - Rollover Dates are not 'modified' to be the       *
       *             Previous Working Day, if the Month End falls on a *
-      *             holiday                                           *      
+      *             holiday                                           *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
@@ -15689,9 +15693,17 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C     COFD          ADD       CFCD          WK13NA                                        CAC00
      C                   ADD       FWOD          WK13NA                                        CAC00
+      *                                                                                     MD034915
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
       *                                                                   CAC001
      C                   SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
@@ -17675,10 +17687,18 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
       ** Subtract Accrued COF Posted to Date from the greater amount      CAC001
       *                                                                   CAC001
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   Z-ADD     FCTD          ACDATE                                        CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
+      *                                                                                     MD034915
      C     WK13N         SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
      C                   Z-ADD     WK13N         ACAMNT                   89                   CAC00

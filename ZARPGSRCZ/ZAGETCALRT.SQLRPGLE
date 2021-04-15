@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO) BNDDIR('HTTPAPI') BNDDIR('YAJL')
-     H COPYRIGHT('(c) Finastra International Limited 2020')
+     H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD API - Invoke ARR Calculator')                 *
@@ -10,7 +10,7 @@
       *                                                               *
       *  ZAGETCALRT Midas API - Invoke ARR Calculator                 *
       *                                                               *
-      *  (c) Finastra International Limited 2020                      *
+      *  (c) Finastra International Limited 2021                      *
       *                                                               *
       *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
@@ -1026,7 +1026,7 @@
                    elseif fileToCheck = LELIBEPD;
                         wSQLStr = 'select * from LELIBEPD ' +
                                   'where LDLNRF = ' + QUO + transactREF + QUO +
-                                  ' and LDVDAT = ' +
+                                  ' and LDINDT = ' +
                                     %char(result.list(i).intPDMidas);
                    endif;
 
@@ -1138,6 +1138,7 @@
                    clear compAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+                   ExtractFLDS.LDINDT = result.list(i).intPDMidas;
                    ExtractFLDS.LDINPD = result.list(i).intPrdDays;
 
                    select;
@@ -1193,6 +1194,7 @@
                    clear compAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
+                   ExtractFLDS.LDINDT = result.list(i).intPDMidas;
                    ExtractFLDS.LDINPD = result.list(i).intPrdDays;
 
                    select;
@@ -1220,7 +1222,7 @@
                               'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
                               ' where A.LDLNRF = ' + QUO + ExtractFLDS.LDLNRF
                                  + QUO +
-                              ' and   A.LDVDAT = ' +  %Char(ExtractFLDS.LDVDAT);
+                              ' and   A.LDINDT = ' +  %Char(ExtractFLDS.LDINDT);
 
                    exec sql
                    execute immediate :wSqlStr;

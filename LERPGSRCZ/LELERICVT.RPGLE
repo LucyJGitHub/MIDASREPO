@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD044083           Date 12Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD057764           Date 17Mar21               *
+      *  Prev Amend No. MD044083           Date 12Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057764 - Apply MD034915 for negative funding rate          *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
+      *  MD057764 - APPLY MD034449, MD052515 for Negative Fixed Rate  *
+      *  MD052515 - Negative fixed rate loan got unexpected errors    *
+      *  MD034449 - Correct negative discount amount display          *
+      *           - Applied for MD052515                              *
       *  MD044083 - Issue 2: Spread rate showing incorrect value on   *
       *             rollover enquiry. Issue fixed with by replacing   *
       *             EVAL with EVALR and MOVEL to MOVE.                *
@@ -431,7 +440,8 @@
      C                   Z-ADD     51            DBASE
      C                   EXSR      SRCurrDet
      C                   MOVE      *BLANKS       ZFIELD
-     C                   MOVE      K_NDAM        ZFIELD
+     C**********         MOVE      K_NDAM        ZFIELD                                     MD034449
+     C                   EVALR     ZFIELD = %trimr(%char(K_NDAM))                           MD034449
      C                   Z-ADD     A6NBDP        ZADEC
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDNDAM
@@ -562,12 +572,15 @@
       *
       **  New funding spread/rate
      C     NFRS          IFNE      *ZERO
-     C                   MOVE      *BLANKS       ZFIELD
-     C                   MOVE      NFRS          ZFIELD
-     C                   Z-ADD     7             ZADEC
-     C                   EXSR      ZEDIT
+     C**********         MOVE      *BLANKS       ZFIELD                                     MD034915
+     C**********         MOVE      NFRS          ZFIELD                                     MD034915
+     C**********         Z-ADD     7             ZADEC                                      MD034915
+     C**********         EXSR      ZEDIT                                                    MD034915
      C**********         MOVE      ZFIELD        DDNFRSB                                      CAP084
-     C                   MOVE      ZFIELD        DDNFRS                                       CAP084
+     C**********         MOVE      ZFIELD        DDNFRS                             CAP084  MD034915
+     C                   MOVEL     *BLANKS       ZFIELD12         12                        MD034915
+     C                   EVAL      ZFIELD12 = %CHAR(NFRS)                                   MD034915
+     C                   MOVE      ZFIELD12      DDNFRS                                     MD034915
      C                   ENDIF
       *
       **  New funding spread indicator and profit centre

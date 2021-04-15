@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052213           Date 26Oct18               *
-      *  Prev Amend No. MD051873           Date 14Sep18               *
+      *  Last Amend No. MD057764           Date 17Mar21               *
+      *  Prev Amend No. MD052213           Date 26Oct18               *
+      *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
@@ -96,6 +97,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057765 - Apply MD034915, MD054876 for negative funding     *
+      *             rate.                                             *
+      *  MD054876 - When only funding rate/spread is populated, value *
+      *             of IRCF becomes 'Y'. Remove passing of value of   *
+      *             @@ALPH to DDRTSP so as to differentiate an SC with*
+      *             intentional zero spread rate from an SC with      *
+      *             funding details amendment only.                   *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *             Use ZA0841 for validation instead of ZALIGN.      *
+      *           - Applied for MD054876.                             *
+      *  MD057765 - Apply MD034449 for negative interest rate.        *
+      *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
+      *           - Applied for MD052515                              *
       *  MD052213 - If CLE158 ON CLE025 OFF, issue overridable error  *
       *             when facility amount exceeded for backvalued loan *
       *  MD051873 - Issue warning or overridable error on Principal   *
@@ -277,11 +292,39 @@
 
       /COPY WNCPYSRC,LELOAMV001
 
+     D ArrayRtSp       S              1A   DIM(12)                                          MD034449
+      * Incoming Spread Rate in screen format                                               MD034449
+                                                                                            MD034449
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE025
      D SCA_LCD       E                     EXTFLD(LCD)                                        CLE025
                                                                                               CLE025
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
+     D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                MD034449
+     D                                     PREFIX(DL_)                                      MD034449
+      ** External DS for Dealing Details                                                    MD034449
+                                                                                            MD034449
+     D PERCD           S              1P 0                                                  MD034449
+     D PAMT            S             15P 0                                                  MD034449
+      ** Alpha field for numeric validation                                                 MD034449
+     D @@ALPH          S             16A                                                    MD034449
+      ** Millions/Thousands id (Y=function on)                                              MD034449
+     D @@MTID          S              1A                                                    MD034449
+      ** Amount calculation field                                                           MD034449
+     D @@AMT           S             15  0                                                  MD034449
+      ** Error code                                                                         MD034449
+     D @@ERCD          S              1  0                                                  MD034449
+      ** Number of decimal places                                                           MD034449
+     D @@IDP           S              3  0                                                  MD034449
+      ** Number of integers                                                                 MD034449
+     D @@IINT          S              3  0                                                  MD034449
+     D PZASignOk       S              1A                                                    MD034449
+     D PZFld17         S             17A                                                    MD034449
+     D PZDig           S              2P 0                                                  MD034449
+     D PZDec           S              1P 0                                                  MD034449
+     D PZSDCSP         S              1A                                                    MD034449
+     D PZOut15         S             15A                                                    MD034449
+     D PZFSign         S              1A                                                    MD034449
 
       *****************************************************************
       /EJECT
@@ -2344,19 +2387,43 @@
      C                             (CLE036 = 'Y' and SVBRTT <> 0) or               BUG10392 MD035672
      C                             (CLE036 = 'Y' and SVBRTE <> 0) or               BUG10392 MD035672
      C                             (CLE036 = 'Y' and SVBASR <> 0)                           MD035672
-     C                   CALLB     'ZALIGN'
-     C                   PARM      *BLANK        ZALIGNok          1
-     C                   PARM      DDRTSP        ZFIELD           16
-     C                   PARM      7             ZADEC             1 0
-     C                   PARM      4             ZADIG             2 0
+     C**********         CALLB     'ZALIGN'                                                 MD034449
+     C**********         PARM      *BLANK        ZALIGNok          1                        MD034449
+     C**********         PARM      DDRTSP        ZFIELD           16                        MD034449
+     C**********         PARM      7             ZADEC             1 0                      MD034449
+     C**********         PARM      4             ZADIG             2 0                      MD034449
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034449
+     C                   MOVE      DDRTSP        @@ALPH                                     MD034449
+     C                   Z-ADD     7             @@IDP                                      MD034449
+     C                   Z-ADD     4             @@IINT                                     MD034449
+     C                   MOVE      'N'           @@MTID            1                        MD034449
+      *                                                                                     MD034449
+     C                   EXSR      VALAMT                                                   MD034449
       *
-     C     ZALIGNok      IFEQ      'N'
+     C*****ZALIGNok      IFEQ      'N'                                                      MD034449
+     C     @@ERCD        IFNE      0                                                        MD034449
      C                   MOVE      'N'           DDRTSPOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDRTSP'
      C                   MOVEL     'LEA0188'     MsgIdArr(Idx)
      C                   ELSE
-     C                   MOVE      ZFIELD        WSPRT            11 7
+      *                                                                                     MD034449
+     C                   MOVE      *BLANKS       PZFld17                                    MD034449
+     C     RetCodeOut    IFEQ      *BLANKS                                                  MD034449
+     C                   MOVEL     DDRTSP        PZFld17                                    MD034449
+     C                   ENDIF                                                              MD034449
+     C                   Z-ADD     4             PZDig                                      MD034449
+     C                   Z-ADD     7             PZDec                                      MD034449
+      *                                                                                     MD034449
+     C                   EXSR      FMTAMT                                                   MD034449
+     C                   MOVE      PZOut15       WNumBas          11 7                      MD034449
+     C                   IF        DDNGVI = 'Y'                                             MD034449
+     C                   Z-SUB     WNumBas       WSPRT            11 7                      MD034449
+     C                   ELSE                                                               MD034449
+     C                   Z-ADD     WNumBas       WSPRT                                      MD034449
+     C                   ENDIF                                                              MD034449
+     C**********         MOVE      @@ALPH        DDRTSP                            MD034449 MD054876
+     C**********         MOVE      ZFIELD        WSPRT            11 7                      MD034449
      C                   ENDIF
      C                   Endif                                                                CLE035
       *
@@ -4824,13 +4891,20 @@
       *
       ** If funding rate/spread entered, check if it is a valid figure
      C                   ELSE
-     C                   CALLB     'ZALIGN'
-     C                   PARM      *BLANK        ZALIGNok          1
-     C                   PARM      DDFRAT        ZFIELD           16
-     C                   PARM      7             ZADEC             1 0
-     C                   PARM      4             ZADIG             2 0
+     C**********         CALLB     'ZALIGN'                                                 MD034915
+     C**********         PARM      *BLANK        ZALIGNok          1                        MD034915
+     C**********         PARM      DDFRAT        ZFIELD           16                        MD034915
+     C**********         PARM      7             ZADEC             1 0                      MD034915
+     C**********         PARM      4             ZADIG             2 0                      MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      DDFRAT        @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID            1                        MD034915
+     C                   EXSR      VALAMT                                                   MD034915
       *
-     C     ZALIGNok      IFEQ      'N'
+     C*****ZALIGNok      IFEQ      'N'                                                      MD034915
+     C     @@ERCD        IFNE      0                                                        MD034915
      C                   MOVE      'N'           DDFRATOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFRAT'
@@ -4838,7 +4912,8 @@
       *
       ** If valid figure, assign rate change flag and funding sign
      C                   ELSE
-     C                   MOVE      ZFIELD        WFRAT
+     C**********         MOVE      ZFIELD        WFRAT                                      MD034915
+     C                   MOVE      @@AMT         WFRAT                                      MD034915
      C                   Z-ADD     WFRAT         WFRSP
      C                   MOVE      'Y'           WFRCF
      C                   MOVE      SVFSGN        WFSGN
@@ -5844,6 +5919,60 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD034449
+      * VALAMT - VALIDATE/REFORMAT AMOUNT                             *                     MD034449
+      *****************************************************************                     MD034449
+      *                                                                                     MD034449
+     C     VALAMT        BEGSR                                                              MD034449
+      *                                                                                     MD034449
+     C                   CALLB     'ZA0841'                                                 MD034449
+      *                                                                                     MD034449
+     C                   PARM      *BLANK        RetCodeOut                                 MD034449
+     C                   PARM                    @@ALPH                                     MD034449
+     C                   PARM                    @@IDP                                      MD034449
+     C                   PARM                    @@IINT                                     MD034449
+     C                   PARM      'N'           @@MTID                                     MD034449
+     C                   PARM      *ZERO         @@ERCD                                     MD034449
+     C                   PARM      *ZERO         @@AMT                                      MD034449
+     C                   PARM                    DL_BNDCSP                                  MD034449
+      *                                                                                     MD034449
+     C                   ENDSR                                                              MD034449
+      *****************************************************************                     MD034449
+      /EJECT                                                                                MD034449
+      *****************************************************************                     MD034449
+      * FMTAMT - FORMAT AMOUNT FOR DISPLAY                            *                     MD034449
+      *****************************************************************                     MD034449
+     C     FMTAMT        BEGSR                                                              MD034449
+      *                                                                                     MD034449
+      * Sadly ZASIGN rejects a minus with a non blank following. So format                  MD034449
+      * non-siged version for database update and use DDNGVI to sign amount.                MD034449
+      *                                                                                     MD034449
+     C                   MOVE      DDRTSP        ScanRTSP         12                        MD034449
+     C     '-'           SCAN      ScanRTSP      PT                2 0                      MD034449
+     C     PT            IFNE      0                                                        MD034449
+      *                                                                                     MD034449
+     C                   MOVE      'Y'           DDNGVI            1                        MD034449
+      *                                                                                     MD034449
+     C                   MOVEA     ScanRTSP      ArrayRtSp                                  MD034449
+     C                   MOVE      ' '           ArrayRtSp(PT)                              MD034449
+     C                   MOVEA     ArrayRtSp     PZFld17                                    MD034449
+      *                                                                                     MD034449
+     C                   ELSE                                                               MD034449
+     C                   MOVE      ' '           DDNGVI                                     MD034449
+     C                   ENDIF                                                              MD034449
+      *                                                                                     MD034449
+     C                   CALLB     'ZASIGN'                                                 MD034449
+     C                   PARM      'Y'           PZASignOk                                  MD034449
+     C                   PARM                    PZFld17                                    MD034449
+     C                   PARM                    PZDig                                      MD034449
+     C                   PARM                    PZDec                                      MD034449
+     C                   PARM      DL_BNDCSP     PZSDCSP                                    MD034449
+     C                   PARM                    PZOut15                                    MD034449
+     C                   PARM                    PZFSign                                    MD034449
+      *                                                                                     MD034449
+     C                   ENDSR                                                              MD034449
+      *****************************************************************                     MD034449
+      /EJECT                                                                                MD034449
       *****************************************************************
       * *INZSR - Module Initialisation routine                        *
       *****************************************************************
@@ -6349,6 +6478,19 @@
      C                   MOVE      'P'           PPCUST                                       240408
      C                   ENDIF                                                                240408
      C                   ENDIF                                                                240408
+      *                                                                                     MD034449
+      ** Access Dealing Details                                                             MD034449
+      *                                                                                     MD034449
+     C                   CALL      'AODEALR1'                                               MD034449
+     C                   PARM      *BLANKS       @RTCD                                      MD034449
+     C                   PARM      '*FIRST '     @OPTN                                      MD034449
+     C     SDDEAL        PARM      SDDEAL        DSSDY                                      MD034449
+      *                                                                                     MD034449
+      * Database Error                                                                      MD034449
+      *                                                                                     MD034449
+     C     @RTCD         IFNE      *BLANK                                                   MD034449
+     C                   EVAL      DL_BNDCSP =  '.'                                         MD034449
+     C                   ENDIF                                                              MD034449
       ***********                                                                    BUG11965 249197
       ***Access*Midas SD Hedging ICD File                                            BUG11965 249197
       ***********                                                                    BUG11965 249197

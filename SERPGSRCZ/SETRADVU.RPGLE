@@ -136,6 +136,7 @@
       *  MD049746 - Settlement details is not defaulted when Charges/ *
       *             Commission fields have values when Trade is       *
       *             inserted via API                                  *
+      *           - Applied for MD-54680.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035243 - Error message for Account with Institution        *
       *             Account is not properly displayed                 *
@@ -374,6 +375,9 @@
      D TranInExch    E DS                  EXTNAME(SETREXPD)
      D TranInSett    E DS                  EXTNAME(SETRSTPD)
      D DDCLTY2       E                     EXTFLD(DDCLTY)
+     D TranInSeWoCLT E DS                  EXTNAME(SETRSTPD)                                MD054680
+     D                                     PREFIX(W_)                                       MD054680
+     D DDCLTY3               537    537                                                     MD054680
      D TranInChCm    E DS                  EXTNAME(SETRCCPD)
      D TranInSwfA    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(A)
@@ -3812,6 +3816,8 @@
      C********           END                                                                BUG10021
 
       ** SETTLEMENT INSTRUCTION DEFAULTING
+     C                   MOVEL     TranInSett    TranInSeWoCLT                              MD054680
+     C                   MOVE      ' '           DDCLTY3           1                        MD054680
      C**********         IF        TranInSett = *BLANKS                            MD049746 MD056627
       *                                                                                     MD056627
       ** Exclude validation of Origin branch (DDORBR) and Profit centre                     MD056627
@@ -3865,6 +3871,8 @@
      C                             and DDPRYC = *blanks                                     MD056627
      C                             and DDPCOD = *blanks                                     MD056627
      C                             and DDAUTS = *blanks)                                    MD056627
+     C                             or (TranInSett <> *BLANKS                                MD054680
+     C                             And TranInSeWoCLT = *BLANKS)                             MD054680
 
      C     DDACTN        IFEQ      'I'
 

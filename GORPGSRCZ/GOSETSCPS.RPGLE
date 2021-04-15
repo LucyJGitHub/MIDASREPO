@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 263109             Date 28Jan10               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263109 - Change design of 246221 since it will cause an error*
+      *           where events with processing date is less than run  *
+      *           date are not processed.                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -160,10 +164,18 @@
      C                   MOVEL     SCOR          T_CNCD
       * Transaction Date
      C**********         Z-ADD     CSDA          T_TDAT
+     C                   IF        CSDA = 0                                                   263109
      C                   Z-ADD     BJRDNB        T_TDAT                                     BUG13281
+     C                   ELSE                                                                 263109
+     C                   Z-ADD     CSDA          T_TDAT                                       263109
+     C                   ENDIF                                                                263109     
       * Start Date
      C**********         Z-ADD     CSDA          T_SDAT
+     C                   IF        CSDA = 0                                                   263109
      C                   Z-ADD     BJRDNB        T_SDAT                                     BUG13281
+     C                   ELSE                                                                 263109
+     C                   Z-ADD     CSDA          T_SDAT                                       263109
+     C                   ENDIF                                                                263109     
       * End Date
      C                   Z-ADD     MATY          T_EDAT
       * Issuer Exposure

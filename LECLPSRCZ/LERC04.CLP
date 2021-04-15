@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE075AA           Date 06Aug12              */
+/*       Last Amend No. AR637337           Date 13Sep11              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE075AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR637337 - Component LEC0464 failed due to dbase error 002. */
+/*                  Create PF/TFACHISH based on FACHISH. To be used  */
+/*                  by LE0464 for CCY checking. Apply fix AR637338.  */
+/*                  (Child: AR823183)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE075AA - COB Restructure - LE COB Optimisation Phase 1    */
 /*       240409 - Fee History records are not purged. Apply 193112:- */
@@ -71,7 +76,13 @@ PGM
 /****CLRPFM AFHISH                                                                   */ /*CLE075AA*/
 /****CLRPFM AFHISA                                                                   */ /*CLE075AA*/
 /****CLRPFM NLFHST                                                            */ /*193112 CLE075AA*/
- 
+/**/                                                                                    /*AR637337*/
+/* Create a Temporary Facility History File */                                          /*AR637337*/
+/**/                                                                                    /*AR637337*/
+             CPYF       FROMFILE(FACHISH) TOFILE(TFACHISH) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*AR637337*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*AR637337*/
+                                                                                                     
   /* Call Reorganise & Archive Program */
  
              CALL       LER040

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR756564           Date 17May11               *
+      *  Last Amend No. AR637337           Date 13Sep11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR756564           Date 17May11               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR637337 - Component LEC0464 failed due to dbase error 002.  *
+      *             Set decimal place to 0 if facility not in FCLTY,  *
+      *             PEFCLFL1 and TFACHISH. Apply fix AR637338.        *
+      *             (Child: AR823183)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR756564 - LEC0464 00001 DBERR 002 in SDCURRPD.              *
       *             (Child: AR756565)                                 *
@@ -82,7 +87,10 @@
  
       ** Midas LE Customer lending facility file
      FFCLTY     IF   E           K DISK    INFSR(*PSSR) PREFIX(X)
- 
+
+     FTFACHISH  IF   E           K DISK    INFSR(*PSSR) RENAME(FACHISHF:TFACHI)             AR637337
+      ** Midas LE Temporary Facility History File                                           AR637337
+      *                                                                                     AR637337
       ** Dropped Participant Contribution History
      FLE0464P1  O    E             PRINTER INFDS(SPOOL1) INFSR(*PSSR)
      F                                     USROPN
@@ -154,19 +162,19 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
      D WDIFLN1         S              3  0 INZ(0)
      D WkPrevEVDT      S                   LIKE(EVDT)
      D WkPrevPRTR      S                   LIKE(PRTR)
      D WkPrintFlag     S              1A   INZ('N')
      D WkDtlFlag       S              1A   INZ('N')
      D WkPrevPMBR      S                   LIKE(PMBR)
- 
+
       ** parameters for AOBANKRO
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
- 
+
       ** Calling parameters for ZDATE2
      D PDayNo          S              5  0 INZ(0)
      D PDtFmt          S              1    INZ(*BLANKS)
@@ -175,38 +183,38 @@
      D PMidasDt        S              6  0
      D PCCY            S              3A
      D PBranch         S              3A
- 
+
       ** ZSEDIT parameters
      D ZFLD15          S             15  0
      D ZDECS           S              1  0
      D ZECODE          S              1A
      D ZOUT21          S             21A
- 
+
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Read all records from LEPCHSL0
- 
+
      C     *LOVAL        SETLL     LEPCHSL0
- 
+
      C                   READ      LEPCHSL0
      C                   DOW       NOT %EOF(LEPCHSL0)
- 
+
       ** Process printing
- 
+
      C                   EXSR      SrProcessPrint
- 
+
      C                   READ      LEPCHSL0
      C                   ENDDO
- 
+
       ** Print Footer
- 
+
      C                   IF        WkDtlFlag = 'N'
      C                   OPEN      LE0464P1
      C                   EVAL      BRCA = *BLANKS
@@ -214,11 +222,11 @@
      C                   EVAL      *IN80 = *ON
      C                   EVAL      WkPrintFlag = 'Y'
      C                   ENDIF
- 
+
      C                   EXSR      SrWp1End
- 
+
       ** Program wrap up
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -230,38 +238,38 @@
       *                                                               *
       *****************************************************************
      C     SrProcessPrintBEGSR
- 
+
      C                   EVAL      PRIMEFACT  = *BLANKS
- 
+
      C                   IF        PMFC <> WkPrevPMFC OR
      C                             PMFT <> WkPrevPMFT OR
      C                             PMFN <> WkPrevPMFN
- 
+
       ** Check if existing in Facilities Table
- 
+
      C     DFCLKY        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
- 
+
       ** Store current Prime Facility to previous variable for
       ** referencing later
- 
+
      C                   EVAL      WkPrevPMFC = PMFC
      C                   EVAL      WkPrevPMFT = PMFT
      C                   EVAL      WkPrevPMFN = PMFN
- 
+
      C                   EVAL      PRIMEFACT = WkPPrFacility
- 
+
      C                   EXSR      SrPrntBrch
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SrPrntBrch
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -271,26 +279,26 @@
       *                                                               *
       *****************************************************************
      C     SrPrntBrch    BEGSR
- 
+
      C                   IF        PMBR <> WkPrevPMBR
- 
+
       ** Print Footer
- 
+
      C                   EXSR      SrWp1End
- 
+
       ** Open printer file
- 
+
      C                   OPEN      LE0464P1
      C                   ENDIF
- 
+
       ** Print report
- 
+
      C                   EXSR      SrWriteP1
- 
+
       ** Drop participant distribution history
- 
+
      C                   EXSR      SrDelDrop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -301,12 +309,12 @@
       *                                                               *
       *****************************************************************
      C     SrWriteP1     BEGSR
- 
+
      C     OFLLN1        SUB       PRTLN1        WDIFLN1
      C                   IF        WDIFLN1  <= 2 OR WkPrintFlag = 'N'
      C                   EXSR      SrWrtHeader
      C                   ENDIF
- 
+
      C                   IF        PTFC <> WkPTFC   or PTFT <> WkPTFT
      C                             or PTFN <> WkPTFN or PRIMEFACT <> *BLANKS
      C
@@ -317,7 +325,7 @@
      C                   ELSE
      C                   EVAL      PARTIFACT = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        PRTR <> WkPrevPRTR or PARTIFACT <> *BLANKS
      C                   EVAL      WkPrevPRTR = PRTR
      C                   SELECT
@@ -333,7 +341,7 @@
      C                   ELSE
      C                   EVAL      PARTITYPE = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        EVDT <> WkPrevEVDT or PARTITYPE <> *BLANKS
      C                   EVAL      WKPrevEVDT = EVDT
      C                   CALL      'ZDATE2'
@@ -341,22 +349,22 @@
      C                   PARM      BJDFIN        PDtFmt
      C                   PARM                    PMidasDt
      C                   PARM      *BLANKS       PDyMonYr
- 
+
      C                   EVAL      EVENTDATE = PDyMonYr
      C                   ELSE
      C                   EVAL      EVENTDATE = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVE      SEQN          SEQUENCE
- 
+
       ** Prime Facility Amount
- 
+
      C                   EVAL      ZFLD15 = PMFA
      C                   EXSR      ZSEdit
      C                   EVAL      FACTAMT = ZOUT21
- 
+
       ** Share Percentage
- 
+
      C                   EVAL      SHAREPRCNT = SHPC
  
       ** Share Amount
@@ -474,10 +482,17 @@
      C                   EVAL      PCCY = YFCCY                                             AR756564
      C                   EXSR      AOCURR                                                   AR756564
      C                   EVAL      ZDECS = A6NBDP                                           AR756564
+     C                   ELSE                                                               AR637337
+     C     PTFACHI       CHAIN     TFACHISH                           91                    AR637337
+     C     *IN91         IFEQ      '0'                                                      AR637337
+     C                   EVAL      PCCY = FHFCCY                                            AR637337
+     C                   EXSR      AOCURR                                                   AR637337
+     C                   EVAL      ZDECS = A6NBDP                                           AR637337
      C                   ELSE                                                               AR756564
      C                   EVAL      ZDECS = 0                                                AR756564
      C                   ENDIF                                                              AR756564
- 
+     C                   ENDIF                                                              AR637337
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -487,7 +502,7 @@
       *                                                               *
       *****************************************************************
      C     ZSEdit        BEGSR
- 
+
      C**********         EXSR      AOCURR                                                   AR756564
      C**********         EVAL      ZDECS = A6NBDP                                           AR756564
      C                   EXSR      SrRtvCurr                                                AR756564
@@ -565,7 +580,12 @@
      C                   KFLD                    PMFC
      C                   KFLD                    PMFT
      C                   KFLD                    PMFN
- 
+
+     C     PTFACHI       KLIST                                                              AR637337
+     C                   KFLD                    PTBR                                       AR637337
+     C                   KFLD                    PTFC                                       AR637337
+     C                   KFLD                    PTFT                                       AR637337
+                                                                                            AR637337
       ** Get Bank ICD
  
      C                   CALL      'AOBANKR0'

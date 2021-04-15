@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD020349           Date 06Jun13               *
-      *  Prev Amend No. MD054693A          Date 27Jan20               *
+      *  Last Amend No. 262896             Date 02Dec09               *
+      *  Prev Amend No. 261842             Date 18Sep09               *
+      *                 MD020349           Date 06Jun13               *
+      *                 MD054693A          Date 27Jan20               *
       *                 MD054492           Date 12Dec19               *
       *                 MD031112           Date 26Nov19               *
       *                 MD046592           Date 24Sep18               *
@@ -144,6 +146,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262896 - Narrative for TI transactions not displayed.        *
+      *           Enhanced fix 178438 to also move Narrative Descrip- *
+      *           tion when Transaction Number is blank and when      *
+      *           transaction type is 'TI'.                           *      
+      *  261842 - Functions keys in PAMV linked from CACB not working *
+      *           properly. Disable F13, F14, and F16 and add F12     *
+      *           when enquiring Projected Account Movements from     *
+      *           CACB. Also used *IN29 instead of *IN30 to indicate  *
+      *           that enquiry is from CACB to prevent conflict from  *
+      *           CGL037.                                             *      
       *  MD020349 - Amount field on Projected account movements does  *
       *             not show complete value.                          *
       *  MD054693A - Customer Account movement narrative was          *
@@ -1428,7 +1440,8 @@
       *                                                                                      BUG5334
      C                     MOVE RQDTD     MODI    2                                          BUG5334
      C           MODI      IFEQ 'GL'                                                         BUG5334
-     C                     MOVE *ON       *IN30                                              BUG5334
+     C**********           MOVE *ON       *IN30                                       BUG5334 261842
+     C                     MOVE *ON       *IN29                                               261842
      C                     EXSR LDAUP                                                        BUG5334
      C                     ENDIF                                                             BUG5334
       *                                                                                      BUG5334
@@ -1493,12 +1506,19 @@
      C           EXTFLG    ANDEQ'N'                                                           236093
       *                                                                                      BUG5334
      C           CRE010    IFEQ 'Y'                                                          BUG5334
-     C           *IN30     ANDEQ*ON                                                          BUG5334
+     C********** *IN30     ANDEQ*ON                                                   BUG5334 261842
+     C           *IN29     ANDEQ*ON                                                           261842
      C           *INKC     ANDEQ*ON                                                          BUG5334
      C                     MOVE 'Q'       RETNWF  1                                          BUG5334
      C                     EXSR RETSR                                                        BUG5334
      C                     ENDIF                                                             BUG5334
      C*
+     C           *IN29     IFEQ '1'                                                           261842
+     C           *INKL     ANDEQ'1'                                                           261842
+     C                     MOVE 'U'       RETNWF                                              261842
+     C                     EXSR RETSR                                                         261842
+     C                     ENDIF                                                              261842
+      *                                                                                       261842
      C                     WRITEHEADING
      C*                                                                   S01408
      C* Note: Hook GL4443CCP3 appears elsewhere in this program!          S01408
@@ -1568,6 +1588,7 @@
       ** If F13 - Account & Statement Details                                                 236093
       *                                                                                       236093
      C           *INKM     IFEQ '1'                                                           236093
+     C           *IN29     ANDEQ'0'                                                           261842
      C                     MOVEL'F13'     FUNC                                                236093
      C                     OUT  DSLDA                                                         236093
      C                     MOVE 'Y'       EXTFLG                                              236093
@@ -1576,6 +1597,7 @@
       ** If F14 - Account Movements                                                           236093
       *                                                                                       236093
      C           *INKN     IFEQ '1'                                                           236093
+     C           *IN29     ANDEQ'0'                                                           261842
      C                     MOVEL'F14'     FUNC                                                236093
      C                     OUT  DSLDA                                                         236093
      C                     MOVE 'Y'       EXTFLG                                              236093
@@ -1584,6 +1606,7 @@
       ** If F16 - Items in Clearing                                                           236093
       *                                                                                       236093
      C           *INKQ     IFEQ '1'                                                           236093
+     C           *IN29     ANDEQ'0'                                                           261842
      C                     MOVEL'F16'     FUNC                                                236093
      C                     OUT  DSLDA                                                         236093
      C                     MOVE 'Y'       EXTFLG                                              236093
@@ -1733,7 +1756,8 @@
      C* ...ELSE END PROGRAM (ie. Cmd/3)
      C*
      C           CRE010    IFEQ 'Y'                                                          BUG5334
-     C           *IN30     ANDEQ*ON                                                          BUG5334
+     C********** *IN30     ANDEQ*ON                                                   BUG5334 261842
+     C           *IN29     ANDEQ*ON                                                           261842
      C                     MOVE 'Q'       RETNWF                                             BUG5334
      C                     EXSR RETSR                                                        BUG5334
      C                     ENDIF                                                             BUG5334
@@ -2801,6 +2825,8 @@ E5   C                     END
      C                     END                                            CGL045
      C*                                                                   S01408
 B5   C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
 E5   C                     END                                                                178438
      C*                                                                                       178438
@@ -2917,6 +2943,8 @@ E5   C                     END
      C                     ENDIF                                          CGL045
      C*                                                                   S01408
 B5   C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
 E5   C                     END                                                                178438
      C*                                                                                       178438
@@ -3800,6 +3828,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -3881,6 +3911,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -3990,6 +4022,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4077,6 +4111,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4193,6 +4229,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4274,6 +4312,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4361,6 +4401,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4447,6 +4489,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008
@@ -4870,6 +4914,8 @@ E1   C                     END
      C                     ELSE
      C                     MOVELTNMR      STNMR
      C           TNMR      IFEQ '000000'                                                      178438
+     C           TNMR      OREQ *BLANKS                                                       262896
+     C           TRYP      ANDEQ'TI'                                                          262896
      C                     MOVELNRTD      STNMR                                               178438
      C                     END                                                                178438
       *                                                                   CDL008

@@ -19,7 +19,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR871336           Date 15Dec11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *  Prev Amend No. CRE026             Date 24May06               *
@@ -31,6 +32,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR871336 - Remove int calc basis as key for chaining Yield   *
+      *             rates file. Use the int calc basis defined in     *
+      *             Yield rates file for calc purposes. Applied fix   *
+      *             261049. (Child: AR871337)                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CAS004 - Hedge Accounting (Phase A)                          *
@@ -52,8 +57,9 @@
       *  *PSSR - Error Subroutine                                     *
       *                                                               *
       *****************************************************************
- 
-     FSDYLDRL2  IF   E           K DISK
+
+     F***SDYLDRL2  IF   E           K DISK                                                  AR871336
+     FSDYLDRL5  IF   E           K DISK                                                     AR871336
       ** Yield Rates File
  
      FSDYLDCL1  IF   E           K DISK
@@ -76,66 +82,73 @@
      C                   PARM                    PIPINC            1
      C                   PARM                    PIPFDT            5 0
      C                   PARM                    PIPDF            13 9
- 
+      *                                                                                     AR871336
+      ** Save default int calc basis for SDCURRPD                                           AR871336
+      *                                                                                     AR871336
+     C                   MOVE      PIPINC        PIPNCX            1                        AR871336
+     C                   MOVE      *blanks       PIPINC                                     AR871336
+
       ** Key Lists for the Discount factors file
- 
+
      C     KRATE1        KLIST
      C                   KFLD                    PIPYLD
      C                   KFLD                    PIPCCY
-     C                   KFLD                    PIPINC
+     C**********         KFLD                    PIPINC                                     AR871336
      C                   KFLD                    PIPFDT
- 
+
       ** Initialise fields.
- 
+
      C                   MOVEA     CPY@          BIS@             80
      C                   MOVE      *blanks       PIPRTC
      C                   Z-ADD     1             PIPDF
- 
+
       ** If a discount factor exists for Yield Curve, Currency, Interest
       ** Calculation Method and Date, no further processing is required.
- 
-     C     KRATE1        CHAIN     SDYLDRL2                           70
- 
+
+     C*****KRATE1        CHAIN     SDYLDRL2                           70                    AR871336
+     C     KRATE1        CHAIN     SDYLDRL5                           70                    AR871336
+
      C                   IF        *IN70 = *OFF
      C                   Z-ADD     FSDSCF        PIPDF
+     C                   MOVE      FSYICM        PIPINC                                     AR871336
      C                   ELSE
- 
+
       ** Retrieve Interpolation Method
- 
+
      C     PIPYLD        CHAIN     SDYLDCL1                           70
- 
+
      C                   IF        *IN70 = *OFF
- 
+
      C                   SELECT
- 
+
       ** Exponential Interpolation between given Yield Rates using actual
       ** days.  Retrieve Rate then convert to Discount Factor.
- 
+
      C                   WHEN      FSINTP = 'R'
      C                   MOVE      'YRATE'       PIPRTC
- 
+
       ** Exponential Interpolation between Discount Factors using actual
       ** days.
- 
+
      C                   WHEN      FSINTP = 'E'
      C                   MOVE      'DISCF'       PIPRTC
- 
+
       ** Straight Line Interpolation between given Yield Rates using
       ** actual days.  Retrieve Rate then convert to Discount Factor.
- 
+
      C                   WHEN      FSINTP = 'Y'
      C                   MOVE      'YRATE'       PIPRTC
- 
+
       ** Straight Line Interpolation between Discount Factors using
       ** actual days.
- 
+
      C                   WHEN      FSINTP = 'S'
      C                   MOVE      'DISCF'       PIPRTC
- 
+
      C                   ENDSL
- 
+
       ** Retrieve Discount Factor or Rate
- 
+
      C                   CALL      'ZADSFRTV'
      C                   PARM      *blanks       PIRTCD            7
      C                   PARM                    PIPRTC            5
@@ -144,30 +157,32 @@
      C                   PARM                    PIPINC            1
      C                   PARM                    PIPFDT            5 0
      C                   PARM      *ZERO         PIPDF            13 9
- 
+
      C                   IF        PIRTCD = '*ERROR '
      C                   MOVE      'ZADSFRTV'    DBFILE
      C                   Z-ADD     001           DBASE
      C                   MOVEL     PIPYLD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If no record was found for yield, currency and int. calculation
       ** method, search for rates for all currencies.
- 
+
      C                   IF        PIRTCD = '*NRF   '
- 
+
      C                   MOVE      *blanks       PIRTCD                                       CAS004
      C                   MOVE      *blanks       PIPCCY
- 
-     C     KRATE1        CHAIN     SDYLDRL2                           70
- 
+
+     C*****KRATE1        CHAIN     SDYLDRL2                           70                    AR871336
+     C     KRATE1        CHAIN     SDYLDRL5                           70                    AR871336
+
      C                   IF        *IN70 = *OFF
      C                   Z-ADD     FSDSCF        PIPDF
+     C                   MOVE      FSYICM        PIPINC                                     AR871336
      C                   MOVE      'E'           FSINTP
- 
+
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      FSINTP = 'R'
      C                   MOVE      'YRATE'       PIPRTC
@@ -178,7 +193,7 @@
      C                   WHEN      FSINTP = 'S'
      C                   MOVE      'DISCF'       PIPRTC
      C                   ENDSL
- 
+
      C                   CALL      'ZADSFRTV'
      C                   PARM      *blanks       PIRTCD
      C                   PARM                    PIPRTC
@@ -187,22 +202,22 @@
      C                   PARM                    PIPINC
      C                   PARM                    PIPFDT
      C                   PARM      *ZERO         PIPDF
- 
+
      C                   IF        PIRTCD = '*ERROR '
      C                   MOVE      'ZADSFRTV'    DBFILE
      C                   Z-ADD     002           DBASE
      C                   MOVEL     PIPYLD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Convert Yield Rate to Discount Factor
- 
+
      C                   IF        FSINTP = 'Y' OR FSINTP = 'R'
- 
+
      C                   MOVE      PIPRTC        PNPRTC            5
      C                   MOVE      PIPYLD        PNPYLD            5
      C                   MOVE      PIPCCY        PNPCCY            3
@@ -210,7 +225,7 @@
      C                   Z-ADD     PIPFDT        PNPFDT            5 0
      C                   Z-ADD     PIPDF         PRATE            13 9
      C                   Z-ADD     *ZERO         PNPDF            13 9
- 
+
      C                   CALL      'ZADSFCON'
      C                   PARM      *blanks       PNRTCD            7
      C                   PARM                    PNPRTC            5
@@ -220,24 +235,24 @@
      C                   PARM                    PNPFDT            5 0
      C                   PARM                    PRATE            13 9
      C                   PARM                    PNPDF            13 9
- 
+
      C                   IF        PNRTCD = '*ERROR '
      C                   MOVE      'ZADSFCON'    DBFILE
      C                   Z-ADD     003           DBASE
      C                   MOVEL     PIPYLD        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     PNPDF         PIPDF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************

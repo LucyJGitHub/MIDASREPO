@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055652           Date 13Jul20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR669649           Date 18Jun15               *
+      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051892           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
@@ -99,6 +100,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR669649 - Missing settlement details for part sold loan.    *
+      *             Initialise ##PPAY during settlement validation.   *
+      *             Pattern after fix AR582890. (Child: AR669650)     *
+      *           - Applied for MD030394                              *
       *  MD055652 - Error LEM0215 occurs when authorising a manual    *
       *             repayment attached to PD. In the codes introduced *
       *             by CLE164, add condition to check if expected     *
@@ -1806,6 +1811,24 @@
       *****************************************************************
 
      C     ValidateSt    BEGSR
+      *                                                                                     AR669649
+      ** Detemine type of Loan.                                                             AR669649
+      *                                                                                     AR669649
+     C                   MOVE      *BLANKS       PTYPE             4                        AR669649
+     C     WRKLNPTYP     IFEQ      66                                                       AR669649
+     C     WRKLNPTYP     OREQ      67                                                       AR669649
+     C     WRKLNPTYP     OREQ      69                                                       AR669649
+     C     WRKLNPTYP     OREQ      72                                                       AR669649
+     C                   MOVE      'PTSO'        PTYPE                                      AR669649
+     C                   ENDIF                                                              AR669649
+      *                                                                                     AR669649
+     C     DDACTN        IFEQ      'X'                                                      AR669649
+     C                   IF        PTYPE = 'PTSO'                                           AR669649
+     C                   MOVEL     'Y'           ##PPAY                                     AR669649
+     C                   ELSE                                                               AR669649
+     C                   MOVEL     'Y'           ##PREC                                     AR669649
+     C                   ENDIF                                                              AR669649
+     C                   ENDIF                                                              AR669649
 
       ** Set up date of receipt, and date of payment
      C                   EVAL      ##DATR = *ZEROS

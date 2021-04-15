@@ -1,0 +1,911 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD TI Transaction Types')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      ***SDT010*-*TI*Transaction*Types*Maintenance*********************
+      *  XX000100  - TI Transaction Types Maintenance                 *
+      *                                                               *
+      *  Function:  This new Standing Data Maintenance facility       *
+      *  ( I/C )    is created primarily for DTA001.                  *
+      *                                                               *
+      *  Called By: New I/C menu option                               *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      ***(C)*Copyright*Misys*International*Banking*Systems*Ltd.*2002***                       DAI102
+      *  (c) Finastra International Limited 2019                      *                       DAI102
+      *                                                               *
+      *  Last Amend No. DAI102             Date 25Jun19               *
+      *  Prev Amend No. DTA001 *Create     Date 03Nov02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  DAI102 - TI Posting Narrative Enhancement. Upgrade to        *
+      *           FBM 2.1                                             *
+      *  DTA001 - TI Posting Narrative Enhancement                    *
+      *                                                               *
+      *****************************************************************
+     FXXTITCL1UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ** Reporting Codes extension file - update
+      *
+     FXX0100DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        RRN   KSFILE SDT010S0
+      * TI Transaction Types Maintenance Screen
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N  C T I O N    O F    I N D I C A T O R S               *
+      *                                                               *
+      *  03         Function key F3 pressed                           *
+      *  05         Function key F5 pressed                           *
+      *  06         Error on any input field                          *
+      *  09         Function key F9 pressed                           *
+      *  10         Function key F10 pressed                          *
+      *  12         Function key F12 pressed                          *
+      *  20         Invalid TI Transaction Type                       *
+      *  21         Invalid TI Transaction Type Description           *
+      *  22         Invalid Enhanced Posting Narrative Indicator      *
+      *  31         Invalid Selection Code                            *
+      *  32         Protect action code                               *
+      *  50         Protect detail screen fields                      *
+      *  52         Disable F5 for refresh                            *
+      *  53         Enable F10 for confirm delete                     *
+      *  61         Failed CHAIN to LF/XXTITCL1                       *
+      *  64         Error on WRITE/UPDAT/DELET command on LF/XXTITCL1 *
+      *  65         End of file LF/XXTITCL1 (Subfile processing)      *
+      *  66         End of file on READC to subfile record format     *
+      *  U7         Database Error                                    *
+      *  U8         Database Error                                    *
+      *  LR         Exit program                                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  Main routine                                                 *
+      *  #BINIT  -  Initial Processing                                *
+      *  #BVACT  -  Validate Action                                   *
+      *  #BVDSF  -  Validate Detail Screen Fields                     *
+      *  #BVENQ  -  Enquiry Processing                                *
+      *  #BVDEL  -  Deletion Processing                               *
+      *  #BVINS  -  Insertion Processing                              *
+      *  #BVAMD  -  Amendment Processing                              *
+      *  #BVRVW  -  Review From Processing                            *
+      *  #BFMTF  -  Format fields for display                         *
+      *  #BLSFL  -  Load subfile Processing                           *
+      *  #BCSFL  -  Clear subfile Processing                          *
+      *  CLEAR   -  Clears the message subfile                        *
+      *  ZASNMS  -  Send message error message queue                  *
+      *  *PSSR   -  Error Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IRUNDAT      DS
+     I                                       13  13 @MBIN
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     I            DS
+      ** ZAMSDA
+      *
+     I                                        1 132 ZAMSDA
+     I                                        1  20 @@DA1
+     I                                       21  40 @@DA2
+     I                                       41  60 @@DA3
+     I            DS
+      ** Constants
+      *
+     I              'Transaction Type    'C         #CNT01
+     I              'Trans Type Desc     'C         #CNT02
+     I              'Enh Posting Narr Ind'C         #CNT03
+     I              'Action Code         'C         #CNT04
+     I              'I, A, E, or R       'C         #CNT05
+     I              'Y or N              'C         #CNT06
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                M A I N  P R O C E S S I N G                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Initial Processing
+      *
+     C                     EXSR #BINIT
+      *
+      ** Main details processing (Subfile)
+      *
+     C           *IN03     DOUEQ'1'
+      *
+      ** Clear the messages from the program message queue.
+      *
+     C                     EXSR CLEAR
+      *
+      ** Reset Error indicator
+      *
+     C                     MOVE '0'       *IN06
+     C                     MOVEA'000'     *IN,20
+     C                     MOVE '1'       *IN25
+     C                     MOVE '0000'    *IN50
+      *
+     C                     EXSR #BVRVW
+      *
+     C                     ENDDO
+      *
+      ** Exit from program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVENQ - Enquiry Processing                                  *
+      *                                                               *
+      *  Called By: #BVRVW - Subfile processing                       *
+      *  Calls:     #BFMTF - Format fields for display                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BVENQ    BEGSR
+      *
+      ** Set On Protection Indicator
+      *
+     C                     MOVEA'111'     *IN,50
+      *
+      ** Format fields for display
+      *
+     C                     EXSR #BFMTF
+      *
+      ** Write Detail Screen format
+      *
+     C                     EXFMTSDT010F0
+      *
+     C                     MOVE '1'       *IN12
+     C                     MOVEA'001'     *IN,50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVDEL - Deletion Processing                                 *
+      *                                                               *
+      *  Called By: #BVRVW - Subfile processing                       *
+      *  Calls:     #BFMTF - Format fields for display                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BVDEL    BEGSR
+      *
+      ** Set On Protection Indicator, enable F10
+      *
+     C                     MOVEA'1111'    *IN,50
+     C                     MOVEA'000'     *IN,20
+      *
+      ** Format fields for display
+      *
+     C                     EXSR #BFMTF
+      *
+B001 C           *IN03     DOUEQ'1'
+ 001 C           *IN12     OREQ '1'
+ 001 C           *IN10     OREQ '1'
+      *
+      ** Write Detail Screen format
+      *
+ 001 C                     EXFMTSDT010F0
+      *
+      ** Clear the messages from the program message queue.
+      *
+ 001 C                     EXSR CLEAR
+      *
+      ** Reset all error indicators
+      *
+ 001 C                     MOVE '0'       *IN06
+      *
+      ** Delete record if F10 pressed
+      *
+B002 C           *IN10     IFEQ '1'
+ 002 C           *IN06     ANDEQ'0'
+      *
+ 002 C                     DELETXXTITCD0               64
+      *
+B003 C           *IN64     IFEQ '0'
+ 003 C                     COMIT
+E003 C                     ENDIF
+      *
+ 002 C                     MOVE '1'       *IN12
+E002 C                     ENDIF
+      *
+E001 C                     ENDDO
+      *
+     C                     MOVEA'0010'    *IN,50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVINS - Insertion Processing                                *
+      *                                                               *
+      *  Called By: #BVRVW - Subfile processing                       *
+      *  Calls:     #BVDSF - Validate detail screen fields            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BVINS    BEGSR
+      *
+     C                     MOVE '1'       *IN05
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN50
+     C                     MOVEA'000'     *IN,20
+      *
+B001 C           *IN03     DOUEQ'1'
+ 001 C           *IN12     OREQ '1'
+      *
+      ** Initialise fields if F5 is pressed
+      *
+B002 C           *IN05     IFEQ '1'
+ 002 C                     MOVE *BLANKS   STTYP
+ 002 C                     MOVE *BLANKS   STTDS
+ 002 C                     MOVE *BLANKS   SEPNI
+ 002 C                     MOVE '0'       *IN05
+ 002 C                     MOVEA'000'     *IN,20
+E002 C                     ENDIF
+      *
+      ** Write Detail Screen format
+      *
+ 001 C                     EXFMTSDT010F0
+      *
+      ** Clear the messages from the program message queue.
+      *
+ 001 C                     EXSR CLEAR
+      *
+      ** Reset all error indicators
+      *
+ 001 C                     MOVE '0'       *IN06
+ 001 C                     MOVEA'000'     *IN,20
+      *
+B002 C           *IN03     IFNE '1'
+ 002 C           *IN05     ANDNE'1'
+ 002 C           *IN12     ANDNE'1'
+      *
+      ** Validate detail screen fields
+      *
+ 002 C                     EXSR #BVDSF
+      *
+      ** Check for duplicate record
+      *
+ 002 C                     MOVE STTYP     #TTYP
+ 002 C           KEY1      CHAINXXTITCD0             61
+B003 C           *IN61     IFEQ *OFF
+ 003 C                     MOVEA'1'       *IN,20
+ 003 C                     MOVE '1'       *IN06
+ 003 C                     MOVEL#CNT01    ZAMSDA
+ 003 C                     MOVEL'XXX0001' ZAMSID
+ 003 C                     EXSR ZASNMS
+E003 C                     ENDIF
+      *
+      ** Write record if all fields valid
+      *
+B003 C           *IN06     IFEQ '0'
+ 003 C                     MOVELSTTYP     TITTYP
+ 003 C                     MOVELSTTDS     TITTDS
+ 003 C                     MOVELSEPNI     TIEPNI
+      *
+ 003 C                     WRITEXXTITCD0               64
+      *
+B004 C           *IN64     IFEQ '0'
+ 004 C                     COMIT
+E004 C                     ENDIF
+      *
+ 003 C                     MOVE '1'       *IN12
+E003 C                     ENDIF
+      *
+E002 C                     ENDIF
+      *
+B002 C           *IN06     IFEQ '1'
+ 002 C           *IN05     OREQ '1'
+ 002 C                     WRITE#MSGCTL
+E002 C                     ENDIF
+      *
+E001 C                     ENDDO
+      *
+     C                     MOVEA'0010'    *IN,50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVAMD - Amendment Processing                                *
+      *                                                               *
+      *  Called By: #BVRVW - Subfile processing                       *
+      *  Calls:     #BVDSF - Validate detail screen fields            *
+      *             #BFMTF - Format fields for display                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BVAMD    BEGSR
+      *
+     C                     MOVE '1'       *IN05
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN52
+     C                     MOVEA'000'     *IN,20
+      *
+B001 C           *IN03     DOUEQ'1'
+ 001 C           *IN12     OREQ '1'
+      *
+      ** Initialise fields if F5 is pressed
+      *
+B002 C           *IN05     IFEQ '1'
+ 002 C                     EXSR #BFMTF
+E002 C                     ENDIF
+      *
+      ** Write Detail Screen format
+      *
+ 001 C                     EXFMTSDT010F0
+      *
+      ** Clear the messages from the program message queue.
+      *
+ 001 C                     EXSR CLEAR
+      *
+      ** Reset all error indicators
+      *
+ 001 C                     MOVE '0'       *IN06
+ 001 C                     MOVEA'000'     *IN,20
+      *
+B002 C           *IN03     IFNE '1'
+ 002 C           *IN05     ANDNE'1'
+ 002 C           *IN12     ANDNE'1'
+      *
+      ** Validate detail screen fields
+      *
+ 002 C                     EXSR #BVDSF
+      *
+      ** Check whether record exist
+      *
+ 002 C                     MOVE STTYP     #TTYP
+ 002 C           KEY1      CHAINXXTITCD0             61
+      *
+B003 C           *IN61     IFEQ *ON
+ 003 C                     MOVE '1'       *IN20
+ 003 C                     MOVE '1'       *IN06
+ 003 C                     MOVEL#CNT01    ZAMSDA
+ 003 C                     MOVEL'XXX0002' ZAMSID
+ 003 C                     EXSR ZASNMS
+E003 C                     ENDIF
+      *
+      ** Update record if all fields valid
+      *
+B003 C           *IN06     IFEQ '0'
+ 003 C                     MOVELSTTYP     TITTYP
+ 003 C                     MOVELSTTDS     TITTDS
+ 003 C                     MOVELSEPNI     TIEPNI
+ 003 C                     UPDATXXTITCD0               64
+      *
+B004 C           *IN64     IFEQ '0'
+ 004 C                     COMIT
+E004 C                     ENDIF
+      *
+ 003 C                     MOVE '1'       *IN12
+E003 C                     ENDIF
+      *
+E002 C                     ENDIF
+      *
+B002 C           *IN06     IFEQ '1'
+ 002 C           *IN05     OREQ '1'
+ 002 C                     WRITE#MSGCTL
+E002 C                     ENDIF
+      *
+E001 C                     ENDDO
+      *
+     C                     MOVEA'0010'    *IN,50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVRVW - Review From Processing                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     #BFMTF - Format fields for display                *
+      *             #BVENQ  -  Enquiry Processing                     *
+      *             #BVDEL  -  Deletion Processing                    *
+      *             #BVINS  -  Insertion Processing                   *
+      *             #BVAMD  -  Amendment Processing                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BVRVW    BEGSR
+      *
+      ** Read TI Transaction Types File
+      *
+     C                     MOVE *OFF      *IN32
+     C           *LOVAL    SETLLXXTITCD0
+     C                     READ XXTITCD0                 65
+      *
+      ** If no record found
+      *
+B001 C           *IN65     IFEQ '1'
+ 001 C                     MOVE *ON       *IN32
+E001 C                     ENDIF
+      *
+      ** Clear subfile and load subfile
+      *
+     C                     MOVE '0'       *IN31
+     C                     EXSR #BCSFL
+     C                     EXSR #BLSFL
+      *
+      ** Do until F3 pressed
+      *
+B001 C           *IN03     DOUEQ'1'
+      *
+ 001 C                     WRITE#MSGCTL
+      *
+      ** Write footer and display screen
+      *
+ 001 C                     MOVE '0'       *IN10
+ 001 C                     WRITESDT010F1
+ 001 C                     EXFMTSDT010C0
+ 001 C                     EXSR CLEAR
+ 001 C                     MOVE '0'       *IN06
+ 001 C                     MOVE '0'       *IN31
+      *
+B002 C           *IN03     IFNE '1'
+      *
+ 002 C                     Z-ADD1         RRN
+      *
+      ** Read Changed record
+      *
+ 002 C                     READCSDT010S0                 66
+      *
+      ** If no record changed and F9 is pressed
+      *
+B003 C           *IN66     IFEQ '1'
+ 003 C           *IN09     ANDEQ'1'
+ 003 C                     EXSR CLEAR
+ 003 C                     WRITE#MSGCTL
+ 003 C                     EXSR #BVINS
+E003 C                     ENDIF
+      *
+B003 C           *IN66     DOWEQ'0'
+      *
+      ** Validate Selection Action field
+      *
+B004 C           SACTN     IFNE *BLANKS
+ 004 C           SACTN     ANDNE'A'
+ 004 C           SACTN     ANDNE'D'
+ 004 C           SACTN     ANDNE'E'
+ 004 C                     MOVE '1'       *IN31
+ 004 C                     MOVE '1'       *IN06
+ 004 C                     MOVEL*BLANKS   ZAMSDA
+ 004 C                     MOVEL#CNT04    @@DA1
+ 004 C                     MOVEL#CNT05    @@DA2
+ 004 C                     MOVEL'XXX0003' ZAMSID
+ 004 C                     EXSR ZASNMS
+E004 C                     ENDIF
+      *
+B004 C           *IN06     IFEQ '0'
+      *
+      ** Validate Action
+      *
+ 004 C                     EXSR #BVACT
+      *
+ 004 C                     MOVE '0'       *IN25
+ 004 C                     MOVE '1'       *IN50
+      *
+ 004 C                     EXSR CLEAR
+ 004 C                     WRITE#MSGCTL
+      *
+B005 C           SACTN     CASEQ'A'       #BVAMD
+ 005 C           SACTN     CASEQ'D'       #BVDEL
+ 005 C           SACTN     CASEQ'E'       #BVENQ
+ 005 C           *IN09     CASEQ'1'       #BVINS
+E005 C                     ENDCS
+      *
+ 004 C                     MOVEL*BLANKS   SACTN
+E004 C                     ENDIF
+      *
+B004 C           *IN06     IFEQ '1'
+ 004 C           SACTN     ORNE *BLANKS
+ 004 C                     MOVEL'1'       *IN54            SFLNXTCHG
+E004 C                     ENDIF
+      *
+ 003 C                     UPDATSDT010S0
+ 003 C                     MOVEL'0'       *IN54            SFLNXTCHG
+      *
+B004 C           *IN06     IFEQ '1'
+ 004 C                     LEAVE
+E004 C                     ENDIF
+      *
+      ** Read next changed record
+      *
+ 003 C                     READCSDT010S0                 66
+      *
+E003 C                     ENDDO
+      *
+      ** Clear subfile and load subfile
+      *
+B003 C           *IN06     IFEQ '0'
+ 003 C                     EXSR #BCSFL
+ 003 C                     EXSR #BLSFL
+E003 C                     ENDIF
+      *
+E002 C                     ENDIF
+      *
+E001 C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BFMTF - Format fields for display                           *
+      *                                                               *
+      *  Called By: #BVENQ- Enquiry Processing                        *
+      *             #BVAMD- Amend Processing                          *
+      *             #BVDEL- Delete Processing                         *
+      *             #BLSFL- Load Subfile Processing                   *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           #BFMTF    BEGSR
+      *
+      ** Transaction Type
+      *
+     C                     MOVELTITTYP    STTYP
+      *
+      ** Transaction Type Description
+      *
+     C                     MOVELTITTDS    STTDS
+      *
+      ** Enhanced Posting Narrative Indicator
+      *
+     C                     MOVELTIEPNI    SEPNI
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVACT - Validate Action                                     *
+      *                                                               *
+      *  Called By: #BVRVW - Review from Processing                   *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           #BVACT    BEGSR
+      *
+B001 C           *IN06     IFEQ '0'
+      *
+B002 C           SACTN     IFEQ 'A'
+ 002 C           SACTN     OREQ 'D'
+ 002 C           SACTN     OREQ 'E'
+      *
+ 002 C                     MOVE STTYP     #TTYP
+ 002 C           KEY1      CHAINXXTITCD0             61
+      *
+E002 C                     ENDIF
+      *
+E001 C                     ENDIF
+      *
+      ** Check if User is authorised
+      *
+     C           @MBIN     IFEQ 'N'
+     C                     CALL 'ZVACTU'
+     C                     PARM SACTN     ZACTN   1
+     C                     PARM           ZERR    10
+      *
+     C           ZERR      IFEQ 1
+     C                     MOVE '1'       *IN06
+     C                     MOVE '1'       *IN31
+     C                     MOVEL'FXM0292' ZAMSID
+     C                     MOVEL'GBDRSMM 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BVDSF - Validate Detail Screen Fields                       *
+      *                                                               *
+      *  Called By: #BVINS - Insertion Processing                     *
+      *             #BVAMD - Amendment Processing                     *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           #BVDSF    BEGSR
+      *
+      ** Validate Transaction Type
+      *
+     C           STTYP     IFEQ *BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN06
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     MOVEL#CNT01    ZAMSDA
+     C                     MOVEL'XXX0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Description
+      *
+     C           STTDS     IFEQ *BLANKS
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN06
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     MOVEL#CNT02    ZAMSDA
+     C                     MOVEL'XXX0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Enhanced Posting Narrative Indicator
+      *
+     C           SEPNI     IFNE 'N'
+     C           SEPNI     ANDNE'Y'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN06
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     MOVEL#CNT03    ZAMSDA
+     C                     MOVEL#CNT06    @@DA2
+     C                     MOVEL'XXX0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     *PSSR - Error Subroutine                          *
+      *                                                               *
+      *****************************************************************
+     C           #BINIT    BEGSR
+      *
+      **  Get RUNDAT to access MULTI-BRANCHING flag.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Initialise LDA field
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'XX000100'DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVEL'1'       *IN98
+     C                     ENDIF
+      *
+      ** Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'XXUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type
+      *
+     C                     MOVELBJMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+      *
+      ** Set Key for SDTITCL1
+      *
+     C           KEY1      KLIST
+     C                     KFLD           #TTYP   3
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BLSFL - Load Subfile Processing                             *
+      *                                                               *
+      *  Called by  : #BVRVW - Review from Processing                 *
+      *  Calls      : #BFMTF - Format fields for display              *
+      *                                                               *
+     C*****************************************************************
+     C           #BLSFL    BEGSR
+      *
+     C                     Z-ADD1         RRN     40
+      *
+      ** SETLL to LF/SDTITCL0 using review date field as key
+      *
+     C           *LOVAL    SETLLXXTITCD0
+      *
+      ** Read first record from file
+      *
+     C                     READ XXTITCD0                 65
+      *
+      ** If no record found
+      *
+     C                     MOVE *OFF      *IN32
+B001 C           *IN65     IFEQ '1'
+ 001 C                     MOVE *ON       *IN32
+ 001 C                     MOVEL*BLANKS   ZAMSDA
+ 001 C                     MOVEL'XXX0007' ZAMSID
+ 001 C                     EXSR ZASNMS
+E001 C                     ENDIF
+      *
+      ** Do until end of file XXTITCD0
+      *
+B001 C           *IN65     DOUEQ'1'
+ 001 C                     MOVELTITTYP    STTYP
+ 001 C                     MOVELTITTDS    STTDS
+ 001 C                     MOVELTIEPNI    SEPNI
+      *
+ 001 C                     EXSR #BFMTF
+      *
+B002 C           *IN65     IFEQ '1'
+ 002 C                     MOVEL*BLANKS   STTYP
+ 002 C                     MOVEL*BLANKS   STTDS
+ 002 C                     MOVEL*BLANKS   SEPNI
+E002 C                     ENDIF
+      *
+ 001 C                     WRITESDT010S0
+ 001 C                     ADD  1         RRN
+      *
+ 001 C                     READ XXTITCD0                 65
+      *
+E001 C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #BCSFL - Clear Subfile Processing                            *
+      *                                                               *
+      *  Called by  : #BVRVW - Review from Processing                 *
+      *  Calls      : None                                            *
+      *                                                               *
+     C*****************************************************************
+     C           #BCSFL    BEGSR
+      *
+     C                     MOVE '1'       *IN10
+     C                     WRITESDT010C0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLEAR - Clears the message file                              *
+      *                                                               *
+      *  Called by   :  Main process                                  *
+      *                 #BVINS - Insertion Processing                 *
+      *                 #BVAMD - Amendment Processing                 *
+      *  Calls       :  Y2CLMSC                                       *
+      *                                                               *
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send error message on subfile message queue         *
+      *                                                               *
+      *  Called by  : #BVDSF - Validate detail screen fields          *
+      *               #BVRVW - Review from processing                 *
+      *  Calls      : None                                            *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data
+     C                     MOVEL*BLANK    ZAMSTP           Message type
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2019

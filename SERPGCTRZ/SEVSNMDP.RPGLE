@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD033789           Date 21May15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033789 - Securities with processing type 7 when amended    *
+      *             defaults the nominal decimal place field to 4     *
+      *             even if there is already an existing decimal place*
+      *             not equal to 4 which causes the nominal position  *
+      *             to be incorrect.                                  *
+      *             Fix is to default only NMDP for Insert action.    *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -180,7 +187,9 @@
       *
       ** Validate nominal decimal places if feature CEU018 is present.
       *
-     C                   IF        CEU018 = 'Y'
+     C**********         IF        CEU018 = 'Y'                                             MD033789
+     C                   IF        CEU018 = 'Y' and                                         MD033789
+     C                             DDACTN = 'I'                                             MD033789
      C                   EXSR      SRValNMDP
      C                   ENDIF
       *
@@ -190,9 +199,11 @@
      C                   IF        OKNMDP = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
-     C                   IF        OKNMDP <> 'N'
- 
+
+     C**********         IF        OKNMDP <> 'N'                                            MD033789
+     C                   IF        OKNMDP <> 'N' and                                        MD033789
+     C                             DDACTN = 'I'                                             MD033789
+
      C                   SELECT
       *
       ** If processing type is '7', field must be equal to '4'.

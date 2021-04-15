@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 262263             Date 18Dec09               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Last Amend No. MD026991           Date 04Jul19               *
+      *  Prev Amend No. DAI102             Date 23Jun19               *
+      *                 262263             Date 18Dec09               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045010           Date 05Apr17               *
       *                 CRE095             Date 25Apr14               *
@@ -85,6 +87,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026991 - Should follow forward value dates set for GL      *
+      *             transaction when CGL010 is On. Incorporate        *
+      *             processing for CGL010.                            *
+      *           - Applied for MD-25424                              *
+      *  DAI102 - TI Posting Narrative Enhancement. Upgrade to FBM2.1 *
+      *           Include "Issuing Bank Reference" for LC postings    *
+      *           Used core hooks  TI0310MC01, TI0310MC04,            *
+      *                            TI0310MD01, and TI0310MF01.        *
+      *           Added hooks DAI102_006 and DAI102_007.              *
+      *           Upgrade to FBMidas 2.1.                             *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
@@ -1747,6 +1759,7 @@
      C                   SELECT
      C     PJTTY         WHENEQ    'A'
      C     MTIVD         IFGE      BJDNWD
+     C     CGL010        ANDEQ     'N'                                                      MD026991
      C                   MOVEL     'PSH'         PSTS
      C                   ELSE
      C                   MOVEL     'PJS'         PSTS
@@ -1902,6 +1915,7 @@
      C                   OUT       LDA                                          140071
      C                   EXSR      *PSSR                                        140071
      C                   ENDIF                                                  140071
+     C/COPY WNCPYSRC,DAI102_006                                                               DAI102
       *
       *  First Posting:
      C                   eval      TIDLBR = TIDLBRL7
@@ -1941,6 +1955,7 @@
      C                   OUT       LDA                                          140071
      C                   EXSR      *PSSR                                        140071
      C                   ENDIF                                                  140071
+     C/COPY WNCPYSRC,DAI102_007                                                               DAI102
      C**********         EVAL      *IN89 = '1'                                        176322 BUG4200
      C**********         ELSE                                                         176322 BUG4200
      C**********         DUMP                                                                BUG4200
@@ -2143,6 +2158,34 @@
      C                   ELSE                                                   CEU029
      C                   MOVEL     'N'           CEU029                         CEU029
      C                   ENDIF                                                  CEU029
+      *                                                                                     MD026991
+      ** Access SAR details file to determine if CGL010 is installed.                       MD026991
+      *                                                                                     MD026991
+     C                   CALL      'AOSARDR0'                                               MD026991
+     C                   PARM      '       '     ##RTCD                                     MD026991
+     C                   PARM      '*VERIFY'     ##OPTN                                     MD026991
+     C                   PARM      'CGL010'      ##SARD                                     MD026991
+      *                                                                                     MD026991
+      ** Database Error                                                                     MD026991
+      *                                                                                     MD026991
+     C     ##RTCD        IFNE      *BLANK                                                   MD026991
+     C     ##RTCD        ANDNE     '*NRF   '                                                MD026991
+     C     *LOCK         IN        LDA                                                      MD026991
+     C                   SETON                                          U7U8                MD026991
+     C                   MOVEL     'TI0310'      DBPGM                                      MD026991
+     C                   Z-ADD     13            DBASE                                      MD026991
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD026991
+     C                   MOVEL     '*CALL'       DBKEY                                      MD026991
+     C                   OUT       LDA                                                      MD026991
+     C                   EXSR      *PSSR                                                    MD026991
+     C                   ENDIF                                                              MD026991
+      *                                                                                     MD026991
+     C     ##RTCD        IFEQ      *BLANK                                                   MD026991
+     C                   MOVEL     'Y'           CGL010            1                        MD026991
+     C                   ELSE                                                               MD026991
+     C                   MOVEL     'N'           CGL010                                     MD026991
+     C                   ENDIF                                                              MD026991
+      *                                                                                     MD026991
      C/COPY WNCPYSRC,TI0310MC04
      C*                                                                         CEU029
       ** Determine if Data Export for CCRM Limits is active                     CDE001

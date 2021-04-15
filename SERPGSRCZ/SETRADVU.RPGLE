@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056627           Date 02Sep20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD054680           Date 27Jan20               *
+      *  Prev Amend No. MD056627           Date 02Sep20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035243           Date 29Jul15               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054680 - Allow defaulting of settlement details even with  *
+      *             Clearance Type DDCLTY2 sent for Kondor            *
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*

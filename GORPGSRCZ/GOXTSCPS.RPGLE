@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 264185             Date 19Aug14               *
+      *  Last Amend No. 263109             Date 20Jan10               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 264185             Date 19Aug14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263109 - Do not generate TS and TP events for incomplete     *
+      *           trades.                                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  264185 - Correct conversion of Nominal. If Price Basis is P, *
       *           ZPRC should be 100. While if Price Basis is U, ZPRC *
@@ -800,6 +803,7 @@
       *
       * CLEAR EVENT
      C                   CLEAR                   E_EVNT
+     C                   IF        TINC = 'C'                                                 263109
       *
       * Processing Date
      C     I#TVDI        IFEQ      'T'
@@ -848,6 +852,8 @@
       *
      C                   MOVEL     '*IMPEVNT  '  W#MODE
      C                   EXSR      WRKEDTA
+      *                                                                                       263109
+     C                   ENDIF                                                                263109
       *
       * Read next live record
       *

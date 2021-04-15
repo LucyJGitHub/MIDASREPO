@@ -13,7 +13,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DAI102             Date 23Jun19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       DAI102 - TI Posting Narrative Enhancement.                  */
+/*                Added hooks DAI102_001, DAI102_002, DAI102_003     */
+/*                DAI102_004 and DAI102_005.                         */
+/*                Upgrade to FBMidas 2.1.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       139756 - Commitment control scope incorrect                 */
@@ -43,6 +48,7 @@
              DCL        VAR(&LIBPRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+/*/COPY WNCPYSRC,DAI102_001                                                               /*DAI102*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -51,6 +57,7 @@
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
+/*/COPY WNCPYSRC,DAI102_002                                                               /*DAI102*/
  
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
@@ -79,10 +86,12 @@
              IF         COND(&STAT *EQ 'Y') THEN(DO)
              CPYF       FROMFILE(&DPLIB/XTIPOSTPD) TOFILE(TIPOSTPD) +
                           MBROPT(*REPLACE)
+/*/COPY WNCPYSRC,DAI102_003                                                               /*DAI102*/
              ENDDO
              ELSE       CMD(DO)
              CPYF       FROMFILE(TIPOSTPD) TOFILE(&DPLIB/XTIPOSTPD) +
                           MBROPT(*ADD) CRTFILE(*YES)
+/*/COPY WNCPYSRC,DAI102_004                                                               /*DAI102*/
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&PCNAM &PCSEQ &STAT)
              ENDDO
@@ -102,6 +111,7 @@
                           CMDLBL(ABNOR))                                                  /*228542*/
                                                                                           /*228542*/
              DLTF       FILE(&DPLIB/XTIPOSTPD)
+/*/COPY WNCPYSRC,DAI102_005                                                               /*DAI102*/
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&PCNAM &PCSEQ &STAT)
              GOTO       CMDLBL(END)

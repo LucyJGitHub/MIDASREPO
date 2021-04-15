@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. 262846             Date 16Mar10               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262846 - Amended so that system will not extract transactions*
+      *           that are newly matured. Applied fix 262820.         *      
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -72,6 +75,11 @@
 
      D/COPY ZACPYSRC,STD_D_SPEC
 
+      ** First DS for Access programs - short data structure                                  262846
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     262846
+                                                                                              262846
+      ** External data structure for Bank Details                                             262846
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  262846
 
      D FXDEAL        E DS                  EXTNAME(FXDEALPP)
      D DEALDB        E DS                  EXTNAME(DEALSDB)
@@ -112,6 +120,8 @@
      C     FHDSTS        OREQ      'A'
      C     FHDSTS        OREQ      'R'
      C*****FHDSTS        OREQ      'M'                                                      BUG13562
+      *                                                                                       262846
+     C     FHVDDN        IFGT      BJRDNB                                                     262846     
      C                   EXSR      ACS_OTHER_DTLS
      C     RECI          IFNE      'M'                                                      AR644662
      C     RECI          ANDNE     'E'                                                      AR644662
@@ -120,6 +130,8 @@
      C                   MOVEL     'T'           Trade_Value
      C                   EXSR      EXTRCT
      C                   ENDIF                                                              AR644662
+     C                   ENDIF                                                                262846
+      *                                                                                       262846
      C                   ENDIF
      C                   ENDIF                                                              AR582204
       *
@@ -147,6 +159,7 @@
      C     *IN99         IFEQ      '0'
      C     FHDSTS        ANDNE     'M'                                                      BUG13562
      C     FHDDLT        ANDEQ     *BLANK                                                   AR582204
+     C     FHVDDN        ANDGT     BJRDNB                                                     262846
      C                   EXSR      ACS_OTHER_DTLS
      C     RECI          IFNE      'M'                                                      AR644662
      C     RECI          ANDNE     'E'                                                      AR644662
@@ -221,6 +234,23 @@
 
       /COPY GOCPYSRC,GOGETEXCT
 
+      ** Access Bank Details                                                                  262846
+                                                                                              262846
+     C                   CALL      'AOBANKR0'                                                 262846
+     C                   PARM      *Blanks       @RTCD             7                          262846
+     C                   PARM      '*FIRST '     @OPTN             7                          262846
+     C     SDBANK        PARM      SDBANK        DSFDY                                        262846
+      *                                                                                       262846
+     C     @RTCD         IFNE      *BLANKS                                                    262846
+     C     *LOCK         IN        LDA                                                        262846
+     C                   MOVEL     'SDBANKPD'    DBFILE                                       262846
+     C                   Z-ADD     1             DBASE                                        262846
+     C                   MOVEL     '*FIRST '     DBKEY                                        262846
+     C                   MOVEL     'GOXCFXDL'    DBPGM                                        262846
+     C                   OUT       LDA                                                        262846
+     C                   EXSR      *PSSR                                                      262846
+     C                   ENDIF                                                                262846
+      *                                                                                       262846
      C                   ENDSR
       ********************************************************************
       /SPACE 5

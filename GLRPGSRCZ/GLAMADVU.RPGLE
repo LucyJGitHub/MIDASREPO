@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR979910           Date 07Jun12               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. AR629716           Date 01Jul19               *
+      *  Prev Amend No. AR979910           Date 07Jun12               *
+      *                 260405             Date 04Apr20               *      
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,6 +145,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR629716 - Duplicate TI sequence generated id accnt is not   *
+      *             yet authorised. Defaulting will be done during    *
+      *             authorisation. (Child: AR629717)                  *
+      *           - Applied for AR629716 (Child: AR954074)            *
       *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
       *             constant timestamp value constant for validation  *
       *             indicating that no change has occured yet.        *
@@ -1141,6 +1146,9 @@
      C     UpdateYN      IFEQ      'Y'
      C     Ix            ANDEQ     0
      C                   EXSR      WriteToDB
+     C                   CLEAR                   WFldNamArr                                 AR629716
+     C                   CLEAR                   WMsgIDArr                                  AR629716
+     C                   CLEAR                   WMsgDtaArr                                 AR629716
      C                   ENDIF
 
      C                   SETON                                        LR

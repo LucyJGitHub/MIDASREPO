@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR724595           Date 27Jul11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27045A          Date 13Apr10               *
       *                 BUG27045           Date 18Feb10               *
@@ -38,6 +39,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR724595 - DB error when account in TIPOSTPD dont exist      *
+      *             Apply AR317586 Update PSTERR if ACCNT not found   *
+      *             (Child: AR724596)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27045A - Override the fix of Bug 27045 (Recompile)        *
@@ -175,14 +179,21 @@
      C*
      C** Database error
      C     W0RTCD        IFNE      *BLANK
-     C     *LOCK         IN        LDA
-     C                   MOVE      'TI0370'      DBPGM
-     C                   MOVEL(P)  'AOACCTR0'    DBFILE
-     C                   MOVEL(P)  ACNERR        DBKEY                          ************
-     C                   Z-ADD     03            DBASE                          *DB ERROR 03
-     C                   EXSR      ERRSR                                        ************
+     C******LOCK         IN        LDA                                                      AR724595
+     C**********         MOVE      'TI0370'      DBPGM                                      AR724595
+     C**********         MOVEL(P)  'AOACCTR0'    DBFILE                                     AR724595
+     C**********         MOVEL(P)  ACNERR        DBKEY                          ************AR724595
+     C**********         Z-ADD     03            DBASE                          *DB ERROR 03AR724595
+     C**********         EXSR      ERRSR                                        ************AR724595
+     C                   MOVE      W0BRCA        BRCA                                       AR724595
+     C                   MOVE      W0CNUM        CNUM                                       AR724595
+     C                   MOVE      W0CCY         CCY                                        AR724595
+     C                   MOVE      W0ACCD        ACOD                                       AR724595
+     C                   MOVE      W0ACSQ        ACSQ                                       AR724595
+     C                   MOVE      'Y'           PSTERR                                     AR724595
      C                   END
      C*
+     C     PSTERR        IFNE      'Y'                                                      AR724595
      C                   MOVE      'N'           UPDIND            1
      C*
      C*  Process the posting if this is a retail account and
@@ -206,6 +217,8 @@
      C                   ENDIF
      C*
      C                   MOVE      'SHP'         PSTS
+     C                   ENDIF                                                              AR724595
+     C                   ENDIF                                                              AR724595
      C                   UPDATE    @TIPSTL0                             11
      C*  Data base error if update fails
      C     *IN11         IFEQ      '1'
@@ -219,7 +232,7 @@
      C*
      C                   ENDIF
       *                                                                         185145
-     C                   ENDIF                                                  185145
+     C**********         ENDIF                                                       185145 AR724595
      C*
      C                   READ      @TIPSTL0                               10
      C                   ENDDO

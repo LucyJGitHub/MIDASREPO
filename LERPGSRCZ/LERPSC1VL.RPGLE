@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024459           Date 07Feb14               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR573985           Date 31Aug10               *
+      *  Prev Amend No. MD024459           Date 07Feb14               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038257           Date 13Apr16               *
       *                 CLE154             Date 02Aug12               *
       *                 CLE164             Date 18Aug14               *
@@ -48,6 +49,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR573985 - System allows the reversal of Repayment Schedule  *
+      *             even if there is a repayment referring to it.     *
+      *             Amended program such that the reversal of         *
+      *             Repayment Schedule will not be allowed if there   *
+      *             is a payment referring to it. Applied fix for     *
+      *             AR316158.                                         *
       *  MD024459 - LES0157 is not being shown upon authorisation     *
       *           Remove checking of DDACTN so that LES0157 will be   *
       *           issued accordingly whethere during insert or auth.  *
@@ -412,6 +419,13 @@
      C                   IF        CLE154 = 'Y'                                               CLE154
      C                   EXSR      SRREPT                                                     CLE154
      C                   ENDIF                                                                CLE154
+      *                                                                                     AR573985
+      ** Do not allow the reversal of Repayment Schedule                                    AR573985
+      ** if it has a Manual Repayment attached.                                             AR573985
+      *                                                                                     AR573985
+     C     DDACTN        IFEQ      'R'                                                      AR573985
+     C                   EXSR      VRPSC                                                    AR573985
+     C                   ENDIF                                                              AR573985
       *
       ***  Move the screen fields to valid file
       *
@@ -1805,6 +1819,43 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     AR573985
+      *  VRPSC - Validate rejection of Repayment Schedule.            *                     AR573985
+      *          Do not allow rejection if there is a Manual Repayment*                     AR573985
+      *          attached to the Repayment Schedule                   *                     AR573985
+      *****************************************************************                     AR573985
+     C     VRPSC         BEGSR                                                              AR573985
+     C                   MOVE      DDLNRF        WKLNRF            6                        AR573985
+     C                   MOVE      DDSEQN        WKLSEQ            3 0                      AR573985
+      *                                                                                     AR573985
+     C                   MOVE      DDVDAT        ZDATE                                      AR573985
+     C                   MOVE      BJDFIN        ZDATFM                                     AR573985
+     C                   CALL      'ZDATE1'                                                 AR573985
+     C                   PARM      *BLANKS       ZERR              7                        AR573985
+     C                   PARM                    ZDATE             6 0                      AR573985
+     C                   PARM                    ZDATFM            1                        AR573985
+     C                   PARM                    ZDAYNO            5 0                      AR573985
+     C                   Z-ADD     ZDAYNO        WVDAYRS           5 0                      AR573985
+      *                                                                                     AR573985
+     C     DDACTN        IFEQ      'R'                                                      AR573985
+     C     WKLNRF        SETLL     LOAMSD                                                   AR573985
+     C     WKLNRF        READE     LOAMSD                                 99                AR573985
+     C     *IN99         DOWEQ     '0'                                                      AR573985
+     C     LO_RECI       IFEQ      'D'                                                      AR573985
+     C     LO_AMTP       ANDEQ     'MR'                                                     AR573985
+     C     WVDAYRS       ANDEQ     LO_XAVD                                                  AR573985
+     C     WKLSEQ        ANDEQ     LO_XASQ                                                  AR573985
+     C                   MOVE      'N'           DDACTNOK                                   AR573985
+     C                   ADD       1             Idx                                        AR573985
+     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                               AR573985
+     C                   MOVEL     'LES0613'     MsgIdArr(Idx)                              AR573985
+     C                   ENDIF                                                              AR573985
+     C     WKLNRF        READE     LOAMSD                                 99                AR573985
+     C                   ENDDO                                                              AR573985
+     C                   ENDIF                                                              AR573985
+     C                   ENDSR                                                              AR573985
+      *****************************************************************                     AR573985
+      /EJECT                                                                                AR573985
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************

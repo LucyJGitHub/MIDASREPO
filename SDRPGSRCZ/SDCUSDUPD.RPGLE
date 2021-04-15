@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056719           Date 16Sep20               *
-      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *  Last Amend No. 249440             Date 03Dec12               *
+      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
       *                 MD055446           Date 04Apr20               *
@@ -154,6 +155,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249440 - Trailer of SDTICSPD is not properly udpated         *
+      *           the count on SDCUSTPD is being carried over to      *
+      *           SDTICSPD count, causing the figure to be bloated.   *
+      *           Clear the work variable for the trailer count.      *
+      *           Applied for AR997295 (Child: AR1063641).            *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
       *             Messages.                                         *
       *           - Include A_PMAPBC field under AR1049708 fix.       *
@@ -6502,6 +6508,13 @@
      C**********         MOVEL     '023'         DBASE                  * DBERR 023* BUG3362 BG12238
      C**********         EXSR      SRERR                                ************ BUG3362 BG12238
      C**********         ELSE                                                        BUG3362 BG12238
+      *                                                                                       249440
+      ** Clear work fields.                                                                   249440
+      *                                                                                       249440
+     C                   Z-ADD     *ZERO         WUNORC                         No of records 249440
+     C                   Z-ADD     *ZERO         WUNOAM                         No of Amend   249440
+     C                   Z-ADD     *ZERO         WUNOIN                         No of delete  249440
+     C                   Z-ADD     *ZERO         WUNODL                         No of Insert  249440
       *                                                                                      BUG3362
       ** if valid                                                                            BUG3362
       *                                                                                      BUG3362

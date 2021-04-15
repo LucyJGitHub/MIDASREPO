@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR996842           Date 11Feb13               *
+      *  Last Amend No. MD026861           Date 14May14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026861 - Instrument mandatory only when Private Banking is *
+      *           enabled.                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR996842 - Creation of new security details: Private Banking *
       *             Instrument type defaulting improvement            *
@@ -471,7 +474,8 @@
  
       /COPY WNCPYSRC,SESEC3V030
                                                                                               CGL014
-     C                   IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                             CGL014
+     C**********         IF        BGN4ST = 'Y'  OR  CGL014 = 'Y'                    CGL014 MD026861
+     C                   IF        BGN4ST = 'Y'                                             MD026861
       *
       ** PB Instrument Type.
       *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 262263             Date 18Dec09               *
-      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *  Last Amend No. AR629716           Date 01Jul19               *
+      *  Prev Amend No. 262263             Date 18Dec09               *
+      *                 AR891357A          Date 12Mar20               *
       *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
@@ -138,6 +139,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR629716 - Duplicate TI sequence generated id accnt is not   *
+      *             yet authorised. Defaulting will be done during    *
+      *             authorisation. (Child: AR629717)                  *
+      *           - Applied for AR629716 (Child: AR954074)            *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
       *  AR891357A - RUNDT field is not existing on the module.       *
@@ -478,6 +483,26 @@
       ** SD Branch Codes                                                                      CTI004
      FSDBRCHL5  IF   E           K DISK                                                       CTI004
                                                                                               CTI004
+      *                                                                                     AR629716
+     FSDACODL1  IF   E           K DISK    INFSR(*PSSR)                                     AR629716
+      ** SD Account Codes Retrieval                                                         AR629716
+      *                                                                                     AR629716
+     FSDISOCL0  IF   E           K DISK    INFSR(*PSSR)                                     AR629716
+      ** SD Midas Currency ISO codes table                                                  AR629716
+      *                                                                                     AR629716
+     FSDTIACL1  IF   E           K DISK    INFSR(*PSSR)                                     AR629716
+     ** SD Trade innovation account types retrieval                                         AR629716
+      *                                                                                     AR629716
+     FACCNTTI   IF   E           K DISK    INFSR(*PSSR)                                     AR629716
+     F                                     RENAME(ACCNTABF:ACCNTTIF)                        AR629716
+     F                                     PREFIX(TH_)                                      AR629716
+      ** GL Accounts by branch, TI A/c no and TI A/c suffix                                 AR629716
+      *                                                                                     AR629716
+     FGLACSHL3  IF   E           K DISK    INFSR(*PSSR)                                     AR629716
+     F                                     RENAME(ACCNTABF:GLACSHTI)                        AR629716
+     F                                     PREFIX(SH_)                                      AR629716
+      ** GL Midas Accounts Details Shadow File                                              AR629716
+      *                                                                                     AR629716
      F/COPY WNCPYSRC,GLAMADDF01
       *                                                                                       CRE023
       ** Outward Clearing Balance File                                                        CRE023
@@ -707,6 +732,11 @@
                                                                                               CSD015
      D PDSXML          DS         30000                                                       CSD015
                                                                                               CSD015
+      *                                                                                     AR629716
+      ** TI ICD details                                                                     AR629716
+      *                                                                                     AR629716
+     D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                AR629716
+      *                                                                                     AR629716
       ** Fields defined for Enhancement CSD012 used for SDAULGL0                              CSD012
      D*@AULG****       DS            20                                                CSD012 CGL029
      D @AULG           DS            26                                                       CGL029
@@ -7144,6 +7174,11 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   KFLD                    Currency1                                    237346
      C                   KFLD                    AccCode1                                     237346
      C                   KFLD                    AccSeq1                                      237346
+      *                                                                                     AR629716
+     C     WACCNT        KLIST                                                              AR629716
+     C                   KFLD                    AMBRCA                                     AR629716
+     C                   KFLD                    AMA5TIAN                                   AR629716
+     C                   KFLD                    AMA5TIAS                                   AR629716
      C*
      C** Define key list for file REHISBL & RECOM & ACCBR
      C*
@@ -7182,6 +7217,9 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   Z-ADD     *ZERO         NATN              5 0
      C/COPY WNCPYSRC,GLAMADDC09
      C*
+     C     AMA5TIAC      IFEQ      'Y'                                                      AR629716
+     C                   EXSR      TIDEFLT                                                  AR629716
+     C                   ENDIF                                                              AR629716
      C*
                                                                                               CSD083
       ** Check if Watch List Element (CSD083) is on                                           CSD083
@@ -7509,6 +7547,86 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
       * Removed ** CMD5 OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)                     CSD101
+      *****************************************************************                     AR629716
+      *                                                               *                     AR629716
+      * TIDEFLT - Defaulting of TI Account Number/Sequence            *                     AR629716
+      *                                                               *                     AR629716
+      * Called by: INITIAL                                            *                     AR629716
+      *                                                               *                     AR629716
+      * Calls: None                                                   *                     AR629716
+      *                                                               *                     AR629716
+      *****************************************************************                     AR629716
+     C     TIDEFLT       BEGSR                                                              AR629716
+      *                                                                                     AR629716
+      ** Second of three cases. Deafauts for BICN customer account.                         AR629716
+      ** If BICN customer then default the basic number into the TI                         AR629716
+      ** customer                                                                           AR629716
+      *                                                                                     AR629716
+     C                   CALL      'AOBRCHR1'                                               AR629716
+     C                   PARM      *BLANKS       @RTCD                                      AR629716
+     C                   PARM      '*KEY   '     @OPTN                                      AR629716
+     C                   PARM      AMBRCA        @BRCH             3                        AR629716
+     C     SDBRCH        PARM      SDBRCH        DSSDY                                      AR629716
+      *                                                                                     AR629716
+     C                   MOVE      AMCNUM        DDCNUM            6                        AR629716
+     C     DS_A8BICN     IFEQ      DDCNUM                                                   AR629716
+     C     AMA5TIAN      IFEQ      *BLANKS                                                  AR629716
+     C     A5TIAT        CHAIN     SDTIACL1                           82                    AR629716
+     C     *IN82         IFEQ      *OFF                                                     AR629716
+     C                   MOVE      GDBCNO        AMA5TIAN                                   AR629716
+     C                   ENDIF                                                              AR629716
+     C                   ENDIF                                                              AR629716
+     C     AMA5TIAS      IFEQ      *BLANKS                                                  AR629716
+     C     AMCCY         CHAIN     SDISOCL0                           83                    AR629716
+     C     *IN83         IFEQ      *OFF                                                     AR629716
+     C                   MOVE      GIISO3        AMA5TIAS                                   AR629716
+     C                   ENDIF                                                              AR629716
+     C                   ENDIF                                                              AR629716
+      *                                                                                     AR629716
+      ** Third of three cases. Deafauts for non BICN customer account.                      AR629716
+      ** If non BICN customer then default that into a blank TI customer                    AR629716
+      *                                                                                     AR629716
+     C                   ELSE                                                               AR629716
+     C     AMA5TIAN      IFEQ      *BLANKS                                                  AR629716
+     C                   MOVE      AMCNUM        AMA5TIAN                                   AR629716
+     C                   ENDIF                                                              AR629716
+     C                                                                                      AR629716
+      *                                                                                     AR629716
+     C     AMA5TIAS      IFEQ      *BLANKS                                                  AR629716
+     C                   MOVE      '001'         AMA5TIAS                                   AR629716
+      *                                                                                     AR629716
+      ** Check if TI account is already already in use, must be unique                      AR629716
+      ** key.                                                                               AR629716
+      *                                                                                     AR629716
+     C                   MOVE      *OFF          *IN85                                      AR629716
+     C     *IN85         DOUEQ     *ON                                                      AR629716
+      *                                                                                     AR629716
+     C     WACCNT        CHAIN     ACCNTTI                            85                    AR629716
+     C   85WACCNT        CHAIN     GLACSHL3                           85                    AR629716
+      *                                                                                     AR629716
+     C     *IN85         IFEQ      *OFF                                                     AR629716
+     C                   MOVE      AMA5TIAS      DDTIASN           3 0                      AR629716
+     C                   ADD       1             DDTIASN                                    AR629716
+     C                   MOVE      DDTIASN       AMA5TIAS                                   AR629716
+      *                                                                                     AR629716
+      ** Error if sequence counts above 999.                                                AR629716
+      *                                                                                     AR629716
+     C     DDTIASN       IFEQ      0                                                        AR629716
+     C                   MOVEL     DBerrKey      DBKEY                                      AR629716
+     C                   MOVEL     'ACCNTAB'     DBFILE                         ************AR629716
+     C                   MOVEL     '086'         DBASE                          * DBERR 086*AR629716
+     C                   EXSR      SRERR                                        ************AR629716
+     C                   ENDIF                                                              AR629716
+     C                   ENDIF                                                              AR629716
+      *                                                                                     AR629716
+     C                   ENDDO                                                              AR629716
+     C                   ENDIF                                                              AR629716
+     C                   ENDIF                                                              AR629716
+      *                                                                                     AR629716
+     C                   ENDSR                                                              AR629716
+      *****************************************************************                     AR629716
+      /EJECT                                                                                AR629716
+      *****************************************************************                     AR629716
 **  CPY@
 (c) Finastra International Limited 2001
 ** CMD1

@@ -10,9 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047693           Date 30Jan18               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *      
-      *                 MD050537           Date 23Apr18               *      
+      *  Last Amend No. MD057764           Date 17Mar21               *
+      *  Prev Amend No. MD047693           Date 30Jan18               *
+      *                 MD050139           Date 23Mar18               *
+      *                 MD050537           Date 23Apr18               *
       *                 MD051159           Date 11Jun18               *
       *                 230713             Date 31Jan18               *
       *                 AR1021051          Date 07Sep17               *
@@ -232,14 +233,20 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD057764 - Apply AR749052, MD034915
+      *  MD034915 - Added fix if NFSN is blank on rollover.           *
+      *           - Applied for MD-34918                              *
+      *  AR749052 - Funding details not displayed.  Default funding   *
+      *             details.  Apply 263440. (Child: AR749053)         *
+      *           - Applied for MD-34918                              *
       *  MD047693 - Rollover Dates are not 'modified' to be the       *
       *             Previous Working Day, if the Month End falls on a *
-      *             holiday                                           *      
+      *             holiday                                           *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
-      *            ZFREQ/ZFRQ*.                                       *      
+      *            ZFREQ/ZFRQ*.                                       *
       *  MD050537 - Guarantee loans are matured one day earlier       *
-      *           - Reverse fix of MD025168                           *      
+      *           - Reverse fix of MD025168                           *
       *  MD051159 - CLE031: LEC06A 00010 IN MSGW FOR LOAN WITH PAY    *
       *             Settlement Currency and a Manual Repayment        *
       *  230713 - When rollover falls on holiday, the rollover        *
@@ -2563,6 +2570,23 @@
      C*                                                                   105046
 0671 C  N49                GOTO NOROL
      C/COPY WNCPYSRC,LE0390C001
+      *                                                                                     AR749052
+      ** If Analytical Accounting is on and new funding details are not present,            AR749052
+      ** default values to current funding details.                                         AR749052
+      *                                                                                     AR749052
+     C           BGN0ST    IFEQ 'Y'                                                         AR749052
+     C           NFSN      IFEQ *BLANK                                                      MD034915
+     C           NFRS      ANDEQ*ZERO                                                       MD034915
+     C                     MOVELFSGN      NFSN                                              MD034915
+     C                     ENDIF                                                            MD034915
+     C           NFRS      IFEQ *ZERO                                                       AR749052
+     C                     Z-ADDFSRP      NFRS                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C           NFPC      IFEQ *BLANK                                                      AR749052
+     C                     MOVELFPRC      NFPC                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C                     ENDIF                                                            AR749052
+      *                                                                                     AR749052
 0672 C* CHECK IF R/O DETAILS ARE PRESENT.(50=ON)
 0673 C           NCAC      COMP 0                    50  53
 0674 C   50      NBRAL     COMP 0                    51

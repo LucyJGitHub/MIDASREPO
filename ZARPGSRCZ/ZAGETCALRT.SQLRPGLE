@@ -1158,9 +1158,9 @@
                                %Dec(Result.List(i).simpleAve:30:9);
                    endsl;
 
-                   compAveRate += %dech(benchMarkAdj:13:9);
+                   compAveRate += %dech(benchMarkAdj:11:7);
                    ExtractFLDS.LDCART =
-                     %dech(compAveRate  :13 :9);
+                     %dech(compAveRate  :11 :7);
 
                    exec sql insert into LELIBEPD
                    values (:ExtractFLDS);
@@ -1214,9 +1214,9 @@
                                %Dec(Result.List(i).simpleAve:30:9);
                    endsl;
 
-                   compAveRate += %dech(benchMarkAdj:13:9);
+                   compAveRate += %dech(benchMarkAdj:11:7);
                    ExtractFLDS.LDCART =
-                     %dech(compAveRate  :13 :9);
+                     %dech(compAveRate  :11 :7);
 
                    wSqlStr = 'update LELIBEPD A '  +
                               'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +

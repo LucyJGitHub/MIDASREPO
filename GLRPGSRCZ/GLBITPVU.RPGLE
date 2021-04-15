@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056412           Date 25Mar21               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048370           Date 29Nov17               *
       *                 MD043023           Date 25Jul17               *
@@ -96,10 +95,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056412 - BITP API message does not show in Repair          *
-      *             Queue - Batch Details. Pass BRBTNB to DDBTNB      *
-      *             after reading GLJENHL3.                           *
-      *           - Applied for MD-57758                              *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -619,7 +614,6 @@
       *                                                                                       249585
      C     *IN31         IFEQ      *OFF                                                     MD043023
      C                   EVAL      HeaderFound = 'Y'                                        MD043023
-     C                   MOVE      BRBTNB        DDBTNB                                     MD056412
      C                   ENDIF                                                              MD043023
       ** Retrieve original batch item details                                                 249585
       *                                                                                       249585

@@ -4676,6 +4676,141 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+      *                                                                                       CLE172
+      ** LIBOR fields defaulted from associated base rate code                                CLE172
+      *                                                                                       CLE172
+     C                   IF        CLE172 = 'Y'                                               CLE172
+     C                             AND WBSRC <> *BLANKS                                       CLE172
+      *                                                                                       CLE172
+      ** Get Backward-looking base rate details                                               CLE172
+      *                                                                                       CLE172
+     C                   CALLB     'AOBSRTR0'                                                 CLE172
+     C                   PARM      *BLANKS       @RTCD                                        CLE172
+     C                   PARM      '*KEY    '    POPTN                                        CLE172
+     C                   PARM      @CURR         PCURR                                        CLE172
+     C                   PARM      WBSRC         PBRAT                                        CLE172
+     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
+      *                                                                                       CLE172
+      ** Backward-looking Flag                                                                CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDBLRT'                                        CLE172
+     C                   EVAL      PFldData = BABLRT                                          CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Risk Free Rate                                                                       CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDRFRR'                                        CLE172
+     C                   EVAL      PFldData = BARFRR                                          CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Calculation Method                                                                   CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDCALM'                                        CLE172
+     C                   EVAL      PFldData = BACALM                                          CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Benchmark Adjustment                                                                 CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     *BLANKS       ZFIELD                                       CLE172
+     C                   MOVE      BABADJ        ZFIELD                                       CLE172
+     C                   Z-ADD     7             ZDEC                                         CLE172
+     C                   CALL      'ZEDIT'                                                    CLE172
+     C                   PARM                    ZFIELD                                       CLE172
+     C                   PARM                    ZDEC                                         CLE172
+     C                   EVAL      PFldData  = ZFIELD                                         CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDBADJ'                                        CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Floor                                                                                CLE172
+      *                                                                                       CLE172
+     C                   MOVEL     *BLANKS       ZFIELD                                       CLE172
+     C                   MOVE      BAFLOR        ZFIELD                                       CLE172
+     C                   Z-ADD     7             ZDEC                                         CLE172
+     C                   CALL      'ZEDIT'                                                    CLE172
+     C                   PARM                    ZFIELD                                       CLE172
+     C                   PARM                    ZDEC                                         CLE172
+     C                   EVAL      PFldData  = ZFIELD                                         CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDFLOR'                                        CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Lookback Days                                                                        CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDLBDY'                                        CLE172
+     C                   MOVEL     BALBDY        PFldData                                     CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Lockout Days                                                                         CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDLODY'                                        CLE172
+     C                   MOVEL     BALODY        PFldData                                     CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Observation Period Shift                                                             CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDOPSH'                                        CLE172
+     C                   EVAL      PFldData = BAOPSH                                          CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Rate Rounding Decimal Places                                                         CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDRRDP'                                        CLE172
+     C                   MOVEL     BARRDP        PFldData                                     CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Daily Basis for Average                                                              CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDDBAV'                                        CLE172
+     C                   MOVEL     BADBAV        PFldData                                     CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+      ** Rates Known                                                                          CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDRTKN'                                        CLE172
+     C                   EVAL      PFldData = 'N'                                             CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+     C                   IF        BABLRT = 'Y'                                               CLE172
+     C                   MOVEL     'D'           C_CHIN                                       CLE172
+     C                   ENDIF                                                                CLE172
+      *                                                                                       CLE172
+     C                   ELSEIF    CLE172 ='Y' AND WBSRC = *BLANKS                            CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDBLRT'                                        CLE172
+     C                   EVAL      PFldData = 'N'                                             CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+      *                                                                                       CLE172
+     C                   EVAL      PFldTag  = 'DDOPSH'                                        CLE172
+     C                   EVAL      PFldData = 'N'                                             CLE172
+     C                   EVAL      PFldType = *BLANK                                          CLE172
+     C                   EVAL      PFldAttr = *BLANK                                          CLE172
+     C                   EXSR      SRFmtWMsg                                                  CLE172
+     C                   ENDIF                                                                CLE172
       *
       ** Change indicator
      C                   MOVEL     *BLANKS       PFldData
@@ -4687,28 +4822,18 @@
      C                   OTHER
      C                   MOVEL     AUCRIN        PFldData
      C                   ENDSL
-      *                                                                                       CLE172
-     C                   IF        CLE172 = 'Y'                                               CLE172
-      *                                                                                       CLE172
-      ** Get Backward-looking base rate details                                               CLE172
-      *                                                                                       CLE172
-     C                   CALLB     'AOBSRTR0'                                                 CLE172
-     C                   PARM      *BLANKS       @RTCD                                        CLE172
-     C                   PARM      '*KEY    '    POPTN                                        CLE172
-     C                   PARM      @CURR         PCURR                                        CLE172
-     C                   PARM      WBSRC         PBRAT                                        CLE172
-     C     SDBSRT        PARM      SDBSRT        DSSDY                                        CLE172
-      *                                                                                       CLE172
-     C                   IF        BABLRT = 'Y'                                               CLE172
+     C                   ELSE                                                                 CLE172
+     C                   IF        CLE172 = 'Y' AND BABLRT = 'Y'                              CLE172
      C                   MOVEL     'D'           PFldData                                     CLE172
      C                   ENDIF                                                                CLE172
      C                   ENDIF                                                                CLE172
+     C                   MOVEL     *BLANKS       BABLRT                                       CLE172
       *
      C                   EVAL      PFldTag  = 'DDCHIN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-     C                   ENDIF
+     C**********         ENDIF                                                                CLE172
       *
       ** Current rate spread
       ** Spread rate should be available only if Base Rate Code or                          MD031225
@@ -6243,112 +6368,6 @@
      C                   EVAL      PFldAttr = *BLANK                                       MD021423B
      C                   EXSR      SRFmtWMsg                                               MD021423B
                                                                                            MD021423B
-     C                   IF        CLE172 = 'Y'                                               CLE172
-      *                                                                                       CLE172
-      ** Backward-looking Flag                                                                CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDBLRT'                                        CLE172
-     C                   EVAL      PFldData = BABLRT                                          CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Risk Free Rate                                                                       CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDRFRR'                                        CLE172
-     C                   EVAL      PFldData = BARFRR                                          CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Calculation Method                                                                   CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDCALM'                                        CLE172
-     C                   EVAL      PFldData = BACALM                                          CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Benchmark Adjustment                                                                 CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     *BLANKS       ZFIELD                                       CLE172
-     C                   MOVE      BABADJ        ZFIELD                                       CLE172
-     C                   Z-ADD     7             ZDEC                                         CLE172
-     C                   CALL      'ZEDIT'                                                    CLE172
-     C                   PARM                    ZFIELD                                       CLE172
-     C                   PARM                    ZDEC                                         CLE172
-     C                   EVAL      PFldData  = ZFIELD                                         CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDBADJ'                                        CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Floor                                                                                CLE172
-      *                                                                                       CLE172
-     C                   MOVEL     *BLANKS       ZFIELD                                       CLE172
-     C                   MOVE      BAFLOR        ZFIELD                                       CLE172
-     C                   Z-ADD     7             ZDEC                                         CLE172
-     C                   CALL      'ZEDIT'                                                    CLE172
-     C                   PARM                    ZFIELD                                       CLE172
-     C                   PARM                    ZDEC                                         CLE172
-     C                   EVAL      PFldData  = ZFIELD                                         CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDFLOR'                                        CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Lookback Days                                                                        CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDLBDY'                                        CLE172
-     C                   MOVEL     BALBDY        PFldData                                     CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Lockout Days                                                                         CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDLODY'                                        CLE172
-     C                   MOVEL     BALODY        PFldData                                     CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Observation Period Shift                                                             CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDOPSH'                                        CLE172
-     C                   EVAL      PFldData = BAOPSH                                          CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Rate Rounding Decimal Places                                                         CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDRRDP'                                        CLE172
-     C                   MOVEL     BARRDP        PFldData                                     CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Daily Basis for Average                                                              CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDDBAV'                                        CLE172
-     C                   MOVEL     BADBAV        PFldData                                     CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-      *                                                                                       CLE172
-      ** Rates Known                                                                          CLE172
-      *                                                                                       CLE172
-     C                   EVAL      PFldTag  = 'DDRTKN'                                        CLE172
-     C                   EVAL      PFldData = 'N'                                             CLE172
-     C                   EVAL      PFldType = *BLANK                                          CLE172
-     C                   EVAL      PFldAttr = *BLANK                                          CLE172
-     C                   EXSR      SRFmtWMsg                                                  CLE172
-     C                   ENDIF                                                                CLE172
-      *                                                                                       CLE172
      C                   EVAL      PMode    = '*RETURN'
      C                   EXSR      SRFmtWMsg
 

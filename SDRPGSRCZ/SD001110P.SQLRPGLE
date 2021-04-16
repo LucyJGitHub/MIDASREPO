@@ -20,6 +20,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer Standing Data     *
       *                                                               *
       *****************************************************************
+
      FSD001110P1O    E             PRINTER OFLIND(*IN50)
       ** Midas SD Compounding Rate History Details Report
 
@@ -79,9 +80,9 @@
      D Dindy                          5p 0
      D Dobdt                          5p 0
      D Dobdy                          5p 0
-     D Dbrfr                         17p 2
-     D Drtap                         17p 2
-     D Davcr                         17p 2
+     D Dbrfr                         17p12
+     D Drtap                         17p12
+     D Davcr                         17p12
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -163,14 +164,6 @@
 
      C     SRPrint       BEGSR
       *
-      ** CHECK IF OVERFLOW
-      *
-     C                   IF        *IN50 = '1'
-     C                   ADD       1             PGENUM
-     C                   WRITE     SD001110H1
-     C                   EVAL      *IN50 = '0'
-     C                   ENDIF
-      *
       ** Write details to printer fields
       *
       * Loan Details
@@ -197,6 +190,7 @@
      C                   EVAL      P1CCY  = CCY
      C                   EVAL      P1BRAT = BRTT
      C                   EVAL      P1CUPR = CPAM
+     C                   EVAL      P1RTSP = RTSP
      C                   EVAL      P1SPRD = SPIN
      C                   EVAL      P1BADJ = BADJ
       *
@@ -221,13 +215,10 @@
       *
      C                   EVAL      P1OBSP = OPSH
      C                   EVAL      P1RAKI = RTKN
-     C                   SETON                                        20
      C                   EVAL      P1FLOR = FLOR
-     C     0             IFEQ      FLOR
-     C                   SETOFF                                       20
-     C                   ENDIF
       *
       ** Daily Details
+      *
       *
      C/exec SQL
      C+ declare SDHS cursor for
@@ -261,7 +252,16 @@
      C/end-exec
       *
      C                   IF        SQLCODE = 0
-
+      *
+      ** CHECK IF OVERFLOW
+      *
+     C                   IF        *IN50 = '1'
+     C                   ADD       1             PGENUM
+     C                   WRITE     SD001110H1
+     C                   EVAL      *IN50 = '0'
+     C                   ENDIF
+      *
+      *
      C                   EVAL      ZDayNo = DintStart
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
@@ -284,6 +284,8 @@
      C                   WRITE     SD001110H3
       *
      C                   DOW       SQLCOD <> 100
+      *
+      ** CHECK IF OVERFLOW
       *
      C                   IF        *IN50 = '1'
      C                   ADD       1             PGENUM

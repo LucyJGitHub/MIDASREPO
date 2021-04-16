@@ -172,7 +172,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *

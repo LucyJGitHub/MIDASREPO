@@ -30,7 +30,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
+      *  CLE172 - LIBOR Deregulation - Lending (Recompile).           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *

@@ -1,0 +1,176 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD ARR Calculator Batch Job')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000114 - ARR Calculator Batch Job                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CLE172             Date 01Oct20              */
+/*       Prev Amend No. CSD103  *CREATE    Date 10Aug20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE172 - LIBOR Deregulation - Lending                       */
+/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNDATE) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE172*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE172*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CLE172*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE172*/
+             DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE172*/
+
+             DCLF       FILE(SDCSTSTD) OPNID(STAT)
+             DCLF       FILE(SDBANKPD) OPNID(BANK)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2020')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDPGMMSG  MSG('SDC000114 - ARR Calculator Batch Job') +
+                          TOMSGQ(MRUNQ)
+
+/** Start commitment control */
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/** Retrieve Midas phase */
+
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+
+/** Read Status File */
+READ:
+             RCVF       OPNID(STAT)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO CMDLBL(CONTINUE)
+             ENDDO
+
+/** If called in COB, run program if Status is not yet completed */
+
+             IF         COND(&MPHAS *EQ 'C') THEN(DO)
+
+/** Retrieve Midas rundate */
+
+                RCVF       OPNID(BANK)
+                CHGVAR     VAR(&RUNDATE) VALUE(&BANK_BJRDNB)
+
+                IF         COND((&STAT_SDSTAT *EQ 'C') *AND +
+                          (&STAT_SDSTDT *EQ &RUNDATE)) THEN(DO)
+                   GOTO CMDLBL(END)
+                ENDDO
+
+             ENDDO
+
+/** Allocate data area to be used in checking if job is running */
+CONTINUE:
+             ALCOBJ     OBJ((SDARRCLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                SNDPGMMSG  MSG('ARR Calculator Batch Job is already +
+                             running') TOMSGQ(MOPERQ MRUNQ)
+                GOTO CMDLBL(END)
+             ENDDO
+
+/** Update Status File to Running */
+
+             CALL       PGM(SD000118) PARM('R')
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/** Check if the CLE172 feature is on */                                                  /*CLE172*/
+                                                                                          /*CLE172*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE172*/
+             CHGVAR     VAR(&SARD) VALUE('CLE172')                                        /*CLE172*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE172*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*CLE172*/
+                                                                                          /*CLE172*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CLE172*/
+                                                                                          /*CLE172*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                          &RTCD *NE '*NRF   ') THEN(DO)                                   /*CLE172*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CLE172*/
+                GOTO       CMDLBL(ERROR)                                                  /*CLE172*/
+             ENDDO                                                                        /*CLE172*/
+                                                                                          /*CLE172*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE172*/
+                CHGVAR     VAR(&CLE172) VALUE('Y')                                        /*CLE172*/
+             ENDDO                                                                        /*CLE172*/
+
+/** Retrieve zone system prefix */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+
+/** If CLE172 is ON, call program to create an extract file for */                        /*CLE172*/
+/** Rollover that uses a backward-looking rate */                                         /*CLE172*/
+                                                                                          /*CLE172*/
+             IF         COND(&CLE172 *EQ 'Y') THEN(DO)                                    /*CLE172*/
+                CLRPFM     FILE(LEROBLPD)                                                 /*CLE172*/
+                CALL       PGM(LE001112)                                                  /*CLE172*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CLE172*/
+                   GOTO       CMDLBL(ERROR)                                               /*CLE172*/
+                ENDDO                                                                     /*CLE172*/
+             ENDDO                                                                        /*CLE172*/
+                                                                                          /*CLE172*/
+/** Call ARR Calculator Batch Job Pogram */
+
+             CLRPFM     FILE(LELIBEPD)
+             CALL       PGM(SD000114)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/** Call program to produce Daily Rates Report */
+
+             CALL       PGM(SD001110P)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/** Call program to produce Exception Error Report */
+
+             CALL       PGM(SD001112)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+/** If sucessful completion, update status file to Completed */
+
+             CALL       PGM(SD000118) PARM('C')
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             GOTO       CMDLBL(END)
+
+/** Update Status File to Failed in case an unexpected error occurs */
+ERROR:
+             CALL       PGM(SD000118) PARM('F')
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+/** Abnormal termination */
+ABNOR:
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000114 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

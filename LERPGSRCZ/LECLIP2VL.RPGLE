@@ -2052,6 +2052,15 @@
      C                   MOVEL     'LEL0145'     MsgIDXAr(Idx)
      C                   LEAVE
      C                   ENDIF
+
+      ** Skip validation on zero interest when CLE172 is ON and                               CLE172
+      ** loan is using a backward-looking rate                                                CLE172
+                                                                                              CLE172
+     C                   MOVEL     'N'           SkipZVAL          1                          CLE172
+     C     CLE172        IFEQ      'Y'                                                        CLE172
+     C     DDBLRT        ANDEQ     'Y'                                                        CLE172
+     C                   MOVEL     'Y'           SkipZVAL                                     CLE172
+     C                   ENDIF                                                                CLE172
       *
       ***  Must be blank for zero interest amounts and discount loans
       ***  parts purchased and sold
@@ -2061,6 +2070,7 @@
      C     @@PTFC        ANDEQ     *Blanks                                                   CSD027A
      C     @@PTFT        ANDEQ     *ZEROS                                                   BUG10226
      C     @@PTFN        ANDEQ     *ZEROS                                                   BUG10226
+     C     SkipZVAL      ANDNE     'Y'                                                        CLE172
      C     WLNPT         OREQ      63
      C     WLNPT         OREQ      65
      C     WLNPT         OREQ      67

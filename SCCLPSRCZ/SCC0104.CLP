@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055683           Date 21May20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSD103             Date 10Aug20              */
+/*       Prev Amend No. MD055683           Date 21May20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      MD027386           Date 19Aug14              */
@@ -48,6 +49,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD055683 - SWIFT jobs will now run based on configurations  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
@@ -149,6 +151,8 @@
              DCL        VAR(&CSD083) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD083*/
              DCL        VAR(&CRE072) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CRE072*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD027386*/
+             DCL        VAR(&CSD103) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD103*/
+                                                                                          /*CSD103*/
 /*/COPY OFCPYSRCZ,CGL155_004                                         */                   /*CGL155*/
                                                                                           /*214363*/
 /** Define work variables for CSC011 */                                                   /*214363*/
@@ -571,6 +575,27 @@
                 CHGVAR     VAR(&CSW025) VALUE('Y')                                      /*MD027386*/
              ENDDO                                                                      /*MD027386*/
                                                                                         /*MD027386*/
+/** Check if the CSD103 feature is on */                                                  /*CSD103*/
+                                                                                          /*CSD103*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CSD103*/
+             CHGVAR     VAR(&SARD) VALUE('CSD103')                                        /*CSD103*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSD103*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*CSD103*/
+                                                                                          /*CSD103*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*CSD103*/
+                                                                                          /*CSD103*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                          &RTCD *NE '*NRF   ') THEN(DO)                                   /*CSD103*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CSD103*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSD103*/
+             ENDDO                                                                        /*CSD103*/
+                                                                                          /*CSD103*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CSD103*/
+                CHGVAR     VAR(&CSD103) VALUE('Y')                                        /*CSD103*/
+             ENDDO                                                                        /*CSD103*/
+                                                                                          /*CSD103*/
 /* Start the calculation manager jobs if required */                                      /*CGL014*/
                                                                                           /*CGL014*/
 /**********  IF         COND(&CGL014 *EQ 'Y') THEN(DO) */                      /*CGL014*/ /*CLE024*/
@@ -611,6 +636,14 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD027386*/
              ENDDO                                                                      /*MD027386*/
                                                                                         /*MD027386*/
+/** Submit ARR Calculator Scheduler */                                                    /*CSD103*/
+                                                                                          /*CSD103*/
+             IF         COND(&CSD103 *EQ 'Y' *AND +
+                           (&MPHAS *EQ 'A' *OR &MPHAS *EQ 'G')) +
+                           THEN(DO)                                                       /*CSD103*/
+                CALL      PGM(SDC000113)                                                  /*CSD103*/
+             ENDDO                                                                        /*CSD103*/
+                                                                                          /*CSD103*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */
 
              GOTO       CMDLBL(END)

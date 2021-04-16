@@ -21,12 +21,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. CSD103             Date 10Aug20               *
-=======
-      *  Last Amend No. MD056543           Date 15Sep20               *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
-      *  Prev Amend No. MD055928           Date 02Jun20               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD055928           Date 02Jun20               *
       *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -66,14 +63,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
-=======
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD055928 - Schedule cannot be inserted for Primary recipient.*
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *

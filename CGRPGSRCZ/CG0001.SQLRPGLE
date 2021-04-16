@@ -30,12 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. CSD103             Date 10Aug20               *
-=======
-      *  Last Amend No. MD056543           Date 15Sep20               *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -55,14 +52,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
-=======
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *

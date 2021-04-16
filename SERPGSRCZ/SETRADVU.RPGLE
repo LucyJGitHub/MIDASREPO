@@ -33,12 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. CSD103             Date 10Aug20               *
-=======
-      *  Last Amend No. MD056627           Date 02Sep20               *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD056627           Date 02Sep20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035243           Date 29Jul15               *
@@ -129,15 +126,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
-=======
       *  MD056627 - Settlement details not defaulted when Origin      *
       *             branch or Profit centre is sent via SE JMS API.   *
       *           - Exclude validating fields Origin branch and Profit*
       *             centre in DS/TranInSett during SSI defaulting.    *
->>>>>>> branch 'develop' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD049746 - Settlement details is not defaulted when Charges/ *
       *             Commission fields have values when Trade is       *

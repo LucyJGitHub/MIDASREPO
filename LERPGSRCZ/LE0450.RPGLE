@@ -3063,7 +3063,7 @@ L118 I                             P   72   77 7RTSPL
      I                               2103 2104 0NLBDYL                                        CLE172
      I                               2105 2106 0NLODYL                                        CLE172
      I                               2107 2107  NOPSHL                                        CLE172
-     I                               2108 2108 0NRRDPL                                        CLE172
+     I                               2108 2109 0NRRDPL                                        CLE172
      I                               2110 2110 0NDBAVL                                        CLE172
 0194 I**
 0195 I**   /FIELDS TO DEFINE WHOLE RECORD

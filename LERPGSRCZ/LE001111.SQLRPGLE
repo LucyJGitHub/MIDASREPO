@@ -54,7 +54,7 @@
 
      C/EXEC SQL
      C+ update CLOANCL
-     C+ set BLRT = 'N'
+     C+ set BLRT = 'N', OPSH = 'N'
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -73,7 +73,7 @@
 
      C/EXEC SQL
      C+ update HISTSHM
-     C+ set BLRT = 'N'
+     C+ set BLRT = 'N', OPSH = 'N'
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -92,7 +92,7 @@
 
      C/EXEC SQL
      C+ update HISTSHN
-     C+ set BLRT = 'N'
+     C+ set BLRT = 'N', OPSH = 'N'
      C+ where BLRT <> 'Y'
      C+ with nc
      C/END-EXEC
@@ -111,8 +111,8 @@
 
      C/EXEC SQL
      C+ update HISTSHQ
-     C+ set BLRT = 'N'
-     C+ where BLRT <> 'Y'
+     C+ set BLRT = 'N', OPSH = 'N'
+     C+ where BLRT <> 'Y' and AMTP = 'RO'
      C+ with nc
      C/END-EXEC
 

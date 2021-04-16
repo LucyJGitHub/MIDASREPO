@@ -22,7 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE172 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *                                                               *
       *****************************************************************

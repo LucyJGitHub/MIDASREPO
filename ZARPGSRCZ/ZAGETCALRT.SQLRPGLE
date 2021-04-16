@@ -25,8 +25,7 @@
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
 
-      *
-      ** Scott Clements library for JSON Parse and HTTP calls
+      ** Scott Clements library for JSON parse and HTTP calls
      D/INCLUDE LIBHTTP123/QRPGLESRC,YAJL_H
      D/INCLUDE LIBHTTP123/QRPGLESRC,HTTPAPI_H
 
@@ -221,6 +220,7 @@
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
+
       ** AOSVALR0 Parameters
      D pRetCode        S              7A
      D pOP01           S             20A
@@ -264,7 +264,8 @@
      D action          s              1s 0
      D errorMessage    s            100a
      D includeRecord   s              1a   inz('N')
-     D compAveRate     s             30p 9 inz(0)
+     D compAveRate     s             11s 7 inz(0)
+     D finalAveRate    s             15s 9 inz(0)
      D logData         s          25000a   varying
      D isError         s               n   inz(false)
      D isException     s               n   inz(false)
@@ -281,7 +282,7 @@
      D   intPrdDate                  10a
       ** Interest Period Date
       ** NCCR, CCR, SAVG, SARR
-     D   intPDMidas                   5p 0
+     D   intPDMidas                   5s 0
       ** Interest Period Date in Midas Format
      D   intPrdDays                   5s 0
       ** Interest Period Days
@@ -289,30 +290,30 @@
      D   obsPrdDate                  10a
       ** Observation Period Date
       ** NCCR
-     D   intOPMidas                   5p 0
+     D   intOPMidas                   5S 0
       ** Observation Period Date in Midas Format
      D   obsPrdDays                   5s 0
       ** Observation Period Days
       ** NCCR
-     D   pubRskFrRt                  30p 9
+     D   pubRskFrRt                  17s12
       ** Published Risk Free Rate
       ** NCCR, CCR, SAVG, SARR
-     D   rateApplied                 30p 9
+     D   rateApplied                 17s12
       ** Rate Applied
       ** NCCR, CCR, SAVG, SARR
      D   rskFrRtFlAp                  5a
       ** Risk Free Rate Floor Applied
       ** NCCR, CCR, SAVG, SARR
-     D   compFactor                  10a
+     D   compFactor                  17a
       ** Compounding Factor
       ** NCCR
-     D   dlyCompRate                 10a
+     D   dlyCompRate                 17a
       ** Daily Compunded Rate
       ** NCCR
-     D   aveCompRate                 10a
+     D   aveCompRate                 17a
       ** Average Compunded Rate
       ** CCR
-     D   simpleAve                   10a
+     D   simpleAve                   17a
       ** Simple Average
       ** SAVG
 
@@ -603,7 +604,7 @@
 
        begsr processTransaction;
 
-                   //** This will build the URL parameter for the Rest API Call
+                   //** This will build the URL parameter for the REST API Call
 
                    exsr buildParameter;
 
@@ -682,7 +683,7 @@
        //                                                            *
        // Called by: processTransaction                              *
        //                                                            *
-       // Calls: LIBHTTP123 http_string                              *
+       // Calls: LIBHTTP123/http_string                              *
        //                                                            *
        //*************************************************************
 
@@ -884,28 +885,28 @@
                        val = YAJL_object_find(node: 'publishedRiskFreeRate');
 
                        cStr  =  yajl_get_string(val);
-                       result.list(i).pubRskFrRt =  %dec(%trim(cStr):30:9  );
+                       result.list(i).pubRskFrRt =  %dec(%trim(cStr):17:12);
 
                        // All calculation methods
                        val = YAJL_object_find(node: 'rateApplied');
                        cStr  =  yajl_get_string(val);
 
                        monitor;
-                          result.list(i).rateApplied =  %dec(%trim(cStr):30:9);
+                          result.list(i).rateApplied =  %dec(%trim(cStr):17:12);
                        on-error;
                        endmon;
 
                        // All calculation methods
                        val = YAJL_object_find(node: 'riskFreeRateFloorApplied');
                        if YAJL_is_true(node);
-                           result.list(i).rskFrRtFlAp=  'True';
+                           result.list(i).rskFrRtFlAp = 'True';
                        else;
-                           result.list(i).rskFrRtFlAp=  'False';
+                           result.list(i).rskFrRtFlAp = 'False';
                        endif;
 
                        if calcMethod = 'NCCR';
                             val = YAJL_object_find(node: 'compoundingFactor');
-                            result.list(i).compFactor=  yajl_get_string(val);
+                            result.list(i).compFactor =  yajl_get_string(val);
 
                             val =
                               YAJL_object_find(node: 'dailyCompoundedRate');
@@ -1094,15 +1095,15 @@
                    select;
                         when calcMethod = 'NCCR';
                              DailyHistDS.CDCMRT =
-                               %Dec(Result.List(i).dlyCompRate:30:9);
+                               %Dec(Result.List(i).dlyCompRate:17:12);
                              DailyHistDS.CCMFAC =
-                               %Dec(Result.List(i).compFactor:30:9);
+                               %Dec(Result.List(i).compFactor:17:12);
                         when calcMethod = 'CCR';
                              DailyHistDS.CAVCRT =
-                               %Dec(Result.List(i).aveCompRate:30:9);
+                               %Dec(Result.List(i).aveCompRate:17:12);
                         when calcMethod = 'SAVG';
                              DailyHistDS.CSMPAV =
-                               %Dec(Result.List(i).simpleAve:30:9);
+                               %Dec(Result.List(i).simpleAve:17:12);
                    endsl;
 
                    exec sql insert into SDHSDRTD
@@ -1136,6 +1137,7 @@
 
                    clear ExtractFLDS;
                    clear compAveRate;
+                   clear finalAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
                    ExtractFLDS.LDINDT = result.list(i).intPDMidas;
@@ -1144,23 +1146,22 @@
                    select;
                         when calcMethod = 'NCCR';
                              compAveRate =
-                               %Dec(Result.List(i).dlyCompRate:30:9);
+                               %dec(Result.List(i).dlyCompRate:11:7);
                         when calcMethod = 'CCR';
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
-                               %Dec(Result.List(i).aveCompRate:30:9);
+                               %dec(Result.List(i).aveCompRate:11:7);
                         when calcMethod = 'SARR';
                              compAveRate =
-                               %Dec(Result.List(i).rateApplied:30:9);
+                               %dec(Result.List(i).rateApplied:11:7);
                         when calcMethod = 'SAVG';
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
-                               %Dec(Result.List(i).simpleAve:30:9);
+                               %dec(Result.List(i).simpleAve:11:7);
                    endsl;
 
-                   compAveRate += %dech(benchMarkAdj:11:7);
-                   ExtractFLDS.LDCART =
-                     %dech(compAveRate  :11 :7);
+                   finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
+                   ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
 
                    exec sql insert into LELIBEPD
                    values (:ExtractFLDS);
@@ -1182,7 +1183,7 @@
        // updateExtractFile                                          *
        // =================                                          *
        //                                                            *
-       // Called by: writeToExtractFile                               *
+       // Called by: writeToExtractFile                              *
        //                                                            *
        // Calls: None                                                *
        //                                                            *
@@ -1192,6 +1193,7 @@
 
                    clear ExtractFLDS;
                    clear compAveRate;
+                   clear finalAveRate;
                    ExtractFLDS.LDLNRF = transactREF;
                    ExtractFLDS.LDVDAT = result.list(i).intPDMidas;
                    ExtractFLDS.LDINDT = result.list(i).intPDMidas;
@@ -1200,23 +1202,22 @@
                    select;
                         when calcMethod = 'NCCR';
                              compAveRate =
-                               %Dec(Result.List(i).dlyCompRate:30:9);
+                               %dec(Result.List(i).dlyCompRate:11:7);
                         when calcMethod = 'CCR';
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
-                               %Dec(Result.List(i).aveCompRate:30:9);
+                               %dec(Result.List(i).aveCompRate:11:7);
                         when calcMethod = 'SARR';
                              compAveRate =
-                               %Dec(Result.List(i).rateApplied:30:9);
+                               %dec(Result.List(i).rateApplied:11:7);
                         when calcMethod = 'SAVG';
                              ExtractFLDS.LDVDAT = %dec(intPrdStrMDAY:5:0);
                              compAveRate =
-                               %Dec(Result.List(i).simpleAve:30:9);
+                               %dec(Result.List(i).simpleAve:11:7);
                    endsl;
 
-                   compAveRate += %dech(benchMarkAdj:11:7);
-                   ExtractFLDS.LDCART =
-                     %dech(compAveRate  :11 :7);
+                   finalAveRate = compAveRate + %dec(benchMarkAdj:11:7);
+                   ExtractFLDS.LDCART = %dech(finalAveRate:11:7);
 
                    wSqlStr = 'update LELIBEPD A '  +
                               'SET A.LDCART = ' + %Char(ExtractFLDS.LDCART) +
@@ -1371,15 +1372,15 @@
                    select;
                         when calcMethod = 'NCCR';
                              DailyHistDS.CDCMRT =
-                               %Dec(Result.List(i).dlyCompRate:30:9);
+                               %dec(Result.List(i).dlyCompRate:17:12);
                              DailyHistDS.CCMFAC =
-                               %Dec(Result.List(i).compFactor:30:9);
+                               %dec(Result.List(i).compFactor:17:12);
                         when calcMethod = 'CCR';
                              DailyHistDS.CAVCRT =
-                               %Dec(Result.List(i).aveCompRate:30:9);
+                               %dec(Result.List(i).aveCompRate:17:12);
                         when calcMethod = 'SAVG';
                              DailyHistDS.CSMPAV =
-                               %Dec(Result.List(i).simpleAve:30:9);
+                               %dec(Result.List(i).simpleAve:17:12);
                    endsl;
 
                    wSqlStr = 'update SDHSDRTD A SET '  +

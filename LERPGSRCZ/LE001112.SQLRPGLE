@@ -27,13 +27,6 @@
       *                                                               *
       *****************************************************************
 
-      ** Zone System Details File
-     FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
-
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -84,8 +77,32 @@
      C/end-exec
 
       ** Get Zone Name of the System ID
-     C     SYSID         CHAIN     GPZONEL2
-     C                   EVAL      Zone = ZOZONE
+     C/exec SQL
+     C+ select ZOZONE into :Zone
+     C+ from GPZONEPD
+     C+ where ZOMSYS = :SYSID
+     C/end-exec
+
+      ** Create temporary table for unauthorised rollover
+     C/exec SQL
+     C+ declare global temporary table LEWIPROLL
+     C+ (TRANSREF char(6))
+     C/end-exec
+
+     C/exec SQL
+     C+ insert into QTEMP/LEWIPROLL
+     C+ select MSWTREF from T_MSWIP
+     C+  where MSWAPI  = 'LERI' AND MSWZONE = :Zone
+     C+    and MSWSTAT = 'TO_AUTHORISE'
+     C/end-exec
+
+     C                   IF        SQLCODE <> NO_ERROR and
+     C                             SQLCODE <> NO_RECORD
+     C                   EVAL      DBFILE = 'SQLERROR'
+     C                   EVAL      DBKEY  = 'SQL ERROR'
+     C                   EVAL      DBASE  = 002
+     C                   EXSR      *PSSR
+     C                   ENDIF
 
       ** Insert to extract file the rollover details that changes loan
       ** from forward-looking to backward-looking rate OR
@@ -97,17 +114,14 @@
      C+        NLBDY, NLODY, NOPSH, NRRDP, NDBAV
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and NBLRT = 'Y'
-     C+   and LNRF not in
-     C+       (select MSWTREF from T_MSWIP
-     C+         where MSWAPI = 'LERI' AND MSWZONE = :Zone
-     C+           and MSWSTAT = 'TO_AUTHORISE')
+     C+   and LNRF not in (select * from LEWIPROLL)
      C/end-exec
 
      C                   IF        SQLCODE <> NO_ERROR and
      C                             SQLCODE <> NO_RECORD
      C                   EVAL      DBFILE = 'SQLERROR'
      C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBASE  = 002
+     C                   EVAL      DBASE  = 003
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -121,17 +135,14 @@
      C+        LBDY, LODY, OPSH, RRDP, DBAV
      C+ from CLOANCL
      C+ where RLDT <> 0 and RLDT < :BJDNWD and BLRT = 'Y'
-     C+   and LNRF in
-     C+       (select MSWTREF from T_MSWIP
-     C+         where MSWAPI = 'LERI' AND MSWZONE = :Zone
-     C+           and MSWSTAT = 'TO_AUTHORISE')
+     C+   and LNRF in (select * from LEWIPROLL)
      C/end-exec
 
      C                   IF        SQLCODE <> NO_ERROR and
      C                             SQLCODE <> NO_RECORD
      C                   EVAL      DBFILE = 'SQLERROR'
      C                   EVAL      DBKEY  = 'SQL ERROR'
-     C                   EVAL      DBASE  = 003
+     C                   EVAL      DBASE  = 004
      C                   EXSR      *PSSR
      C                   ENDIF
 

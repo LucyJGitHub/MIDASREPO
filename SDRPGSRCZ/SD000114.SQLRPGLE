@@ -677,7 +677,7 @@
      C                   EXSR      SRZDATE
      C                   EVAL      WCalcTillDate = %char(ISODate)
 
-     C                   MOVE      TrBADJ        BenchMarkAdj
+     C                   EVAL      BenchMarkAdj = %char(TrBADJ)
 
      C                   ENDSR
       *****************************************************************

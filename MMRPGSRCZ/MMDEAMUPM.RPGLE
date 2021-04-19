@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1088819          Date 03Jun20               *
-      *  Prev Amend No. MD053472           Date 27Oct20               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. AR1088819          Date 03Jun20               *
+      *                 MD053472           Date 27Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -87,6 +88,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
+      *           parameter mismatch. Apply fix 258724.               *
       *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls                                            *
       *            - Applied for MD050405                             *
@@ -1771,6 +1774,8 @@
       *
       * Deal Amendment Type
      C                   PARM      IGMTYP        DDMTYP            2
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS                                                                 CAP006
       *                                                                         CAP006

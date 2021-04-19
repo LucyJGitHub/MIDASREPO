@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 261824             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -187,11 +192,11 @@
      C                   IF        OKNCD = 'N'
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
- 
+
      C                   IF        OKNCD <> 'N'
      C                   EVAL      S1NCD = ZDAYNO
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -229,7 +234,7 @@
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   PARM      6             ZADIG             2 0
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        ZDATEI
      C                   CALLB     'ZDATE1'
@@ -251,6 +256,7 @@
       *
      C                   IF        ZDAYNO < BJRDNB OR
      C                             ZDAYNO > S1MATY
+     C                             and S1MATY <> *ZEROS                                       261824
      C                   MOVE      'N'           OKNCD
      C                   ADD       1             IDx
      C                   MOVEL     'DDNCD'       FldNamXAr(IDx)
@@ -303,7 +309,7 @@
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   MOVEL     PDateOut      DDNCD
       *
      C                   ELSE

@@ -1,0 +1,501 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  XCBDYSZ1LE - Duplicate of /COPY ZCBDYSZ1LE                   *
+      *               but uses CALL instead of CALLB.                 *
+      *                                                               *
+      *  Last Amend No. LUC109             Date 21Sep16               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Input:  ZCBSDT ( 5,0) Start Date                             *
+      *          ZCBEDT ( 5,0) End Date                               *
+      *          ZCBCBS ( 1,0) Calculation Basis                      *
+      *                                                               *
+      *  Output: ZCBDAY ( 5,0) Number of Days in Period               *
+      *          ZCBDIV ( 3,0) Number of Days in Year                 *
+      *                                                               *
+      *  Calls:  ZDATE2 - Convert Midas Day No to Date Format         *
+      *                                                               *
+      *  Calculation Bases are:                                       *
+      *                                                               *
+      *  1 - Actual/365                                               *
+      *  2 - Actual/360                                               *
+      *  3 - 30/360                                                   *
+      *  4 - Actual/365 (Excluding 29FEB)                             *
+      *  5 - Actual/360 (Excluding 29FEB)                             *
+      *  6 - Actual/366                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     ZCBDYS        BEGSR                                                  *** ZCBDYS ***
+      *
+      ***  Initialise fields.
+      *
+     C                   Z-ADD     ZCBSDT        ZCBSDT            5 0
+     C                   Z-ADD     ZCBEDT        ZCBEDT            5 0
+     C                   Z-ADD     ZCBCBS        ZCBCBS            1 0
+     C                   Z-ADD     0             ZCBDAY            5 0
+     C                   Z-ADD     1             ZCBDIV            3 0
+     C                   Z-ADD     0             ZINT6
+     C                   Z-ADD     0             W@NLP1
+     C                   Z-ADD     0             W@NLP2
+      *
+      ** Check if Dealing Calculation Method is installed
+      *
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD             7
+     C                   PARM      '*VERIFY'     @OPTN             7
+     C                   PARM      'CIR004'      @SARD             6
+     C     @RTCD         IFEQ      *BLANKS
+     C                   MOVE      'Y'           CIR004            1
+     C                   ELSE
+     C                   MOVE      'N'           CIR004
+     C                   ENDIF
+     C                   MOVE      *BLANKS       @RTCD
+      *
+     C     ZCBCBS        IFEQ      9
+     c                   CALL      'ZDATE9'
+     c                   parm                    ZCBSDT
+     c                   parm                    ZZDAT1
+     c                   parm                    @@RTN             1
+      *
+     c                   CALL      'ZDATE9'
+     c                   parm                    ZCBEDT
+     c                   parm                    ZZDAT2
+     c                   parm                    @@RTN
+      *
+      ** #29FEB - Flag to represent the existence of a 29th Feb. between
+      *           the start and end dates
+     C                   MOVE      'N'           #29FEB            1
+      *
+      ** ZZYYA - start year from data structure over ZZDAT1 in ZCBDYSZ2
+      *  #29WKY = incremental year initially at start year
+     C                   Z-ADD     ZZYYA         #29WKY            4 0
+      *
+      ** Move to subfields of @@VDT - data structure from ZDATE9Z2 - 8,0
+     C                   Z-ADD     ZZYYA         @@YR
+     C                   Z-ADD     2             @@Z71M
+     C                   Z-ADD     29            @@Z71D
+      ** #29YA - 29/02/start year (fixed workfield)
+     C                   Z-ADD     @@VDT         #29YA             8 0
+      ** ZZYYB - end year from data structure over ZZDAT2 in ZCBDYSZ2
+     C                   Z-ADD     ZZYYB         @@YR
+      ** #29YB - 29/02/end year (fixed workfield)
+     C                   Z-ADD     @@VDT         #29YB             8 0
+      *
+      ** Loop round incrementing the year from start to end
+     C     #29WKY        DOUGT     ZZYYB
+      *  Check to see whether 29/02/xx is a valid date by checking
+      ** to see whether any of the years falling between the two dates
+      *  are leap years.
+     C     ZZDAT1        IFLE      #29YA
+     C     #29WKY        ANDEQ     ZZYYA
+     C     ZZDAT2        ANDGE     #29YA
+     C     #29WKY        ORGT      ZZYYA
+     C     #29WKY        ANDLT     ZZYYB
+     C     ZZDAT2        ORGE      #29YB
+     C     #29WKY        ANDEQ     ZZYYB
+     C     ZZDAT1        ANDLE     #29YB
+      *
+     C     #29WKY        DIV       4             ZLYR30            3 0
+     C                   MVR                     ZLY               1 0
+      ** Leap year
+     C     ZLY           IFEQ      0
+     C                   MOVE      'Y'           #29FEB
+     C                   LEAVE
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ADD       1             #29WKY
+     C                   ENDDO
+      *
+     C                   ENDIF
+      *---------------------------------------------------------------*
+      ***   First define the Number of Days in the Year.              *
+      *---------------------------------------------------------------*
+      *
+      ***  365 Days - Calculation Basis = 1 or 4 or 9
+      *
+     C     ZCBCBS        IFEQ      1
+     C     ZCBCBS        OREQ      4
+     C     ZCBCBS        OREQ      9
+     C     #29FEB        ANDEQ     'N'
+     C                   Z-ADD     365           ZCBDIV
+     C                   END
+      *
+      ***  360 Days - Calculation Basis = 2, 3 or 5.
+      *
+     C     ZCBCBS        IFEQ      2
+     C     ZCBCBS        OREQ      3
+     C     ZCBCBS        OREQ      5
+     C     ZCBCBS        OREQ      7
+     C     CIR004        ANDEQ     'Y'
+     C                   Z-ADD     360           ZCBDIV
+     C                   END
+      *
+      ***  366 Days - Calculation Basis = 6 or 9
+      *
+     C     ZCBCBS        IFEQ      6
+     C     ZCBCBS        OREQ      9
+     C     #29FEB        ANDEQ     'Y'
+     C                   Z-ADD     366           ZCBDIV
+     C                   END
+      *
+      *---------------------------------------------------------------*
+      ***   Then calculate the Number of Days in the Period.          *
+      *---------------------------------------------------------------*
+      *
+      ***  If the Start Date is Greater Than or Equal To the End Date,
+      ***  output the Number of Days in Period Equal to zero.
+      *
+     C     ZCBSDT        IFGE      ZCBEDT
+     C                   Z-ADD     0             ZCBDAY
+     C                   GOTO      ZCBEND
+     C                   END
+      *
+      ***  The Actual Number of Days in the Period is the difference
+      ***  between the Start Date and the End Date (Midas Date Format).
+      *
+     C     ZCBEDT        SUB       ZCBSDT        ZCBDAY
+      *
+      ***  Calculation Bases 1, and 2: Actual Number of Days.
+      ***  ----------------------------------------------------
+      ***  For these two, ZCBDAY already contains the final result,
+      ***  so no need for any further calculations.
+      *
+     C     ZCBCBS        IFEQ      1
+     C     ZCBCBS        OREQ      2
+     C                   GOTO      ZCBEND
+     C                   END
+      *
+      ** Calculation Basis 6: Actual Number of Days.
+      ** -------------------------------------------
+      ** For calculation basis 6, take the number of days in year
+      ** to be equal to 366 days for leap years and 365 days for
+      ** non-leap years.
+      *
+     C     ZCBCBS        IFEQ      6
+     C     ZCBCBS        OREQ      9
+     C     #29FEB        ANDEQ     'Y'
+      *
+ 
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE9'
+     c                   parm                    ZCBSDT
+     c                   parm                    ZZDAT1
+     c                   parm                    @@RTN
+ 
+      *
+ 
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE9'
+     c                   parm                    ZCBEDT
+     c                   parm                    ZZDAT2
+     c                   parm                    @@RTN
+ 
+      *
+      ** Find the number of leap year and non-leap year days in the
+      ** interest period. The number of non-leap year days are then
+      ** adjusted by a factor of 366/365 to allow for a divisor of
+      ** 366. This figure is then added to the actual leap year days
+      ** to give a factored number of days in the interest period.
+      *
+     C                   Z-ADD     0             WLEAP             5 0
+     C                   Z-ADD     0             WNLEAP            5 0
+      *
+      ** If the start and end date are in the same year, check if the
+      ** year is a leap year and add number of interest days to the
+      ** relevant total
+      *
+     C                   Z-ADD     0             ZZWRK
+     C     ZZYYA         IFEQ      ZZYYB
+     C     ZZYYA         DIV       4             ZZWRK             8 0
+     C                   MVR                     ZZWRK
+      *
+     C     ZZWRK         IFNE      0
+     C                   ADD       ZCBDAY        WNLEAP
+     C                   ELSE
+     C                   ADD       ZCBDAY        WLEAP
+     C                   ENDIF
+      *
+      ** else must break down the interest period into leap years
+      ** and non-leap years.
+      *
+     C                   ELSE
+      *
+      ** Save end date year value.
+      *
+     C                   Z-ADD     ZZDAT2        WZDAT2            8 0
+     C                   Z-ADD     ZZYYB         WZZYYB            4 0
+      *
+      ** Add one to starting year number.
+      *
+     C     ZZYYA         ADD       1             ZZYYB
+      *
+      ** Get MIDAS day number for 1st Jan of year after start date.
+      *
+     C                   MOVE      '01'          ZZMMB
+     C                   MOVE      '01'          ZZDDB
+ 
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE10'
+     c                   parm                    ZZDAT2
+     c                   parm                    WENDDT
+     c                   z-add     WENDDT        WENDDT            5 0
+ 
+     C     WENDDT        SUB       ZCBSDT        ZCBDAY
+      *
+      ** Check if current year is a leap year.
+      *
+     C                   Z-ADD     0             ZZWRK
+     C     ZZYYA         DIV       4             ZZWRK
+     C                   MVR                     ZZWRK
+      *
+     C     ZZWRK         IFNE      0
+     C                   ADD       ZCBDAY        WNLEAP
+     C                   ELSE
+     C                   ADD       ZCBDAY        WLEAP
+     C                   ENDIF
+      *
+      ** Accumulate leap year and non-leap year days for complete
+      ** years in the interest period.
+      *
+     C     ZZYYB         DOWLT     WZZYYB
+      *
+      ** Check if current year is a leap year.
+      *
+C    C                   Z-ADD     0             ZZWRK
+     C     ZZYYB         DIV       4             ZZWRK
+     C                   MVR                     ZZWRK
+      *
+     C     ZZWRK         IFNE      0
+     C                   ADD       365           WNLEAP
+     C                   ELSE
+     C                   ADD       366           WLEAP
+     C                   ENDIF
+      *
+      ** Add one to year number.
+      *
+     C                   ADD       1             ZZYYB
+      *
+     C                   ENDDO
+      *
+      ** Finally calculate the days for the last part-year up to
+      ** the end date. Get MIDAS day number for 1st Jan of current year.
+      *
+     C                   MOVE      '01'          ZZMMB
+     C                   MOVE      '01'          ZZDDB
+ 
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE10'
+     c                   parm                    ZZDAT2
+     c                   parm                    ZCBSDT
+ 
+     C     ZCBEDT        SUB       ZCBSDT        ZCBDAY
+      *
+      ** Check if year is a leap year.
+      *
+     C                   Z-ADD     0             ZZWRK
+     C     ZZYYB         DIV       4             ZZWRK
+     C                   MVR                     ZZWRK
+      *
+     C     ZZWRK         IFNE      0
+     C                   ADD       ZCBDAY        WNLEAP
+     C                   ELSE
+     C                   ADD       ZCBDAY        WLEAP
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * Factoring of non-leap year days is not required for method 9
+     C     ZCBCBS        IFEQ      9
+     C                   Z-ADD     WNLEAP        W@NLP2
+     C                   ELSE
+      *
+      ** Multiply non-leap year days by 366/365
+      *
+     C     WNLEAP        MULT      366           W@NLP1           15 0
+     C     W@NLP1        DIV(H)    365           W@NLP2           15 9
+      *
+     C                   ENDIF
+      *
+      ** Add the result to the number of leap year days to give
+      ** the total days in interest period.
+      *
+     C     WLEAP         ADD(H)    W@NLP2        ZINT6            15 9
+      *
+      ** Return original value of ZZDAT2 and ZZYYB.
+      *
+     C                   Z-ADD     WZDAT2        ZZDAT2
+     C                   Z-ADD     WZZYYB        ZZYYB
+     C                   GOTO      ZCBEND
+     C                   ENDIF
+      *
+      ***  Calculation Bases 4 and 5: Actual Days, excluding 29th Feb.
+      ***  -----------------------------------------------------------
+      ***  Take Actual Days and subtract all the 29th February Days:
+      ***  This is done by checking the ZF29 array, (Midas Dates for
+      ***  29th February), to get the indices of the first 29FEB after
+      ***  each of the Start Date and The End Date. The difference is
+      ***  the Number of 29FEBs in the Period.
+      *
+     C     ZCBCBS        IFEQ      4
+     C     ZCBCBS        OREQ      5
+     C     ZCBCBS        OREQ      9
+     C     #29FEB        ANDEQ     'N'
+     C                   Z-ADD     1             ZS                2 0
+     C                   Z-ADD     0             ZI1               2 0
+     C                   Z-ADD     0             ZI2               2 0
+      *
+      ***  Find Index of first FEB29 after Start Date.
+      ***  (if Start Date is later than last FEB29 in array then set
+      ***  ZI1 to last index + 1 (= 33) ).
+      *
+     C     ZF29(32)      IFLT      ZCBSDT
+     C                   Z-ADD     33            ZI1
+     C                   ELSE
+      *
+     C     ZI1           DOUNE     0
+     C     ZF29(ZS)      IFGT      ZCBSDT
+     C                   Z-ADD     ZS            ZI1
+     C                   ELSE
+     C                   ADD       1             ZS
+     C                   END
+     C                   END
+     C                   END
+      *
+      ***  Continue, to find Index of first FEB29 after End Date. Note:
+      ***  leave ZS as is, so as to continue in array from that point.
+      ***  (if End Date is later than last FEB29 in array then set
+      ***  ZI2 to last index + 1 (= 33) ).
+      *
+     C     ZF29(32)      IFLT      ZCBEDT
+     C                   Z-ADD     33            ZI2
+     C                   ELSE
+      *
+     C     ZI2           DOUNE     0
+     C     ZF29(ZS)      IFGT      ZCBEDT
+     C                   Z-ADD     ZS            ZI2
+     C                   ELSE
+     C                   ADD       1             ZS
+     C                   END
+     C                   END
+     C                   END
+      *
+     C     ZI2           SUB       ZI1           ZS
+     C                   SUB       ZS            ZCBDAY
+     C                   GOTO      ZCBEND
+     C                   END
+      *
+      ***  Calculation Basis 3: 30 Day months, (including '30th Feb.')
+      ***  -----------------------------------------------------------
+      *
+      ***  Convert Input Dates to DD/MM/YY or MM/DD/YY Format.
+      *
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE2'
+     c                   parm                    ZCBSDT
+     c                   parm                    BJDFIN
+     c                   parm                    ZYR1_6            6 0
+     c                   parm                    ZADATE
+     C                   MOVE      ZYR1_6        ZYR1              2 0
+ 
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     ZYR1_6        ZDY1              2 0
+     C                   MOVE      ZYR1_6        ZWRK4             4 0
+     C                   MOVEL     ZWRK4         ZMT1              2 0
+     C                   ELSE
+     C                   MOVEL     ZYR1_6        ZMT1
+     C                   MOVEL     ZYR1_6        ZWRK4
+     C                   MOVE      ZWRK4         ZDY1
+     C                   END
+      * Subroutine replaced by external module
+     c                   CALL      'ZDATE2'
+     c                   parm                    ZCBEDT
+     c                   parm                    BJDFIN
+     c                   parm                    ZYR2_6            6 0
+     c                   parm                    ZADATE
+     C                   MOVE      ZYR2_6        ZYR2              2 0
+ 
+     C     *IN98         IFEQ      '0'
+     C                   MOVEL     ZYR2_6        ZDY2              2 0
+     C                   MOVE      ZYR2_6        ZWRK4             4 0
+     C                   MOVEL     ZWRK4         ZMT2              2 0
+     C                   ELSE
+     C                   MOVEL     ZYR2_6        ZMT2
+     C                   MOVEL     ZYR2_6        ZWRK4
+     C                   MOVE      ZWRK4         ZDY2
+     C                   END
+      *
+      ***  Change Days to 30 if 31.
+      *
+     C     ZDY1          IFEQ      31
+     C                   MOVE      30            ZDY1
+     C                   END
+     C     ZDY2          IFEQ      31
+     C                   MOVE      30            ZDY2
+     C                   END
+      *
+      ***  To keep the Day Difference positive, if Start Day is Greater
+      ***  Than End Day, add 30 to End Day and reduce End Month by 1,
+      ***  (i.e. add one month's worth of days to End Day).
+      *
+     C     ZDY1          IFGT      ZDY2
+     C                   ADD       30            ZDY2
+     C                   SUB       1             ZMT2
+     C                   END
+      *
+      ***  Calculate Day Difference.
+      *
+     C     ZDY2          SUB       ZDY1          ZDYDF             5 0
+      *
+      ***  Similarly, if Start Month Greater Than End Month, add 12
+      ***  to End Month and reduce End Year by 1.
+      *
+     C     ZMT1          IFGT      ZMT2
+     C                   ADD       12            ZMT2
+     C     ZYR2          IFEQ      00
+     C                   Z-ADD     99            ZYR2
+     C                   ELSE
+     C                   SUB       1             ZYR2
+     C                   END
+     C                   END
+      *
+      ***  Calculate Month Difference in Days.
+      *
+     C     ZMT2          SUB       ZMT1          ZMTDF             5 0
+     C                   MULT      30            ZMTDF
+      *
+      ***  Subtract Start Year from End Year: If result Less Than zero
+      ***  then End Date must be in the following century, so add 100.
+      *
+     C     ZYR2          SUB       ZYR1          ZYRDF             5 0
+     C     ZYRDF         IFLT      0
+     C                   ADD       100           ZYRDF
+     C                   END
+      *
+      ***  Calculate Year Difference in Days.
+      *
+     C                   MULT      360           ZYRDF
+      *
+      ***  Total the three differences to get the Number of Days in
+      ***  the Period.
+      *
+     C     ZDYDF         ADD       ZMTDF         ZCBDAY
+     C                   ADD       ZYRDF         ZCBDAY
+      *
+      *---------------------------------------------------------------*
+      *
+     C     ZCBEND        TAG                                                    *** ZCBEND ***
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      * End of /COPY XCBDYSZ1LE                                       *
+      *****************************************************************

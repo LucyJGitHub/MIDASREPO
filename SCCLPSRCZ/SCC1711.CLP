@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD038500           Date 17Aug16              */
+/*       Last Amend No. LUC109             Date 21Sep16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD038500           Date 17Aug16              */
 /*                      MD035839           Date 14Sep15              */
 /*                      AR1096483          Date 18Mar13              */
 /*                      CSC048             Date 06Aug12              */
@@ -84,6 +85,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC109 - HO Reporting (Upgrade to FBM 2.1)                  */
+/*                Addition of hook LUC109_020                        */
+/*                Addition of hook LUC109_021                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD038500 - Error when saving global library due to file     */
 /*                  locking. Patterned after fix AR546370 as a pre-  */
@@ -234,7 +238,7 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
              DCL        VAR(&DTACPRV) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PRFK) TYPE(*CHAR) LEN(3) VALUE(' ')
- 
+/*/COPY WNCPYSRC,LUC109_020                                          */             /*LUC109*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
  
              SNDPGMMSG  MSG('Input Cycle Database Save - ' *CAT &MODE) +
@@ -406,6 +410,7 @@
                          *CAT  ' - Midas I/C termination ' +
                          *CAT &MODE *TCAT 'LIB save')
              CHGSAVF    FILE(&DILIB/&SAVF) TEXT(&SAVFTEXT)
+/*/COPY WNCPYSRC,LUC109_021                                          */             /*LUC109*/
  
              CHGVAR     VAR(%SUBSTRING(&JRNE 1 5)) VALUE('DISK ')
              CHGVAR     VAR(%SUBSTRING(&JRNE 6 8)) VALUE(&MODLIB)

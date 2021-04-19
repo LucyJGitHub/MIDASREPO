@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034915A          Date 26Aug20               *
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. LUC109             Date 23Aug16               *
+      *  Prev Amend No. MD034915A          Date 26Aug20               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD024812A          Date 06Nov19               *
       *                 MD024812           Date 06Nov19               *
       *                 MD055380           Date 17Apr20               *
@@ -119,6 +120,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
+      *           Issue error message if facility is blocked.         *
+      *           Amendment of core hook LELERIV001                   *
+      *           Amendment of core hook LELERIV002                   *
+      *           Amendment of core hook LELERIV010                   *
+      *           Amendment of core hook LELERIV058                   *
+      *           Amendment of core hook LELERIV069                   *      
       *  MD034915A - New funding rate disappears after input. Change  *
       *              from Z-ADD to MOVE when passing value of @@AMT   *
       *              to VNFRS.                                        *

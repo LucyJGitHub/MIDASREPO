@@ -11,15 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CFT162             Date 08Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG25841           Date 03Sep09               *
+      *                 BUG25841           Date 03Sep09               *
       *                 BUG25072           Date 04Aug09               *
       *                 BUG24973           Date 23Jul09               *
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG25841 - Sender to Receiver Information (Cover A) is not   *
       *             highlighted when in error.                        *

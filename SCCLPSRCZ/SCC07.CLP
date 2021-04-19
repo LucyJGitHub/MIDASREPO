@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR374612           Date 21Mar15              */
-/*       Prev Amend No. MD021975B          Date 10Dec14              */
+/*       Last Amend No. LUC109             Date 19Sep16              */
+/*       Prev Amend No. LUC102             Date 17Dec14              */
+/*                      AR374612           Date 21Mar15              */
+/*                      MD021975B          Date 10Dec14              */
 /*                      MD021975           Date 27Nov13              */
 /*                      MD054045           Date 27Aug19              */
 /*                      MD046248           Date 27Oct17              */
@@ -132,6 +134,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC109   - HO Reporting (Upgrade to FBM 2.1)                */
+/*                  Amendment of core hook SCH00005                  */
+/*                  Amendment of core hook SCC07MP4                  */
+/*       LUC102   - Re-Open Input Cycle Invocation of Bank's Program */
+/*                  (use existing copy members SCC07INT & SCC07005)  */
 /*       AR374612 - COB Re-Open option fails due to problem restoring*/
 /*                  file members in DBIC which cannot be found in    */
 /*                  some files in DMLIB. Fix is to use the correct   */

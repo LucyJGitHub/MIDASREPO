@@ -959,7 +959,8 @@
      C**********         Z-ADD     0             AB_OLDB                               CTI005 CSD103
      C                   MOVE      *BLANKS       AB_OLDB                                      CSD103
      C                   Z-ADD     0             AB_OLDS                                      CTI005
-     C                   Z-ADD     0             AB_CRIB                                      CTI005
+     C**********         Z-ADD     0             AB_CRIB                               CTI005 CSD103
+     C                   MOVE      *BLANKS       AB_CRIB                                      CSD103
      C                   Z-ADD     0             AB_CRIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_CRCD                                      CTI005
      C                   Z-ADD     0             AB_CRIC                                      CTI005

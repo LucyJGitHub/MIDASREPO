@@ -33,7 +33,7 @@
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
-        MD056543 - EDWH SSRS Reports cannot be run.                  *
+      *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD to readable  *
       *             unicode equivalent.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

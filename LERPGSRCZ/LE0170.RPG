@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LUC116             Date 21Jan19               *
+      *  Prev Amend No. MD043838           Date 01Feb17               *
+      *                 LUC109             Date 24Aug16               *
+      *                 CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR804792           Date 05Sep11               *
@@ -114,6 +117,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC116 - Facility Expiry and Last Availability Dates -       *
+      *             Until Further Notice                              *
+      *             Addition of hook LUC116_003                       *
+      *             Addition of hook LUC116_004                       *
+      *  MD-43838 - Check for both 'E' and 'Z' action code in ZVACTBU *
+      *             program.                                          *
+      *  LUC109 - HO reporting (Upgrade to FB Midas 2.1)              *
+      *           Intrusive changes also noted as LUC109 for          *
+      *           window processing fixing.                           *
+      *           Amendment to core hook LE0170DTA                    *
+      *           Amendment to core hook LE0170MOV1                   *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -862,7 +876,7 @@
 0399 I                                        1   1 RECI
       * Define the data structure to pass data to WN0010 and return pgm   S01241
       *                                                                   S01241
-      /COPY QWINDSRC,LE0170DTA                                            S01241
+     **COPY*QWINDSRC,LE0170DTA*****                                       S01241 LUC109
      I                                      201 210 U#ORGN                                  AR820566
      I**********                            211 2160U#LNRF                           AR820566 CLE148
      I                                      211 216 U#LNRF                                    CLE148
@@ -881,6 +895,7 @@
      I                                       12  12 #1RCTP                                    CER001
      I                                       13  15 #1CCY                                     CER001
      I                                       16  32 #1AMNT                                    CER001
+      /COPY QWINDSRC,LE0170DTA                                            LUC109
 0406 I*
 0407 I*    LOCAL DATA AREA
 0408 I*
@@ -1114,6 +1129,9 @@
      C                     ENDIF                                          157602
       *                                                                   157602
      C/COPY WNCPYSRC,LE0170C017
+     C           FACA      IFNE DFACT                                     LUC109
+     C                     MOVE *BLANKS   FCCY                            LUC109
+     C                     ENDIF                                          LUC109
      C                     MOVELNUMNAM    CUSTNO  6                       147221
      C                     MOVE FACA      DFACT   3                       147221
      C                     MOVE FACB      DFCNO   2                       147221
@@ -1182,6 +1200,7 @@
      C           *INKX     ANDEQ'0'                                                           CER001
      C           *IN76     ANDEQ'0'                                                           CER001
      C           *IN77     ANDEQ'0'                                                           CER001
+     C           FCCY      ANDNE*BLANKS                                                       LUC109
      C                     MOVE CUSTNO    #1CNUM                                              CER001
      C                     MOVE DFACT     #1FACT                                              CER001
      C                     MOVE DFCNO     #1FCNO                                              CER001
@@ -1216,6 +1235,7 @@
      C           *INKX     ANDEQ'0'                        CMD23          191106
      C           *IN76     ANDEQ'0'                        ROLLUP         191106
      C           *IN77     ANDEQ'0'                        ROLLDOWN       191106
+     C           FCCY      ANDNE*BLANKS                                                       LUC109
       *    /copy to move data into the data structure fields passed       S01241
       *     as a parameter to the window controller                       S01241
       /COPY WNCPYSRC,LE0170MOV1                                           S01241
@@ -1281,6 +1301,7 @@
       **  pressed in window program.                                      CGL007
       *                                                                   CGL007
      C           PGN2D     IFEQ 'GL0090'                                  CGL007
+     C           PGN2D     ORNE 'GL0090'                                  LUC109
       *                                                                   CGL007
       **  If CA03 pressed, exit from program.                             CGL007
       *                                                                   CGL007
@@ -1921,10 +1942,17 @@
      C*    IF MULTIBRANCHING = YES, CHECK USERS ACCESS TO BOOKING BRANCH  S01117
      C*                                                                   S01117
       *                                                                   S01117
-     C                     CALL 'ZVBBU'                                   S01117
+     C**********           CALL 'ZVBBU'                            S01117 LUC109
+     C                     CALL 'ZVACTBU'                                 LUC109
+     C                     PARM 'E'       @ZACTN  1                       LUC109
      C                     PARM BRCA      @ZBR    3                       S01117
      C                     PARM           @ERR    10                      S01117
      C           @ERR      IFNE 0                                         S01117
+     C                     CALL 'ZVACTBU'                                                   MD043838
+     C                     PARM 'Z'       @ZACTN  1                                         MD043838
+     C                     PARM BRCA      @ZBR    3                                         MD043838
+     C                     PARM           @ERR    10                                        MD043838
+     C           @ERR      IFNE 0                                                           MD043838
      C                     SETON                     404142               S01117
      C                     SETON                     49                   S01117
      C           @ERR      IFEQ 1                                         S01117
@@ -1936,6 +1964,7 @@
      C                     GOTO END                                       S01117
      C                     END                                            S01117
      C                     END                                            S01117
+     C                     ENDIF                                                            MD043838
       *                                                                   S01117
 0480 C*  ACCESS CLIENT FILE USING THE NAME/ADDRESS CODE FROM FCLTY.
 0481 C**********           MOVE NACD      W3                              S01194
@@ -2128,11 +2157,13 @@
 0544 C*********44          MOVE '       ' DATS,I                          CLE004
 0544 C         44          MOVE '       ' DAT,I                           CLE004
 0545 C         44          GOTO BYP3
+     C/COPY WNCPYSRC,LUC116_003
 0546 C***********          MOVE DAYS,I    ZDAYNO                          CLE004
 0546 C                     MOVE DAY,I     ZDAYNO                          CLE004
 0547 C                     EXSR ZDATE2
 0548 C***********          MOVE ZADATE    DATS,I                          CLE004
 0548 C                     MOVE ZADATE    DAT,I                           CLE004
+     C/COPY WNCPYSRC,LUC116_004
 0549 C           BYP3      TAG                             ** BYP3 TAG **
 0550 C           I         ADD  1         I
 0551 C********   I         COMP 8                      43                 S01270

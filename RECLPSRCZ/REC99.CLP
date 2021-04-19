@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*     Last Amend No. MD046248           Date 27Oct17               */
-/*     Prev Amend No. CER049             Date 06Dec10                */
+/*     Last Amend No. LUC110             Date 24Jan19                */
+/*     Prev Amend No. MD046248           Date 27Oct17               */
+/*                    CER049             Date 06Dec10                */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     LUC110  -  Extended Narratives (Upgrade NUC002 to FBM 2.1)   */
+/*                Use of core hook REC99001                         */
+/*                Use of core hook REC99003                         */
 /*     MD046248 - Finastra Rebranding                               */
 /*     CER049  -  Stamp Tax                                         */
 /*     089310  -  Do not do RMVM/ADDLFM on SACPO as it may take     */

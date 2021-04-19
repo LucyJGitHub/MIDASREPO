@@ -10,8 +10,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR674247           Date 18Dec14               *
+      *  Last Amend No. MD053571           Date 27Sep19               *
+      *  Prev Amend No. MD035027           Date 07Jan16               *
+      *                 LUC101             Date 15Dec14               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR674247           Date 18Dec14               *
       *                 CSC051             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +32,15 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD053571 - LUC101 - Wash Out GLC39/90001 not running as      *
+      *             expected. Applied fix MD035027B                   *
+      *  MD035027 - London COB monitor job cancelled during COB       *
+      *             Lock on Lf/SDHOLL2 (Pf/SDHOLPD)                   *
+      *             ILE/ZFWDT calling AOHOLS0 (without *FREE opton)   *
+      *  LUC101 - Amend Profit and Loss Transfer at end of year.      *
+      *           Used existing hooks - WNCPYSRC,CB0800I001           *
+      *                                 CBCPYSRC,CB0800C81            *
+      *                                 CBCPYSRC,CB0800C82            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR674247 - Introduce calendar year end run condition 81.     *
       *           - Applied for MD031576                              *
@@ -53,6 +65,8 @@
      E*
      E                    FRQ        99  1               Run conditions
      E/COPY WNCPYSRC,CB0800E001
+     E/COPY ZSRSRC,ZHOLE                                                                    MD035027
+     IDSSDY     E DSDSSDY                                                                   MD035027
      IDLSTAT    E DSDLSTAT
      I              DLACKEY                         DLCONT
      I              ZZ10                            ZZ10DL
@@ -74,6 +88,7 @@
       *
      I              EOM                             EOMSE
      I/COPY WNCPYSRC,CB0800I001
+     I/COPY ZSRSRC,ZHOLI                                                                    MD035027
       *
      ISCSARD    E DSSCSARDPD                                                                  CER001
       *                                                                                       CER001
@@ -213,6 +228,14 @@
       *    Return run condition string to parameter
       *
      C                     MOVEAFRQ       FRQLST
+      ** Free lock on AOHOLSO                                                              MD035027B
+     C                     CALL 'AOHOLS0'                                                  MD035027B
+     C                     PARM *BLANK    RTNCD                                            MD035027B
+     C                     PARM '*FREE  ' ZOPTN                                            MD035027B
+     C                     PARM           BJLCCY                                           MD035027B
+     C                     PARM *BLANKS   ZZLOC                                            MD035027B
+     C                     PARM ZDAYNO    ZZDYNO                                           MD035027B
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                                            MD035027B
      C                     SETON                     LR
      C                     RETRN
       *
@@ -672,6 +695,7 @@
      C                     ENDSR
       *
      C           RCON81    BEGSR
+     C                     MOVE '*FREE  ' ZOPTN                                             MD035027
       /COPY CBCPYSRC,CB0800C81
      C                     CALL 'SD2002'                                                    AR674247
      C                     PARM ' '       RUN     1                                         AR674247
@@ -754,5 +778,9 @@
      C           RCON99    BEGSR
       /COPY CBCPYSRC,CB0800C99
      C                     ENDSR
+      *                                                                                     MD035027
+      /COPY ZSRSRC,ZACCH                                                                    MD035027
+      *                                                                                     MD035027
+      /COPY ZSRSRC,ZFWDT                                                                   MD035027B
 **  CPY@
 (c) Finastra International Limited 2001

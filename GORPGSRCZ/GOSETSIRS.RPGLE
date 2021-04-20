@@ -27,7 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR DEREGULATION - COMMON LAYER/STANDING DATA     *
+      *  CSD103 - Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *

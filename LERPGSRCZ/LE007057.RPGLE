@@ -23,13 +23,19 @@
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD055657           Date 14May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1042505 *CREATE  Date 19Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *           (Recompile)                                         *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate. (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1042505 - MFU is not included on rebuild of fclty exposure.*
       *              Create a new function to update FCLTYFN for MFU  *

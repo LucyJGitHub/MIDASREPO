@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056812           Date 20Sep20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR325346           Date 21May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR325346 - DVP/RVP should not appear                         *
@@ -134,7 +136,8 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
 
-     D SdSCOD        E DS                  EXTNAME(SDSCODPD)
+     D*SdSCOD***     E DS                  EXTNAME(SDSCODPD)                                MD056812
+     D SdSCOD        E DS                  EXTNAME(SDSCOJW0)                                MD056812
       ** SWIFT Status and Reason Codes
 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                AR325346

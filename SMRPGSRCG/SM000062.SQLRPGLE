@@ -16,11 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1092867          Date 01Mar13               *
-      *  Prev Amend No. AR1085447*CREATE   Date 06Feb13               *
+      *  Last Amend No. MD057599           Date 21Jan21               *
+      *  Prev Amend No. AR1092867          Date 01Mar13               *
+      *                 AR1085447*CREATE   Date 06Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057599 - Deliverable Data Split for Bridge and Util files  *
       *  AR1092867 - Make sure that the SQL written via UTWRTSQL is   *
       *              complete.                                        *
       *  AR1085447 - Handle migration of loan reference to alpha.     *
@@ -28,7 +30,7 @@
       *****************************************************************
       *
       ** Files with loan reference fields
-     FSMLNRFPD  UF   E           K DISK
+     F*SMLNRFPD* UF   E           K DISK                                                    MD057599
       *
       ** DSPFFD outfile
      FSM000062F IF   E             DISK    USROPN
@@ -136,6 +138,7 @@
      DCmdDSPFD         DS           150
      D QualName2              12     32
       *
+     D SMLNRF        E DS                  Extname(SMLNRJW0)                                MD057599
       *****************************************************************
       * Start of MAIN processing                                      *
       *****************************************************************
@@ -165,7 +168,8 @@
       ** If ReRun is '*NO ', set all update flags to blank.
      C                   IF        ReRun  = '*NO '
      C/Exec SQL
-     C+ Update SMLNRFPD set LNUPDF = ' '
+     C**Update*SMLNRFPD*set*LNUPDF*= ' '                                                    MD057599
+     C+ Update SMLNRXTD set LNUPDF = ' '                                                    MD057599
      C/End-Exec
      C                   ENDIF
       *
@@ -181,20 +185,41 @@
       ** Read in the files to be migrated (or single file,
       ** if in single mode)
      C                   IF        SingleMode = 'Y'
-     C     Key02         CHAIN     SMLNRFPD
-     C                   IF        NOT %FOUND
+     C*****Key02         CHAIN     SMLNRFPD                                                 MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ SELECT * into :SMLNRF                                                               MD057599
+     C+ from SMLNRJW0                                                                       MD057599
+     C+ where LNFILE = :ObjName and LNTYPE = :ObjType                                       MD057599
+     C/END-EXEC                                                                             MD057599
+     C**********         IF        NOT %FOUND                                               MD057599
+     C                   IF        SQLCODE = 100                                            MD057599
      C                   EVAL      ReturnCode = '*NOTONLNRF'
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
       *
      C                   ELSE
-     C                   READ      SMLNRFPD
+     C**********         READ      SMLNRFPD                                                 MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ declare ACursor insensitive scroll cursor for                                       MD057599
+     C+ select distinct(LNFILE) from SMLNRJW0                                               MD057599
+     C+ order by LNFILE                                                                     MD057599
+     C/END-EXEC                                                                             MD057599
+                                                                                            MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ open ACursor                                                                        MD057599
+     C/END-EXEC                                                                             MD057599
+                                                                                            MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ fetch next from ACursor into :SMLNRF                                                MD057599
+     C/END-EXEC                                                                             MD057599
+                                                                                            MD057599
      C                   ENDIF
      C                   EVAL      ObjName = LNFILE
      C                   EVAL      SQLFail = ' '
 
-     C                   DOU       %EOF or SingleMode = 'Y'
+     C**********         DOU       %EOF or SingleMode = 'Y'                                 MD057599
+     C                   DOU       SQLCODE = 100 or SingleMode = 'Y'                        MD057599
       *
       ** Only process file if it hasn't already been processed.
      C                   IF        LNUPDF <> 'Y'
@@ -247,8 +272,14 @@
       ** Check if a loan reference - if so then convert 0 to blanks
       ** and pad any numbers with leading zeros
      C                   EVAL      FieldName = WHFLDI
-     C     Key01         CHAIN     SMLNRFPD
-     C                   IF        %FOUND
+     C*****Key01         CHAIN     SMLNRFPD                                                 MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ SELECT * into :SMLNRF                                                               MD057599
+     C+ from SMLNRJW0                                                                       MD057599
+     C+ where LNFILE = :ObjName and LNTYPE = :ObjType and LNFLD = :FieldName                MD057599
+     C/END-EXEC                                                                             MD057599
+     C**********         IF        %FOUND                                                   MD057599
+     C                   IF        SQLCODE = 0                                              MD057599
      C                   EVAL      FromList = %TRIM(FromList) + ', CASE WHEN ' +
      C                             WHFLDI + ' = 0 THEN '' '' ELSE DIGITS(' +
      C                             %TRIM(WHFLDI) + ') END'
@@ -364,13 +395,17 @@
      C     UpdateF       TAG
      C                   IF        SQLFail = ' '
      C                             or SQLFail = 'U'
-     C     Key02         SETLL     SMLNRFPD
-     C     Key02         READE     SMLNRFPD                               91
-     C                   DOW       *IN91 = *OFF
-     C                   EVAL      LNUPDF = 'Y'
-     C                   UPDATE    LNLNRFD0
-     C     Key02         READE     SMLNRFPD                               91
-     C                   ENDDO
+     C*****Key02         SETLL     SMLNRFPD                                                 MD057599
+     C*****Key02         READE     SMLNRFPD                               91                MD057599
+     C**********         DOW       *IN91 = *OFF                                             MD057599
+     C**********         EVAL      LNUPDF = 'Y'                                             MD057599
+     C**********         UPDATE    LNLNRFD0                                                 MD057599
+     C*****Key02         READE     SMLNRFPD                               91                MD057599
+     C**********         ENDDO                                                              MD057599
+     C/Exec SQL                                                                             MD057599
+     C+ Update SMLNRXTD set LNUPDF = 'Y'                                                    MD057599
+     C+ where LNFILE = :ObjName and LNTYPE = :ObjType                                       MD057599
+     C/End-Exec                                                                             MD057599
      C                   ENDIF
       *
      C                   IF        SQLFail = 'Y'
@@ -382,12 +417,20 @@
      C                   ENDIF
       *
       ** Get next file to be migrated
-     C     Key02         SETGT     SMLNRFPD
-     C                   READ      SMLNRFPD
+     C*****Key02         SETGT     SMLNRFPD                                                 MD057599
+     C**********         READ      SMLNRFPD                                                 MD057599
+     C/EXEC SQL                                                                             MD057599
+     C+ fetch next from ACursor into :SMLNRF                                                MD057599
+     C/END-EXEC                                                                             MD057599
+                                                                                            MD057599
      C                   EVAL      ObjName = LNFILE
      C                   EVAL      SQLFail = ' '
      C                   ENDDO
       *
+     C/EXEC SQL                                                                             MD057599
+     C+ close ACursor                                                                       MD057599
+     C/END-EXEC                                                                             MD057599
+                                                                                            MD057599
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************

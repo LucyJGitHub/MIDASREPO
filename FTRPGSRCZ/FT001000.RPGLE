@@ -21,9 +21,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. AR927047           Date 21Mar12               *      
-      *  Prev Amend No. MD055694           Date 09Mar20               *
-      *                 CMG008             Date 20Feb20               *
+      *  Last Amend No. MD056560           Date 31Aug20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
       *                 MD050730           Date 25Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD037229           Date 03Sep18               *
@@ -125,8 +124,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR927047 - Suppress Dbase 6 (Child: AR927049)                *      
-      *  MD055694 - SWIFT Changes 2021                                *
+      *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
       *             of system value Fld50FAddCustDtl                  *
@@ -630,7 +628,8 @@
      D SDNOST        E DS                  Extname(SDNOSTPD)
      D  QQACC1       E                     ExtFld(QQACCD)                                     250600
      D SDNWRK        E DS                  Extname(SDNWRKPD)
-     D SDMTAG        E DS                  Extname(SDMTAGPD)
+     D*SDMTAG***     E DS                  Extname(SDMTAGPD)                                MD056560
+     D SDMTAG        E DS                  Extname(SDMTGJW0)                                MD056560
      D DSFDY         E DS                  Extname(DSFDY)
      D DSLDY         E DS                  Extname(DSLDY)
      D DSSDY         E DS                  Extname(DSSDY)
@@ -673,8 +672,6 @@
      D  WFC4                         15A
      D  WFC5                         15A
 
-     D CSW221          S              1A                                                    MD055694
-     D PSWIFT          S              6A                                                    MD055694
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1625,10 +1622,10 @@
      C                   Parm                    DSLDY
 
      C                   If        PMReturnCode <> *Blanks
-     C**********         Eval      PMReturnCode = '*ERROR'                                  AR927047
-     C**********         Eval      DbFile = 'SDCSSWPD'                                      AR927047
-     C**********         Eval      Dbase  = 06                                              AR927047
-     C**********         Exsr      *PSSR                                                    AR927047
+     C                   Eval      PMReturnCode = '*ERROR'
+     C                   Eval      DbFile = 'SDCSSWPD'
+     C                   Eval      Dbase  = 06
+     C                   Exsr      *PSSR
      C                   Else
 
      C                   Eval      WStr = %Len(SDCUST) + 1
@@ -2020,7 +2017,6 @@
       *
      C                   DOW       Idx < 5
       *
-     C                   IF        CSW221 <> 'Y'                                            MD055694
      C                   IF        wSeqArr(Idx) = 2  And
      C**********                   wSeqArr(Ndx) <> 3 And                                    BUG21064
      C                             wSeqArr(Ndx) <> 3                                        BUG21064
@@ -2030,7 +2026,6 @@
      C**********         EVAL      PMErrType = 'E'                                           250804A
      C                   LEAVESR
      C                   ENDif
-     C                   ENDIF                                                              MD055694
       *
       ** If code 4/ is used, the next line must start with 5/
       *
@@ -2082,23 +2077,12 @@
      C                   EVAL      PMReturnCode = '*ERROR'                                    CSW209
      C                   EVAL      PMMsgID = 'ME00256'                                        CSW209
      C                   EVAL      PMErrType = 'E'                                            CSW209
-     C                   LEAVESR                                                            MD055694
      C                   ENDIF                                                                CSW209
      C                   EndIf                                                                CSW209
       *                                                                                       CSW209
      C                   Eval      Idx = Idx + 1
      C                   Eval      Ndx = Ndx + 1
      C                   ENDdo
-      *                                                                                     MD055694
-      ** SWIFT 2021: A line starting with '3/' must be present.                             MD055694
-      *                                                                                     MD055694
-     C                   IF        CSW221 = 'Y' AND wSeqArr(3) <> 3                         MD055694
-     C                             AND wSeqArr(4) <> 3                                      MD055694
-     C                             AND wSeqArr(5) <> 3                                      MD055694
-     C                   EVAL      PMReturnCode = '*ERROR'                                  MD055694
-     C                   EVAL      PMMsgID = 'MES0001'                                      MD055694
-     C                   LEAVESR                                                            MD055694
-     C                   ENDIF                                                              MD055694
       *                                                                                     BUG21064
       ** If code 4/ is used, the next line must start with 5/                               BUG21064
       *                                                                                     BUG21064
@@ -2257,7 +2241,6 @@
      C                   EndIf                                                               CSW207A
       *                                                                                       CSW209
      C                   If        CSW209 <> 'Y'                                              CSW209
-     C                             AND CSW221 <> 'Y'                                        MD055694
      C                   IF        WContinue = 'Y'                                            CSW209
      C                             AND WNcode = '3'                                           CSW209
      C                             AND WSaveCode <> '2'                                       CSW209
@@ -2288,18 +2271,6 @@
      C                   Movel     WInpParm      WSaveInp         35                         CSW207A
 
      C                   EndDo
-      *                                                                                     MD055694
-      ** SWIFT 2021: A line starting with 3/ must be present                                MD055694
-      *                                                                                     MD055694
-     C                   IF        %Subst(PMInpParm3:1:2) <> '3/' AND                       MD055694
-     C                             %Subst(PMInpParm4:1:2) <> '3/' AND                       MD055694
-     C                             %Subst(PMInpParm5:1:2) <> '3/' AND                       MD055694
-     C                             CSW221 = 'Y' AND PMErrType <> 'E'                        MD055694
-     C                   EVAL      PMMsgID = 'FTS0086'                                      MD055694
-     C                   EXSR      SetError                                                 MD055694
-     C                   EVAL      PMErrType = 'E'                                          MD055694
-     C                   LEAVESR                                                            MD055694
-     C                   ENDIF                                                              MD055694
                                                                                             BUG25101
       ** CSW209 FDS2.01 Changes                                                             BUG25101
                                                                                             BUG25101
@@ -2320,7 +2291,6 @@
      C                   If        WContinue = 'Y'
      C                   Select
      C                   When      WPrevNCode = '2'
-     C                             AND CSW221 <> 'Y'                                        MD055694
      C                   Eval      PMMsgID = 'FTS0026'
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
@@ -2459,7 +2429,6 @@
      C                   Select
      C                   When      WPrevNCode = '2'
      C                   If        CSW209 <> 'Y'                                              CSW209
-     C                             AND CSW221 <> 'Y'                                        MD055694
      C                   Eval      PMMsgID = 'FTS0026'
      C                   Eval      WContinue = 'N'
      C                   Exsr      SetError
@@ -3771,7 +3740,6 @@
      C                             AND WNCode <> '3')                                       BUG24490
      C**********                   And WNCode <> '3'                                        BUG24490
      C**********                   And WNCode <> '8')                                       BUG24490
-     C                             AND CSW221 <> 'Y'                                        MD055694
      C                   Eval      PMMsgID = 'FTS0026'
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
@@ -3795,10 +3763,8 @@
      C                   ENDIF                                                                CSW209
      C                   ENDIF                                                                CSW209
       *                                                                                       CSW209
-      ***Only*Lines*starting*with*numbers*1*and*2*may*be*repeated.*****              CSW209 MD055694
-      ***Lines*starting*with*3,4,5,6,7*and*8*must*not*be*repeated.*****              CSW209 MD055694
-      ** Only Lines starting with numbers 1, 2 and 3 may be repeated.                       MD055694
-      ** Lines starting with 4,5,6,7 and 8 must not be repeated.                            MD055694
+      ** Only Lines starting with numbers 1 and 2 may be repeated.                            CSW209
+      ** Lines starting with 3,4,5,6,7 and 8 must not be repeated.                            CSW209
      C                   Move      WNCode        WNCodeN                                      CSW209
      C**********         IF        WNCodeN > 2 AND                                   CSW209 BUG25323
      C**********         IF        WNCodeN > 2                                       BUG25323 CSW215
@@ -3815,17 +3781,6 @@
      C                   ENDIF                                                                CSW209
      C                   ENDIF                                                                CSW209
       *                                                                                       CSW209
-      ** SWIFT 2021: Lines starting with 1/, 2/ & 3/ must only occur twice                  MD055694
-      *                                                                                     MD055694
-     C                   IF        CSW221 = 'Y' AND WNCodeN < 4                             MD055694
-     C                             AND WNCode = WPrevNCode                                  MD055694
-     C                             AND WNCode = WNextNCode                                  MD055694
-     C                   EVAL      PMMsgID = 'FTS0087'                                      MD055694
-     C                   EXSR      SetError                                                 MD055694
-     C                   EVAL      PMErrType = 'E'                                          MD055694
-     C                   LEAVESR                                                            MD055694
-     C                   ENDIF                                                              MD055694
-      *                                                                                     MD055694
      C                   If        WPrevNCode = '4'
      C                             And (WNCode <> '4'
      C                             And WNCode <> '5'
@@ -4607,14 +4562,8 @@
      C     ' '           CheckR    WLN2          WPtr1
 
      C                   If        WPtr1 > 35
-      *                                                                                     MD055694
-      ** SWIFT 2021: Lines starting with 1/, 2/ & 3/ must only occur twice                  MD055694
-      *                                                                                     MD055694
-     C                   IF        CSW221 = 'Y'                                             MD055694
-     C                   Eval      WCtr03 = 2                                               MD055694
-     C                   ELSE                                                               MD055694
+
      C                   Eval      WCtr03 = 0
-     C                   ENDIF                                                              MD055694
      C                   DoW       WCtr03 < 3
      C**********         Eval      WCtr03 += 1                                              BUG15045
      C                   Eval      WCtr03 = WCtr03 + 1                                      BUG15045
@@ -5141,19 +5090,6 @@
      C                   ELSE                                                                 CSW215
      C                   EVAL      CSW215 = 'N'                                               CSW215
      C                   ENDIF                                                                CSW215
-      *                                                                                     MD055694
-      ** Check if SWIFT2021 is enabled                                                      MD055694
-      *                                                                                     MD055694
-     C                   EVAL      CSW221 = 'N'                                             MD055694
-     C                   CALL      'SWIFTACTV'                                              MD055694
-     C                   PARM      'CSW221'      PSWIFT                                     MD055694
-     C                   PARM      *BLANKS       PMReturnCode                               MD055694
-      *                                                                                     MD055694
-     C                   IF        PMReturnCode = 'CSWACTV'                                 MD055694
-     C                   EVAL      CSW221 = 'Y'                                             MD055694
-     C                   ELSE                                                               MD055694
-     C                   EVAL      CSW221 = 'N'                                             MD055694
-     C                   ENDIF                                                              MD055694
       *                                                                                    BUG15149A
       ** Check if Private Banking is switched on:                                          BUG15149A
       *                                                                                    BUG15149A

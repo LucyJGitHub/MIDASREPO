@@ -11,15 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056812           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE039  *CREATE    Date 17Feb03               *
+      *                 CSE039  *CREATE    Date 17Feb03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056812  - Deliverable Data Split for SDSCODPD              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Automatic Settlement of Trades                      *
       *                                                               *
@@ -28,13 +30,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEMVTSL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEMVTSD0:SEMVTSD2)
       ** Movements Status - Omit Midas-Generated Records
- 
+
       /COPY WNCPYSRC,SEMVTSV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -46,20 +48,20 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -71,76 +73,77 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CurTrnDets    E DS                  EXTNAME(SEMVTS1PD) PREFIX(C_)
       ** SEMVTS Transaction Details in screen format
       ** Current state (i.e. before any amendment)
- 
+
      D APITrnDets    E DS                  EXTNAME(SEMVTS1PD)
       ** SEMVTS Transaction Details in screen format
- 
+
      D OScrnFlds     E DS                  EXTNAME(SEMVTS2PD)
       ** SEMVTS Output only Screen Fields
- 
+
      D OKTrnDets     E DS                  EXTNAME(SEEMVTSPD)
       ** Transaction Details OK indicators
- 
+
      D ValidMVTS     E DS                  EXTNAME(SEVMVTSPD)
       ** Valid Transaction Details layout
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
-     D SdSCOD        E DS                  EXTNAME(SDSCODPD)
+
+     D*SdSCOD***     E DS                  EXTNAME(SDSCODPD)                                MD056812
+     D SdSCOD        E DS                  EXTNAME(SDSCOJW0)                                MD056812
       ** SWIFT Status and Reason Codes
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Long DS for access programs
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Alternate arrays of Midas-generated Status Codes and Narratives
       ** and their related index
      D MidasGCod       S              4A   DIM(12) CTDATA PERRCD(1)
      D MidasGNar       S             60A   DIM(12) ALT(MidasGCod)
      D MGi             S              3P 0
- 
+
       ** Index for error message arrays
      D Idx             S              3P 0
      D SavIdx          S              3P 0
- 
+
       ** Index for warning message arrays
      D WIdx            S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /COPY WNCPYSRC,SEMVTSV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -148,13 +151,13 @@
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEMVTSV003
- 
+
       ** Initializations
       *
      C                   EXSR      INIT
- 
+
       ** When the calling module is "*CTL" or "*RPR" and the mode is "Amend",
       ** we must first verify that only amendable fields are modified.
       ** The problem can't arise in the SIN function, as only the amendable
@@ -174,7 +177,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Validate Notification Date
       *
       /COPY WNCPYSRC,SEMVTSV004
@@ -182,61 +185,61 @@
      C                   EXSR      ValNTDT
      C                   ENDIF
       /COPY WNCPYSRC,SEMVTSV005
- 
+
       ** Validate Notification Method
       *
       /COPY WNCPYSRC,SEMVTSV006
      C                   EXSR      ValNTMT
       /COPY WNCPYSRC,SEMVTSV007
- 
+
       ** Validate SWIFT Status code
       *
       /COPY WNCPYSRC,SEMVTSV008
      C                   EXSR      ValSWSC
       /COPY WNCPYSRC,SEMVTSV009
- 
+
       ** Validate SWIFT Reason code
       *
       /COPY WNCPYSRC,SEMVTSV010
      C                   EXSR      ValSWRC
       /COPY WNCPYSRC,SEMVTSV011
- 
+
       ** Validate Message Key
       *
       /COPY WNCPYSRC,SEMVTSV012
      C                   EXSR      ValMSGK
       /COPY WNCPYSRC,SEMVTSV013
- 
+
       ** Validate Input Origin
       *
       /COPY WNCPYSRC,SEMVTSV014
      C                   EXSR      ValINOR
       /COPY WNCPYSRC,SEMVTSV015
- 
+
       ** Validate Settlement Confirmation Requested
       *
       /COPY WNCPYSRC,SEMVTSV016
      C                   EXSR      ValSCRQ
       /COPY WNCPYSRC,SEMVTSV017
- 
+
       ** Validate Settlement Message Generated
       *
       /COPY WNCPYSRC,SEMVTSV018
      C                   EXSR      ValSTMG
       /COPY WNCPYSRC,SEMVTSV019
- 
+
       ** Validate Narrative
       *
       /COPY WNCPYSRC,SEMVTSV020
      C                   EXSR      ValNARR
       /COPY WNCPYSRC,SEMVTSV021
- 
+
      C     EndMod        TAG
       *
      C                   RETURN
- 
+
       /COPY WNCPYSRC,SEMVTSV022
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************

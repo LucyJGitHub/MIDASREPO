@@ -26,8 +26,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. MD045498           Date 01Jun17               *
+      *  Last Amend No. MD057599           Date 21Jan21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 05Feb18               *
+      *                 MD045498           Date 01Jun17               *
       *                 MD040956           Date 01Sep16               *
       *                 MD039358           Date 05May16               *
       *                 AR1085447D         Date 29Mar13               *
@@ -39,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057599 - Deliverable Data Split for Bridge and Util files  *
+      *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045498 - Incorrect concatenation for leading blanks.       *
       *  MD040956 - SQL syntax incorrect.                             *
@@ -74,14 +78,34 @@
       *****************************************************************
 
       ** Update MXEXFFPD
-     C                   EVAL      SQLSTRING =
-     C                             'UPDATE MXEXFFPD SET ' +
-     C                             'WHFLDT= ''A'' WHERE WHFLDI IN' +
-     C                             '(''LNRF'', ''FELOAN'', ''LNNO'') WITH NC'
+     C**********         EVAL      SQLSTRING =                                              MD056612
+     C**********                   'UPDATE MXEXFFPD SET ' +                                 MD056612
+     C**********                   'WHFLDT= ''A'' WHERE WHFLDI IN' +                        MD056612
+     C**********                   '(''LNRF'', ''FELOAN'', ''LNNO'') WITH NC'               MD056612
+     C                   EVAL      SQLSTRING =                                              MD056612
+     C                             'UPDATE MXEXFCTD SET ' +                                 MD056612
+     C                             'WHFLDT= ''A'' WHERE WHFLDI IN' +                        MD056612
+     C                             '(''LNRF'', ''FELOAN'', ''LNNO'') WITH NC'               MD056612
      C/Exec SQL
      C+ EXECUTE IMMEDIATE :SQLSTRING
      C/End-Exec
 
+     C                   EVAL      SQLSTRING =                                              MD056612
+     C                             'UPDATE MXEXFBTD SET ' +                                 MD056612
+     C                             'WHFLDT= ''A'' WHERE WHFLDI IN' +                        MD056612
+     C                             '(''LNRF'', ''FELOAN'', ''LNNO'') WITH NC'               MD056612
+     C/Exec SQL                                                                             MD056612
+     C+ EXECUTE IMMEDIATE :SQLSTRING                                                        MD056612
+     C/End-Exec                                                                             MD056612
+                                                                                            MD056612
+     C                   EVAL      SQLSTRING =                                              MD056612
+     C                             'UPDATE MXEXFXTD SET ' +                                 MD056612
+     C                             'WHFLDT= ''A'' WHERE WHFLDI IN' +                        MD056612
+     C                             '(''LNRF'', ''FELOAN'', ''LNNO'') WITH NC'               MD056612
+     C/Exec SQL                                                                             MD056612
+     C+ EXECUTE IMMEDIATE :SQLSTRING                                                        MD056612
+     C/End-Exec                                                                             MD056612
+                                                                                            MD056612
       ** Update PSTTOM
      C                   EVAL      SQLSTRING =
      C                             'UPDATE PSTTOM SET ' +
@@ -905,7 +929,8 @@
      C+       select LNFILE, LNFLDN                                                           CLE134
      C+       from                                                                            CLE134
      C********SMU006PD*********************************************                 CLE134 AR1078292
-     C+       SMLOANPD                                                                     AR1078292
+     C********SMLOANPD                                                            AR1078292 MD057599
+     C+       SMLOAJW0                                                                      MD057599
      C/end-exec                                                                               CLE134
                                                                                               CLE134
      ** Open cursor                                                                           CLE134

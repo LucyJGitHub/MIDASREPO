@@ -10,12 +10,14 @@
       *                                                               *
       *  CB000801 - Midas COB Generic Trailer Update Program          *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025467A          Date 17Mar14               *
+      *  Last Amend No. MD056816           Date 20Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025467A          Date 17Mar14               *
       *                 MD025467 *CREATE   Date 28Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *   MD056816 - Deliverable Data Split for SDTRDHPD/SDTRDFPD     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025467A - Few records placed in SDTRDFPD for ACTIONFILE    *
       *            - Recompiled due to changes in SDTRDFL0            *
@@ -23,11 +25,11 @@
       *                                                               *
       *****************************************************************
 
-     FSDTRDFL0  IF   E           K DISK
+     F*SDTRDFL0* IF   E           K DISK                                                    MD056816
       ** Trailer Extension file
-     F                                     INFSR(*PSSR)
-     F                                     BLOCK(*YES)
-     F                                     USROPN
+     F**********                           INFSR(*PSSR)                                     MD056816
+     F**********                           BLOCK(*YES)                                      MD056816
+     F**********                           USROPN                                           MD056816
 
       ** Entry Parameters
       ** ================
@@ -65,6 +67,7 @@
      D DSBank        E DS                  INZ EXTNAME(SDBANKPD)
      D                                     QUALIFIED
      D DSDummyS      E DS                  INZ EXTNAME(DSFDY)
+     D SDTRDF        E DS                  EXTNAME(SDTRFJW0)                                MD056816
 
       ** Static variables/constants used by subprocs/functions
       ** Note: limit use in main procedure/program
@@ -140,7 +143,7 @@
 
       ** Main process initialization
 
-     C                   OPEN      SDTRDFL0
+     C*********          OPEN      SDTRDFL0                                                 MD056816
      C                   EVAL      StrSQLStmt = ''
      C                   EVAL      StrSQLFld = ''
      C                   EVAL      StrSQLFldVal = ''
@@ -167,7 +170,7 @@
 
       ** Last record/program end processing
 
-     C                   CLOSE     SDTRDFL0
+     C**********         CLOSE     SDTRDFL0                                                 MD056816
 
      C                   SETON                                        LR
      C                   RETURN
@@ -218,10 +221,25 @@
      C     UpdMainTrl    BEGSR
 
 
-     C     PTrlFile      SETLL     SDTRDFL0
-     C                   READ      SDTRDFL0
-     C                   DOW       NOT %EOF(SDTRDFL0)
-     C                             AND A9TRLNM = PTrlFile
+     C*****PTrlFile      SETLL     SDTRDFL0                                                 MD056816
+     C**********         READ      SDTRDFL0                                                 MD056816
+     C/EXEC SQL                                                                             MD056816
+     C+ declare ACursor insensitive scroll cursor for                                       MD056816
+     C+ select * from SDTRFJW0                                                              MD056816
+     C+ where A9TRLNM = :PTrlFile                                                           MD056816
+     C+ order by A9TRLNM, A9FLDINT                                                          MD056816
+     C/END-EXEC                                                                             MD056816
+                                                                                            MD056816
+     C/EXEC SQL                                                                             MD056816
+     C+ open ACursor                                                                        MD056816
+     C/END-EXEC                                                                             MD056816
+                                                                                            MD056816
+     C/EXEC SQL                                                                             MD056816
+     C+ fetch next from ACursor into :SDTRDF                                                MD056816
+     C/END-EXEC                                                                             MD056816
+     C**********         DOW       NOT %EOF(SDTRDFL0)                                       MD056816
+     C**********                   AND A9TRLNM = PTrlFile                                   MD056816
+     C                   DOW       SQLCODE = 0                                              MD056816
 
      C                   EVAL      IntField = %TRIMR(A9FLDINT)
      C                   EVAL      DecField = %TRIMR(A9FLDDEC)
@@ -261,7 +279,10 @@
 
      C                   ENDSL
 
-     C                   READ      SDTRDFL0
+     C**********         READ      SDTRDFL0                                                 MD056816
+     C/EXEC SQL                                                                             MD056816
+     C+ fetch next from ACursor into :SDTRDF                                                MD056816
+     C/END-EXEC                                                                             MD056816
      C                   ENDDO
 
       ** Clean up statements before joining and running them

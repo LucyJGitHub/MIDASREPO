@@ -145,7 +145,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSW221   - SWIFT 2021 Changes                                *
+      *  CSW221   - SWIFT Changes 2021                                *
       *  MD051567 - ISDA Rules version must be a valid year starting  *
       *             with 199 or 20.                                   *
       *           - Applied for MD056763                              *

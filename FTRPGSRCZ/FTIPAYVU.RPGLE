@@ -234,7 +234,6 @@
 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
 
-
      FMEINCRL2  IF   E           K DISK    INFSR(*PSSR)                                       257943
      FMEINCRL3  IF   E           K DISK    INFSR(*PSSR)                                       257943
       ** Hook to enable non-core files to be included
@@ -3558,18 +3557,6 @@
      C                   PARM      *BLANKS       PMOR                                        BUG1282
      C                   PARM      *BLANKS       PMIR                                        BUG1282
      C                   PARM      *BLANKS       PRTN                                        BUG1282
-
-
-
-
-
-
-
-
-
-
-
-
                                                                                              BUG1282
       ** If call to program resulted in an error, then end program.                          BUG1282
                                                                                              BUG1282
@@ -6910,47 +6897,6 @@
 
      C     UpdateDB      BEGSR
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       ** Update files.
 
      C                   CALLB     'FTIPAYUPD'
@@ -7107,8 +7053,6 @@
      C                   ENDIF                                                                CER001
                                                                                               CER001
      C                   ENDSR
-
-
 
       *****************************************************************
       /EJECT
@@ -7799,10 +7743,6 @@
      C                   KFLD                    PCNUM                                      MD034973
      C                   KFLD                    PPYTY                                      MD034973
      C                   KFLD                    PPYST                                      MD034973
-
-
-
-
 
      C     *LIKE         DEFINE    DDSMCY        WRCHCY
      C     *LIKE         DEFINE    DDSMAM        WRCHAM

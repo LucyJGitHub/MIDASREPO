@@ -17,9 +17,6 @@
       *  Last Amend No. 250041             Date 22May20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
-
-
-
       *                 CFT157             Date 29Aug14               *
       *                 AR1080200          Date 24Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -224,8 +221,6 @@
 
 
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
-
-
 
 
       * Array of Fields in error.
@@ -462,8 +457,6 @@
 
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
-
-
 
 
       * A code to indicate the calling function to the lower level modules
@@ -1109,9 +1102,6 @@
      C*****SACTION       IFEQ      'I'                                                 222731 250041
      C**********         Move      *Blanks       SRCRM                                 CFT014 250041
      C**********         ENDIF                                                         222731 250041
-
-
-
 
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014

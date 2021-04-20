@@ -19,7 +19,6 @@
       *                 MD044553           Date 08May17               *
       *                 MD055373           Date 14Jul20               *
       *                 MD030856           Date 06Nov19               *
-      *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -5175,8 +5174,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
-     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD056546
-     C**********         ADD       26            Bfp                                MD044553 MD056546
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD05654
+     C**********         ADD       26            Bfp                                MD044553 MD05654
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 

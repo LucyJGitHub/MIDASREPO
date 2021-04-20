@@ -1,4 +1,5 @@
      H DEBUG
+     H CCSID(*GRAPH:*SRC)                                                                   MD056543
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas CG Retail Interest Summary - Extract')           *

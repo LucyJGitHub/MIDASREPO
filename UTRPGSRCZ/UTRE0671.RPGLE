@@ -77,7 +77,7 @@
      D WkDATE          S              5P 0
      D WkVALD          S              5P 0
      D WWBRAT          S             11P 7
-
+ 
       *  Data Structure for Rate 2
      D STRAT2          DS
      D  SRAT2                  1     36
@@ -87,7 +87,7 @@
      D  RAT2D                 19     24P 7
      D  RAT2E                 25     30P 7
      D  RAT2F                 31     36P 7
-
+ 
       *  Data Structure for Bal  2
      D STBAL2          DS
      D  SBAL2                  1     48
@@ -97,7 +97,7 @@
      D  BAL2D                 25     32P 0
      D  BAL2E                 33     40P 0
      D  BAL2F                 41     48P 0
-
+ 
       *  Data Structure for Rate 3
      D STRAT3          DS
      D  RAT3                   1     30
@@ -106,7 +106,7 @@
      D  RAT3C                 13     18P 7
      D  RAT3D                 19     24P 7
      D  RAT3E                 25     30P 7
-
+ 
       *  Data Structure for Bal  3
      D STBAL3          DS
      D  BAL3                   1     40
@@ -115,7 +115,7 @@
      D  BAL3C                 17     24P 0
      D  BAL3D                 25     32P 0
      D  BAL3E                 33     40P 0
-
+ 
       *  Data Structure for Bal  2/3
      D WkBAL3          DS
      D  WBal3                  1     40
@@ -124,7 +124,7 @@
      D  WBal3C                17     24P 0
      D  WBal3D                25     32P 0
      D  WBal3E                33     40P 0
-
+ 
      D LDA             DS           256
       *
       ** Define LDA
@@ -142,14 +142,14 @@
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
-
+ 
      D KEY             DS            12
      D BLANC                   1      1
      D TYPE                    2      3
      D SBTYPE                  4      8
      D CURR                    9     11
      D D                      12     12
-
+ 
       *****************************************************************
       *                                                               *
       *  S U B R O U T I N E   I N D E X                              *
@@ -160,7 +160,7 @@
       *  *PSSR  - Error Processing                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    @MODE             1
       *
@@ -171,7 +171,7 @@
       ** Process main processing
       *
      C                   EXSR      SRMAIN
-
+ 
      C                   IF        *IN80 = *ON
      C                   WRITE     HEAD1
      C                   EVAL      *IN80 = *OFF
@@ -223,7 +223,7 @@
      C                   KFLD                    RPCCY
      C                   KFLD                    RPACOD
      C                   KFLD                    RPACSQ
-
+ 
      C     RRKEY         KLIST
      C                   KFLD                    RPBRCA
      C                   KFLD                    RPCNUM
@@ -233,7 +233,7 @@
      C                   KFLD                    WkDate
      C                   KFLD                    KDRCR
      C                   KFLD                    KRSEQ
-
+ 
      C     RSKEY         KLIST
      C                   KFLD                    RPBRCA
      C                   KFLD                    RPCNUM
@@ -241,7 +241,7 @@
      C                   KFLD                    RPACOD
      C                   KFLD                    RPACSQ
      C                   KFLD                    WkDate
-
+ 
       *
       ** Audit/Update Mode
       *
@@ -274,7 +274,7 @@
       *                                                               *
       *****************************************************************
      C     SRMAIN        BEGSR
-
+ 
      C                   READ      REIAC
      C                   DOW       NOT(%EOF(REIAC))
      C                   IF        RPRECI = 'D'                                            MD023799A
@@ -294,7 +294,7 @@
      C     ACOLDR        IFNE      BJRDNB                                                  MD023799A
       *                                                                                    MD023799A
      C**********         IF        RPRECI = 'D'                                            MD023799A
-
+ 
      C     RPDICT        IFNE      *Zeros
      C                   EVAL      KDRCR = 0
      C     KEY1          SETGT     REHRDJ
@@ -302,7 +302,7 @@
      C     KEY1          READPE    REHRDJ                                 54               MD023799A
      C     *IN54         IFEQ      '0'                                                     MD023799A
      C                   IF        (RPDICT <> DRINTP) or (RPDCST <> DRINST)
-
+ 
      C                   EXSR      GetRTDate
      C     UPDOK         IFEQ      'Y'                                                     MD023799A
      C                   EXSR      PrintDetl
@@ -311,12 +311,12 @@
      C                   EXSR      UpdHdRec
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
-
+ 
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
-
+ 
      C     ACOLCR        IFNE      BJRDNB                                                  MD023799A
      C     RPCICT        IFNE      *Zeros
      C                   EVAL      KDRCR = 1
@@ -325,7 +325,7 @@
      C     KEY1          READPE    REHRCJ                                 54               MD023799A
      C     *IN54         IFEQ      '0'                                                     MD023799A
      C                   IF        (RPCICT <> CRINTP) or (RPCCST <> CRINST)
-
+ 
      C                   EXSR      GetRTDate
      C     UPDOK         IFEQ      'Y'                                                     MD023799A
      C                   EXSR      PrintDetl
@@ -334,17 +334,17 @@
      C                   EXSR      UpdHdRec
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
-
+ 
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
      C                   ENDIF
-
+ 
      C                   ENDIF
      C                   ENDIF                                                             MD023799A
      C                   ENDIF                                                             MD023799A
      C                   READ      REIAC
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -356,7 +356,7 @@
       *                                                               *
       *****************************************************************
      C     GetRTDate     BEGSR
-
+ 
      C     KEY1          CHAIN     ACCBR
      C                   IF        NOT %FOUND(ACCBR)
      C                   MOVEL     RPCNUM        DBKEY
@@ -386,7 +386,7 @@
      C                   ENDIF                                                             MD023799A
       *                                                                                    MD023799A
      C                   ENDIF                                                             MD023799A
-
+ 
      C     UPDOK         IFEQ      'Y'                                                     MD023799A
      C                   IF        KDRCR = 0
      C                   EVAL      PRINTP = DRINTP
@@ -397,10 +397,10 @@
      C                   EVAL      PRINST = CRINST
      C                   EVAL      WkDATE = ACCRCD
      C                   ENDIF
-
+ 
      C                   EVAL      TRAIL = TRAIL + 1
      C                   ENDIF                                                             MD023799A
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -412,7 +412,7 @@
       *                                                               *
       *****************************************************************
      C     PrintDetl     BEGSR
-
+ 
      C                   IF        KDRCR = 0
      C                   EVAL      RPDRCR = 'DR'
      C                   EVAL      NWINTP = RPDICT
@@ -429,13 +429,13 @@
      C                   EVAL      RPHISD = ZADATE
      C                   EVAL      CUINTP = PRINTP
      C                   EVAL      CUSTYP = PRINST
-
+ 
      C                   IF        *IN80 = *ON
      C                   WRITE     HEAD1
      C                   EVAL      *IN80 = *OFF
      C                   ENDIF
      C                   WRITE     DETAIL
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -449,7 +449,7 @@
      C     UpdRatePF     BEGSR
      C                   DUMP
      C                   Exsr      SR_REINTD
-
+ 
      C                   EVAL      WWBRAT = *ZEROS
      C     BRT           IFNE      *ZEROS
      C                   MOVE      BRT           @BSRC             2
@@ -462,7 +462,7 @@
      C                   ENDIF
      C                   EVAL      WWBRAT = BANBRT
      C                   ENDIF
-
+ 
      C                   EVAL      KRSEQ = '1'
      C     RRKEY         CHAIN     REHPOS1F                           51
      C                   IF        *IN51 = *OFF
@@ -470,7 +470,7 @@
      C                   EVAL      RRINST = NWSTYP
      C                   EVAL      RRBRT = BRT
      C                   UPDATE    REHPOS1F
-
+ 
      C                   EVAL      KRSEQ = '2'
      C     RRKEY         CHAIN     REHPOS2F                           52
      C                   IF        *IN52 = *OFF
@@ -500,7 +500,7 @@
      C                   EVAL      RRCONI = *BLANKS
      C                   ENDIF
      C                   UPDATE    REHPOS2F
-
+ 
      C                   EVAL      KRSEQ = '3'
      C     RRKEY         CHAIN     REHPOS3F                           53
      C                   IF        WBal3A = *ZEROS
@@ -537,13 +537,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        (CUINTP <> NWINTP)
      C                   Exsr      UpdPostPF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -555,7 +555,7 @@
       *                                                               *
       *****************************************************************
      C     UpdPostPF     BEGSR
-
+ 
      C     RSKEY         SETLL     REHISL
      C     KEY1          READE     REHISL
      C                   DOW       NOT %EOF(REHISL)
@@ -571,7 +571,7 @@
      C                   ENDIF
      C     KEY1          READE     REHISL
      C                   ENDDO
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -583,22 +583,22 @@
       *                                                               *
       *****************************************************************
      C     UpdHdRec      BEGSR
-
+ 
      C     KEY1          CHAIN     REHISBL
-
+ 
      C                   IF        NOT %FOUND(REHISBL)
      C                   MOVEL     ACACNO        DBKEY
      C                   MOVEL     'REHISBL'     DBFILE
      C                   MOVEL     '005'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   EVAL      B_ADTY = 'Y'
      C                   IF        B_VDTC > WkDATE
      C                   EVAL      B_VDTC = WkDATE
      C                   ENDIF
      C                   UPDATE    REHISPBF
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -610,7 +610,7 @@
       *                                                               *
       *****************************************************************
      C     SR_REINTD     BEGSR
-
+ 
      C                   MOVE      NWINTP        TYPE
      C                   MOVE      NWSTYP        SBTYPE
      C                   MOVE      RPCCY         CURR
@@ -622,7 +622,7 @@
      C                   MOVEL     '003'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *

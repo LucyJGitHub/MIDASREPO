@@ -21,14 +21,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD057794           Date 24Mar21               *
-      *  Prev Amend No. MD057790           Date 23Mar21               *
+      *  Last Amend No. MD057889           Date 19Apr21               *
+      *  Prev Amend No. MD057794           Date 24Mar21               *
+      *                 MD057790           Date 23Mar21               *
       *                 MD057770           Date 18Mar21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103  *CREATE    Date 01Aug20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057889 - System throws a validation error when BLRT and    *
+      *             OPSH are left blank when a fixed rate loan is     *
+      *             entered via SOAP. Default BLRT and OPSH to N.     *
       *  MD057794 - Non-mandatory dropdown fields in BSRT throws an   *
       *             error when left blank                             *
       *  MD057790 - Amendment of Floor limit error message            *
@@ -379,6 +383,11 @@
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDBLRT = BABLRT                                            CLE172
                                                                                               CLE172
+      ** Default to N if base rate code not exists                                          MD057889
+     C                   WHEN      ApiName = 'CLIP' and                                     MD057889
+     C                             BSRTRecFound = 'N'                                       MD057889
+     C                   EVAL      DDBLRT = 'N'                                             MD057889
+                                                                                            MD057889
       ** Default value from loan details                                                      CLE172
      C                   WHEN      ApiName = 'LERI' and                                       CLE172
      C                             DDBLRT = *BLANKS                                           CLE172
@@ -1014,6 +1023,11 @@
      C                             BSRTRecFound = 'Y'                                         CLE172
      C                   EVAL      DDOPSH = BAOPSH                                            CLE172
                                                                                               CLE172
+      ** Default to N if base rate code not exists                                          MD057889
+     C                   WHEN      ApiName = 'CLIP' and                                     MD057889
+     C                             BSRTRecFound = 'N'                                       MD057889
+     C                   EVAL      DDOPSH = 'N'                                             MD057889
+                                                                                            MD057889
       ** Default value from loan details                                                      CLE172
      C                   WHEN      ApiName = 'LERI'                                           CLE172
      C                   IF        DDBLRT = 'Y'                                               CLE172

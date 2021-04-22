@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. CSD103  *CREATE    Date 10Aug20               *
+      *  Last Amend No. MD057871           Date 19Apr21               *
+      *  Prev Amend No. CSD103  *CREATE    Date 10Aug20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  CSD103 - LIBOR Deregulation - Common Layer Standing Data     *
       *                                                               *
       *****************************************************************
@@ -215,6 +217,7 @@
      D QUO             c                   const('''')
      D SDHSDRTD        c                   const(0)
      D UPDATE          c                   const(1)
+     D BLANK_FLOOR     c                   const('9999.9999999')                MD057871
 
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
@@ -648,29 +651,57 @@
 
        begsr buildParameter;
 
-                   RestAPIParm =    %trim(CalcMetURL) +
-                                 QUE + 'interestPeriodStartDate=' +
-                                    %trim(intPrdStartDt) +
-                                 AMP + 'interestPeriodEndDate=' +
-                                    %trim(intPrdEndDt) +
-                                 AMP + 'riskFreeRate=' +
-                                    %trim(riskFreeRate) +
-                                 AMP + 'lookBackDays=' +
-                                    %trim(lookBackDays)  +
-                                 AMP + 'rateRoundingDecimalPoints=' +
-                                    %trim(RateRndDecPts) +
-                                 AMP + 'dayCountConvention=' +
-                                    %trim(dayCntConvent) +
-                                 AMP + 'observationPeriodShift=' +
-                                    %trim(obserPrdShift) +
-                                 AMP + 'lockoutDays=' +
-                                    %trim(lockOutDays) +
-                                 AMP + 'showDailyDetails=' +
-                                    %trim(showDailyDeta) +
-                                 AMP + 'calculateTillDate=' +
-                                    %trim(callTillDate) +
-                                 AMP + 'riskFreeRateFloor=' +
-                                    %trim(riskFreeRatFl);
+                   if not(riskFreeRatFl = BLANK_FLOOR);                                   //MD057871
+
+                      RestAPIParm =    %trim(CalcMetURL) +
+                                    QUE + 'interestPeriodStartDate=' +
+                                      %trim(intPrdStartDt) +
+                                    AMP + 'interestPeriodEndDate=' +
+                                      %trim(intPrdEndDt) +
+                                    AMP + 'riskFreeRate=' +
+                                      %trim(riskFreeRate) +
+                                    AMP + 'lookBackDays=' +
+                                      %trim(lookBackDays)  +
+                                    AMP + 'rateRoundingDecimalPoints=' +
+                                      %trim(RateRndDecPts) +
+                                    AMP + 'dayCountConvention=' +
+                                      %trim(dayCntConvent) +
+                                    AMP + 'observationPeriodShift=' +
+                                      %trim(obserPrdShift) +
+                                    AMP + 'lockoutDays=' +
+                                       %trim(lockOutDays) +
+                                    AMP + 'showDailyDetails=' +
+                                      %trim(showDailyDeta) +
+                                    AMP + 'calculateTillDate=' +
+                                      %trim(callTillDate) +
+                                    AMP + 'riskFreeRateFloor=' +
+                                      %trim(riskFreeRatFl);
+
+                   else;                                                                  //MD057871
+                                                                                          //MD057871
+                      RestAPIParm =    %trim(CalcMetURL) +                                //MD057871
+                                    QUE + 'interestPeriodStartDate=' +                    //MD057871
+                                      %trim(intPrdStartDt) +                              //MD057871
+                                    AMP + 'interestPeriodEndDate=' +                      //MD057871
+                                      %trim(intPrdEndDt) +                                //MD057871
+                                    AMP + 'riskFreeRate=' +                               //MD057871
+                                      %trim(riskFreeRate) +                               //MD057871
+                                    AMP + 'lookBackDays=' +                               //MD057871
+                                      %trim(lookBackDays)  +                              //MD057871
+                                    AMP + 'rateRoundingDecimalPoints=' +                  //MD057871
+                                      %trim(RateRndDecPts) +                              //MD057871
+                                    AMP + 'dayCountConvention=' +                         //MD057871
+                                      %trim(dayCntConvent) +                              //MD057871
+                                    AMP + 'observationPeriodShift=' +                     //MD057871
+                                      %trim(obserPrdShift) +                              //MD057871
+                                    AMP + 'lockoutDays=' +                                //MD057871
+                                       %trim(lockOutDays) +                               //MD057871
+                                    AMP + 'showDailyDetails=' +                           //MD057871
+                                      %trim(showDailyDeta) +                              //MD057871
+                                    AMP + 'calculateTillDate=' +                          //MD057871
+                                      %trim(callTillDate);                                //MD057871
+                                                                                          //MD057871
+                   endif;                                                                 //MD057871
 
        endsr;
 
